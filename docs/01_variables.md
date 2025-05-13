@@ -46,7 +46,10 @@ int64 big_number = 123456789012345;
 uint8 small_number = 250;
 int b = a;  # the value of a is copied into b
 b = 7;  # b is 7, a is still 3
+char c = 'c';
 ```
+
+Note that characters are declared using single quotes
 
 ### === Integer and Floating-point precision
 
