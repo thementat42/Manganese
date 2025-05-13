@@ -6,17 +6,17 @@ Manganese supports a variety of different operators, which can be grouped into d
 
 ## === Arithmetic Operators ===
 
-| Operator |            Name              |     Example    |
-| -------- | ---------------------------- | -------------- |
-|    `+`   |   Addition/Unary Positive    |  `x+y` or `+x` |
-|    `-`   |   Subtraction/Unary Negative | `x-y` or `-x`  |
-|    `*`   |   Multiplication             |     `x*y`      |
-|    `/`   |   Floating point division    |     `x/y`      |
-|   `//`   |   Floor (integer) division   |    `x//y`      |
-|    `%`   |   Modulus (Remainder)        |     `x%y`      |
-|   `**`   |   Exponentiation             |    `x**y`      |
-|   `++`   |   Increment                  | `++x` or `x++` |
-|   `--`   |   Decrement                  | `--x` or `x--` |
+| Operator |            Name            |     Example    |
+| -------- | ---------------------------| -------------- |
+| `+`      | Addition/Unary Positive    |  `x+y` or `+x` |
+| `-`      | Subtraction/Unary Negative | `x-y` or `-x`  |
+| `*`      | Multiplication             | `x*y`          |
+| `/`      | Floating point division    | `x/y`          |
+| `//`     | Floor (integer) division   | `x//y`         |
+|  `%`     | Modulus (Remainder)        | `x%y`          |
+| `**`     | Exponentiation             | `x**y`         |
+| `++`     | Increment                  | `++x` or `x++` |
+| `--`     | Decrement                  | `--x` or `x--` |
 
 All the binary operators support the immediate re-assignment syntax using `op=`.
 
@@ -31,24 +31,24 @@ Unary operators will preserve the type they act on. The increment and decrement 
 
 ## === Comparison Operators ===
 
-| Operator |            Name              |    Example  |
-| -------- | ---------------------------- | ----------- |
-|    `<`   |     (Strictly) Less than     |   `x < y`   |
-|   `<=`   |    Less than or equal to     |   `x <= y`  |
-|    `>`   |    (Strictly) Greater than   |   `x > y`   |
-|   `>=`   |    Greater than or equal to  |   `x >= y`  |
-|   `==`   |          Equal to            |   `x == y`  |
-|   `!=`   |         Not equal to         |   `x != y`  |
+| Operator |            Name          |  Example |
+| -------- | -------------------------| -------- |
+| `<`      | (Strictly) Less than     | `x < y`  |
+| `<=`     | Less than or equal to    | `x <= y` |
+| `>`      | (Strictly) Greater than  | `x > y`  |
+| `>=`     | Greater than or equal to | `x >= y` |
+| `==`     | Equal to                 | `x == y` |
+| `!=`     | Not equal to             | `x != y` |
 
 Manganese supports comparison operator chaining (e.g. `x < y < z`). Note that, due to hardware limitations, some comparisons between floating-point values may give unexpected results.
 
 ## === Boolean (Logical) Operators ===
 
-| Operator |            Name              |     Example  |
-| -------- | ---------------------------- | ------------ |
-|   `&&`   |         Logical AND          |   `x && y`   |
-|  `\|\|`  |         Logical OR           |   `x \|\| y` |
-|   `!`    |         Logical NOT          |     `!x`     |
+| Operator |      Name    |    Example   |
+| -------- | ------------ | ------------ |
+| `&&`     |  Logical AND | `x && y`     |
+| `\|\|`   |  Logical OR  | `x \|\| y`   |
+| `!`      |  Logical NOT | `!x`         |
 
 The logical AND and OR operators use short-circuiting for efficiency:
 
@@ -59,14 +59,14 @@ The logical AND and OR operators use short-circuiting for efficiency:
 
 Bitwise operators work similarly to logical operators, but (as their name suggests), they operate on the individual bits that make up a value, rather than using the truthiness of the value as a whole.
 
-| Operator |            Name              |    Example  |
-| -------- | ---------------------------- | ----------- |
-|   `&`    |        Bitwise AND           |   `x & y`   |
-|   `\|`   |        Bitwise OR            |   `x \| y`  |
-|   `^`    |        Bitwise XOR           |   `x ^ y`   |
-|   `~`    |        Bitwise NOT           |   `x ~ y`   |
-|  `<<`    |     Bitwise Left Shift       |   `x << y`  |
-|  `>>`    |     Bitwise Right Shift      |   `x >> y`  |
+| Operator |         Name        |    Example  |
+| -------- | ------------------- | ----------- |
+|   `&`    | Bitwise AND         | `x & y`     |
+|   `\|`   | Bitwise OR          | `x \| y`    |
+|   `^`    | Bitwise XOR         | `x ^ y`     |
+|   `~`    | Bitwise NOT         | `x ~ y`     |
+|  `<<`    | Bitwise Left Shift  | `x << y`    |
+|  `>>`    | Bitwise Right Shift | `x >> y`    |
 
 Bitwise operators support the immediate re-assignment syntax (`op=`)
 
@@ -85,11 +85,11 @@ These operators don't fit in any other category
 
 | Operator |       Name       |       Example       |
 | -------- | ---------------- | ------------------- |
-|    `?`   | Address of       |       `?x`          |
-|    `@`   | Dereference      |      `@p_x`         |
-|    `.`   | Member access    |       `x.y`         |
-|   `::`   | Scope Resolution |     `module::y`     |
-|    `=`   | Assignment       |      `x = y`        |
+|    `?`   | Address of       | `?x`                |
+|    `@`   | Dereference      | `@p_x`              |
+|    `.`   | Member access    | `x.y`               |
+|   `::`   | Scope Resolution | `module::y`         |
+|    `=`   | Assignment       | `x = y`             |
 |   `->`   | Arrow            | `func foo() -> int` |
 | `cast<>` | Type cast        | `cast<int> x`       |
 
@@ -104,9 +104,9 @@ The following aren't really operators, but are symbols interpreted in a specific
 
 |  Symbol |      Purpose         |           Example           |
 | ------- | -------------------- | --------------------------- |
-|   `#`   | Inline comments      | `x++;  # Ignore this value` |
-| `/* */` | Multiline comments   |     `/* A docstring */`     |
-|   `;`   | Statement terminator |       `statement;`          |
+| `#`     | Inline comments      | `x++;  # Ignore this value` |
+| `/* */` | Multiline comments   | `/* A docstring */`         |
+| `;`     | Statement terminator | `statement;`                |
 
 <!-- TODO? Nested block comments -->
 
