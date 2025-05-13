@@ -32,9 +32,9 @@ The primitive types in Manganese are:
 
 |   Type   |          Description           |                             Size                             |
 | -------- | ------------------------------ | ------------------------------------------------------------ |
-| `int`    | A signed integer               | 32 bits (see [here](#-integer-and-floating-point-precision)) |
-| `uint`   | An unsigned integer            | 32 bits (see [here](#-integer-and-floating-point-precision)) |
-| `float`  | A floating-point value         | 32 bits (see [here](#-integer-and-floating-point-precision)) |
+| `int`    | A signed integer               | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
+| `uint`   | An unsigned integer            | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
+| `float`  | A floating-point value         | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
 | `char`   | A single character             | 8 bits                                                       |
 | `bool`   | A boolean (`true` or `false`)  | 8 bits                                                       |
 
@@ -51,7 +51,7 @@ char c = 'c';
 
 Note that characters are declared using single quotes
 
-### === Integer and Floating-point precision
+### === Integer and Floating-point precision ===
 
 Manganese supports different integer and floating-point widths, which can hold different ranges of values, using the `int<width>`, `uint<width>` and `float<width>` syntax, where `width` is 8, 16, 32 or 64 (8 and 16 only apply for `int` and `uint`). If no width is specified, all three default to 32-bit values.
 
