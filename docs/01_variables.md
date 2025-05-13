@@ -1,6 +1,6 @@
 # === Variables ===
 
-Manganese is a statically typed language, so all variables must be declared with their type. Manganese is also strongly typed, so the compiler will minimize implicit type conversions.
+Manganese is a statically typed language, so all variables must be declared with their type. Manganese is also strongly typed, so the compiler will minimize implicit type conversions. When assigning a variable to another variable, Manganese copies the value on the right into the variable on the left.
 
 The general syntax for declaring a variable in Manganese is:
 
@@ -38,6 +38,16 @@ The primitive types in Manganese are:
 | `char`   | A single character             | 8 bits                                                       |
 | `bool`   | A boolean (`true` or `false`)  | 8 bits                                                       |
 
+Some example variable assignments in Manganese are:
+
+```manganese
+int a = 3;  # defaults to a 32-bit integer
+int64 big_number = 123456789012345;
+uint8 small_number = 250;
+int b = a;  # the value of a is copied into b
+b = 7;  # b is 7, a is still 3
+```
+
 ### === Integer and Floating-point precision
 
 Manganese supports different integer and floating-point widths, which can hold different ranges of values, using the `int<width>`, `uint<width>` and `float<width>` syntax, where `width` is 8, 16, 32 or 64 (8 and 16 only apply for `int` and `uint`). If no width is specified, all three default to 32-bit values.
@@ -71,6 +81,18 @@ When a variable is declared, but not assigned a value, the compiler will give it
 | `ptr`   | a null pointer |
 
 Default initialization can be explicitly disabled for a variable using the `garbage` keyword. Setting a variable equal to `garbage` will stop the compiler from assigning it a default value (i.e., it will contain whatever value happens to be in its assigned memory address)
+
+For example:
+
+```manganese
+int32 a;  # a is initialized to 0
+float64 b;  # b is initialized to 0.0
+char c;  # c is initialized to '\0`
+bool d;  # d is initialized to false
+ptr int f;  # f is a null pointer
+float g = garbage;  # g contains whatever data was in memory
+ptr int h = ?a;  # no default initialization, h points to a
+```
 
 ## === Type Casting ===
 
