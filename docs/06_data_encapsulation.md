@@ -37,7 +37,7 @@ bundle Circle {
 }
 
 Point p;  # default initialized to x = 0 and y = 0 (default value for int)
-Circle c; # default initialized to center = (0, 0) (the center field is initalized as a default point) and radius = 0
+Circle c; # default initialized to center = (0, 0) (the center field is initialized as a default point) and radius = 0
 p.x = 5; # set the x coordinate of the point to 5
 c.center.y = 7; # set the y coordinate of the center of the circle to 7
 c.center.y++; # increment the y coordinate of the center of the circle by 1
@@ -130,3 +130,4 @@ blueprint Point {
         return ((x - p.x) ** 2 + (y - p.y) ** 2) ** 0.5;
     }
 }
+```
