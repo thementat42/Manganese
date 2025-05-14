@@ -1,4 +1,4 @@
-# Modules
+# === Modules ===
 
 Modules allow code to be split across multiple files. Modules can be imported to access the function and variables declared in the module.
 
@@ -32,7 +32,7 @@ If multiple modules are grouped within a folder/directory, that folder/directory
 
 the syntax for importing the `foo` module is `import my_module::foo`.
 
-## Privacy
+## === Privacy ===
 
 By default, anything declared within a module is only accessible within that module (i.e., module elements are default private).
 It is possible to change the access level of a module variable to one of three levels:
