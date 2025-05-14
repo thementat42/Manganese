@@ -23,8 +23,11 @@ Type qualifiers provide extra information to the compiler about how variables sh
     Once assigned, a `const` variable cannot have its value changed. Variables marked as `const` must have a value assigned when they are declared
 2. `ptr`: Declares a pointer to a variable of the specified type (a `ptr` variable holds the memory address of the variable it points to).
 3. `owns`: Declares that a function takes responsibility for freeing a block of memory it accepts as a parameter. By default, the caller is responsible for freeing memory (i.e., pointers are borrowed by default). Must be paired with `ptr`. See the [functions doc](/docs/04_functions.md#-ownership-) for more
+4. `public`: Declares that a variable can be accessed and modified outside its parent [module](/docs/05_modules_and_scoping.md)
+5. `readonly`: Declares that a variable can be accessed but not modified outside its parent [module](/docs/05_modules_and_scoping.md)
 
 `const` always applies to the type to its right.
+By default, all variables are private -- they cannot be accessed or modified outside their parent module.
 
 ## === Primitive Types ===
 
