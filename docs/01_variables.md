@@ -22,7 +22,7 @@ Type qualifiers provide extra information to the compiler about how variables sh
 1. `const`: Declares a variable as constant (i.e.) immutable. <br>
     Once assigned, a `const` variable cannot have its value changed. Variables marked as `const` must have a value assigned when they are declared
 2. `ptr`: Declares a pointer to a variable of the specified type (a `ptr` variable holds the memory address of the variable it points to).
-3. `owns`: Declares that a function takes responsibility for freeing a block of memory it accepts as a parameter. By default, the caller is responsible for freeing memory (i.e., pointers are borrowed by default)
+3. `owns`: Declares that a function takes responsibility for freeing a block of memory it accepts as a parameter. By default, the caller is responsible for freeing memory (i.e., pointers are borrowed by default). Must be paired with `ptr`. See the [functions doc](/docs/04_functions.md#-ownership-) for more
 
 `const` always applies to the type to its right.
 
