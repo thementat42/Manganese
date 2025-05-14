@@ -106,6 +106,7 @@ The following aren't really operators, but are symbols interpreted in a specific
 | ------- | -------------------- | --------------------------- |
 | `#`     | Inline comments      | `x++;  # Ignore this value` |
 | `/* */` | Multiline comments   | `/* A docstring */`         |
+| `...`   | Variadic Arguments   | `func foo (int... args)`   |
 | `;`     | Statement terminator | `statement;`                |
 
 <!-- TODO? Nested block comments -->
