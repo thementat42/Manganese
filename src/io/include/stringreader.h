@@ -20,6 +20,7 @@ class StringReader : public Reader {
    public:
     StringReader() = default;
     StringReader(const std::string& source);
+    StringReader(const StringReader& other) = delete; // Disable copy constructor
     ~StringReader() override = default;
     char peekChar(size_t offset = 0) override;
     [[nodiscard]] char consumeChar() override;
@@ -28,6 +29,9 @@ class StringReader : public Reader {
     size_t getLine() const override;
     size_t getColumn() const override;
     bool done() const override;
+
+    StringReader& operator=(const StringReader& other) = delete; // Disable copy assignment operator
+
 };
 } // namespace io
 MANG_END

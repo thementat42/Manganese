@@ -28,6 +28,7 @@ class FileReader : public Reader {
 
    public:
     FileReader() = default;
+    FileReader(const FileReader& other) = delete; // Disable copy constructor
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
     ~FileReader() override;
 
@@ -39,6 +40,8 @@ class FileReader : public Reader {
     size_t getLine() const override;
     size_t getColumn() const override;
     bool done() const override;
+
+    FileReader& operator=(const FileReader& other) = delete; // Disable copy assignment operator
 };
 } // namespace io
 MANG_END
