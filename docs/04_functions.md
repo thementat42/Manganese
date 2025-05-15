@@ -30,9 +30,7 @@ func foo(int x, int y, int z = 3, int... args) -> int {
 }
 ```
 
-<!-- ## === Generics ===
-
-Manganese also supports generics -- parameters whose types are not known until the function is called. Functions can be marked as generic by using `func<T>` in their declaration (with multiple types being separated by commas). -->
+> TODO: (eventually) add generics, and `constraint` types to make them safer
 
 ## === Lambdas ===
 
