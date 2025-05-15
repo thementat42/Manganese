@@ -26,34 +26,34 @@ namespace lexer {
  */
 enum class TokenType : unsigned char {
     //~ Basic
-    KEYWORD,         // if, char, etc.
-    IDENTIFIER,      // variables, functions
-    STRING_LITERAL,  // "text"
-    CHARACTER,       // 'a'
-    OPERATOR,        // +, -, *, etc.
+    Keyword,         // if, char, etc.
+    Identifier,      // variables, functions
+    StrLiteral,  // "text"
+    CharLiteral,       // 'a'
+    Operator,        // +, -, *, etc.
 
     // ~ Numbers
-    INTEGER,  // Whole Number
-    FLOAT,    // Floating point number
+    Integer,  // Whole Number
+    Float,    // Floating point number
 
     //~ Brackets
-    LEFT_PAREN,    // (
-    RIGHT_PAREN,   // )
-    LEFT_BRACE,    // {
-    RIGHT_BRACE,   // }
-    LEFT_SQUARE,   // [
-    RIGHT_SQUARE,  // ]
-    LEFT_ANGLE,    // <
-    RIGHT_ANGLE,   // >
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBrace,    // {
+    RightBrace,   // }
+    LeftSquare,   // [
+    RightSquare,  // ]
+    LeftAngle,    // <
+    RightAngle,   // >
 
     //~ Punctuation
-    SEMICOLON,  // ;
-    COLON,      // :
-    COMMA,      // ,
+    Semicolon,  // ;
+    Colon,      // :
+    Comma,      // ,
 
     //~ Misc
-    END_OF_FILE,
-    INVALID,
+    EndOfFile,
+    Invalid,
 };
 
 /**

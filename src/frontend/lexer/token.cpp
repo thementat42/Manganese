@@ -19,9 +19,9 @@ Token::Token(const TokenType _type, const std::string _lexeme, const size_t _lin
     : type(_type),
       lexeme(std::move(_lexeme)),  // Move the lexeme string to avoid copying it again
       operatorType(                // If it's an operator, keep track of which one it is
-          _type == TokenType::OPERATOR ? operatorFromString(_lexeme) : std::nullopt),
+          _type == TokenType::Operator ? operatorFromString(_lexeme) : std::nullopt),
       keywordType(  // If it's a keyword, keep track of which one it is
-          _type == TokenType::KEYWORD ? keywordFromString(_lexeme) : std::nullopt),
+          _type == TokenType::Keyword ? keywordFromString(_lexeme) : std::nullopt),
       line(_line),
       column(_column) {}
 
@@ -29,9 +29,9 @@ Token::Token(const TokenType _type, const char _lexeme, const size_t _line, cons
     : type(_type),
       lexeme(std::string(1, _lexeme)),  // Convert char to string
       operatorType(                     // If it's an operator, keep track of which one it is
-          _type == TokenType::OPERATOR ? operatorFromString(std::string(1, _lexeme)) : std::nullopt),
+          _type == TokenType::Operator ? operatorFromString(std::string(1, _lexeme)) : std::nullopt),
       keywordType(  // If it's a keyword, keep track of which one it is
-          _type == TokenType::KEYWORD ? keywordFromString(std::string(1, _lexeme)) : std::nullopt),
+          _type == TokenType::Keyword ? keywordFromString(std::string(1, _lexeme)) : std::nullopt),
       line(_line),
       column(_column) {}
 
@@ -39,54 +39,54 @@ std::string Token::tokenTypeToString(TokenType type) {
 #if DEBUG
     switch (type) {
         // Basic
-        case TokenType::KEYWORD:
-            return "TokenType::KEYWORD";
-        case TokenType::IDENTIFIER:
-            return "TokenType::IDENTIFIER";
-        case TokenType::STRING_LITERAL:
+        case TokenType::Keyword:
+            return "TokenType::Keyword";
+        case TokenType::Identifier:
+            return "TokenType::Identifier";
+        case TokenType::StrLiteral:
             return "TokenType::STRING_LITERAL";
-        case TokenType::CHARACTER:
-            return "TokenType::CHARACTER";
-        case TokenType::OPERATOR:
+        case TokenType::CharLiteral:
+            return "TokenType::CharLiteral";
+        case TokenType::Operator:
             return "TokenType::OPERATOR";
 
         // Numbers
-        case TokenType::INTEGER:
-            return "TokenType::INTEGER";
-        case TokenType::FLOAT:
-            return "TokenType::FLOAT";
+        case TokenType::Integer:
+            return "TokenType::Integer";
+        case TokenType::Float:
+            return "TokenType::Float";
 
         // Brackets
-        case TokenType::LEFT_PAREN:
-            return "TokenType::LEFT_PAREN";
-        case TokenType::RIGHT_PAREN:
-            return "TokenType::RIGHT_PAREN";
-        case TokenType::LEFT_BRACE:
-            return "TokenType::LEFT_BRACE";
-        case TokenType::RIGHT_BRACE:
-            return "TokenType::RIGHT_BRACE";
-        case TokenType::LEFT_SQUARE:
-            return "TokenType::LEFT_SQUARE";
-        case TokenType::RIGHT_SQUARE:
-            return "TokenType::RIGHT_SQUARE";
-        case TokenType::LEFT_ANGLE:
-            return "TokenType::LEFT_ANGLE";
-        case TokenType::RIGHT_ANGLE:
-            return "TokenType::RIGHT_ANGLE";
+        case TokenType::LeftParen:
+            return "TokenType::LeftParen";
+        case TokenType::RightParen:
+            return "TokenType::RightParen";
+        case TokenType::LeftBrace:
+            return "TokenType::LeftBrace";
+        case TokenType::RightBrace:
+            return "TokenType::RightBrace";
+        case TokenType::LeftSquare:
+            return "TokenType::LeftSquare";
+        case TokenType::RightSquare:
+            return "TokenType::RightSquare";
+        case TokenType::LeftAngle:
+            return "TokenType::LeftAngle";
+        case TokenType::RightAngle:
+            return "TokenType::RightAngle";
 
         // Punctuation
-        case TokenType::SEMICOLON:
-            return "TokenType::SEMICOLON";
-        case TokenType::COMMA:
-            return "TokenType::COMMA";
-        case TokenType::COLON:
-            return "TokenType::COLON";
+        case TokenType::Semicolon:
+            return "TokenType::Semicolon";
+        case TokenType::Comma:
+            return "TokenType::Comma";
+        case TokenType::Colon:
+            return "TokenType::Colon";
 
         // Misc
-        case TokenType::END_OF_FILE:
-            return "TokenType::END_OF_FILE";
-        case TokenType::INVALID:
-            return "TokenType::INVALID";
+        case TokenType::EndOfFile:
+            return "TokenType::EndOfFile";
+        case TokenType::Invalid:
+            return "TokenType::Invalid";
 
         default:
             return "Unknown TokenType";

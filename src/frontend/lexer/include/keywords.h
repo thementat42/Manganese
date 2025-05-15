@@ -27,77 +27,77 @@ namespace lexer {
 enum class KeywordType : unsigned char {
 
     //~ Type Qualifiers
-    CONST,     // constant variable
-    PTR,       // pointer variables
-    OWNS,     // ownership transfer
+    Const,     // constant variable
+    Ptr,       // pointer variables
+    Owns,     // ownership transfer
 
     //~ Access Levels
-    READONLY,  // readable, but can't be modified, outside the module
-    PUBLIC,    // can be read and modified outside the module
+    ReadOnly,  // readable, but can't be modified, outside the module
+    Public,    // can be read and modified outside the module
 
     //~ Primitive Types
-    INT8,     // 8 bit int
-    INT16,    // 16 bit int
-    INT32,    // 32 bit int
-    INT64,    // 64 bit int
-    UINT8,     // unsigned 8 bit int
-    UINT16,    // unsigned 16 bit int
-    UINT32,    // unsigned 32 bit int
-    UINT64,    // unsigned 64 bit int
-    FLOAT,    // floating point
-    FLOAT32,  // 32-bit float (single precision)
-    FLOAT64,  // 64-bit float (double precision)
-    CHAR,     // single character
-    BOOL,     // true or false
-    TRUE,     // boolean true
-    FALSE,    // boolean false
+    Int8,     // 8 bit int
+    Int16,    // 16 bit int
+    Int32,    // 32 bit int
+    Int64,    // 64 bit int
+    UInt8,     // unsigned 8 bit int
+    UInt16,    // unsigned 16 bit int
+    UInt32,    // unsigned 32 bit int
+    UInt64,    // unsigned 64 bit int
+    Float,    // floating point
+    Float32,  // 32-bit float (single precision)
+    Float64,  // 64-bit float (double precision)
+    Char,     // single character
+    Bool,     // true or false
+    True,     // boolean true
+    False,    // boolean false
 
     //~ Data Structures
-    STRING,  // string of characters
-    ARR,     // static arrays
-    VEC,     // dynamic arrays
-    MAP,     // hashmaps
-    SET,     // hashsets
+    Str,  // string of characters
+    Arr,     // static arrays
+    Vec,     // dynamic arrays
+    Map,     // hashmaps
+    Set,     // hashsets
 
     //~ Control Flow
     //* Conditionals
-    IF,    // check a condition
-    ELIF,  // if previous condition was false, check this
-    ELSE,  // if all previous conditions were false, do this
+    If,    // check a condition
+    Elif,  // if previous condition was false, check this
+    Else,  // if all previous conditions were false, do this
 
     //* Pattern Matching
-    SWITCH,   // value to compare against
-    CASE,     // specific value
-    DEFAULT,  // if no values matched, do this
+    Switch,   // value to compare against
+    Case,     // specific value
+    Default,  // if no values matched, do this
 
     //* Loops
-    FOR,
-    WHILE,
-    REPEAT,    // execute a block of code `n` times -- don't care about index
-    DO,        // run once before checking condition (in while loop)
-    BREAK,     // stop loop
-    CONTINUE,  // skip this iteration
+    For,
+    While,
+    Repeat,    // execute a block of code `n` times -- don't care about index
+    Do,        // run once before checking condition (in while loop)
+    Break,     // stop loop
+    Continue,  // skip this iteration
 
     //~ Functions
-    FUNC,    // function
-    LAMBDA,  // anonymous function
-    RETURN,  // function returns
+    Func,    // function
+    Lambda,  // anonymous function
+    Return,  // function returns
 
     //~ Modules & Scoping
-    IMPORT,  // bring in another module
-    MODULE,  // declare as a module
-    AS,      // alias a module
+    Import,  // bring in another module
+    Module,  // declare as a module
+    As,      // alias a module
 
     //~ Encapsulation
-    BUNDLE,  // like C's struct
-    ENUM,
-    BLUEPRINT,  // like a class
+    Bundle,  // like C's struct
+    Enum,
+    Blueprint,  // like a class
 
     //~ Misc
-    ALIAS,    // type aliasing (alias `a` as `b`)
-    TYPEOF,   // get the type of a variable
-    CAST,     // cast to a new type (cast<"new type">)
-    GARBAGE,  // prevent default initialization
+    Alias,    // type aliasing (alias `a` as `b`)
+    TypeOf,   // get the type of a variable
+    Cast,     // cast to a new type (cast<"new type">)
+    Garbage,  // prevent default initialization
 };
 
 extern std::unordered_map<std::string, const KeywordType> keyword_map;

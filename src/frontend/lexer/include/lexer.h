@@ -16,8 +16,8 @@ namespace lexer {
 using TokenList = std::vector<Token>;
 
 enum class Mode {
-    STRING,  // Source code passed in as a string
-    FILE     // Filename passed in
+    String,  // Source code passed in as a string
+    File     // Filename passed in
 };
 
 // Only expose the actual tokenization function to other code
@@ -29,7 +29,7 @@ enum class Mode {
  * @param mode The mode to use (string or file). Default is file.
  * @return A vector of tokens (see token.h)
  */
-TokenList tokenize(const std::string& source, Mode mode = Mode::FILE);
+TokenList tokenize(const std::string& source, Mode mode = Mode::File);
 }  // namespace lexer
 MANG_END
 

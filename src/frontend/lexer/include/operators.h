@@ -26,68 +26,68 @@ MANG_BEGIN
 namespace lexer {
 enum class OperatorType : unsigned char {
     //~ Arithmetic Operators
-    ADD,        // `+`
-    SUB,        // `-`
-    MUL,        // `*`
-    DIV,        // `/`
-    FLOOR_DIV,  // `//`
-    MOD,        // `%`
-    EXP,        // `**`
-    INC,        // `++`
-    DEC,        // `--`
+    Add,        // `+`
+    Sub,        // `-`
+    Mul,        // `*`
+    Div,        // `/`
+    FloorDiv,  // `//`
+    Mod,        // `%`
+    Exp,        // `**`
+    Inc,        // `++`
+    Dec,        // `--`
 
     //~ Arithmetic Assignment Operators
     // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)
-    ADD_ASSIGN,        // `+=`
-    SUB_ASSIGN,        // `-=`
-    MUL_ASSIGN,        // `*=`
-    DIV_ASSIGN,        // `/=`
-    FLOOR_DIV_ASSIGN,  // `//=`
-    MOD_ASSIGN,        // `%=`
-    EXP_ASSIGN,        // `**=`
+    AddAssign,        // `+=`
+    SubAssign,        // `-=`
+    MulAssign,        // `*=`
+    DivAssign,        // `/=`
+    FloorDivAssign,  // `//=`
+    ModAssign,        // `%=`
+    ExpAssign,        // `**=`
 
     //~ Comparison Operators
-    GT,   // `>`
-    GEQ,  // `>=`
-    LT,   // `<`
-    LEQ,  // `<=`,
-    EQ,   // `==`
-    NEQ,  // `!=`
+    GreaterThan,   // `>`
+    GreaterThanOrEqual,  // `>=`
+    LessThan,   // `<`
+    LessThanOrEqual,  // `<=`,
+    Equal,   // `==`
+    NotEqual,  // `!=`
 
     //~ Boolean Operators
-    AND,  // `&&`
-    OR,   // `||`
-    NOT,  // `!`
+    And,  // `&&`
+    Or,   // `||`
+    Not,  // `!`
 
     //~ Bitwise Operators
-    BIT_AND,     // `&`
-    BIT_OR,      // `|`
-    BIT_NOT,     // `~`
-    BIT_XOR,     // `^`
-    BIT_LSHIFT,  // `<<`
-    BIT_RSHIFT,  // `>>`
+    BitAnd,     // `&`
+    BitOr,      // `|`
+    BitNot,     // `~`
+    BitXor,     // `^`
+    BitLShift,  // `<<`
+    BitRShift,  // `>>`
 
     //~ Bitwise Assignment Operators
     // Overrides the value of the variable in place (e.g. x &~= y is the same as x = x &~ y)
-    BIT_AND_ASSIGN,     // `&=`
-    BIT_OR_ASSIGN,      // `|=`
-    BIT_NOT_ASSIGN,     // `~=`
-    BIT_XOR_ASSIGN,     // `^=`
-    BIT_LSHIFT_ASSIGN,  // `<<=`
-    BIT_RSHIFT_ASSIGN,  // `>>=`
+    BitAndAssign,     // `&=`
+    BitOrAssign,      // `|=`
+    BitNotAssign,     // `~=`
+    BitXorAssign,     // `^=`
+    BitLShiftAssign,  // `<<=`
+    BitRShiftAssign,  // `>>=`
 
     //~ Pointer Operators
-    ADDRESS,  // `?`
-    DEREF,    // `@`
+    AddressOf,  // `?`
+    Dereference,    // `@`
 
     //~ Access Operators
-    MEMBER,            // `.`
-    SCOPE_RESOLUTION,  // `::`
+    MemberAccess,            // `.`
+    ScopeResolution,  // `::`
 
     //~ Misc
-    ASSIGNMENT,  // `=`
-    ARROW,       // `->`
-    ELLIPSIS,    // `...`
+    Assignment,  // `=`
+    Arrow,       // `->`
+    Ellipsis,    // `...`
 };
 extern std::unordered_map<std::string, const OperatorType> operator_map;
 

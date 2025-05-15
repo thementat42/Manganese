@@ -32,25 +32,25 @@ void removeEOFToken(std::vector<Token>& tokens) {
     // Lexer always pushes an EOF token at the end of the token stream
     // This messes up the testing, since it was not included in the test cases
     // So we remove it here
-    if (!tokens.empty() && tokens.back().type == TokenType::END_OF_FILE) {
+    if (!tokens.empty() && tokens.back().type == TokenType::EndOfFile) {
         tokens.pop_back();
     }
 }
 
 bool testEmptyString() {
-    auto tokens = tokenize("", Mode::STRING);
+    auto tokens = tokenize("", Mode::String);
     removeEOFToken(tokens);
     return tokens.empty();
 }
 
 bool testWhitespace() {
-    auto tokens = tokenize("  \t\n\r  ", Mode::STRING);
+    auto tokens = tokenize("  \t\n\r  ", Mode::String);
     removeEOFToken(tokens);
     return tokens.empty();
 }
 
 bool testComments() {
-    auto tokens = tokenize("# This is a comment\nint x; /*This is\n a\n multiline comment!*/", Mode::STRING);
+    auto tokens = tokenize("# This is a comment\nint x; /*This is\n a\n multiline comment!*/", Mode::String);
     removeEOFToken(tokens);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
@@ -62,13 +62,13 @@ bool testComments() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::KEYWORD, "int") &&
-           checkToken(tokens[1], TokenType::IDENTIFIER, "x") &&
-           checkToken(tokens[2], TokenType::SEMICOLON, ";");
+    return checkToken(tokens[0], TokenType::Keyword, "int") &&
+           checkToken(tokens[1], TokenType::Identifier, "x") &&
+           checkToken(tokens[2], TokenType::Semicolon, ";");
 }
 
 bool testIdentifiers() {
-    auto tokens = tokenize("foo bar baz _var var123", Mode::STRING);
+    auto tokens = tokenize("foo bar baz _var var123", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -80,15 +80,15 @@ bool testIdentifiers() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::IDENTIFIER, "foo") &&
-           checkToken(tokens[1], TokenType::IDENTIFIER, "bar") &&
-           checkToken(tokens[2], TokenType::IDENTIFIER, "baz") &&
-           checkToken(tokens[3], TokenType::IDENTIFIER, "_var") &&
-           checkToken(tokens[4], TokenType::IDENTIFIER, "var123");
+    return checkToken(tokens[0], TokenType::Identifier, "foo") &&
+           checkToken(tokens[1], TokenType::Identifier, "bar") &&
+           checkToken(tokens[2], TokenType::Identifier, "baz") &&
+           checkToken(tokens[3], TokenType::Identifier, "_var") &&
+           checkToken(tokens[4], TokenType::Identifier, "var123");
 }
 
 bool testKeywords() {
-    auto tokens = tokenize("alias arr as blueprint bool break bundle case cast char const continue default do elif else enum false float float32 float64 for func garbage if import int int16 int32 int64 int8 lambda map module owns ptr public readonly repeat return set str switch true typeof uint uint8 uint16 uint32 uint64 vec while foo", Mode::STRING);
+    auto tokens = tokenize("alias arr as blueprint bool break bundle case cast char const continue default do elif else enum false float float32 float64 for func garbage if import int int16 int32 int64 int8 lambda map module owns ptr public readonly repeat return set str switch true typeof uint uint8 uint16 uint32 uint64 vec while foo", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -100,63 +100,63 @@ bool testKeywords() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::KEYWORD, "alias") &&
-           checkToken(tokens[1], TokenType::KEYWORD, "arr") &&
-           checkToken(tokens[2], TokenType::KEYWORD, "as") &&
-           checkToken(tokens[3], TokenType::KEYWORD, "blueprint") &&
-           checkToken(tokens[4], TokenType::KEYWORD, "bool") &&
-           checkToken(tokens[5], TokenType::KEYWORD, "break") &&
-           checkToken(tokens[6], TokenType::KEYWORD, "bundle") &&
-           checkToken(tokens[7], TokenType::KEYWORD, "case") &&
-           checkToken(tokens[8], TokenType::KEYWORD, "cast") &&
-           checkToken(tokens[9], TokenType::KEYWORD, "char") &&
-           checkToken(tokens[10], TokenType::KEYWORD, "const") &&
-           checkToken(tokens[11], TokenType::KEYWORD, "continue") &&
-           checkToken(tokens[12], TokenType::KEYWORD, "default") &&
-           checkToken(tokens[13], TokenType::KEYWORD, "do") &&
-           checkToken(tokens[14], TokenType::KEYWORD, "elif") &&
-           checkToken(tokens[15], TokenType::KEYWORD, "else") &&
-           checkToken(tokens[16], TokenType::KEYWORD, "enum") &&
-           checkToken(tokens[17], TokenType::KEYWORD, "false") &&
-           checkToken(tokens[18], TokenType::KEYWORD, "float") &&
-           checkToken(tokens[19], TokenType::KEYWORD, "float32") &&
-           checkToken(tokens[20], TokenType::KEYWORD, "float64") &&
-           checkToken(tokens[21], TokenType::KEYWORD, "for") &&
-           checkToken(tokens[22], TokenType::KEYWORD, "func") &&
-           checkToken(tokens[23], TokenType::KEYWORD, "garbage") &&
-           checkToken(tokens[24], TokenType::KEYWORD, "if") &&
-           checkToken(tokens[25], TokenType::KEYWORD, "import") &&
-           checkToken(tokens[26], TokenType::KEYWORD, "int") &&
-           checkToken(tokens[27], TokenType::KEYWORD, "int16") &&
-           checkToken(tokens[28], TokenType::KEYWORD, "int32") &&
-           checkToken(tokens[29], TokenType::KEYWORD, "int64") &&
-           checkToken(tokens[30], TokenType::KEYWORD, "int8") &&
-           checkToken(tokens[31], TokenType::KEYWORD, "lambda") &&
-           checkToken(tokens[32], TokenType::KEYWORD, "map") &&
-           checkToken(tokens[33], TokenType::KEYWORD, "module") &&
-           checkToken(tokens[34], TokenType::KEYWORD, "owns") &&
-           checkToken(tokens[35], TokenType::KEYWORD, "ptr") &&
-           checkToken(tokens[36], TokenType::KEYWORD, "public") &&
-           checkToken(tokens[37], TokenType::KEYWORD, "readonly") &&
-           checkToken(tokens[38], TokenType::KEYWORD, "repeat") &&
-           checkToken(tokens[39], TokenType::KEYWORD, "return") &&
-           checkToken(tokens[40], TokenType::KEYWORD, "set") &&
-           checkToken(tokens[41], TokenType::KEYWORD, "str") &&
-           checkToken(tokens[42], TokenType::KEYWORD, "switch") &&
-           checkToken(tokens[43], TokenType::KEYWORD, "true") &&
-           checkToken(tokens[44], TokenType::KEYWORD, "typeof") &&
-           checkToken(tokens[45], TokenType::KEYWORD, "uint") &&
-           checkToken(tokens[46], TokenType::KEYWORD, "uint8") &&
-           checkToken(tokens[47], TokenType::KEYWORD, "uint16") &&
-           checkToken(tokens[48], TokenType::KEYWORD, "uint32") &&
-           checkToken(tokens[49], TokenType::KEYWORD, "uint64") &&
-           checkToken(tokens[50], TokenType::KEYWORD, "vec") &&
-           checkToken(tokens[51], TokenType::KEYWORD, "while") &&
-           checkToken(tokens[52], TokenType::IDENTIFIER, "foo");
+    return checkToken(tokens[0], TokenType::Keyword, "alias") &&
+           checkToken(tokens[1], TokenType::Keyword, "arr") &&
+           checkToken(tokens[2], TokenType::Keyword, "as") &&
+           checkToken(tokens[3], TokenType::Keyword, "blueprint") &&
+           checkToken(tokens[4], TokenType::Keyword, "bool") &&
+           checkToken(tokens[5], TokenType::Keyword, "break") &&
+           checkToken(tokens[6], TokenType::Keyword, "bundle") &&
+           checkToken(tokens[7], TokenType::Keyword, "case") &&
+           checkToken(tokens[8], TokenType::Keyword, "cast") &&
+           checkToken(tokens[9], TokenType::Keyword, "char") &&
+           checkToken(tokens[10], TokenType::Keyword, "const") &&
+           checkToken(tokens[11], TokenType::Keyword, "continue") &&
+           checkToken(tokens[12], TokenType::Keyword, "default") &&
+           checkToken(tokens[13], TokenType::Keyword, "do") &&
+           checkToken(tokens[14], TokenType::Keyword, "elif") &&
+           checkToken(tokens[15], TokenType::Keyword, "else") &&
+           checkToken(tokens[16], TokenType::Keyword, "enum") &&
+           checkToken(tokens[17], TokenType::Keyword, "false") &&
+           checkToken(tokens[18], TokenType::Keyword, "float") &&
+           checkToken(tokens[19], TokenType::Keyword, "float32") &&
+           checkToken(tokens[20], TokenType::Keyword, "float64") &&
+           checkToken(tokens[21], TokenType::Keyword, "for") &&
+           checkToken(tokens[22], TokenType::Keyword, "func") &&
+           checkToken(tokens[23], TokenType::Keyword, "garbage") &&
+           checkToken(tokens[24], TokenType::Keyword, "if") &&
+           checkToken(tokens[25], TokenType::Keyword, "import") &&
+           checkToken(tokens[26], TokenType::Keyword, "int") &&
+           checkToken(tokens[27], TokenType::Keyword, "int16") &&
+           checkToken(tokens[28], TokenType::Keyword, "int32") &&
+           checkToken(tokens[29], TokenType::Keyword, "int64") &&
+           checkToken(tokens[30], TokenType::Keyword, "int8") &&
+           checkToken(tokens[31], TokenType::Keyword, "lambda") &&
+           checkToken(tokens[32], TokenType::Keyword, "map") &&
+           checkToken(tokens[33], TokenType::Keyword, "module") &&
+           checkToken(tokens[34], TokenType::Keyword, "owns") &&
+           checkToken(tokens[35], TokenType::Keyword, "ptr") &&
+           checkToken(tokens[36], TokenType::Keyword, "public") &&
+           checkToken(tokens[37], TokenType::Keyword, "readonly") &&
+           checkToken(tokens[38], TokenType::Keyword, "repeat") &&
+           checkToken(tokens[39], TokenType::Keyword, "return") &&
+           checkToken(tokens[40], TokenType::Keyword, "set") &&
+           checkToken(tokens[41], TokenType::Keyword, "str") &&
+           checkToken(tokens[42], TokenType::Keyword, "switch") &&
+           checkToken(tokens[43], TokenType::Keyword, "true") &&
+           checkToken(tokens[44], TokenType::Keyword, "typeof") &&
+           checkToken(tokens[45], TokenType::Keyword, "uint") &&
+           checkToken(tokens[46], TokenType::Keyword, "uint8") &&
+           checkToken(tokens[47], TokenType::Keyword, "uint16") &&
+           checkToken(tokens[48], TokenType::Keyword, "uint32") &&
+           checkToken(tokens[49], TokenType::Keyword, "uint64") &&
+           checkToken(tokens[50], TokenType::Keyword, "vec") &&
+           checkToken(tokens[51], TokenType::Keyword, "while") &&
+           checkToken(tokens[52], TokenType::Identifier, "foo");
 }
 
 bool testIntegerLiterals() {
-    auto tokens = tokenize("0 123 456789 0xFFF 0b1001 0o33", Mode::STRING);
+    auto tokens = tokenize("0 123 456789 0xFFF 0b1001 0o33", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << "";
@@ -168,16 +168,16 @@ bool testIntegerLiterals() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::INTEGER, "0") &&
-           checkToken(tokens[1], TokenType::INTEGER, "123") &&
-           checkToken(tokens[2], TokenType::INTEGER, "456789") &&
-           checkToken(tokens[3], TokenType::INTEGER, "0xFFF") &&
-           checkToken(tokens[4], TokenType::INTEGER, "0b1001") &&
-           checkToken(tokens[5], TokenType::INTEGER, "0o33");
+    return checkToken(tokens[0], TokenType::Integer, "0") &&
+           checkToken(tokens[1], TokenType::Integer, "123") &&
+           checkToken(tokens[2], TokenType::Integer, "456789") &&
+           checkToken(tokens[3], TokenType::Integer, "0xFFF") &&
+           checkToken(tokens[4], TokenType::Integer, "0b1001") &&
+           checkToken(tokens[5], TokenType::Integer, "0o33");
 }
 
 bool testFloatLiterals() {
-    auto tokens = tokenize("0.0 1.23 456.789", Mode::STRING);
+    auto tokens = tokenize("0.0 1.23 456.789", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -189,13 +189,13 @@ bool testFloatLiterals() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::FLOAT, "0.0") &&
-           checkToken(tokens[1], TokenType::FLOAT, "1.23") &&
-           checkToken(tokens[2], TokenType::FLOAT, "456.789");
+    return checkToken(tokens[0], TokenType::Float, "0.0") &&
+           checkToken(tokens[1], TokenType::Float, "1.23") &&
+           checkToken(tokens[2], TokenType::Float, "456.789");
 }
 
 bool testCharLiterals() {
-    auto tokens = tokenize("'a' '\\n' '\\'' '\\\\' '\\t' '\\u1234'", Mode::STRING);
+    auto tokens = tokenize("'a' '\\n' '\\'' '\\\\' '\\t' '\\u1234'", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -207,16 +207,16 @@ bool testCharLiterals() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::CHARACTER, "a") &&
-           checkToken(tokens[1], TokenType::CHARACTER, "\n") &&
-           checkToken(tokens[2], TokenType::CHARACTER, "\'") &&
-           checkToken(tokens[3], TokenType::CHARACTER, "\\") &&
-           checkToken(tokens[4], TokenType::CHARACTER, "\t") &&
-           checkToken(tokens[5], TokenType::CHARACTER, "\u1234");
+    return checkToken(tokens[0], TokenType::CharLiteral, "a") &&
+           checkToken(tokens[1], TokenType::CharLiteral, "\n") &&
+           checkToken(tokens[2], TokenType::CharLiteral, "\'") &&
+           checkToken(tokens[3], TokenType::CharLiteral, "\\") &&
+           checkToken(tokens[4], TokenType::CharLiteral, "\t") &&
+           checkToken(tokens[5], TokenType::CharLiteral, "\u1234");
 }
 
 bool testStringLiterals() {
-    auto tokens = tokenize("\"hello\" \"world\" \"escaped \\\"quote\\\"\"", Mode::STRING);
+    auto tokens = tokenize("\"hello\" \"world\" \"escaped \\\"quote\\\"\"", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -228,13 +228,13 @@ bool testStringLiterals() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::STRING_LITERAL, "hello") &&
-           checkToken(tokens[1], TokenType::STRING_LITERAL, "world") &&
-           checkToken(tokens[2], TokenType::STRING_LITERAL, "escaped \"quote\"");
+    return checkToken(tokens[0], TokenType::StrLiteral, "hello") &&
+           checkToken(tokens[1], TokenType::StrLiteral, "world") &&
+           checkToken(tokens[2], TokenType::StrLiteral, "escaped \"quote\"");
 }
 
 bool testOperators() {
-    auto tokens = tokenize("+ - * / // % ** ++ -- += -= *= /= //= %= **= == != && || ! & | ~ ^ &= |= ~= ^=  ? @ . : :: = -> ...", Mode::STRING);
+    auto tokens = tokenize("+ - * / // % ** ++ -- += -= *= /= //= %= **= == != && || ! & | ~ ^ &= |= ~= ^=  ? @ . : :: = -> ...", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -247,47 +247,47 @@ bool testOperators() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::OPERATOR, "+") &&
-           checkToken(tokens[1], TokenType::OPERATOR, "-") &&
-           checkToken(tokens[2], TokenType::OPERATOR, "*") &&
-           checkToken(tokens[3], TokenType::OPERATOR, "/") &&
-           checkToken(tokens[4], TokenType::OPERATOR, "//") &&
-           checkToken(tokens[5], TokenType::OPERATOR, "%") &&
-           checkToken(tokens[6], TokenType::OPERATOR, "**") &&
-           checkToken(tokens[7], TokenType::OPERATOR, "++") &&
-           checkToken(tokens[8], TokenType::OPERATOR, "--") &&
-           checkToken(tokens[9], TokenType::OPERATOR, "+=") &&
-           checkToken(tokens[10], TokenType::OPERATOR, "-=") &&
-           checkToken(tokens[11], TokenType::OPERATOR, "*=") &&
-           checkToken(tokens[12], TokenType::OPERATOR, "/=") &&
-           checkToken(tokens[13], TokenType::OPERATOR, "//=") &&
-           checkToken(tokens[14], TokenType::OPERATOR, "%=") &&
-           checkToken(tokens[15], TokenType::OPERATOR, "**=") &&
-           checkToken(tokens[16], TokenType::OPERATOR, "==") &&
-           checkToken(tokens[17], TokenType::OPERATOR, "!=") &&
-           checkToken(tokens[18], TokenType::OPERATOR, "&&") &&
-           checkToken(tokens[19], TokenType::OPERATOR, "||") &&
-           checkToken(tokens[20], TokenType::OPERATOR, "!") &&
-           checkToken(tokens[21], TokenType::OPERATOR, "&") &&
-           checkToken(tokens[22], TokenType::OPERATOR, "|") &&
-           checkToken(tokens[23], TokenType::OPERATOR, "~") &&
-           checkToken(tokens[24], TokenType::OPERATOR, "^") &&
-           checkToken(tokens[25], TokenType::OPERATOR, "&=") &&
-           checkToken(tokens[26], TokenType::OPERATOR, "|=") &&
-           checkToken(tokens[27], TokenType::OPERATOR, "~=") &&
-           checkToken(tokens[28], TokenType::OPERATOR, "^=") &&
-           checkToken(tokens[29], TokenType::OPERATOR, "?") &&
-           checkToken(tokens[30], TokenType::OPERATOR, "@") &&
-           checkToken(tokens[31], TokenType::OPERATOR, ".") &&
-           checkToken(tokens[32], TokenType::COLON, ":") &&
-           checkToken(tokens[33], TokenType::OPERATOR, "::") &&
-           checkToken(tokens[34], TokenType::OPERATOR, "=") &&
-           checkToken(tokens[35], TokenType::OPERATOR, "->") &&
-           checkToken(tokens[36], TokenType::OPERATOR, "...");
+    return checkToken(tokens[0], TokenType::Operator, "+") &&
+           checkToken(tokens[1], TokenType::Operator, "-") &&
+           checkToken(tokens[2], TokenType::Operator, "*") &&
+           checkToken(tokens[3], TokenType::Operator, "/") &&
+           checkToken(tokens[4], TokenType::Operator, "//") &&
+           checkToken(tokens[5], TokenType::Operator, "%") &&
+           checkToken(tokens[6], TokenType::Operator, "**") &&
+           checkToken(tokens[7], TokenType::Operator, "++") &&
+           checkToken(tokens[8], TokenType::Operator, "--") &&
+           checkToken(tokens[9], TokenType::Operator, "+=") &&
+           checkToken(tokens[10], TokenType::Operator, "-=") &&
+           checkToken(tokens[11], TokenType::Operator, "*=") &&
+           checkToken(tokens[12], TokenType::Operator, "/=") &&
+           checkToken(tokens[13], TokenType::Operator, "//=") &&
+           checkToken(tokens[14], TokenType::Operator, "%=") &&
+           checkToken(tokens[15], TokenType::Operator, "**=") &&
+           checkToken(tokens[16], TokenType::Operator, "==") &&
+           checkToken(tokens[17], TokenType::Operator, "!=") &&
+           checkToken(tokens[18], TokenType::Operator, "&&") &&
+           checkToken(tokens[19], TokenType::Operator, "||") &&
+           checkToken(tokens[20], TokenType::Operator, "!") &&
+           checkToken(tokens[21], TokenType::Operator, "&") &&
+           checkToken(tokens[22], TokenType::Operator, "|") &&
+           checkToken(tokens[23], TokenType::Operator, "~") &&
+           checkToken(tokens[24], TokenType::Operator, "^") &&
+           checkToken(tokens[25], TokenType::Operator, "&=") &&
+           checkToken(tokens[26], TokenType::Operator, "|=") &&
+           checkToken(tokens[27], TokenType::Operator, "~=") &&
+           checkToken(tokens[28], TokenType::Operator, "^=") &&
+           checkToken(tokens[29], TokenType::Operator, "?") &&
+           checkToken(tokens[30], TokenType::Operator, "@") &&
+           checkToken(tokens[31], TokenType::Operator, ".") &&
+           checkToken(tokens[32], TokenType::Colon, ":") &&
+           checkToken(tokens[33], TokenType::Operator, "::") &&
+           checkToken(tokens[34], TokenType::Operator, "=") &&
+           checkToken(tokens[35], TokenType::Operator, "->") &&
+           checkToken(tokens[36], TokenType::Operator, "...");
 }
 
 bool testBrackets() {
-    auto tokens = tokenize("( ) { } [ ] < >", Mode::STRING);
+    auto tokens = tokenize("( ) { } [ ] < >", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -299,18 +299,18 @@ bool testBrackets() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::LEFT_PAREN, "(") &&
-           checkToken(tokens[1], TokenType::RIGHT_PAREN, ")") &&
-           checkToken(tokens[2], TokenType::LEFT_BRACE, "{") &&
-           checkToken(tokens[3], TokenType::RIGHT_BRACE, "}") &&
-           checkToken(tokens[4], TokenType::LEFT_SQUARE, "[") &&
-           checkToken(tokens[5], TokenType::RIGHT_SQUARE, "]") &&
-           checkToken(tokens[6], TokenType::LEFT_ANGLE, "<") &&
-           checkToken(tokens[7], TokenType::RIGHT_ANGLE, ">");
+    return checkToken(tokens[0], TokenType::LeftParen, "(") &&
+           checkToken(tokens[1], TokenType::RightParen, ")") &&
+           checkToken(tokens[2], TokenType::LeftBrace, "{") &&
+           checkToken(tokens[3], TokenType::RightBrace, "}") &&
+           checkToken(tokens[4], TokenType::LeftSquare, "[") &&
+           checkToken(tokens[5], TokenType::RightSquare, "]") &&
+           checkToken(tokens[6], TokenType::LeftAngle, "<") &&
+           checkToken(tokens[7], TokenType::RightAngle, ">");
 }
 
 bool testPunctuation() {
-    auto tokens = tokenize("; , . ? @ : ::", Mode::STRING);
+    auto tokens = tokenize("; , . ? @ : ::", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -322,13 +322,13 @@ bool testPunctuation() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::SEMICOLON, ";") &&
-           checkToken(tokens[1], TokenType::COMMA, ",") &&
-           checkToken(tokens[2], TokenType::OPERATOR, ".") &&
-           checkToken(tokens[3], TokenType::OPERATOR, "?") &&
-           checkToken(tokens[4], TokenType::OPERATOR, "@") &&
-           checkToken(tokens[5], TokenType::COLON, ":") &&
-           checkToken(tokens[6], TokenType::OPERATOR, "::");
+    return checkToken(tokens[0], TokenType::Semicolon, ";") &&
+           checkToken(tokens[1], TokenType::Comma, ",") &&
+           checkToken(tokens[2], TokenType::Operator, ".") &&
+           checkToken(tokens[3], TokenType::Operator, "?") &&
+           checkToken(tokens[4], TokenType::Operator, "@") &&
+           checkToken(tokens[5], TokenType::Colon, ":") &&
+           checkToken(tokens[6], TokenType::Operator, "::");
 }
 
 bool testCompleteProgram() {
@@ -341,7 +341,7 @@ func main() -> int {
 }
     )";
 
-    auto tokens = tokenize(program, Mode::STRING);
+    auto tokens = tokenize(program, Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -353,17 +353,17 @@ func main() -> int {
         std::cout << "Expected non-empty tokens" << std::endl;
         return false;
     }
-    return checkToken(tokens[0], TokenType::KEYWORD, "func") &&
-           checkToken(tokens[1], TokenType::IDENTIFIER, "main") &&
-           checkToken(tokens[2], TokenType::LEFT_PAREN, "(") &&
-           checkToken(tokens[3], TokenType::RIGHT_PAREN, ")") &&
-           checkToken(tokens[4], TokenType::OPERATOR, "->") &&
-           checkToken(tokens[5], TokenType::KEYWORD, "int") &&
-           checkToken(tokens[6], TokenType::LEFT_BRACE, "{");
+    return checkToken(tokens[0], TokenType::Keyword, "func") &&
+           checkToken(tokens[1], TokenType::Identifier, "main") &&
+           checkToken(tokens[2], TokenType::LeftParen, "(") &&
+           checkToken(tokens[3], TokenType::RightParen, ")") &&
+           checkToken(tokens[4], TokenType::Operator, "->") &&
+           checkToken(tokens[5], TokenType::Keyword, "int") &&
+           checkToken(tokens[6], TokenType::LeftBrace, "{");
 }
 
 bool testNestedBrackets() {
-    auto tokens = tokenize("arr<arr<int>> foo", Mode::STRING);
+    auto tokens = tokenize("arr<arr<int>> foo", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -375,31 +375,31 @@ bool testNestedBrackets() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::KEYWORD, "arr") &&
-           checkToken(tokens[1], TokenType::LEFT_ANGLE, "<") &&
-           checkToken(tokens[2], TokenType::KEYWORD, "arr") &&
-           checkToken(tokens[3], TokenType::LEFT_ANGLE, "<") &&
-           checkToken(tokens[4], TokenType::KEYWORD, "int") &&
-           checkToken(tokens[5], TokenType::RIGHT_ANGLE, ">") &&
-           checkToken(tokens[6], TokenType::RIGHT_ANGLE, ">") &&
-           checkToken(tokens[7], TokenType::IDENTIFIER, "foo");
+    return checkToken(tokens[0], TokenType::Keyword, "arr") &&
+           checkToken(tokens[1], TokenType::LeftAngle, "<") &&
+           checkToken(tokens[2], TokenType::Keyword, "arr") &&
+           checkToken(tokens[3], TokenType::LeftAngle, "<") &&
+           checkToken(tokens[4], TokenType::Keyword, "int") &&
+           checkToken(tokens[5], TokenType::RightAngle, ">") &&
+           checkToken(tokens[6], TokenType::RightAngle, ">") &&
+           checkToken(tokens[7], TokenType::Identifier, "foo");
 }
 
 bool testInvalidChar() {
-    auto tokens = tokenize("'too long' '\\z' '\\u9Z99' ", Mode::STRING);
+    auto tokens = tokenize("'too long' '\\z' '\\u9Z99' ", Mode::String);
     removeEOFToken(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 token, got " << tokens.size() << std::endl;
         return false;
     }
 
-    return tokens[0].type == TokenType::INVALID &&
-           tokens[1].type == TokenType::INVALID &&
-           tokens[2].type == TokenType::INVALID;
+    return tokens[0].type == TokenType::Invalid &&
+           tokens[1].type == TokenType::Invalid &&
+           tokens[2].type == TokenType::Invalid;
 }
 
 bool testInvalidEscapeSequence() {
-    auto tokens = tokenize("'\\z'", Mode::STRING);
+    auto tokens = tokenize("'\\z'", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -411,7 +411,7 @@ bool testInvalidEscapeSequence() {
         return false;
     }
 
-    return tokens[0].type == TokenType::INVALID;
+    return tokens[0].type == TokenType::Invalid;
 }
 
 int main() {
