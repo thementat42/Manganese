@@ -34,14 +34,6 @@ func foo(int x, int y, int z = 3, int... args) -> int {
 
 Manganese also supports generics -- parameters whose types are not known until the function is called. Functions can be marked as generic by using `func<T>` in their declaration (with multiple types being separated by commas). -->
 
-## === Ownership ===
-
-By default, all parameters are copied when passed to a function (i.e., variables are passed by value). To pass a reference to the original variable, the variable can be passed as a pointer (then dereferenced to modify the underlying value).
-
-If a block of memory is manually allocated inside a function, it will automatically be freed once the function stops execution. When a pointer to a block of memory is passed to a function, the default behaviour is that it is not responsible for freeing the memory (i.e., it will be freed in the caller). Marking a pointer variable as `owns` overrides this behaviour -- this indicates that the callee will free the memory.
-
-Manganese does not guarantee memory safety (the way Rust does). The goal of these ownership semantics is to minimize the risk of some common memory bugs (use-after-frees and leaks). See the [memory documentation](/docs/10_memory_management.md) for more.
-
 ## === Lambdas ===
 
 Lambdas are anonymous functions, which can be declared inline for single-use cases. The syntax for declaring a lambda is:
