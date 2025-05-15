@@ -80,7 +80,7 @@ std::string Token::tokenTypeToString(TokenType type) {
         case TokenType::COMMA:
             return "TokenType::COMMA";
         case TokenType::COLON:
-            return "TokenType::COMMA";
+            return "TokenType::COLON";
 
         // Misc
         case TokenType::END_OF_FILE:
