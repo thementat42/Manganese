@@ -82,6 +82,7 @@ enum class OperatorType : unsigned char {
 
     //~ Access Operators
     MEMBER,            // `.`
+    ELLIPSIS,          // `...`
     SCOPE_RESOLUTION,  // `::`
 
     //~ Misc

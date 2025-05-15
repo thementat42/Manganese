@@ -24,7 +24,7 @@ std::optional<OperatorType> operatorFromString(const std::string& op) {
 }
 
 std::string operatorToString(OperatorType op) {
-#ifdef DEBUG
+#if DEBUG
     switch (op) {
         case OperatorType::ADD:
             return "OperatorType::ADD";

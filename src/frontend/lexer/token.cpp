@@ -36,7 +36,7 @@ Token::Token(const TokenType _type, const char _lexeme, const size_t _line, cons
       column(_column) {}
 
 std::string Token::tokenTypeToString(TokenType type) {
-#ifdef DEBUG
+#if DEBUG
     switch (type) {
         // Basic
         case TokenType::KEYWORD:
@@ -97,7 +97,7 @@ std::string Token::tokenTypeToString(TokenType type) {
 }
 
 void Token::log() {
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Token: " << tokenTypeToString(type) << " \"" << lexeme << "\"";
 
     if (operatorType.has_value()) {
