@@ -190,7 +190,7 @@ bool testStringLiterals() {
 }
 
 bool testOperators() {
-    auto tokens = tokenize("+ - * / % ++ -- ** -> += -= *= /= %= == != ! && || & | ~ ^ &= |= != ^=", Mode::STRING);
+    auto tokens = tokenize("+ - * / // % ** ++ -- += -= *= /= //= %= **= == != && || ! & | ~ ^ &= |= ~= ^=  ? @ . : :: = -> ...", Mode::STRING);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
@@ -198,8 +198,8 @@ bool testOperators() {
     std::cout << std::endl;
     removeEOFToken(tokens);
     std::cout << '\n';
-    if (tokens.size() != 27) {
-        std::cout << "Expected 27 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 37) {
+        std::cout << "Expected 37 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
@@ -207,11 +207,39 @@ bool testOperators() {
            checkToken(tokens[1], TokenType::OPERATOR, "-") &&
            checkToken(tokens[2], TokenType::OPERATOR, "*") &&
            checkToken(tokens[3], TokenType::OPERATOR, "/") &&
-           checkToken(tokens[4], TokenType::OPERATOR, "%") &&
-           checkToken(tokens[5], TokenType::OPERATOR, "++") &&
-           checkToken(tokens[6], TokenType::OPERATOR, "--") &&
-           checkToken(tokens[7], TokenType::OPERATOR, "**") &&
-           checkToken(tokens[8], TokenType::OPERATOR, "->");
+           checkToken(tokens[4], TokenType::OPERATOR, "//") &&
+           checkToken(tokens[5], TokenType::OPERATOR, "%") &&
+           checkToken(tokens[6], TokenType::OPERATOR, "**") &&
+           checkToken(tokens[7], TokenType::OPERATOR, "++") &&
+           checkToken(tokens[8], TokenType::OPERATOR, "--") &&
+           checkToken(tokens[9], TokenType::OPERATOR, "+=") &&
+           checkToken(tokens[10], TokenType::OPERATOR, "-=") &&
+           checkToken(tokens[11], TokenType::OPERATOR, "*=") &&
+           checkToken(tokens[12], TokenType::OPERATOR, "/=") &&
+           checkToken(tokens[13], TokenType::OPERATOR, "//=") &&
+           checkToken(tokens[14], TokenType::OPERATOR, "%=") &&
+           checkToken(tokens[15], TokenType::OPERATOR, "**=") &&
+           checkToken(tokens[16], TokenType::OPERATOR, "==") &&
+           checkToken(tokens[17], TokenType::OPERATOR, "!=") &&
+           checkToken(tokens[18], TokenType::OPERATOR, "&&") &&
+           checkToken(tokens[19], TokenType::OPERATOR, "||") &&
+           checkToken(tokens[20], TokenType::OPERATOR, "!") &&
+           checkToken(tokens[21], TokenType::OPERATOR, "&") &&
+           checkToken(tokens[22], TokenType::OPERATOR, "|") &&
+           checkToken(tokens[23], TokenType::OPERATOR, "~") &&
+           checkToken(tokens[24], TokenType::OPERATOR, "^") &&
+           checkToken(tokens[25], TokenType::OPERATOR, "&=") &&
+           checkToken(tokens[26], TokenType::OPERATOR, "|=") &&
+           checkToken(tokens[27], TokenType::OPERATOR, "~=") &&
+           checkToken(tokens[28], TokenType::OPERATOR, "^=") &&
+           checkToken(tokens[29], TokenType::OPERATOR, "?") &&
+           checkToken(tokens[30], TokenType::OPERATOR, "@") &&
+           checkToken(tokens[31], TokenType::OPERATOR, ".") &&
+           checkToken(tokens[32], TokenType::COLON, ":") &&
+           checkToken(tokens[33], TokenType::OPERATOR, "::") &&
+           checkToken(tokens[34], TokenType::OPERATOR, "=") &&
+           checkToken(tokens[35], TokenType::OPERATOR, "->") &&
+           checkToken(tokens[36], TokenType::OPERATOR, "...");
 }
 
 bool testBrackets() {
