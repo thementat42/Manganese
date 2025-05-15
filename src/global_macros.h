@@ -8,4 +8,4 @@
 #define MANG_END }
 
 
-#endif /* GLOBAL_MACROS_H */
+#endif // GLOBAL_MACROS_H
