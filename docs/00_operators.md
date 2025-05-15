@@ -129,11 +129,10 @@ Comments are always evaluated first (i.e., operators within comments are ignored
 | 8 | `<<`<br> `>>` | Bitwise Left Shift<br> Bitwise Right Shift |
 | 9 | `<`, `>`, `<=`, `>=` | Relational operators |
 | 10 | `==`, `!=` | Equality operators |
-| 11 | `&~` | Bitwise AND |
-| 12 | `^~` | Bitwise XOR |
-| 13 | `\|~` | Bitwise OR |
-| 14 | `&` | Logical AND |
-| 15 | `^` | Logical XOR |
-| 16 | `\|` | Logical OR |
-| 17 | `=`<br> `<op> =`| Assignment<br> Immediate Reassignment |
-| 18 | `->` | Arrow |
+| 11 | `&` | Bitwise AND |
+| 12 | `^` | Bitwise XOR |
+| 13 | `\|` | Bitwise OR |
+| 14 | `&&` | Logical AND |
+| 15 | `\|\|` | Logical OR |
+| 16 | `=`<br> `<op> =`| Assignment<br> Immediate Reassignment |
+| 17 | `->` | Arrow |
