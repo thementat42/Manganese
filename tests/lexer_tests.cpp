@@ -243,15 +243,15 @@ bool testOperators() {
 }
 
 bool testBrackets() {
-    auto tokens = tokenize("( ) { } [ ]", Mode::STRING);
+    auto tokens = tokenize("( ) { } [ ] < >", Mode::STRING);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.lexeme << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
-    if (tokens.size() != 6) {
-        std::cout << "Expected 6 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 8) {
+        std::cout << "Expected 8 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
@@ -260,7 +260,9 @@ bool testBrackets() {
            checkToken(tokens[2], TokenType::LEFT_BRACE, "{") &&
            checkToken(tokens[3], TokenType::RIGHT_BRACE, "}") &&
            checkToken(tokens[4], TokenType::LEFT_SQUARE, "[") &&
-           checkToken(tokens[5], TokenType::RIGHT_SQUARE, "]");
+           checkToken(tokens[5], TokenType::RIGHT_SQUARE, "]") &&
+           checkToken(tokens[6], TokenType::LEFT_ANGLE, "<") &&
+           checkToken(tokens[7], TokenType::RIGHT_ANGLE, ">");
 }
 
 bool testPunctuation() {
