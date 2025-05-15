@@ -82,12 +82,12 @@ enum class OperatorType : unsigned char {
 
     //~ Access Operators
     MEMBER,            // `.`
-    ELLIPSIS,          // `...`
     SCOPE_RESOLUTION,  // `::`
 
     //~ Misc
     ASSIGNMENT,  // `=`
     ARROW,       // `->`
+    ELLIPSIS,    // `...`
 };
 extern std::unordered_map<std::string, const OperatorType> operator_map;
 
@@ -107,4 +107,4 @@ std::string operatorToString(OperatorType op);
 }  // namespace lexer
 MANG_END
 
-#endif // OPERATORS_H
+#endif  // OPERATORS_H
