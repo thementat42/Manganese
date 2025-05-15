@@ -106,6 +106,8 @@ std::string operatorToString(OperatorType op) {
             return "OperatorType::DEREF";
         case OperatorType::MEMBER:
             return "OperatorType::MEMBER";
+        case OperatorType::ELLIPSIS:
+            return "OperatorType::ELLIPSIS";
         case OperatorType::SCOPE_RESOLUTION:
             return "OperatorType::SCOPE_RESOLUTION";
         case OperatorType::ASSIGNMENT:
@@ -176,6 +178,7 @@ std::unordered_map<std::string, const OperatorType> operator_map = {
 
     // Access Operators
     {".", OperatorType::MEMBER},
+    {"...", OperatorType::ELLIPSIS},
     {"::", OperatorType::SCOPE_RESOLUTION},
 
     // Misc

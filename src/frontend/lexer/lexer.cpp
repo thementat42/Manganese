@@ -189,7 +189,9 @@ optional<wchar_t> resolveHexAndUnicodeCharacters(const str& esc, const bool& isU
     auto isNotHex = [](char c) { return !std::isxdigit(static_cast<unsigned char>(c)); };
     auto x = std::find_if(esc.begin(), esc.begin() + (isUnicode ? 4 : 2), isNotHex);
     if (x != esc.end()) {
-        fprintf(stderr, "Error: Invalid %s escape sequence: \\%s%s\n", sequenceType, isUnicode ? "u" : "x", esc.c_str());
+        fprintf(stderr,
+                "Error: Invalid %s escape sequence: \\%c%s\n",
+                sequenceType, isUnicode ? 'u' : 'x', esc.c_str());
         return NONE;
     }
     wchar_t unicodeChar = 0;
@@ -252,29 +254,29 @@ inline optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
 /**
  * @brief Converts a wide character to its corresponding UTF-8 representation
  * @param wideChar The wide character to convert (e.g., \u1234)
- * @param processed The string to append the converted character to
+ * @return The UTF-8 encoded string representing the wide character
  */
-inline void convertWideCharToUTF8(uint32_t wideChar, str& processed) {
-    // inline since this is only used in one place
-    // extracted for readability only
+inline std::string convertWideCharToUTF8(uint32_t wideChar) {
+    std::string result;
     if (wideChar <= UTF8_1B_MAX) {
-        processed += static_cast<char>(wideChar);  // Narrow character
+        result += static_cast<char>(wideChar);  // Narrow character
     } else if (wideChar <= UTF8_2B_MAX) {
         // 2-byte UTF-8 character
-        processed += static_cast<char>(UTF8_2B_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_2B_MASK));
-        processed += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
+        result += static_cast<char>(UTF8_2B_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_2B_MASK));
+        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
     } else if (wideChar <= UTF8_3B_MAX) {
         // 3-byte UTF-8 character
-        processed += static_cast<char>(UTF8_3B_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_3B_MASK));
-        processed += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
-        processed += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
+        result += static_cast<char>(UTF8_3B_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_3B_MASK));
+        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
+        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
     } else if (wideChar <= UTF8_4B_MAX) {
         // 4-byte UTF-8 character (outside the Basic Multilingual Plane)
-        processed += static_cast<char>(UTF8_4B_PRE | ((wideChar >> UTF8_3B_SHIFT) & UTF8_4B_MASK));
-        processed += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_CONT_MASK));
-        processed += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
-        processed += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
+        result += static_cast<char>(UTF8_4B_PRE | ((wideChar >> UTF8_3B_SHIFT) & UTF8_4B_MASK));
+        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_CONT_MASK));
+        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
+        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
     }
+    return result;
 }
 
 /**
@@ -324,7 +326,7 @@ str resolveEscapeCharacters(const str& escapeString) {
             fprintf(stderr, "error: invalid unicode escape sequence\n");
             return "INVALID ESCAPE SEQUENCE";
         }
-        convertWideCharToUTF8(wideChar, processed);
+        processed += convertWideCharToUTF8(wideChar);
     }
     return processed;
 }
@@ -514,6 +516,8 @@ void tokenizeSymbol(LexerState& state) {
             type = TokenType::COMMA;
             break;
         case '.':
+            lexeme = (next == '.' && nextnext == '.') ? "..." : ".";
+            // Intentionally fall through to set the type
         case '?':
         case '@':
             type = TokenType::OPERATOR;
