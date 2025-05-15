@@ -35,6 +35,54 @@ Token::Token(const TokenType _type, const char _lexeme, const size_t _line, cons
       line(_line),
       column(_column) {}
 
+TokenType Token::getType() const {
+    return type;
+}
+
+std::optional<OperatorType> Token::getOperatorType() const {
+    return operatorType;
+}
+
+std::optional<KeywordType> Token::getKeywordType() const {
+    return keywordType;
+}
+
+std::string Token::getLexeme() const {
+    return lexeme;
+}
+
+size_t Token::getLine() const {
+    return line;
+}
+
+size_t Token::getColumn() const {
+    return column;
+}
+
+void Token::overrideType(TokenType _type) {
+#if DEBUG
+    printf(
+        "Warning: overriding token type from %s to %s (line %zu in file %s)\n",
+        tokenTypeToString(type).c_str(),
+        tokenTypeToString(_type).c_str(),
+        __LINE__,
+        __FILE__);
+#endif
+    type = _type;
+}
+
+void Token::overrideOperatorType(OperatorType _type) {
+#if DEBUG
+    printf(
+        "Warning: overriding operator from %s to %s (line %zu in file %s)\n",
+        operatorToString(operatorType).c_str(),
+        operatorToString(_type).c_str(),
+        __LINE__,
+        __FILE__);
+#endif
+    operatorType = _type;
+}
+
 std::string Token::tokenTypeToString(TokenType type) {
 #if DEBUG
     switch (type) {
@@ -91,12 +139,12 @@ std::string Token::tokenTypeToString(TokenType type) {
         default:
             return "Unknown TokenType";
     }
-#else  // ^ DEBUG ^ | v !DEBUG v
+#else   // ^ DEBUG ^ | v !DEBUG v
     return "";
-#endif // DEBUG */
+#endif  // DEBUG */
 }
 
-void Token::log() {
+void Token::log() const {
 #if DEBUG
     std::cout << "Token: " << tokenTypeToString(type) << " \"" << lexeme << "\"";
 
@@ -109,7 +157,7 @@ void Token::log() {
     }
 
     std::cout << " Line: " << line << " Column: " << column << '\n';
-#endif // DEBUG
+#endif  // DEBUG
 }
 
 void Token::log(Token token) {
