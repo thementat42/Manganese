@@ -65,6 +65,10 @@ std::string keywordToString(KeywordType keyword) {
             return "KeywordType::FALSE";
         case KeywordType::FLOAT:
             return "KeywordType::FLOAT";
+        case KeywordType::FLOAT32:
+            return "KeywordType::FLOAT32";
+        case KeywordType::FLOAT64:
+            return "KeywordType::FLOAT64";
         case KeywordType::FOR:
             return "KeywordType::FOR";
         case KeywordType::FUNC:
@@ -87,14 +91,12 @@ std::string keywordToString(KeywordType keyword) {
             return "KeywordType::LAMBDA";
         case KeywordType::MAP:
             return "KeywordType::MAP";
-        case KeywordType::MATCH:
-            return "KeywordType::MATCH";
         case KeywordType::MODULE:
             return "KeywordType::MODULE";
+        case KeywordType::OWNS:
+            return "KeywordType::OWNS";
         case KeywordType::PTR:
             return "KeywordType::PTR";
-        case KeywordType::PRIVATE:
-            return "KeywordType::PRIVATE";
         case KeywordType::PUBLIC:
             return "KeywordType::PUBLIC";
         case KeywordType::READONLY:
@@ -113,10 +115,14 @@ std::string keywordToString(KeywordType keyword) {
             return "KeywordType::TRUE";
         case KeywordType::TYPEOF:
             return "KeywordType::TYPEOF";
-        case KeywordType::UNSIGNED:
-            return "KeywordType::UNSIGNED";
-        case KeywordType::VARIANT:
-            return "KeywordType::VARIANT";
+        case KeywordType::UINT8:
+            return "KeywordType::UINT8";
+        case KeywordType::UINT16:
+            return "KeywordType::UINT16";
+        case KeywordType::UINT32:
+            return "KeywordType::UINT32";
+        case KeywordType::UINT64:
+            return "KeywordType::UINT64";
         case KeywordType::VEC:
             return "KeywordType::VEC";
         case KeywordType::WHILE:
@@ -163,21 +169,23 @@ inline std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"int8", KeywordType::INT8},
     {"lambda", KeywordType::LAMBDA},
     {"map", KeywordType::MAP},
-    {"match", KeywordType::MATCH},
     {"module", KeywordType::MODULE},
+    {"owns", KeywordType::OWNS},
     {"ptr", KeywordType::PTR},
-    {"private", KeywordType::PRIVATE},
     {"public", KeywordType::PUBLIC},
     {"readonly", KeywordType::READONLY},
     {"repeat", KeywordType::REPEAT},
     {"return", KeywordType::RETURN},
     {"set", KeywordType::SET},
-    {"string", KeywordType::STRING},
+    {"str", KeywordType::STRING},
     {"switch", KeywordType::SWITCH},
     {"true", KeywordType::TRUE},
     {"typeof", KeywordType::TYPEOF},
-    {"unsigned", KeywordType::UNSIGNED},
-    {"variant", KeywordType::VARIANT},
+    {"uint", KeywordType::UINT32},  // default to uint32 when integer width isn't specified
+    {"uint8", KeywordType::UINT8},
+    {"uint16", KeywordType::UINT16},
+    {"uint32", KeywordType::UINT32},
+    {"uint64", KeywordType::UINT64},
     {"vec", KeywordType::VEC},
     {"while", KeywordType::WHILE}};
 

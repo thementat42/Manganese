@@ -28,11 +28,10 @@ enum class KeywordType : unsigned char {
 
     //~ Type Qualifiers
     CONST,     // constant variable
-    UNSIGNED,  // positive values only
     PTR,       // pointer variables
+    OWNS,     // ownership transfer
 
     //~ Access Levels
-    PRIVATE,   // not accessible outside module
     READONLY,  // readable, but can't be modified, outside the module
     PUBLIC,    // can be read and modified outside the module
 
@@ -41,12 +40,15 @@ enum class KeywordType : unsigned char {
     INT16,    // 16 bit int
     INT32,    // 32 bit int
     INT64,    // 64 bit int
+    UINT8,     // unsigned 8 bit int
+    UINT16,    // unsigned 16 bit int
+    UINT32,    // unsigned 32 bit int
+    UINT64,    // unsigned 64 bit int
     FLOAT,    // floating point
     FLOAT32,  // 32-bit float (single precision)
     FLOAT64,  // 64-bit float (double precision)
     CHAR,     // single character
     BOOL,     // true or false
-    VARIANT,  // multiple types
     TRUE,     // boolean true
     FALSE,    // boolean false
 
@@ -65,7 +67,6 @@ enum class KeywordType : unsigned char {
 
     //* Pattern Matching
     SWITCH,   // value to compare against
-    MATCH,    // value to compare against (more advanced)
     CASE,     // specific value
     DEFAULT,  // if no values matched, do this
 
