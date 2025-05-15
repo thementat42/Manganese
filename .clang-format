@@ -1,0 +1,18 @@
+BasedOnStyle: Google
+IndentWidth: 4
+UseTab: Never
+SpaceAfterCStyleCast: false
+Braces:
+  AfterFunction: true
+  AfterControlStatement: true
+  AfterStruct: true
+  AfterEnum: true
+  AfterClass: true
+  AfterIfElse: true
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: false
+ColumnLimit: 0
+SpacesBeforeTrailingComments: 2
+SortIncludes: true
