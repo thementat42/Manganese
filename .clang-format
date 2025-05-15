@@ -12,7 +12,7 @@ Braces:
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
 AllowShortIfStatementsOnASingleLine: true
-AllowShortLoopsOnASingleLine: false
+AllowShortLoopsOnASingleLine: true
 ColumnLimit: 0
 SpacesBeforeTrailingComments: 2
 SortIncludes: true
