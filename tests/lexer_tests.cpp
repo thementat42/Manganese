@@ -15,14 +15,14 @@ using Manganese::lexer::tokenize;
 using Manganese::lexer::TokenType;
 
 bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme) {
-    if (token.type != expectedType) {
+    if (token.getType() != expectedType) {
         std::cout << "Expected token type " << Token::tokenTypeToString(expectedType)
-                  << " but got " << Token::tokenTypeToString(token.type) << " (lexeme was " << token.lexeme << ")" << std::endl;
+                  << " but got " << Token::tokenTypeToString(token.getType()) << " (lexeme was " << token.getLexeme() << ")" << std::endl;
         return false;
     }
-    if (token.lexeme != expectedLexeme) {
+    if (token.getLexeme() != expectedLexeme) {
         std::cout << "Expected lexeme '" << expectedLexeme
-                  << "' but got '" << token.lexeme << "'" << std::endl;
+                  << "' but got '" << token.getLexeme() << "'" << std::endl;
         return false;
     }
     return true;
@@ -32,7 +32,7 @@ void removeEOFToken(std::vector<Token>& tokens) {
     // Lexer always pushes an EOF token at the end of the token stream
     // This messes up the testing, since it was not included in the test cases
     // So we remove it here
-    if (!tokens.empty() && tokens.back().type == TokenType::EndOfFile) {
+    if (!tokens.empty() && tokens.back().getType() == TokenType::EndOfFile) {
         tokens.pop_back();
     }
 }
@@ -54,7 +54,7 @@ bool testComments() {
     removeEOFToken(tokens);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     if (tokens.size() != 3) {
@@ -71,7 +71,7 @@ bool testIdentifiers() {
     auto tokens = tokenize("foo bar baz _var var123", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -91,7 +91,7 @@ bool testKeywords() {
     auto tokens = tokenize("alias arr as blueprint bool break bundle case cast char const continue default do elif else enum false float float32 float64 for func garbage if import int int16 int32 int64 int8 lambda map module owns ptr public readonly repeat return set str switch true typeof uint uint8 uint16 uint32 uint64 vec while foo", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -159,7 +159,7 @@ bool testIntegerLiterals() {
     auto tokens = tokenize("0 123 456789 0xFFF 0b1001 0o33", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << "";
+        std::cout << token.getLexeme() << "";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -180,7 +180,7 @@ bool testFloatLiterals() {
     auto tokens = tokenize("0.0 1.23 456.789", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -198,7 +198,7 @@ bool testCharLiterals() {
     auto tokens = tokenize("'a' '\\n' '\\'' '\\\\' '\\t' '\\u1234'", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -219,7 +219,7 @@ bool testStringLiterals() {
     auto tokens = tokenize("\"hello\" \"world\" \"escaped \\\"quote\\\"\"", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -237,7 +237,7 @@ bool testOperators() {
     auto tokens = tokenize("+ - * / // % ** ++ -- += -= *= /= //= %= **= == != && || ! & | ~ ^ &= |= ~= ^=  ? @ . : :: = -> ...", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -290,7 +290,7 @@ bool testBrackets() {
     auto tokens = tokenize("( ) { } [ ] < >", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -313,7 +313,7 @@ bool testPunctuation() {
     auto tokens = tokenize("; , . ? @ : ::", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -344,7 +344,7 @@ func main() -> int {
     auto tokens = tokenize(program, Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -366,7 +366,7 @@ bool testNestedBrackets() {
     auto tokens = tokenize("arr<arr<int>> foo", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -393,16 +393,16 @@ bool testInvalidChar() {
         return false;
     }
 
-    return tokens[0].type == TokenType::Invalid &&
-           tokens[1].type == TokenType::Invalid &&
-           tokens[2].type == TokenType::Invalid;
+    return tokens[0].getType() == TokenType::Invalid &&
+           tokens[1].getType() == TokenType::Invalid &&
+           tokens[2].getType() == TokenType::Invalid;
 }
 
 bool testInvalidEscapeSequence() {
     auto tokens = tokenize("'\\z'", Mode::String);
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << " ";
+        std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
     removeEOFToken(tokens);
@@ -411,7 +411,7 @@ bool testInvalidEscapeSequence() {
         return false;
     }
 
-    return tokens[0].type == TokenType::Invalid;
+    return tokens[0].getType() == TokenType::Invalid;
 }
 
 int main() {
