@@ -26,11 +26,11 @@ namespace lexer {
  */
 enum class TokenType : unsigned char {
     //~ Basic
-    Keyword,         // if, char, etc.
-    Identifier,      // variables, functions
-    StrLiteral,  // "text"
-    CharLiteral,       // 'a'
-    Operator,        // +, -, *, etc.
+    Keyword,      // if, char, etc.
+    Identifier,   // variables, functions
+    StrLiteral,   // "text"
+    CharLiteral,  // 'a'
+    Operator,     // +, -, *, etc.
 
     // ~ Numbers
     Integer,  // Whole Number
@@ -60,13 +60,15 @@ enum class TokenType : unsigned char {
  * @brief Representation of a token
  */
 struct Token {
-    const TokenType type;
+   private:
+    TokenType type;
     const std::string lexeme;  // TODO: Consider making this an std::string_view or just a char* (minimize memory use)
 
-    const std::optional<OperatorType> operatorType;
+    std::optional<OperatorType> operatorType;
     const std::optional<KeywordType> keywordType;
     const size_t line, column;
 
+   public:
     Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column);
     Token(const TokenType type, const char lexeme, const size_t line, const size_t column);
 
@@ -78,15 +80,26 @@ struct Token {
      */
     static std::string tokenTypeToString(TokenType type);
 
+    TokenType getType() const;
+    std::optional<OperatorType> getOperatorType() const;
+    std::optional<KeywordType> getKeywordType() const;
+    std::string getLexeme() const;
+    size_t getLine() const;
+    size_t getColumn() const;
+    void overrideType(TokenType _type);
+    void overrideOperatorType(OperatorType _type) {
+        operatorType = _type;
+    }
+
     /**
      * @brief Print out a token
      * @details This function is used for debugging purposes. (if the debug flag is not set, this function will be empty)
      */
-    void log();
+    void log() const;
 
     static void log(Token token);
 };
 }  // namespace lexer
 MANG_END
 
-#endif // TOKEN
+#endif  // TOKEN
