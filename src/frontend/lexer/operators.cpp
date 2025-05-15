@@ -23,9 +23,12 @@ std::optional<OperatorType> operatorFromString(const std::string& op) {
     return std::nullopt;
 }
 
-std::string operatorToString(OperatorType op) {
+std::string operatorToString(std::optional<OperatorType> op) {
+    if (!op.has_value()) {
+        return "Invalid Operator";
+    }
 #if DEBUG
-    switch (op) {
+    switch (*op) {
         case OperatorType::Add:
             return "OperatorType::Add";
         case OperatorType::Sub:

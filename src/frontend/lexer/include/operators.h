@@ -102,7 +102,7 @@ std::optional<OperatorType> operatorFromString(const std::string& op);
  * @param op The OperatorType to convert
  * @return String representation of the OperatorType
  */
-std::string operatorToString(OperatorType op);
+std::string operatorToString(std::optional<OperatorType> op);
 
 }  // namespace lexer
 MANG_END
