@@ -48,7 +48,7 @@ If no output file name is specified, the source file name will be used (e.g., fo
 
 This project is divided into several directories:
 
-- [`Docs`](/docs): Contains documentation for the language as markdown files.
+- [`Docs`](/docs): Contains documentation for the language as markdown files. The documentation represents a hypothetical version of Manganese -- right now, not everything in the docs is implemented, but will be at some point in the future.
   - [`Syntax`](/docs/syntax/): Contains documentation for the actual syntax of the language
   - [`Library`](/docs/library/): Contains documentation for the standard library
 

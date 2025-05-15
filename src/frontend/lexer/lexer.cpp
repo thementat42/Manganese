@@ -162,11 +162,10 @@ struct LexerState {
     LexerState(unique_ptr<io::Reader>&& _reader, TokenList& _tokens) : reader(std::move(_reader)), tokens(_tokens) {}
 
     // Wrapper functions for the reader (to do state.X instead of state.reader->X)
-    // inline to try and avoid function call overhead
     inline char peekChar(size_t offset = 0) { return reader->peekChar(offset); }
     [[nodiscard]] inline char getChar() { return reader->getChar(); }
     inline size_t getLine() { return reader->getLine(); }
-    inline size_t getColumn() { return reader->getColumn(); }
+    inline size_t getCol() { return reader->getColumn(); }
     inline size_t getPosition() { return reader->getPosition(); }
     inline void advance(size_t n = 1) {
         reader->setPosition(reader->getPosition() + n);
@@ -245,8 +244,8 @@ inline optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
             return '\0';
         default:
             fprintf(stderr,
-                    "\\%c is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ('\\\\')\n",
-                    escapeChar);
+                    "\\%c is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ('\\\\%c')\n",
+                    escapeChar, escapeChar);
             return NONE;
     }
 }
@@ -341,12 +340,11 @@ inline void processCharEscapeSequence(str& charLiteral, LexerState& state) {
     // extracted for readability only
     auto processed = resolveEscapeCharacters(charLiteral);
     if (processed == "INVALID ESCAPE SEQUENCE") {
-        state.tokens.emplace_back(TokenType::Invalid, "INVALID ESCAPE SEQUENCE", state.getLine(), state.getColumn());
+        state.tokens.emplace_back(TokenType::Invalid, "INVALID ESCAPE SEQUENCE", state.getLine(), state.getCol());
         return;
     }
     // For escaped characters, we need to check if it represents a single code point
-    // not necessarily the same as the length of the resolved string
-    // this is a little messy
+    // not necessarily the same as the length of the resolved string being 1
     size_t byteCount = processed.length();
     bool isValidSingleCodePoint = true;
     if (byteCount > 1) {
@@ -356,12 +354,11 @@ inline void processCharEscapeSequence(str& charLiteral, LexerState& state) {
                                  (byteCount == 4 && (firstByte & 0xF8) == 0xF0);    // 4-byte UTF-8 character
     }
     if (!isValidSingleCodePoint) {
-        fprintf(stderr, "Error: Invalid character literal at line %zu column %zu\n", state.getLine(), state.getColumn());
-        state.tokens.emplace_back(TokenType::Invalid, "INVALID CharLiteral LITERAL", state.getLine(), state.getColumn());
+        fprintf(stderr, "Error: Invalid character literal at line %zu column %zu\n", state.getLine(), state.getCol());
+        state.tokens.emplace_back(TokenType::Invalid, "INVALID CharLiteral LITERAL", state.getLine(), state.getCol());
         return;
     }
-    state.tokens.emplace_back(TokenType::CharLiteral, processed, state.getLine(), state.getColumn());
-    return;
+    state.tokens.emplace_back(TokenType::CharLiteral, processed, state.getLine(), state.getCol());
 }
 
 /**
@@ -369,7 +366,7 @@ inline void processCharEscapeSequence(str& charLiteral, LexerState& state) {
  * @param state The lexer state
  */
 void tokenizeCharLiteral(LexerState& state) {
-    (void)state.getChar();  // Move past the opening quote
+    state.advance();  // Move past the opening quote
     str charLiteral;
     // For simplicity, just extract a chunk of text, handle it later
     // Look for a closing quote
@@ -381,20 +378,20 @@ void tokenizeCharLiteral(LexerState& state) {
         charLiteral += state.getChar();
     }
     if (state.done()) {
-        fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", state.getLine(), state.getColumn());
-        state.tokens.emplace_back(TokenType::Invalid, "INVALID", state.getLine(), state.getColumn());
+        fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", state.getLine(), state.getCol());
+        state.tokens.emplace_back(TokenType::Invalid, "INVALID", state.getLine(), state.getCol());
         return;
     }
     // go past closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
-    (void)state.getChar();
+    state.advance();
     if (charLiteral[0] == '\\') {
         return processCharEscapeSequence(charLiteral, state);
     } else if (charLiteral.length() > 1) {
-        fprintf(stderr, "Error: Character literal at line %zu column %zu exceeds 1 character limit.\n", state.getLine(), state.getColumn());
-        state.tokens.emplace_back(TokenType::Invalid, "INVALID CharLiteral LITERAL", state.getLine(), state.getColumn());
+        fprintf(stderr, "Error: Character literal at line %zu column %zu exceeds 1 character limit.\n", state.getLine(), state.getCol());
+        state.tokens.emplace_back(TokenType::Invalid, "INVALID CharLiteral LITERAL", state.getLine(), state.getCol());
         return;
     }
-    state.tokens.emplace_back(TokenType::CharLiteral, charLiteral, state.getLine(), state.getColumn());
+    state.tokens.emplace_back(TokenType::CharLiteral, charLiteral, state.getLine(), state.getCol());
 }
 
 /**
@@ -402,7 +399,7 @@ void tokenizeCharLiteral(LexerState& state) {
  * @param state The lexer state
  */
 void tokenizeStringLiteral(LexerState& state) {
-    (void)state.getChar();  // Move past the opening quote
+    state.advance();  // Move past the opening quote
     bool containsEscapeSequence = false;
     str stringLiteral;
 
@@ -416,20 +413,100 @@ void tokenizeStringLiteral(LexerState& state) {
     }
     if (state.done()) {
         // No closing quote found
-        fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", state.getLine(), state.getColumn());
-        state.tokens.emplace_back(TokenType::Invalid, "INVALID", state.getLine(), state.getColumn());
+        fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", state.getLine(), state.getCol());
+        state.tokens.emplace_back(TokenType::Invalid, "INVALID", state.getLine(), state.getCol());
         return;
     }
     // Move past the closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
-    (void)state.getChar();
+    state.advance();
     if (containsEscapeSequence) {
         stringLiteral = resolveEscapeCharacters(stringLiteral);
         if (stringLiteral == "INVALID ESCAPE SEQUENCE") {
-            state.tokens.emplace_back(TokenType::Invalid, "INVALID", state.getLine(), state.getColumn());
+            state.tokens.emplace_back(TokenType::Invalid, "INVALID", state.getLine(), state.getCol());
             return;
         }
     }
-    state.tokens.emplace_back(TokenType::StrLiteral, stringLiteral, state.getLine(), state.getColumn());
+    state.tokens.emplace_back(TokenType::StrLiteral, stringLiteral, state.getLine(), state.getCol());
+}
+
+/**
+ * @brief Processes a keyword or identifier (e.g., if, while, myVar, etc.)
+ * @param state The lexer state
+ */
+void tokenizeKeywordOrIdentifier(LexerState& state) {
+    str lexeme = "";
+    while (!state.done() && (isalnum(state.peekChar()) || state.peekChar() == '_')) {
+        lexeme += state.getChar();
+    }
+    auto it = keyword_map.find(lexeme);
+
+    state.tokens.emplace_back(
+        it != keyword_map.end() ? TokenType::Keyword : TokenType::Identifier,
+        lexeme,
+        state.getLine(), state.getCol());
+}
+
+/**
+ * @brief Processes a number literal (e.g., 123, 45.67, etc.)
+ * @param state The lexer state
+ */
+void tokenizeNumber(LexerState& state) {
+    str numberLiteral;
+    char currentChar = state.peekChar();
+    bool isFloat = false;
+    std::function<bool(char)> isValidBaseChar;
+    // TODO: Add floating point support for hex numbers (but not octal or binary)
+    if (currentChar == '0') {
+        // Could be a base indicator (0x, 0b, 0o) -- check next char
+        char baseChar = state.peekChar(1);
+        switch (baseChar) {
+            case 'x':
+            case 'X':
+                // Hexadecimal number
+                isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); };
+                state.advance(2);       // Skip the 0x
+                numberLiteral += "0x";  // Add the base indicator so the parser can handle it
+                break;
+            case 'b':
+            case 'B':
+                isValidBaseChar = [](char c) { return c == '0' || c == '1'; };
+                state.advance(2);       // Skip the 0b
+                numberLiteral += "0b";  // Add the base indicator so the parser can handle it
+                break;
+            case 'o':
+            case 'O':
+                isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; };
+                state.advance(2);       // Skip the 0o
+                numberLiteral += "0o";  // Add the base indicator so the parser can handle it
+                break;
+            default:
+                // Not a valid base indicator -- just treat it as a decimal number
+                isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); };
+                break;
+        }
+        currentChar = state.peekChar();  // if there was a base indicator, update the current char
+    } else {
+        // Decimal number
+        isValidBaseChar = [](char c) { return isdigit(c); };
+    }
+
+    while (!state.done() && (isValidBaseChar(currentChar) || currentChar == '.')) {
+        numberLiteral += state.getChar();
+        if (currentChar == '.') {
+            if (isFloat) {
+                // Invalid number -- two decimal points
+                fprintf(stderr, "Error: Invalid number at line %zu column %zu\n", state.getLine(), state.getCol());
+                return;
+            }
+            isFloat = true;
+        }
+        currentChar = state.peekChar();
+    }
+    // TODO: Add support for scientific notation (e.g., 1.23e4)
+    state.tokens.emplace_back(
+        isFloat ? TokenType::Float : TokenType::Integer,
+        numberLiteral,
+        state.getLine(), state.getCol());
 }
 
 void skipMultilineComment(LexerState& state) {
@@ -439,7 +516,7 @@ void skipMultilineComment(LexerState& state) {
         state.advance();  // Skip the comment
     }
     if (state.done()) {
-        fprintf(stderr, "Error: Unclosed comment at line %zu column %zu\n", state.getLine(), state.getColumn());
+        fprintf(stderr, "Error: Unclosed comment at line %zu column %zu\n", state.getLine(), state.getCol());
         return;
     }
     state.advance(2);  // Skip the */
@@ -517,7 +594,7 @@ void tokenizeSymbol(LexerState& state) {
             break;
         case '.':
             lexeme = (next == '.' && nextnext == '.') ? "..." : ".";
-            // Intentionally fall through to set the type
+            [[fallthrough]];  // Intentionally fall through to set the type
         case '?':
         case '@':
             type = TokenType::Operator;
@@ -531,14 +608,14 @@ void tokenizeSymbol(LexerState& state) {
         case '+':
             type = TokenType::Operator;
             if (next == '+' || next == '=') {
-                // ++ (increment) or += (in-place addition)
+                //* ++ (increment) or += (in-place addition)
                 lexeme += next;
             }
             break;
         case '-':
             type = TokenType::Operator;
             if (next == '-' || next == '=' || next == '>') {
-                // -- (decrement) or -= (in-place subtraction) or -> (arrow operator)
+                //* -- (decrement) or -= (in-place subtraction) or -> (arrow operator)
                 lexeme += next;
             }
             break;
@@ -552,116 +629,34 @@ void tokenizeSymbol(LexerState& state) {
         case '*':
             type = TokenType::Operator;
             if (next == '=') {
-                // *= (in-place multiplication)
+                //* *= (in-place multiplication)
                 lexeme += '=';
             } else if (next == '*') {
-                // ** (exponentiation)
+                // ** (exponentiation) or **= (in-place exponentiation)
                 lexeme += next;
                 lexeme += (nextnext == '=') ? "=" : "";
-                // just ** or **= (exponentiation or in-place exponentiation)
             }
             break;
         case '/':
             type = TokenType::Operator;
             if (next == '=') {
-                // /= (in-place division)
+                //* /= (in-place division)
                 lexeme += '=';
             } else if (next == '/') {
-                // Floor division operator
+                //* // (floor division) or //= (in-place floor division)
                 lexeme += next;
                 lexeme += (nextnext == '=') ? "=" : "";
-                // just // or //= (floor division or in-place floor division)
             } else if (next == '*') {
                 skipMultilineComment(state);
                 return;  // Don't add a token for the comment
             }
             break;
         default:
-            type = TokenType::Invalid;  // Not a valid symbol
+            type = TokenType::Invalid;
             break;
     }
-    state.advance(lexeme.length());  // Move past the symbol
-    state.tokens.emplace_back(type, lexeme, state.getLine(), state.getColumn());
-}
-
-/**
- * @brief Processes a number literal (e.g., 123, 45.67, etc.)
- * @param state The lexer state
- */
-void tokenizeNumber(LexerState& state) {
-    str numberLiteral;
-    char currentChar = state.peekChar();
-    bool isFloat = false;
-    std::function<bool(char)> isValidBaseChar;
-    // TODO: Add floating point support for hex numbers (but not octal or binary)
-    if (currentChar == '0') {
-        // Could be a base indicator (0x, 0b, 0o) -- check next char
-        char baseChar = state.peekChar(1);
-        switch (baseChar) {
-            case 'x':
-            case 'X':
-                // Hexadecimal number
-                isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); };
-                state.advance(2);       // Skip the 0x
-                numberLiteral += "0x";  // Add the base indicator so the parser can handle it
-                break;
-            case 'b':
-            case 'B':
-                isValidBaseChar = [](char c) { return c == '0' || c == '1'; };
-                state.advance(2);       // Skip the 0b
-                numberLiteral += "0b";  // Add the base indicator so the parser can handle it
-                break;
-            case 'o':
-            case 'O':
-                isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; };
-                state.advance(2);       // Skip the 0o
-                numberLiteral += "0o";  // Add the base indicator so the parser can handle it
-                break;
-            default:
-                // Not a valid base indicator -- just treat it as a decimal number
-                isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); };
-                break;
-        }
-        currentChar = state.peekChar();  // if there was a base indicator, update the current char
-    } else {
-        // Decimal number
-        isValidBaseChar = [](char c) { return isdigit(c); };
-    }
-
-    while (!state.done() && (isValidBaseChar(currentChar) || currentChar == '.')) {
-        numberLiteral += state.getChar();
-        if (currentChar == '.') {
-            if (isFloat) {
-                // Invalid number -- two decimal points
-                fprintf(stderr, "Error: Invalid number at line %zu column %zu\n", state.getLine(), state.getColumn());
-                return;
-            }
-            isFloat = true;
-        }
-        currentChar = state.peekChar();
-    }
-    // TODO: Add support for scientific notation (e.g., 1.23e4)
-    state.tokens.emplace_back(
-        isFloat ? TokenType::Float : TokenType::Integer,
-        numberLiteral,
-        state.getLine(), state.getColumn());
-}
-
-/**
- * @brief Processes a keyword or identifier (e.g., if, while, myVar, etc.)
- * @param state The lexer state
- */
-void tokenizeKeywordOrIdentifier(LexerState& state) {
-    str lexeme = "";
-    while (!state.done() && (isalnum(state.peekChar()) || state.peekChar() == '_')) {
-        lexeme += state.getChar();
-    }
-    auto it = keyword_map.find(lexeme);
-
-    state.tokens.emplace_back(
-        it != keyword_map.end() ? TokenType::Keyword : TokenType::Identifier,
-        lexeme,
-        state.getLine(), state.getColumn());
+    state.advance(lexeme.length());
+    state.tokens.emplace_back(type, lexeme, state.getLine(), state.getCol());
 }
 
 TokenList tokenize(const str& source, Mode mode) {
@@ -673,18 +668,13 @@ TokenList tokenize(const str& source, Mode mode) {
         case Mode::File:
             reader = std::make_unique<io::FileReader>(source);
             break;
-        default:
-            fprintf(stderr, "Error: Invalid mode\n");
-            exit(EXIT_FAILURE);
+            // Don't need a default case since any other mode is invalid
     }
 
     TokenList tokens;
     LexerState state(std::move(reader), tokens);
     char currentChar = state.peekChar();
     while (!state.done()) {
-        // Order is roughly based on frequency of occurrence
-        // (but each check is quick so not a huge deal)
-
         if (currentChar == '#') {
             // Inline comment
             do {
@@ -705,9 +695,9 @@ TokenList tokenize(const str& source, Mode mode) {
         } else {
             tokenizeSymbol(state);
         }
-        currentChar = state.peekChar();  // Go to the next character
+        currentChar = state.peekChar();
     }
-    tokens.emplace_back(TokenType::EndOfFile, "EOF", state.getLine(), state.getColumn());  // End of file token
+    tokens.emplace_back(TokenType::EndOfFile, "EOF", state.getLine(), state.getCol());
     return tokens;
 }
 }  // namespace lexer
