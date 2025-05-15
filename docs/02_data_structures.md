@@ -2,6 +2,7 @@
 
 Manganese has 5 different built-in data structures. They are:
 
+> TODO: Once blueprints implemented, make these modules, each implemented as a blueprint wrapping something primitive
 <!-- TODO? Make each associated with a standard library module instead? -->
 
 - [strings](#-strings-)
