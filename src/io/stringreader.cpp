@@ -18,7 +18,7 @@ char StringReader::peekChar(size_t offset) {
     return source[position + offset];
 }
 
-char StringReader::getChar() {
+char StringReader::consumeChar() {
     if (position >= source.length()) {
         return EOF_CHAR;
     }

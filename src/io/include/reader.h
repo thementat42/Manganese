@@ -38,7 +38,7 @@ class Reader {
      * @brief Consume the next character
      * @return The character that was consumed
      */
-     [[nodiscard]] virtual char getChar() = 0;
+     [[nodiscard]] virtual char consumeChar() = 0;
     /**
      * @brief Move the reader forward to a new position
      * @param newPosition The new position to move to

@@ -22,7 +22,7 @@ class StringReader : public Reader {
     StringReader(const std::string& source);
     ~StringReader() override = default;
     char peekChar(size_t offset = 0) override;
-    [[nodiscard]] char getChar() override;
+    [[nodiscard]] char consumeChar() override;
     void setPosition(size_t newPosition) override;
     size_t getPosition() const override;
     size_t getLine() const override;

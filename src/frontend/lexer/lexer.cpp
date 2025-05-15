@@ -163,7 +163,7 @@ struct LexerState {
 
     // Wrapper functions for the reader (to do state.X instead of state.reader->X)
     inline char peekChar(size_t offset = 0) { return reader->peekChar(offset); }
-    [[nodiscard]] inline char getChar() { return reader->getChar(); }
+    [[nodiscard]] inline char consumeChar() { return reader->consumeChar(); }
     inline size_t getLine() { return reader->getLine(); }
     inline size_t getCol() { return reader->getColumn(); }
     inline size_t getPosition() { return reader->getPosition(); }
@@ -373,9 +373,9 @@ void tokenizeCharLiteral(LexerState& state) {
     while (!state.done() && state.peekChar() != '\'') {
         if (state.peekChar() == '\\') {
             // skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
-            charLiteral += state.getChar();
+            charLiteral += state.consumeChar();
         }
-        charLiteral += state.getChar();
+        charLiteral += state.consumeChar();
     }
     if (state.done()) {
         fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", state.getLine(), state.getCol());
@@ -406,10 +406,10 @@ void tokenizeStringLiteral(LexerState& state) {
     // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
     while (!state.done() && state.peekChar() != '"') {
         if (state.peekChar() == '\\') {        // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
-            stringLiteral += state.getChar();  // Add the backslash to the string
+            stringLiteral += state.consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
         }
-        stringLiteral += state.getChar();  // Add the character to the string
+        stringLiteral += state.consumeChar();  // Add the character to the string
     }
     if (state.done()) {
         // No closing quote found
@@ -436,7 +436,7 @@ void tokenizeStringLiteral(LexerState& state) {
 void tokenizeKeywordOrIdentifier(LexerState& state) {
     str lexeme = "";
     while (!state.done() && (isalnum(state.peekChar()) || state.peekChar() == '_')) {
-        lexeme += state.getChar();
+        lexeme += state.consumeChar();
     }
     auto it = keyword_map.find(lexeme);
 
@@ -491,7 +491,7 @@ void tokenizeNumber(LexerState& state) {
     }
 
     while (!state.done() && (isValidBaseChar(currentChar) || currentChar == '.')) {
-        numberLiteral += state.getChar();
+        numberLiteral += state.consumeChar();
         if (currentChar == '.') {
             if (isFloat) {
                 // Invalid number -- two decimal points

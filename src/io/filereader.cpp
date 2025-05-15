@@ -103,7 +103,7 @@ char FileReader::peekChar(size_t offset) {
     return buffer[position + offset];
 }
 
-char FileReader::getChar() {
+char FileReader::consumeChar() {
     // Check if we need more data
     if (position >= bufferSize) {
         if (fileStream.eof() && position >= bufferSize) {
