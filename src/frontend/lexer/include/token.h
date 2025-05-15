@@ -87,9 +87,7 @@ struct Token {
     size_t getLine() const;
     size_t getColumn() const;
     void overrideType(TokenType _type);
-    void overrideOperatorType(OperatorType _type) {
-        operatorType = _type;
-    }
+    void overrideOperatorType(OperatorType _type);
 
     /**
      * @brief Print out a token
