@@ -4,6 +4,16 @@ project(manganese)
 set(CMAKE_CXX_STANDARD 17)
 set(ROOT_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/manganese.cpp")
 
+# Find LLVM package
+find_package(LLVM REQUIRED CONFIG)
+
+if(NOT LLVM_FOUND)
+  message(FATAL_ERROR "LLVM not found. Please install LLVM and make sure it's in your path.")
+endif()
+
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
 # Prevent in-source builds
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there.")
