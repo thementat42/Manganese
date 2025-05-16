@@ -51,7 +51,7 @@ class Lexer {
     std::unique_ptr<io::Reader> reader;
 
    public:  // public variables
-    std::queue<Token> tokenStream;
+    std::deque<Token> tokenStream;
     bool isTokenizingDone;
 
    private:  // private methods
@@ -83,7 +83,7 @@ class Lexer {
     Lexer(const str& source, Mode mode = Mode::File);
     ~Lexer() = default;
 
-    Token peekToken(int offset = 0);
+    Token peekToken(size_t offset = 0);
     Token consumeToken();
 };
 }  // namespace lexer

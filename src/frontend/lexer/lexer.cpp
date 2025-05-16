@@ -36,7 +36,7 @@ Lexer::Lexer(const str& source, Mode mode) {
             reader = std::make_unique<io::FileReader>(source);
             break;
     }
-    tokenStream = std::queue<Token>();
+    tokenStream = std::deque<Token>();
     isTokenizingDone = false;
 }
 
@@ -177,7 +177,7 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
     str processed = resolveEscapeCharacters(charLiteral);
     if (processed == "INVALID ESCAPE SEQUENCE") {
         fprintf(stderr, "Error: Invalid character literal at line %zu column %zu\n", getLine(), getCol());
-        tokenStream.emplace(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
+        tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
         return;
     }
     // For escaped characters, we need to check if it represents a single code point
@@ -192,10 +192,10 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
     }
     if (!isValidSingleCodePoint) {
         fprintf(stderr, "Error: Invalid character literal at line %zu column %zu\n", getLine(), getCol());
-        tokenStream.emplace(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
+        tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
         return;
     }
-    tokenStream.emplace(TokenType::CharLiteral, processed, getLine(), getCol());
+    tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
 }
 
 void Lexer::tokenizeCharLiteral() {
@@ -212,7 +212,7 @@ void Lexer::tokenizeCharLiteral() {
     }
     if (done()) {
         fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", getLine(), getCol());
-        tokenStream.emplace(TokenType::Invalid, "INVALID", getLine(), getCol());
+        tokenStream.emplace_back(TokenType::Invalid, "INVALID", getLine(), getCol());
         return;
     }
     // go past closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
@@ -222,10 +222,10 @@ void Lexer::tokenizeCharLiteral() {
         return;
     } else if (charLiteral.length() > 1) {
         fprintf(stderr, "Error: Character literal at line %zu column %zu exceeds 1 character limit.\n", getLine(), getCol());
-        tokenStream.emplace(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
+        tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
         return;
     }
-    tokenStream.emplace(TokenType::CharLiteral, charLiteral, getLine(), getCol());
+    tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
 }
 
 void Lexer::tokenizeStringLiteral() {
@@ -244,7 +244,7 @@ void Lexer::tokenizeStringLiteral() {
     if (done()) {
         // No closing quote found
         fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", getLine(), getCol());
-        tokenStream.emplace(TokenType::Invalid, "INVALID", getLine(), getCol());
+        tokenStream.emplace_back(TokenType::Invalid, "INVALID", getLine(), getCol());
         return;
     }
     // Move past the closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
@@ -252,11 +252,11 @@ void Lexer::tokenizeStringLiteral() {
     if (containsEscapeSequence) {
         stringLiteral = resolveEscapeCharacters(stringLiteral);
         if (stringLiteral == "INVALID ESCAPE SEQUENCE") {
-            tokenStream.emplace(TokenType::Invalid, "INVALID", getLine(), getCol());
+            tokenStream.emplace_back(TokenType::Invalid, "INVALID", getLine(), getCol());
             return;
         }
     }
-    tokenStream.emplace(TokenType::StrLiteral, stringLiteral, getLine(), getCol());
+    tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, getLine(), getCol());
 }
 
 void Lexer::tokenizeKeywordOrIdentifier() {
@@ -266,7 +266,7 @@ void Lexer::tokenizeKeywordOrIdentifier() {
     }
     auto it = keyword_map.find(lexeme);
 
-    tokenStream.emplace(
+    tokenStream.emplace_back(
         it != keyword_map.end() ? TokenType::Keyword : TokenType::Identifier,
         lexeme,
         getLine(), getCol());
@@ -325,7 +325,7 @@ void Lexer::tokenizeNumber() {
         currentChar = peekChar();
     }
     // TODO: Add support for scientific notation (e.g., 1.23e4)
-    tokenStream.emplace(
+    tokenStream.emplace_back(
         isFloat ? TokenType::Float : TokenType::Integer,
         numberLiteral,
         getLine(), getCol());
@@ -476,7 +476,7 @@ void Lexer::tokenizeSymbol() {
             break;
     }
     advance(lexeme.length());
-    tokenStream.emplace(type, lexeme, getLine(), getCol());
+    tokenStream.emplace_back(type, lexeme, getLine(), getCol());
 }
 
 void Lexer::makeTokens(size_t numTokens) {
@@ -511,21 +511,22 @@ void Lexer::makeTokens(size_t numTokens) {
     }
     if (done()) {
         isTokenizingDone = true;
-        tokenStream.emplace(TokenType::EndOfFile, "EOF", getLine(), getCol());
+        tokenStream.emplace_back(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
 }
 
-Token Lexer::peekToken(int offset){
+Token Lexer::peekToken(size_t offset){
     if (isTokenizingDone) {
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
     if (tokenStream.empty()) {
-        makeTokens(offset == 0 ? 1 : offset);  // If queue empty, generate {offset} tokens to read
+        size_t numToMake = offset == 0 ? 1 : offset;
+        makeTokens(numToMake);  // If queue empty, generate {offset} tokens to read
     } else if (tokenStream.size() <= offset) {
-        int numToMake = offset - tokenStream.size();
-        makeTokens(numToMake == 0 ? 1 : numToMake);  // fill the queue with more tokens
+        size_t numToMake = offset - tokenStream.size();
+        makeTokens(numToMake);  // fill the queue with more tokens
     }
-    return tokenStream.front();
+    return tokenStream[offset];
 }
 
 Token Lexer::consumeToken() {
@@ -537,7 +538,7 @@ Token Lexer::consumeToken() {
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
     Token token = tokenStream.front();
-    tokenStream.pop();  // get rid of the token
+    tokenStream.pop_front();  // get rid of the token
     return token;
 }
 }  // namespace lexer
