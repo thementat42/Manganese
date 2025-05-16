@@ -30,7 +30,7 @@ class FileReader : public Reader {
     FileReader() = default;
     FileReader(const FileReader& other) = delete; // Disable copy constructor
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
-    ~FileReader() override;
+    ~FileReader();
 
     void refillBuffer(); // Fill the buffer with data from the file
     char peekChar(size_t offset = 0) override;

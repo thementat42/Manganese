@@ -135,7 +135,7 @@ std::string keywordToString(KeywordType keyword) {
 #endif // DEBUG
 }
 
-inline std::unordered_map<std::string, const KeywordType> keyword_map = {
+std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"alias", KeywordType::Alias},
     {"arr", KeywordType::Arr},
     {"as", KeywordType::As},

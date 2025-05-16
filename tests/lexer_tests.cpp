@@ -405,7 +405,7 @@ bool testInvalidEscapeSequence() {
     return tokens[0].getType() == TokenType::Invalid;
 }
 
-int main() {
+int runLexerTests() {
     TestRunner runner;
 
     // Register all tests

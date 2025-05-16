@@ -25,7 +25,7 @@ class Reader {
    public:
     static constexpr char EOF_CHAR = '\0';
     Reader() = default;
-    virtual ~Reader() = 0;
+    ~Reader() = default;
 
     /**
      * @brief Look at the next character without consuming it
@@ -69,7 +69,6 @@ class Reader {
      */
     virtual bool done() const = 0;
 };
-Reader::~Reader() = default;  // Pure virtual destructor still needs a definition
 }  // namespace io
 MANG_END
 

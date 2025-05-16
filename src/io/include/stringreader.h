@@ -21,7 +21,7 @@ class StringReader : public Reader {
     StringReader() = default;
     StringReader(const std::string& source);
     StringReader(const StringReader& other) = delete; // Disable copy constructor
-    ~StringReader() override = default;
+    ~StringReader() = default;
     char peekChar(size_t offset = 0) override;
     [[nodiscard]] char consumeChar() override;
     void setPosition(size_t newPosition) override;
