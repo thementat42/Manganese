@@ -117,6 +117,24 @@ if current char is an operator (after doing the above checks), look at the next 
 
 */
 
+/*
+TODO: Make this lazy
+- Large files could have a lot of tokens -- this is not memory efficient
+- Instead, generate tokens on demand.
+
+- Create a TokenStream class, with a queue containing tokens
+- When the parser asks for the next token, pop it from the queue
+- If the queue is empty, generate more tokens
+- Like a filereader, this should be abstracted away -- from the point of view of the lexer, it's just a stream of tokens
+
+- Have to still be able to implement lookahead and look behind so the parser can use context
+    - Especially important for angle brackets (eventually, once generics start to be implemented)
+    - Maybe: inside parser, have an std::vector of tokens for the current parsing context
+    - Once the context is done, flush the vector
+    - That way, the number of tokens that actually need to be stored in memory is smaller
+
+*/
+
 MANG_BEGIN
 namespace lexer {
 

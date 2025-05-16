@@ -62,7 +62,7 @@ size_t Token::getColumn() const {
 void Token::overrideType(TokenType _type) {
 #if DEBUG
     printf(
-        "Warning: overriding token type from %s to %s (line %zu in file %s)\n",
+        "Warning: overriding token type from %s to %s (line %d in file %s)\n",
         tokenTypeToString(type).c_str(),
         tokenTypeToString(_type).c_str(),
         __LINE__,
@@ -74,7 +74,7 @@ void Token::overrideType(TokenType _type) {
 void Token::overrideOperatorType(OperatorType _type) {
 #if DEBUG
     printf(
-        "Warning: overriding operator from %s to %s (line %zu in file %s)\n",
+        "Warning: overriding operator from %s to %s (line %d in file %s)\n",
         operatorToString(operatorType).c_str(),
         operatorToString(_type).c_str(),
         __LINE__,
