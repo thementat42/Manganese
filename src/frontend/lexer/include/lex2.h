@@ -62,10 +62,11 @@ class Lexer {
     void tokenizeNumber();
     void tokenizeKeywordOrIdentifier();
     void tokenizeSymbol();
-    void makeToken();
+    void makeTokens(size_t numTokens = 1);
 
     //~ Helper tokenization functions
     void processCharEscapeSequence(const str& charLiteral);
+    void skipMultilineComment();
 
     //~ Reader wrapper functions
     inline char peekChar(size_t offset = 0) { return reader->peekChar(offset); }
