@@ -1,6 +1,15 @@
 #include "include/lex2.h"
 
 #include <algorithm>
+#include <functional>
+
+#include "../../global_macros.h"
+#include "../io/include/filereader.h"
+#include "../io/include/reader.h"
+#include "../io/include/stringreader.h"
+#include "include/keywords.h"
+#include "include/operators.h"
+#include "include/token.h"
 
 MANG_BEGIN
 namespace lexer {
@@ -157,6 +166,22 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
         tokenStream.emplace(TokenType::Invalid, "INVALID CharLiteral LITERAL", getLine(), getCol());
         return;
     }
+    // For escaped characters, we need to check if it represents a single code point
+    // not necessarily the same as the length of the resolved string being 1
+    size_t byteCount = processed.length();
+    bool isValidSingleCodePoint = true;
+    if (byteCount > 1) {
+        unsigned char firstByte = static_cast<unsigned char>(processed[0]);
+        isValidSingleCodePoint = (byteCount == 2 && (firstByte & 0xE0) == 0xC0) ||  // 2-byte UTF-8 character
+                                 (byteCount == 3 && (firstByte & 0xF0) == 0xE0) ||  // 3-byte UTF-8 character
+                                 (byteCount == 4 && (firstByte & 0xF8) == 0xF0);    // 4-byte UTF-8 character
+    }
+    if (!isValidSingleCodePoint) {
+        fprintf(stderr, "Error: Invalid character literal at line %zu column %zu\n", getLine(), getCol());
+        tokenStream.emplace(TokenType::Invalid, "INVALID CharLiteral LITERAL", getLine(), getCol());
+        return;
+    }
+    tokenStream.emplace(TokenType::CharLiteral, processed, getLine(), getCol());
 }
 
 void Lexer::tokenizeCharLiteral() {
@@ -188,6 +213,312 @@ void Lexer::tokenizeCharLiteral() {
     }
     tokenStream.emplace(TokenType::CharLiteral, charLiteral, getLine(), getCol());
 }
+
+void Lexer::tokenizeStringLiteral() {
+    advance();  // Move past the opening quote
+    bool containsEscapeSequence = false;
+    str stringLiteral;
+
+    // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
+    while (!done() && peekChar() != '"') {
+        if (peekChar() == '\\') {            // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
+            stringLiteral += consumeChar();  // Add the backslash to the string
+            containsEscapeSequence = true;
+        }
+        stringLiteral += consumeChar();  // Add the character to the string
+    }
+    if (done()) {
+        // No closing quote found
+        fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", getLine(), getCol());
+        tokenStream.emplace(TokenType::Invalid, "INVALID", getLine(), getCol());
+        return;
+    }
+    // Move past the closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
+    advance();
+    if (containsEscapeSequence) {
+        stringLiteral = resolveEscapeCharacters(stringLiteral);
+        if (stringLiteral == "INVALID ESCAPE SEQUENCE") {
+            tokenStream.emplace(TokenType::Invalid, "INVALID", getLine(), getCol());
+            return;
+        }
+    }
+    tokenStream.emplace(TokenType::StrLiteral, stringLiteral, getLine(), getCol());
+}
+
+void Lexer::tokenizeKeywordOrIdentifier() {
+    str lexeme = "";
+    while (!done() && (isalnum(peekChar()) || peekChar() == '_')) {
+        lexeme += consumeChar();
+    }
+    auto it = keyword_map.find(lexeme);
+
+    tokenStream.emplace(
+        it != keyword_map.end() ? TokenType::Keyword : TokenType::Identifier,
+        lexeme,
+        getLine(), getCol());
+}
+
+void Lexer::tokenizeNumber() {
+    str numberLiteral;
+    char currentChar = peekChar();
+    bool isFloat = false;
+    std::function<bool(char)> isValidBaseChar;
+    // TODO: Add floating point support for hex numbers (but not octal or binary)
+    if (currentChar == '0') {
+        // Could be a base indicator (0x, 0b, 0o) -- check next char
+        char baseChar = peekChar(1);
+        switch (baseChar) {
+            case 'x':
+            case 'X':
+                // Hexadecimal number
+                isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); };
+                advance(2);             // Skip the 0x
+                numberLiteral += "0x";  // Add the base indicator so the parser can handle it
+                break;
+            case 'b':
+            case 'B':
+                isValidBaseChar = [](char c) { return c == '0' || c == '1'; };
+                advance(2);             // Skip the 0b
+                numberLiteral += "0b";  // Add the base indicator so the parser can handle it
+                break;
+            case 'o':
+            case 'O':
+                isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; };
+                advance(2);             // Skip the 0o
+                numberLiteral += "0o";  // Add the base indicator so the parser can handle it
+                break;
+            default:
+                // Not a valid base indicator -- just treat it as a decimal number
+                isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); };
+                break;
+        }
+        currentChar = peekChar();  // if there was a base indicator, update the current char
+    } else {
+        // Decimal number
+        isValidBaseChar = [](char c) { return isdigit(c); };
+    }
+
+    while (!done() && (isValidBaseChar(currentChar) || currentChar == '.')) {
+        numberLiteral += consumeChar();
+        if (currentChar == '.') {
+            if (isFloat) {
+                // Invalid number -- two decimal points
+                fprintf(stderr, "Error: Invalid number at line %zu column %zu\n", getLine(), getCol());
+                return;
+            }
+            isFloat = true;
+        }
+        currentChar = peekChar();
+    }
+    // TODO: Add support for scientific notation (e.g., 1.23e4)
+    tokenStream.emplace(
+        isFloat ? TokenType::Float : TokenType::Integer,
+        numberLiteral,
+        getLine(), getCol());
+}
+
+void Lexer::skipMultilineComment() {
+    advance(2);  // Skip the /*
+    while (!done() && !(peekChar() == '*' && peekChar(1) == '/')) {
+        advance();  // Skip the comment
+    }
+    if (done()) {
+        fprintf(stderr, "Error: Unclosed comment at line %zu column %zu\n", getLine(), getCol());
+        return;
+    }
+    advance(2);  // Skip the */
+}
+
+void Lexer::tokenizeSymbol() {
+    TokenType type;
+    char current = peekChar();
+    char next = peekChar(1);
+    char nextnext = peekChar(2);
+    str lexeme = std::string(1, current);
+    switch (current) {
+        //~ Brackets
+        case '(':
+            type = TokenType::LeftParen;
+            break;
+        case '{':
+            type = TokenType::LeftBrace;
+            break;
+        case '[':
+            type = TokenType::LeftSquare;
+            break;
+        case '<':
+            // Don't handle all the possible cases here -- let parser handle it
+            type = TokenType::LeftAngle;
+            break;
+        case ')':
+            type = TokenType::RightParen;
+            break;
+        case '}':
+            type = TokenType::RightBrace;
+            break;
+        case ']':
+            type = TokenType::RightSquare;
+            break;
+        case '>':
+            // Don't handle all the possible cases here -- let parser handle it
+            type = TokenType::RightAngle;
+            break;
+
+        // ~ Boolean / Bitwise operators
+        case '&':
+        case '|':
+            type = TokenType::Operator;
+            if (next == current) {
+                // Logical operator (&& or ||)
+                lexeme += current;
+            } else if (next == '=') {
+                // Bitwise assignment operator (&= or |=)
+                lexeme += '=';
+            } else {
+                // Bitwise operator (& or |)
+                // Do nothing
+            }
+            break;
+        case '^':
+        case '!':
+        case '~':
+        case '=':
+            type = TokenType::Operator;
+            if (next == '=') {
+                // Assignment operator (^=, != or ~=)
+                // or equality check (==)
+                lexeme += '=';
+            }
+            break;
+
+        // ~ Other punctuation
+        case ';':
+            type = TokenType::Semicolon;
+            break;
+        case ',':
+            type = TokenType::Comma;
+            break;
+        case '.':
+            lexeme = (next == '.' && nextnext == '.') ? "..." : ".";
+            [[fallthrough]];  // Intentionally fall through to set the type
+        case '?':
+        case '@':
+            type = TokenType::Operator;
+            break;
+        case ':':
+            type = (next == ':') ? TokenType::Operator : TokenType::Colon;
+            lexeme = (next == ':') ? "::" : ":";
+            break;
+
+        //~ Arithmetic operators
+        case '+':
+            type = TokenType::Operator;
+            if (next == '+' || next == '=') {
+                //* ++ (increment) or += (in-place addition)
+                lexeme += next;
+            }
+            break;
+        case '-':
+            type = TokenType::Operator;
+            if (next == '-' || next == '=' || next == '>') {
+                //* -- (decrement) or -= (in-place subtraction) or -> (arrow operator)
+                lexeme += next;
+            }
+            break;
+        case '%':
+            type = TokenType::Operator;
+            if (next == '=') {
+                // %= (in-place modulus)
+                lexeme += '=';
+            }
+            break;
+        case '*':
+            type = TokenType::Operator;
+            if (next == '=') {
+                //* *= (in-place multiplication)
+                lexeme += '=';
+            } else if (next == '*') {
+                // ** (exponentiation) or **= (in-place exponentiation)
+                lexeme += next;
+                lexeme += (nextnext == '=') ? "=" : "";
+            }
+            break;
+        case '/':
+            type = TokenType::Operator;
+            if (next == '=') {
+                //* /= (in-place division)
+                lexeme += '=';
+            } else if (next == '/') {
+                //* // (floor division) or //= (in-place floor division)
+                lexeme += next;
+                lexeme += (nextnext == '=') ? "=" : "";
+            } else if (next == '*') {
+                skipMultilineComment();
+                return;  // Don't add a token for the comment
+            }
+            break;
+        default:
+            type = TokenType::Invalid;
+            break;
+    }
+    advance(lexeme.length());
+    tokenStream.emplace(type, lexeme, getLine(), getCol());
+}
+
+void Lexer::makeTokens(size_t numTokens) {
+    size_t numTokensMade = 0;
+    char currentChar = peekChar();
+    while (!done() && numTokensMade < numTokens) {
+        if (currentChar == '#') {
+            do {
+                advance();
+                currentChar = peekChar();
+            } while (!done() && currentChar != '\n');
+            advance();  // Skip the newline
+        } else if (std::isspace(currentChar)) {
+            advance();  // Skip whitespace
+        } else if (isalpha(currentChar) || currentChar == '_') {
+            tokenizeKeywordOrIdentifier();
+        } else if (currentChar == '\'') {
+            tokenizeCharLiteral();
+        } else if (currentChar == '"') {
+            tokenizeStringLiteral();
+        } else if (std::isdigit(currentChar)) {
+            tokenizeNumber();
+        } else {
+            tokenizeSymbol();
+        }
+        currentChar = peekChar();
+    }
+    if (done()) {
+        isTokenizingDone = true;
+        tokenStream.emplace(TokenType::EndOfFile, "EOF", getLine(), getCol());
+    }
+}
+
+Token Lexer::peekToken(size_t offset){
+    if (isTokenizingDone) {
+        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+    }
+    if (tokenStream.empty()) {
+        makeTokens(offset);  // If queue empty, generate {offset} tokens to read
+    } else if (tokenStream.size() < offset) {
+        makeTokens(offset - tokenStream.size());  // fill the queue with more tokens
+    }
+    return tokenStream.front();
+}
+
+Token Lexer::consumeToken() {
+    if (tokenStream.empty()) {
+        makeTokens(1);  // If queue empty, generate 1 token to read
+    }
+    if (tokenStream.empty()) {
+        isTokenizingDone = true;
+        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+    }
+    Token token = tokenStream.front();
+    tokenStream.pop();  // get rid of the token
+    return token;
 
 }  // namespace lexer
 MANG_END
