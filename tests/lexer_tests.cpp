@@ -23,10 +23,10 @@ std::vector<Token> tokensFromString(const std::string& source) {
     // Consume tokens until we hit EOF
     while (true) {
         Token token = lexer.consumeToken();
-        tokens.push_back(token);
         if (token.getType() == TokenType::EndOfFile) {
             break;
         }
+        tokens.push_back(token);
     }
 
     return tokens;
@@ -46,24 +46,13 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
     return true;
 }
 
-void removeEOFToken(std::vector<Token>& tokens) {
-    // Lexer always pushes an EOF token at the end of the token stream
-    // This messes up the testing, since it was not included in the test cases
-    // So we remove it here
-    if (!tokens.empty() && tokens.back().getType() == TokenType::EndOfFile) {
-        tokens.pop_back();
-    }
-}
-
 bool testEmptyString() {
     auto tokens = tokensFromString("");
-    removeEOFToken(tokens);
     return tokens.empty();
 }
 
 bool testWhitespace() {
     auto tokens = tokensFromString("  \t\n\r  ");
-    removeEOFToken(tokens);
     return tokens.empty();
 }
 
@@ -74,7 +63,6 @@ bool testComments() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -92,7 +80,6 @@ bool testIdentifiers() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 5) {
         std::cout << "Expected 5 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -112,7 +99,6 @@ bool testKeywords() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 53) {
         std::cout << "Expected 53 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -180,7 +166,6 @@ bool testIntegerLiterals() {
         std::cout << token.getLexeme() << "";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 6) {
         std::cout << "Expected 6 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -200,7 +185,6 @@ bool testFloatLiterals() {
     for (const auto& token : tokens) {
         std::cout << token.getLexeme() << " ";
     }
-    removeEOFToken(tokens);
     std::cout << std::endl;
     if (tokens.size() != 3) {
         std::cout << "Expected 3 tokens, got " << tokens.size() << std::endl;
@@ -219,7 +203,6 @@ bool testCharLiterals() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 6) {
         std::cout << "Expected 6 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -240,7 +223,6 @@ bool testStringLiterals() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -258,7 +240,6 @@ bool testOperators() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 37) {
         std::cout << "Expected 37 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -310,7 +291,6 @@ bool testBrackets() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 8) {
         std::cout << "Expected 8 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -332,7 +312,6 @@ bool testPunctuation() {
     for (const auto& token : tokens) {
         std::cout << token.getLexeme() << " ";
     }
-    removeEOFToken(tokens);
     std::cout << std::endl;
     if (tokens.size() != 7) {
         std::cout << "Expected 7 tokens, got " << tokens.size() << std::endl;
@@ -364,7 +343,6 @@ func main() -> int {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.empty()) {
         std::cout << "Expected non-empty tokens" << std::endl;
         return false;
@@ -385,7 +363,6 @@ bool testNestedBrackets() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 8) {
         std::cout << "Expected 8 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -403,7 +380,6 @@ bool testNestedBrackets() {
 
 bool testInvalidChar() {
     auto tokens = tokensFromString("'too long' '\\z' '\\u9Z99' ");
-    removeEOFToken(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 token, got " << tokens.size() << std::endl;
         return false;
@@ -421,7 +397,6 @@ bool testInvalidEscapeSequence() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    removeEOFToken(tokens);
     if (tokens.size() != 1) {
         std::cout << "Expected 1 token, got " << tokens.size() << std::endl;
         return false;
