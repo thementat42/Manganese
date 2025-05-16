@@ -49,6 +49,7 @@ enum class Mode {
 class Lexer {
    private:  // private variables
     std::unique_ptr<io::Reader> reader;
+    constexpr static const size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
 
    public:  // public variables
     std::deque<Token> tokenStream;

@@ -521,9 +521,11 @@ Token Lexer::peekToken(size_t offset){
     }
     if (tokenStream.empty()) {
         size_t numToMake = offset == 0 ? 1 : offset;
+        numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
         makeTokens(numToMake);  // If queue empty, generate {offset} tokens to read
     } else if (tokenStream.size() <= offset) {
         size_t numToMake = offset - tokenStream.size();
+        numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
         makeTokens(numToMake);  // fill the queue with more tokens
     }
     return tokenStream[offset];
