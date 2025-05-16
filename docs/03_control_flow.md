@@ -1,6 +1,6 @@
 # === Control Flow ===
 
-Control flow is used to modify the execution of a program from a linear progression through the file. Manganese supports has `if`, `switch` and `return` statements, `break` and `skip` instructions and `for`, `repeat`, `while` and `do/while` loops.
+Control flow is used to modify the execution of a program from a linear progression through the file. Manganese supports has `if`, `switch` and `return` statements, `break` and `continue` instructions and `for`, `repeat`, `while` and `do/while` loops.
 
 ## === Conditionals ===
 
@@ -42,7 +42,7 @@ The `default` block is optional -- if no case is met and the `default` block is 
 
 Loops allow a piece of code to be executed repeatedly while some condition remains true.
 
-Loops can be exited early using a `break` statement or have iterations skipped using `skip`.
+Loops can be exited early using a `break` statement or have iterations skipped using `continue`.
 
 ### === For Loops and Repeat loops ===
 
