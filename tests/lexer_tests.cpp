@@ -21,10 +21,12 @@ std::vector<Token> tokensFromString(const std::string& source) {
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
-    Token token = lexer.peekToken();
-    while (token.getType() != TokenType::EndOfFile) {
-        tokens.push_back(lexer.consumeToken());
-        token = lexer.peekToken();
+    while (true) {
+        Token token = lexer.consumeToken();
+        tokens.push_back(token);
+        if (token.getType() == TokenType::EndOfFile) {
+            break;
+        }
     }
 
     return tokens;
@@ -61,6 +63,7 @@ bool testEmptyString() {
 
 bool testWhitespace() {
     auto tokens = tokensFromString("  \t\n\r  ");
+    removeEOFToken(tokens);
     return tokens.empty();
 }
 
