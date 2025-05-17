@@ -18,14 +18,14 @@ namespace io {
  * @brief An abstract base class for reading characters from a source
  */
 class Reader {
-   private:
+   protected:
     size_t position, line, column;
     std::string source;
 
    public:
     static constexpr char EOF_CHAR = '\0';
     Reader() = default;
-    ~Reader() = default;
+    virtual ~Reader() = default;
 
     /**
      * @brief Look at the next character without consuming it
