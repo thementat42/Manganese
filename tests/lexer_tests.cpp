@@ -5,15 +5,16 @@
 #include <vector>
 
 #include "../src/frontend/lexer/include/lexer.h"
-#include "../src/frontend/lexer/include/token.h"
 #include "../src/global_macros.h"
 #include "testrunner.h"
 
-using Manganese::lexer::Lexer;
-using Manganese::lexer::Mode;
-using Manganese::lexer::Token;
+MANG_BEGIN
+namespace tests {
+using lexer::Lexer;
+using lexer::Mode;
+using lexer::Token;
 using TokenList = std::vector<Token>;
-using Manganese::lexer::TokenType;
+using lexer::TokenType;
 
 // Utility function to convert string to tokens using the class-based Lexer
 std::vector<Token> tokensFromString(const std::string& source) {
@@ -429,3 +430,5 @@ int runLexerTests(TestRunner& runner) {
 
     // g++ tests/test_lexer.cpp tests/test_runner.cpp src/frontend/keywords.cpp src/frontend/lexer.cpp src/frontend/operators.cpp src/frontend/token.cpp -o tl; ./tl
 }
+}  // namespace tests
+MANG_END
