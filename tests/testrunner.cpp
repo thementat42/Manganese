@@ -4,6 +4,10 @@
 #include <iostream>
 #include <string>
 
+#include "../src/global_macros.h"
+
+MANG_BEGIN
+namespace tests {
 void TestRunner::runTest(const std::string& testName, std::function<bool()> testFunction) {
     std::cout << "Running test: " << testName << "... ";
 
@@ -28,3 +32,5 @@ void TestRunner::printSummary() {
 bool TestRunner::allTestsPassed() {
     return failed == 0;
 }
+}  // namespace tests
+MANG_END

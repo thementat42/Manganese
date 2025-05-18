@@ -9,6 +9,8 @@
 #define DEBUG  // Force debug mode for testing (to enable string conversion functions, logging, etc)
 #endif // DEBUG
 
+MANG_BEGIN
+namespace tests {
 class TestRunner {
    private:
     int passed = 0;
@@ -24,5 +26,7 @@ class TestRunner {
     void printSummary();
     bool allTestsPassed();
 };
+}  // namespace tests
+MANG_END
 
 #endif  // MANGANESE_TESTS_TEST_RUNNER_H
