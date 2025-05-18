@@ -44,6 +44,34 @@ manganese <source file> -o <output file>
 
 If no output file name is specified, the source file name will be used (e.g., foo.mn will output an executable named foo)
 
+## Testing Framework
+
+The [tests](/tests) directory contains tests for all parts of the compiler. The tests take in short snippets of Manganese code (as a string) and check if the output is as expected.
+The tests use a simple [testrunner class](/tests/testrunner.h) which tracks success and failure.
+
+The tests can be run using the [tests-main.cpp](/tests-main.cpp) file in the root directory. The file uses a unity built to run the tests (because I was too lazy to setup a second CMake). To run the test suite, first compile the tests-main file:
+
+```bash
+g++ -o mntests tests-main.cpp
+```
+
+(or substitute `g++` with your compiler).
+Then run the tests:
+
+```bash
+./mntests [options]
+```
+
+The tests executable takes the following command line arguments:
+
+- `--lexer`: Run the lexer tests
+- `--parser`: Run the parser tests
+- `--semantic`: Run the semantic analyzer tests
+- `--codegen`: Test the IR generation
+- `--all`: Run all tests
+
+Running it with no arguments prints a help message.
+
 ## File Structure
 
 This project is divided into several directories:
