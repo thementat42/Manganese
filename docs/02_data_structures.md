@@ -37,7 +37,7 @@ Strings support some of the operators outlined in the [operators doc](/docs/00_o
 | `+`      | concatenates two strings, returning a new string.|
 | `*`      | when the right-hand side is an integer, returns a new string with that many copies of the original string (e.g. "h"*3 outputs "hhh")|
 | `==`     | `true` if two strings have all the same characters, false otherwise |
-|`!=`      | opposite of the `!=` operator |
+| `!=`     | opposite of the `==` operator |
 | `[]`     | Returns the character at a given index |
 
 ### === String Methods ===
@@ -47,10 +47,10 @@ Strings support different methods. They are:
 | Method | Effect | Return Type |
 | ------ | ------ | ----------- |
 | `.count(value)` | Returns the number of times a value appears in the string (`0` if it doesn't) | `int64` |
-| `.is_alpha()` | `true` if the string contains only alphabetic characters, `false otherwise | `bool` |
-| `.is_alphanum()` | `true` if the string contains only alphanumeric characters, `false otherwise | `bool` |
-| `.is_digit()` | `true` if the string contains only numeric characters, `false otherwise | `bool` |
-| `.is_hex()` | `true` if the string contains only hexadecimal digits (), `false otherwise | `bool` |
+| `.is_alpha()` | `true` if the string contains only alphabetic characters, `false` otherwise | `bool` |
+| `.is_alphanum()` | `true` if the string contains only alphanumeric characters, `false` otherwise | `bool` |
+| `.is_digit()` | `true` if the string contains only numeric characters, `false` otherwise | `bool` |
+| `.is_hex()` | `true` if the string contains only hexadecimal digits (), `false` otherwise | `bool` |
 | `.length()` | The length of the string | `int64` |
 <!-- TODO? Slice? -->
 
@@ -79,9 +79,9 @@ Using `const` in both places results in an array which cannot be reassigned and 
 | `+`      | concatenates two arrays, returning a new array.|
 | `*`      | when the right-hand side is an integer, returns a new array with that many copies of the elements of the original array (e.g. `{1,2}*3` outputs `{1,2,1,2,1,2}`)|
 | `==`     | `true` if two arrays have all the same elements, false otherwise |
-|`!=`      | opposite of the `!=` operator |
+| `!=`     | opposite of the `==` operator |
 | `[]`     | Returns the item at a given index |
-| `[] =`     | Updates the item at a given index (the types must match) |
+| `[] =`   | Updates the item at a given index (the types must match) |
 
 ### === Array Methods ===
 
@@ -119,9 +119,9 @@ Using `const` in both places results in a vector which cannot be reassigned and 
 | `+`      | concatenates two vectors, returning a new vector.|
 | `*`      | when the right-hand side is an integer, returns a new vector with that many copies of the elements of the original vector (e.g. `{1,2}*3` outputs `{1,2,1,2,1,2}`)|
 | `==`     | `true` if two vectors have all the same elements, false otherwise |
-|`!=`      | opposite of the `!=` operator |
+| `!=`     | opposite of the `==` operator |
 | `[]`     | Returns the item at a given index |
-| `[] =`     | Updates the item at a given index (the types must match) |
+| `[] =`   | Updates the item at a given index (the types must match) |
 
 ### === Vector Methods ===
 
@@ -152,7 +152,7 @@ Hashmaps are indexed using `[]`, where the value inside the square brackets is o
 The const keyword can be used in two places in a map declaration:
 
 - `const map<key type, value type>` means the map variable cannot be reassigned (nor can it have elements added/removed), but its elements can be modified
-- `vec<key type, const value type>` means the vector variable can be reassigned, but the values cannot be modified.
+- `map<key type, const value type>` means the vector variable can be reassigned, but the values cannot be modified.
 Using const in both places results in a map which cannot be reassigned and whose values cannot be modified.
 
 The keys of a hashmap are always constant, and can never be modified.

@@ -115,7 +115,7 @@ The following aren't really operators, but are symbols interpreted in a specific
 
 In a multi-operator expression, operations are performed based on the following order (higher in the table means evaluated first). In the case of a tie, the operators are evaluated left-to-right.
 
-Comments are always evaluated first (i.e., operators within comments are ignored.)
+Comments are stripped during lexing, so don't play a role in operator precedence.
 
 | Precedence | Operator | Description | Associativity|
 | ---------- | -------- | ------------------ | ----- |

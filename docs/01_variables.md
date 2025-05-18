@@ -87,7 +87,7 @@ When a variable is declared, but not assigned a value, the compiler will give it
 | `bool`  | `false`        |
 | `ptr`   | a null pointer |
 
-Default initialization can be explicitly disabled for a variable using the `garbage` keyword. Setting a variable equal to `garbage` will stop the compiler from assigning it a default value (i.e., it will contain whatever value happens to be in its assigned memory address)
+Default initialization can be explicitly disabled for a variable using the `garbage` keyword. Setting a variable equal to `garbage` will stop the compiler from assigning it a default value (i.e., it will contain whatever value happens to be in its assigned memory address). Using a `garbage` variable before assigning it a value is undefined behavior.
 
 For example:
 
