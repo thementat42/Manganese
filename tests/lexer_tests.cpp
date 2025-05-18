@@ -405,8 +405,7 @@ bool testInvalidEscapeSequence() {
     return tokens[0].getType() == TokenType::Invalid;
 }
 
-int runLexerTests() {
-    TestRunner runner;
+int runLexerTests(TestRunner& runner) {
 
     // Register all tests
     runner.runTest("Empty String", testEmptyString);
@@ -425,8 +424,6 @@ int runLexerTests() {
     runner.runTest("Nested Brackets", testNestedBrackets);
     runner.runTest("Invalid Character", testInvalidChar);
     runner.runTest("Invalid Escape Sequence", testInvalidEscapeSequence);
-
-    runner.printSummary();
 
     return runner.allTestsPassed() ? 0 : 1;
 
