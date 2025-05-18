@@ -46,7 +46,7 @@ If no output file name is specified, the source file name will be used (e.g., fo
 
 ## Testing Framework
 
-The [tests](/tests) directory contains tests for all parts of the compiler. The tests take in short snippets of Manganese code (as a string) and check if the output is as expected.
+The [tests](/tests) directory contains tests for the portions of the compiler up to IR generation. The tests take in short snippets of Manganese code (as a string) and check if the output is as expected.
 The tests use a simple [testrunner class](/tests/testrunner.h) which tracks success and failure.
 
 The tests can be run using the [tests-main.cpp](/tests-main.cpp) file in the root directory. The file uses a unity built to run the tests (because I was too lazy to setup a second CMake). To run the test suite, first compile the tests-main file:
