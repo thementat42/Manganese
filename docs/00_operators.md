@@ -117,22 +117,22 @@ In a multi-operator expression, operations are performed based on the following 
 
 Comments are always evaluated first (i.e., operators within comments are ignored.)
 
-| Precedence | Operator | Description |
-| ---------- | -------- | ----------- |
-| 1 | `::` | Scope Resolution |
-| 2 | `.` | Member access |
-| 3 | `x++`<br> `x--`<br> `x()`<br> `x[]` | Increment (Postfix)<br> Decrement (Postfix) <br> Function Call <br> Indexing |
-| 4 | `++x` <br> `--x` <br> `+x` <br> `-x`<br> `!`<br> `~`<br> `cast<>` <br> `@` <br> `?` | Increment (prefix) <br> Decrement (prefix) <br> Unary positive <br> Unary Negative <br> Logical NOT <br> Bitwise NOT <br> Type cast <br> Dereference <br> Address of <br> |
-| 5 | `**` | Exponentiation |
-| 6 | `*`<br> `/`<br> `//`<br> `%` | Multiplication<br> Floating-point division <br> Integer division <br> Modulus |
-| 7 | `+`<br> `-` | Addition<br> Subtraction |
-| 8 | `<<`<br> `>>` | Bitwise Left Shift<br> Bitwise Right Shift |
-| 9 | `<`, `>`, `<=`, `>=` | Relational operators |
-| 10 | `==`, `!=` | Equality operators |
-| 11 | `&` | Bitwise AND |
-| 12 | `^` | Bitwise XOR |
-| 13 | `\|` | Bitwise OR |
-| 14 | `&&` | Logical AND |
-| 15 | `\|\|` | Logical OR |
-| 16 | `=`<br> `<op> =`| Assignment<br> Immediate Reassignment |
-| 17 | `->` | Arrow |
+| Precedence | Operator | Description | Associativity|
+| ---------- | -------- | ------------------ | ----- |
+| 1          | `::` | Scope Resolution | Left |
+| 2          | `.` | Member access | Left |
+| 3          | `x++` <br> `x--` <br> `x()` <br> `x[]` | Postfix Increment <br> Postfix Decrement <br> Function Call <br> Indexing | Left |
+| 4          | `++x` <br> `--x` <br> `+x` <br> `-x` <br> `!` <br> `~` <br> `cast<>` <br> `@` <br> `?` | Prefix Increment <br> Prefix Decrement <br> Unary Positive <br> Unary Negative <br> Logical NOT <br> Bitwise NOT <br> Type Cast <br> Dereference <br> Address-of | Right |
+| 5          | `**` | Exponentiation | Right |
+| 6          | `*` <br> `/` <br> `//` <br> `%` | Multiplication <br> Floating-point Division <br> Integer Division <br> Modulus | Left |
+| 7          | `+` <br> `-` | Addition <br> Subtraction | Left |
+| 8          | `<<` <br> `>>` | Bitwise Left Shift <br> Bitwise Right Shift | Left |
+| 9          | `<` <br> `>` <br> `<=` <br> `>=` | Relational operators | Left |
+| 10         | `==` <br> `!=` | Equality operators | Left |
+| 11         | `&` | Bitwise AND| Left |
+| 12         | `^` | Bitwise XOR | Left |
+| 13         | `\|`  |  Bitwise OR | Left |
+| 14         | `&&` | Logical AND | Left |
+| 15         | `\|\|` | Logical OR | Left |
+| 16         | `=` <br> `<op> =` | Assignment <br> Immediate Reassignment | Right |
+| 17         | `->` | Arrow operator | Left |
