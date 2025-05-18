@@ -29,10 +29,10 @@ std::string operatorToString(std::optional<OperatorType> op) {
     }
 #if DEBUG
     switch (*op) {
-        case OperatorType::Add:
-            return "OperatorType::Add";
-        case OperatorType::Sub:
-            return "OperatorType::Sub";
+        case OperatorType::Plus:
+            return "OperatorType::Plus";
+        case OperatorType::Minus:
+            return "OperatorType::Minus";
         case OperatorType::Mul:
             return "OperatorType::Mul";
         case OperatorType::Div:
@@ -120,15 +120,15 @@ std::string operatorToString(std::optional<OperatorType> op) {
         default:
             return "Unknown Operator";
     }
-#else  // ^ DEBUG ^ | v !DEBUG v
+#else   // ^ DEBUG ^ | v !DEBUG v
     return "";
-#endif // DEBUG
+#endif  // DEBUG
 }
 
 std::unordered_map<std::string, const OperatorType> operator_map = {
     // Arithmetic Operators
-    {"+", OperatorType::Add},
-    {"-", OperatorType::Sub},
+    {"+", OperatorType::Plus},
+    {"-", OperatorType::Minus},
     {"*", OperatorType::Mul},
     {"/", OperatorType::Div},
     {"//", OperatorType::FloorDiv},

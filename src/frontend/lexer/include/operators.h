@@ -26,33 +26,33 @@ MANG_BEGIN
 namespace lexer {
 enum class OperatorType : unsigned char {
     //~ Arithmetic Operators
-    Add,        // `+`
-    Sub,        // `-`
-    Mul,        // `*`
-    Div,        // `/`
+    Plus,      // `+`
+    Minus,     // `-`
+    Mul,       // `*`
+    Div,       // `/`
     FloorDiv,  // `//`
-    Mod,        // `%`
-    Exp,        // `**`
-    Inc,        // `++`
-    Dec,        // `--`
+    Mod,       // `%`
+    Exp,       // `**`
+    Inc,       // `++`
+    Dec,       // `--`
 
     //~ Arithmetic Assignment Operators
     // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)
-    AddAssign,        // `+=`
-    SubAssign,        // `-=`
-    MulAssign,        // `*=`
-    DivAssign,        // `/=`
+    AddAssign,       // `+=`
+    SubAssign,       // `-=`
+    MulAssign,       // `*=`
+    DivAssign,       // `/=`
     FloorDivAssign,  // `//=`
-    ModAssign,        // `%=`
-    ExpAssign,        // `**=`
+    ModAssign,       // `%=`
+    ExpAssign,       // `**=`
 
     //~ Comparison Operators
-    GreaterThan,   // `>`
+    GreaterThan,         // `>`
     GreaterThanOrEqual,  // `>=`
-    LessThan,   // `<`
-    LessThanOrEqual,  // `<=`,
-    Equal,   // `==`
-    NotEqual,  // `!=`
+    LessThan,            // `<`
+    LessThanOrEqual,     // `<=`,
+    Equal,               // `==`
+    NotEqual,            // `!=`
 
     //~ Boolean Operators
     And,  // `&&`
@@ -77,11 +77,11 @@ enum class OperatorType : unsigned char {
     BitRShiftAssign,  // `>>=`
 
     //~ Pointer Operators
-    AddressOf,  // `?`
-    Dereference,    // `@`
+    AddressOf,    // `?`
+    Dereference,  // `@`
 
     //~ Access Operators
-    MemberAccess,            // `.`
+    MemberAccess,     // `.`
     ScopeResolution,  // `::`
 
     //~ Misc
@@ -103,6 +103,13 @@ std::optional<OperatorType> operatorFromString(const std::string& op);
  * @return String representation of the OperatorType
  */
 std::string operatorToString(std::optional<OperatorType> op);
+
+/**
+ * @brief Get the precedence of an operator
+ * @param op The OperatorType to get the precedence for
+ * @return unsigned int The precedence of the operator
+ */
+unsigned int getPrecedence(OperatorType op);
 
 }  // namespace lexer
 MANG_END
