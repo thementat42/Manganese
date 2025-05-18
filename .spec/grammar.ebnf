@@ -42,8 +42,9 @@ binary_op = arithmetic_op | comparison_op | boolean_op | bitwise_op;
 binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)
 
 #* Variables
-variable_decl = ("public" | "readonly")? "const"? "ptr"? "const"? type variable_name ("=" expression)? ";";
+variable_decl = type_qualifiers type variable_name ("=" expression)? ";";
 
+type_qualifiers = ("public" | "readonly")? "const"? "ptr"? "const"?
 type = primitive_type | user_type;
 primitive_type = int_type | float_type | "char" | "bool";
 int_type = ("u"?)"int"(int_width?);  # u makes it unsigned
