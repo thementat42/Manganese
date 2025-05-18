@@ -24,7 +24,8 @@ literal = int_literal | float_literal | char_literal | string_literal | bool_lit
 int_literal = digit+;
 float_literal = digit+ "." digit*;
 char_literal = "'" [^'] "'";
-string_literal = "\"" [^\""]* | escape_seq "\"";
+string_literal = "\"" (unescaped_char | escape_seq)* "\"";
+unescaped_char = [^"\\];
 escape_seq = "\\" ("n" | "t" | "\\" | "\"" | "u" hex_digit | "a" | "b" | "x");
 
 #* Operators
