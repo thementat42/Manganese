@@ -38,8 +38,8 @@ enum class OperatorType : unsigned char {
 
     //~ Arithmetic Assignment Operators
     // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)
-    AddAssign,       // `+=`
-    SubAssign,       // `-=`
+    PlusAssign,       // `+=`
+    MinusAssign,       // `-=`
     MulAssign,       // `*=`
     DivAssign,       // `/=`
     FloorDivAssign,  // `//=`

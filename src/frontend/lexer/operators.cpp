@@ -47,10 +47,10 @@ std::string operatorToString(std::optional<OperatorType> op) {
             return "OperatorType::Inc";
         case OperatorType::Dec:
             return "OperatorType::Dec";
-        case OperatorType::AddAssign:
-            return "OperatorType::AddAssign";
-        case OperatorType::SubAssign:
-            return "OperatorType::SubAssign";
+        case OperatorType::PlusAssign:
+            return "OperatorType::PlusAssign";
+        case OperatorType::MinusAssign:
+            return "OperatorType::MinusAssign";
         case OperatorType::MulAssign:
             return "OperatorType::MulAssign";
         case OperatorType::DivAssign:
@@ -138,8 +138,8 @@ std::unordered_map<std::string, const OperatorType> operator_map = {
     {"--", OperatorType::Dec},
 
     // Arithmetic Assignment Operators
-    {"+=", OperatorType::AddAssign},
-    {"-=", OperatorType::SubAssign},
+    {"+=", OperatorType::PlusAssign},
+    {"-=", OperatorType::MinusAssign},
     {"*=", OperatorType::MulAssign},
     {"/=", OperatorType::DivAssign},
     {"//=", OperatorType::FloorDivAssign},
