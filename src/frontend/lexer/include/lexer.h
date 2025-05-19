@@ -81,7 +81,7 @@ class Lexer {
     inline bool done() { return reader->done(); }
 
    public:   // public methods
-    Lexer(const str& source, Mode mode = Mode::File);
+    Lexer(const str& source, const Mode mode = Mode::File);
     ~Lexer() = default;
 
     Token peekToken(size_t offset = 0);
