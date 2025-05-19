@@ -7,9 +7,14 @@
  * The lexer takes the source code and splits it into tokens (see token.h)
  * These tokens are then passed on to the parser to build the AST.
  *
- * Note: all angle brackets are tokenized as angle brackets, even if they are actually comparison or bitwise shift operators.
+ * @note: all angle brackets are tokenized as angle brackets, even if they are actually comparison or bitwise shift operators.
  * This is because determining which operator it is would require looking ahead in the source code, which is not possible in a single-pass lexer.
  * The parser will handle this ambiguity and determine the correct operator.
+ * 
+ * @note: The lexer strips out comments and whitespace -- the parser never sees this
+ * 
+ * @note: The main loop does not advance the reader position, it just peeks the current character. Each specific tokenization function should advance the reader position once its token has been generated.
+    *  E.g. the string tokenizing function will advance the reader past the quotes, the operator tokenizing function will advance the reader past the operator, etc.
  */
 
  #include "include/lexer.h"
@@ -27,7 +32,7 @@
 
 MANG_BEGIN
 namespace lexer {
-Lexer::Lexer(const str& source, Mode mode) {
+Lexer::Lexer(const str& source, const Mode mode) {
     switch (mode) {
         case Mode::String:
             reader = std::make_unique<io::StringReader>(source);
@@ -507,6 +512,11 @@ void Lexer::makeTokens(size_t numTokens) {
             tokenizeSymbol();
             numTokensMade++;
         }
+
+        /*
+        The current numTokensMade counting has a known bug -- if the current token is a multiline comment, it will be counted as a token being generated (even though that's not a token)
+        For simplicity, this will be left as intended behaviour -- based on tests, the performance costs are negligible, especially since multiline comments are rare.
+        */
         currentChar = peekChar();
     }
     if (done()) {
@@ -516,7 +526,8 @@ void Lexer::makeTokens(size_t numTokens) {
 }
 
 Token Lexer::peekToken(size_t offset){
-    if (isTokenizingDone) {
+    if (isTokenizingDone && offset >= tokenStream.size()) {
+        // Only return EOF if we are done tokenizing and trying to read past the end
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
     if (tokenStream.empty()) {
@@ -528,7 +539,7 @@ Token Lexer::peekToken(size_t offset){
         numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
         makeTokens(numToMake);  // fill the queue with more tokens
     }
-    return tokenStream[offset];
+    return offset < tokenStream.size() ? tokenStream[offset] : Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
 }
 
 Token Lexer::consumeToken() {
