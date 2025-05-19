@@ -64,5 +64,5 @@ int main(int argc, char const *argv[]) {
     }
 
     runner.printSummary();
-    return 0;
+    return runner.allTestsPassed() ? 0 : 1;
 }
