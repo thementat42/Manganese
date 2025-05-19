@@ -62,15 +62,21 @@ enum class TokenType : unsigned char {
 struct Token {
    private:
     TokenType type;
-    const std::string lexeme;  // TODO: Consider making this an std::string_view or just a char* (minimize memory use)
+    std::string lexeme;  // TODO: Consider making this an std::string_view or just a char* (minimize memory use)
 
     std::optional<OperatorType> operatorType;
-    const std::optional<KeywordType> keywordType;
-    const size_t line, column;
+    std::optional<KeywordType> keywordType;
+    size_t line, column;
 
    public:
+    Token() = default;
     Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column);
     Token(const TokenType type, const char lexeme, const size_t line, const size_t column);
+    Token(const Token& other) = default;
+    Token(Token&& other) = default;
+    Token& operator=(const Token& other) = default;
+    Token& operator=(Token&& other) = default;
+    ~Token() = default;
 
     /**
      * @brief Convert TokenType enum to string representation
