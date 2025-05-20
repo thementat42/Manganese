@@ -64,8 +64,8 @@ struct Token {
     TokenType type;
     std::string lexeme;  // TODO: Consider making this an std::string_view or just a char* (minimize memory use)
 
-    std::optional<OperatorType> operatorType;
-    std::optional<KeywordType> keywordType;
+    // types with extra info
+    std::variant<std::monostate, OperatorType, KeywordType> specialType;
     size_t line, column;
 
    public:

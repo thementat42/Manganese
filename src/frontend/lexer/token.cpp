@@ -15,36 +15,40 @@
 
 MANG_BEGIN
 namespace lexer {
-Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column)
-    : type(_type),
-      lexeme(std::move(_lexeme)),  // Move the lexeme string to avoid copying it again
-      operatorType(                // If it's an operator, keep track of which one it is
-          _type == TokenType::Operator ? operatorFromString(_lexeme) : std::nullopt),
-      keywordType(  // If it's a keyword, keep track of which one it is
-          _type == TokenType::Keyword ? keywordFromString(_lexeme) : std::nullopt),
-      line(_line),
-      column(_column) {}
+Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column) : type(_type), lexeme(std::move(_lexeme)), line(_line), column(_column) {
+    if (_type == TokenType::Operator) {
+        auto op = operatorFromString(lexeme);
+        if (op.has_value()) {
+            specialType = op.value();
+        }
+    } else if (_type == TokenType :: Keyword) {
+        auto kw = keywordFromString(lexeme);
+        if (kw.has_value()) {
+            specialType = kw.value();
+        }
+    } else {
+        specialType = std::monostate();
+    }
+}
 
-Token::Token(const TokenType _type, const char _lexeme, const size_t _line, const size_t _column)
-    : type(_type),
-      lexeme(std::string(1, _lexeme)),  // Convert char to string
-      operatorType(                     // If it's an operator, keep track of which one it is
-          _type == TokenType::Operator ? operatorFromString(std::string(1, _lexeme)) : std::nullopt),
-      keywordType(  // If it's a keyword, keep track of which one it is
-          _type == TokenType::Keyword ? keywordFromString(std::string(1, _lexeme)) : std::nullopt),
-      line(_line),
-      column(_column) {}
+Token::Token(const TokenType _type, const char _lexeme, const size_t _line, const size_t _column) : Token(_type, std::string(1, _lexeme), _line, _column) {}  // Defer to string constructor to avoid duplicating code
 
 TokenType Token::getType() const {
     return type;
 }
 
 std::optional<OperatorType> Token::getOperatorType() const {
-    return operatorType;
+    if (std::holds_alternative<OperatorType>(specialType)) {
+        return std::get<OperatorType>(specialType);
+    }
+    return std::nullopt;
 }
 
 std::optional<KeywordType> Token::getKeywordType() const {
-    return keywordType;
+    if (std::holds_alternative<KeywordType>(specialType)) {
+        return std::get<KeywordType>(specialType);
+    }
+    return std::nullopt;
 }
 
 std::string Token::getLexeme() const {
@@ -67,20 +71,25 @@ void Token::overrideType(TokenType _type) {
         tokenTypeToString(_type).c_str(),
         __LINE__,
         __FILE__);
-#endif
+#endif  // DEBUG
     type = _type;
+    // Reset specialType if needed
+    if (_type != TokenType::Operator && _type != TokenType::Keyword) {
+        specialType = std::monostate{};
+    }
 }
 
 void Token::overrideOperatorType(OperatorType _type) {
-#if DEBUG
+    #if DEBUG
     printf(
-        "Warning: overriding operator from %s to %s (line %d in file %s)\n",
-        operatorToString(operatorType).c_str(),
+        "Warning: overriding token operator type from %s to %s (line %d in file %s)\n",
+        operatorToString(std::get<OperatorType>(specialType)).c_str(),
         operatorToString(_type).c_str(),
         __LINE__,
         __FILE__);
-#endif
-    operatorType = _type;
+#endif  // DEBUG
+    specialType = _type;
+    type = TokenType::Operator;
 }
 
 std::string Token::tokenTypeToString(TokenType type) {
@@ -146,17 +155,15 @@ std::string Token::tokenTypeToString(TokenType type) {
 
 void Token::log() const {
 #if DEBUG
-    std::cout << "Token: " << tokenTypeToString(type) << " \"" << lexeme << "\"";
+    std::cout << "Token: Type: " << tokenTypeToString(type) << ", Lexeme: \"" << lexeme << "\"";
 
-    if (operatorType.has_value()) {
-        std::cout << " Operator: " << operatorToString(operatorType.value());
+    if (std::holds_alternative<OperatorType>(specialType)) {
+        std::cout << ", Operator: " << operatorToString(std::get<OperatorType>(specialType));
+    } else if (std::holds_alternative<KeywordType>(specialType)) {
+        std::cout << ", Keyword: " << keywordToString(std::get<KeywordType>(specialType));
     }
 
-    if (keywordType.has_value()) {
-        std::cout << " Keyword: " << keywordToString(keywordType.value());
-    }
-
-    std::cout << " Line: " << line << " Column: " << column << '\n';
+    std::cout << " (Line " << line << ", Column " << column << ")\n";
 #endif  // DEBUG
 }
 
