@@ -67,7 +67,7 @@ class Lexer {
 
     //~ Helper tokenization functions
     void processCharEscapeSequence(const str& charLiteral);
-    void skipMultilineComment();
+    void skipMultilineComment(const size_t startLine, const size_t startCol);
 
     //~ Reader wrapper functions
     inline char peekChar(size_t offset = 0) { return reader->peekChar(offset); }

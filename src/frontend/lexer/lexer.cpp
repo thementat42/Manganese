@@ -204,6 +204,7 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
 }
 
 void Lexer::tokenizeCharLiteral() {
+    size_t startLine = getLine(), startCol = getCol();
     advance();  // Move past the opening quote
     str charLiteral;
     // For simplicity, just extract a chunk of text, handle it later
@@ -216,8 +217,8 @@ void Lexer::tokenizeCharLiteral() {
         charLiteral += consumeChar();
     }
     if (done()) {
-        fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", getLine(), getCol());
-        tokenStream.emplace_back(TokenType::Invalid, "INVALID", getLine(), getCol());
+        fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", startLine, startCol);
+        tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
         return;
     }
     // go past closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
@@ -226,14 +227,15 @@ void Lexer::tokenizeCharLiteral() {
         processCharEscapeSequence(charLiteral);
         return;
     } else if (charLiteral.length() > 1) {
-        fprintf(stderr, "Error: Character literal at line %zu column %zu exceeds 1 character limit.\n", getLine(), getCol());
-        tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
+        fprintf(stderr, "Error: Character literal at line %zu column %zu exceeds 1 character limit.\n", startLine, startCol);
+        tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", startLine, startCol);
         return;
     }
-    tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
+    tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, startLine, startCol);
 }
 
 void Lexer::tokenizeStringLiteral() {
+    size_t startLine = getLine(), startCol = getCol();
     advance();  // Move past the opening quote
     bool containsEscapeSequence = false;
     str stringLiteral;
@@ -248,8 +250,8 @@ void Lexer::tokenizeStringLiteral() {
     }
     if (done()) {
         // No closing quote found
-        fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", getLine(), getCol());
-        tokenStream.emplace_back(TokenType::Invalid, "INVALID", getLine(), getCol());
+        fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", startLine, startCol);
+        tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
         return;
     }
     // Move past the closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
@@ -257,14 +259,15 @@ void Lexer::tokenizeStringLiteral() {
     if (containsEscapeSequence) {
         stringLiteral = resolveEscapeCharacters(stringLiteral);
         if (stringLiteral == "INVALID ESCAPE SEQUENCE") {
-            tokenStream.emplace_back(TokenType::Invalid, "INVALID", getLine(), getCol());
+            tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
     }
-    tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, getLine(), getCol());
+    tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, startLine, startCol);
 }
 
 void Lexer::tokenizeKeywordOrIdentifier() {
+    size_t startLine = getLine(), startCol = getCol();
     str lexeme = "";
     while (!done() && (isalnum(peekChar()) || peekChar() == '_')) {
         lexeme += consumeChar();
@@ -274,10 +277,11 @@ void Lexer::tokenizeKeywordOrIdentifier() {
     tokenStream.emplace_back(
         it != keyword_map.end() ? TokenType::Keyword : TokenType::Identifier,
         lexeme,
-        getLine(), getCol());
+        startLine, startCol);
 }
 
 void Lexer::tokenizeNumber() {
+    size_t startLine = getLine(), startCol = getCol();
     str numberLiteral;
     char currentChar = peekChar();
     bool isFloat = false;
@@ -318,11 +322,12 @@ void Lexer::tokenizeNumber() {
     }
 
     while (!done() && (isValidBaseChar(currentChar) || currentChar == '.')) {
+        
         numberLiteral += consumeChar();
         if (currentChar == '.') {
             if (isFloat) {
                 // Invalid number -- two decimal points
-                fprintf(stderr, "Error: Invalid number at line %zu column %zu\n", getLine(), getCol());
+                fprintf(stderr, "Error: Invalid number at line %zu column %zu\n", startLine, startCol);
                 return;
             }
             isFloat = true;
@@ -333,22 +338,24 @@ void Lexer::tokenizeNumber() {
     tokenStream.emplace_back(
         isFloat ? TokenType::Float : TokenType::Integer,
         numberLiteral,
-        getLine(), getCol());
+        startLine, startCol);
 }
 
-void Lexer::skipMultilineComment() {
+void Lexer::skipMultilineComment(const size_t startLine, const size_t startCol) {
+    
     advance(2);  // Skip the /*
     while (!done() && !(peekChar() == '*' && peekChar(1) == '/')) {
         advance();  // Skip the comment
     }
     if (done()) {
-        fprintf(stderr, "Error: Unclosed comment at line %zu column %zu\n", getLine(), getCol());
+        fprintf(stderr, "Error: Unclosed comment at line %zu column %zu\n", startLine, startCol);
         return;
     }
     advance(2);  // Skip the */
 }
 
 void Lexer::tokenizeSymbol() {
+    size_t startLine = getLine(), startCol = getCol();
     TokenType type;
     char current = peekChar();
     char next = peekChar(1);
@@ -472,7 +479,7 @@ void Lexer::tokenizeSymbol() {
                 lexeme += next;
                 lexeme += (nextnext == '=') ? "=" : "";
             } else if (next == '*') {
-                skipMultilineComment();
+                skipMultilineComment(startLine, startCol);
                 return;  // Don't add a token for the comment
             }
             break;
@@ -481,7 +488,7 @@ void Lexer::tokenizeSymbol() {
             break;
     }
     advance(lexeme.length());
-    tokenStream.emplace_back(type, lexeme, getLine(), getCol());
+    tokenStream.emplace_back(type, lexeme, startLine, startCol);
 }
 
 void Lexer::makeTokens(size_t numTokens) {
@@ -547,6 +554,7 @@ Token Lexer::consumeToken() {
         makeTokens(1);  // If queue empty, generate 1 token to read
     }
     if (tokenStream.empty()) {
+        // still empty -- we are done tokenizing
         isTokenizingDone = true;
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
