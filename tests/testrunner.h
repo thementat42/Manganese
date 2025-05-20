@@ -6,7 +6,7 @@
 
 #include "../src/global_macros.h"
 #ifndef DEBUG
-#define DEBUG  // Force debug mode for testing (to enable string conversion functions, logging, etc)
+#define DEBUG 1 // Force debug mode for testing (to enable string conversion functions, logging, etc)
 #endif // DEBUG
 
 MANG_BEGIN
