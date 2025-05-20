@@ -92,7 +92,7 @@ void Token::overrideOperatorType(OperatorType _type) {
     type = TokenType::Operator;
 }
 
-std::string Token::tokenTypeToString(TokenType type) {
+DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) {
 #if DEBUG
     switch (type) {
         // Basic
@@ -153,7 +153,7 @@ std::string Token::tokenTypeToString(TokenType type) {
 #endif  // DEBUG */
 }
 
-void Token::log() const {
+DEBUG_FUNC void Token::log() const {
 #if DEBUG
     std::cout << "Token: Type: " << tokenTypeToString(type) << ", Lexeme: \"" << lexeme << "\"";
 

@@ -24,7 +24,7 @@ std::optional<KeywordType> keywordFromString(const std::string& keyword) {
     return std::nullopt;
 }
 
-std::string keywordToString(KeywordType keyword) {
+DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
 #if DEBUG
     switch (keyword) {
         case KeywordType::Alias:

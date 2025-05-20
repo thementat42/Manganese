@@ -2,6 +2,7 @@
  * @file tests-main.cpp
  * @brief Main file for running all tests.
  * @details Uses a unity build to compile all test files. Specific tests are run based on command line arguments.
+ * @note g++ -o mntests tests-main.cpp
  */
 
 // Includes for unity build
