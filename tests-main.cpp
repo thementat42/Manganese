@@ -3,6 +3,7 @@
  * @brief Main file for running all tests.
  * @details Uses a unity build to compile all test files. Specific tests are run based on command line arguments.
  * @note g++ -o mntests tests-main.cpp
+ * @note clang++ -o mntests tests-main.cpp
  */
 
 // Includes for unity build
@@ -50,18 +51,22 @@ int main(int argc, char const *argv[]) {
     if (lexer) {
         printf("=== Lexer Tests ===\n");
         runLexerTests(runner);
+        printf("\n");
     }
     if (parser) {
         printf("=== Parser Tests ===\n");
         // TODO: Add once parser done
+        printf("\n");
     }
     if (semantic) {
         printf("=== Semantic Analyzer Tests ===\n");
         // TODO: Add once semantic analyzer done
+        printf("\n");
     }
     if (codegen) {
         printf("=== Codegen Tests ===\n");
         // TODO: Add once codegen done
+        printf("\n");
     }
 
     runner.printSummary();

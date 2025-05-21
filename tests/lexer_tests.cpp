@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include "../src/frontend/lexer/include/lexer.h"
 #include "../src/global_macros.h"
@@ -19,6 +20,23 @@ using lexer::TokenType;
 // Utility function to convert string to tokens using the class-based Lexer
 std::vector<Token> tokensFromString(const std::string& source) {
     Lexer lexer(source, Mode::String);
+    std::vector<Token> tokens;
+
+    // Consume tokens until we hit EOF
+    while (true) {
+        Token token = lexer.consumeToken();
+        if (token.getType() == TokenType::EndOfFile) {
+            break;
+        }
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
+
+std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
+    std::filesystem::path fullPath = std::filesystem::current_path() / filename;
+    Lexer lexer(fullPath.string(), Mode::File);
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
@@ -329,16 +347,8 @@ bool testPunctuation() {
 }
 
 bool testCompleteProgram() {
-    const std::string program = R"(
-func main() -> int {
-    int x = 5;
-    float y = 10.5;
-    print(x);
-    print(y);
-}
-    )";
 
-    auto tokens = tokensFromString(program);
+    auto tokens = tokensFromFile("tests/lexer_tests.mn");
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.getLexeme() << " ";
@@ -354,7 +364,28 @@ func main() -> int {
            checkToken(tokens[3], TokenType::RightParen, ")") &&
            checkToken(tokens[4], TokenType::Operator, "->") &&
            checkToken(tokens[5], TokenType::Keyword, "int") &&
-           checkToken(tokens[6], TokenType::LeftBrace, "{");
+           checkToken(tokens[6], TokenType::LeftBrace, "{") &&
+           checkToken(tokens[7], TokenType::Keyword, "int") &&
+           checkToken(tokens[8], TokenType::Identifier, "x") &&
+           checkToken(tokens[9], TokenType::Operator, "=") &&
+           checkToken(tokens[10], TokenType::Integer, "5") &&
+           checkToken(tokens[11], TokenType::Semicolon, ";") &&
+           checkToken(tokens[12], TokenType::Keyword, "float") &&
+           checkToken(tokens[13], TokenType::Identifier, "y") &&
+           checkToken(tokens[14], TokenType::Operator, "=") &&
+           checkToken(tokens[15], TokenType::Float, "10.5") &&
+           checkToken(tokens[16], TokenType::Semicolon, ";") &&
+           checkToken(tokens[17], TokenType::Identifier, "print") &&
+           checkToken(tokens[18], TokenType::LeftParen, "(") &&
+           checkToken(tokens[19], TokenType::Identifier, "x") &&
+           checkToken(tokens[20], TokenType::RightParen, ")") &&
+           checkToken(tokens[21], TokenType::Semicolon, ";") &&
+           checkToken(tokens[22], TokenType::Identifier, "print") &&
+           checkToken(tokens[23], TokenType::LeftParen, "(") &&
+           checkToken(tokens[24], TokenType::Identifier, "y") &&
+           checkToken(tokens[25], TokenType::RightParen, ")") &&
+           checkToken(tokens[26], TokenType::Semicolon, ";") &&
+           checkToken(tokens[27], TokenType::RightBrace, "}");
 }
 
 bool testNestedBrackets() {
