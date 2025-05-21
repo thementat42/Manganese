@@ -10,14 +10,14 @@
  * @note: all angle brackets are tokenized as angle brackets, even if they are actually comparison or bitwise shift operators.
  * This is because determining which operator it is would require looking ahead in the source code, which is not possible in a single-pass lexer.
  * The parser will handle this ambiguity and determine the correct operator.
- * 
+ *
  * @note: The lexer strips out comments and whitespace -- the parser never sees this
- * 
+ *
  * @note: The main loop does not advance the reader position, it just peeks the current character. Each specific tokenization function should advance the reader position once its token has been generated.
-    *  E.g. the string tokenizing function will advance the reader past the quotes, the operator tokenizing function will advance the reader past the operator, etc.
+ *  E.g. the string tokenizing function will advance the reader past the quotes, the operator tokenizing function will advance the reader past the operator, etc.
  */
 
- #include "include/lexer.h"
+#include "include/lexer.h"
 
 #include <algorithm>
 #include <functional>
@@ -322,7 +322,6 @@ void Lexer::tokenizeNumber() {
     }
 
     while (!done() && (isValidBaseChar(currentChar) || currentChar == '.')) {
-        
         numberLiteral += consumeChar();
         if (currentChar == '.') {
             if (isFloat) {
@@ -339,22 +338,6 @@ void Lexer::tokenizeNumber() {
         isFloat ? TokenType::Float : TokenType::Integer,
         numberLiteral,
         startLine, startCol);
-}
-
-void Lexer::skipMultilineComment(const size_t startLine, const size_t startCol) {
-    
-    advance(2);  // Skip the /*
-    while (!done()) {
-        if (peekChar() == '*' && peekChar(1) == '/') {
-            break;  // End of comment
-        }
-        advance();  // Skip the comment
-    }
-    if (done()) {
-        printf("Error: Unclosed comment at line %zu column %zu\n", startLine, startCol);
-        return;
-    }
-    advance(2);  // Skip the */
 }
 
 void Lexer::tokenizeSymbol() {
@@ -506,7 +489,15 @@ void Lexer::makeTokens(size_t numTokens) {
         } else if (currentChar == '/' && peekChar(1) == '*') {
             // Multiline comment
             size_t startLine = getLine(), startCol = getCol();
-            skipMultilineComment(startLine, startCol);
+            advance(2);  // Skip the /*
+            while (!done() && !(peekChar() == '*' && peekChar(1) == '/')) {
+                advance();  // Skip the comment
+            }
+            if (done()) {
+                printf("Error: Unclosed comment at line %zu column %zu\n", startLine, startCol);
+                return;
+            }
+            advance(2);  // Skip the */
         } else if (std::isspace(currentChar)) {
             advance();  // Skip whitespace
         } else if (isalpha(currentChar) || currentChar == '_') {
@@ -533,7 +524,7 @@ void Lexer::makeTokens(size_t numTokens) {
     }
 }
 
-Token Lexer::peekToken(size_t offset){
+Token Lexer::peekToken(size_t offset) {
     if (isTokenizingDone && offset >= tokenStream.size()) {
         // Only return EOF if we are done tokenizing and trying to read past the end
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
