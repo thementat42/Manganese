@@ -58,32 +58,103 @@ class Lexer {
    private:  // private methods
 
    //~ Main tokenization functions
+
+    /**
+     * @brief Process a character literal and generate a token. Triggered when a single quote (') is encountered
+     */
     void tokenizeCharLiteral();
+
+    /**
+     * @brief Process a string literal and generate a token. Triggered when a double quote (") is encountered
+     */
     void tokenizeStringLiteral();
+
+    /**
+     * @brief Process a number literal and generate a token
+     */
     void tokenizeNumber();
+    
+    /**
+     * @brief Process any sequence of alphanumeric characters and underscores
+     * @details If the sequence is a keyword (e.g. "if"), it will be tokenized as such
+     */
     void tokenizeKeywordOrIdentifier();
+
+    /**
+     * @brief Process any character that is neither alphanumeric, a number, an underscore, quotes or whitespace
+     */
     void tokenizeSymbol();
+
+    /**
+     * @brief Generates a certain number of tokens. Holds the main tokenization loop
+     * @param numTokens The number of tokens to generate (default is 1)
+     */
     void makeTokens(size_t numTokens = 1);
 
-    // Helper specifically for char escape sequences
+    /**
+     * @brief Helper function specifically to handle escape sequences in char literals
+     * @param charLiteral The char literal to process
+     */
     void processCharEscapeSequence(const str& charLiteral);
 
     //~ Reader wrapper functions
+
+    /**
+     * @brief See the next character in the input stream without consuming it
+     * @param offset How many characters to look ahead (default is 0 -- the current character)
+     * @return The peeked character
+     */
     inline char peekChar(size_t offset = 0) { return reader->peekChar(offset); }
+
+    /**
+     * @brief Consume the next character in the input stream
+     * @details This will advance the reader position by 1
+     * @return The consumed character
+     */
     [[nodiscard]] inline char consumeChar() { return reader->consumeChar(); }
+
+    /**
+     * @brief Get the current line in the input stream
+     * @return The current line number
+     */
     inline size_t getLine() { return reader->getLine(); }
+
+    /**
+     * @brief Get the current column in the input stream
+     * @return The current column number
+     */
     inline size_t getCol() { return reader->getColumn(); }
-    inline size_t getPosition() { return reader->getPosition(); }
+
+    /**
+     * @brief Move forward in the input stream by a certain number of characters
+     * @param n The number of characters to move forward (default is 1)
+     */
     inline void advance(size_t n = 1) {
         reader->setPosition(reader->getPosition() + n);
     }
+    /**
+     * @brief Check if the end of the input stream has been reached
+     * @return True if the end of the stream has been reached, false otherwise
+     */
     inline bool done() { return reader->done(); }
 
    public:   // public methods
     Lexer(const str& source, const Mode mode = Mode::File);
     ~Lexer() = default;
 
+    /**
+     * @brief See the next token in the input stream without consuming it
+     * @param offset How many tokens to look ahead (default is 0 -- the current token)
+     * @return The peeked token
+     * @details This function will not advance the reader position
+     */
     Token peekToken(size_t offset = 0);
+
+    /**
+     * @brief Consume the next token in the input stream
+     * @return The consumed token
+     * @details This function will advance the reader position by 1
+     */
     Token consumeToken();
 };
 }  // namespace lexer
