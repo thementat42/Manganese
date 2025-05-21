@@ -39,7 +39,7 @@ FileReader::~FileReader() {
     }
 }
 
-bool isLexemeEnd(char c) {
+inline bool isLexemeEnd(char c) {
     return c == ' ' || c == '\n' || c == '\t' ||
            c == ';' || c == ',' || c == '{' ||
            c == '}' || c == '(' || c == ')';
@@ -87,6 +87,8 @@ void FileReader::refillBuffer() {
         }
     }
 }
+
+
 char FileReader::peekChar(size_t offset) {
     // Check if we need more data
     if (position + offset >= bufferSize) {

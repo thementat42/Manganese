@@ -344,11 +344,14 @@ void Lexer::tokenizeNumber() {
 void Lexer::skipMultilineComment(const size_t startLine, const size_t startCol) {
     
     advance(2);  // Skip the /*
-    while (!done() && !(peekChar() == '*' && peekChar(1) == '/')) {
+    while (!done()) {
+        if (peekChar() == '*' && peekChar(1) == '/') {
+            break;  // End of comment
+        }
         advance();  // Skip the comment
     }
     if (done()) {
-        fprintf(stderr, "Error: Unclosed comment at line %zu column %zu\n", startLine, startCol);
+        printf("Error: Unclosed comment at line %zu column %zu\n", startLine, startCol);
         return;
     }
     advance(2);  // Skip the */
@@ -478,10 +481,8 @@ void Lexer::tokenizeSymbol() {
                 //* // (floor division) or //= (in-place floor division)
                 lexeme += next;
                 lexeme += (nextnext == '=') ? "=" : "";
-            } else if (next == '*') {
-                skipMultilineComment(startLine, startCol);
-                return;  // Don't add a token for the comment
             }
+            // Multiline comments handled in the main loop
             break;
         default:
             type = TokenType::Invalid;
@@ -496,11 +497,16 @@ void Lexer::makeTokens(size_t numTokens) {
     char currentChar = peekChar();
     while (!done() && numTokensMade < numTokens) {
         if (currentChar == '#') {
+            // Single line comment
             do {
                 advance();
                 currentChar = peekChar();
             } while (!done() && currentChar != '\n');
             advance();  // Skip the newline
+        } else if (currentChar == '/' && peekChar(1) == '*') {
+            // Multiline comment
+            size_t startLine = getLine(), startCol = getCol();
+            skipMultilineComment(startLine, startCol);
         } else if (std::isspace(currentChar)) {
             advance();  // Skip whitespace
         } else if (isalpha(currentChar) || currentChar == '_') {
@@ -519,11 +525,6 @@ void Lexer::makeTokens(size_t numTokens) {
             tokenizeSymbol();
             numTokensMade++;
         }
-
-        /*
-        The current numTokensMade counting has a known bug -- if the current token is a multiline comment, it will be counted as a token being generated (even though that's not a token)
-        For simplicity, this will be left as intended behaviour -- based on tests, the performance costs are negligible, especially since multiline comments are rare.
-        */
         currentChar = peekChar();
     }
     if (done()) {

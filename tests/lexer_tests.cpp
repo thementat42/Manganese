@@ -452,10 +452,10 @@ int runLexerTests(TestRunner& runner) {
     runner.runTest("String Literals", testStringLiterals);
     runner.runTest("Brackets", testBrackets);
     runner.runTest("Punctuation", testPunctuation);
-    runner.runTest("Complete Program", testCompleteProgram);
     runner.runTest("Nested Brackets", testNestedBrackets);
     runner.runTest("Invalid Character", testInvalidChar);
     runner.runTest("Invalid Escape Sequence", testInvalidEscapeSequence);
+    runner.runTest("Complete Program", testCompleteProgram);
 
     return runner.allTestsPassed() ? 0 : 1;
 

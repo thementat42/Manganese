@@ -4,13 +4,6 @@
 This is a really long comment
 asdf
 
-
-
-
-
-
-
-
 Here's some more text
 
 hi
@@ -22,8 +15,6 @@ abcdabcdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 abcdabcdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 abcdabcdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 anyways, the comment is done now, here's the code
-
-
 */
 
 func main() -> int {
