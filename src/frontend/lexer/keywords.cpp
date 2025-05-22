@@ -73,8 +73,8 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
             return "KeywordType::For";
         case KeywordType::Func:
             return "KeywordType::Func";
-        case KeywordType::Garbage:
-            return "KeywordType::Garbage";
+        case KeywordType::NoInit:
+            return "KeywordType::NoInit";
         case KeywordType::If:
             return "KeywordType::If";
         case KeywordType::Import:
@@ -157,7 +157,7 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"float64", KeywordType::Float64},
     {"for", KeywordType::For},
     {"func", KeywordType::Func},
-    {"garbage", KeywordType::Garbage},
+    {"noinit", KeywordType::NoInit},
     {"if", KeywordType::If},
     {"import", KeywordType::Import},
     {"int", KeywordType::Int32},  // default to int32 when integer width isn't specified

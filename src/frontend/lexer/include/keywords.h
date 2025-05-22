@@ -29,6 +29,7 @@ enum class KeywordType : unsigned char {
     //~ Type Qualifiers
     Const,     // constant variable
     Ptr,       // pointer variables
+    NoInit,  // prevent default initialization
 
     //~ Access Levels
     ReadOnly,  // readable, but can't be modified, outside the module
@@ -96,7 +97,6 @@ enum class KeywordType : unsigned char {
     Alias,    // type aliasing (alias `a` as `b`)
     TypeOf,   // get the type of a variable
     Cast,     // cast to a new type (cast<"new type">)
-    Garbage,  // prevent default initialization
 };
 
 extern std::unordered_map<std::string, const KeywordType> keyword_map;

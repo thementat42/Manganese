@@ -21,7 +21,6 @@ float32
 float64
 for
 func
-garbage
 if
 import
 int
@@ -32,6 +31,7 @@ int8
 lambda
 map
 module
+noinit
 ptr
 public
 readonly
