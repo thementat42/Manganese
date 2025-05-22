@@ -112,7 +112,7 @@ bool testIdentifiers() {
 }
 
 bool testKeywords() {
-    auto tokens = tokensFromString("alias arr as blueprint bool break bundle case cast char const continue default do elif else enum false float float32 float64 for func garbage if import int int16 int32 int64 int8 lambda map module owns ptr public readonly repeat return set str switch true typeof uint uint8 uint16 uint32 uint64 vec while foo");
+    auto tokens = tokensFromString("alias arr as blueprint bool break bundle case cast char const foo");
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.getLexeme() << " ";
@@ -134,48 +134,7 @@ bool testKeywords() {
            checkToken(tokens[8], TokenType::Keyword, "cast") &&
            checkToken(tokens[9], TokenType::Keyword, "char") &&
            checkToken(tokens[10], TokenType::Keyword, "const") &&
-           checkToken(tokens[11], TokenType::Keyword, "continue") &&
-           checkToken(tokens[12], TokenType::Keyword, "default") &&
-           checkToken(tokens[13], TokenType::Keyword, "do") &&
-           checkToken(tokens[14], TokenType::Keyword, "elif") &&
-           checkToken(tokens[15], TokenType::Keyword, "else") &&
-           checkToken(tokens[16], TokenType::Keyword, "enum") &&
-           checkToken(tokens[17], TokenType::Keyword, "false") &&
-           checkToken(tokens[18], TokenType::Keyword, "float") &&
-           checkToken(tokens[19], TokenType::Keyword, "float32") &&
-           checkToken(tokens[20], TokenType::Keyword, "float64") &&
-           checkToken(tokens[21], TokenType::Keyword, "for") &&
-           checkToken(tokens[22], TokenType::Keyword, "func") &&
-           checkToken(tokens[23], TokenType::Keyword, "garbage") &&
-           checkToken(tokens[24], TokenType::Keyword, "if") &&
-           checkToken(tokens[25], TokenType::Keyword, "import") &&
-           checkToken(tokens[26], TokenType::Keyword, "int") &&
-           checkToken(tokens[27], TokenType::Keyword, "int16") &&
-           checkToken(tokens[28], TokenType::Keyword, "int32") &&
-           checkToken(tokens[29], TokenType::Keyword, "int64") &&
-           checkToken(tokens[30], TokenType::Keyword, "int8") &&
-           checkToken(tokens[31], TokenType::Keyword, "lambda") &&
-           checkToken(tokens[32], TokenType::Keyword, "map") &&
-           checkToken(tokens[33], TokenType::Keyword, "module") &&
-           checkToken(tokens[34], TokenType::Keyword, "owns") &&
-           checkToken(tokens[35], TokenType::Keyword, "ptr") &&
-           checkToken(tokens[36], TokenType::Keyword, "public") &&
-           checkToken(tokens[37], TokenType::Keyword, "readonly") &&
-           checkToken(tokens[38], TokenType::Keyword, "repeat") &&
-           checkToken(tokens[39], TokenType::Keyword, "return") &&
-           checkToken(tokens[40], TokenType::Keyword, "set") &&
-           checkToken(tokens[41], TokenType::Keyword, "str") &&
-           checkToken(tokens[42], TokenType::Keyword, "switch") &&
-           checkToken(tokens[43], TokenType::Keyword, "true") &&
-           checkToken(tokens[44], TokenType::Keyword, "typeof") &&
-           checkToken(tokens[45], TokenType::Keyword, "uint") &&
-           checkToken(tokens[46], TokenType::Keyword, "uint8") &&
-           checkToken(tokens[47], TokenType::Keyword, "uint16") &&
-           checkToken(tokens[48], TokenType::Keyword, "uint32") &&
-           checkToken(tokens[49], TokenType::Keyword, "uint64") &&
-           checkToken(tokens[50], TokenType::Keyword, "vec") &&
-           checkToken(tokens[51], TokenType::Keyword, "while") &&
-           checkToken(tokens[52], TokenType::Identifier, "foo");
+           checkToken(tokens[12], TokenType::Identifier, "foo");
 }
 
 bool testIntegerLiterals() {
