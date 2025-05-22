@@ -117,26 +117,18 @@ For example:
 const int x = 5;
 ```
 
-The value is optional, and if not provided, will be default initialized (see [here](/docs/syntax/variables.md#default-initialization-rules)). Default initialization can be bypassed by explicitly setting the value to `garbage` (a keyword in Manganese).
+The value is optional, and if not provided, will be default initialized (see [here](/docs/syntax/variables.md#default-initialization-rules)). Default initialization can be bypassed by using the `noinit` type qualifier.
 
-Manganese supports all the basic primitive types (`int`, `float`, `bool`, `char` and `null`) as well as strings (the `str` type).
+Manganese supports all the basic primitive types (`int`, `float`, `bool`, `char` and `null`).
 
 Finally, Manganese supports pointers (the `ptr`) type. See [the memory section](#memory) for a quick overview and the [memory module](/docs/library/memory.md) for a more in-depth explanation.
 
 ### Data Structures
 
-Manganese also supports arrays (both static and dynamic), hashmaps and sets. They are declared as follows:
+Manganese also supports strings, arrays (both static and dynamic), hashmaps and sets. For example:
 
 ```manganese
-arr<type, size> variable_name (= [value1, value2, ...]);
-vector<type> variable_name (= [value1, value2, ...]);
-map<key_type, value_type> variable_name (= {key1: value1, key2: value2, ...});
-set<type> variable_name (= {value1, value2, ...});
-```
-
-For example:
-
-```manganese
+str x = "Hello world!";
 arr<int, 5> x = [1, 2, 3, 4, 5];
 vector<int> y = [1, 2, 3, 4, 5];
 map<int, int> z = {1: 'a', 2: 'b', 3: 'c'};
