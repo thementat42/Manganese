@@ -23,7 +23,7 @@
  * for expression handling and precedence rules.
  */
 MANG_BEGIN
-namespace lexer {
+namespace core {
 enum class OperatorType : unsigned char {
     //~ Arithmetic Operators
     Plus,      // `+`
@@ -104,7 +104,7 @@ std::optional<OperatorType> operatorFromString(const std::string& op);
  */
 std::string operatorToString(std::optional<OperatorType> op);
 
-}  // namespace lexer
+}  // namespace core
 MANG_END
 
 #endif  // OPERATORS_H

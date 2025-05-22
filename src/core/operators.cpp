@@ -12,7 +12,7 @@
 #include "../global_macros.h"
 
 MANG_BEGIN
-namespace lexer {
+namespace core {
 
 std::optional<OperatorType> operatorFromString(const std::string& op) {
     std::string op_str(op);
@@ -188,5 +188,5 @@ std::unordered_map<std::string, const OperatorType> operator_map = {
     {"=", OperatorType::Assignment},
     {"->", OperatorType::Arrow}};
 
-}  // namespace lexer
+}  // namespace core
 MANG_END

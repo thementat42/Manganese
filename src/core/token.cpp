@@ -14,7 +14,7 @@
 #include "include/operators.h"
 
 MANG_BEGIN
-namespace lexer {
+namespace core {
 Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column) : type(_type), lexeme(std::move(_lexeme)), line(_line), column(_column) {
     if (_type == TokenType::Operator) {
         auto op = operatorFromString(lexeme);
@@ -171,5 +171,5 @@ void Token::log(Token token) {
     token.log();
 }
 
-}  // namespace lexer
+}  // namespace core
 MANG_END

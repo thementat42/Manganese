@@ -23,7 +23,7 @@
  * be used as identifiers in Manganese programs.
  */
 MANG_BEGIN
-namespace lexer {
+namespace core {
 enum class KeywordType : unsigned char {
 
     //~ Type Qualifiers
@@ -109,7 +109,7 @@ std::optional<KeywordType> keywordFromString(const std::string& keyword);
 std::string keywordToString(KeywordType keyword);
 
 
-}  // namespace lexer
+}  // namespace core
 MANG_END
 
 #endif // KEYWORDS_H

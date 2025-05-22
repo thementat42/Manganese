@@ -6,12 +6,12 @@
 
 #include "../../global_macros.h"
 #include "lexer.h"
-#include "nodes.h"
+#include "ast.h"
 
 MANG_BEGIN
 namespace parser {
 constexpr auto NONE = std::nullopt;
-using Token = lexer::Token;
+using core::Token;
 class Parser {
    private:  // private variables
     std::unique_ptr<lexer::Lexer> lexer;

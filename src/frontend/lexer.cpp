@@ -32,6 +32,7 @@
 
 MANG_BEGIN
 namespace lexer {
+using core::TokenType;
 Lexer::Lexer(const str& source, const Mode mode) {
     switch (mode) {
         case Mode::String:
@@ -272,10 +273,10 @@ void Lexer::tokenizeKeywordOrIdentifier() {
     while (!done() && (isalnum(peekChar()) || peekChar() == '_')) {
         lexeme += consumeChar();
     }
-    auto it = keyword_map.find(lexeme);
+    auto it = core::keyword_map.find(lexeme);
 
     tokenStream.emplace_back(
-        it != keyword_map.end() ? TokenType::Keyword : TokenType::Identifier,
+        it != core::keyword_map.end() ? TokenType::Keyword : TokenType::Identifier,
         lexeme,
         startLine, startCol);
 }

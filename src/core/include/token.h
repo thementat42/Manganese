@@ -15,7 +15,7 @@
 #include "operators.h"
 
 MANG_BEGIN
-namespace lexer {
+namespace core {
 
 /**
  * @brief Defines all supported token types in Manganese
@@ -103,7 +103,7 @@ struct Token {
 
     static void log(Token token);
 };
-}  // namespace lexer
+}  // namespace core
 MANG_END
 
 #endif  // TOKEN

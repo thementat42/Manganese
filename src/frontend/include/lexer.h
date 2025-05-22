@@ -16,6 +16,7 @@
 MANG_BEGIN
 namespace lexer {
 using str = std::string;
+using core::Token;
 using std::optional;
 using std::unique_ptr;
 constexpr auto NONE = std::nullopt;

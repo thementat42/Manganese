@@ -13,7 +13,7 @@
 #include "../global_macros.h"
 
 MANG_BEGIN
-namespace lexer {
+namespace core {
 
 std::optional<KeywordType> keywordFromString(const std::string& keyword) {
     auto it = keyword_map.find(keyword);
@@ -168,5 +168,5 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"uint64", KeywordType::UInt64},
     {"while", KeywordType::While}};
 
-}  // namespace lexer
+}  // namespace core
 MANG_END
