@@ -157,7 +157,6 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"float64", KeywordType::Float64},
     {"for", KeywordType::For},
     {"func", KeywordType::Func},
-    {"noinit", KeywordType::NoInit},
     {"if", KeywordType::If},
     {"import", KeywordType::Import},
     {"int", KeywordType::Int32},  // default to int32 when integer width isn't specified
@@ -168,6 +167,7 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"lambda", KeywordType::Lambda},
     {"map", KeywordType::Map},
     {"module", KeywordType::Module},
+    {"noinit", KeywordType::NoInit},
     {"ptr", KeywordType::Ptr},
     {"public", KeywordType::Public},
     {"readonly", KeywordType::ReadOnly},
