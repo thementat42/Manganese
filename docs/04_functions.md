@@ -30,7 +30,7 @@ func foo(int x, int y, int z = 3, int... args) -> int {
 }
 ```
 
-> TODO: (eventually) add generics, and `constraint` types to make them safer
+> TODO: (eventually) add generics
 
 ## === Lambdas ===
 

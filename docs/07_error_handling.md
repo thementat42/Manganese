@@ -25,4 +25,4 @@ switch (typeof(success)){
 
 The compiler will enforce that there is either a case statement for every error type, or that the switch statement has a `default` block (which can act as a catch-all).
 
-Functions can also return an error type in the switch statement to bubble the error up to the caller. Some common errors are defined in the [standard library errors module](/docs/library/errors.md). Custom errors can also be defined by creating a [`blueprint`](/docs/06_data_encapsulation.md#-blueprints-) that inherits from the `BaseError` blueprint. See the [standard library errors module](/docs/library/errors.md) for more information.
+Functions can also return an error type in the switch statement to bubble the error up to the caller.

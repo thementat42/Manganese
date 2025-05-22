@@ -1,7 +1,5 @@
 # === Data Encapsulation ===
 
-Manganese supports different data encapsulation methods. Data encapsulation methods allow functionality to be abstracted away from the user. Manganese uses slightly different terminology for its data encapsulation methods than other languages. The following sections describe the different data encapsulation methods in Manganese.
-
 ## === Bundles ===
 
 Bundles in Manganese are similar to structs in C. They allow for simple data encapsulation, and are used to group related data together. Like structs in C, bundles do not have any methods or functions associated with them and do not support inheritance. They are simply a way to group related data together. Bundles are declared using the following syntax:
@@ -77,57 +75,4 @@ enum Foo {
 };
 ```
 
-## === Blueprints ===
-
-Blueprints are Manganese's version of classes. Like `bundle`s, they can contain variables; but unlike `bundle`s, they can also contain member functions. The general syntax for a blueprint is as follows:
-
-```manganese
-blueprint <blueprint name> {
-    <data type> <variable1>;
-    <data type> <variable2>;
-    <data type> <variable3> = <value>;
-    ...
-    
-    func constructor((optional parameters)) -> (<blueprint name>) {
-        # code
-    }
-
-    func destructor() {
-        # code
-    }
-
-    func <function name>((optional parameters)) -> (<return type>) {
-        # code
-    }
-}
-```
-
-Members of a blueprint can be accessed using the dot operator (`.`), like with `bundle`
-By default, members of a blueprint are `private` -- they cannot be accessed or modified outside the blueprint. This can be changed using the `public` keyword, which makes the member accessible and modifiable outside the blueprint. The `readonly` keyword can also be used to make a member accessible but not modifiable outside the blueprint.
-
-### === Constructors and Destructors ===
-
-`constructor` and `destructor` are special functions that are called when an object of the blueprint is created and destroyed, respectively. Like `main`, they are not reserved keywords, but will always be interpreted as the constructor or destructor of the blueprint. The return type of the constructor must be the blueprint name (and cannot be an error type). The destructor will return an error if any cleanup fails, and `0` if the cleanup succeeds. The destructor is not required, but is recommended for blueprints that allocate memory or other resources. The constructor is also not required, but is recommended for blueprints that require initialization. If a constructor is not provided, the default constructor will be used, which initializes all members to their default values. If a destructor is not provided, the default destructor will be used, which does nothing.
-
-### === Blueprint Member Functions ===
-
-Blueprint member functions are declared like regular functions and are called using the `.` operator. Member functions can access and modify the members of the blueprint. Functions which are not meant to modify the members of the blueprint can be marked as `const`. This is enforced at compile time.
-
-```manganese
-blueprint Point {
-    int x;
-    int y;
-
-    func constructor(int x, int y) -> Point {
-        this.x = x;
-        this.y = y;
-    }
-    func destructor() {
-        # code
-    }
-
-    const func distance(Point p) -> int {  # cannot modify the members of the blueprint
-        return ((x - p.x) ** 2 + (y - p.y) ** 2) ** 0.5;
-    }
-}
-```
+> TODO: Something more like a class
