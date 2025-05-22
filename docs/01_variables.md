@@ -24,9 +24,8 @@ Type qualifiers provide extra information to the compiler about how variables sh
 1. `const`: Declares a variable as constant (i.e.) immutable. <br>
     Once assigned, a `const` variable cannot have its value changed. Variables marked as `const` must have a value assigned when they are declared
 2. `ptr`: Declares a pointer to a variable of the specified type (a `ptr` variable holds the memory address of the variable it points to).
-3. `noinit`: Prevents a variable from being [default initialized](/docs/01_variables.md#-default-initialization-)
-4. `public`: Declares that a variable can be accessed and modified outside its parent [module](/docs/05_modules_and_scoping.md)
-5. `readonly`: Declares that a variable can be accessed but not modified outside its parent [module](/docs/05_modules_and_scoping.md)
+3. `public`: Declares that a variable can be accessed and modified outside its parent [module](/docs/05_modules_and_scoping.md)
+4. `readonly`: Declares that a variable can be accessed but not modified outside its parent [module](/docs/05_modules_and_scoping.md)
 
 `const` always applies to the type to its right.
 By default, all variables are private -- they cannot be accessed or modified outside their parent module.
@@ -88,7 +87,7 @@ When a variable is declared, but not assigned a value, the compiler will give it
 | `bool`  | `false`        |
 | `ptr`   | a null pointer |
 
-Default initialization can be explicitly disabled for a variable using the `noinit` qualifier. This will stop the compiler from assigning it a default value (i.e., it will contain whatever value happens to be in its assigned memory address). Using a `noinit` variable before assigning it a value is undefined behavior.
+>TODO: Rework this
 
 For example:
 
@@ -98,7 +97,6 @@ float64 b;  # b is initialized to 0.0
 char c;  # c is initialized to '\0`
 bool d;  # d is initialized to false
 ptr int f;  # f is a null pointer
-noinit float g;  # g contains whatever data was in memory
 ptr int h = ?a;  # no default initialization, h points to a
 ```
 

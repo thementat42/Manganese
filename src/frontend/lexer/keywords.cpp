@@ -71,8 +71,6 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
             return "KeywordType::For";
         case KeywordType::Func:
             return "KeywordType::Func";
-        case KeywordType::NoInit:
-            return "KeywordType::NoInit";
         case KeywordType::If:
             return "KeywordType::If";
         case KeywordType::Import:
@@ -155,7 +153,6 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"int8", KeywordType::Int8},
     {"lambda", KeywordType::Lambda},
     {"module", KeywordType::Module},
-    {"noinit", KeywordType::NoInit},
     {"ptr", KeywordType::Ptr},
     {"public", KeywordType::Public},
     {"readonly", KeywordType::ReadOnly},

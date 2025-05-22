@@ -29,7 +29,6 @@ enum class KeywordType : unsigned char {
     //~ Type Qualifiers
     Const,     // constant variable
     Ptr,       // pointer variables
-    NoInit,  // prevent default initialization
 
     //~ Access Levels
     ReadOnly,  // readable, but can't be modified, outside the module
