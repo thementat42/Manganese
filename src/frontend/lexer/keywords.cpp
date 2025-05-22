@@ -93,8 +93,6 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
             return "KeywordType::Map";
         case KeywordType::Module:
             return "KeywordType::Module";
-        case KeywordType::Owns:
-            return "KeywordType::Owns";
         case KeywordType::Ptr:
             return "KeywordType::Ptr";
         case KeywordType::Public:
@@ -170,7 +168,6 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"lambda", KeywordType::Lambda},
     {"map", KeywordType::Map},
     {"module", KeywordType::Module},
-    {"owns", KeywordType::Owns},
     {"ptr", KeywordType::Ptr},
     {"public", KeywordType::Public},
     {"readonly", KeywordType::ReadOnly},

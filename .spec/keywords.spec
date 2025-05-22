@@ -32,7 +32,6 @@ int8
 lambda
 map
 module
-owns
 ptr
 public
 readonly
