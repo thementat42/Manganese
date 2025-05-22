@@ -34,7 +34,7 @@ cmake ..
 make
 ```
 
-This will create an executable called `manganese` in the `build` directory. To compile code, create a file ending in `.mn` and write some manganese code. Check out the [examples](/examples/) directory for some samples.
+This will create an executable called `manganese` in the `build/bin` directory. To compile code, create a file ending in `.mn` and write some manganese code. Check out the [examples](/examples/) directory for some samples.
 
 You can then run:
 
@@ -82,10 +82,13 @@ This project is divided into several directories:
 
 - [`Examples`](/examples): Contains example programs written in Manganese
 
-- [`Src`](/src): Contains the source code for the compiler. Per the general LLVM structure, it is divided into three phases
+- [`Src`](/src): Contains the source code for the compiler.
+  - [`core`](/src/core/): Contains some core elements (tokens, keyword and operator utils)
   - [`Frontend`](/src/frontend): Contains the lexer (which splits the source code into tokens), the parser (which builds an abstract syntax tree from the tokens), and the semantic analyzer (which checks the AST for semantic errors)
-  - [`Middle`](/src/middle): Takes in the AST and generates LLVM IR code. It then hands execution off to the LLVM backend for things like optimization and code generation.
+  - [`Middleend`](/src/middleend): Takes in the AST and generates LLVM IR code. It then hands execution off to the LLVM backend for things like optimization and code generation.
   - [`Backend`](/src/backend): Contains the LLVM backend, which takes in the LLVM IR code and generates machine code.
   - Each of these directories has an `include` directory which contains the header files for that phase.
   - [`global_macros`](/src/global_macros.h): Contains some macros which are useful everywhere.
 - [`Tests`](/tests): Contains tests for the compiler.
+- [`manganese.cpp`](/manganese.cpp): The main file which runs the compiler code
+- [`tests-main.cpp`](/tests-main.cpp): The main file for running the tests
