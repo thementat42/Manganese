@@ -1,6 +1,6 @@
 #include "testrunner.h"
 
-#include "../src/frontend/parser/include/parser.h"
+#include "../src/frontend/include/parser.h"
 #include "../src/global_macros.h"
 
 MANG_BEGIN

@@ -9,7 +9,7 @@
 #include <optional>
 #include <string>
 
-#include "../../global_macros.h"
+#include "../global_macros.h"
 #include "include/keywords.h"
 #include "include/operators.h"
 

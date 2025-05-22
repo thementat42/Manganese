@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "../../../global_macros.h"
+#include "../../global_macros.h"
 
 /**
  * @brief Defines all supported operator types in Manganese

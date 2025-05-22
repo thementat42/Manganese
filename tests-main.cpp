@@ -9,10 +9,10 @@
 // Includes for unity build
 #include <string.h>
 
-#include "src/frontend/lexer/keywords.cpp"
-#include "src/frontend/lexer/lexer.cpp"
-#include "src/frontend/lexer/operators.cpp"
-#include "src/frontend/lexer/token.cpp"
+#include "src/core/keywords.cpp"
+#include "src/frontend/lexer.cpp"
+#include "src/core/operators.cpp"
+#include "src/core/token.cpp"
 #include "src/io/filereader.cpp"
 #include "src/io/stringreader.cpp"
 #include "tests/lexer_tests.cpp"

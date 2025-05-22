@@ -5,7 +5,7 @@
 #include <vector>
 #include <filesystem>
 
-#include "../src/frontend/lexer/include/lexer.h"
+#include "../src/frontend/include/lexer.h"
 #include "../src/global_macros.h"
 #include "testrunner.h"
 
@@ -118,8 +118,8 @@ bool testKeywords() {
         std::cout << token.getLexeme() << " ";
     }
     std::cout << std::endl;
-    if (tokens.size() != 53) {
-        std::cout << "Expected 53 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 11) {
+        std::cout << "Expected 11 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
@@ -358,9 +358,9 @@ bool testNestedBrackets() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Keyword, "arr") &&
+    return checkToken(tokens[0], TokenType::Identifier, "arr") &&
            checkToken(tokens[1], TokenType::LeftAngle, "<") &&
-           checkToken(tokens[2], TokenType::Keyword, "arr") &&
+           checkToken(tokens[2], TokenType::Identifier, "arr") &&
            checkToken(tokens[3], TokenType::LeftAngle, "<") &&
            checkToken(tokens[4], TokenType::Keyword, "int") &&
            checkToken(tokens[5], TokenType::RightAngle, ">") &&

@@ -5,13 +5,13 @@
 #include <optional>
 #include <queue>
 
-#include "../../../global_macros.h"
-#include "../../../io/include/filereader.h"
-#include "../../../io/include/reader.h"
-#include "../../../io/include/stringreader.h"
-#include "keywords.h"
-#include "operators.h"
-#include "token.h"
+#include "../../global_macros.h"
+#include "../../io/include/filereader.h"
+#include "../../io/include/reader.h"
+#include "../../io/include/stringreader.h"
+#include "../../core/include/keywords.h"
+#include "../../core/include/operators.h"
+#include "../../core/include/token.h"
 
 MANG_BEGIN
 namespace lexer {

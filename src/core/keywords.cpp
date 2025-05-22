@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../../global_macros.h"
+#include "../global_macros.h"
 
 MANG_BEGIN
 namespace lexer {
