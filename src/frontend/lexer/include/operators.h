@@ -104,13 +104,6 @@ std::optional<OperatorType> operatorFromString(const std::string& op);
  */
 std::string operatorToString(std::optional<OperatorType> op);
 
-/**
- * @brief Get the precedence of an operator
- * @param op The OperatorType to get the precedence for
- * @return unsigned int The precedence of the operator
- */
-unsigned int getPrecedence(OperatorType op);
-
 }  // namespace lexer
 MANG_END
 
