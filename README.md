@@ -121,7 +121,7 @@ The value is optional, and if not provided, will be default initialized (see [he
 
 Manganese supports all the basic primitive types (`int`, `float`, `bool`, `char` and `null`).
 
-Finally, Manganese supports pointers (the `ptr`) type. See [the memory section](#memory) for a quick overview and the [memory module](/docs/library/memory.md) for a more in-depth explanation.
+Finally, Manganese supports pointers (the `ptr`) type.
 
 ### Data Structures
 
