@@ -125,17 +125,7 @@ Finally, Manganese supports pointers (the `ptr`) type. See [the memory section](
 
 ### Data Structures
 
-Manganese also supports strings, arrays (both static and dynamic), hashmaps and sets. For example:
-
-```manganese
-str x = "Hello world!";
-arr<int, 5> x = [1, 2, 3, 4, 5];
-vector<int> y = [1, 2, 3, 4, 5];
-map<int, int> z = {1: 'a', 2: 'b', 3: 'c'};
-set<int> w = {1, 2, 3, 4, 5};
-```
-
-Each of these also has default initialization rules, which can be found [here](/docs/syntax/data_structures.md).
+> TODO: Add
 
 ### Control Flow
 
@@ -187,39 +177,3 @@ bundle Point {
     int y;
 }
 ```
-
-#### Blueprints
-
-Manganese also has `blueprint`s, which are like `class`es in C++. They contain member functions as well as member variables. They are declared as follows:
-
-```manganese
-blueprint blueprint_name {
-    type1 variable1;
-    type2 variable2;
-    ...
-    func function_name(type1 arg1, type2 arg2, ...) -> return_type {
-        // function body
-    }
-}
-```
-
-For example:
-
-```manganese
-blueprint Point {
-    int x;
-    int y;
-    func distance(Point other) -> float {
-        return sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
-    }
-}
-```
-
-Blueprints can also have constructors and destructors via the `constructor` and `destructor` methods inside the blueprint.
-
-### Memory
-
-Manganese implements a borrow checking system, similar to Rust. While direct references are not possible, pointers are. Pointers can be created using the `?` operator, and dereferenced using the `@` operator.
-By default, all variables in Manganese are mutable; variables can be made immutable by using the `const` keyword. Pointers can be made immutable as well to prevent modifying the value they point to through the pointer. See [variables](/docs/syntax/variables.md) for more information. Similarly, function arguments can be made immutable to prevent modification of the argument inside the function.
-
-### Error Handling
