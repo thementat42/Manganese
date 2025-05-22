@@ -12,8 +12,6 @@ func name(type1 parameter1, type2 parameter2, etc) -> return type {
 
 If a function does not return a value, the return type can be omitted. Functions which do not return a value cannot be called in a variable assignment expression.
 
-A parameter can be marked as a variadic argument by placing an ellipsis (`...`) before the variable name. Variadic arguments can be accessed like an array of the same type as the argument.
-
 Functions can also assign parameters default values -- any parameters with default values must be placed after functions without them in the function's signature. If the parameter is not given a value, the default value will be used.
 
 Functions can also be overloaded, provided they have unambiguously distinguishable types at compile time. Functions cannot be distinguished by return type alone.

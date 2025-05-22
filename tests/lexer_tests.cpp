@@ -112,7 +112,7 @@ bool testIdentifiers() {
 }
 
 bool testKeywords() {
-    auto tokens = tokensFromString("alias arr as blueprint bool break bundle case cast char const foo");
+    auto tokens = tokensFromString("alias as blueprint bool break bundle case cast char const foo");
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.getLexeme() << " ";
@@ -124,17 +124,16 @@ bool testKeywords() {
     }
 
     return checkToken(tokens[0], TokenType::Keyword, "alias") &&
-           checkToken(tokens[1], TokenType::Keyword, "arr") &&
-           checkToken(tokens[2], TokenType::Keyword, "as") &&
-           checkToken(tokens[3], TokenType::Keyword, "blueprint") &&
-           checkToken(tokens[4], TokenType::Keyword, "bool") &&
-           checkToken(tokens[5], TokenType::Keyword, "break") &&
-           checkToken(tokens[6], TokenType::Keyword, "bundle") &&
-           checkToken(tokens[7], TokenType::Keyword, "case") &&
-           checkToken(tokens[8], TokenType::Keyword, "cast") &&
-           checkToken(tokens[9], TokenType::Keyword, "char") &&
-           checkToken(tokens[10], TokenType::Keyword, "const") &&
-           checkToken(tokens[12], TokenType::Identifier, "foo");
+           checkToken(tokens[1], TokenType::Keyword, "as") &&
+           checkToken(tokens[2], TokenType::Keyword, "blueprint") &&
+           checkToken(tokens[3], TokenType::Keyword, "bool") &&
+           checkToken(tokens[4], TokenType::Keyword, "break") &&
+           checkToken(tokens[5], TokenType::Keyword, "bundle") &&
+           checkToken(tokens[6], TokenType::Keyword, "case") &&
+           checkToken(tokens[7], TokenType::Keyword, "cast") &&
+           checkToken(tokens[8], TokenType::Keyword, "char") &&
+           checkToken(tokens[9], TokenType::Keyword, "const") &&
+           checkToken(tokens[10], TokenType::Identifier, "foo");
 }
 
 bool testIntegerLiterals() {

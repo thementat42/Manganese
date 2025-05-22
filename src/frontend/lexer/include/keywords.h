@@ -52,13 +52,6 @@ enum class KeywordType : unsigned char {
     True,     // boolean true
     False,    // boolean false
 
-    //~ Data Structures
-    Str,  // string of characters
-    Arr,     // static arrays
-    Vec,     // dynamic arrays
-    Map,     // hashmaps
-    Set,     // hashsets
-
     //~ Control Flow
     //* Conditionals
     If,    // check a condition

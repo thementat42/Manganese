@@ -1,7 +1,5 @@
 alias
-arr
 as
-blueprint
 bool
 break
 bundle
@@ -29,16 +27,13 @@ int32
 int64
 int8
 lambda
-map
 module
-noinit
 ptr
 public
 readonly
 repeat
 return
 set
-str
 switch
 true
 typeof
@@ -47,10 +42,7 @@ uint8
 uint16
 uint32
 uint64
-vec
 while
 
 -- Contextual --
 main
-constructor
-destructor

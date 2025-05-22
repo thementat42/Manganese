@@ -29,8 +29,6 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
     switch (keyword) {
         case KeywordType::Alias:
             return "KeywordType::Alias";
-        case KeywordType::Arr:
-            return "KeywordType::Arr";
         case KeywordType::As:
             return "KeywordType::As";
         case KeywordType::Blueprint:
@@ -89,8 +87,6 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
             return "KeywordType::Int64";
         case KeywordType::Lambda:
             return "KeywordType::Lambda";
-        case KeywordType::Map:
-            return "KeywordType::Map";
         case KeywordType::Module:
             return "KeywordType::Module";
         case KeywordType::Ptr:
@@ -103,10 +99,6 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
             return "KeywordType::Repeat";
         case KeywordType::Return:
             return "KeywordType::Return";
-        case KeywordType::Set:
-            return "KeywordType::Set";
-        case KeywordType::Str:
-            return "KeywordType::Str";
         case KeywordType::Switch:
             return "KeywordType::Switch";
         case KeywordType::True:
@@ -121,8 +113,6 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
             return "KeywordType::UInt32";
         case KeywordType::UInt64:
             return "KeywordType::UInt64";
-        case KeywordType::Vec:
-            return "KeywordType::Vec";
         case KeywordType::While:
             return "KeywordType::While";
         default:
@@ -135,7 +125,6 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
 
 std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"alias", KeywordType::Alias},
-    {"arr", KeywordType::Arr},
     {"as", KeywordType::As},
     {"blueprint", KeywordType::Blueprint},
     {"bool", KeywordType::Bool},
@@ -165,7 +154,6 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"int64", KeywordType::Int64},
     {"int8", KeywordType::Int8},
     {"lambda", KeywordType::Lambda},
-    {"map", KeywordType::Map},
     {"module", KeywordType::Module},
     {"noinit", KeywordType::NoInit},
     {"ptr", KeywordType::Ptr},
@@ -173,8 +161,6 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"readonly", KeywordType::ReadOnly},
     {"repeat", KeywordType::Repeat},
     {"return", KeywordType::Return},
-    {"set", KeywordType::Set},
-    {"str", KeywordType::Str},
     {"switch", KeywordType::Switch},
     {"true", KeywordType::True},
     {"typeof", KeywordType::TypeOf},
@@ -183,7 +169,6 @@ std::unordered_map<std::string, const KeywordType> keyword_map = {
     {"uint16", KeywordType::UInt16},
     {"uint32", KeywordType::UInt32},
     {"uint64", KeywordType::UInt64},
-    {"vec", KeywordType::Vec},
     {"while", KeywordType::While}};
 
 }  // namespace lexer
