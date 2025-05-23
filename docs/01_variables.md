@@ -26,6 +26,7 @@ Type qualifiers provide extra information to the compiler about how variables sh
 2. `ptr`: Declares a pointer to a variable of the specified type (a `ptr` variable holds the memory address of the variable it points to).
 3. `public`: Declares that a variable can be accessed and modified outside its parent [module](/docs/05_modules_and_scoping.md)
 4. `readonly`: Declares that a variable can be accessed but not modified outside its parent [module](/docs/05_modules_and_scoping.md)
+5. `private`: Declares that a variable can only be accessed within its parent [module](/docs/05_modules_and_scoping.md)
 
 `const` always applies to the type to its right.
 By default, all variables are private -- they cannot be accessed or modified outside their parent module.

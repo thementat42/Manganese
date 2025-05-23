@@ -39,13 +39,53 @@ It is possible to change the access level of a module variable to one of three l
 
 - `public`: If a variable is `public`, it can be accessed and modified outside the module in which it is declared (its "parent module")
 - `readonly`: If a variable is `readonly`, it can be accessed outside its parent module, but cannot be modified
+- `private`: If a variable is `private`, it can only be accessed within its parent module. This is the default access level
 
-Functions only support `public` -- `public` functions can be called outside their parent module, while private functions cannot.
+Functions only support `public` and `private` access, not `readonly`
 
-These access modifiers are placed along with other type qualifiers in variable declarations.
+`public`, `readonly` and `private` can also be used to create blocks by placing a colon (`:`) after the keyword. Every variable and function declared after it, until the next block, will be assigned that access level. This is syntactic sugar for putting the access modifier in every variable declaration. For example:
 
 ```manganese
-public int x = 3;  # x can be accessed and modified outside this module
-readonly int y = 7;  # y can be accessed outside this module, but not modified
-int z = 9;  # z can neither be accessed nor modified outside this module
+module my_module
+public:
+int x = 3;
+int y = 4;
+
+readonly:
+int z = 5;
+
+private:
+func foo(int a, int b) -> int {
+    return a + b;
+}
 ```
+
+This is equivalent to:
+
+```manganese
+module my_module
+public int x = 3;
+public int y = 4;
+readonly int z = 5;
+private func foo(int a, int b) -> int {
+    return a + b;
+}
+```
+
+If a variable has an access modifier specified within a block, it will override the access modifier of the block for that variable. If the specified modifier is less restrictive than the block in which it is declared, the compiler will issue a warning. For example:
+
+```manganese
+module my_module
+private:
+int w = 1;
+int x = 3;
+int y = 7;
+readonly int z = 5;
+
+public:
+int a = 3;
+int b = 4;
+private int c = 5;
+```
+
+Here `z` will be `readonly`, and `c` will be `private`, despite being declared in a `private` and `public` block respectively. The compiler will issue a warning for `z` since `readonly` is less restrictive than `private`, but not for `c` since `private` is more restrictive than `public`.
