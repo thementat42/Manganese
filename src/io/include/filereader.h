@@ -28,17 +28,18 @@ class FileReader : public Reader {
     static constexpr int DEFAULT_BUFFER_CAPCITY = 2 << 20;  // ~2MB buffer size
     std::unique_ptr<char[]> buffer;                         // Buffer for file reading
 
-   public:
-    FileReader() = default;
-    FileReader(const FileReader& other) = delete;  // Disable copy constructor
-    FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
-    ~FileReader();
     /**
      * @brief Reads more data from the file (on disc) into the buffer (in memory)
      * @details Handles cases where a lexeme is split across two buffer reads (mainly for lookaheads via peekChar)
      * 
      */
     void refillBuffer();
+
+   public:
+    FileReader() = default;
+    FileReader(const FileReader& other) = delete;  // Disable copy constructor
+    FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
+    ~FileReader();
 
     char peekChar(size_t offset = 0) override;
     [[nodiscard]] char consumeChar() override;
