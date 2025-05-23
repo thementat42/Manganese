@@ -23,15 +23,15 @@ This project uses CMake for its build system. To build the compiler from source,
 ```bash
 mkdir Manganese
 cd Manganese
-git clone https://github.com/thementat42/Manganese.git
+git clone https://github.com/thementat42/Manganese.git .
 ```
 
 Then run:
 
 ```bash
+mkdir build
 cd build
-cmake ..
-make
+cmake --build ..
 ```
 
 This will create an executable called `manganese` in the `build/bin` directory. To compile code, create a file ending in `.mn` and write some manganese code. Check out the [examples](/examples/) directory for some samples.
