@@ -12,6 +12,10 @@
 
 MANG_BEGIN
 namespace io {
+
+/**
+ * @brief A simple reader that extracts characters from a string, stored entirely in memory
+ */
 class StringReader : public Reader {
    private:
     size_t position, line, column;
@@ -20,20 +24,22 @@ class StringReader : public Reader {
    public:
     StringReader() = default;
     StringReader(const std::string& source);
-    StringReader(const StringReader& other) = delete; // Disable copy constructor
+    StringReader(const StringReader& other) = delete;  // Disable copy constructor
     ~StringReader() = default;
+
     char peekChar(size_t offset = 0) override;
     [[nodiscard]] char consumeChar() override;
+
     void setPosition(size_t newPosition) override;
     size_t getPosition() const override;
     size_t getLine() const override;
     size_t getColumn() const override;
+
     bool done() const override;
 
-    StringReader& operator=(const StringReader& other) = delete; // Disable copy assignment operator
-
+    StringReader& operator=(const StringReader& other) = delete;  // Disable copy assignment operator
 };
-} // namespace io
+}  // namespace io
 MANG_END
 
-#endif // STRING_READER_H
+#endif  // STRING_READER_H
