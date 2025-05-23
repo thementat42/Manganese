@@ -34,14 +34,13 @@ the syntax for importing the `foo` module is `import my_module::foo`.
 
 ## === Privacy ===
 
-By default, anything declared within a module is only accessible within that module (i.e., module elements are default private).
-It is possible to change the access level of a module variable to one of three levels:
-
 - `public`: If a variable is `public`, it can be accessed and modified outside the module in which it is declared (its "parent module")
 - `readonly`: If a variable is `readonly`, it can be accessed outside its parent module, but cannot be modified
 - `private`: If a variable is `private`, it can only be accessed within its parent module. This is the default access level
 
 Functions only support `public` and `private` access, not `readonly`
+
+By default, all variables are `readonly` and all functions are `public`.
 
 `public`, `readonly` and `private` can also be used to create blocks by placing a colon (`:`) after the keyword. Every variable and function declared after it, until the next block, will be assigned that access level. This is syntactic sugar for putting the access modifier in every variable declaration. For example:
 
