@@ -10,9 +10,9 @@
 #include <string.h>
 
 #include "src/core/keywords.cpp"
-#include "src/frontend/lexer.cpp"
 #include "src/core/operators.cpp"
 #include "src/core/token.cpp"
+#include "src/frontend/lexer.cpp"
 #include "src/io/filereader.cpp"
 #include "src/io/stringreader.cpp"
 #include "tests/lexer_tests.cpp"
@@ -28,6 +28,9 @@ int main(int argc, char const *argv[]) {
     bool parser = false;
     bool semantic = false;
     bool codegen = false;
+
+    // TODO: Replace this with proper argument parser later (when working on argparser for main executable)
+
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--lexer") == 0) {
             lexer = true;
