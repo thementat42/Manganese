@@ -262,19 +262,45 @@ void Lexer::tokenizeStringLiteral() {
     str stringLiteral;
 
     // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
-    while (!done() && peekChar() != '"') {
-        if (peekChar() == '\\') {            // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
+    while (true) {
+        if (done()) {
+            fprintf(stderr, "Unclosed string literal at line %zu column %zu\n", startLine, startCol);
+            tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
+            return;
+        }
+        if (peekChar() == '"') {
+            break;
+        }
+        if (peekChar() == '\n') {
+            if (stringLiteral.empty() || stringLiteral.back() != '\\') {
+                fprintf(stderr, "String literal cannot span multiple lines at line %zu column %zu\n", startLine, startCol);
+                tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
+                return;
+            }
+            // Remove the backslash (not part of the string, just indicating it's crossing a line)
+            stringLiteral.pop_back();
+        }
+        if (peekChar() == '\\') {
+            // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
             stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
         }
         stringLiteral += consumeChar();  // Add the character to the string
     }
-    if (done()) {
-        // No closing quote found
-        fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", startLine, startCol);
-        tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
-        return;
-    }
+
+    // while (!done() && peekChar() != '"') {
+    //     if (peekChar() == '\\') {            // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
+    //         stringLiteral += consumeChar();  // Add the backslash to the string
+    //         containsEscapeSequence = true;
+    //     }
+    //     stringLiteral += consumeChar();  // Add the character to the string
+    // }
+    // if (done()) {
+    //     // No closing quote found
+    //     fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", startLine, startCol);
+    //     tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
+    //     return;
+    // }
     // Move past the closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
     advance();
     if (containsEscapeSequence) {
