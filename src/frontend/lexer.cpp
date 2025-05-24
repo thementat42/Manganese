@@ -22,13 +22,13 @@
 #include <algorithm>
 #include <functional>
 
+#include "../core/include/keywords.h"
+#include "../core/include/operators.h"
+#include "../core/include/token.h"
 #include "../global_macros.h"
 #include "../io/include/filereader.h"
 #include "../io/include/reader.h"
 #include "../io/include/stringreader.h"
-#include "../core/include/keywords.h"
-#include "../core/include/operators.h"
-#include "../core/include/token.h"
 
 MANG_BEGIN
 namespace lexer {
@@ -210,18 +210,38 @@ void Lexer::tokenizeCharLiteral() {
     str charLiteral;
     // For simplicity, just extract a chunk of text, handle it later
     // Look for a closing quote
-    while (!done() && peekChar() != '\'') {
-        if (peekChar() == '\\') {
-            // skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
-            charLiteral += consumeChar();
+    while (true) {
+        if (done()) {
+            fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", startLine, startCol);
+            tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
+            return;
         }
-        charLiteral += consumeChar();
+        if (peekChar() == '\'') {
+            break;
+        }
+        if (peekChar() == '\n') {
+            fprintf(stderr, "Character literal cannot span multiple lines at line %zu column %zu\n", startLine, startCol);
+            tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
+            return;    
+        }
+        if (peekChar() == '\\') {
+            // Skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
+            charLiteral += consumeChar();  // Add the backslash to the string
+        }
+        charLiteral += consumeChar();  // Add the character to the string
     }
-    if (done()) {
-        fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", startLine, startCol);
-        tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
-        return;
-    }
+    // while (!done() && peekChar() != '\'') {
+    //     if (peekChar() == '\\') {
+    //         // skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
+    //         charLiteral += consumeChar();
+    //     }
+    //     charLiteral += consumeChar();
+    // }
+    // if (done()) {
+    //     fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", startLine, startCol);
+    //     tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
+    //     return;
+    // }
     // go past closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
     advance();
     if (charLiteral[0] == '\\') {
