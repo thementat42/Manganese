@@ -26,15 +26,16 @@ file(GLOB_RECURSE SOURCES
      "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
 )
 
-# Filter out files with "_old" in their name
-list(FILTER SOURCES EXCLUDE REGEX ".*_old.*")
-
 # Add executable with all source files
 add_executable(${PROJECT_NAME} ${SOURCES} ${ROOT_SOURCE})
 
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/io/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/include
 )
 
 # Output binary to bin directory
