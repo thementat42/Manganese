@@ -271,19 +271,19 @@ void Lexer::tokenizeStringLiteral() {
         if (peekChar() == '"') {
             break;
         }
-        if (peekChar() == '\n') {
-            if (stringLiteral.empty() || stringLiteral.back() != '\\') {
-                fprintf(stderr, "String literal cannot span multiple lines at line %zu column %zu\n", startLine, startCol);
-                tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
-                return;
-            }
-            // Remove the backslash (not part of the string, just indicating it's crossing a line)
-            stringLiteral.pop_back();
-        }
         if (peekChar() == '\\') {
+            if (peekChar(1) == '\n') {
+                // continuing a string literal across lines
+                advance(2);  // Skip the backslash and the newline
+                continue;
+            }
             // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
             stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
+        } else if (peekChar() == '\n') {
+            fprintf(stderr, "String literal cannot span multiple lines at line %zu column %zu\n", startLine, startCol);
+            tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
+            return;
         }
         stringLiteral += consumeChar();  // Add the character to the string
     }
