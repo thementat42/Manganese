@@ -1,27 +1,20 @@
 #include "include/parser.h"
 
+#include "../core/include/token.h"
 #include "../global_macros.h"
-#include "include/nodes.h"
+#include "include/ast.h"
+#include "include/lexer.h"
 
 MANG_BEGIN
 namespace parser {
 
-    Parser::Parser(const str& source, const lexer::Mode mode) {
-        this->lexer = std::make_unique<lexer::Lexer>(source, mode);
-    }
+Parser::Parser(const str& source, const lexer::Mode mode) {
+    this->lexer = std::make_unique<lexer::Lexer>(source, mode);
+}
 
-    inline bool Parser::doneParsing() {
-        return lexer->peekToken().getType() != lexer::TokenType::EndOfFile;
-    }
-
-    Block Parser::parse() {
-        Block program;
-        while (!doneParsing()) {
-            program.push_back(std::move(parseStatement()));  // move the statement to avoid duplicates
-        }
-        return program;
-    }
-    
+inline bool Parser::doneParsing() {
+    return lexer->peekToken().getType() != core::TokenType::EndOfFile;
+}
 
 }  // namespace parser
 MANG_END

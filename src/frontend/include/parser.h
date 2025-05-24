@@ -12,6 +12,7 @@ MANG_BEGIN
 namespace parser {
 constexpr auto NONE = std::nullopt;
 using core::Token;
+using str = std::string;
 class Parser {
    private:  // private variables
     std::unique_ptr<lexer::Lexer> lexer;
@@ -19,13 +20,13 @@ class Parser {
 
    private:  // private functions
     bool doneParsing();
-    StatementPtr parseStatement();
+    // ast::StatementPtr parseStatement();
 
    public:   // public functions
     Parser(const str& source, const lexer::Mode mode);
     ~Parser() = default;
 
-    Block parse();
+    // ast::Block parse();
 };
 
 }  // namespace parser
