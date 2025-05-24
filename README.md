@@ -31,8 +31,11 @@ Then run:
 ```bash
 mkdir build
 cd build
-cmake --build ..
+cmake ..
+make
 ```
+
+(or substitute `make` with your target build system, e.g. `ninja`)
 
 This will create an executable called `manganese` in the `build/bin` directory. To compile code, create a file ending in `.mn` and write some manganese code. Check out the [examples](/examples/) directory for some samples.
 
