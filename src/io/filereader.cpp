@@ -39,12 +39,6 @@ FileReader::~FileReader() {
     }
 }
 
-inline bool isLexemeEnd(char c) {
-    return c == ' ' || c == '\n' || c == '\t' ||
-           c == ';' || c == ',' || c == '{' ||
-           c == '}' || c == '(' || c == ')';
-}
-
 void FileReader::refillBuffer() {
     // Save any remaining data that hasn't been processed yet
     size_t remainingSize = 0;
@@ -78,12 +72,7 @@ void FileReader::refillBuffer() {
 
             // Add the character to our buffer
             buffer[bufferSize++] = nextChar;
-            buffer[bufferSize] = '\0';
-
-            // Check if this is a good stopping point
-            if (isLexemeEnd(nextChar)) {
-                break;
-            }
+            buffer[bufferSize] = '\0'; // Null-terminate the buffer
         }
     }
 }
