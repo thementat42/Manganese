@@ -23,3 +23,7 @@ func main() -> int {
     print(x);
     print(y);
 }
+
+"unclosed string
+/*
+unclosed comment

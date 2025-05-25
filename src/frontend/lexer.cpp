@@ -182,7 +182,7 @@ static str resolveEscapeCharacters(const str& escapeString) {
 void Lexer::processCharEscapeSequence(const str& charLiteral) {
     str processed = resolveEscapeCharacters(charLiteral);
     if (processed == "INVALID ESCAPE SEQUENCE") {
-        fprintf(stderr, "Error: Invalid character literal at line %zu column %zu\n", getLine(), getCol());
+        fprintf(stderr, "Error: Invalid character literal (line %zu, column %zu)\n", getLine(), getCol());
         tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
         return;
     }
@@ -197,7 +197,7 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
                                  (byteCount == 4 && (firstByte & 0xF8) == 0xF0);    // 4-byte UTF-8 character
     }
     if (!isValidSingleCodePoint) {
-        fprintf(stderr, "Error: Invalid character literal at line %zu column %zu\n", getLine(), getCol());
+        fprintf(stderr, "Error: Invalid character literal (line %zu, column %zu)\n", getLine(), getCol());
         tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
         return;
     }
@@ -212,7 +212,7 @@ void Lexer::tokenizeCharLiteral() {
     // Look for a closing quote
     while (true) {
         if (done()) {
-            fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", startLine, startCol);
+            fprintf(stderr, "Unclosed character literal (line %zu, column %zu)\n", startLine, startCol);
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -220,7 +220,11 @@ void Lexer::tokenizeCharLiteral() {
             break;
         }
         if (peekChar() == '\n') {
-            fprintf(stderr, "Character literal cannot span multiple lines at line %zu column %zu\n", startLine, startCol);
+            fprintf(
+                stderr, "Unclosed string literal (line %zu, column %zu)\
+                If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line\n",
+                startLine, startCol
+            );
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;    
         }
@@ -238,7 +242,7 @@ void Lexer::tokenizeCharLiteral() {
     //     charLiteral += consumeChar();
     // }
     // if (done()) {
-    //     fprintf(stderr, "Unclosed character literal at line %zu column %zu\n", startLine, startCol);
+    //     fprintf(stderr, "Unclosed character literal (line %zu column %zu(\n", startLine, startCol);
     //     tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
     //     return;
     // }
@@ -248,7 +252,7 @@ void Lexer::tokenizeCharLiteral() {
         processCharEscapeSequence(charLiteral);
         return;
     } else if (charLiteral.length() > 1) {
-        fprintf(stderr, "Error: Character literal at line %zu column %zu exceeds 1 character limit.\n", startLine, startCol);
+        fprintf(stderr, "Error: Character literal exceeds 1 character limit (line %zu, column %zu).\n", startLine, startCol);
         tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", startLine, startCol);
         return;
     }
@@ -264,7 +268,7 @@ void Lexer::tokenizeStringLiteral() {
     // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
     while (true) {
         if (done()) {
-            fprintf(stderr, "Unclosed string literal at line %zu column %zu\n", startLine, startCol);
+            fprintf(stderr, "Unclosed string literal (line %zu, column %zu)\n", startLine, startCol);
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -281,7 +285,7 @@ void Lexer::tokenizeStringLiteral() {
             stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
         } else if (peekChar() == '\n') {
-            fprintf(stderr, "String literal cannot span multiple lines at line %zu column %zu\n", startLine, startCol);
+            fprintf(stderr, "String literal cannot span multiple lines (line %zu, column %zu)\n", startLine, startCol);
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -297,7 +301,7 @@ void Lexer::tokenizeStringLiteral() {
     // }
     // if (done()) {
     //     // No closing quote found
-    //     fprintf(stderr, "Error: Unterminated string literal at line %zu column %zu\n", startLine, startCol);
+    //     fprintf(stderr, "Error: Unterminated string literal (line %zu, column %zu)\n", startLine, startCol);
     //     tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
     //     return;
     // }
@@ -373,7 +377,7 @@ void Lexer::tokenizeNumber() {
         if (currentChar == '.') {
             if (isFloat) {
                 // Invalid number -- two decimal points
-                fprintf(stderr, "Error: Invalid number at line %zu column %zu\n", startLine, startCol);
+                fprintf(stderr, "Error: Invalid number literal (line %zu, column %zu)\n", startLine, startCol);
                 return;
             }
             isFloat = true;
@@ -541,7 +545,7 @@ void Lexer::makeTokens(size_t numTokens) {
                 advance();  // Skip the comment
             }
             if (done()) {
-                printf("Error: Unclosed comment at line %zu column %zu\n", startLine, startCol);
+                printf("Error: Unclosed comment (line %zu, column %zu)\n", startLine, startCol);
                 return;
             }
             advance(2);  // Skip the */
