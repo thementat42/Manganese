@@ -5,6 +5,11 @@
 
 #include <iostream>
 
-int main() {
-    std::cout << "Hello world!\n";
+int main(int argc, char const *argv[]) {
+    std::cout << "Hello, World!" << '\n';
+    for (size_t i = 1; i < argc; i++) {
+        std::cout << "Arg" << i << ": " << argv[i] << '\n';
+    }
+
+    return 0;
 }
