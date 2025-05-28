@@ -9,14 +9,14 @@
 // Includes for unity build
 #include <string.h>
 
-#include "src/core/keywords.cpp"
-#include "src/core/operators.cpp"
-#include "src/core/token.cpp"
-#include "src/frontend/lexer.cpp"
-#include "src/io/filereader.cpp"
-#include "src/io/stringreader.cpp"
-#include "tests/lexer_tests.cpp"
-#include "tests/testrunner.cpp"
+#include "src/core/include/keywords.h"
+#include "src/core/include/operators.h"
+#include "src/core/include/token.h"
+#include "src/frontend/include/lexer.h"
+#include "src/io/include/filereader.h"
+#include "src/io/include/stringreader.h"
+#include "tests/testrunner.h"
+#include "tests/tests.h"
 
 int main(int argc, char const *argv[]) {
     if (argc == 1) {
