@@ -1,9 +1,9 @@
 #include <cassert>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 #include "../src/core/include/token.h"
 #include "../src/frontend/include/lexer.h"
@@ -306,7 +306,6 @@ bool testPunctuation() {
 }
 
 bool testCompleteProgram() {
-
     auto tokens = tokensFromFile("tests/lexer_tests.mn");
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
@@ -397,7 +396,6 @@ bool testInvalidEscapeSequence() {
 }
 
 int runLexerTests(TestRunner& runner) {
-
     // Register all tests
     runner.runTest("Empty String", testEmptyString);
     runner.runTest("Whitespace", testWhitespace);
