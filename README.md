@@ -52,17 +52,18 @@ If no output file name is specified, the source file name will be used (e.g., fo
 The [tests](/tests) directory contains tests for the portions of the compiler up to IR generation. The tests take in short snippets of Manganese code (as a string) and check if the output is as expected.
 The tests use a simple [testrunner class](/tests/testrunner.h) which tracks success and failure.
 
-The tests can be run using the [tests-main.cpp](/tests-main.cpp) file in the root directory. The file uses a unity built to run the tests (because I was too lazy to setup a second CMake). To run the test suite, first compile the tests-main file:
+The tests can be built by adding the `-DBUILD_TESTS` flag when running CMake from the `build` directory:
 
 ```bash
-g++ -o mntests tests-main.cpp
+cmake .. -DBUILD_TESTS=ON
+make
 ```
 
-(or substitute `g++` with your compiler).
-Then run the tests:
+This will create an executable called `manganese-tests` in the `build/bin` directory. To run the tests, first move the `manganese-tests` executable to the root directory, then run it.
 
 ```bash
-./mntests [options]
+mv build/bin/manganese-tests .
+./manganese-tests [--lexer | --parser | --semantic | --codegen | --all]
 ```
 
 The tests executable takes the following command line arguments:
