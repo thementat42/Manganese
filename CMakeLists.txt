@@ -3,7 +3,7 @@ project(manganese)
 
 set(CMAKE_CXX_STANDARD 17)
 set(COMPILER_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese.cpp")
-set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese-tests.cpp")
+set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese_tests.cpp")
 
 # Option to build the compiler tests instead of the main compiler
 option(BUILD_TESTS "Build the test suite" OFF)
