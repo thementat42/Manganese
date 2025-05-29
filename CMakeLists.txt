@@ -23,7 +23,12 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there.")
 endif()
 
-# Include directories common for both main compiler and tests
+# Common source files for tests and compiler build
+file(GLOB_RECURSE SRC 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+)
+
 set(INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/include
@@ -31,16 +36,20 @@ set(INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/include
 )
+
 if(BUILD_TESTS)
-  file(GLOB_RECURSE TEST_SOURCES
-          "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-          "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+    file(GLOB_RECURSE TEST_SOURCES
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp"
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c"
-      )
+        )
+    list(APPEND INCLUDE_DIRS
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
+
+    set(TEST_SRC ${SRC} ${TEST_SOURCES})
 
     # Create test executable with tests main file
-    add_executable(${PROJECT_NAME}_tests ${SOURCES} ${TESTS_MAIN})
+    add_executable(${PROJECT_NAME}_tests ${TEST_SRC} ${TESTS_MAIN})
     
     # Include directories
     target_include_directories(${PROJECT_NAME}_tests PRIVATE 
@@ -55,12 +64,8 @@ if(BUILD_TESTS)
     
     message(STATUS "Configured to build test suite")
 else()
-    file(GLOB_RECURSE SOURCES 
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
-    )
     # Add executable with all source files
-    add_executable(${PROJECT_NAME} ${SOURCES} ${COMPILER_MAIN})
+    add_executable(${PROJECT_NAME} ${SRC} ${COMPILER_MAIN})
 
     # Include directories
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
