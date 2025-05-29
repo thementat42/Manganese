@@ -32,7 +32,9 @@ Then, either use the Python script for a simple build:
 python build.py
 ```
 
-Or, use CMake directly:
+The Python script has different command line arguments to control the build process. Run `python build.py --help` to see the available options.
+
+If you don't have python, use CMake directly:
 
 ```bash
 mkdir build
