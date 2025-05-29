@@ -88,7 +88,7 @@ bool testComments() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Keyword, "int") &&
+    return checkToken(tokens[0], TokenType::Keyword, "int32") &&
            checkToken(tokens[1], TokenType::Identifier, "x") &&
            checkToken(tokens[2], TokenType::Semicolon, ";");
 }
@@ -321,9 +321,9 @@ bool testCompleteProgram() {
            checkToken(tokens[2], TokenType::LeftParen, "(") &&
            checkToken(tokens[3], TokenType::RightParen, ")") &&
            checkToken(tokens[4], TokenType::Operator, "->") &&
-           checkToken(tokens[5], TokenType::Keyword, "int") &&
+           checkToken(tokens[5], TokenType::Keyword, "int32") &&
            checkToken(tokens[6], TokenType::LeftBrace, "{") &&
-           checkToken(tokens[7], TokenType::Keyword, "int") &&
+           checkToken(tokens[7], TokenType::Keyword, "int32") &&
            checkToken(tokens[8], TokenType::Identifier, "x") &&
            checkToken(tokens[9], TokenType::Operator, "=") &&
            checkToken(tokens[10], TokenType::Integer, "5") &&
@@ -347,7 +347,7 @@ bool testCompleteProgram() {
 }
 
 bool testNestedBrackets() {
-    auto tokens = tokensFromString("arr<arr<int>> foo");
+    auto tokens = tokensFromString("arr<arr<int16>> foo");
     std::cout << "Tokens: ";
     for (const auto& token : tokens) {
         std::cout << token.getLexeme() << " ";
@@ -362,7 +362,7 @@ bool testNestedBrackets() {
            checkToken(tokens[1], TokenType::LeftAngle, "<") &&
            checkToken(tokens[2], TokenType::Identifier, "arr") &&
            checkToken(tokens[3], TokenType::LeftAngle, "<") &&
-           checkToken(tokens[4], TokenType::Keyword, "int") &&
+           checkToken(tokens[4], TokenType::Keyword, "int16") &&
            checkToken(tokens[5], TokenType::RightAngle, ">") &&
            checkToken(tokens[6], TokenType::RightAngle, ">") &&
            checkToken(tokens[7], TokenType::Identifier, "foo");
@@ -395,7 +395,7 @@ bool testInvalidEscapeSequence() {
     return tokens[0].getType() == TokenType::Invalid;
 }
 
-int runLexerTests(TestRunner& runner) {
+inline void runLexerTests(TestRunner& runner) {
     // Register all tests
     runner.runTest("Empty String", testEmptyString);
     runner.runTest("Whitespace", testWhitespace);
@@ -413,10 +413,6 @@ int runLexerTests(TestRunner& runner) {
     runner.runTest("Invalid Character", testInvalidChar);
     runner.runTest("Invalid Escape Sequence", testInvalidEscapeSequence);
     runner.runTest("Complete Program", testCompleteProgram);
-
-    return runner.allTestsPassed() ? 0 : 1;
-
-    // g++ tests/test_lexer.cpp tests/test_runner.cpp src/frontend/keywords.cpp src/frontend/lexer.cpp src/frontend/operators.cpp src/frontend/token.cpp -o tl; ./tl
 }
 }  // namespace tests
 MANG_END

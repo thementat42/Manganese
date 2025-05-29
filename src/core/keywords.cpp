@@ -28,91 +28,91 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
 #if DEBUG
     switch (keyword) {
         case KeywordType::Alias:
-            return "KeywordType::Alias";
+            return "alias";
         case KeywordType::As:
-            return "KeywordType::As";
+            return "as";
         case KeywordType::Blueprint:
-            return "KeywordType::Blueprint";
+            return "blueprint";
         case KeywordType::Bool:
-            return "KeywordType::Bool";
+            return "bool";
         case KeywordType::Break:
-            return "KeywordType::Break";
+            return "break";
         case KeywordType::Bundle:
-            return "KeywordType::Bundle";
+            return "bundle";
         case KeywordType::Case:
-            return "KeywordType::Case";
+            return "case";
         case KeywordType::Cast:
-            return "KeywordType::Cast";
+            return "cast";
         case KeywordType::Char:
-            return "KeywordType::Char";
+            return "char";
         case KeywordType::Const:
-            return "KeywordType::Const";
+            return "const";
         case KeywordType::Continue:
-            return "KeywordType::Continue";
+            return "continue";
         case KeywordType::Default:
-            return "KeywordType::Default";
+            return "Default";
         case KeywordType::Do:
-            return "KeywordType::Do";
+            return "do";
         case KeywordType::Elif:
-            return "KeywordType::Elif";
+            return "elif";
         case KeywordType::Else:
-            return "KeywordType::Else";
+            return "else";
         case KeywordType::Enum:
-            return "KeywordType::Enum";
+            return "enum";
         case KeywordType::False:
-            return "KeywordType::False";
+            return "false";
         case KeywordType::Float:
-            return "KeywordType::Float";
+            return "float";
         case KeywordType::Float32:
-            return "KeywordType::Float32";
+            return "float32";
         case KeywordType::Float64:
-            return "KeywordType::Float64";
+            return "float64";
         case KeywordType::For:
-            return "KeywordType::For";
+            return "for";
         case KeywordType::Func:
-            return "KeywordType::Func";
+            return "func";
         case KeywordType::If:
-            return "KeywordType::If";
+            return "if";
         case KeywordType::Import:
-            return "KeywordType::Import";
+            return "import";
         case KeywordType::Int8:
-            return "KeywordType::Int8";
+            return "int8";
         case KeywordType::Int16:
-            return "KeywordType::Int16";
+            return "int16";
         case KeywordType::Int32:
-            return "KeywordType::Int32";
+            return "int32";
         case KeywordType::Int64:
-            return "KeywordType::Int64";
+            return "int64";
         case KeywordType::Lambda:
-            return "KeywordType::Lambda";
+            return "lambda";
         case KeywordType::Module:
-            return "KeywordType::Module";
+            return "module";
         case KeywordType::Ptr:
-            return "KeywordType::Ptr";
+            return "ptr";
         case KeywordType::Public:
-            return "KeywordType::Public";
+            return "public";
         case KeywordType::ReadOnly:
-            return "KeywordType::ReadOnly";
+            return "readonly";
         case KeywordType::Repeat:
-            return "KeywordType::Repeat";
+            return "repeat";
         case KeywordType::Return:
-            return "KeywordType::Return";
+            return "return";
         case KeywordType::Switch:
-            return "KeywordType::Switch";
+            return "switch";
         case KeywordType::True:
-            return "KeywordType::True";
+            return "true";
         case KeywordType::TypeOf:
-            return "KeywordType::TypeOf";
+            return "typeof";
         case KeywordType::UInt8:
-            return "KeywordType::UInt8";
+            return "uint8";
         case KeywordType::UInt16:
-            return "KeywordType::UInt16";
+            return "uint16";
         case KeywordType::UInt32:
-            return "KeywordType::UInt32";
+            return "uint32";
         case KeywordType::UInt64:
-            return "KeywordType::UInt64";
+            return "uint64";
         case KeywordType::While:
-            return "KeywordType::While";
+            return "while";
         default:
             return "Unknown Keyword";
     }

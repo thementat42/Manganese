@@ -30,93 +30,93 @@ DEBUG_FUNC std::string operatorToString(std::optional<OperatorType> op) {
 #if DEBUG
     switch (*op) {
         case OperatorType::Plus:
-            return "OperatorType::Plus";
+            return "+";
         case OperatorType::Minus:
-            return "OperatorType::Minus";
+            return "-";
         case OperatorType::Mul:
-            return "OperatorType::Mul";
+            return "*";
         case OperatorType::Div:
-            return "OperatorType::Div";
+            return "/";
         case OperatorType::FloorDiv:
-            return "OperatorType::FloorDiv";
+            return "//";
         case OperatorType::Mod:
-            return "OperatorType::Mod";
+            return "%";
         case OperatorType::Exp:
-            return "OperatorType::Exp";
+            return "**";
         case OperatorType::Inc:
-            return "OperatorType::Inc";
+            return "++";
         case OperatorType::Dec:
-            return "OperatorType::Dec";
+            return "--";
         case OperatorType::PlusAssign:
-            return "OperatorType::PlusAssign";
+            return "+=";
         case OperatorType::MinusAssign:
-            return "OperatorType::MinusAssign";
+            return "-=";
         case OperatorType::MulAssign:
-            return "OperatorType::MulAssign";
+            return "*=";
         case OperatorType::DivAssign:
-            return "OperatorType::DivAssign";
+            return "/=";
         case OperatorType::FloorDivAssign:
-            return "OperatorType::FloorDivAssign";
+            return "//=";
         case OperatorType::ModAssign:
-            return "OperatorType::ModAssign";
+            return "%=";
         case OperatorType::ExpAssign:
-            return "OperatorType::ExpAssign";
+            return "**=";
         case OperatorType::GreaterThan:
-            return "OperatorType::GreaterThan";
+            return ">";
         case OperatorType::GreaterThanOrEqual:
-            return "OperatorType::GreaterThanOrEqual";
+            return ">=";
         case OperatorType::LessThan:
-            return "OperatorType::LessThan";
+            return "<";
         case OperatorType::LessThanOrEqual:
-            return "OperatorType::LessThanOrEqual";
+            return "<=";
         case OperatorType::Equal:
-            return "OperatorType::Equal";
+            return "==";
         case OperatorType::NotEqual:
-            return "OperatorType::NotEqual";
+            return "!=";
         case OperatorType::And:
-            return "OperatorType::And";
+            return "&&";
         case OperatorType::Or:
-            return "OperatorType::Or";
+            return "||";
         case OperatorType::Not:
-            return "OperatorType::Not";
+            return "!";
         case OperatorType::BitAnd:
-            return "OperatorType::BitAnd";
+            return "&";
         case OperatorType::BitOr:
-            return "OperatorType::BitOr";
+            return "|";
         case OperatorType::BitNot:
-            return "OperatorType::BitNot";
+            return "~";
         case OperatorType::BitXor:
-            return "OperatorType::BitXor";
+            return "^";
         case OperatorType::BitLShift:
-            return "OperatorType::BitLShift";
+            return "<<";
         case OperatorType::BitRShift:
-            return "OperatorType::BitRShift";
+            return ">>";
         case OperatorType::BitAndAssign:
-            return "OperatorType::BitAndAssign";
+            return "&=";
         case OperatorType::BitOrAssign:
-            return "OperatorType::BitOrAssign";
+            return "|=";
         case OperatorType::BitNotAssign:
-            return "OperatorType::BitNotAssign";
+            return "~=";
         case OperatorType::BitXorAssign:
-            return "OperatorType::BitXorAssign";
+            return "^=";
         case OperatorType::BitLShiftAssign:
-            return "OperatorType::BitLShiftAssign";
+            return "<<=";
         case OperatorType::BitRShiftAssign:
-            return "OperatorType::BitRShiftAssign";
+            return ">>=";
         case OperatorType::AddressOf:
-            return "OperatorType::AddressOf";
+            return "?";
         case OperatorType::Dereference:
-            return "OperatorType::Dereference";
+            return "@";
         case OperatorType::MemberAccess:
-            return "OperatorType::MemberAccess";
+            return ".";
         case OperatorType::Ellipsis:
-            return "OperatorType::Ellipsis";
+            return "...";
         case OperatorType::ScopeResolution:
-            return "OperatorType::ScopeResolution";
+            return "::";
         case OperatorType::Assignment:
-            return "OperatorType::Assignment";
+            return "=";
         case OperatorType::Arrow:
-            return "OperatorType::Arrow";
+            return "->";
         default:
             return "Unknown Operator";
     }

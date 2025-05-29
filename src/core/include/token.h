@@ -62,10 +62,10 @@ enum class TokenType : unsigned char {
 struct Token {
    private:
     TokenType type;
-    std::string lexeme;  // TODO: Consider making this an std::string_view or just a char* (minimize memory use)
 
-    // types with extra info
-    std::variant<std::monostate, OperatorType, KeywordType> specialType;
+    // specific data about the token
+    // std::string is for tokens with no enum representation (identifiers, numbers, etc.)
+    std::variant<OperatorType, KeywordType, std::string> data;
     size_t line, column;
 
    public:
@@ -92,7 +92,7 @@ struct Token {
     std::string getLexeme() const;
     size_t getLine() const;
     size_t getColumn() const;
-    void overrideType(TokenType _type);
+    void overrideType(TokenType _type, std::string _lexeme = "");
     void overrideOperatorType(OperatorType _type);
 
     /**
@@ -101,7 +101,7 @@ struct Token {
      */
     void log() const;
 
-    static void log(Token token);
+    static void log(const Token& token);
 };
 }  // namespace core
 MANG_END

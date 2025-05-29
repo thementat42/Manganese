@@ -15,19 +15,19 @@
 
 MANG_BEGIN
 namespace core {
-Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column) : type(_type), lexeme(std::move(_lexeme)), line(_line), column(_column) {
+Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column) : type(_type), line(_line), column(_column) {
     if (_type == TokenType::Operator) {
-        auto op = operatorFromString(lexeme);
+        auto op = operatorFromString(_lexeme);
         if (op.has_value()) {
-            specialType = op.value();
+            data = op.value();
         }
-    } else if (_type == TokenType :: Keyword) {
-        auto kw = keywordFromString(lexeme);
+    } else if (_type == TokenType::Keyword) {
+        auto kw = keywordFromString(_lexeme);
         if (kw.has_value()) {
-            specialType = kw.value();
+            data = kw.value();
         }
     } else {
-        specialType = std::monostate();
+        data = std::move(_lexeme);
     }
 }
 
@@ -38,21 +38,26 @@ TokenType Token::getType() const {
 }
 
 std::optional<OperatorType> Token::getOperatorType() const {
-    if (std::holds_alternative<OperatorType>(specialType)) {
-        return std::get<OperatorType>(specialType);
+    if (std::holds_alternative<OperatorType>(data)) {
+        return std::get<OperatorType>(data);
     }
     return std::nullopt;
 }
 
 std::optional<KeywordType> Token::getKeywordType() const {
-    if (std::holds_alternative<KeywordType>(specialType)) {
-        return std::get<KeywordType>(specialType);
+    if (std::holds_alternative<KeywordType>(data)) {
+        return std::get<KeywordType>(data);
     }
     return std::nullopt;
 }
 
 std::string Token::getLexeme() const {
-    return lexeme;
+    if (std::holds_alternative<OperatorType>(data)) {
+        return operatorToString(std::get<OperatorType>(data));
+    } else if (std::holds_alternative<KeywordType>(data)) {
+        return keywordToString(std::get<KeywordType>(data));
+    }
+    return std::get<std::string>(data);
 }
 
 size_t Token::getLine() const {
@@ -63,7 +68,7 @@ size_t Token::getColumn() const {
     return column;
 }
 
-void Token::overrideType(TokenType _type) {
+void Token::overrideType(TokenType _type, std::string _lexeme) {
 #if DEBUG
     printf(
         "Warning: overriding token type from %s to %s (line %d in file %s)\n",
@@ -73,22 +78,22 @@ void Token::overrideType(TokenType _type) {
         __FILE__);
 #endif  // DEBUG
     type = _type;
-    // Reset specialType if needed
+    // Reset data if needed
     if (_type != TokenType::Operator && _type != TokenType::Keyword) {
-        specialType = std::monostate{};
+        data = _lexeme;
     }
 }
 
 void Token::overrideOperatorType(OperatorType _type) {
-    #if DEBUG
+#if DEBUG
     printf(
         "Warning: overriding token operator type from %s to %s (line %d in file %s)\n",
-        operatorToString(std::get<OperatorType>(specialType)).c_str(),
+        operatorToString(std::get<OperatorType>(data)).c_str(),
         operatorToString(_type).c_str(),
         __LINE__,
         __FILE__);
 #endif  // DEBUG
-    specialType = _type;
+    data = _type;
     type = TokenType::Operator;
 }
 
@@ -97,56 +102,56 @@ DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) {
     switch (type) {
         // Basic
         case TokenType::Keyword:
-            return "TokenType::Keyword";
+            return "Keyword";
         case TokenType::Identifier:
-            return "TokenType::Identifier";
+            return "Identifier";
         case TokenType::StrLiteral:
-            return "TokenType::STRING_LITERAL";
+            return "String Literal";
         case TokenType::CharLiteral:
-            return "TokenType::CharLiteral";
+            return "Char Literal";
         case TokenType::Operator:
-            return "TokenType::OPERATOR";
+            return "Operator";
 
         // Numbers
         case TokenType::Integer:
-            return "TokenType::Integer";
+            return "Integer";
         case TokenType::Float:
-            return "TokenType::Float";
+            return "Float";
 
         // Brackets
         case TokenType::LeftParen:
-            return "TokenType::LeftParen";
+            return "Left Parenthesis";
         case TokenType::RightParen:
-            return "TokenType::RightParen";
+            return "Right Parenthesis";
         case TokenType::LeftBrace:
-            return "TokenType::LeftBrace";
+            return "Left Brace";
         case TokenType::RightBrace:
-            return "TokenType::RightBrace";
+            return "Right Brace";
         case TokenType::LeftSquare:
-            return "TokenType::LeftSquare";
+            return "Left Square";
         case TokenType::RightSquare:
-            return "TokenType::RightSquare";
+            return "Right Square";
         case TokenType::LeftAngle:
-            return "TokenType::LeftAngle";
+            return "Left Angle";
         case TokenType::RightAngle:
-            return "TokenType::RightAngle";
+            return "Right Angle";
 
         // Punctuation
         case TokenType::Semicolon:
-            return "TokenType::Semicolon";
+            return "Semicolon";
         case TokenType::Comma:
-            return "TokenType::Comma";
+            return "Comma";
         case TokenType::Colon:
-            return "TokenType::Colon";
+            return "Colon";
 
         // Misc
         case TokenType::EndOfFile:
-            return "TokenType::EndOfFile";
+            return "End Of File";
         case TokenType::Invalid:
-            return "TokenType::Invalid";
+            return "Invalid";
 
         default:
-            return "Unknown TokenType";
+            return "Unknown Token Type";
     }
 #else   // ^ DEBUG ^ | v !DEBUG v
     return "";
@@ -155,19 +160,13 @@ DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) {
 
 DEBUG_FUNC void Token::log() const {
 #if DEBUG
-    std::cout << "Token: Type: " << tokenTypeToString(type) << ", Lexeme: \"" << lexeme << "\"";
-
-    if (std::holds_alternative<OperatorType>(specialType)) {
-        std::cout << ", Operator: " << operatorToString(std::get<OperatorType>(specialType));
-    } else if (std::holds_alternative<KeywordType>(specialType)) {
-        std::cout << ", Keyword: " << keywordToString(std::get<KeywordType>(specialType));
-    }
-
-    std::cout << " (Line " << line << ", Column " << column << ")\n";
+    std::cout << "Token: " << tokenTypeToString(type) << " ("
+              << getLexeme() << ") at line " << line << ", column " << column;
+    std::cout << '\n';
 #endif  // DEBUG
 }
 
-void Token::log(Token token) {
+void Token::log(const Token& token) {
     token.log();
 }
 
