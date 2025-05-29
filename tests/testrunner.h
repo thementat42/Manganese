@@ -4,6 +4,8 @@
 #include <functional>
 #include <string>
 
+#include "../src/global_macros.h"
+
 MANG_BEGIN
 namespace tests {
 class TestRunner {

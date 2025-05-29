@@ -395,7 +395,7 @@ bool testInvalidEscapeSequence() {
     return tokens[0].getType() == TokenType::Invalid;
 }
 
-inline void runLexerTests(TestRunner& runner) {
+void runLexerTests(TestRunner& runner) {
     // Register all tests
     runner.runTest("Empty String", testEmptyString);
     runner.runTest("Whitespace", testWhitespace);
