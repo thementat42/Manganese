@@ -221,12 +221,12 @@ void Lexer::tokenizeCharLiteral() {
         }
         if (peekChar() == '\n') {
             fprintf(
-                stderr, "Unclosed string literal (line %zu, column %zu)\
+                stderr,
+                "Unclosed string literal (line %zu, column %zu)\
                 If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line\n",
-                startLine, startCol
-            );
+                startLine, startCol);
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
-            return;    
+            return;
         }
         if (peekChar() == '\\') {
             // Skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
@@ -336,6 +336,7 @@ void Lexer::tokenizeNumber() {
     str numberLiteral;
     char currentChar = peekChar();
     bool isFloat = false;
+    uint8_t base = 10;  // Default base is decimal
     std::function<bool(char)> isValidBaseChar;
     // TODO: Add floating point support for hex numbers (but not octal or binary)
     if (currentChar == '0') {
@@ -346,20 +347,21 @@ void Lexer::tokenizeNumber() {
             case 'X':
                 // Hexadecimal number
                 isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); };
-                advance(2);             // Skip the 0x
-                numberLiteral += "0x";  // Add the base indicator so the parser can handle it
+                advance(2);
+                numberLiteral += "0x";
+                base = 16;
                 break;
             case 'b':
             case 'B':
                 isValidBaseChar = [](char c) { return c == '0' || c == '1'; };
-                advance(2);             // Skip the 0b
-                numberLiteral += "0b";  // Add the base indicator so the parser can handle it
+                advance(2);
+                numberLiteral += "0b";
                 break;
             case 'o':
             case 'O':
                 isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; };
-                advance(2);             // Skip the 0o
-                numberLiteral += "0o";  // Add the base indicator so the parser can handle it
+                advance(2);
+                numberLiteral += "0o";
                 break;
             default:
                 // Not a valid base indicator -- just treat it as a decimal number
@@ -384,7 +386,41 @@ void Lexer::tokenizeNumber() {
         }
         currentChar = peekChar();
     }
-    // TODO: Add support for scientific notation (e.g., 1.23e4)
+    // Handle scientific notation (e.g., 1.23e4)
+    if ((currentChar == 'e' || currentChar == 'E') && base == 10) {
+        // Scientific notation
+        numberLiteral += consumeChar();  // Add the 'e' or 'E'
+        currentChar = peekChar();
+        if (currentChar == '+' || currentChar == '-') {
+            numberLiteral += consumeChar();  // Add the sign
+            currentChar = peekChar();
+        }
+        if (!isdigit(currentChar)) {
+            fprintf(stderr, "Error: Invalid scientific notation (line %zu, column %zu)\n", startLine, startCol);
+            return;
+        }
+        while (!done() && isdigit(currentChar)) {
+            numberLiteral += consumeChar();
+            currentChar = peekChar();
+        }
+
+    } else if ((currentChar == 'p' || currentChar == 'P') && base == 16) {
+        // Hexadecimal exponentiation (e.g., 0x1.23p4)
+        numberLiteral += consumeChar();  // Add the 'p' or 'P'
+        currentChar = peekChar();
+        if (currentChar == '+' || currentChar == '-') {
+            numberLiteral += consumeChar();  // Add the sign
+            currentChar = peekChar();
+        }
+        if (!isdigit(currentChar)) {
+            fprintf(stderr, "Error: Invalid hexadecimal exponentiation (line %zu, column %zu)\n", startLine, startCol);
+            return;
+        }
+        while (!done() && isdigit(currentChar)) {
+            numberLiteral += consumeChar();
+            currentChar = peekChar();
+        }
+    }
     tokenStream.emplace_back(
         isFloat ? TokenType::Float : TokenType::Integer,
         numberLiteral,
