@@ -61,8 +61,8 @@ cmake --build .
 Then, move the `manganese-tests` executable to the root directory and run tests:
 
 ```bash
-mv build/bin/manganese-tests .
-./manganese-tests [--lexer | --parser | --semantic | --codegen | --all]
+mv build/bin/manganese_tests .
+./manganese_tests [--lexer | --parser | --semantic | --codegen | --all]
 ```
 
 The tests executable takes the following command line arguments:
