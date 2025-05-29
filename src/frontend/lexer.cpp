@@ -594,7 +594,7 @@ Token Lexer::peekToken(size_t offset) {
 
 Token Lexer::consumeToken() {
     if (tokenStream.empty()) {
-        makeTokens(1);  // If queue empty, generate 1 token to read
+        makeTokens(QUEUE_LOOKAHEAD_AMOUNT);  // If queue empty, generate 1 token to read
     }
     if (tokenStream.empty()) {
         // still empty -- we are done tokenizing
