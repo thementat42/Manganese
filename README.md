@@ -34,7 +34,7 @@ python build.py
 
 The Python script has different command line arguments to control the build process. Run `python build.py --help` to see the available options.
 
-If you don't have python, use CMake directly:
+If you don't have python, you can use CMake directly:
 
 ```bash
 mkdir build
