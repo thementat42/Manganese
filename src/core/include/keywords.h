@@ -88,9 +88,13 @@ enum class KeywordType : unsigned char {
     //~ Misc
     Alias,    // type aliasing (alias `a` as `b`)
     TypeOf,   // get the type of a variable
-    Cast,     // cast to a new type (cast<"new type">)
+    Cast,     // cast to a new type (e.g., cast<new_type>)
 };
 
+/**
+ * @brief Maps string representations of keywords to their corresponding KeywordType enum values.
+ * Used by the lexer and parser for keyword identification and validation.
+ */
 extern std::unordered_map<std::string, const KeywordType> keyword_map;
 
 /**
@@ -104,7 +108,7 @@ std::optional<KeywordType> keywordFromString(const std::string& keyword);
  * @brief Convert KeywordType enum to string representation
  * @param keyword The KeywordType to convert
  * @return String representation of the KeywordType
- * @details Only used for debugging purposes. (if the debug flag is not set, this function will be empty)
+ * @details Only used for debugging purposes. (if debug mode is disabled, this function returns an empty string)
  */
 std::string keywordToString(KeywordType keyword);
 

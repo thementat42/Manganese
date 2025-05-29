@@ -68,7 +68,7 @@ enum class OperatorType : unsigned char {
     BitRShift,  // `>>`
 
     //~ Bitwise Assignment Operators
-    // Overrides the value of the variable in place (e.g. x &~= y is the same as x = x &~ y)
+    // Overrides the value of the variable in place (e.g. x &= y is the same as x = x & y)
     BitAndAssign,     // `&=`
     BitOrAssign,      // `|=`
     BitNotAssign,     // `~=`
@@ -89,10 +89,14 @@ enum class OperatorType : unsigned char {
     Arrow,       // `->`
     Ellipsis,    // `...`
 };
+
+/**
+ * @brief Maps string representations of operators to their corresponding OperatorType enum values.
+ */
 extern std::unordered_map<std::string, const OperatorType> operator_map;
 
 /**
- * @brief Convert a string to OperatorType enum
+ * @brief Convert a string to the corresponding OperatorType enum
  * @param op The string to convert
  * @return std::optional<OperatorType> The corresponding OperatorType, or std::nullopt if not found
  */
