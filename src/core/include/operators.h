@@ -93,7 +93,7 @@ enum class OperatorType : unsigned char {
 /**
  * @brief Maps string representations of operators to their corresponding OperatorType enum values.
  */
-extern std::unordered_map<std::string, const OperatorType> operator_map;
+extern std::unordered_map<std::string, const OperatorType> operatorMap;
 
 /**
  * @brief Convert a string to the corresponding OperatorType enum

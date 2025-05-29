@@ -323,10 +323,10 @@ void Lexer::tokenizeKeywordOrIdentifier() {
     while (!done() && (isalnum(peekChar()) || peekChar() == '_')) {
         lexeme += consumeChar();
     }
-    auto it = core::keyword_map.find(lexeme);
+    auto it = core::keywordMap.find(lexeme);
 
     tokenStream.emplace_back(
-        it != core::keyword_map.end() ? TokenType::Keyword : TokenType::Identifier,
+        it != core::keywordMap.end() ? TokenType::Keyword : TokenType::Identifier,
         lexeme,
         startLine, startCol);
 }

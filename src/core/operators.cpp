@@ -16,8 +16,8 @@ namespace core {
 
 std::optional<OperatorType> operatorFromString(const std::string& op) {
     std::string op_str(op);
-    auto it = operator_map.find(op_str);
-    if (it != operator_map.end()) {
+    auto it = operatorMap.find(op_str);
+    if (it != operatorMap.end()) {
         return it->second;
     }
     return std::nullopt;
@@ -125,7 +125,7 @@ DEBUG_FUNC std::string operatorToString(std::optional<OperatorType> op) {
 #endif  // DEBUG
 }
 
-std::unordered_map<std::string, const OperatorType> operator_map = {
+std::unordered_map<std::string, const OperatorType> operatorMap = {
     // Arithmetic Operators
     {"+", OperatorType::Plus},
     {"-", OperatorType::Minus},

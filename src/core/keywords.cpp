@@ -16,8 +16,8 @@ MANG_BEGIN
 namespace core {
 
 std::optional<KeywordType> keywordFromString(const std::string& keyword) {
-    auto it = keyword_map.find(keyword);
-    if (it != keyword_map.end()) {
+    auto it = keywordMap.find(keyword);
+    if (it != keywordMap.end()) {
         return it->second;
     }
 
@@ -121,7 +121,7 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
 #endif // DEBUG
 }
 
-std::unordered_map<std::string, const KeywordType> keyword_map = {
+std::unordered_map<std::string, const KeywordType> keywordMap = {
     {"alias", KeywordType::Alias},
     {"as", KeywordType::As},
     {"blueprint", KeywordType::Blueprint},

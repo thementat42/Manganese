@@ -95,7 +95,7 @@ enum class KeywordType : unsigned char {
  * @brief Maps string representations of keywords to their corresponding KeywordType enum values.
  * Used by the lexer and parser for keyword identification and validation.
  */
-extern std::unordered_map<std::string, const KeywordType> keyword_map;
+extern std::unordered_map<std::string, const KeywordType> keywordMap;
 
 /**
  * @brief Convert a string to KeywordType enum
