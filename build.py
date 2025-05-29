@@ -52,19 +52,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--config",
-    choices=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
-    default="Debug",
-    help="Set the build configuration type"
-)
-
-parser.add_argument(
-    "-v", "--verbose",
-    action="store_true",
-    help="Enable verbose output during the build process"
-)
-
-parser.add_argument(
     "-j", "--jobs",
     type=int,
     help="Number of parallel build jobs"
@@ -86,6 +73,7 @@ if args.clean:
     except PermissionError:
         print(f"\033[31mPermission denied while cleaning {BUILD_DIR}\033[0m")
         sys.exit(1)
+    print(f"\033[34mCleaned build directory ({BUILD_DIR})\033[0m")
 os.makedirs(BUILD_DIR, exist_ok=True)
 
 os.chdir(BUILD_DIR)
@@ -95,16 +83,13 @@ OUT_NAME = "manganese" + ("_tests" if args.tests else "") + (".exe" if os.name =
 cmake_args = [
     "cmake",
     "..",
-    f"-DBUILD_TESTS={"ON" if args.tests else "OFF"}",
-    f" -DCMAKE_BUILD_TYPE={args.config}",
+    f"-DBUILD_TESTS={"ON" if args.tests else "OFF"}"
 ]
 
 if args.jobs:
     cmake_args.extend(["--parallel", str(args.jobs)])
 if args.target:
     cmake_args.extend(["--target", args.target])
-if args.verbose:
-    cmake_args.append("--verbose")
 if args.generator is not None:
     cmake_args.extend(["-G", args.generator])
 
