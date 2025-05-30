@@ -113,9 +113,9 @@ DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) {
             return "Operator";
 
         // Numbers
-        case TokenType::Integer:
+        case TokenType::IntegerLiteral:
             return "Integer";
-        case TokenType::Float:
+        case TokenType::FloatLiteral:
             return "Float";
 
         // Brackets

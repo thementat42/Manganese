@@ -422,7 +422,7 @@ void Lexer::tokenizeNumber() {
         }
     }
     tokenStream.emplace_back(
-        isFloat ? TokenType::Float : TokenType::Integer,
+        isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral,
         numberLiteral,
         startLine, startCol);
 }

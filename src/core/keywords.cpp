@@ -61,7 +61,7 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
             return "enum";
         case KeywordType::False:
             return "false";
-        case KeywordType::Float:
+        case KeywordType::FloatLiteral:
             return "float";
         case KeywordType::Float32:
             return "float32";
@@ -139,7 +139,7 @@ std::unordered_map<std::string, const KeywordType> keywordMap = {
     {"else", KeywordType::Else},
     {"enum", KeywordType::Enum},
     {"false", KeywordType::False},
-    {"float", KeywordType::Float},  // default to float32 when floating point width isn't specified
+    {"float", KeywordType::FloatLiteral},  // default to float32 when floating point width isn't specified
     {"float32", KeywordType::Float32},
     {"float64", KeywordType::Float64},
     {"for", KeywordType::For},

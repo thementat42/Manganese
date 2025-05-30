@@ -149,14 +149,14 @@ bool testIntegerLiterals() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Integer, "0") &&
-           checkToken(tokens[1], TokenType::Integer, "123") &&
-           checkToken(tokens[2], TokenType::Integer, "456789") &&
-           checkToken(tokens[3], TokenType::Integer, "0xFFF") &&
-           checkToken(tokens[4], TokenType::Integer, "0b1001") &&
-           checkToken(tokens[5], TokenType::Integer, "0o33") &&
-              checkToken(tokens[6], TokenType::Float, "0x1.23p4") &&
-              checkToken(tokens[7], TokenType::Float, "1.23e-4");
+    return checkToken(tokens[0], TokenType::IntegerLiteral, "0") &&
+           checkToken(tokens[1], TokenType::IntegerLiteral, "123") &&
+           checkToken(tokens[2], TokenType::IntegerLiteral, "456789") &&
+           checkToken(tokens[3], TokenType::IntegerLiteral, "0xFFF") &&
+           checkToken(tokens[4], TokenType::IntegerLiteral, "0b1001") &&
+           checkToken(tokens[5], TokenType::IntegerLiteral, "0o33") &&
+              checkToken(tokens[6], TokenType::FloatLiteral, "0x1.23p4") &&
+              checkToken(tokens[7], TokenType::FloatLiteral, "1.23e-4");
 }
 
 bool testFloatLiterals() {
@@ -171,9 +171,9 @@ bool testFloatLiterals() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Float, "0.0") &&
-           checkToken(tokens[1], TokenType::Float, "1.23") &&
-           checkToken(tokens[2], TokenType::Float, "456.789");
+    return checkToken(tokens[0], TokenType::FloatLiteral, "0.0") &&
+           checkToken(tokens[1], TokenType::FloatLiteral, "1.23") &&
+           checkToken(tokens[2], TokenType::FloatLiteral, "456.789");
 }
 
 bool testCharLiterals() {
@@ -328,12 +328,12 @@ bool testCompleteProgram() {
            checkToken(tokens[7], TokenType::Keyword, "int32") &&
            checkToken(tokens[8], TokenType::Identifier, "x") &&
            checkToken(tokens[9], TokenType::Operator, "=") &&
-           checkToken(tokens[10], TokenType::Integer, "5") &&
+           checkToken(tokens[10], TokenType::IntegerLiteral, "5") &&
            checkToken(tokens[11], TokenType::Semicolon, ";") &&
            checkToken(tokens[12], TokenType::Keyword, "float") &&
            checkToken(tokens[13], TokenType::Identifier, "y") &&
            checkToken(tokens[14], TokenType::Operator, "=") &&
-           checkToken(tokens[15], TokenType::Float, "10.5") &&
+           checkToken(tokens[15], TokenType::FloatLiteral, "10.5") &&
            checkToken(tokens[16], TokenType::Semicolon, ";") &&
            checkToken(tokens[17], TokenType::Identifier, "print") &&
            checkToken(tokens[18], TokenType::LeftParen, "(") &&

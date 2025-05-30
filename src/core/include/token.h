@@ -30,9 +30,9 @@ enum class TokenType : unsigned char {
     Identifier,   // variables, functions
     StrLiteral,   // "text"
     CharLiteral,  // 'a'
+    IntegerLiteral,  // Whole Number
+    FloatLiteral,    // Floating point number
     Operator,     // +, -, *, etc.
-    Integer,  // Whole Number
-    Float,    // Floating point number
 
     //~ Brackets
     LeftParen,    // (

@@ -90,6 +90,23 @@ enum class OperatorType : unsigned char {
     Ellipsis,    // `...`
 };
 
+enum class OperatorBindingPower {
+    Default,
+    Comma,
+    Assignment,
+    Logical,
+    Relational,
+    Additive,
+    Multiplicative,
+    Unary,
+    Call,
+    Member,
+    Primary
+};
+
+// TODO: Add debug check that these are in the right order
+
+
 /**
  * @brief Maps string representations of operators to their corresponding OperatorType enum values.
  */

@@ -44,7 +44,7 @@ enum class KeywordType : unsigned char {
     UInt16,    // unsigned 16 bit int
     UInt32,    // unsigned 32 bit int
     UInt64,    // unsigned 64 bit int
-    Float,    // floating point
+    FloatLiteral,    // floating point
     Float32,  // 32-bit float (single precision)
     Float64,  // 64-bit float (double precision)
     Char,     // single character
