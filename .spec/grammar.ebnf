@@ -44,7 +44,7 @@ binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)
 #* Variables
 variable_decl = type_qualifiers type variable_name ("=" expression)? ";";
 
-type_qualifiers = ("public" | "readonly")? "const"? "ptr"? "const"?
+type_qualifiers = ("public" | "readonly" | "private")? "const"? "ptr"? "const"?
 type = primitive_type | user_type;
 primitive_type = int_type | float_type | "char" | "bool";
 int_type = ("u"?)"int"(int_width?);  # u makes it unsigned
