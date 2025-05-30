@@ -1,0 +1,25 @@
+name: Run Compiler Test Suite
+
+on: [push, pull_request]
+
+jobs:
+  test_compiler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install CMake
+        run: sudo apt-get update && sudo apt-get install -y cmake
+
+      - name: Install LLVM
+        run: sudo apt-get install -y llvm clang
+      
+      - name: Run tests
+        run: python build.py -t -r exec_args --all
+        # -t builds the test suite, -r runs the resulting executable, exec_args specifies the arguments for the executable (--all runs all tests)
+    
