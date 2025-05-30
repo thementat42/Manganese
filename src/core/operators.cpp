@@ -23,9 +23,9 @@ std::optional<OperatorType> operatorFromString(const std::string& op) {
     return std::nullopt;
 }
 
-DEBUG_FUNC std::string operatorToString(std::optional<OperatorType> op) {
+DEBUG_FUNC std::optional<std::string> operatorToString(std::optional<OperatorType> op) {
     if (!op.has_value()) {
-        return "Invalid Operator";
+        return std::nullopt;
     }
 #if DEBUG
     switch (*op) {

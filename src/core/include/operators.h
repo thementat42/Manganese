@@ -38,8 +38,8 @@ enum class OperatorType : unsigned char {
 
     //~ Arithmetic Assignment Operators
     // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)
-    PlusAssign,       // `+=`
-    MinusAssign,       // `-=`
+    PlusAssign,      // `+=`
+    MinusAssign,     // `-=`
     MulAssign,       // `*=`
     DivAssign,       // `/=`
     FloorDivAssign,  // `//=`
@@ -106,7 +106,7 @@ std::optional<OperatorType> operatorFromString(const std::string& op);
  * @param op The OperatorType to convert
  * @return String representation of the OperatorType
  */
-std::string operatorToString(std::optional<OperatorType> op);
+std::optional<std::string> operatorToString(std::optional<OperatorType> op);
 
 }  // namespace core
 MANG_END
