@@ -7,6 +7,9 @@
 #~ ? means optional
 
 #* Basics
+single_line_comment = "#" [^\n]*;
+multi_line_comment = "/*" [^*]* ("*" [^/])* "*/";
+
 letter = "A" | "B" | "C" | "D" | "E" | "F" | "G"
        | "H" | "I" | "J" | "K" | "L" | "M" | "N"
        | "O" | "P" | "Q" | "R" | "S" | "T" | "U"
@@ -27,6 +30,7 @@ char_literal = "'" [^'] "'";
 string_literal = "\"" (unescaped_char | escape_seq)* "\"";
 unescaped_char = [^"\\];
 escape_seq = "\\" ("n" | "t" | "\\" | "\"" | "u" hex_digit{4} | "a" | "b" | "x");
+bool_literal = "true" | "false";
 
 #* Operators
 arithmetic_op = "+" | "-" | "*" | "/" | "//" | "%" | "**";
@@ -96,7 +100,7 @@ parameter_list = variable_decl+;
 
 lambda_statement = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";
 
-function_call = expression "(" ( <expression> ("," <expression>)*)? ")";
+function_call = expression "(" ( expression ("," expression)*)? ")";
 
 #* Data Encapsulation
 bundle_decl = "bundle" "{" variable_decl+ "}"
