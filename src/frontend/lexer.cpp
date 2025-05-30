@@ -34,8 +34,6 @@ MANG_BEGIN
 namespace lexer {
 using core::TokenType;
 
-const Token EOF_TOKEN = Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
-
 Lexer::Lexer(const str& source, const Mode mode) {
     switch (mode) {
         case Mode::String:
@@ -613,14 +611,14 @@ void Lexer::lex(size_t numTokens) {
     }
     if (done()) {
         // Just finished tokenizing
-        tokenStream.push_back(EOF_TOKEN);
+        tokenStream.emplace_back(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
 }
 
 Token Lexer::peekToken(size_t offset) {
     if (done() && offset >= tokenStream.size()) {
         // Only return EOF if we are done tokenizing and trying to read past the end
-        return EOF_TOKEN;
+        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
     if (tokenStream.empty()) {
         size_t numToMake = offset == 0 ? 1 : offset;
@@ -632,7 +630,7 @@ Token Lexer::peekToken(size_t offset) {
         lex(numToMake);  // fill the queue with more tokens
     }
     // If the token stream can't be filled up with enough tokens, we're reading past the end -- indicate that
-    return offset < tokenStream.size() ? tokenStream[offset] : EOF_TOKEN;
+    return offset < tokenStream.size() ? tokenStream[offset] : Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
 }
 
 Token Lexer::consumeToken() {
@@ -641,7 +639,7 @@ Token Lexer::consumeToken() {
     }
     if (tokenStream.empty()) {
         // still empty -- we are done tokenizing
-        return EOF_TOKEN;
+        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
     Token token = tokenStream.front();
     tokenStream.pop_front();  // get rid of the token
