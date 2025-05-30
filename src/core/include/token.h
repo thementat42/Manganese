@@ -31,8 +31,6 @@ enum class TokenType : unsigned char {
     StrLiteral,   // "text"
     CharLiteral,  // 'a'
     Operator,     // +, -, *, etc.
-
-    // ~ Numbers
     Integer,  // Whole Number
     Float,    // Floating point number
 

@@ -53,7 +53,7 @@ std::optional<KeywordType> Token::getKeywordType() const {
 
 std::string Token::getLexeme() const {
     if (std::holds_alternative<OperatorType>(data)) {
-        return operatorToString(std::get<OperatorType>(data));
+        return *operatorToString(std::get<OperatorType>(data));
     } else if (std::holds_alternative<KeywordType>(data)) {
         return keywordToString(std::get<KeywordType>(data));
     }
@@ -88,8 +88,8 @@ void Token::overrideOperatorType(OperatorType _type) {
 #if DEBUG
     printf(
         "Warning: overriding token operator type from %s to %s (line %d in file %s)\n",
-        operatorToString(std::get<OperatorType>(data)).c_str(),
-        operatorToString(_type).c_str(),
+        (*operatorToString(std::get<OperatorType>(data))).c_str(),
+        (*operatorToString(_type)).c_str(),
         __LINE__,
         __FILE__);
 #endif  // DEBUG
