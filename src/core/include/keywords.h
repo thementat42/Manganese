@@ -31,6 +31,7 @@ enum class KeywordType : unsigned char {
     Ptr,       // pointer variables
 
     //~ Access Levels
+    Private,
     ReadOnly,  // readable, but can't be modified, outside the module
     Public,    // can be read and modified outside the module
 

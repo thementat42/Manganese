@@ -153,6 +153,7 @@ std::unordered_map<std::string, const KeywordType> keywordMap = {
     {"int8", KeywordType::Int8},
     {"lambda", KeywordType::Lambda},
     {"module", KeywordType::Module},
+    {"private", KeywordType::Private},
     {"ptr", KeywordType::Ptr},
     {"public", KeywordType::Public},
     {"readonly", KeywordType::ReadOnly},

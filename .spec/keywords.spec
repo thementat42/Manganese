@@ -28,6 +28,7 @@ int64
 int8
 lambda
 module
+private
 ptr
 public
 readonly
