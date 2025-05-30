@@ -53,7 +53,6 @@ class Lexer {
 
    public:  // public variables
     std::deque<Token> tokenStream;
-    bool isTokenizingDone;
 
    private:  // private methods
 
@@ -89,7 +88,7 @@ class Lexer {
      * @brief Generates a certain number of tokens. Holds the main tokenization loop
      * @param numTokens The number of tokens to generate (default is 1)
      */
-    void makeTokens(size_t numTokens = 1);
+    void lex(size_t numTokens = 1);
 
     /**
      * @brief Helper function specifically to handle escape sequences in char literals

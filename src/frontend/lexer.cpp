@@ -33,6 +33,9 @@
 MANG_BEGIN
 namespace lexer {
 using core::TokenType;
+
+const Token EOF_TOKEN = Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+
 Lexer::Lexer(const str& source, const Mode mode) {
     switch (mode) {
         case Mode::String:
@@ -43,7 +46,6 @@ Lexer::Lexer(const str& source, const Mode mode) {
             break;
     }
     tokenStream = std::deque<Token>();
-    isTokenizingDone = false;
 }
 
 static optional<wchar_t> resolveHexAndUnicodeCharacters(const str& esc, const bool& isUnicode, size_t& skipLength) {
@@ -562,7 +564,11 @@ void Lexer::tokenizeSymbol() {
     tokenStream.emplace_back(type, lexeme, startLine, startCol);
 }
 
-void Lexer::makeTokens(size_t numTokens) {
+void Lexer::lex(size_t numTokens) {
+    if (done()) {
+        // Nothing else to do
+        return;
+    }
     size_t numTokensMade = 0;
     char currentChar = peekChar();
     while (!done() && numTokensMade < numTokens) {
@@ -606,36 +612,36 @@ void Lexer::makeTokens(size_t numTokens) {
         currentChar = peekChar();
     }
     if (done()) {
-        isTokenizingDone = true;
-        tokenStream.emplace_back(TokenType::EndOfFile, "EOF", getLine(), getCol());
+        // Just finished tokenizing
+        tokenStream.push_back(EOF_TOKEN);
     }
 }
 
 Token Lexer::peekToken(size_t offset) {
-    if (isTokenizingDone && offset >= tokenStream.size()) {
+    if (done() && offset >= tokenStream.size()) {
         // Only return EOF if we are done tokenizing and trying to read past the end
-        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+        return EOF_TOKEN;
     }
     if (tokenStream.empty()) {
         size_t numToMake = offset == 0 ? 1 : offset;
         numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
-        makeTokens(numToMake);  // If queue empty, generate {offset} tokens to read
+        lex(numToMake);  // If queue empty, generate {offset} tokens to read
     } else if (tokenStream.size() <= offset) {
         size_t numToMake = offset - tokenStream.size();
         numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
-        makeTokens(numToMake);  // fill the queue with more tokens
+        lex(numToMake);  // fill the queue with more tokens
     }
-    return offset < tokenStream.size() ? tokenStream[offset] : Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+    // If the token stream can't be filled up with enough tokens, we're reading past the end -- indicate that
+    return offset < tokenStream.size() ? tokenStream[offset] : EOF_TOKEN;
 }
 
 Token Lexer::consumeToken() {
     if (tokenStream.empty()) {
-        makeTokens(QUEUE_LOOKAHEAD_AMOUNT);  // If queue empty, generate 1 token to read
+        lex(QUEUE_LOOKAHEAD_AMOUNT);  // If queue empty, generate 1 token to read
     }
     if (tokenStream.empty()) {
         // still empty -- we are done tokenizing
-        isTokenizingDone = true;
-        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+        return EOF_TOKEN;
     }
     Token token = tokenStream.front();
     tokenStream.pop_front();  // get rid of the token
