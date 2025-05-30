@@ -65,7 +65,7 @@ expression = unary_expression |
 
 expression_statement = expression ";";
 
-unary_expression = prefix_unary_op expression | postfix_unary_op expression;
+unary_expression = prefix_unary_op expression | expression postfix_unary_op;
 
 #* Statements
 block = statement*;
