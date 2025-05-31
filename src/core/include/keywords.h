@@ -117,4 +117,14 @@ std::string keywordToString(KeywordType keyword);
 }  // namespace core
 MANG_END
 
+// Hash specialization for KeywordType, for lookups in the parser
+namespace std {  //! Ok since extending std
+    template<>
+    struct hash<Manganese::core::KeywordType> {
+        size_t operator()(const Manganese::core::KeywordType& op) const noexcept {
+            return static_cast<size_t>(op);
+        }
+    };
+}
+
 #endif  // KEYWORDS_H
