@@ -90,7 +90,7 @@ enum class OperatorType : uint8_t {
     Ellipsis,    // `...`
 };
 
-enum class OperatorBindingPower: uint8_t {
+enum class OperatorBindingPower : uint8_t {
     Default = 0,
     Comma = 1,
     Assignment = 2,
@@ -127,15 +127,14 @@ std::optional<std::string> operatorToString(std::optional<OperatorType> op);
 }  // namespace core
 MANG_END
 
-
 // Hash specialization for OperatorType, for lookups in the parser
-namespace std {
-    template<>
-    struct hash<Manganese::core::OperatorType> {
-        size_t operator()(const Manganese::core::OperatorType& op) const noexcept {
-            return static_cast<size_t>(op);
-        }
-    };
-}
+namespace std {  //! Ok since extending std
+template <>
+struct hash<Manganese::core::OperatorType> {
+    size_t operator()(const Manganese::core::OperatorType& op) const noexcept {
+        return static_cast<size_t>(op);
+    }
+};
+}  // namespace std
 
 #endif  // OPERATORS_H
