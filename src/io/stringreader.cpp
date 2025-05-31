@@ -3,6 +3,9 @@
  * @brief This file contains the implementation of the StringReader class
  */
 
+//! Note: This is a temporary file, mainly for testing purposes.
+//! Once the compiler is complete, this will be removed, and only the FileReader will be used.
+
 #include "include/stringreader.h"
 
 #include "../global_macros.h"
