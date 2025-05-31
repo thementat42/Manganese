@@ -54,7 +54,7 @@ int main(int argc, char const *argv[]) {
         }
     }
 
-    using namespace Manganese::tests;
+    using namespace manganese::tests;
     TestRunner runner;
     if (lexer) {
         printf("=== Lexer Tests ===\n");

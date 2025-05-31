@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 #define EXT_C_BEGIN extern "C" {
 #define EXT_C_END }
-#define MANG_BEGIN namespace Manganese {
+#define MANG_BEGIN namespace manganese {
 #define MANG_END }
 #else  // ^^ __cplusplus vv !__cplusplus
 #define EXT_C_BEGIN

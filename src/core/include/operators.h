@@ -130,8 +130,8 @@ MANG_END
 // Hash specialization for OperatorType, for lookups in the parser
 namespace std {  //! Ok since extending std
 template <>
-struct hash<Manganese::core::OperatorType> {
-    size_t operator()(const Manganese::core::OperatorType& op) const noexcept {
+struct hash<manganese::core::OperatorType> {
+    size_t operator()(const manganese::core::OperatorType& op) const noexcept {
         return static_cast<size_t>(op);
     }
 };
