@@ -1,6 +1,8 @@
 #ifndef GLOBAL_MACROS_H
 #define GLOBAL_MACROS_H
 
+#include <stdint.h>
+
 #define DEBUG 1
 
 #if DEBUG
