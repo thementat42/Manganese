@@ -24,7 +24,7 @@
  */
 MANG_BEGIN
 namespace core {
-enum class OperatorType : unsigned char {
+enum class OperatorType : uint8_t {
     //~ Arithmetic Operators
     Plus,      // `+`
     Minus,     // `-`
@@ -90,22 +90,21 @@ enum class OperatorType : unsigned char {
     Ellipsis,    // `...`
 };
 
-enum class OperatorBindingPower {
-    Default,
-    Comma,
-    Assignment,
-    Logical,
-    Relational,
-    Additive,
-    Multiplicative,
-    Unary,
-    Call,
-    Member,
-    Primary
+enum class OperatorBindingPower: uint8_t {
+    Default = 0,
+    Comma = 1,
+    Assignment = 2,
+    Logical = 3,
+    Relational = 4,
+    Additive = 5,
+    Multiplicative = 6,
+    Unary = 7,
+    Call = 8,
+    Member = 9,
+    Primary = 10,
 };
 
 // TODO: Add debug check that these are in the right order
-
 
 /**
  * @brief Maps string representations of operators to their corresponding OperatorType enum values.

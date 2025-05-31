@@ -5,6 +5,7 @@
 
 #ifndef KEYWORDS_H
 #define KEYWORDS_H
+
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -24,11 +25,11 @@
  */
 MANG_BEGIN
 namespace core {
-enum class KeywordType : unsigned char {
+enum class KeywordType : uint8_t {
 
     //~ Type Qualifiers
-    Const,     // constant variable
-    Ptr,       // pointer variables
+    Const,  // constant variable
+    Ptr,    // pointer variables
 
     //~ Access Levels
     Private,
@@ -36,21 +37,21 @@ enum class KeywordType : unsigned char {
     Public,    // can be read and modified outside the module
 
     //~ Primitive Types
-    Int8,     // 8 bit int
-    Int16,    // 16 bit int
-    Int32,    // 32 bit int
-    Int64,    // 64 bit int
-    UInt8,     // unsigned 8 bit int
-    UInt16,    // unsigned 16 bit int
-    UInt32,    // unsigned 32 bit int
-    UInt64,    // unsigned 64 bit int
-    FloatLiteral,    // floating point
-    Float32,  // 32-bit float (single precision)
-    Float64,  // 64-bit float (double precision)
-    Char,     // single character
-    Bool,     // true or false
-    True,     // boolean true
-    False,    // boolean false
+    Int8,          // 8 bit int
+    Int16,         // 16 bit int
+    Int32,         // 32 bit int
+    Int64,         // 64 bit int
+    UInt8,         // unsigned 8 bit int
+    UInt16,        // unsigned 16 bit int
+    UInt32,        // unsigned 32 bit int
+    UInt64,        // unsigned 64 bit int
+    FloatLiteral,  // floating point
+    Float32,       // 32-bit float (single precision)
+    Float64,       // 64-bit float (double precision)
+    Char,          // single character
+    Bool,          // true or false
+    True,          // boolean true
+    False,         // boolean false
 
     //~ Control Flow
     //* Conditionals
@@ -87,9 +88,9 @@ enum class KeywordType : unsigned char {
     Blueprint,  // like a class
 
     //~ Misc
-    Alias,    // type aliasing (alias `a` as `b`)
-    TypeOf,   // get the type of a variable
-    Cast,     // cast to a new type (e.g., cast<new_type>)
+    Alias,   // type aliasing (alias `a` as `b`)
+    TypeOf,  // get the type of a variable
+    Cast,    // cast to a new type (e.g., cast<new_type>)
 };
 
 /**
@@ -113,8 +114,7 @@ std::optional<KeywordType> keywordFromString(const std::string& keyword);
  */
 std::string keywordToString(KeywordType keyword);
 
-
 }  // namespace core
 MANG_END
 
-#endif // KEYWORDS_H
+#endif  // KEYWORDS_H

@@ -24,7 +24,7 @@ namespace core {
  * categorized by their functional purpose (keywords, identifiers, etc.).
  * Each token is documented with its corresponding
  */
-enum class TokenType : unsigned char {
+enum class TokenType : uint8_t {
     //~ Basic
     Keyword,      // if, char, etc.
     Identifier,   // variables, functions
