@@ -125,7 +125,7 @@ std::optional<OperatorType> operatorFromString(const std::string& op);
 std::optional<std::string> operatorToString(std::optional<OperatorType> op);
 
 }  // namespace core
-}
+}  // namespace manganese
 
 // Hash specialization for OperatorType, for lookups in the parser
 namespace std {  //! Ok since extending std

@@ -7,7 +7,7 @@
 
 #if DEBUG
 #define DEBUG_FUNC  // In debug mode, leave functions as is
-#else // ^ DEBUG ^ | v !DEBUG v
+#else               // ^ DEBUG ^ | v !DEBUG v
 // In release mode, inline the debug functions (since they do nothing)
 #ifdef _MSC_VER
 #define DEBUG_FUNC inline __forceinline

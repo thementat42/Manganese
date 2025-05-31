@@ -24,6 +24,6 @@ class TestRunner {
     bool allTestsPassed();
 };
 }  // namespace tests
-}
+}  // namespace manganese
 
 #endif  // MANGANESE_TESTS_TEST_RUNNER_H

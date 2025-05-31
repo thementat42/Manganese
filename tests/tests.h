@@ -16,5 +16,5 @@ void runSemanticAnalysisTests(TestRunner& runner);
 void runCodeGenerationTests(TestRunner& runner);
 
 }  // namespace tests
-}
+}  // namespace manganese
 #endif  // MANGANESE_TESTS_H

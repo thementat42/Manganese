@@ -38,7 +38,7 @@ class Reader {
      * @brief Consume the next character
      * @return The character that was consumed
      */
-     [[nodiscard]] virtual char consumeChar() = 0;
+    [[nodiscard]] virtual char consumeChar() = 0;
     /**
      * @brief Move the reader forward to a new position
      * @param newPosition The new position to move to
@@ -70,6 +70,6 @@ class Reader {
     virtual bool done() const = 0;
 };
 }  // namespace io
-}
+}  // namespace manganese
 
-#endif // READER_H
+#endif  // READER_H

@@ -5,13 +5,13 @@
 #include <optional>
 #include <queue>
 
+#include "../../core/include/keywords.h"
+#include "../../core/include/operators.h"
+#include "../../core/include/token.h"
 #include "../../global_macros.h"
 #include "../../io/include/filereader.h"
 #include "../../io/include/reader.h"
 #include "../../io/include/stringreader.h"
-#include "../../core/include/keywords.h"
-#include "../../core/include/operators.h"
-#include "../../core/include/token.h"
 
 namespace manganese {
 namespace lexer {
@@ -55,8 +55,7 @@ class Lexer {
     std::deque<Token> tokenStream;
 
    private:  // private methods
-
-   //~ Main tokenization functions
+             //~ Main tokenization functions
 
     /**
      * @brief Process a character literal and generate a token. Triggered when a single quote (') is encountered
@@ -72,7 +71,7 @@ class Lexer {
      * @brief Process a number literal and generate a token
      */
     void tokenizeNumber();
-    
+
     /**
      * @brief Process any sequence of alphanumeric characters and underscores
      * @details If the sequence is a keyword (e.g. "if"), it will be tokenized as such
@@ -137,7 +136,7 @@ class Lexer {
      */
     inline bool done() { return reader->done(); }
 
-   public:   // public methods
+   public:  // public methods
     Lexer(const str& source, const Mode mode = Mode::File);
     ~Lexer() = default;
 
@@ -157,6 +156,6 @@ class Lexer {
     Token consumeToken();
 };
 }  // namespace lexer
-}
+}  // namespace manganese
 
 #endif  // LEXER_H

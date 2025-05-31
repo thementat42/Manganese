@@ -22,15 +22,15 @@ FileReader::FileReader(const std::string& filename, size_t _bufferCapacity) : po
         fprintf(stderr, "Error: Could not open file %s\n", filename.c_str());
         exit(EXIT_FAILURE);
     }
-    buffer = std::make_unique<char[]>(_bufferCapacity + 1);                              // +1 for null terminator
-    fileStream.get(buffer.get(), static_cast<std::streamsize>(_bufferCapacity));         // Read the first chunk of data into the buffer
-    bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount())); // Ensure non-negative before casting
+    buffer = std::make_unique<char[]>(_bufferCapacity + 1);                               // +1 for null terminator
+    fileStream.get(buffer.get(), static_cast<std::streamsize>(_bufferCapacity));          // Read the first chunk of data into the buffer
+    bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));  // Ensure non-negative before casting
 
     if (bufferSize == 0) {
         fprintf(stderr, "Error: File %s is empty or could not be read\n", filename.c_str());
         exit(EXIT_FAILURE);
     }
-    buffer[bufferSize] = '\0'; // Null-terminate the buffer
+    buffer[bufferSize] = '\0';  // Null-terminate the buffer
 }
 
 FileReader::~FileReader() {
@@ -72,11 +72,10 @@ void FileReader::refillBuffer() {
 
             // Add the character to our buffer
             buffer[bufferSize++] = nextChar;
-            buffer[bufferSize] = '\0'; // Null-terminate the buffer
+            buffer[bufferSize] = '\0';  // Null-terminate the buffer
         }
     }
 }
-
 
 char FileReader::peekChar(size_t offset) {
     // Check if we need more data
@@ -142,5 +141,5 @@ inline bool FileReader::done() const {
     return position >= bufferSize && fileStream.eof();
 }
 
-} // namespace io
-}
+}  // namespace io
+}  // namespace manganese

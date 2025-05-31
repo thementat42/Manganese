@@ -646,4 +646,4 @@ Token Lexer::consumeToken() {
     return token;
 }
 }  // namespace lexer
-}
+}  // namespace manganese

@@ -26,13 +26,13 @@ namespace core {
  */
 enum class TokenType : uint8_t {
     //~ Basic
-    Keyword,      // if, char, etc.
-    Identifier,   // variables, functions
-    StrLiteral,   // "text"
-    CharLiteral,  // 'a'
+    Keyword,         // if, char, etc.
+    Identifier,      // variables, functions
+    StrLiteral,      // "text"
+    CharLiteral,     // 'a'
     IntegerLiteral,  // Whole Number
     FloatLiteral,    // Floating point number
-    Operator,     // +, -, *, etc.
+    Operator,        // +, -, *, etc.
 
     //~ Brackets
     LeftParen,    // (
@@ -102,6 +102,6 @@ struct Token {
     static void log(const Token& token);
 };
 }  // namespace core
-}
+}  // namespace manganese
 
 #endif  // TOKEN

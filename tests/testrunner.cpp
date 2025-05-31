@@ -33,4 +33,4 @@ bool TestRunner::allTestsPassed() {
     return failed == 0;
 }
 }  // namespace tests
-}
+}  // namespace manganese

@@ -155,8 +155,8 @@ bool testIntegerLiterals() {
            checkToken(tokens[3], TokenType::IntegerLiteral, "0xFFF") &&
            checkToken(tokens[4], TokenType::IntegerLiteral, "0b1001") &&
            checkToken(tokens[5], TokenType::IntegerLiteral, "0o33") &&
-              checkToken(tokens[6], TokenType::FloatLiteral, "0x1.23p4") &&
-              checkToken(tokens[7], TokenType::FloatLiteral, "1.23e-4");
+           checkToken(tokens[6], TokenType::FloatLiteral, "0x1.23p4") &&
+           checkToken(tokens[7], TokenType::FloatLiteral, "1.23e-4");
 }
 
 bool testFloatLiterals() {
@@ -417,4 +417,4 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Complete Program", testCompleteProgram);
 }
 }  // namespace tests
-}
+}  // namespace manganese

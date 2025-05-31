@@ -189,4 +189,4 @@ std::unordered_map<std::string, const OperatorType> operatorMap = {
     {"->", OperatorType::Arrow}};
 
 }  // namespace core
-}
+}  // namespace manganese

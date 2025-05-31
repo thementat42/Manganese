@@ -115,16 +115,16 @@ std::optional<KeywordType> keywordFromString(const std::string& keyword);
 std::string keywordToString(KeywordType keyword);
 
 }  // namespace core
-}
+}  // namespace manganese
 
 // Hash specialization for KeywordType, for lookups in the parser
 namespace std {  //! Ok since extending std
-    template<>
-    struct hash<manganese::core::KeywordType> {
-        size_t operator()(const manganese::core::KeywordType& op) const noexcept {
-            return static_cast<size_t>(op);
-        }
-    };
-}
+template <>
+struct hash<manganese::core::KeywordType> {
+    size_t operator()(const manganese::core::KeywordType& op) const noexcept {
+        return static_cast<size_t>(op);
+    }
+};
+}  // namespace std
 
 #endif  // KEYWORDS_H

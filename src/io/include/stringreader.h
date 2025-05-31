@@ -40,6 +40,6 @@ class StringReader : public Reader {
     StringReader& operator=(const StringReader& other) = delete;  // Disable copy assignment operator
 };
 }  // namespace io
-}
+}  // namespace manganese
 
 #endif  // STRING_READER_H

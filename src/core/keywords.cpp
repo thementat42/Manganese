@@ -116,9 +116,9 @@ DEBUG_FUNC std::string keywordToString(KeywordType keyword) {
         default:
             return "Unknown Keyword";
     }
-#else  // ^ DEBUG ^ | v !DEBUG v
+#else   // ^ DEBUG ^ | v !DEBUG v
     return "";
-#endif // DEBUG
+#endif  // DEBUG
 }
 
 std::unordered_map<std::string, const KeywordType> keywordMap = {
@@ -170,4 +170,4 @@ std::unordered_map<std::string, const KeywordType> keywordMap = {
     {"while", KeywordType::While}};
 
 }  // namespace core
-}
+}  // namespace manganese

@@ -31,7 +31,7 @@ class FileReader : public Reader {
     /**
      * @brief Reads more data from the file (on disc) into the buffer (in memory)
      * @details Handles cases where a lexeme is split across two buffer reads (mainly for lookaheads via peekChar)
-     * 
+     *
      */
     void refillBuffer();
 
@@ -54,5 +54,5 @@ class FileReader : public Reader {
     FileReader& operator=(const FileReader& other) = delete;  // Disable copy assignment operator
 };
 }  // namespace io
-}
+}  // namespace manganese
 #endif  // FILEREADER_H

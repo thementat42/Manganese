@@ -4,6 +4,7 @@
  */
 
 #include "include/stringreader.h"
+
 #include "../global_macros.h"
 
 namespace manganese {
@@ -41,7 +42,6 @@ void StringReader::setPosition(size_t newPosition) {
     }
 }
 
-
 inline size_t StringReader::getPosition() const {
     return position;
 }
@@ -58,5 +58,5 @@ inline bool StringReader::done() const {
     return position >= source.length();
 }
 
-} // namespace io
-}
+}  // namespace io
+}  // namespace manganese

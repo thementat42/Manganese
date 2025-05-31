@@ -171,4 +171,4 @@ void Token::log(const Token& token) {
 }
 
 }  // namespace core
-}
+}  // namespace manganese
