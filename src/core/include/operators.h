@@ -22,7 +22,7 @@
  * Used by the lexer for token classification and by the parser
  * for expression handling and precedence rules.
  */
-MANG_BEGIN
+namespace manganese {
 namespace core {
 enum class OperatorType : uint8_t {
     //~ Arithmetic Operators
@@ -125,7 +125,7 @@ std::optional<OperatorType> operatorFromString(const std::string& op);
 std::optional<std::string> operatorToString(std::optional<OperatorType> op);
 
 }  // namespace core
-MANG_END
+}
 
 // Hash specialization for OperatorType, for lookups in the parser
 namespace std {  //! Ok since extending std

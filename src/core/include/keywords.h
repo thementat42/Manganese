@@ -23,7 +23,7 @@
  * for syntax validation and semantic analysis. These keywords cannot
  * be used as identifiers in Manganese programs.
  */
-MANG_BEGIN
+namespace manganese {
 namespace core {
 enum class KeywordType : uint8_t {
 
@@ -115,7 +115,7 @@ std::optional<KeywordType> keywordFromString(const std::string& keyword);
 std::string keywordToString(KeywordType keyword);
 
 }  // namespace core
-MANG_END
+}
 
 // Hash specialization for KeywordType, for lookups in the parser
 namespace std {  //! Ok since extending std

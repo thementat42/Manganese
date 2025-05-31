@@ -13,7 +13,7 @@
 #include "include/keywords.h"
 #include "include/operators.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace core {
 Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column) : type(_type), line(_line), column(_column) {
     if (_type == TokenType::Operator) {
@@ -171,4 +171,4 @@ void Token::log(const Token& token) {
 }
 
 }  // namespace core
-MANG_END
+}

@@ -12,7 +12,7 @@
 
 #include "../global_macros.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace core {
 
 std::optional<KeywordType> keywordFromString(const std::string& keyword) {
@@ -170,4 +170,4 @@ std::unordered_map<std::string, const KeywordType> keywordMap = {
     {"while", KeywordType::While}};
 
 }  // namespace core
-MANG_END
+}

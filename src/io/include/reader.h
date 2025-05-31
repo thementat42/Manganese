@@ -11,7 +11,7 @@
 
 #include "../../global_macros.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace io {
 
 /**
@@ -70,6 +70,6 @@ class Reader {
     virtual bool done() const = 0;
 };
 }  // namespace io
-MANG_END
+}
 
 #endif // READER_H

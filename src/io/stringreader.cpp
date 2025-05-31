@@ -6,7 +6,7 @@
 #include "include/stringreader.h"
 #include "../global_macros.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace io {
 
 StringReader::StringReader(const std::string& _source) : position(0), line(1), column(1), source(_source) {}
@@ -59,4 +59,4 @@ inline bool StringReader::done() const {
 }
 
 } // namespace io
-MANG_END
+}

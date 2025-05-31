@@ -10,7 +10,7 @@
 #include "../../global_macros.h"
 #include "reader.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace io {
 
 /**
@@ -40,6 +40,6 @@ class StringReader : public Reader {
     StringReader& operator=(const StringReader& other) = delete;  // Disable copy assignment operator
 };
 }  // namespace io
-MANG_END
+}
 
 #endif  // STRING_READER_H

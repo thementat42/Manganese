@@ -11,7 +11,7 @@
 
 #include "../global_macros.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace core {
 
 std::optional<OperatorType> operatorFromString(const std::string& op) {
@@ -189,4 +189,4 @@ std::unordered_map<std::string, const OperatorType> operatorMap = {
     {"->", OperatorType::Arrow}};
 
 }  // namespace core
-MANG_END
+}

@@ -6,7 +6,7 @@
 
 #include "../src/global_macros.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace tests {
 void TestRunner::runTest(const std::string& testName, std::function<bool()> testFunction) {
     std::cout << "Running test: " << testName << "... ";
@@ -33,4 +33,4 @@ bool TestRunner::allTestsPassed() {
     return failed == 0;
 }
 }  // namespace tests
-MANG_END
+}

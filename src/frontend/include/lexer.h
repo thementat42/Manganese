@@ -13,7 +13,7 @@
 #include "../../core/include/operators.h"
 #include "../../core/include/token.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace lexer {
 using str = std::string;
 using core::Token;
@@ -157,6 +157,6 @@ class Lexer {
     Token consumeToken();
 };
 }  // namespace lexer
-MANG_END
+}
 
 #endif  // LEXER_H

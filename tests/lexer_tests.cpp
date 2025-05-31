@@ -10,7 +10,7 @@
 #include "../src/global_macros.h"
 #include "testrunner.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace tests {
 using lexer::Lexer;
 using lexer::Mode;
@@ -417,4 +417,4 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Complete Program", testCompleteProgram);
 }
 }  // namespace tests
-MANG_END
+}

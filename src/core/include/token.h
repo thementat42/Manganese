@@ -14,7 +14,7 @@
 #include "keywords.h"
 #include "operators.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace core {
 
 /**
@@ -102,6 +102,6 @@ struct Token {
     static void log(const Token& token);
 };
 }  // namespace core
-MANG_END
+}
 
 #endif  // TOKEN

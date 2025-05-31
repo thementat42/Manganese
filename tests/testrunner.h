@@ -6,7 +6,7 @@
 
 #include "../src/global_macros.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace tests {
 class TestRunner {
    private:
@@ -24,6 +24,6 @@ class TestRunner {
     bool allTestsPassed();
 };
 }  // namespace tests
-MANG_END
+}
 
 #endif  // MANGANESE_TESTS_TEST_RUNNER_H

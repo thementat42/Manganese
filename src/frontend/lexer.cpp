@@ -30,7 +30,7 @@
 #include "../io/include/reader.h"
 #include "../io/include/stringreader.h"
 
-MANG_BEGIN
+namespace manganese {
 namespace lexer {
 using core::TokenType;
 
@@ -646,4 +646,4 @@ Token Lexer::consumeToken() {
     return token;
 }
 }  // namespace lexer
-MANG_END
+}
