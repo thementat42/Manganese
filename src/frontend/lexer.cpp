@@ -374,7 +374,13 @@ void Lexer::tokenizeNumber() {
         isValidBaseChar = [](char c) { return isdigit(c); };
     }
 
-    while (!done() && (isValidBaseChar(currentChar) || currentChar == '.')) {
+    while (!done() && (isValidBaseChar(currentChar) || currentChar == '.' || currentChar == '_')) {
+        if (currentChar == '_') {
+            // Ignore underscores in number literals
+            advance();
+            currentChar = peekChar();
+            continue;
+        }
         numberLiteral += consumeChar();
         if (currentChar == '.') {
             if (isFloat) {
