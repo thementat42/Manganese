@@ -19,14 +19,17 @@ void TestRunner::runTest(const std::string& testName, std::function<bool()> test
     } else {
         std::cout << RED << "FAILED" << RESET << '\n';
         ++failed;
+        // TODO: Keep track of which tests failed -- print those
     }
 }
 
 void TestRunner::printSummary() {
+    auto total = passed + failed;
+    total = total == 0 ? 1 : total;  // avoid any division by 0 problems
     std::cout << "\n=== Test Summary ===" << '\n';
-    std::cout << GREEN << "Passed: " << passed << RESET << '\n';
-    std::cout << RED << "Failed: " << failed << RESET << '\n';
-    std::cout << "Total: " << (passed + failed) << '\n';
+    std::cout << GREEN << "Passed: " << passed << "/" << total << " (" << (passed/total)*100 << "%)" << RESET << '\n';
+    std::cout << RED << "Failed: " << failed << "/" << total << " (" << (failed/total)*100 << "%)" << RESET << '\n';
+    std::cout << "Total: " << total << '\n';
 }
 
 bool TestRunner::allTestsPassed() {
