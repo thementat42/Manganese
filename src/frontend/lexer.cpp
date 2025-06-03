@@ -426,6 +426,10 @@ void Lexer::tokenizeNumber() {
             numberLiteral += consumeChar();
             currentChar = peekChar();
         }
+    } else if (isFloat && (currentChar == 'f' || currentChar == 'F')) {
+        // Floating point suffix (e.g., 1.23f)
+        numberLiteral += consumeChar();  // Add the 'f' or 'F'
+        currentChar = peekChar();
     }
     tokenStream.emplace_back(
         isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral,
