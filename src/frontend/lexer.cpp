@@ -453,7 +453,19 @@ void Lexer::tokenizeSymbol() {
             break;
         case '<':
             // Don't handle all the possible cases here -- let parser handle it
-            type = TokenType::LeftAngle;
+            if (next == '=') {
+                // <= (less than or equal to)
+                lexeme += '=';
+                type = TokenType::Operator;
+            } else if (next == '<') {
+                // << (bitwise left shift)
+                lexeme += next;
+                lexeme += (nextnext == '=') ? "=" : "";  // <<=, in place left shift
+                type = TokenType::Operator;
+            } else {
+                // Left angle -- can't tell if it's a comparison or a generic
+                type = TokenType::LeftAngle;
+            }
             break;
         case ')':
             type = TokenType::RightParen;
