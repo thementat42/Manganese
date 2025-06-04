@@ -82,6 +82,8 @@ Running it with no arguments prints a help message.
 
 This project is divided into several directories:
 
+- [`.spec`](/.spec/): Contains the formal specification of the manganese language, encluding its EBNF grammar
+
 - [`Docs`](/docs): Language documentation. The documentation represents a hypothetical version of Manganese -- right now, not everything in the docs is implemented, but will be at some point in the future.
   - [`Syntax`](/docs/syntax/): Documentation for the core language syntax.
   - [`Library`](/docs/library/): Documentation for the standard library
