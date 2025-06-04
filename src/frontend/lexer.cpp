@@ -500,10 +500,10 @@ void Lexer::tokenizeSymbol() {
                 // Do nothing
             }
             break;
-        case '^':
-        case '!':
-        case '~':
-        case '=':
+        case '^':  // XOR
+        case '!':  // NOT
+        case '~':  // Bitwise NOTE
+        case '=':  // Assignment
             type = TokenType::Operator;
             if (next == '=') {
                 // Assignment operator (^=, != or ~=)
