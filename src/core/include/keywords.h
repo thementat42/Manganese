@@ -83,8 +83,8 @@ enum class KeywordType : uint8_t {
     As,      // alias a module
 
     //~ Encapsulation
-    Bundle,  // like C's struct
-    Enum,
+    Bundle,     // like C's struct
+    Enum,       // list of named constants
     Blueprint,  // like a class
 
     //~ Misc

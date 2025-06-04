@@ -56,7 +56,6 @@ class Lexer {
 
    private:  // private methods
              //~ Main tokenization functions
-
     /**
      * @brief Process a character literal and generate a token. Triggered when a single quote (') is encountered
      */

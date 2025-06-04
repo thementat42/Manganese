@@ -90,8 +90,9 @@ class Expression : public ASTNode {
 class NumberExpression : public Expression {
    protected:
     float64_t value;
-    public:
-     NumberExpression(float64_t _value) : value(_value) {};
+
+   public:
+    NumberExpression(float64_t _value) : value(_value) {};
 };
 
 class StringExpression : public Expression {

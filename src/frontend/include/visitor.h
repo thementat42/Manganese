@@ -4,12 +4,12 @@
 #include "../../global_macros.h"
 
 namespace manganese {
-namespace parser {
+namespace visitor {
 
 class Visitor {
 };
 
-}  // namespace parser
+}  // namespace visitor
 }  // namespace manganese
 
 #endif  // VISITOR_H

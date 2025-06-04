@@ -3,5 +3,5 @@
 namespace manganese {
 namespace ast {
 
-}
+}  // namespace ast
 }  // namespace manganese

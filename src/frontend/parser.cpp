@@ -13,22 +13,22 @@
 namespace manganese {
 namespace parser {
 
-inline void Parser::initializeLookups(){
+inline void Parser::initializeLookups() {
     // TODO: Update this to account for different sizes
     nud(core::TokenType::IntegerLiteral, [](Parser* parser) {
-        double value = std::stod(parser->consumeToken().getLexeme()); 
+        double value = std::stod(parser->consumeToken().getLexeme());
         return std::make_unique<ast::NumberExpression>(value);
     });
     nud(core::TokenType::FloatLiteral, [](Parser* parser) {
         std::string lexeme = parser->consumeToken().getLexeme();
         if (lexeme.back() == 'f' || lexeme.back() == 'F') {
-                return std::make_unique<ast::NumberExpression>(std::stof(lexeme));
+            return std::make_unique<ast::NumberExpression>(std::stof(lexeme));
         } else {
             return std::make_unique<ast::NumberExpression>(std::stod(lexeme));
         }
     });
-    nud(core::TokenType::StrLiteral, [](Parser* parser) { 
-        std::string value = parser->consumeToken().getLexeme(); 
+    nud(core::TokenType::StrLiteral, [](Parser* parser) {
+        std::string value = parser->consumeToken().getLexeme();
         return std::make_unique<ast::StringExpression>(value);
     });
 }
