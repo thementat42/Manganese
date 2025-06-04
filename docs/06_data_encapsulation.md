@@ -75,4 +75,17 @@ enum Foo {
 };
 ```
 
+The underlying type of an enum can also be modified, with the following syntax:
+
+```manganese
+enum <enum name> : type {
+        <value1>;
+    <value2>;
+    <value3>;
+    ...
+}
+```
+
+Where `type` can be any primitive type
+
 > TODO: Something more like a class
