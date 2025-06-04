@@ -15,7 +15,7 @@ Manganese requires the following dependencies to be installed:
 
 - [LLVM](https://llvm.org/) (version 16 or later)
 - [CMake](https://cmake.org/) (version 3.10 or later), if you want to build it from source
-- [Python](https://www.python.org/) (version 3.10 or later), if you want to use the `build.py` script
+- [Python](https://www.python.org/) (version 3.8 or later), if you want to use the `build.py` script
 
 ## Building
 
