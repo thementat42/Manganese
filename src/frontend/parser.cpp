@@ -13,8 +13,8 @@
 namespace manganese {
 namespace parser {
 
-inline void Parser::initializeLookups() {
-    // TODO: Update this to account for different sizes
+// inline void Parser::initializeLookups() {
+//     // TODO: Update this to account for different sizes
 //     nud(core::TokenType::IntegerLiteral, [](Parser* parser) {
 //         double value = std::stod(parser->consumeToken().getLexeme());
 //         return std::make_unique<ast::NumberExpression>(value);
