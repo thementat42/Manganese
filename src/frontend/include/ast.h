@@ -33,46 +33,91 @@ In Manganese, there are:
         - Function calls
         - Lambdas (eventually)
 
-A block is an std::vector of statements
+A block is a vector of statements
 */
 
 #ifndef AST_H
 #define AST_H
 
+#include <memory>
+#include <string>
+#include <vector>
 
+#include "../../core/include/keywords.h"
+#include "../../core/include/operators.h"
+#include "../../core/include/token.h"
 #include "../../global_macros.h"
+using float32_t = float;
+using float64_t = double;
 
-MANG_BEGIN
-//* Forward declarations
+namespace manganese {
+
 namespace parser {
-    class Parser;
-}  // namespace parser
-
-namespace visitor {
-    class Visitor;
-}  // namespace visitor
+class Parser;
+}
 
 namespace ast {
-//* High-Level constructs
-    class ASTNode {
-    public:
-    virtual ~ASTNode() = default;
-    friend parser::Parser;
-    friend visitor::Visitor;
-};
+class Expression;
+class Statement;
+using ExpressionPtr = std::unique_ptr<Expression>;
+using StatementPtr = std::unique_ptr<Statement>;
+using Block = std::vector<StatementPtr>;
 
-class Expression : public ASTNode {
+//~ Base Nodes
+class ASTNode {
+   protected:
+    size_t line, column;
+
+   public:
+    virtual ~ASTNode() = default;
+
+    friend parser::Parser;
 };
 
 class Statement : public ASTNode {
+   public:
+    virtual ~Statement() = default;
 };
 
-//* Expressions
+class Expression : public ASTNode {
+   public:
+    virtual ~Expression() = default;
+};
 
+//~ Expressions
 
-//* Statements
+//* Literal Expressions
+class NumberExpression : public Expression {
+   protected:
+    float64_t value;
+    public:
+     NumberExpression(float64_t _value) : value(_value) {};
+};
+
+class StringExpression : public Expression {
+   protected:
+    std::string value;
+};
+
+class SymbolExpression : public Expression {
+   protected:
+    std::string value;
+};
+
+//* Complex Expressions
+class BinaryExpression : public Expression {
+   protected:
+    ExpressionPtr left, right;
+    core::OperatorType op;
+};
+
+//~ Statements
+class ExpressionStatement {
+   protected:
+    ExpressionPtr expression;
+};
 
 }  // namespace ast
-MANG_END
+}  // namespace manganese
 
-#endif // AST_H
+#endif  // AST_H
