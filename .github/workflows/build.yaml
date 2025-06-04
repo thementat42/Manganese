@@ -1,30 +1,22 @@
-name: Build and Test
+name: Build and Run Test Suite
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+  [push, pull_request]
 
 jobs:
-  build:    runs-on: ubuntu-latest
-
+  test:
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
 
-    - name: Set up Python 3.13
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.13'    - name: Install LLVM and CMake
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y llvm llvm-dev cmake
-
-    - name: Run build script and tests
-      run: |
-        python build.py -t -r exec_args --all    # - name: Upload test artifacts
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: test-results
-    #     path: manganese_tests*
+      - name: Install LLVM and CMake
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm cmake
+      - name: go
+        run: |
+          python build.py -t -r exec_args --all
