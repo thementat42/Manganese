@@ -28,17 +28,17 @@ class StringReader : public Reader {
     StringReader() = default;
     StringReader(const std::string& source);
     StringReader(const StringReader& other) = delete;  // Disable copy constructor
-    ~StringReader() = default;
+    ~StringReader() noexcept = default;
 
-    char peekChar(size_t offset = 0) override;
-    [[nodiscard]] char consumeChar() override;
+    char peekChar(size_t offset = 0) noexcept override;
+    [[nodiscard]] char consumeChar() noexcept override;
 
-    void setPosition(size_t newPosition) override;
-    size_t getPosition() const override;
-    size_t getLine() const override;
-    size_t getColumn() const override;
+    void setPosition(size_t newPosition) noexcept override;
+    size_t getPosition() const noexcept override;
+    size_t getLine() const noexcept override;
+    size_t getColumn() const noexcept override;
 
-    bool done() const override;
+    bool done() const noexcept override;
 
     StringReader& operator=(const StringReader& other) = delete;  // Disable copy assignment operator
 };

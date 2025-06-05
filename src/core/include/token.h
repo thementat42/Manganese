@@ -84,12 +84,12 @@ struct Token {
      */
     static std::string tokenTypeToString(TokenType type);
 
-    TokenType getType() const;
-    std::optional<OperatorType> getOperatorType() const;
-    std::optional<KeywordType> getKeywordType() const;
-    std::string getLexeme() const;
-    size_t getLine() const;
-    size_t getColumn() const;
+    TokenType getType() const noexcept;
+    std::optional<OperatorType> getOperatorType() const noexcept;
+    std::optional<KeywordType> getKeywordType() const noexcept;
+    std::string getLexeme() const noexcept;
+    size_t getLine() const noexcept;
+    size_t getColumn() const noexcept;
     void overrideType(TokenType _type, std::string _lexeme = "");
     void overrideOperatorType(OperatorType _type);
 
@@ -97,9 +97,9 @@ struct Token {
      * @brief Print out a token
      * @details This function is used for debugging purposes. (if the debug flag is not set, this function will be empty)
      */
-    void log() const;
+    void log() const noexcept;
 
-    static void log(const Token& token);
+    static void log(const Token& token) noexcept;
 };
 }  // namespace core
 }  // namespace manganese

@@ -25,49 +25,49 @@ class Reader {
    public:
     static constexpr char EOF_CHAR = '\0';
     Reader() = default;
-    virtual ~Reader() = default;
+    virtual ~Reader()  noexcept = default;
 
     /**
      * @brief Look at the next character without consuming it
      * @param offset The number of characters to look ahead (default is 0)
      * @return The character at the specified offset
      */
-    virtual char peekChar(size_t offset = 0) = 0;
+    virtual char peekChar(size_t offset = 0) noexcept = 0;
 
     /**
      * @brief Consume the next character
      * @return The character that was consumed
      */
-    [[nodiscard]] virtual char consumeChar() = 0;
+    [[nodiscard]] virtual char consumeChar() noexcept = 0;
     /**
      * @brief Move the reader forward to a new position
      * @param newPosition The new position to move to
      */
-    virtual void setPosition(size_t newPosition) = 0;
+    virtual void setPosition(size_t newPosition) noexcept = 0;
 
     /**
      * @brief Get the current position of the reader
      * @return The current position of the reader
      */
-    virtual size_t getPosition() const = 0;
+    virtual size_t getPosition() const noexcept = 0;
 
     /**
      * @brief Get the current line of the reader
      * @return The current line of the reader
      */
-    virtual size_t getLine() const = 0;
+    virtual size_t getLine() const noexcept = 0;
 
     /**
      * @brief Get the current column of the reader
      * @return The current column of the reader
      */
-    virtual size_t getColumn() const = 0;
+    virtual size_t getColumn() const noexcept = 0;
 
     /**
      * @brief Returns true if the reader has reached the end of the input
      * @return True if the reader is done, false otherwise
      */
-    virtual bool done() const = 0;
+    virtual bool done() const noexcept = 0;
 };
 }  // namespace io
 }  // namespace manganese

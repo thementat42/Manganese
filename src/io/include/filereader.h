@@ -39,15 +39,15 @@ class FileReader : public Reader {
     FileReader() = default;
     FileReader(const FileReader& other) = delete;  // Disable copy constructor
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
-    ~FileReader();
+    ~FileReader() noexcept = default;
 
-    char peekChar(size_t offset = 0) override;
-    [[nodiscard]] char consumeChar() override;
+    char peekChar(size_t offset = 0) noexcept override;
+    [[nodiscard]] char consumeChar() noexcept override;
 
-    void setPosition(size_t newPosition) override;
-    size_t getPosition() const override;
-    size_t getLine() const override;
-    size_t getColumn() const override;
+    void setPosition(size_t newPosition) noexcept override;
+    size_t getPosition() const noexcept override;
+    size_t getLine() const noexcept override;
+    size_t getColumn() const noexcept override;
 
     bool done() const override;
 
