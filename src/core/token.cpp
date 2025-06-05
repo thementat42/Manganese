@@ -33,25 +33,25 @@ Token::Token(const TokenType _type, const std::string _lexeme, const size_t _lin
 
 Token::Token(const TokenType _type, const char _lexeme, const size_t _line, const size_t _column) : Token(_type, std::string(1, _lexeme), _line, _column) {}  // Defer to string constructor to avoid duplicating code
 
-TokenType Token::getType() const {
+TokenType Token::getType() const noexcept {
     return type;
 }
 
-std::optional<OperatorType> Token::getOperatorType() const {
+std::optional<OperatorType> Token::getOperatorType() const noexcept {
     if (std::holds_alternative<OperatorType>(data)) {
         return std::get<OperatorType>(data);
     }
     return std::nullopt;
 }
 
-std::optional<KeywordType> Token::getKeywordType() const {
+std::optional<KeywordType> Token::getKeywordType() const noexcept {
     if (std::holds_alternative<KeywordType>(data)) {
         return std::get<KeywordType>(data);
     }
     return std::nullopt;
 }
 
-std::string Token::getLexeme() const {
+std::string Token::getLexeme() const noexcept {
     if (std::holds_alternative<OperatorType>(data)) {
         return *operatorToString(std::get<OperatorType>(data));
     } else if (std::holds_alternative<KeywordType>(data)) {
@@ -60,11 +60,11 @@ std::string Token::getLexeme() const {
     return std::get<std::string>(data);
 }
 
-size_t Token::getLine() const {
+size_t Token::getLine() const noexcept {
     return line;
 }
 
-size_t Token::getColumn() const {
+size_t Token::getColumn() const noexcept {
     return column;
 }
 
@@ -97,7 +97,7 @@ void Token::overrideOperatorType(OperatorType _type) {
     type = TokenType::Operator;
 }
 
-DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) {
+DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) noexcept {
 #if DEBUG
     switch (type) {
         // Basic
@@ -158,7 +158,7 @@ DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) {
 #endif  // DEBUG */
 }
 
-DEBUG_FUNC void Token::log() const {
+DEBUG_FUNC void Token::log() const noexcept {
 #if DEBUG
     std::cout << "Token: " << tokenTypeToString(type) << " ("
               << getLexeme() << ") at line " << line << ", column " << column;
@@ -166,7 +166,7 @@ DEBUG_FUNC void Token::log() const {
 #endif  // DEBUG
 }
 
-void Token::log(const Token& token) {
+void Token::log(const Token& token) noexcept {
     token.log();
 }
 

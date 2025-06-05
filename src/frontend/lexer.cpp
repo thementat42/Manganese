@@ -637,7 +637,7 @@ void Lexer::lex(size_t numTokens) {
     }
 }
 
-Token Lexer::peekToken(size_t offset) {
+Token Lexer::peekToken(size_t offset) noexcept {
     if (done() && offset >= tokenStream.size()) {
         // Only return EOF if we are done tokenizing and trying to read past the end
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
@@ -655,7 +655,7 @@ Token Lexer::peekToken(size_t offset) {
     return offset < tokenStream.size() ? tokenStream[offset] : Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
 }
 
-Token Lexer::consumeToken() {
+Token Lexer::consumeToken() noexcept {
     if (tokenStream.empty()) {
         lex(QUEUE_LOOKAHEAD_AMOUNT);  // If queue empty, generate 1 token to read
     }

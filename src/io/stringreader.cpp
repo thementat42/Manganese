@@ -15,14 +15,14 @@ namespace io {
 
 StringReader::StringReader(const std::string& _source) : position(0), line(1), column(1), source(_source) {}
 
-char StringReader::peekChar(size_t offset) {
+char StringReader::peekChar(size_t offset) noexcept {
     if (position + offset >= source.length()) {
         return EOF_CHAR;
     }
     return source[position + offset];
 }
 
-char StringReader::consumeChar() {
+char StringReader::consumeChar() noexcept {
     if (position >= source.length()) {
         return EOF_CHAR;
     }
@@ -37,7 +37,7 @@ char StringReader::consumeChar() {
     return c;
 }
 
-void StringReader::setPosition(size_t newPosition) {
+void StringReader::setPosition(size_t newPosition) noexcept {
     if (newPosition >= source.length()) {
         position = source.length();
     } else {
@@ -45,19 +45,19 @@ void StringReader::setPosition(size_t newPosition) {
     }
 }
 
-inline size_t StringReader::getPosition() const {
+inline size_t StringReader::getPosition() const noexcept {
     return position;
 }
 
-inline size_t StringReader::getLine() const {
+inline size_t StringReader::getLine() const noexcept {
     return line;
 }
 
-inline size_t StringReader::getColumn() const {
+inline size_t StringReader::getColumn() const noexcept {
     return column;
 }
 
-inline bool StringReader::done() const {
+inline bool StringReader::done() const noexcept {
     return position >= source.length();
 }
 

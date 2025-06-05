@@ -117,7 +117,7 @@ char FileReader::consumeChar() {
     return c;
 }
 
-void FileReader::setPosition(size_t newPosition) {
+void FileReader::setPosition(size_t newPosition) noexcept {
     if (newPosition >= bufferSize) {
         position = bufferSize;
     } else {
@@ -125,19 +125,19 @@ void FileReader::setPosition(size_t newPosition) {
     }
 }
 
-inline size_t FileReader::getPosition() const {
+inline size_t FileReader::getPosition() const noexcept {
     return position;
 }
 
-inline size_t FileReader::getLine() const {
+inline size_t FileReader::getLine() const noexcept {
     return line;
 }
 
-inline size_t FileReader::getColumn() const {
+inline size_t FileReader::getColumn() const noexcept {
     return column;
 }
 
-inline bool FileReader::done() const {
+inline bool FileReader::done() const noexcept {
     return position >= bufferSize && fileStream.eof();
 }
 

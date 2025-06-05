@@ -82,7 +82,7 @@ struct Token {
      * @return String representation of the TokenType
      * @details Only used for debugging purposes. (if the debug flag is not set, this function will be empty)
      */
-    static std::string tokenTypeToString(TokenType type);
+    static std::string tokenTypeToString(TokenType type) noexcept;
 
     TokenType getType() const noexcept;
     std::optional<OperatorType> getOperatorType() const noexcept;

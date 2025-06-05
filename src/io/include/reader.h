@@ -32,18 +32,18 @@ class Reader {
      * @param offset The number of characters to look ahead (default is 0)
      * @return The character at the specified offset
      */
-    virtual char peekChar(size_t offset = 0) noexcept = 0;
+    virtual char peekChar(size_t offset = 0) = 0;
 
     /**
      * @brief Consume the next character
      * @return The character that was consumed
      */
-    [[nodiscard]] virtual char consumeChar() noexcept = 0;
+    [[nodiscard]] virtual char consumeChar() = 0;
     /**
      * @brief Move the reader forward to a new position
      * @param newPosition The new position to move to
      */
-    virtual void setPosition(size_t newPosition) noexcept = 0;
+    virtual void setPosition(size_t newPosition) = 0;
 
     /**
      * @brief Get the current position of the reader
@@ -67,7 +67,7 @@ class Reader {
      * @brief Returns true if the reader has reached the end of the input
      * @return True if the reader is done, false otherwise
      */
-    virtual bool done() const noexcept = 0;
+    virtual bool done() const = 0;
 };
 }  // namespace io
 }  // namespace manganese

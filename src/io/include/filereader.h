@@ -39,17 +39,17 @@ class FileReader : public Reader {
     FileReader() = default;
     FileReader(const FileReader& other) = delete;  // Disable copy constructor
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
-    ~FileReader() noexcept = default;
+    ~FileReader() noexcept;
 
-    char peekChar(size_t offset = 0) noexcept override;
-    [[nodiscard]] char consumeChar() noexcept override;
+    char peekChar(size_t offset = 0) override;
+    [[nodiscard]] char consumeChar() override;
 
     void setPosition(size_t newPosition) noexcept override;
     size_t getPosition() const noexcept override;
     size_t getLine() const noexcept override;
     size_t getColumn() const noexcept override;
 
-    bool done() const override;
+    bool done() const noexcept override;
 
     FileReader& operator=(const FileReader& other) = delete;  // Disable copy assignment operator
 };
