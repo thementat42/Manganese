@@ -1,9 +1,7 @@
 /**
  * @file tests-main.cpp
  * @brief Main file for running all tests.
- * @details Uses a unity build to compile all test files. Specific tests are run based on command line arguments.
- * @note g++ -o mntests tests-main.cpp
- * @note clang++ -o mntests tests-main.cpp
+ * @note Run CMake with -DBUILD_TESTS=ON
  */
 
 // Includes for unity build
