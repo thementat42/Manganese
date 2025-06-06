@@ -91,7 +91,6 @@ This project is divided into several directories:
 - [`Examples`](/examples): Sample Manganese programs
 
 - [`Src`](/src): The compiler source code
-  - [`core`](/src/core/): Core utilities (tokens, keywords, operators)
   - [`Frontend`](/src/frontend): Lexer, parser, semantic analyzer
   - [`Middleend`](/src/middleend): Generates LLVM IR, runs LLVM's optimization passes
   - [`Backend`](/src/backend): LLVM backend to generate machine code
