@@ -88,7 +88,7 @@ bool testComments() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Keyword, "int32") &&
+    return checkToken(tokens[0], TokenType::Int32, "int32") &&
            checkToken(tokens[1], TokenType::Identifier, "x") &&
            checkToken(tokens[2], TokenType::Semicolon, ";");
 }
@@ -124,16 +124,16 @@ bool testKeywords() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Keyword, "alias") &&
-           checkToken(tokens[1], TokenType::Keyword, "as") &&
-           checkToken(tokens[2], TokenType::Keyword, "blueprint") &&
-           checkToken(tokens[3], TokenType::Keyword, "bool") &&
-           checkToken(tokens[4], TokenType::Keyword, "break") &&
-           checkToken(tokens[5], TokenType::Keyword, "bundle") &&
-           checkToken(tokens[6], TokenType::Keyword, "case") &&
-           checkToken(tokens[7], TokenType::Keyword, "cast") &&
-           checkToken(tokens[8], TokenType::Keyword, "char") &&
-           checkToken(tokens[9], TokenType::Keyword, "const") &&
+    return checkToken(tokens[0], TokenType::Alias, "alias") &&
+           checkToken(tokens[1], TokenType::As, "as") &&
+           checkToken(tokens[2], TokenType::Blueprint, "blueprint") &&
+           checkToken(tokens[3], TokenType::Bool, "bool") &&
+           checkToken(tokens[4], TokenType::Break, "break") &&
+           checkToken(tokens[5], TokenType::Bundle, "bundle") &&
+           checkToken(tokens[6], TokenType::Case, "case") &&
+           checkToken(tokens[7], TokenType::Cast, "cast") &&
+           checkToken(tokens[8], TokenType::Char, "char") &&
+           checkToken(tokens[9], TokenType::Const, "const") &&
            checkToken(tokens[10], TokenType::Identifier, "foo");
 }
 
@@ -225,43 +225,43 @@ bool testOperators() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Operator, "+") &&
-           checkToken(tokens[1], TokenType::Operator, "-") &&
-           checkToken(tokens[2], TokenType::Operator, "*") &&
-           checkToken(tokens[3], TokenType::Operator, "/") &&
-           checkToken(tokens[4], TokenType::Operator, "//") &&
-           checkToken(tokens[5], TokenType::Operator, "%") &&
-           checkToken(tokens[6], TokenType::Operator, "**") &&
-           checkToken(tokens[7], TokenType::Operator, "++") &&
-           checkToken(tokens[8], TokenType::Operator, "--") &&
-           checkToken(tokens[9], TokenType::Operator, "+=") &&
-           checkToken(tokens[10], TokenType::Operator, "-=") &&
-           checkToken(tokens[11], TokenType::Operator, "*=") &&
-           checkToken(tokens[12], TokenType::Operator, "/=") &&
-           checkToken(tokens[13], TokenType::Operator, "//=") &&
-           checkToken(tokens[14], TokenType::Operator, "%=") &&
-           checkToken(tokens[15], TokenType::Operator, "**=") &&
-           checkToken(tokens[16], TokenType::Operator, "==") &&
-           checkToken(tokens[17], TokenType::Operator, "!=") &&
-           checkToken(tokens[18], TokenType::Operator, "&&") &&
-           checkToken(tokens[19], TokenType::Operator, "||") &&
-           checkToken(tokens[20], TokenType::Operator, "!") &&
-           checkToken(tokens[21], TokenType::Operator, "&") &&
-           checkToken(tokens[22], TokenType::Operator, "|") &&
-           checkToken(tokens[23], TokenType::Operator, "~") &&
-           checkToken(tokens[24], TokenType::Operator, "^") &&
-           checkToken(tokens[25], TokenType::Operator, "&=") &&
-           checkToken(tokens[26], TokenType::Operator, "|=") &&
-           checkToken(tokens[27], TokenType::Operator, "~=") &&
-           checkToken(tokens[28], TokenType::Operator, "^=") &&
-           checkToken(tokens[29], TokenType::Operator, "?") &&
-           checkToken(tokens[30], TokenType::Operator, "@") &&
-           checkToken(tokens[31], TokenType::Operator, ".") &&
+    return checkToken(tokens[0], TokenType::Plus, "+") &&
+           checkToken(tokens[1], TokenType::Minus, "-") &&
+           checkToken(tokens[2], TokenType::Mul, "*") &&
+           checkToken(tokens[3], TokenType::Div, "/") &&
+           checkToken(tokens[4], TokenType::FloorDiv, "//") &&
+           checkToken(tokens[5], TokenType::Mod, "%") &&
+           checkToken(tokens[6], TokenType::Exp, "**") &&
+           checkToken(tokens[7], TokenType::Inc, "++") &&
+           checkToken(tokens[8], TokenType::Dec, "--") &&
+           checkToken(tokens[9], TokenType::PlusAssign, "+=") &&
+           checkToken(tokens[10], TokenType::MinusAssign, "-=") &&
+           checkToken(tokens[11], TokenType::MulAssign, "*=") &&
+           checkToken(tokens[12], TokenType::DivAssign, "/=") &&
+           checkToken(tokens[13], TokenType::FloorDivAssign, "//=") &&
+           checkToken(tokens[14], TokenType::ModAssign, "%=") &&
+           checkToken(tokens[15], TokenType::ExpAssign, "**=") &&
+           checkToken(tokens[16], TokenType::Equal, "==") &&
+           checkToken(tokens[17], TokenType::NotEqual, "!=") &&
+           checkToken(tokens[18], TokenType::And, "&&") &&
+           checkToken(tokens[19], TokenType::Or, "||") &&
+           checkToken(tokens[20], TokenType::Not, "!") &&
+           checkToken(tokens[21], TokenType::BitAnd, "&") &&
+           checkToken(tokens[22], TokenType::BitOr, "|") &&
+           checkToken(tokens[23], TokenType::BitNot, "~") &&
+           checkToken(tokens[24], TokenType::BitXor, "^") &&
+           checkToken(tokens[25], TokenType::BitAndAssign, "&=") &&
+           checkToken(tokens[26], TokenType::BitOrAssign, "|=") &&
+           checkToken(tokens[27], TokenType::BitNotAssign, "~=") &&
+           checkToken(tokens[28], TokenType::BitXorAssign, "^=") &&
+           checkToken(tokens[29], TokenType::AddressOf, "?") &&
+           checkToken(tokens[30], TokenType::Dereference, "@") &&
+           checkToken(tokens[31], TokenType::MemberAccess, ".") &&
            checkToken(tokens[32], TokenType::Colon, ":") &&
-           checkToken(tokens[33], TokenType::Operator, "::") &&
-           checkToken(tokens[34], TokenType::Operator, "=") &&
-           checkToken(tokens[35], TokenType::Operator, "->") &&
-           checkToken(tokens[36], TokenType::Operator, "...");
+           checkToken(tokens[33], TokenType::ScopeResolution, "::") &&
+           checkToken(tokens[34], TokenType::Assignment, "=") &&
+           checkToken(tokens[35], TokenType::Arrow, "->") &&
+           checkToken(tokens[36], TokenType::Ellipsis, "...");
 }
 
 bool testBrackets() {
@@ -300,11 +300,11 @@ bool testPunctuation() {
 
     return checkToken(tokens[0], TokenType::Semicolon, ";") &&
            checkToken(tokens[1], TokenType::Comma, ",") &&
-           checkToken(tokens[2], TokenType::Operator, ".") &&
-           checkToken(tokens[3], TokenType::Operator, "?") &&
-           checkToken(tokens[4], TokenType::Operator, "@") &&
+           checkToken(tokens[2], TokenType::MemberAccess, ".") &&
+           checkToken(tokens[3], TokenType::AddressOf, "?") &&
+           checkToken(tokens[4], TokenType::Dereference, "@") &&
            checkToken(tokens[5], TokenType::Colon, ":") &&
-           checkToken(tokens[6], TokenType::Operator, "::");
+           checkToken(tokens[6], TokenType::ScopeResolution, "::");
 }
 
 bool testCompleteProgram() {
@@ -318,21 +318,21 @@ bool testCompleteProgram() {
         std::cout << "Expected non-empty tokens" << std::endl;
         return false;
     }
-    return checkToken(tokens[0], TokenType::Keyword, "func") &&
+    return checkToken(tokens[0], TokenType::Func, "func") &&
            checkToken(tokens[1], TokenType::Identifier, "main") &&
            checkToken(tokens[2], TokenType::LeftParen, "(") &&
            checkToken(tokens[3], TokenType::RightParen, ")") &&
-           checkToken(tokens[4], TokenType::Operator, "->") &&
-           checkToken(tokens[5], TokenType::Keyword, "int32") &&
+           checkToken(tokens[4], TokenType::Arrow, "->") &&
+           checkToken(tokens[5], TokenType::Int32, "int32") &&
            checkToken(tokens[6], TokenType::LeftBrace, "{") &&
-           checkToken(tokens[7], TokenType::Keyword, "int32") &&
+           checkToken(tokens[7], TokenType::Int32, "int32") &&
            checkToken(tokens[8], TokenType::Identifier, "x") &&
-           checkToken(tokens[9], TokenType::Operator, "=") &&
+           checkToken(tokens[9], TokenType::Assignment, "=") &&
            checkToken(tokens[10], TokenType::IntegerLiteral, "5") &&
            checkToken(tokens[11], TokenType::Semicolon, ";") &&
-           checkToken(tokens[12], TokenType::Keyword, "float") &&
+           checkToken(tokens[12], TokenType::Float32, "float32") &&
            checkToken(tokens[13], TokenType::Identifier, "y") &&
-           checkToken(tokens[14], TokenType::Operator, "=") &&
+           checkToken(tokens[14], TokenType::Assignment, "=") &&
            checkToken(tokens[15], TokenType::FloatLiteral, "10.5") &&
            checkToken(tokens[16], TokenType::Semicolon, ";") &&
            checkToken(tokens[17], TokenType::Identifier, "print") &&
@@ -364,7 +364,7 @@ bool testNestedBrackets() {
            checkToken(tokens[1], TokenType::LeftAngle, "<") &&
            checkToken(tokens[2], TokenType::Identifier, "arr") &&
            checkToken(tokens[3], TokenType::LeftAngle, "<") &&
-           checkToken(tokens[4], TokenType::Keyword, "int16") &&
+           checkToken(tokens[4], TokenType::Int16, "int16") &&
            checkToken(tokens[5], TokenType::RightAngle, ">") &&
            checkToken(tokens[6], TokenType::RightAngle, ">") &&
            checkToken(tokens[7], TokenType::Identifier, "foo");

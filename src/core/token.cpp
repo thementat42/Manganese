@@ -15,49 +15,59 @@
 
 namespace manganese {
 namespace core {
-Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column) : type(_type), line(_line), column(_column) {
+Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column) : type(_type), lexeme(_lexeme), line(_line), column(_column) {
     if (_type == TokenType::Operator) {
         auto op = operatorFromString(_lexeme);
         if (op.has_value()) {
-            data = op.value();
+            type = op.value();
         }
     } else if (_type == TokenType::Keyword) {
         auto kw = keywordFromString(_lexeme);
         if (kw.has_value()) {
-            data = kw.value();
+            type = kw.value();
         }
-    } else {
-        data = std::move(_lexeme);
+    }
+    // Special lexeme override cases
+    if (type == TokenType::Int32) {
+        lexeme = "int32";
+    } else if (type == TokenType::Float32) {
+        lexeme = "float32";
     }
 }
 
 Token::Token(const TokenType _type, const char _lexeme, const size_t _line, const size_t _column) : Token(_type, std::string(1, _lexeme), _line, _column) {}  // Defer to string constructor to avoid duplicating code
 
+std::optional<TokenType> operatorFromString(const std::string& op) {
+    std::string op_str(op);
+    auto it = operatorMap.find(op_str);
+    if (it != operatorMap.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+std::optional<TokenType> keywordFromString(const std::string& keyword) {
+    auto it = keywordMap.find(keyword);
+    if (it != keywordMap.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+bool Token::isKeyword() const noexcept {
+    return type >= TokenType::__KeywordStart && type <= TokenType::__KeywordEnd;
+}
+
+bool Token::isOperator() const noexcept {
+    return type >= TokenType::__OperatorStart && type <= TokenType::__OperatorEnd;
+}
+
 TokenType Token::getType() const noexcept {
     return type;
 }
 
-std::optional<OperatorType> Token::getOperatorType() const noexcept {
-    if (std::holds_alternative<OperatorType>(data)) {
-        return std::get<OperatorType>(data);
-    }
-    return std::nullopt;
-}
-
-std::optional<KeywordType> Token::getKeywordType() const noexcept {
-    if (std::holds_alternative<KeywordType>(data)) {
-        return std::get<KeywordType>(data);
-    }
-    return std::nullopt;
-}
-
 std::string Token::getLexeme() const noexcept {
-    if (std::holds_alternative<OperatorType>(data)) {
-        return *operatorToString(std::get<OperatorType>(data));
-    } else if (std::holds_alternative<KeywordType>(data)) {
-        return keywordToString(std::get<KeywordType>(data));
-    }
-    return std::get<std::string>(data);
+    return lexeme;
 }
 
 size_t Token::getLine() const noexcept {
@@ -78,39 +88,35 @@ void Token::overrideType(TokenType _type, std::string _lexeme) {
         __FILE__);
 #endif  // DEBUG
     type = _type;
-    // Reset data if needed
-    if (_type != TokenType::Operator && _type != TokenType::Keyword) {
-        data = _lexeme;
-    }
 }
 
-void Token::overrideOperatorType(OperatorType _type) {
+DEBUG_FUNC void Token::log() const noexcept {
 #if DEBUG
-    printf(
-        "Warning: overriding token operator type from %s to %s (line %d in file %s)\n",
-        (*operatorToString(std::get<OperatorType>(data))).c_str(),
-        (*operatorToString(_type)).c_str(),
-        __LINE__,
-        __FILE__);
+    std::cout << "Token: " << tokenTypeToString(type) << " ("
+              << getLexeme() << ") at line " << line << ", column " << column;
+    std::cout << '\n';
 #endif  // DEBUG
-    data = _type;
-    type = TokenType::Operator;
 }
+
+void Token::log(const Token& token) noexcept {
+    token.log();
+}
+
+// ! === Really Long Stuff ===
 
 DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) noexcept {
-#if DEBUG
+#if !DEBUG
+    return "";
+#else   // ^^ !DEBUG vv DEBUG
+
     switch (type) {
         // Basic
-        case TokenType::Keyword:
-            return "Keyword";
         case TokenType::Identifier:
             return "Identifier";
         case TokenType::StrLiteral:
             return "String Literal";
         case TokenType::CharLiteral:
             return "Char Literal";
-        case TokenType::Operator:
-            return "Operator";
 
         // Numbers
         case TokenType::IntegerLiteral:
@@ -150,25 +156,296 @@ DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) noexcept {
         case TokenType::Invalid:
             return "Invalid";
 
+        // Keywords
+        case TokenType::Alias:
+            return "alias";
+        case TokenType::As:
+            return "as";
+        case TokenType::Blueprint:
+            return "blueprint";
+        case TokenType::Bool:
+            return "bool";
+        case TokenType::Break:
+            return "break";
+        case TokenType::Bundle:
+            return "bundle";
+        case TokenType::Case:
+            return "case";
+        case TokenType::Cast:
+            return "cast";
+        case TokenType::Char:
+            return "char";
+        case TokenType::Const:
+            return "const";
+        case TokenType::Continue:
+            return "continue";
+        case TokenType::Default:
+            return "Default";
+        case TokenType::Do:
+            return "do";
+        case TokenType::Elif:
+            return "elif";
+        case TokenType::Else:
+            return "else";
+        case TokenType::Enum:
+            return "enum";
+        case TokenType::False:
+            return "false";
+        case TokenType::Float32:
+            return "float32";
+        case TokenType::Float64:
+            return "float64";
+        case TokenType::For:
+            return "for";
+        case TokenType::Func:
+            return "func";
+        case TokenType::If:
+            return "if";
+        case TokenType::Import:
+            return "import";
+        case TokenType::Int8:
+            return "int8";
+        case TokenType::Int16:
+            return "int16";
+        case TokenType::Int32:
+            return "int32";
+        case TokenType::Int64:
+            return "int64";
+        case TokenType::Lambda:
+            return "lambda";
+        case TokenType::Module:
+            return "module";
+        case TokenType::Ptr:
+            return "ptr";
+        case TokenType::Public:
+            return "public";
+        case TokenType::ReadOnly:
+            return "readonly";
+        case TokenType::Repeat:
+            return "repeat";
+        case TokenType::Return:
+            return "return";
+        case TokenType::Switch:
+            return "switch";
+        case TokenType::True:
+            return "true";
+        case TokenType::TypeOf:
+            return "typeof";
+        case TokenType::UInt8:
+            return "uint8";
+        case TokenType::UInt16:
+            return "uint16";
+        case TokenType::UInt32:
+            return "uint32";
+        case TokenType::UInt64:
+            return "uint64";
+        case TokenType::While:
+            return "while";
+
+        case TokenType::Plus:
+            return "+";
+        case TokenType::Minus:
+            return "-";
+        case TokenType::Mul:
+            return "*";
+        case TokenType::Div:
+            return "/";
+        case TokenType::FloorDiv:
+            return "//";
+        case TokenType::Mod:
+            return "%";
+        case TokenType::Exp:
+            return "**";
+        case TokenType::Inc:
+            return "++";
+        case TokenType::Dec:
+            return "--";
+        case TokenType::PlusAssign:
+            return "+=";
+        case TokenType::MinusAssign:
+            return "-=";
+        case TokenType::MulAssign:
+            return "*=";
+        case TokenType::DivAssign:
+            return "/=";
+        case TokenType::FloorDivAssign:
+            return "//=";
+        case TokenType::ModAssign:
+            return "%=";
+        case TokenType::ExpAssign:
+            return "**=";
+        case TokenType::GreaterThan:
+            return ">";
+        case TokenType::GreaterThanOrEqual:
+            return ">=";
+        case TokenType::LessThan:
+            return "<";
+        case TokenType::LessThanOrEqual:
+            return "<=";
+        case TokenType::Equal:
+            return "==";
+        case TokenType::NotEqual:
+            return "!=";
+        case TokenType::And:
+            return "&&";
+        case TokenType::Or:
+            return "||";
+        case TokenType::Not:
+            return "!";
+        case TokenType::BitAnd:
+            return "&";
+        case TokenType::BitOr:
+            return "|";
+        case TokenType::BitNot:
+            return "~";
+        case TokenType::BitXor:
+            return "^";
+        case TokenType::BitLShift:
+            return "<<";
+        case TokenType::BitRShift:
+            return ">>";
+        case TokenType::BitAndAssign:
+            return "&=";
+        case TokenType::BitOrAssign:
+            return "|=";
+        case TokenType::BitNotAssign:
+            return "~=";
+        case TokenType::BitXorAssign:
+            return "^=";
+        case TokenType::BitLShiftAssign:
+            return "<<=";
+        case TokenType::BitRShiftAssign:
+            return ">>=";
+        case TokenType::AddressOf:
+            return "?";
+        case TokenType::Dereference:
+            return "@";
+        case TokenType::MemberAccess:
+            return ".";
+        case TokenType::Ellipsis:
+            return "...";
+        case TokenType::ScopeResolution:
+            return "::";
+        case TokenType::Assignment:
+            return "=";
+        case TokenType::Arrow:
+            return "->";
         default:
             return "Unknown Token Type";
     }
-#else   // ^ DEBUG ^ | v !DEBUG v
-    return "";
-#endif  // DEBUG */
-}
-
-DEBUG_FUNC void Token::log() const noexcept {
-#if DEBUG
-    std::cout << "Token: " << tokenTypeToString(type) << " ("
-              << getLexeme() << ") at line " << line << ", column " << column;
-    std::cout << '\n';
 #endif  // DEBUG
 }
 
-void Token::log(const Token& token) noexcept {
-    token.log();
-}
+std::unordered_map<std::string, const TokenType> operatorMap = {
+    // Arithmetic Operators
+    {"+", TokenType::Plus},
+    {"-", TokenType::Minus},
+    {"*", TokenType::Mul},
+    {"/", TokenType::Div},
+    {"//", TokenType::FloorDiv},
+    {"%", TokenType::Mod},
+    {"**", TokenType::Exp},
+    {"++", TokenType::Inc},
+    {"--", TokenType::Dec},
+
+    // Arithmetic Assignment Operators
+    {"+=", TokenType::PlusAssign},
+    {"-=", TokenType::MinusAssign},
+    {"*=", TokenType::MulAssign},
+    {"/=", TokenType::DivAssign},
+    {"//=", TokenType::FloorDivAssign},
+    {"%=", TokenType::ModAssign},
+    {"**=", TokenType::ExpAssign},
+
+    // Comparison Operators
+    {">", TokenType::GreaterThan},
+    {">=", TokenType::GreaterThanOrEqual},
+    {"<", TokenType::LessThan},
+    {"<=", TokenType::LessThanOrEqual},
+    {"==", TokenType::Equal},
+    {"!=", TokenType::NotEqual},
+
+    // Boolean Operators
+    {"&&", TokenType::And},
+    {"||", TokenType::Or},
+    {"!", TokenType::Not},
+
+    // Bitwise Operators
+    {"&", TokenType::BitAnd},
+    {"|", TokenType::BitOr},
+    {"~", TokenType::BitNot},
+    {"^", TokenType::BitXor},
+    {"<<", TokenType::BitLShift},
+    {">>", TokenType::BitRShift},
+
+    // Bitwise Assignment Operators
+    {"&=", TokenType::BitAndAssign},
+    {"|=", TokenType::BitOrAssign},
+    {"~=", TokenType::BitNotAssign},
+    {"^=", TokenType::BitXorAssign},
+    {"<<=", TokenType::BitLShiftAssign},
+    {">>=", TokenType::BitRShiftAssign},
+
+    // Pointer Operators
+    {"?", TokenType::AddressOf},
+    {"@", TokenType::Dereference},
+
+    // Access Operators
+    {".", TokenType::MemberAccess},
+    {"...", TokenType::Ellipsis},
+    {"::", TokenType::ScopeResolution},
+
+    // Misc
+    {"=", TokenType::Assignment},
+    {"->", TokenType::Arrow}};
+
+std::unordered_map<std::string, const TokenType> keywordMap = {
+    {"alias", TokenType::Alias},
+    {"as", TokenType::As},
+    {"blueprint", TokenType::Blueprint},
+    {"bool", TokenType::Bool},
+    {"break", TokenType::Break},
+    {"bundle", TokenType::Bundle},
+    {"case", TokenType::Case},
+    {"cast", TokenType::Cast},
+    {"char", TokenType::Char},
+    {"const", TokenType::Const},
+    {"continue", TokenType::Continue},
+    {"default", TokenType::Default},
+    {"do", TokenType::Do},
+    {"elif", TokenType::Elif},
+    {"else", TokenType::Else},
+    {"enum", TokenType::Enum},
+    {"false", TokenType::False},
+    {"float", TokenType::Float32},  // default to float32 when floating point width isn't specified
+    {"float32", TokenType::Float32},
+    {"float64", TokenType::Float64},
+    {"for", TokenType::For},
+    {"func", TokenType::Func},
+    {"if", TokenType::If},
+    {"import", TokenType::Import},
+    {"int", TokenType::Int32},  // default to int32 when integer width isn't specified
+    {"int16", TokenType::Int16},
+    {"int32", TokenType::Int32},
+    {"int64", TokenType::Int64},
+    {"int8", TokenType::Int8},
+    {"lambda", TokenType::Lambda},
+    {"module", TokenType::Module},
+    {"private", TokenType::Private},
+    {"ptr", TokenType::Ptr},
+    {"public", TokenType::Public},
+    {"readonly", TokenType::ReadOnly},
+    {"repeat", TokenType::Repeat},
+    {"return", TokenType::Return},
+    {"switch", TokenType::Switch},
+    {"true", TokenType::True},
+    {"typeof", TokenType::TypeOf},
+    {"uint", TokenType::UInt32},  // default to uint32 when integer width isn't specified
+    {"uint8", TokenType::UInt8},
+    {"uint16", TokenType::UInt16},
+    {"uint32", TokenType::UInt32},
+    {"uint64", TokenType::UInt64},
+    {"while", TokenType::While}};
 
 }  // namespace core
 }  // namespace manganese
