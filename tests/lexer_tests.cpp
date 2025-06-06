@@ -54,8 +54,8 @@ std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
 
 bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme) {
     if (token.getType() != expectedType) {
-        std::cout << "Expected token type " << Token::tokenTypeToString(expectedType)
-                  << " but got " << Token::tokenTypeToString(token.getType()) << " (lexeme was " << token.getLexeme() << ")" << std::endl;
+        std::cout << "Expected token type " << tokenTypeToString(expectedType)
+                  << " but got " << tokenTypeToString(token.getType()) << " (lexeme was " << token.getLexeme() << ")" << std::endl;
         return false;
     }
     if (token.getLexeme() != expectedLexeme) {
