@@ -5,7 +5,7 @@
 #include <optional>
 #include <queue>
 
-#include "../../core/include/token.h"
+#include "include/token.h"
 #include "../../global_macros.h"
 #include "../../io/include/filereader.h"
 #include "../../io/include/reader.h"
@@ -14,7 +14,6 @@
 namespace manganese {
 namespace lexer {
 using str = std::string;
-using core::Token;
 using std::optional;
 constexpr auto NONE = std::nullopt;
 

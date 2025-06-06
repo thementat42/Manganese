@@ -21,7 +21,7 @@
 
 #include <algorithm>
 #include <functional>
-#include "../core/include/token.h"
+#include "include/token.h"
 #include "../global_macros.h"
 #include "../io/include/filereader.h"
 #include "../io/include/reader.h"
@@ -29,7 +29,6 @@
 
 namespace manganese {
 namespace lexer {
-using core::TokenType;
 
 Lexer::Lexer(const str& source, const Mode mode) {
     switch (mode) {
@@ -320,10 +319,10 @@ void Lexer::tokenizeKeywordOrIdentifier() {
     while (!done() && (isalnum(peekChar()) || peekChar() == '_')) {
         lexeme += consumeChar();
     }
-    auto it = core::keywordMap.find(lexeme);
+    auto it = keywordMap.find(lexeme);
 
     tokenStream.emplace_back(
-        it != core::keywordMap.end() ? TokenType::Keyword : TokenType::Identifier,
+        it != keywordMap.end() ? TokenType::Keyword : TokenType::Identifier,
         lexeme,
         startLine, startCol);
 }

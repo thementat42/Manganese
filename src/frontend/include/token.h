@@ -14,7 +14,7 @@
 #include "../../global_macros.h"
 
 namespace manganese {
-namespace core {
+namespace lexer {
 
 /**
  * @brief Defines all supported token types in Manganese
@@ -38,6 +38,8 @@ enum class OperatorBindingPower : uint8_t {
     Member = 9,
     Primary = 10,
 };
+
+// TODO: Add debug check that these are in the right order
 
 /**
  * @brief Representation of a token
@@ -285,7 +287,7 @@ enum class TokenType : uint16_t {
 
 };
 
-}  // namespace core
+}  // namespace lexer
 }  // namespace manganese
 
 #endif  // TOKEN

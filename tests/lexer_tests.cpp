@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "../src/core/include/token.h"
+#include "../src/frontend/include/token.h"
 #include "../src/frontend/include/lexer.h"
 #include "../src/global_macros.h"
 #include "testrunner.h"
@@ -16,7 +16,7 @@ using lexer::Lexer;
 using lexer::Mode;
 using lexer::Token;
 using TokenList = std::vector<Token>;
-using core::TokenType;
+using lexer::TokenType;
 
 // Utility function to convert string to tokens using the class-based Lexer
 std::vector<Token> tokensFromString(const std::string& source) {

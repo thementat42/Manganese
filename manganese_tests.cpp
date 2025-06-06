@@ -13,7 +13,7 @@
 
 #undef DEBUG
 #define DEBUG 1  // Force debug mode on
-#include "src/core/include/token.h"
+#include "src/frontend/include/token.h"
 #include "src/frontend/include/lexer.h"
 #include "src/io/include/filereader.h"
 #include "src/io/include/stringreader.h"

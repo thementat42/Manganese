@@ -31,7 +31,6 @@ file(GLOB_RECURSE SRC
 
 set(INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/include

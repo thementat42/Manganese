@@ -12,8 +12,11 @@
 #include "../global_macros.h"
 
 namespace manganese {
-namespace core {
-Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column) : type(_type), lexeme(_lexeme), line(_line), column(_column) {
+namespace lexer {
+Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column)
+    : type(_type), lexeme(_lexeme), line(_line), column(_column) {
+
+    // Set a specific enum value for operators and keywords based on the lexeme
     if (_type == TokenType::Operator) {
         auto op = operatorFromString(_lexeme);
         if (op.has_value()) {
@@ -445,5 +448,5 @@ std::unordered_map<std::string, const TokenType> keywordMap = {
     {"uint64", TokenType::UInt64},
     {"while", TokenType::While}};
 
-}  // namespace core
+}  // namespace lexer
 }  // namespace manganese
