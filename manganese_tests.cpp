@@ -58,7 +58,7 @@ int main(int argc, char const *argv[]) {
     }
     if (parser) {
         printf("=== Parser Tests ===\n");
-        // TODO: Add once parser done
+        runParserTests(runner);
         printf("\n");
     }
     if (semantic) {
