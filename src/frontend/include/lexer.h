@@ -5,7 +5,6 @@
 #include <optional>
 #include <queue>
 
-#include "../../core/include/operators.h"
 #include "../../core/include/token.h"
 #include "../../global_macros.h"
 #include "../../io/include/filereader.h"

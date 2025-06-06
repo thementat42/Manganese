@@ -9,9 +9,9 @@
 #include <optional>
 #include <string>
 #include <variant>
+#include <unordered_map>
 
 #include "../../global_macros.h"
-#include "operators.h"
 
 namespace manganese {
 namespace core {
@@ -23,6 +23,96 @@ namespace core {
  * categorized by their functional purpose (keywords, identifiers, etc.).
  * Each token is documented with its corresponding
  */
+enum class TokenType : uint16_t;  // Forward declaration -- implementation is at the end of this file for readability
+
+enum class OperatorBindingPower : uint8_t {
+    Default = 0,
+    Comma = 1,
+    Assignment = 2,
+    Logical = 3,
+    Relational = 4,
+    Additive = 5,
+    Multiplicative = 6,
+    Unary = 7,
+    Call = 8,
+    Member = 9,
+    Primary = 10,
+};
+
+/**
+ * @brief Representation of a token
+ */
+class Token {
+   private:
+    TokenType type;
+
+    // specific data about the token
+    // std::string is for tokens with no enum representation (identifiers, numbers, etc.)
+    std::string lexeme;
+    size_t line, column;
+
+   public:
+    Token() = default;
+    Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column);
+    Token(const TokenType type, const char lexeme, const size_t line, const size_t column);
+    Token(const Token& other) = default;
+    Token(Token&& other) = default;
+    Token& operator=(const Token& other) = default;
+    Token& operator=(Token&& other) = default;
+    ~Token() = default;
+
+    /**
+     * @brief Convert TokenType enum to string representation
+     * @param type The TokenType to convert
+     * @return String representation of the TokenType
+     * @details Only used for debugging purposes. (if the debug flag is not set, this function will be empty)
+     */
+    static std::string tokenTypeToString(TokenType type) noexcept;
+
+    bool isKeyword() const noexcept;
+    bool isOperator() const noexcept;
+    TokenType getType() const noexcept;
+    std::string getLexeme() const noexcept;
+    size_t getLine() const noexcept;
+    size_t getColumn() const noexcept;
+    void overrideType(TokenType _type, std::string _lexeme = "");
+
+    /**
+     * @brief Print out a token
+     * @details This function is used for debugging purposes. (if the debug flag is not set, this function will be empty)
+     */
+    void log() const noexcept;
+
+    static void log(const Token& token) noexcept;
+};
+
+/**
+ * @brief Maps string representations of keywords to their corresponding enum values.
+ * Used by the lexer and parser for keyword identification and validation.
+ */
+extern std::unordered_map<std::string, const TokenType> keywordMap;
+
+/**
+ * @brief Maps string representations of operators to their corresponding enum values.
+ */
+extern std::unordered_map<std::string, const TokenType> operatorMap;
+
+/**
+ * @brief Convert a string to a keyword enum member
+ * @param keyword The string to convert
+ * @return The corresponding keyword enum value, or std::nullopt if not found
+ */
+std::optional<TokenType> keywordFromString(const std::string& keyword);
+
+/**
+ * @brief Convert a string to the corresponding enum value
+ * @param op The string to convert
+ * @return  The corresponding enum value, or std::nullopt if not found
+ */
+std::optional<TokenType> operatorFromString(const std::string& op);
+
+
+// Implementation of TokenType
 enum class TokenType : uint16_t {
     //~ Basic
     Identifier,      // variables, functions
@@ -194,78 +284,6 @@ enum class TokenType : uint16_t {
     __OperatorEnd,
 
 };
-
-/**
- * @brief Representation of a token
- */
-class Token {
-   private:
-    TokenType type;
-
-    // specific data about the token
-    // std::string is for tokens with no enum representation (identifiers, numbers, etc.)
-    std::string lexeme;
-    size_t line, column;
-
-   public:
-    Token() = default;
-    Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column);
-    Token(const TokenType type, const char lexeme, const size_t line, const size_t column);
-    Token(const Token& other) = default;
-    Token(Token&& other) = default;
-    Token& operator=(const Token& other) = default;
-    Token& operator=(Token&& other) = default;
-    ~Token() = default;
-
-    /**
-     * @brief Convert TokenType enum to string representation
-     * @param type The TokenType to convert
-     * @return String representation of the TokenType
-     * @details Only used for debugging purposes. (if the debug flag is not set, this function will be empty)
-     */
-    static std::string tokenTypeToString(TokenType type) noexcept;
-
-    bool isKeyword() const noexcept;
-    bool isOperator() const noexcept;
-    TokenType getType() const noexcept;
-    std::string getLexeme() const noexcept;
-    size_t getLine() const noexcept;
-    size_t getColumn() const noexcept;
-    void overrideType(TokenType _type, std::string _lexeme = "");
-
-    /**
-     * @brief Print out a token
-     * @details This function is used for debugging purposes. (if the debug flag is not set, this function will be empty)
-     */
-    void log() const noexcept;
-
-    static void log(const Token& token) noexcept;
-};
-
-/**
- * @brief Maps string representations of keywords to their corresponding enum values.
- * Used by the lexer and parser for keyword identification and validation.
- */
-extern std::unordered_map<std::string, const TokenType> keywordMap;
-
-/**
- * @brief Maps string representations of operators to their corresponding enum values.
- */
-extern std::unordered_map<std::string, const TokenType> operatorMap;
-
-/**
- * @brief Convert a string to a keyword enum member
- * @param keyword The string to convert
- * @return The corresponding keyword enum value, or std::nullopt if not found
- */
-std::optional<TokenType> keywordFromString(const std::string& keyword);
-
-/**
- * @brief Convert a string to the corresponding enum value
- * @param op The string to convert
- * @return  The corresponding enum value, or std::nullopt if not found
- */
-std::optional<TokenType> operatorFromString(const std::string& op);
 
 }  // namespace core
 }  // namespace manganese
