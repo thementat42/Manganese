@@ -43,12 +43,8 @@ A block is a vector of statements
 #include <string>
 #include <vector>
 
-#include "../../core/include/keywords.h"
-#include "../../core/include/operators.h"
-#include "../../core/include/token.h"
+#include "token.h"
 #include "../../global_macros.h"
-using float32_t = float;
-using float64_t = double;
 
 namespace manganese {
 
@@ -63,25 +59,41 @@ using ExpressionPtr = std::unique_ptr<Expression>;
 using StatementPtr = std::unique_ptr<Statement>;
 using Block = std::vector<StatementPtr>;
 
+using number_t = std::variant<
+    int8_t,
+    uint8_t,
+    int16_t,
+    uint16_t,
+    int32_t,
+    uint32_t,
+    int64_t,
+    uint64_t,
+    float,
+    double>;
+
 //~ Base Nodes
 class ASTNode {
    protected:
     size_t line, column;
 
    public:
-    virtual ~ASTNode() = default;
+    virtual ~ASTNode() noexcept = default;
+    virtual std::string toString() const = 0;
+    
+    size_t getLine() const { return line; }
+    size_t getColumn() const { return column; }
 
     friend parser::Parser;
 };
 
 class Statement : public ASTNode {
    public:
-    virtual ~Statement() = default;
+    virtual ~Statement() noexcept = default;
 };
 
 class Expression : public ASTNode {
    public:
-    virtual ~Expression() = default;
+    virtual ~Expression() noexcept = default;
 };
 
 //~ Expressions
@@ -89,33 +101,62 @@ class Expression : public ASTNode {
 //* Literal Expressions
 class NumberExpression : public Expression {
    protected:
-    float64_t value;
+    number_t value;
 
    public:
-    NumberExpression(float64_t _value) : value(_value) {};
+    NumberExpression(number_t _value) : value(_value) {};
+    
+    const number_t& getValue() const { return value; }
+    std::string toString() const override;
 };
 
 class StringExpression : public Expression {
    protected:
     std::string value;
+
+   public:
+    StringExpression(const std::string& _value) : value(std::move(_value)) {};
+    
+    const std::string& getValue() const { return value; }
+    std::string toString() const override;
 };
 
 class SymbolExpression : public Expression {
    protected:
     std::string value;
+   public:
+    SymbolExpression(const std::string& _value) : value(std::move(_value)) {}
+    
+    const std::string& getValue() const { return value; }
+    std::string toString() const override;
 };
 
 //* Complex Expressions
 class BinaryExpression : public Expression {
    protected:
     ExpressionPtr left, right;
-    core::OperatorType op;
+    lexer::TokenType op;
+
+   public:
+    BinaryExpression(ExpressionPtr _left, lexer::TokenType _op, ExpressionPtr _right)
+        : left(std::move(_left)), op(_op), right(std::move(_right)) {};
+    
+    const Expression& getLeft() const { return *left; }
+    const Expression& getRight() const { return *right; }
+    lexer::TokenType getOperator() const { return op; }
+    std::string toString() const override;
 };
 
 //~ Statements
-class ExpressionStatement {
+class ExpressionStatement : public Statement {
    protected:
     ExpressionPtr expression;
+
+   public:
+    ExpressionStatement(ExpressionPtr _expression) : expression(std::move(_expression)) {};
+    
+    const Expression& getExpression() const { return *expression; }
+    std::string toString() const override;
 };
 
 }  // namespace ast

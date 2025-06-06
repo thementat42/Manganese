@@ -6,79 +6,127 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../core/include/keywords.h"
-#include "../../core/include/operators.h"
-#include "../../core/include/token.h"
 #include "../../global_macros.h"
 #include "ast.h"
 #include "lexer.h"
+#include "token.h"
 
 namespace manganese {
 namespace parser {
-using core::TokenType,
-    core::OperatorBindingPower,
-    core::Token;
+using ast::StatementPtr, ast::ExpressionPtr;
+using lexer::TokenType,
+    lexer::OperatorBindingPower,
+    lexer::Token;
+using str = std::string;
 
 class Parser {
    private:  // private variables
     bool hasError = false;
     std::unique_ptr<lexer::Lexer> lexer;
-    std::vector<core::Token> tokenCache;  // store relevant tokens for the current parsing context
+    size_t tokenCachePosition = 0;
+    std::vector<lexer::Token> tokenCache;  // store relevant tokens for the current parsing context
 
-    using statementHandler_t = std::function<ast::StatementPtr(Parser*)>;
-    using nullDenotationHandler_t = std::function<ast::ExpressionPtr(Parser*)>;
-    using leftDenotationHandler_t = std::function<ast::ExpressionPtr(Parser*, ast::ExpressionPtr, core::OperatorBindingPower)>;
+    using statementHandler_t = std::function<StatementPtr(Parser*)>;
+    using nullDenotationHandler_t = std::function<ExpressionPtr(Parser*)>;
+    using leftDenotationHandler_t = std::function<ExpressionPtr(Parser*, ExpressionPtr, OperatorBindingPower)>;
 
    public:   // public variables
-   private:  // private methods
+   private:  // sub-parsing methods
+    ExpressionPtr parseExpression(OperatorBindingPower bindingPower);
+    ExpressionPtr parseBinaryExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
+    ExpressionPtr parsePrimaryExpression();
+
+   private:  // helpers
+
+    /**
+     * @brief Expect a specific token type
+     * @param expectedType The token type to expect
+     * @return True if the token was found, false otherwise
+
+     */
+    Token expectToken(TokenType expectedType);
+
+    /**
+     * @brief Expect a specific token type from a list of types
+     * @param expectedTypes The list of token types to expect
+     * @return True if the token was found, false otherwise
+     */
+    Token expectToken(const std::initializer_list<TokenType>& expectedTypes);
+
     ast::StatementPtr parseStatement();
     ast::ExpressionPtr nullDenotationHandler();
-    ast::ExpressionPtr leftDenotationHandler(ast::ExpressionPtr left, core::OperatorBindingPower bindingPower);
+    ast::ExpressionPtr leftDenotationHandler(ExpressionPtr left, OperatorBindingPower bindingPower);
 
     //~ Lookup Tables
-    std::unordered_map<core::TokenType, statementHandler_t> statementLookup;
+    std::unordered_map<TokenType, statementHandler_t> statementLookup;
 
     /**
      * @brief Null denotation: we don't expect anything to the left of the token
      */
-    std::unordered_map<core::TokenType, nullDenotationHandler_t> nullDenotationLookup;
+    std::unordered_map<TokenType, nullDenotationHandler_t> nullDenotationLookup;
 
     /**
      * @brief Left denotation: we expect an expression to the left of the token
      */
-    std::unordered_map<core::TokenType, leftDenotationHandler_t> leftDenotationLookup;
-    std::unordered_map<core::TokenType, core::OperatorBindingPower> bindingPowerLookup;
+    std::unordered_map<TokenType, leftDenotationHandler_t> leftDenotationLookup;
+    std::unordered_map<TokenType, OperatorBindingPower> bindingPowerLookup;
 
-    // TODO: Inline these functions into the constructor later (removing the definitions)
-    inline void led(core::TokenType type, core::OperatorBindingPower bindingPower,
+    // TODO?: Inline these functions into the constructor later (removing the definitions)
+    inline void led(TokenType type, OperatorBindingPower bindingPower,
                     leftDenotationHandler_t handler) {
         leftDenotationLookup[type] = handler;
         bindingPowerLookup[type] = bindingPower;
     }
 
-    inline void nud(core::TokenType type,
+    inline void nud(TokenType type,
                     nullDenotationHandler_t handler) {
         nullDenotationLookup[type] = handler;
-        bindingPowerLookup[type] = core::OperatorBindingPower::Primary;  // Have to bind as tightly as possible since there's nothing else to bind to
+        bindingPowerLookup[type] = OperatorBindingPower::Primary;  // Have to bind as tightly as possible since there's nothing else to bind to
     }
 
-    inline void stmt(core::TokenType type, statementHandler_t handler) {
+    inline void stmt(TokenType type, statementHandler_t handler) {
         statementLookup[type] = handler;
-        bindingPowerLookup[type] = core::OperatorBindingPower::Default;
+        bindingPowerLookup[type] = OperatorBindingPower::Default;
     }
 
     inline void initializeLookups();
 
     //~ Wrappers around the lexer
-    inline lexer::Token peekToken(size_t offset = 0) { return lexer->peekToken(offset); };
-    [[nodiscard]] inline lexer::Token consumeToken() { return lexer->consumeToken(); };
+    /**
+     * @brief Peek at the next token in the input stream without consuming it
+     * @param offset How many tokens to look ahead (default is 0 -- the current token)
+     * @return The peeked token
+     */
+    inline Token peekToken(size_t offset = 0) noexcept { return lexer->peekToken(offset); };
 
-    bool done() { return peekToken().getType() == core::TokenType::EndOfFile; }
+    /**
+     * @brief Peek at the next lexeme in the input stream without consuming it
+     * @param offset How many tokens to look ahead (default is 0 -- the current token)
+     * @return The lexeme of the peeked token
+     */
+    inline str peekLexeme(size_t offset = 0) noexcept {
+        return peekToken(offset).getLexeme();
+    }
+
+    /**
+     * @brief Consume the next token in the input stream
+     * @details This will advance the lexer position by 1
+     * @return The consumed token
+     */
+    [[nodiscard]] inline Token consumeToken() noexcept { return lexer->consumeToken(); };
+
+    /**
+     * @brief Consume the next token in the input stream and return its lexeme
+     * @return The lexeme of the consumed token
+     */
+    [[nodiscard]] inline str consumeLexeme() noexcept { return consumeToken().getLexeme(); }
+
+    bool done() noexcept { return peekToken().getType() == TokenType::EndOfFile; }
 
    public:  // public methods
     Parser() = default;
-    Parser(const std::string& source, lexer::Mode mode);
-    ~Parser();
+    Parser(const str& source, lexer::Mode mode);
+    ~Parser() noexcept = default;
 
     ast::Block parse();
 };
