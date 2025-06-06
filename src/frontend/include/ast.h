@@ -79,6 +79,7 @@ class ASTNode {
    public:
     virtual ~ASTNode() noexcept = default;
     virtual std::string toString() const = 0;
+    virtual void dump(std::ostream& os, int indent = 0) const = 0;
     
     size_t getLine() const { return line; }
     size_t getColumn() const { return column; }
@@ -108,6 +109,7 @@ class NumberExpression : public Expression {
     
     const number_t& getValue() const { return value; }
     std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 class StringExpression : public Expression {
@@ -119,6 +121,7 @@ class StringExpression : public Expression {
     
     const std::string& getValue() const { return value; }
     std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 class SymbolExpression : public Expression {
@@ -129,6 +132,7 @@ class SymbolExpression : public Expression {
     
     const std::string& getValue() const { return value; }
     std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 //* Complex Expressions
@@ -145,6 +149,7 @@ class BinaryExpression : public Expression {
     const Expression& getRight() const { return *right; }
     lexer::TokenType getOperator() const { return op; }
     std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 //~ Statements
@@ -157,6 +162,7 @@ class ExpressionStatement : public Statement {
     
     const Expression& getExpression() const { return *expression; }
     std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 }  // namespace ast
