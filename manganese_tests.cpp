@@ -14,7 +14,6 @@
 #undef DEBUG
 #define DEBUG 1  // Force debug mode on
 
-#include "src/core/include/keywords.h"
 #include "src/core/include/operators.h"
 #include "src/core/include/token.h"
 #include "src/frontend/include/lexer.h"

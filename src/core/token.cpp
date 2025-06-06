@@ -10,7 +10,6 @@
 #include <string>
 
 #include "../global_macros.h"
-#include "include/keywords.h"
 #include "include/operators.h"
 
 namespace manganese {

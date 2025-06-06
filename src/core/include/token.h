@@ -11,7 +11,6 @@
 #include <variant>
 
 #include "../../global_macros.h"
-#include "keywords.h"
 #include "operators.h"
 
 namespace manganese {
