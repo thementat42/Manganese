@@ -8,8 +8,8 @@
 
 #include <optional>
 #include <string>
-#include <variant>
 #include <unordered_map>
+#include <variant>
 
 #include "../../global_macros.h"
 
@@ -63,14 +63,6 @@ class Token {
     Token& operator=(Token&& other) = default;
     ~Token() = default;
 
-    /**
-     * @brief Convert TokenType enum to string representation
-     * @param type The TokenType to convert
-     * @return String representation of the TokenType
-     * @details Only used for debugging purposes. (if the debug flag is not set, this function will be empty)
-     */
-    static std::string tokenTypeToString(TokenType type) noexcept;
-
     bool isKeyword() const noexcept;
     bool isOperator() const noexcept;
     TokenType getType() const noexcept;
@@ -87,6 +79,14 @@ class Token {
 
     static void log(const Token& token) noexcept;
 };
+
+/**
+ * @brief Convert TokenType enum to string representation
+ * @param type The TokenType to convert
+ * @return String representation of the TokenType
+ * @details Only used for debugging purposes. (if the debug flag is not set, this function will be empty)
+ */
+std::string tokenTypeToString(TokenType type) noexcept;
 
 /**
  * @brief Maps string representations of keywords to their corresponding enum values.
@@ -112,7 +112,6 @@ std::optional<TokenType> keywordFromString(const std::string& keyword);
  * @return  The corresponding enum value, or std::nullopt if not found
  */
 std::optional<TokenType> operatorFromString(const std::string& op);
-
 
 // Implementation of TokenType
 enum class TokenType : uint16_t {
@@ -152,7 +151,7 @@ enum class TokenType : uint16_t {
     Invalid,
 
     //~ Keywords
-    __KeywordStart = 100,
+    __KeywordStart = 100,  // Marker for the start of keyword token types -- not to be used as an actual token type
     //* Type Qualifiers
     Const,  // constant variable
     Ptr,    // pointer variables
@@ -212,24 +211,23 @@ enum class TokenType : uint16_t {
     Blueprint,  // like a class
 
     //* Misc Operators
-    Alias,   // type aliasing (alias `a` as `b`)
-    TypeOf,  // get the type of a variable
-    Cast,    // cast to a new type (e.g., cast<new_type>)
-    __KeywordEnd,
-
+    Alias,         // type aliasing (alias `a` as `b`)
+    TypeOf,        // get the type of a variable
+    Cast,          // cast to a new type (e.g., cast<new_type>)
+    __KeywordEnd,  // Marker for the end of keyword token types -- not to be used as an actual token type
 
     //~ Operators
     //* Arithmetic Operators
-    __OperatorStart = 300,
-    Plus,      // `+`
-    Minus,     // `-`
-    Mul,       // `*`
-    Div,       // `/`
-    FloorDiv,  // `//`
-    Mod,       // `%`
-    Exp,       // `**`
-    Inc,       // `++`
-    Dec,       // `--`
+    __OperatorStart = 300,  // Marker for the start of operator token types -- not to be used as an actual token type
+    Plus,                   // `+`
+    Minus,                  // `-`
+    Mul,                    // `*`
+    Div,                    // `/`
+    FloorDiv,               // `//`
+    Mod,                    // `%`
+    Exp,                    // `**`
+    Inc,                    // `++`
+    Dec,                    // `--`
 
     //* Arithmetic Assignment Operators
     // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)
@@ -280,10 +278,10 @@ enum class TokenType : uint16_t {
     ScopeResolution,  // `::`
 
     //* Misc
-    Assignment,  // `=`
-    Arrow,       // `->`
-    Ellipsis,    // `...`
-    __OperatorEnd,
+    Assignment,     // `=`
+    Arrow,          // `->`
+    Ellipsis,       // `...`
+    __OperatorEnd,  // Marker for the end of operator token types -- not to be used as an actual token type
 
 };
 

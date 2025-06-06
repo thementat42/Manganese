@@ -105,7 +105,7 @@ void Token::log(const Token& token) noexcept {
 
 // ! === Really Long Stuff ===
 
-DEBUG_FUNC std::string Token::tokenTypeToString(TokenType type) noexcept {
+DEBUG_FUNC std::string tokenTypeToString(TokenType type) noexcept {
 #if !DEBUG
     return "";
 #else   // ^^ !DEBUG vv DEBUG
