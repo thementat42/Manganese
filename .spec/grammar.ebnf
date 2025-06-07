@@ -27,8 +27,8 @@ literal = int_literal | float_literal | char_literal | string_literal | bool_lit
 int_literal = ("-" | "+")? digit+;
 float_literal = ("-" | "+")? digit+ "." digit*;
 char_literal = "'" [^'] "'";
-string_literal = "\"" (unescaped_char | escape_seq)* "\"";
-unescaped_char = [^"\\];
+string_literal = '"' (unescaped_char | escape_seq)* '"';
+unescaped_char = [^"\];
 escape_seq = "\\" ("n" | "t" | "\\" | "\"" | "u" hex_digit{4} | "a" | "b" | "x");
 bool_literal = "true" | "false";
 
@@ -48,7 +48,7 @@ binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)
 #* Variables
 variable_decl = type_qualifiers type variable_name ("=" expression)? ";";
 
-type_qualifiers = ("public" | "readonly" | "private")? "const"? "ptr"? "const"?
+type_qualifiers = ("public" | "readonly" | "private")? "const"? "ptr"? "const"?  # default is readonly (outside the module) and mutable (within the module)
 type = primitive_type | user_type;
 primitive_type = int_type | float_type | "char" | "bool";
 int_type = ("u"?)"int"(int_width?);  # u makes it unsigned, if no width specified, defaults to 32 bits
