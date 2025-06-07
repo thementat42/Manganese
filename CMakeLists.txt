@@ -51,14 +51,26 @@ if(BUILD_TESTS)
     add_executable(${PROJECT_NAME}_tests ${TEST_SRC} ${TESTS_MAIN})
     
     # Add maximum warnings for test builds
-    target_compile_options(${PROJECT_NAME}_tests PRIVATE
-        -O2
-        -Wall
-        -Wformat
-        -Wformat=2
-        -Wconversion
-        -Wimplicit-fallthrough
-    )
+    if(MSVC)
+        target_compile_options(${PROJECT_NAME}_tests PRIVATE
+            /O0
+            /W4
+            /permissive-
+            /WX
+            /EHsc
+        )
+    else()
+        target_compile_options(${PROJECT_NAME}_tests PRIVATE
+            -O0 -g
+            -Wall
+            -Wextra
+            -Wformat
+            -Wformat=2
+            -Wconversion
+            -Wimplicit-fallthrough
+            -Werror
+        )
+    endif()
     
     # Include directories
     target_include_directories(${PROJECT_NAME}_tests PRIVATE 
@@ -76,9 +88,16 @@ else()
     # Add executable with all source files
     add_executable(${PROJECT_NAME} ${SRC} ${COMPILER_MAIN})
 
-    target_compile_options(${PROJECT_NAME} PRIVATE
-        -O3
-    )
+    if(MSVC)
+        target_compile_options(${PROJECT_NAME} PRIVATE
+            /O3
+            /EHsc
+        )
+    else()
+        target_compile_options(${PROJECT_NAME} PRIVATE
+            -O3
+        )
+    endif()
 
     # Include directories
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
