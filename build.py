@@ -112,4 +112,4 @@ if not args.no_move:
 if args.run:
     # If we chose not to move the file, it should be executed from the build/bin directory
     EXECUTE_PATH = str(bin_dir / OUT_NAME if args.no_move else Path.cwd() / OUT_NAME)
-    run_command([EXECUTE_PATH] + args.exec_args[1:])  # 1: to skip passing "exec_args" on 
+    run_command([EXECUTE_PATH] + args.exec_args[1:])  # 1: to skip passing "exec_args" on

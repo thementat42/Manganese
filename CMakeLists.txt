@@ -50,6 +50,16 @@ if(BUILD_TESTS)
     # Create test executable with tests main file
     add_executable(${PROJECT_NAME}_tests ${TEST_SRC} ${TESTS_MAIN})
     
+    # Add maximum warnings for test builds
+    target_compile_options(${PROJECT_NAME}_tests PRIVATE
+        -O2
+        -Wall
+        -Wformat
+        -Wformat=2
+        -Wconversion
+        -Wimplicit-fallthrough
+    )
+    
     # Include directories
     target_include_directories(${PROJECT_NAME}_tests PRIVATE 
         ${INCLUDE_DIRS}
@@ -65,6 +75,10 @@ if(BUILD_TESTS)
 else()
     # Add executable with all source files
     add_executable(${PROJECT_NAME} ${SRC} ${COMPILER_MAIN})
+
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        -O3
+    )
 
     # Include directories
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
