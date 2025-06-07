@@ -10,11 +10,11 @@ namespace manganese {
 namespace tests {
 
 // ANSI color codes for terminal output
-constexpr char* GREEN = "\033[32m";
-constexpr char* RED = "\033[31m";
-constexpr char* RESET = "\033[0m";
-constexpr char* PINK = "\033[95m";
-constexpr char* CYAN = "\033[36m";
+constexpr const char* GREEN = "\033[32m";
+constexpr const char* RED = "\033[31m";
+constexpr const char* RESET = "\033[0m";
+constexpr const char* PINK = "\033[95m";
+constexpr const char* CYAN = "\033[36m";
 
 class TestRunner {
    private:
