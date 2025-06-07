@@ -8,22 +8,19 @@
 namespace manganese {
 namespace tests {
 
-bool testSimpleArithmeticExpression() {
-    // Test parsing a simple arithmetic expression: "3 + 5 * 7 + 9 - 2"
-    std::string expression = "3 + 5 * 7 + 9 - 2;";
+bool testArithmeticOperators() {
+    // Test all arithmetic operators including their precedence and associativity
+    std::string expression = "8 - 4 + 6 * 2 // 5 % 3 ** 2 ** 2 / 7;";
     parser::Parser parser(expression, lexer::Mode::String);
     
     // Parse the expression
     ast::Block block = parser.parse();
     
     // Print the parsed AST
-    std::cout << "Parsed expression AST:" << std::endl;
+    std::cout << "Parsed arithmetic operators AST:" << std::endl;
     for (const auto& stmt : block) {
         std::cout << stmt->toString() << std::endl;
     }
-      // Verify that the AST represents the expression with correct operator precedence
-    // The multiplication (5 * 7) should be evaluated first, then the additions and subtractions from left to right
-    // Expected structure: ((3 + (5 * 7)) + 9) - 2
     
     // Check that we have exactly one statement
     if (block.size() != 1) {
@@ -34,9 +31,7 @@ bool testSimpleArithmeticExpression() {
     // Get the actual string representation of the AST
     std::string actual = block[0]->toString();
     
-    // Define the expected string representation with proper operator precedence
-    // The exact format depends on your AST's toString() implementation
-    std::string expected = "(((3 + (5 * 7)) + 9) - 2);";
+    std::string expected = "((8 - 4) + ((((6 * 2) // 5) % (3 ** (2 ** 2))) / 7));";
 
     // Compare the output with the expected string
     if (actual != expected) {
@@ -49,9 +44,48 @@ bool testSimpleArithmeticExpression() {
     return true;
 }
 
+bool testExponentiationAssociativity() {
+    // Test that exponentiation is right-associative: 2 ** 3 ** 2 should be 2 ** (3 ** 2) = 2 ** 9 = 512
+    // Not (2 ** 3) ** 2 = 8 ** 2 = 64
+    std::string expression = "2 ** 3 ** 2;";
+    parser::Parser parser(expression, lexer::Mode::String);
+    
+    // Parse the expression
+    ast::Block block = parser.parse();
+    
+    // Print the parsed AST
+    std::cout << "Parsed exponentiation associativity AST:" << std::endl;
+    for (const auto& stmt : block) {
+        std::cout << stmt->toString() << std::endl;
+    }
+    
+    // Check that we have exactly one statement
+    if (block.size() != 1) {
+        std::cerr << "ERROR: Expected 1 statement, got " << block.size() << std::endl;
+        return false;
+    }
+    
+    // Get the actual string representation of the AST
+    std::string actual = block[0]->toString();
+    
+    // Define the expected string representation with right associativity
+    std::string expected = "(2 ** (3 ** 2));";
+
+    // Compare the output with the expected string
+    if (actual != expected) {
+        std::cerr << "ERROR: Exponentiation is not right-associative." << std::endl;
+        std::cerr << "Expected: " << expected << std::endl;
+        std::cerr << "Actual:   " << actual << std::endl;
+        return false;
+    }
+    
+    return true;
+}
+
 int runParserTests(TestRunner& runner) {
     // Register the test
-    runner.runTest("Simple Arithmetic Expression", testSimpleArithmeticExpression);
+    runner.runTest("Simple Arithmetic Expression", testArithmeticOperators);
+    runner.runTest("Exponentiation Right Associativity", testExponentiationAssociativity);
     
     return 0;
 }
