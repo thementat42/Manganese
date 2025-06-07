@@ -1,15 +1,17 @@
-# Manganese
+# === Manganese ===
 
 ![Logo](/logo.svg "Manganese Logo")
 Manganese is a statically typed programming language built on the LLVM framework. It's a project inspired by an autocomplete text parsing task for ESC190 at the University of Toronto. Manganese compiles to LLVM IR, which is then translated into machine code.
 
 This project is licensed under the MIT License. See [LICENSE-MIT](LICENSE-MIT) for details. The LLVM project itself is licensed under the Apache License 2.0 with LLVM Exceptions ([LICENSE-APACHE](LICENSE-APACHE), also available on [LLVM's website](https://llvm.org/LICENSE.txt)).
 
-## Why Manganese?
+## === Why Manganese? ===
 
-Manganese is mainly a fun project for learning about compilers and low-level programming. It's not meant for production use and lacks features like a full standard library. Please don't use this for any important projects.
+Manganese is mainly a fun project for learning about compilers and low-level programming. It's not meant for production use and lacks features like a full standard library.
 
-### Dependencies
+On the off chance that you were considering using Manganese for something important, please don't.
+
+### === Dependencies ===
 
 Manganese requires the following dependencies to be installed:
 
@@ -17,7 +19,7 @@ Manganese requires the following dependencies to be installed:
 - [CMake](https://cmake.org/) (version 3.10 or later)
 - [Python](https://www.python.org/) (version 3.8 or later), if you want to use the `build.py` script
 
-## Building
+## === Building ===
 
 To build from source, first clone the repository:
 
@@ -52,7 +54,7 @@ manganese <source file> -o <output file>
 
 If no output file is specified, the source file name will be used (e.g. `foo.mn` becomes `foo`).
 
-## Testing Framework
+## === Testing Framework ===
 
 The [tests](/tests) directory contains tests for the compiler up to IR generation. To run the tests, enable tests during the build:
 
@@ -86,7 +88,7 @@ The tests executable takes the following command line arguments:
 
 Running it with no arguments prints a help message. Any other arguments will be ignored.
 
-## File Structure
+## === File Structure ===
 
 This project is divided into several directories:
 
@@ -109,7 +111,7 @@ This project is divided into several directories:
 - [`manganese.cpp`](/manganese.cpp): Entry point for the compiler
 - [`manganese-tests.cpp`](/manganese-tests.cpp): Entry point for running tests
 
-### Miscellaneous Files
+### === Miscellaneous Files ===
 
 The root directory has some other files as well:
 
