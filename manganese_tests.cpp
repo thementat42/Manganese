@@ -11,14 +11,14 @@
 
 #undef DEBUG
 #define DEBUG 1  // Force debug mode on
-#include "src/frontend/include/token.h"
 #include "src/frontend/include/lexer.h"
+#include "src/frontend/include/token.h"
 #include "src/io/include/filereader.h"
 #include "src/io/include/stringreader.h"
 #include "tests/testrunner.h"
 #include "tests/tests.h"
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const* argv[]) {
     if (argc == 1) {
         fprintf(stderr, "Usage: %s [--lexer] [--parser] [--semantic] [--codegen] [--all]\n", argv[0]);
         return 1;

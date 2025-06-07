@@ -5,11 +5,11 @@
 #include <optional>
 #include <queue>
 
-#include "token.h"
 #include "../../global_macros.h"
 #include "../../io/include/filereader.h"
 #include "../../io/include/reader.h"
 #include "../../io/include/stringreader.h"
+#include "token.h"
 
 namespace manganese {
 namespace lexer {

@@ -27,8 +27,8 @@ void TestRunner::printSummary() {
     auto total = passed + failed;
     total = total == 0 ? 1 : total;  // avoid any division by 0 problems
     std::cout << PINK << "\n=== Test Summary ===" << RESET << '\n';
-    std::cout << GREEN << "Passed: " << passed << "/" << total << " (" << (passed/total)*100 << "%)" << RESET << '\n';
-    std::cout << RED << "Failed: " << failed << "/" << total << " (" << (failed/total)*100 << "%)" << RESET << '\n';
+    std::cout << GREEN << "Passed: " << passed << "/" << total << " (" << (passed / total) * 100 << "%)" << RESET << '\n';
+    std::cout << RED << "Failed: " << failed << "/" << total << " (" << (failed / total) * 100 << "%)" << RESET << '\n';
     std::cout << PINK << "Total: " << total << RESET << '\n';
 }
 

@@ -41,7 +41,6 @@ class Parser {
     StatementPtr parseVariableDeclaration();
 
    private:  // helpers
-
     /**
      * @brief Expect a specific token type
      * @param expectedType The token type to expect

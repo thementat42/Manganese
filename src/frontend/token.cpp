@@ -15,7 +15,6 @@ namespace manganese {
 namespace lexer {
 Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column)
     : type(_type), lexeme(_lexeme), line(_line), column(_column) {
-
     // Set a specific enum value for operators and keywords based on the lexeme
     if (_type == TokenType::Operator) {
         auto op = operatorFromString(_lexeme);

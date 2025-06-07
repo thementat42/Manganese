@@ -79,7 +79,7 @@ ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, OperatorBindingP
 
 ExpressionPtr Parser::parseExponentiationExpression(ExpressionPtr left, OperatorBindingPower bindingPower) {
     auto operatorToken = consumeToken();
-    
+
     // For right associativity, use one less binding power for the right operand
     // This will allow nested exponentiations to be parsed from right to left
     auto right = parseExpression(static_cast<OperatorBindingPower>(static_cast<int>(bindingPower) - 1));

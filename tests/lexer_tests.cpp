@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "../src/frontend/include/token.h"
 #include "../src/frontend/include/lexer.h"
+#include "../src/frontend/include/token.h"
 #include "../src/global_macros.h"
 #include "testrunner.h"
 

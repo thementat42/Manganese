@@ -1,8 +1,8 @@
 /**
-* @file global_macros.h
-* @brief Global macros and utility definitions for the project.
-* @details Contains useful macros for debugging, assertions, and C linkage, and common macros used throughout the project.
-*/
+ * @file global_macros.h
+ * @brief Global macros and utility definitions for the project.
+ * @details Contains useful macros for debugging, assertions, and C linkage, and common macros used throughout the project.
+ */
 
 #ifndef GLOBAL_MACROS_H
 #define GLOBAL_MACROS_H

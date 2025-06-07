@@ -25,7 +25,7 @@ class Reader {
    public:
     static constexpr char EOF_CHAR = '\0';
     Reader() = default;
-    virtual ~Reader()  noexcept = default;
+    virtual ~Reader() noexcept = default;
 
     /**
      * @brief Look at the next character without consuming it
