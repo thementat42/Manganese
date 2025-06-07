@@ -9,7 +9,9 @@
 
 #include <stdint.h>
 
-#define DEBUG 1
+#ifndef DEBUG
+#define DEBUG 0  // Default to release mode if not defined
+#endif           // DEBUG
 
 #define ASSERT_CRITICAL(condition, message)                                             \
     do {                                                                                \
@@ -20,7 +22,6 @@
     } while (0)
 
 #if DEBUG
-#define DEBUG_FUNC  // In debug mode, leave functions as is
 #define LOG_VAR(var)                                                                        \
     do {                                                                                    \
         std::cout << "\033[34mDEBUG: " << #var << " = " << (var) << "\033[0m" << std::endl; \
@@ -33,12 +34,6 @@
     } while (0)
 #else  // ^ DEBUG ^ | v !DEBUG v
 // In release mode, inline the debug functions (since they do nothing)
-#ifdef _MSC_VER
-#define DEBUG_FUNC inline __forceinline
-#else  // ^ _MSC_VER ^ | v ! _MSC_VER v
-// GCC/Clang
-#define DEBUG_FUNC inline __attribute__((always_inline))
-#endif                                    // _MSC_VER
 #define ASSERT_DEBUG(condition, message)  // no-op in release mode
 #define LOG_VAR(var)                      // no-op in release mode
 #endif                                    // DEBUG

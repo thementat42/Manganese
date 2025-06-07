@@ -88,9 +88,10 @@ void Token::overrideType(TokenType _type, std::string _lexeme) {
         __FILE__);
 #endif  // DEBUG
     type = _type;
+    lexeme = std::move(_lexeme);
 }
 
-DEBUG_FUNC void Token::log() const noexcept {
+void Token::log() const noexcept {
 #if DEBUG
     std::cout << "Token: " << tokenTypeToString(type) << " ("
               << getLexeme() << ") at line " << line << ", column " << column;
@@ -104,7 +105,7 @@ void Token::log(const Token& token) noexcept {
 
 // ! === Really Long Stuff ===
 
-DEBUG_FUNC std::string tokenTypeToString(TokenType type) noexcept {
+std::string tokenTypeToString(TokenType type) noexcept {
 #if !DEBUG
     return "";
 #else   // ^^ !DEBUG vv DEBUG

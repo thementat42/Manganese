@@ -45,7 +45,7 @@ static std::string getNumberTypeName(const number_t& value) {
                       value);
 }
 
-DEBUG_FUNC std::string NumberExpression::toString() const {
+std::string NumberExpression::toString() const {
 #if !DEBUG
     return "";
     ;
@@ -67,7 +67,7 @@ void NumberExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-DEBUG_FUNC std::string StringExpression::toString() const {
+std::string StringExpression::toString() const {
 #if !DEBUG
     return "";
 #endif
@@ -81,7 +81,7 @@ void StringExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-DEBUG_FUNC std::string SymbolExpression::toString() const {
+std::string SymbolExpression::toString() const {
 #if !DEBUG
     return "";
 #endif
@@ -94,7 +94,7 @@ void SymbolExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-DEBUG_FUNC std::string BinaryExpression::toString() const {
+std::string BinaryExpression::toString() const {
 #if !DEBUG
     return "";
 #endif
@@ -115,7 +115,7 @@ void BinaryExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-DEBUG_FUNC std::string ExpressionStatement::toString() const {
+std::string ExpressionStatement::toString() const {
 #if !DEBUG
     return "";
 #endif
