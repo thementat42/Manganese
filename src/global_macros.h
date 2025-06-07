@@ -8,35 +8,57 @@
 #define GLOBAL_MACROS_H
 
 #include <stdint.h>
+#include <stdio.h>
 
-#ifndef DEBUG
+#ifndef DEBUG    // Defined by CMake (see CMakeLists.txt)
 #define DEBUG 0  // Default to release mode if not defined
 #endif           // DEBUG
+
+// TODO: Replace printing macros with a proper logging system
+// NOTE: These macros use fprintf for compatibility with C
+
+#define __PRINT_LOCATION() \
+    fprintf(stderr, "\033[33m%s, %d: %s\033[0m\n", __FILE__, __LINE__, __func__);  // Used inside other macros only: Print the file, line number, and function name
+
+#define UNREACHABLE(message)                                              \
+    do {                                                                  \
+        fprintf(stderr, "\033[31mUnreachable code reached: %s", message); \
+        __PRINT_LOCATION()                                                \
+        exit(EXIT_FAILURE);                                               \
+    } while (0)
 
 #define ASSERT_CRITICAL(condition, message)                                             \
     do {                                                                                \
         if (!(condition)) {                                                             \
             fprintf(stderr, "\033[31mCritical assertion failed: %s\n\033[0m", message); \
-            abort();                                                                    \
+            __PRINT_LOCATION()                                                          \
+            exit(EXIT_FAILURE);                                                         \
         }                                                                               \
     } while (0)
 
 #if DEBUG
-#define LOG_VAR(var)                                                                        \
-    do {                                                                                    \
-        std::cout << "\033[34mDEBUG: " << #var << " = " << (var) << "\033[0m" << std::endl; \
-    } while (0)
 #define ASSERT_DEBUG(condition, message)                                            \
     do {                                                                            \
         if (!(condition)) {                                                         \
             fprintf(stderr, "033[33mDebug assertion failed: %s\n\033[0m", message); \
+            __PRINT_LOCATION()                                                      \
         }                                                                           \
     } while (0)
-#else  // ^ DEBUG ^ | v !DEBUG v
+#else                                     // ^ DEBUG ^ | v !DEBUG v
 // In release mode, inline the debug functions (since they do nothing)
 #define ASSERT_DEBUG(condition, message)  // no-op in release mode
-#define LOG_VAR(var)                      // no-op in release mode
 #endif                                    // DEBUG
+
+#define DISCARD(x) (void)(x)  // Explicitly discard a value
+#define DISABLE_COPY_AND_ASSIGN(ClassName) \
+    ClassName(const ClassName&) = delete;  \
+    ClassName& operator=(const ClassName&) = delete;  // Disable copy constructor and assignment operator
+#define DISABLE_MOVE(ClassName)      \
+    ClassName(ClassName&&) = delete; \
+    ClassName& operator=(ClassName&&) = delete;  // Disable move constructor and assignment operator
+#define DISABLE_COPY_MOVE(ClassName)   \
+    DISABLE_COPY_AND_ASSIGN(ClassName) \
+    DISABLE_MOVE(ClassName)  // Disable both copy and move semantics
 
 #ifdef __cplusplus
 #define EXT_C_BEGIN extern "C" {
