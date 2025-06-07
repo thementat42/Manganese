@@ -1,4 +1,34 @@
-"""A small script that automates using cmake to build the manganese compiler"""
+"""
+A small script that automates using CMake to build the manganese compiler.
+This script creates the cmake commands and runs them using Python's subprocess library
+Usage:
+    python build.py [options] [-- exec_args...]
+Options:
+    NOTE: These options may be out of date if the docstring has not been correctly updated.
+    NOTE: For a the actual set of available arguments, run the script with the -h flag
+    
+    -b, --build-dir   Specify a custom build directory (default: 'build').
+    -c, --clean       Clean the build directory before compiling.
+    -d, --debug       Build the compiler in debug mode instead of release mode.
+    -g, --generator   Set a generator for CMake's build files.
+    -h, --help        Print this help message
+    -j, --jobs        Number of parallel build jobs.
+    --no-move         Don't move the executable from the build directory to the root directory.
+    -r, --run         Run the executable immediately after building.
+    -t, --tests       Build the test suite instead of the main compiler.
+    --target          Specific CMake target to build.
+    exec_args         Arguments to pass to the executable when using -r or --run.
+Examples:
+    python build.py -c -d -j 4
+    python build.py --tests --run exec_args --all
+Requirements:
+    - Python 3.8+
+    - CMake installed and available in PATH
+    - The script should be run from the project root directory containing CMakeLists.txt
+A small script that automates using cmake to build the manganese compiler
+This script creates the cmake commands and runs them using Python's subprocess library
+run `python build.py -h` to see the different command line arguments that are available
+"""
 import sys
 import os
 import subprocess
@@ -15,7 +45,7 @@ def run_command(command: list[str]):
         print(f"\033[31mCommand failed with exit code {e.returncode}\033[0m")
         sys.exit(e.returncode)
 
-argparser = argparse.ArgumentParser()
+argparser = argparse.ArgumentParser(description = "Runs CMake to build the manganese compiler")
 
 argparser.add_argument(
     "-b", "--build-dir",
