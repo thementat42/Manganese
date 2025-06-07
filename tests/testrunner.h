@@ -17,6 +17,7 @@ class TestRunner {
     const char* GREEN = "\033[32m";
     const char* RED = "\033[31m";
     const char* RESET = "\033[0m";
+    const char* PINK = "\033[95m";
 
    public:
     void runTest(const std::string& testName, std::function<bool()> testFunction);

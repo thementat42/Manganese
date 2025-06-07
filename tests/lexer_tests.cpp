@@ -17,6 +17,20 @@ using lexer::Mode;
 using lexer::Token;
 using TokenList = std::vector<Token>;
 using lexer::TokenType;
+using lexer::tokenTypeToString;
+
+// ANSI color codes
+const std::string CYAN = "\033[36m";
+const std::string RESET = "\033[0m";
+
+// Utility function to print tokens in cyan color
+void printAllTokens(const std::vector<Token>& tokens) {
+    std::cout << "Tokens: " << CYAN;
+    for (const auto& token : tokens) {
+        std::cout << token.getLexeme() << " ";
+    }
+    std::cout << RESET << std::endl;
+}
 
 // Utility function to convert string to tokens using the class-based Lexer
 std::vector<Token> tokensFromString(const std::string& source) {
@@ -68,21 +82,19 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
 
 bool testEmptyString() {
     auto tokens = tokensFromString("");
+    printAllTokens(tokens);
     return tokens.empty();
 }
 
 bool testWhitespace() {
     auto tokens = tokensFromString("  \t\n\r  ");
+    printAllTokens(tokens);
     return tokens.empty();
 }
 
 bool testComments() {
     auto tokens = tokensFromString("# This is a comment\nint x; /*This is\n a\n multiline comment!*/");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -95,11 +107,7 @@ bool testComments() {
 
 bool testIdentifiers() {
     auto tokens = tokensFromString("foo bar baz _var var123");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 5) {
         std::cout << "Expected 5 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -114,11 +122,7 @@ bool testIdentifiers() {
 
 bool testKeywords() {
     auto tokens = tokensFromString("alias as blueprint bool break bundle case cast char const foo");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 11) {
         std::cout << "Expected 11 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -139,11 +143,7 @@ bool testKeywords() {
 
 bool testIntegerLiterals() {
     auto tokens = tokensFromString("0 123 456789 0xFFF 0b1001 0o33 0x1.23p4 1.23e-4");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 8) {
         std::cout << "Expected 8 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -161,11 +161,7 @@ bool testIntegerLiterals() {
 
 bool testFloatLiterals() {
     auto tokens = tokensFromString("0.0 1.23 456.789");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -178,11 +174,7 @@ bool testFloatLiterals() {
 
 bool testCharLiterals() {
     auto tokens = tokensFromString("'a' '\\n' '\\'' '\\\\' '\\t' '\\u1234'");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 6) {
         std::cout << "Expected 6 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -198,11 +190,7 @@ bool testCharLiterals() {
 
 bool testStringLiterals() {
     auto tokens = tokensFromString("\"hello\" \"world\" \"escaped \\\"quote\\\"\"");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -215,11 +203,7 @@ bool testStringLiterals() {
 
 bool testOperators() {
     auto tokens = tokensFromString("+ - * / // % ** ++ -- += -= *= /= //= %= **= == != && || ! & | ~ ^ &= |= ~= ^=  ? @ . : :: = -> ...");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 37) {
         std::cout << "Expected 37 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -266,11 +250,7 @@ bool testOperators() {
 
 bool testBrackets() {
     auto tokens = tokensFromString("( ) { } [ ] < >");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 8) {
         std::cout << "Expected 8 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -288,11 +268,7 @@ bool testBrackets() {
 
 bool testPunctuation() {
     auto tokens = tokensFromString("; , . ? @ : ::");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 7) {
         std::cout << "Expected 7 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -309,11 +285,7 @@ bool testPunctuation() {
 
 bool testCompleteProgram() {
     auto tokens = tokensFromFile("tests/lexer_tests.mn");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.empty()) {
         std::cout << "Expected non-empty tokens" << std::endl;
         return false;
@@ -350,11 +322,7 @@ bool testCompleteProgram() {
 
 bool testNestedBrackets() {
     auto tokens = tokensFromString("arr<arr<int16>> foo");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 8) {
         std::cout << "Expected 8 tokens, got " << tokens.size() << std::endl;
         return false;
@@ -372,6 +340,7 @@ bool testNestedBrackets() {
 
 bool testInvalidChar() {
     auto tokens = tokensFromString("'too long' '\\z' '\\u9Z99' ");
+    printAllTokens(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 token, got " << tokens.size() << std::endl;
         return false;
@@ -384,11 +353,7 @@ bool testInvalidChar() {
 
 bool testInvalidEscapeSequence() {
     auto tokens = tokensFromString("'\\z'");
-    std::cout << "Tokens: ";
-    for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
-    }
-    std::cout << std::endl;
+    printAllTokens(tokens);
     if (tokens.size() != 1) {
         std::cout << "Expected 1 token, got " << tokens.size() << std::endl;
         return false;

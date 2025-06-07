@@ -51,23 +51,26 @@ int main(int argc, char const *argv[]) {
 
     using namespace manganese::tests;
     TestRunner runner;
+    const char* pink = "\033[95m";
+    const char* reset = "\033[0m";
+
     if (lexer) {
-        printf("=== Lexer Tests ===\n");
+        printf("%s=== Lexer Tests ===%s\n", pink, reset);
         runLexerTests(runner);
         printf("\n");
     }
     if (parser) {
-        printf("=== Parser Tests ===\n");
+        printf("%s=== Parser Tests ===%s\n", pink, reset);
         runParserTests(runner);
         printf("\n");
     }
     if (semantic) {
-        printf("=== Semantic Analyzer Tests ===\n");
+        printf("%s=== Semantic Analyzer Tests ===%s\n", pink, reset);
         // TODO: Add once semantic analyzer done
         printf("\n");
     }
     if (codegen) {
-        printf("=== Codegen Tests ===\n");
+        printf("%s=== Codegen Tests ===%s\n", pink, reset);
         // TODO: Add once codegen done
         printf("\n");
     }
