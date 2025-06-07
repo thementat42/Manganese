@@ -22,6 +22,7 @@ using str = std::string;
 class Parser {
    private:  // private variables
     bool hasError = false;
+    ast::Visibility defaultVisibility = ast::Visibility::ReadOnly;  // If a variable is declared without an explicit visibility, it will default to this
     std::unique_ptr<lexer::Lexer> lexer;
     size_t tokenCachePosition = 0;
     std::vector<lexer::Token> tokenCache;  // store relevant tokens for the current parsing context
@@ -34,7 +35,10 @@ class Parser {
    private:  // sub-parsing methods
     ExpressionPtr parseExpression(OperatorBindingPower bindingPower);
     ExpressionPtr parseBinaryExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
+    ExpressionPtr parseExponentiationExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
     ExpressionPtr parsePrimaryExpression();
+
+    StatementPtr parseVariableDeclaration();
 
    private:  // helpers
 

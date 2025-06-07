@@ -25,16 +25,16 @@ ast::Block Parser::parse() {
         // Special cases for block visiblity modifiers (`public:`, `readonly:` and `private`: set the visibility for all future variables, until the next modifier is encountered)
         if (peekToken().getType() == TokenType::Public && peekToken(1).getType() == TokenType::Colon) {
             defaultVisibility = ast::Visibility::Public;
-            consumeToken();  // Consume the Public token
-            consumeToken();  // Consume the Colon token
+            (void)consumeToken();  // Consume the Public token
+            (void)consumeToken();  // Consume the Colon token
         } else if (peekToken().getType() == TokenType::ReadOnly && peekToken(1).getType() == TokenType::Colon) {
             defaultVisibility = ast::Visibility::ReadOnly;
-            consumeToken();  // Consume the ReadOnly token
-            consumeToken();  // Consume the Colon token
+            (void)consumeToken();  // Consume the ReadOnly token
+            (void)consumeToken();  // Consume the Colon token
         } else if (peekToken().getType() == TokenType::Private && peekToken(1).getType() == TokenType::Colon) {
             defaultVisibility = ast::Visibility::Private;
-            consumeToken();  // Consume the Private token
-            consumeToken();  // Consume the Colon token
+            (void)consumeToken();  // Consume the Private token
+            (void)consumeToken();  // Consume the Colon token
         } else {
             body.push_back(parseStatement());
         }
@@ -77,6 +77,16 @@ ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, OperatorBindingP
     return std::make_unique<ast::BinaryExpression>(std::move(left), operatorToken.getType(), std::move(right));
 }
 
+ExpressionPtr Parser::parseExponentiationExpression(ExpressionPtr left, OperatorBindingPower bindingPower) {
+    auto operatorToken = consumeToken();
+    
+    // For right associativity, use one less binding power for the right operand
+    // This will allow nested exponentiations to be parsed from right to left
+    auto right = parseExpression(static_cast<OperatorBindingPower>(static_cast<int>(bindingPower) - 1));
+
+    return std::make_unique<ast::BinaryExpression>(std::move(left), operatorToken.getType(), std::move(right));
+}
+
 ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
     // First, parse the null denotated expression
     lexer::TokenType type = peekToken().getType();
@@ -115,6 +125,10 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
     return left;
 }
 
+// StatementPtr Parser::parseVariableDeclaration() {
+//     return std::make_unique<ast::VariableDeclarationStatement>();
+// }
+
 inline void Parser::initializeLookups() {
     using lexer::TokenType;
 
@@ -130,13 +144,14 @@ inline void Parser::initializeLookups() {
     led(TokenType::Equal, OperatorBindingPower::Relational, parseBinaryExpression);
     led(TokenType::NotEqual, OperatorBindingPower::Relational, parseBinaryExpression);
 
-    //~ Additive & Multiplicative
+    //~ Additive, Multiplicative & Exponential
     led(TokenType::Plus, OperatorBindingPower::Additive, parseBinaryExpression);
     led(TokenType::Minus, OperatorBindingPower::Additive, parseBinaryExpression);
     led(TokenType::Mul, OperatorBindingPower::Multiplicative, parseBinaryExpression);
     led(TokenType::Div, OperatorBindingPower::Multiplicative, parseBinaryExpression);
     led(TokenType::FloorDiv, OperatorBindingPower::Multiplicative, parseBinaryExpression);
     led(TokenType::Mod, OperatorBindingPower::Multiplicative, parseBinaryExpression);
+    led(TokenType::Exp, OperatorBindingPower::Exponential, parseExponentiationExpression);
 
     // ~ Literals & Symbols
     nud(TokenType::IntegerLiteral, parsePrimaryExpression);
