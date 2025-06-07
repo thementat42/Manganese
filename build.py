@@ -37,7 +37,7 @@ parser.add_argument(
 
 parser.add_argument(
     "-g", "--generator",
-    help = "Set a generator for cmake's build file (default make)",
+    help = "Set a generator for cmake's build file (default to user's CMake-configured generator)",
 )
 
 parser.add_argument(
