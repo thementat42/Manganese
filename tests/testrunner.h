@@ -9,7 +9,7 @@
 namespace manganese {
 namespace tests {
 
-    // ANSI color codes for terminal output
+// ANSI color codes for terminal output
 constexpr char* GREEN = "\033[32m";
 constexpr char* RED = "\033[31m";
 constexpr char* RESET = "\033[0m";
