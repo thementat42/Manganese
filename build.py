@@ -22,6 +22,13 @@ parser.add_argument(
     action = "store_true",
     help = "Build the test suite instead of the main compiler"
 )
+
+parser.add_argument(
+    "-d", "--debug",
+    action = "store_true",
+    help = "build the compiler in debug mode"
+)
+
 parser.add_argument(
     "-c", "--clean",
     action = "store_true",
@@ -83,7 +90,8 @@ OUT_NAME = "manganese" + ("_tests" if args.tests else "") + (".exe" if os.name =
 cmake_args = [
     "cmake",
     "..",
-    f"-DBUILD_TESTS={"ON" if args.tests else "OFF"}"
+    f"-DBUILD_TESTS={"ON" if args.tests else "OFF"}",
+    f"-DDEBUG={"ON" if args.debug else "OFF"}",
 ]
 
 if args.jobs:

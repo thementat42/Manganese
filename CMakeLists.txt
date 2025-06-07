@@ -5,8 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(COMPILER_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese.cpp")
 set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese_tests.cpp")
 
-# Option to build the compiler tests instead of the main compiler
+# Build options
 option(BUILD_TESTS "Build the test suite" OFF)
+option(DEBUG "Build with debug symbols and no optimization" OFF)
 
 # Find LLVM package
 find_package(LLVM REQUIRED CONFIG)
@@ -20,7 +21,7 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 # Prevent in-source builds
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-  message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there.")
+  message(FATAL_ERROR "In-source builds not allowed. Please make a new build directory and run CMake from there.")
 endif()
 
 # Common source files for tests and compiler build
@@ -49,11 +50,14 @@ if(BUILD_TESTS)
 
     # Create test executable with tests main file
     add_executable(${PROJECT_NAME}_tests ${TEST_SRC} ${TESTS_MAIN})
+
+    # Always include debug symbols and DEBUG definition for test builds
+    target_compile_definitions(${PROJECT_NAME}_tests PRIVATE DEBUG=1)
     
-    # Add maximum warnings for test builds
     if(MSVC)
         target_compile_options(${PROJECT_NAME}_tests PRIVATE
-            /O0
+            /Od
+            /Zi
             /W4
             /permissive-
             /WX
@@ -86,17 +90,44 @@ if(BUILD_TESTS)
     message(STATUS "Configured to build test suite")
 else()
     # Add executable with all source files
-    add_executable(${PROJECT_NAME} ${SRC} ${COMPILER_MAIN})
-
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE
-            /O3
-            /EHsc
-        )
+    add_executable(${PROJECT_NAME} ${SRC} ${COMPILER_MAIN})    # Configure compiler options based on DEBUG flag
+    if(DEBUG)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=1)        
+        if(MSVC)
+            target_compile_options(${PROJECT_NAME} PRIVATE
+                /Od
+                /Zi
+                /W4
+                /permissive-
+                /WX
+                /EHsc
+            )
+        else()
+            target_compile_options(${PROJECT_NAME} PRIVATE
+                -O0 -g
+                -Wall
+                -Wextra
+                -Wformat
+                -Wformat=2
+                -Wconversion
+                -Wimplicit-fallthrough
+                -Werror
+            )
+        endif()
+        message(STATUS "Building compiler in DEBUG mode")
     else()
-        target_compile_options(${PROJECT_NAME} PRIVATE
-            -O3
-        )
+        target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=0)
+        if(MSVC)
+            target_compile_options(${PROJECT_NAME} PRIVATE
+                /O3
+                /EHsc
+            )
+        else()
+            target_compile_options(${PROJECT_NAME} PRIVATE
+                -O3
+            )
+        endif()
+        message(STATUS "Building compiler in RELEASE mode")
     endif()
 
     # Include directories
