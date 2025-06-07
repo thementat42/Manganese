@@ -46,7 +46,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "exec_args",
+    "exec-args",
     nargs=argparse.REMAINDER,
     help="Arguments to pass to the executable when using --run"
 )
