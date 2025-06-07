@@ -104,5 +104,5 @@ function_call = expression "(" ( expression ("," expression)*)? ")";
 
 #* Data Encapsulation
 bundle_decl = "bundle" "{" variable_decl+ "}"
-enum_decl = "enum" identifier (":" primitive_typetype)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}"
+enum_decl = "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}"
 # TODO: Add blueprint decl later
