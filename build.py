@@ -15,63 +15,70 @@ def run_command(command: list[str]):
         print(f"\033[31mCommand failed with exit code {e.returncode}\033[0m")
         sys.exit(e.returncode)
 
-parser = argparse.ArgumentParser()
+argparser = argparse.ArgumentParser()
 
-parser.add_argument(
-    "-t", "--tests",
-    action = "store_true",
-    help = "Build the test suite instead of the main compiler"
+argparser.add_argument(
+    "-b", "--build-dir",
+    type=str,
+    default="build",
+    help="Specify a custom build directory (default: 'build')"
 )
 
-parser.add_argument(
-    "-d", "--debug",
-    action = "store_true",
-    help = "build the compiler in debug mode"
-)
-
-parser.add_argument(
+argparser.add_argument(
     "-c", "--clean",
     action = "store_true",
     help = "Clean the build directory before compiling"
 )
 
-parser.add_argument(
+argparser.add_argument(
+    "-d", "--debug",
+    action = "store_true",
+    help = "build the compiler in debug mode instead of release mode"
+)
+
+argparser.add_argument(
     "-g", "--generator",
     help = "Set a generator for cmake's build file (default to user's CMake-configured generator)",
 )
 
-parser.add_argument(
-    "-r", "--run",
-    action="store_true",
-    help="Run the executable immediately after building"
-)
-
-parser.add_argument(
-    "--no-move",
-    action="store_true",
-    help="Don't move the executable from the build directory to the root directory"
-)
-
-parser.add_argument(
-    "exec_args",
-    nargs=argparse.REMAINDER,
-    help="Arguments to pass to the executable when using --run"
-)
-
-parser.add_argument(
+argparser.add_argument(
     "-j", "--jobs",
     type=int,
     help="Number of parallel build jobs"
 )
 
-parser.add_argument(
+argparser.add_argument(
+    "--no-move",
+    action="store_true",
+    help="Don't move the executable from the build directory to the root directory"
+)
+
+argparser.add_argument(
+    "-r", "--run",
+    action="store_true",
+    help="Run the executable immediately after building"
+)
+
+argparser.add_argument(
+    "-t", "--tests",
+    action = "store_true",
+    help = "Build the test suite instead of the main compiler"
+)
+
+argparser.add_argument(
     "--target",
     help="Specific CMake target to build"
 )
 
-args = parser.parse_args()
+argparser.add_argument(
+    "exec_args",
+    nargs=argparse.REMAINDER,
+    help="Arguments to pass to the executable when using -r or --run"
+)
 
-BUILD_DIR = Path('build')
+args = argparser.parse_args()
+
+BUILD_DIR = Path(args.build_dir)
 
 if args.clean:
     print(f"\033[34mCleaning build directory ({BUILD_DIR})\033[0m")
@@ -81,19 +88,21 @@ if args.clean:
         print(f"\033[31mPermission denied while cleaning {BUILD_DIR}\033[0m")
         sys.exit(1)
     print(f"\033[34mCleaned build directory ({BUILD_DIR})\033[0m")
-os.makedirs(BUILD_DIR, exist_ok=True)
 
+os.makedirs(BUILD_DIR, exist_ok=True)
 os.chdir(BUILD_DIR)
 
 OUT_NAME = "manganese" + ("_tests" if args.tests else "") + (".exe" if os.name == "nt" else "")
 
+#  Basic args
 cmake_args = [
     "cmake",
-    "..",
+    "..",  # since we switched to the build directory, but CMakeLists.txt is in root
     f"-DBUILD_TESTS={"ON" if args.tests else "OFF"}",
     f"-DDEBUG={"ON" if args.debug else "OFF"}",
 ]
 
+# Extra args
 if args.jobs:
     cmake_args.extend(["--parallel", str(args.jobs)])
 if args.target:
