@@ -22,7 +22,22 @@ Parser::Parser(const str& source, lexer::Mode mode) : lexer(std::make_unique<lex
 ast::Block Parser::parse() {
     ast::Block body;
     while (!done()) {
-        body.push_back(parseStatement());
+        // Special cases for block visiblity modifiers (`public:`, `readonly:` and `private`: set the visibility for all future variables, until the next modifier is encountered)
+        if (peekToken().getType() == TokenType::Public && peekToken(1).getType() == TokenType::Colon) {
+            defaultVisibility = ast::Visibility::Public;
+            consumeToken();  // Consume the Public token
+            consumeToken();  // Consume the Colon token
+        } else if (peekToken().getType() == TokenType::ReadOnly && peekToken(1).getType() == TokenType::Colon) {
+            defaultVisibility = ast::Visibility::ReadOnly;
+            consumeToken();  // Consume the ReadOnly token
+            consumeToken();  // Consume the Colon token
+        } else if (peekToken().getType() == TokenType::Private && peekToken(1).getType() == TokenType::Colon) {
+            defaultVisibility = ast::Visibility::Private;
+            consumeToken();  // Consume the Private token
+            consumeToken();  // Consume the Colon token
+        } else {
+            body.push_back(parseStatement());
+        }
 
         // Flush the cache so there are no holdover tokens
         tokenCache.clear();
@@ -53,6 +68,13 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             std::cerr << ("Invalid Token Type in parsePrimaryExpression: " + lexer::tokenTypeToString(token.getType()));
             abort();
     }
+}
+
+ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, OperatorBindingPower bindingPower) {
+    auto operatorToken = consumeToken();
+    auto right = parseExpression(bindingPower);
+
+    return std::make_unique<ast::BinaryExpression>(std::move(left), operatorToken.getType(), std::move(right));
 }
 
 ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
@@ -93,13 +115,6 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
     return left;
 }
 
-ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, OperatorBindingPower bindingPower) {
-    auto operatorToken = consumeToken();
-    auto right = parseExpression(bindingPower);
-
-    return std::make_unique<ast::BinaryExpression>(std::move(left), operatorToken.getType(), std::move(right));
-}
-
 inline void Parser::initializeLookups() {
     using lexer::TokenType;
 
@@ -128,6 +143,8 @@ inline void Parser::initializeLookups() {
     nud(TokenType::FloatLiteral, parsePrimaryExpression);
     nud(TokenType::StrLiteral, parsePrimaryExpression);
     nud(TokenType::Identifier, parsePrimaryExpression);
+
+    //~ Statements
 }
 
 ast::StatementPtr Parser::parseStatement() {
