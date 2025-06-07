@@ -46,6 +46,8 @@ int main(int argc, char const* argv[]) {
             semantic = true;
             codegen = true;
             break;
+        } else {
+            fprintf(stderr, "Skipping unknown argument: %s\n", argv[i]);
         }
     }
 
