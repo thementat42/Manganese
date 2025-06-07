@@ -27,8 +27,9 @@ class StringReader : public Reader {
    public:
     StringReader() = default;
     StringReader(const std::string& source);
-    StringReader(const StringReader& other) = delete;  // Disable copy constructor
     ~StringReader() noexcept = default;
+
+    DISABLE_COPY_AND_ASSIGN(StringReader)
 
     char peekChar(size_t offset = 0) noexcept override;
     [[nodiscard]] char consumeChar() noexcept override;
@@ -39,8 +40,6 @@ class StringReader : public Reader {
     size_t getColumn() const noexcept override;
 
     bool done() const noexcept override;
-
-    StringReader& operator=(const StringReader& other) = delete;  // Disable copy assignment operator
 };
 }  // namespace io
 }  // namespace manganese

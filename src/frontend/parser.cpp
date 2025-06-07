@@ -25,16 +25,16 @@ ast::Block Parser::parse() {
         // Special cases for block visiblity modifiers (`public:`, `readonly:` and `private`: set the visibility for all future variables, until the next modifier is encountered)
         if (peekToken().getType() == TokenType::Public && peekToken(1).getType() == TokenType::Colon) {
             defaultVisibility = ast::Visibility::Public;
-            (void)consumeToken();  // Consume the Public token
-            (void)consumeToken();  // Consume the Colon token
+            DISCARD(consumeToken());  // Consume the Public token
+            DISCARD(consumeToken());  // Consume the Colon token
         } else if (peekToken().getType() == TokenType::ReadOnly && peekToken(1).getType() == TokenType::Colon) {
             defaultVisibility = ast::Visibility::ReadOnly;
-            (void)consumeToken();  // Consume the ReadOnly token
-            (void)consumeToken();  // Consume the Colon token
+            DISCARD(consumeToken());  // Consume the ReadOnly token
+            DISCARD(consumeToken());  // Consume the Colon token
         } else if (peekToken().getType() == TokenType::Private && peekToken(1).getType() == TokenType::Colon) {
             defaultVisibility = ast::Visibility::Private;
-            (void)consumeToken();  // Consume the Private token
-            (void)consumeToken();  // Consume the Colon token
+            DISCARD(consumeToken());  // Consume the Private token
+            DISCARD(consumeToken());  // Consume the Colon token
         } else {
             body.push_back(parseStatement());
         }
@@ -65,8 +65,7 @@ ExpressionPtr Parser::parsePrimaryExpression() {
         case TokenType::Identifier:
             return make_unique<ast::SymbolExpression>(lexeme);
         default:
-            std::cerr << ("Invalid Token Type in parsePrimaryExpression: " + lexer::tokenTypeToString(token.getType()));
-            abort();
+            UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + lexer::tokenTypeToString(token.getType()));
     }
 }
 
@@ -92,9 +91,7 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
     lexer::TokenType type = peekToken().getType();
     auto it = nullDenotationLookup.find(type);
     if (it == nullDenotationLookup.end()) {
-        // TODO: Replace with proper error message
-        std::cerr << ("No null denotation function for token type: " + lexer::tokenTypeToString(type));
-        abort();
+        UNREACHABLE("No null denotation function for token type: " + lexer::tokenTypeToString(type));
     }
     nullDenotationHandler_t nullDenotationFunction = it->second;
     ExpressionPtr left = nullDenotationFunction(this);
@@ -115,9 +112,7 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
 
         auto it = leftDenotationLookup.find(type);
         if (it == leftDenotationLookup.end()) {
-            // TODO: Replace with proper error message
-            std::cerr << ("No left denotation function for token type: " + lexer::tokenTypeToString(type));
-            abort();
+            UNREACHABLE("No left denotation function for token type: " + lexer::tokenTypeToString(type));
         }
         leftDenotationHandler_t leftDenotationFunction = it->second;
         left = leftDenotationFunction(this, std::move(left), bindingPowerLookup[type]);

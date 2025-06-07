@@ -37,9 +37,10 @@ class FileReader : public Reader {
 
    public:
     FileReader() = default;
-    FileReader(const FileReader& other) = delete;  // Disable copy constructor
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
     ~FileReader() noexcept;
+
+    DISABLE_COPY_AND_ASSIGN(FileReader)
 
     char peekChar(size_t offset = 0) override;
     [[nodiscard]] char consumeChar() override;
@@ -50,8 +51,6 @@ class FileReader : public Reader {
     size_t getColumn() const noexcept override;
 
     bool done() const noexcept override;
-
-    FileReader& operator=(const FileReader& other) = delete;  // Disable copy assignment operator
 };
 }  // namespace io
 }  // namespace manganese
