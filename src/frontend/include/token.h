@@ -33,10 +33,11 @@ enum class OperatorBindingPower : uint8_t {
     Relational = 4,
     Additive = 5,
     Multiplicative = 6,
-    Unary = 7,
-    Call = 8,
-    Member = 9,
-    Primary = 10,
+    Exponential = 7,
+    Unary = 8,
+    Call = 9,
+    Member = 10,
+    Primary = 11,
 };
 
 // TODO: Add debug check that these are in the right order
