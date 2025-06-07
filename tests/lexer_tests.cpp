@@ -19,10 +19,6 @@ using TokenList = std::vector<Token>;
 using lexer::TokenType;
 using lexer::tokenTypeToString;
 
-// ANSI color codes
-const std::string CYAN = "\033[36m";
-const std::string RESET = "\033[0m";
-
 // Utility function to print tokens in cyan color
 void printAllTokens(const std::vector<Token>& tokens) {
     std::cout << "Tokens: " << CYAN;

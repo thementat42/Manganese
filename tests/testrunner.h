@@ -8,16 +8,18 @@
 
 namespace manganese {
 namespace tests {
+
+    // ANSI color codes for terminal output
+constexpr char* GREEN = "\033[32m";
+constexpr char* RED = "\033[31m";
+constexpr char* RESET = "\033[0m";
+constexpr char* PINK = "\033[95m";
+constexpr char* CYAN = "\033[36m";
+
 class TestRunner {
    private:
     int passed = 0;
     int failed = 0;
-
-    // ANSI color codes for terminal output
-    const char* GREEN = "\033[32m";
-    const char* RED = "\033[31m";
-    const char* RESET = "\033[0m";
-    const char* PINK = "\033[95m";
 
    public:
     void runTest(const std::string& testName, std::function<bool()> testFunction);
