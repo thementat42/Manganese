@@ -62,10 +62,18 @@ if(BUILD_TESTS)
             /permissive-
             /WX
             /EHsc
+            /RTC1
+            /RTCu
+            /GS
+            /analyz
         )
     else()
+        # be extra pedantic in debug test builds
         target_compile_options(${PROJECT_NAME}_tests PRIVATE
-            -O0 -g
+            -O0 -g3
+            -Wshadow
+            -Wuninitialized
+            -Wnull-dereference
             -Wall
             -Wextra
             -Wformat
@@ -73,7 +81,17 @@ if(BUILD_TESTS)
             -Wconversion
             -Wimplicit-fallthrough
             -Werror
+            -fsanitize=address
+            -fsanitize=undefined
+            -fsanitize=memory
+            -fsanitize=leak
+            -fno-omit-frame-pointer
+            -fno-inline
+            -fcheck-new
+            -DGLIBCXX_DEBUG
+            --coverage
         )
+        target_link_libraries(${PROJECT_NAME}_tests PRIVATE gcov)  # add gcov to make sure everything is tested
     endif()
     
     # Include directories
@@ -101,10 +119,18 @@ else()
                 /permissive-
                 /WX
                 /EHsc
+                /RTC1
+                /RTCu
+                /GS
+                /analyze
             )
         else()
+            # be extra pedantic in debug builds
             target_compile_options(${PROJECT_NAME} PRIVATE
-                -O0 -g
+                -O0 -g3
+                -Wshadow
+                -Wuninitialized
+                -Wnull-dereference
                 -Wall
                 -Wextra
                 -Wformat
@@ -112,19 +138,42 @@ else()
                 -Wconversion
                 -Wimplicit-fallthrough
                 -Werror
+                -fsanitize=address
+                -fsanitize=undefined
+                -fsanitize=memory
+                -fsanitize=leak
+                -fno-omit-frame-pointer
+                -fno-inline
+                -fcheck-new
+                -DGLIBCXX_DEBUG
             )
         endif()
         message(STATUS "Building compiler in DEBUG mode")
     else()
         target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=0)
+        # be more permissive in release builds
         if(MSVC)
             target_compile_options(${PROJECT_NAME} PRIVATE
-                /O3
+                /O2
+                /Ob2
+                /Ot
                 /EHsc
+                /Qspectre
             )
         else()
             target_compile_options(${PROJECT_NAME} PRIVATE
                 -O3
+                -s
+                -finline-functions
+                -funroll-loops
+                -flto
+                -fomit-frame-pointer
+                -fstack-protector-strong
+                -march=native
+                -mspeculative-load-hardening
+                -mindirect-branch=thunk
+                -mfunction-return=thunk
+                -g0
             )
         endif()
         message(STATUS "Building compiler in RELEASE mode")
