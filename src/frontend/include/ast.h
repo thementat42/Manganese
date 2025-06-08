@@ -86,6 +86,10 @@ enum class Visibility : char {
 };
 
 //~ Base Nodes
+
+/**
+ * @brief Base class for all AST nodes
+ */
 class ASTNode {
    protected:
     size_t line, column;
@@ -94,7 +98,18 @@ class ASTNode {
     virtual ~ASTNode() noexcept = default;
 
     #if DEBUG
+
+    /**
+     * @brief Convert the AST node to a string representation
+     * @return A string representation of the AST node
+     */
     virtual std::string toString() const = 0;
+
+    /**
+     * @brief Dump the AST node to an output stream
+     * @param os The output stream to dump to
+     * @param indent The indentation level for pretty-printing
+     */
     virtual void dump(std::ostream& os, int indent = 0) const = 0;
     #endif // DEBUG
 
@@ -104,11 +119,19 @@ class ASTNode {
     friend parser::Parser;
 };
 
+
+/**
+ * @brief The base class for all statements in the AST
+ */
 class Statement : public ASTNode {
    public:
     virtual ~Statement() noexcept = default;
 };
 
+
+/**
+ * @brief The base class for all expressions in the AST
+ */
 class Expression : public ASTNode {
    public:
     virtual ~Expression() noexcept = default;
@@ -117,33 +140,63 @@ class Expression : public ASTNode {
 //~ Expressions
 
 //* Literal Expressions
+
+/**
+ * @brief Represents a numeric literal in the AST
+ */
 class NumberExpression : public Expression {
    protected:
     number_t value;
 
    public:
+
+    /**
+     * @brief Initialize a NumberExpression node
+     * @param _value The numeric value of the expression (can be any numeric type)
+     */
     NumberExpression(number_t _value) : value(_value) {};
 
     const number_t& getValue() const { return value; }
     AST_DEBUG_OVERRIDES
 };
 
+/**
+ * @brief Represents a string literal in the AST
+ */
 class StringExpression : public Expression {
    protected:
     std::string value;
 
    public:
+
+    /**
+     * @brief Initialize a StringExpression node
+     * @param _value The string value of the expression (std::string)
+     */
     StringExpression(const std::string& _value) : value(std::move(_value)) {};
+
+    /**
+     * @brief Initialize a StringExpression node
+     * @param _value The string value of the expression (const char*)
+     */
+    StringExpression(const char* _value) : value(_value) {};
 
     const std::string& getValue() const { return value; }
     AST_DEBUG_OVERRIDES
 };
 
+/**
+ * @brief Represents a symbol (identifier) in the AST
+ */
 class SymbolExpression : public Expression {
    protected:
     std::string value;
 
    public:
+    /**
+     * @brief Initialize a SymbolExpression node
+     * @param _value The symbol value of the expression (std::string)
+     */
     SymbolExpression(const std::string& _value) : value(std::move(_value)) {}
 
     const std::string& getValue() const { return value; }
@@ -151,12 +204,22 @@ class SymbolExpression : public Expression {
 };
 
 //* Complex Expressions
+
+/**
+ * @brief Represents a binary expression in the AST
+ */
 class BinaryExpression : public Expression {
    protected:
     ExpressionPtr left, right;
     lexer::TokenType op;
 
    public:
+    /**
+     * @brief Initialize a BinaryExpression node
+     * @param _left The left operand of the expression
+     * @param _op The operator token type (e.g., +, -, *, /)
+     * @param _right The right operand of the expression
+     */
     BinaryExpression(ExpressionPtr _left, lexer::TokenType _op, ExpressionPtr _right)
         : left(std::move(_left)), right(std::move(_right)), op(_op) {};
 
@@ -167,17 +230,29 @@ class BinaryExpression : public Expression {
 };
 
 //~ Statements
+
+/**
+ * @brief Wrapper class to convert an expression into a statement
+ */
 class ExpressionStatement : public Statement {
    protected:
     ExpressionPtr expression;
 
    public:
+    /**
+     * @brief Initialize an ExpressionStatement node
+     * @param _expression The expression to wrap in the statement
+     */
     ExpressionStatement(ExpressionPtr _expression) : expression(std::move(_expression)) {};
 
     const Expression& getExpression() const { return *expression; }
     AST_DEBUG_OVERRIDES
 };
 
+
+/**
+ * @brief Represents a variable declaration statement in the AST
+ */
 class VariableDeclarationStatement : public Statement {
    protected:
     std::string name;
@@ -187,10 +262,17 @@ class VariableDeclarationStatement : public Statement {
     // primitiveType type;
 
    public:
+
+   /**
+    * @brief Initialize a VariableDeclarationStatement node
+    * @param _name The name of the variable
+    * @param _isConst Whether the variable is a constant (immutable)
+    * @param _visibility The visibility of the variable (public, read-only, private)
+    * @param _value The initial value of the variable
+    */
     VariableDeclarationStatement(std::string _name, bool _isConst, Visibility _visibility, ExpressionPtr _value)
         : name(std::move(_name)), isConst(_isConst), visibility(_visibility), value(std::move(_value)) {};
-    VariableDeclarationStatement(std::string _name, bool _isConst, ExpressionPtr _value)
-        : name(std::move(_name)), isConst(_isConst), visibility(Visibility::ReadOnly), value(std::move(_value)) {};
+
     AST_DEBUG_OVERRIDES
 };
 
