@@ -1,7 +1,5 @@
 #include "include/parser.h"
 
-#include <stdio.h>
-
 #include <iostream>
 
 #include "../global_macros.h"
@@ -44,6 +42,17 @@ ast::Block Parser::parse() {
         tokenCachePosition = 0;
     }
     return body;
+}
+
+ast::StatementPtr Parser::parseStatement() {
+    lexer::TokenType type = peekToken().getType();
+    auto it = statementLookup.find(type);
+    if (it != statementLookup.end()) {
+        return (it->second)(this);
+    }
+    auto expression = parseExpression(OperatorBindingPower::Default);
+    expectToken(TokenType::Semicolon);
+    return std::make_unique<ast::ExpressionStatement>(std::move(expression));
 }
 
 ExpressionPtr Parser::parsePrimaryExpression() {
@@ -89,11 +98,11 @@ ExpressionPtr Parser::parseExponentiationExpression(ExpressionPtr left, Operator
 ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
     // First, parse the null denoted expression
     lexer::TokenType type = peekToken().getType();
-    auto it = nullDenotationLookup.find(type);
-    if (it == nullDenotationLookup.end()) {
+    auto nudIt = nullDenotationLookup.find(type);
+    if (nudIt == nullDenotationLookup.end()) {
         UNREACHABLE("No null denotation function for token type: " + lexer::tokenTypeToString(type));
     }
-    nullDenotationHandler_t nullDenotationFunction = it->second;
+    nullDenotationHandler_t nullDenotationFunction = nudIt->second;
     ExpressionPtr left = nullDenotationFunction(this);
 
     // While we have a left denoted expression and (current binding power) < (current token binding power), continue parsing
@@ -110,19 +119,28 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
             break;
         }
 
-        auto it = leftDenotationLookup.find(type);
-        if (it == leftDenotationLookup.end()) {
+        auto ledIt = leftDenotationLookup.find(type);
+        if (ledIt == leftDenotationLookup.end()) {
             UNREACHABLE("No left denotation function for token type: " + lexer::tokenTypeToString(type));
         }
-        leftDenotationHandler_t leftDenotationFunction = it->second;
+        leftDenotationHandler_t leftDenotationFunction = ledIt->second;
         left = leftDenotationFunction(this, std::move(left), bindingPowerLookup[type]);
     }
     return left;
 }
 
-// StatementPtr Parser::parseVariableDeclaration() {
-//     return std::make_unique<ast::VariableDeclarationStatement>();
-// }
+StatementPtr Parser::parseVariableDeclaration() {
+    bool isConst = (consumeToken().getType() == TokenType::Const);
+
+    std::string name = expectToken(TokenType::Identifier, "Expected a variable name after " + (isConst ? str("'const'") : str("'let'"))).getLexeme();
+
+    expectToken({TokenType::Assignment, TokenType::Colon}, "Expected an '=' to assign a value to the variable, or a ':' to declare its type");
+
+    ExpressionPtr assignedValue = parseExpression(OperatorBindingPower::Assignment);
+    expectToken(TokenType::Semicolon, "Expected a ';' to end the variable declaration");
+
+    return std::make_unique<ast::VariableDeclarationStatement>(name, isConst, defaultVisibility, std::move(assignedValue));
+}
 
 inline void Parser::initializeLookups() {
     using lexer::TokenType;
@@ -155,31 +173,27 @@ inline void Parser::initializeLookups() {
     nud(TokenType::Identifier, parsePrimaryExpression);
 
     //~ Statements
+    stmt(TokenType::Const, parseVariableDeclaration);
+    stmt(TokenType::Let, parseVariableDeclaration);
 }
 
-ast::StatementPtr Parser::parseStatement() {
-    lexer::TokenType type = peekToken().getType();
-    auto it = statementLookup.find(type);
-    if (it != statementLookup.end()) {
-        return (it->second)(this);
-    }
-    auto expression = parseExpression(OperatorBindingPower::Default);
-    expectToken(TokenType::Semicolon);
-    return std::make_unique<ast::ExpressionStatement>(std::move(expression));
-}
-
-Token Parser::expectToken(TokenType expectedType) {
+Token Parser::expectToken(TokenType expectedType, const std::string& message) {
     auto token = peekToken();
     auto tokenType = token.getType();
-    if (tokenType != expectedType) {
-        fprintf(stderr, "Expected %s, got %s instead\n",
-                lexer::tokenTypeToString(expectedType).c_str(),
-                lexer::tokenTypeToString(tokenType).c_str());
-        exit(EXIT_FAILURE);
+    if (tokenType == expectedType) {
+        return consumeToken();
     }
-    return consumeToken();
+    if (!message.empty()) {
+        std::cerr << message << "(";
+    }
+    std::cerr << "Expected " << lexer::tokenTypeToString(expectedType)
+              << ", got " << lexer::tokenTypeToString(tokenType) << " instead\n";
+    if (!message.empty()) {
+        std::cerr << message << ")";
+    }
+    exit(EXIT_FAILURE);
 }
-Token Parser::expectToken(const std::initializer_list<TokenType>& expectedTypes) {
+Token Parser::expectToken(const std::initializer_list<TokenType>& expectedTypes, const std::string& message) {
     auto token = peekToken();
     auto tokenType = token.getType();
     for (auto expectedType : expectedTypes) {
@@ -187,11 +201,18 @@ Token Parser::expectToken(const std::initializer_list<TokenType>& expectedTypes)
             return consumeToken();
         }
     }
-    fprintf(stderr, "Expected one of: ");
-    for (auto expectedType : expectedTypes) {
-        fprintf(stderr, "%s, ", lexer::tokenTypeToString(expectedType).c_str());
+    if (!message.empty()) {
+        std::cerr << message << "(";
     }
-    fprintf(stderr, "but got %s instead\n", lexer::tokenTypeToString(tokenType).c_str());
+    std::cerr << "Expected one of: ";
+    for (auto expectedType : expectedTypes) {
+        std::cerr << lexer::tokenTypeToString(expectedType) << ", ";
+    }
+    std::cerr << "but got " << lexer::tokenTypeToString(tokenType) << " instead\n";
+    if (!message.empty()) {
+        std::cerr << message << ")";
+    }
+    std::cerr << "(line " << token.getLine() << " column " << token.getColumn() << ")\n";
     exit(EXIT_FAILURE);
 }
 }  // namespace parser
