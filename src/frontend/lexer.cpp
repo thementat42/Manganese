@@ -231,19 +231,6 @@ void Lexer::tokenizeCharLiteral() {
         }
         charLiteral += consumeChar();  // Add the character to the string
     }
-    // while (!done() && peekChar() != '\'') {
-    //     if (peekChar() == '\\') {
-    //         // skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
-    //         charLiteral += consumeChar();
-    //     }
-    //     charLiteral += consumeChar();
-    // }
-    // if (done()) {
-    //     fprintf(stderr, "Unclosed character literal (line %zu column %zu(\n", startLine, startCol);
-    //     tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
-    //     return;
-    // }
-    // go past closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
     advance();
     if (charLiteral[0] == '\\') {
         processCharEscapeSequence(charLiteral);
@@ -289,20 +276,6 @@ void Lexer::tokenizeStringLiteral() {
         stringLiteral += consumeChar();  // Add the character to the string
     }
 
-    // while (!done() && peekChar() != '"') {
-    //     if (peekChar() == '\\') {            // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
-    //         stringLiteral += consumeChar();  // Add the backslash to the string
-    //         containsEscapeSequence = true;
-    //     }
-    //     stringLiteral += consumeChar();  // Add the character to the string
-    // }
-    // if (done()) {
-    //     // No closing quote found
-    //     fprintf(stderr, "Error: Unterminated string literal (line %zu, column %zu)\n", startLine, startCol);
-    //     tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
-    //     return;
-    // }
-    // Move past the closing quote so it doesn't get interpreted as an opening quote in the main tokenizing function
     advance();
     if (containsEscapeSequence) {
         stringLiteral = resolveEscapeCharacters(stringLiteral);
