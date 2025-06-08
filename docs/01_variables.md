@@ -11,7 +11,7 @@ const <variable name> : <type qualifier> <type> (= <value>);
 
 `let` declares a mutable variable, while `const` declares an immutable variable.
 
-<!-- TODO: Type inference (either `auto` or just omit type declaration -- hsa to be determined at compile time) -->
+<!-- TODO: Type inference (omit type declaration -- the type must be deducible at compile time) -->
 <!-- TODO?: Type unions (e.g. int|float) -->
 
 Where:
