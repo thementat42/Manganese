@@ -87,7 +87,7 @@ ExpressionPtr Parser::parseExponentiationExpression(ExpressionPtr left, Operator
 }
 
 ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
-    // First, parse the null denotated expression
+    // First, parse the null denoted expression
     lexer::TokenType type = peekToken().getType();
     auto it = nullDenotationLookup.find(type);
     if (it == nullDenotationLookup.end()) {
@@ -172,7 +172,7 @@ Token Parser::expectToken(TokenType expectedType) {
     auto token = peekToken();
     auto tokenType = token.getType();
     if (tokenType != expectedType) {
-        fprintf(stderr, "Expected %s, got %s intstead\n",
+        fprintf(stderr, "Expected %s, got %s instead\n",
                 lexer::tokenTypeToString(expectedType).c_str(),
                 lexer::tokenTypeToString(tokenType).c_str());
         exit(EXIT_FAILURE);

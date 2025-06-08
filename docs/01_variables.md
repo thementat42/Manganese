@@ -66,7 +66,7 @@ Manganese supports different integer and floating-point widths, which can hold d
 
 The following table summarizes the ranges of values for the different integer types in Manganese:
 
-|    Type    |         Min Value         |         Max Value          |
+|    Type    |       Minimum Value       |       Maximum Value        |
 | ---------- | ------------------------- | -------------------------- |
 | `int8`     | -128                      | 127                        |
 | `int16`    | -32 768                   | 32 767                     |
@@ -92,7 +92,7 @@ When a variable is declared, but not assigned a value, the compiler will give it
 | `bool`  | `false`        |
 | `ptr`   | a null pointer |
 
->TODO: Rework this
+> TODO: Rework this
 
 For example:
 

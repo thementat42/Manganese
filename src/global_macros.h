@@ -20,29 +20,29 @@
 #define __PRINT_LOCATION() \
     std::cerr << "\033[33m" << __FILE__ << ", " << __LINE__ << ": " << __func__ << "\033[0m\n";  // Used inside other macros only: Print the file, line number, and function name
 
-#define UNREACHABLE(message)                                              \
-    do {                                                                  \
+#define UNREACHABLE(message)                                                         \
+    do {                                                                             \
         std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m"; \
-        __PRINT_LOCATION()                                                \
-        exit(EXIT_FAILURE);                                               \
+        __PRINT_LOCATION()                                                           \
+        exit(EXIT_FAILURE);                                                          \
     } while (0)
 
-#define ASSERT_CRITICAL(condition, message)                                             \
-    do {                                                                                \
-        if (!(condition)) {                                                             \
+#define ASSERT_CRITICAL(condition, message)                                               \
+    do {                                                                                  \
+        if (!(condition)) {                                                               \
             std::cerr << "\033[31mCritical assertion failed: " << message << "\n\033[0m"; \
-            __PRINT_LOCATION()                                                          \
-            exit(EXIT_FAILURE);                                                         \
-        }                                                                               \
+            __PRINT_LOCATION()                                                            \
+            exit(EXIT_FAILURE);                                                           \
+        }                                                                                 \
     } while (0)
 
 #if DEBUG
-#define ASSERT_DEBUG(condition, message)                                            \
-    do {                                                                            \
-        if (!(condition)) {                                                         \
+#define ASSERT_DEBUG(condition, message)                                               \
+    do {                                                                               \
+        if (!(condition)) {                                                            \
             std::cerr << "\033[31mDebug assertion failed: " << message << "\n\033[0m"; \
-            __PRINT_LOCATION()                                                      \
-        }                                                                           \
+            __PRINT_LOCATION()                                                         \
+        }                                                                              \
     } while (0)
 #else                                     // ^ DEBUG ^ | v !DEBUG v
 // In release mode, inline the debug functions (since they do nothing)
