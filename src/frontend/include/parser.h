@@ -41,20 +41,22 @@ class Parser {
     StatementPtr parseVariableDeclaration();
 
    private:  // helpers
+
     /**
      * @brief Expect a specific token type
      * @param expectedType The token type to expect
-     * @return True if the token was found, false otherwise
-
+     * @param message A custom error message to print
+     * @return Consumes a token and returns it if it matches
      */
-    Token expectToken(TokenType expectedType);
+    Token expectToken(TokenType expectedType, const std::string& message = "");
 
     /**
      * @brief Expect a specific token type from a list of types
      * @param expectedTypes The list of token types to expect
-     * @return True if the token was found, false otherwise
+     * @param message A custom error message to print
+     * @return Consumes a token and returns it if it matches
      */
-    Token expectToken(const std::initializer_list<TokenType>& expectedTypes);
+    Token expectToken(const std::initializer_list<TokenType>& expectedTypes, const std::string& message = "");
 
     ast::StatementPtr parseStatement();
     ast::ExpressionPtr nullDenotationHandler();
