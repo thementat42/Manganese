@@ -129,6 +129,32 @@ void ExpressionStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
+std::string VariableDeclarationStatement::toString() const {
+#if !DEBUG
+    return "";
+#endif
+    std::string prefix = isConst ? "const " : "let ";
+    return "(" + prefix + name + " = " + value->toString() + ");";
+}
+
+void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "VariableDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "name: " << name << "\n";
+    os << getIndent(indent + 1) << "isConst: " << (isConst ? "true" : "false") << "\n";
+    
+    std::string visString;
+    switch (visibility) {
+        case Visibility::Public:    visString = "Public"; break;
+        case Visibility::ReadOnly:  visString = "ReadOnly"; break;
+        case Visibility::Private:   visString = "Private"; break;
+    }
+    os << getIndent(indent + 1) << "visibility: " << visString << "\n";
+    
+    os << getIndent(indent + 1) << "value: \n";
+    value->dump(os, indent + 2);
+    os << getIndent(indent) << "}\n";
+}
+
 #endif  // DEBUG
 
 }  // namespace ast
