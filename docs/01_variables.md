@@ -5,10 +5,14 @@ Manganese is a statically typed language, so all variables must be declared with
 The general syntax for declaring a variable in Manganese is:
 
 ```manganese
-(<type qualifier(s)>) <type> <variable name> (= <value>);
+let <variable name> : <type qualifier> <type> (= <value>);
+const <variable name> : <type qualifier> <type> (= <value>);
 ```
 
-<!-- TODO: Type unions (e.g. int|float) -->
+`let` declares a mutable variable, while `const` declares an immutable variable.
+
+<!-- TODO: Type inference (either `auto` or just omit type declaration -- hsa to be determined at compile time) -->
+<!-- TODO?: Type unions (e.g. int|float) -->
 
 Where:
 
@@ -46,12 +50,12 @@ The primitive types in Manganese are:
 Some example variable assignments in Manganese are:
 
 ```manganese
-int a = 3;  # defaults to a 32-bit integer
-int64 big_number = 123456789012345;
-uint8 small_number = 250;
-int b = a;  # the value of a is copied into b
+let a : int = 3;  # defaults to a 32-bit integer
+let big_number : int64 = 123456789012345;
+let small_number : uint8 = 250;
+let b : int = a;  # the value of a is copied into b
 b = 7;  # b is 7, a is still 3
-char c = 'c';
+let c : char = 'c';
 ```
 
 Note that characters are declared using single quotes
@@ -93,12 +97,12 @@ When a variable is declared, but not assigned a value, the compiler will give it
 For example:
 
 ```manganese
-int32 a;  # a is initialized to 0
-float64 b;  # b is initialized to 0.0
-char c;  # c is initialized to '\0`
-bool d;  # d is initialized to false
-ptr int f;  # f is a null pointer
-ptr int h = ?a;  # no default initialization, h points to a
+let a: int32;  # a is initialized to 0
+let b: float64;  # b is initialized to 0.0
+let c: char;  # c is initialized to '\0`
+let d: bool;  # d is initialized to false
+let f : ptr int;  # f is a null pointer
+let h : ptr int = ?a;  # no default initialization, h points to a
 ```
 
 ## === Type Casting ===
@@ -106,7 +110,7 @@ ptr int h = ?a;  # no default initialization, h points to a
 Manganese allows casting between all the primitive types using the `cast<>` operator (with the output type in the angle brackets). The general syntax for a type cast is:
 
 ```manganese
-<new type> <variable name> = cast<new type>(<value>)
+let <variable name> : <new type> = cast<new type>(<value>)
 ```
 
 Casts can also be done in-place (e.g., when passing a variable to a function).
@@ -172,14 +176,9 @@ Pointers store memory addresses -- dereferencing a pointer accesses the value at
 
 In a pointer declaration, `const` can be used in two ways:
 
-- `const ptr <type>`: creates a pointer which cannot be moved (i.e., cannot be changed to point to another memory address). This can be read as "a constant pointer to a(n) `<type>`"
-- `ptr const <type>`: creates a pointer which cannot be used to modify the value it points to. This can be read as "a pointer to a constant `<type>`"
+- `const <variable name> : ptr <type>`: creates a pointer which cannot be moved (i.e., cannot be changed to point to another memory address). The underlying value can still be modified. This can be read as "a constant named `<variable name>` which is a pointer to a `<type>`"
+- `let <variable name> : ptr const <type>`: creates a pointer which cannot be used to modify the value it points to, but can be moved to point to another memory address. This can be read as "a variable named `<variable name>` which is a pointer to a constant `<type>`"
 
-Combining these two (`const ptr const <type>`) creates a pointer variable which can neither be reassigned nor used to modify its underlying value.
-
-`const` always applies to the type immediately to its right. So a declaration like `const ptr const ptr int` creates a pointer to a pointer to an integer which:
-    - cannot be moved to point to some other pointer
-    - cannot be used to change the pointer it points to
-    - can be used to modify the value pointed to by the pointer it points to
+Combining these two (`const <variable name> : ptr const <type>`) creates a pointer variable which can neither be reassigned nor used to modify its underlying value.
 
 For more information on Manganese's memory management system, see the [memory documentation](/docs/10_memory_management.md).

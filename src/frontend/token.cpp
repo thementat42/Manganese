@@ -431,6 +431,7 @@ std::unordered_map<std::string, const TokenType> keywordMap = {
     {"int64", TokenType::Int64},
     {"int8", TokenType::Int8},
     {"lambda", TokenType::Lambda},
+    {"let", TokenType::Let},
     {"module", TokenType::Module},
     {"private", TokenType::Private},
     {"ptr", TokenType::Ptr},

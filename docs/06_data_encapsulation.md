@@ -2,6 +2,8 @@
 
 ## === Bundles ===
 
+> TODO: Rework after revising 0 values
+
 Bundles in Manganese are similar to structs in C. They allow for simple data encapsulation, and are used to group related data together. Like structs in C, bundles do not have any methods or functions associated with them and do not support inheritance. They are simply a way to group related data together. Bundles are declared using the following syntax:
 
 ```manganese
@@ -25,17 +27,17 @@ For example:
 
 ```manganese
 bundle Point {
-    int x;
-    int y;
+    x : int ;
+    y : int ;
 }
 
 bundle Circle {
-    Point center;
-    int radius;
+    center : Point;
+    radius : int ;
 }
 
-Point p;  # default initialized to x = 0 and y = 0 (default value for int)
-Circle c; # default initialized to center = (0, 0) (the center field is initialized as a default point) and radius = 0
+let p : Point;  # default initialized to x = 0 and y = 0 (default value for int)
+let c : Circle; # default initialized to center = (0, 0) (the center field is initialized as a default point) and radius = 0
 p.x = 5; # set the x coordinate of the point to 5
 c.center.y = 7; # set the y coordinate of the center of the circle to 7
 c.center.y++; # increment the y coordinate of the center of the circle by 1
@@ -79,7 +81,7 @@ The underlying type of an enum can also be modified, with the following syntax:
 
 ```manganese
 enum <enum name> : type {
-        <value1>;
+    <value1>;
     <value2>;
     <value3>;
     ...
@@ -88,4 +90,6 @@ enum <enum name> : type {
 
 Where `type` can be any primitive type
 
-> TODO: Something more like a class
+## === Blueprints ===
+
+> TODO: Create syntax

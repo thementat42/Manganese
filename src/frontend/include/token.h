@@ -154,6 +154,7 @@ enum class TokenType : uint16_t {
     //~ Keywords
     __KeywordStart = 100,  // Marker for the start of keyword token types -- not to be used as an actual token type
     //* Type Qualifiers
+    Let,    // mutable variable
     Const,  // constant variable
     Ptr,    // pointer variables
 

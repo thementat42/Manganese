@@ -27,6 +27,7 @@ int32
 int64
 int8
 lambda
+let
 module
 private
 ptr

@@ -3,7 +3,7 @@
 Functions are blocks of code which can be reused throughout a program. Almost all code in Manganese is inside a function. The general syntax for a function is:
 
 ```manganese
-func name(type1 parameter1, type2 parameter2, etc) -> return type {
+func name(parameter1 : type1, parameter2 : type2, etc) -> return type {
     statement(s);
 
     return <value>;
@@ -19,8 +19,8 @@ Functions can also be overloaded, provided they have unambiguously distinguishab
 An example function declaration might be:
 
 ```manganese
-func foo(int x, int y, int z = 3, int... args) -> int {
-    int64 sum = 0;
+func foo(x: int, y: int, z: int = 3, ... args : int) -> int {
+    let sum : in64 = 0;
     for (int i = 0; i < args.length(); i++) {
         sum += args[i];
     }
@@ -31,6 +31,8 @@ func foo(int x, int y, int z = 3, int... args) -> int {
 > TODO: (eventually) add generics
 
 ## === Lambdas ===
+
+> TODO: Review this section (just have func without an identifier?)
 
 Lambdas are anonymous functions, which can be declared inline for single-use cases. The syntax for declaring a lambda is:
 

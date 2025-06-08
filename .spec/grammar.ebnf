@@ -46,9 +46,10 @@ binary_op = arithmetic_op | comparison_op | boolean_op | bitwise_op;
 binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)
 
 #* Variables
-variable_decl = type_qualifiers type variable_name ("=" expression)? ";";
+variable_decl = type_qualifiers type variable_name ("=" expression)? ";";   # semantically, the expression must match the given type
+variable_decl = ("let" | "const") variable_name (":" type_qualifiers? type)? ("=" expression)? ";"
 
-type_qualifiers = ("public" | "readonly" | "private")? "const"? "ptr"? "const"?  # default is readonly (outside the module) and mutable (within the module)
+type_qualifiers = ("public" | "readonly" | "private")? "ptr"? "const"?  # default is readonly (outside the module) and mutable (within the module)
 type = primitive_type | user_type;
 primitive_type = int_type | float_type | "char" | "bool";
 int_type = ("u"?)"int"(int_width?);  # u makes it unsigned, if no width specified, defaults to 32 bits

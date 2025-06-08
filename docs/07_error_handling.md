@@ -1,5 +1,7 @@
 # === Error Handling ===
 
+> TODO: Rework
+
 In Manganese, errors are treated as return types (similar to Zig).
 
 ```manganese

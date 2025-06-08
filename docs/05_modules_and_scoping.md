@@ -9,14 +9,14 @@ To import a module, use the `import` keyword followed by the module name. Module
 
 # in my_module.mn
 module my_module
-int x = 3;
+let x : int = 3;
 # other code
 
 # in main.mn
 import my_module
 import really_long_module_name as mod
 
-int z = my_module.x;  # z is now 3
+let z : int = my_module.x;  # z is now 3
 
 ```
 
@@ -47,14 +47,14 @@ By default, all variables are `readonly` and all functions are `public`.
 ```manganese
 module my_module
 public:
-int x = 3;
-int y = 4;
+let x : int = 3;
+let y : int = 4;
 
 readonly:
-int z = 5;
+let z : int = 5;
 
 private:
-func foo(int a, int b) -> int {
+func foo(a : int, b : int) -> int {
     return a + b;
 }
 ```
@@ -63,10 +63,10 @@ This is equivalent to:
 
 ```manganese
 module my_module
-public int x = 3;
-public int y = 4;
-readonly int z = 5;
-private func foo(int a, int b) -> int {
+let x : public int = 3;
+let y : public int = 4;
+let z : readonly int = 5;
+private func foo(a : int, b : int) -> int {
     return a + b;
 }
 ```
@@ -76,15 +76,15 @@ If a variable has an access modifier specified within a block, it will override 
 ```manganese
 module my_module
 private:
-int w = 1;
-int x = 3;
-int y = 7;
-readonly int z = 5;
+let w : int = 1;
+let x : int = 3;
+let y : int = 7;
+int : readonly z = 5;
 
 public:
-int a = 3;
-int b = 4;
-private int c = 5;
+let a : int  = 3;
+let b : int  = 4;
+let c : private int = 5;
 ```
 
 Here `z` will be `readonly`, and `c` will be `private`, despite being declared in a `private` and `public` block respectively. The compiler will issue a warning for `z` since `readonly` is less restrictive than `private`, but not for `c` since `private` is more restrictive than `public`.
