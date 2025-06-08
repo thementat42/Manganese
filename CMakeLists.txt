@@ -83,7 +83,6 @@ if(BUILD_TESTS)
             -Werror
             -fsanitize=address
             -fsanitize=undefined
-            -fsanitize=memory
             -fsanitize=leak
             -fno-omit-frame-pointer
             -fno-inline
@@ -140,7 +139,6 @@ else()
                 -Werror
                 -fsanitize=address
                 -fsanitize=undefined
-                -fsanitize=memory
                 -fsanitize=leak
                 -fno-omit-frame-pointer
                 -fno-inline
