@@ -93,7 +93,7 @@ while_loop = "while" "(" expression ")" "{" block "}";
 do_while_loop = "do" "{" block "}" "while" "(" expression ")" ";";
 
 #* Functions
-function_decl = "func" generic_parameters? identifier "(" parameter_list? ")" ("->" type)? "{" block "}";
+function_decl = "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
 
 generic_parameters = "<" identifier ("," identifier)* ">";
 
