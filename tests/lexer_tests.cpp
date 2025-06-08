@@ -10,6 +10,8 @@
 #include "../src/global_macros.h"
 #include "testrunner.h"
 
+// TODO: Replace this with purely file-based tests
+
 namespace manganese {
 namespace tests {
 using lexer::Lexer;
@@ -20,7 +22,11 @@ using lexer::TokenType;
 using lexer::tokenTypeToString;
 
 // Utility function to print tokens in cyan color
-void printAllTokens(const std::vector<Token>& tokens) {
+inline void printAllTokens(const std::vector<Token>& tokens) {
+    if (tokens.empty()) {
+        std::cout << "No tokens found." << std::endl;
+        return;
+    }
     std::cout << "Tokens: " << CYAN;
     for (const auto& token : tokens) {
         std::cout << token.getLexeme() << " ";
