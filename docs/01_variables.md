@@ -39,13 +39,13 @@ By default, all variables are private -- they cannot be accessed or modified out
 
 The primitive types in Manganese are:
 
-|   Type   |          Description           |                             Size                             |
-| -------- | ------------------------------ | ------------------------------------------------------------ |
+|   Type   |          Description           |                             Size                              |
+| -------- | ------------------------------ | ------------------------------------------------------------- |
 | `int`    | A signed integer               | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
 | `uint`   | An unsigned integer            | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
 | `float`  | A floating-point value         | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
-| `char`   | A single character             | 8 bits                                                       |
-| `bool`   | A boolean (`true` or `false`)  | 8 bits                                                       |
+| `char`   | A single character             | 8 bits                                                        |
+| `bool`   | A boolean (`true` or `false`)  | 8 bits                                                        |
 
 Some example variable assignments in Manganese are:
 
