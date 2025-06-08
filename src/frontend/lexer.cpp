@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <iostream>
 
 #include "../global_macros.h"
 #include "../io/include/filereader.h"
@@ -45,31 +46,36 @@ Lexer::Lexer(const str& source, const Mode mode) {
 
 static optional<wchar_t> resolveHexAndUnicodeCharacters(const str& esc, const bool& isUnicode, size_t& skipLength) {
     // Length is checked in caller (when passing in substring)
-    const char* sequenceType = isUnicode ? "unicode" : "hex";
     auto isNotHex = [](char c) { return !std::isxdigit(static_cast<unsigned char>(c)); };
     auto x = std::find_if(esc.begin(), esc.begin() + (isUnicode ? 4 : 2), isNotHex);
     if (x != esc.end()) {
-        fprintf(stderr,
-                "Error: Invalid %s escape sequence: \\%c%s\n",
-                sequenceType, isUnicode ? 'u' : 'x', esc.c_str());
+        std::cerr << "Error: Invalid " << (isUnicode ? "unicode" : "hex") << "escape sequence: \\" << (isUnicode ? 'u' : 'x') << esc;
         return NONE;
     }
     wchar_t unicodeChar = 0;
-    if (isUnicode) {
-        // Convert to unicode character
-        for (size_t i = 0; i < 4; ++i) {
-            unicodeChar <<= 4;
-            unicodeChar |= static_cast<wchar_t>(std::stoi(std::string(1, esc[i]), nullptr, 16));
-        }
-        skipLength = 4;
-    } else {
-        // Convert to hex character
-        for (size_t i = 0; i < 2; ++i) {
-            unicodeChar <<= 4;
-            unicodeChar |= static_cast<wchar_t>(std::stoi(esc.substr(i, 1), nullptr, 16));
-        }
-        skipLength = 2;
+    size_t length = isUnicode ? 4 : 2;
+    unicodeChar = 0;
+    for (size_t i = 0; i < length; ++i) {
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#elif defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4244)  // 4244 is a data loss warning
+#endif
+
+        // this line converts 4 from an int to a wchar_t
+        // ignore the conversion warning (hence the pragma directives)
+        unicodeChar <<= 4;
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+        unicodeChar |= static_cast<wchar_t>(std::stoi(std::string(1, esc[i]), nullptr, 16));
     }
+    skipLength = length;
     return unicodeChar;
 }
 
@@ -99,9 +105,7 @@ static inline optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
         case '0':
             return '\0';
         default:
-            fprintf(stderr,
-                    "\\%c is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ('\\\\%c')\n",
-                    escapeChar, escapeChar);
+            std::cerr << '\\' << escapeChar << " is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ('\\\\" << escapeChar << "')\n";
             return NONE;
     }
 }
@@ -141,14 +145,14 @@ static str resolveEscapeCharacters(const str& escapeString) {
         }
         ++i;  // skip the backslash
         if (i >= escapeString.length()) {
-            fprintf(stderr, "error: incomplete escape sequence at end of string\n");
+            std::cerr << "error: incomplete escape sequence at end of string" << std::endl;
             return "INVALID ESCAPE SEQUENCE";
         }
         optional<wchar_t> escapeSequence;
         if (escapeString[i] == 'u' || escapeString[i] == 'x') {
             unsigned int length = (escapeString[i] == 'u') ? 4 : 2;
             if (i + length >= escapeString.length()) {
-                fprintf(stderr, "error: incomplete escape sequence at end of string\n");
+                std::cerr << "error: incomplete escape sequence at end of string" << std::endl;
                 return "INVALID ESCAPE SEQUENCE";
             }
             str escDigits = escapeString.substr(i + 1, length);
@@ -168,7 +172,7 @@ static str resolveEscapeCharacters(const str& escapeString) {
         // Convert the escape sequence to a string and add it to the processed string
         uint32_t wideChar = *escapeSequence;
         if (wideChar > UTF8_4B_MAX) {
-            fprintf(stderr, "error: invalid unicode escape sequence\n");
+            std::cerr << "error: invalid unicode escape sequence\n";
             return "INVALID ESCAPE SEQUENCE";
         }
         processed += convertWideCharToUTF8(wideChar);
@@ -179,7 +183,7 @@ static str resolveEscapeCharacters(const str& escapeString) {
 void Lexer::processCharEscapeSequence(const str& charLiteral) {
     str processed = resolveEscapeCharacters(charLiteral);
     if (processed == "INVALID ESCAPE SEQUENCE") {
-        fprintf(stderr, "Error: Invalid character literal (line %zu, column %zu)\n", getLine(), getCol());
+        std::cerr << "Error: Invalid character literal (line " << getLine() << ", column " << getCol() << ")\n";
         tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
         return;
     }
@@ -194,7 +198,7 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
                                  (byteCount == 4 && (firstByte & 0xF8) == 0xF0);    // 4-byte UTF-8 character
     }
     if (!isValidSingleCodePoint) {
-        fprintf(stderr, "Error: Invalid character literal (line %zu, column %zu)\n", getLine(), getCol());
+        std::cerr << "Error: Invalid character literal (line " << getLine() << ", column " << getCol() << ")\n";
         tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
         return;
     }
@@ -209,7 +213,7 @@ void Lexer::tokenizeCharLiteral() {
     // Look for a closing quote
     while (true) {
         if (done()) {
-            fprintf(stderr, "Unclosed character literal (line %zu, column %zu)\n", startLine, startCol);
+            std::cerr << "Unclosed character literal (line " << startLine << ", column " << startCol << ")\n";
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -217,11 +221,9 @@ void Lexer::tokenizeCharLiteral() {
             break;
         }
         if (peekChar() == '\n') {
-            fprintf(
-                stderr,
-                "Unclosed string literal (line %zu, column %zu)\
-                If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line\n",
-                startLine, startCol);
+            std::cerr << "Unclosed string literal (line " << startLine << ", column " << startCol << ")";
+            std::cerr << " If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line\n";
+
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -236,7 +238,7 @@ void Lexer::tokenizeCharLiteral() {
         processCharEscapeSequence(charLiteral);
         return;
     } else if (charLiteral.length() > 1) {
-        fprintf(stderr, "Error: Character literal exceeds 1 character limit (line %zu, column %zu).\n", startLine, startCol);
+        std::cerr << "Error: Character literal exceeds 1 character limit (line " << startLine << ", column " << startCol << ").\n";
         tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", startLine, startCol);
         return;
     }
@@ -252,7 +254,7 @@ void Lexer::tokenizeStringLiteral() {
     // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
     while (true) {
         if (done()) {
-            fprintf(stderr, "Unclosed string literal (line %zu, column %zu)\n", startLine, startCol);
+            std::cerr << "Unclosed string literal (line " << startLine << ", column " << startCol << ")\n";
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -269,7 +271,7 @@ void Lexer::tokenizeStringLiteral() {
             stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
         } else if (peekChar() == '\n') {
-            fprintf(stderr, "String literal cannot span multiple lines (line %zu, column %zu)\n", startLine, startCol);
+            std::cerr << "String literal cannot span multiple lines (line " << startLine << ", column " << startCol << ")\n";
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -355,7 +357,7 @@ void Lexer::tokenizeNumber() {
         if (currentChar == '.') {
             if (isFloat) {
                 // Invalid number -- two decimal points
-                fprintf(stderr, "Error: Invalid number literal (line %zu, column %zu)\n", startLine, startCol);
+                std::cerr << "Error: Invalid number literal (line " << startLine << ", column " << startCol << ")\n";
                 return;
             }
             isFloat = true;
@@ -372,7 +374,7 @@ void Lexer::tokenizeNumber() {
             currentChar = peekChar();
         }
         if (!isdigit(currentChar)) {
-            fprintf(stderr, "Error: Invalid scientific notation (line %zu, column %zu)\n", startLine, startCol);
+            std::cerr << "Error: Invalid scientific notation (line " << startLine << ", column " << startCol << ")\n";
             return;
         }
         while (!done() && isdigit(currentChar)) {
@@ -389,7 +391,7 @@ void Lexer::tokenizeNumber() {
             currentChar = peekChar();
         }
         if (!isdigit(currentChar)) {
-            fprintf(stderr, "Error: Invalid hexadecimal exponentiation (line %zu, column %zu)\n", startLine, startCol);
+            std::cerr << "Error: Invalid hexadecimal exponentiation (line " << startLine << "column " << startCol << ")\n";
             return;
         }
         while (!done() && isdigit(currentChar)) {
@@ -577,7 +579,7 @@ void Lexer::lex(size_t numTokens) {
                 advance();  // Skip the comment
             }
             if (done()) {
-                printf("Error: Unclosed comment (line %zu, column %zu)\n", startLine, startCol);
+                std::cerr << "Error: Unclosed comment (line " << startLine << ", column " << startCol << ")\n";
                 return;
             }
             advance(2);  // Skip the */
