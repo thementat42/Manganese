@@ -8,21 +8,21 @@
 #define GLOBAL_MACROS_H
 
 #include <stdint.h>
-#include <stdio.h>
+
+#include <iostream>
 
 #ifndef DEBUG    // Defined by CMake (see CMakeLists.txt)
 #define DEBUG 0  // Default to release mode if not defined
 #endif           // DEBUG
 
 // TODO: Replace printing macros with a proper logging system
-// NOTE: These macros use fprintf for compatibility with C
 
 #define __PRINT_LOCATION() \
-    fprintf(stderr, "\033[33m%s, %d: %s\033[0m\n", __FILE__, __LINE__, __func__);  // Used inside other macros only: Print the file, line number, and function name
+    std::cerr << "\033[33m" << __FILE__ << ", " << __LINE__ << ": " << __func__ << "\033[0m\n";  // Used inside other macros only: Print the file, line number, and function name
 
 #define UNREACHABLE(message)                                              \
     do {                                                                  \
-        fprintf(stderr, "\033[31mUnreachable code reached: %s", message); \
+        std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m"; \
         __PRINT_LOCATION()                                                \
         exit(EXIT_FAILURE);                                               \
     } while (0)
@@ -30,7 +30,7 @@
 #define ASSERT_CRITICAL(condition, message)                                             \
     do {                                                                                \
         if (!(condition)) {                                                             \
-            fprintf(stderr, "\033[31mCritical assertion failed: %s\n\033[0m", message); \
+            std::cerr << "\033[31mCritical assertion failed: " << message << "\n\033[0m"; \
             __PRINT_LOCATION()                                                          \
             exit(EXIT_FAILURE);                                                         \
         }                                                                               \
@@ -40,7 +40,7 @@
 #define ASSERT_DEBUG(condition, message)                                            \
     do {                                                                            \
         if (!(condition)) {                                                         \
-            fprintf(stderr, "033[33mDebug assertion failed: %s\n\033[0m", message); \
+            std::cerr << "\033[31mDebug assertion failed: " << message << "\n\033[0m"; \
             __PRINT_LOCATION()                                                      \
         }                                                                           \
     } while (0)
