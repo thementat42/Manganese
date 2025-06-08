@@ -35,7 +35,6 @@ public
 readonly
 repeat
 return
-set
 switch
 true
 typeof
