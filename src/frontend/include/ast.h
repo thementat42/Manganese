@@ -39,12 +39,20 @@ A block is a vector of statements
 #ifndef AST_H
 #define AST_H
 
+#if DEBUG
+#define AST_DEBUG_OVERRIDES                \
+    std::string toString() const override; \
+    void dump(std::ostream& os, int indent = 0) const override;
+#else                        // ^^ DEBUG vv !DEBUG
+#define AST_DEBUG_OVERRIDES  // Don't have these methods in release builds
+#endif                       // DEBUG
+
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "token.h"
 #include "../../global_macros.h"
+#include "token.h"
 
 namespace manganese {
 
@@ -71,6 +79,12 @@ using number_t = std::variant<
     float,
     double>;
 
+enum class Visibility : char {
+    Public = 0,
+    ReadOnly = 1,
+    Private = 2,
+};
+
 //~ Base Nodes
 class ASTNode {
    protected:
@@ -78,9 +92,12 @@ class ASTNode {
 
    public:
     virtual ~ASTNode() noexcept = default;
+
+    #if DEBUG
     virtual std::string toString() const = 0;
     virtual void dump(std::ostream& os, int indent = 0) const = 0;
-    
+    #endif // DEBUG
+
     size_t getLine() const { return line; }
     size_t getColumn() const { return column; }
 
@@ -106,10 +123,9 @@ class NumberExpression : public Expression {
 
    public:
     NumberExpression(number_t _value) : value(_value) {};
-    
+
     const number_t& getValue() const { return value; }
-    std::string toString() const override;
-    void dump(std::ostream& os, int indent = 0) const override;
+    AST_DEBUG_OVERRIDES
 };
 
 class StringExpression : public Expression {
@@ -118,21 +134,20 @@ class StringExpression : public Expression {
 
    public:
     StringExpression(const std::string& _value) : value(std::move(_value)) {};
-    
+
     const std::string& getValue() const { return value; }
-    std::string toString() const override;
-    void dump(std::ostream& os, int indent = 0) const override;
+    AST_DEBUG_OVERRIDES
 };
 
 class SymbolExpression : public Expression {
    protected:
     std::string value;
+
    public:
     SymbolExpression(const std::string& _value) : value(std::move(_value)) {}
-    
+
     const std::string& getValue() const { return value; }
-    std::string toString() const override;
-    void dump(std::ostream& os, int indent = 0) const override;
+    AST_DEBUG_OVERRIDES
 };
 
 //* Complex Expressions
@@ -143,13 +158,12 @@ class BinaryExpression : public Expression {
 
    public:
     BinaryExpression(ExpressionPtr _left, lexer::TokenType _op, ExpressionPtr _right)
-        : left(std::move(_left)), op(_op), right(std::move(_right)) {};
-    
+        : left(std::move(_left)), right(std::move(_right)), op(_op) {};
+
     const Expression& getLeft() const { return *left; }
     const Expression& getRight() const { return *right; }
     lexer::TokenType getOperator() const { return op; }
-    std::string toString() const override;
-    void dump(std::ostream& os, int indent = 0) const override;
+    AST_DEBUG_OVERRIDES
 };
 
 //~ Statements
@@ -159,10 +173,25 @@ class ExpressionStatement : public Statement {
 
    public:
     ExpressionStatement(ExpressionPtr _expression) : expression(std::move(_expression)) {};
-    
+
     const Expression& getExpression() const { return *expression; }
-    std::string toString() const override;
-    void dump(std::ostream& os, int indent = 0) const override;
+    AST_DEBUG_OVERRIDES
+};
+
+class VariableDeclarationStatement : public Statement {
+   protected:
+    std::string name;
+    bool isConst;
+    Visibility visibility;
+    ExpressionPtr value;
+    // primitiveType type;
+
+   public:
+    VariableDeclarationStatement(std::string _name, bool _isConst, Visibility _visibility, ExpressionPtr _value)
+        : name(std::move(_name)), isConst(_isConst), visibility(_visibility), value(std::move(_value)) {};
+    VariableDeclarationStatement(std::string _name, bool _isConst, ExpressionPtr _value)
+        : name(std::move(_name)), isConst(_isConst), visibility(Visibility::ReadOnly), value(std::move(_value)) {};
+    AST_DEBUG_OVERRIDES
 };
 
 }  // namespace ast
