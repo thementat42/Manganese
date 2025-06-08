@@ -4,6 +4,10 @@
 #include <functional>
 #include <string>
 
+#ifndef DEBUG
+#define DEBUG 1  // Force debug on in tests
+#endif  // DEBUG
+
 #include "../src/global_macros.h"
 
 namespace manganese {
