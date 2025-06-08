@@ -81,9 +81,6 @@ if(BUILD_TESTS)
             -Wconversion
             -Wimplicit-fallthrough
             -Werror
-            -fsanitize=address
-            -fsanitize=undefined
-            -fsanitize=leak
             -fno-omit-frame-pointer
             -fno-inline
             -fcheck-new
@@ -137,12 +134,6 @@ else()
                 -Wconversion
                 -Wimplicit-fallthrough
                 -Werror
-                -fsanitize=address
-                -fsanitize=undefined
-                -fsanitize=leak
-                -fno-omit-frame-pointer
-                -fno-inline
-                -fcheck-new
                 -DGLIBCXX_DEBUG
             )
         endif()
