@@ -18,6 +18,10 @@
 #include "tests/testrunner.h"
 #include "tests/tests.h"
 
+constexpr bool strneq(const char* a, const char* b,size_t max_count) {
+    return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
+}
+
 int main(int argc, char const* argv[]) {
     if (argc == 1) {
         fprintf(stderr, "Usage: %s [--lexer] [--parser] [--semantic] [--codegen] [--all]\n", argv[0]);
@@ -32,15 +36,15 @@ int main(int argc, char const* argv[]) {
     // TODO: Replace this with proper argument parser later (when working on argparser for main executable)
 
     for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], "--lexer") == 0) {
+        if (strneq(argv[i], "--lexer", 7)) {
             lexer = true;
-        } else if (strcmp(argv[i], "--parser") == 0) {
+        } else if (strneq(argv[i], "--parser", 8)) {
             parser = true;
-        } else if (strcmp(argv[i], "--semantic") == 0) {
+        } else if (strneq(argv[i], "--semantic", 10)) {
             semantic = true;
-        } else if (strcmp(argv[i], "--codegen") == 0) {
+        } else if (strneq(argv[i], "--codegen", 9)) {
             codegen = true;
-        } else if (strcmp(argv[i], "--all") == 0) {
+        } else if (strneq(argv[i], "--all", 5)) {
             lexer = true;
             parser = true;
             semantic = true;
