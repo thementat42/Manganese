@@ -10,8 +10,9 @@
 namespace manganese {
 namespace ast {
 
+# if DEBUG  // Thse functions are only used in debug mode
 // Helper function to create indentation
-static std::string getIndent(int indent) {
+inline static std::string getIndent(int indent) {
     return std::string(indent * 2, ' ');
 }
 
@@ -127,6 +128,8 @@ void ExpressionStatement::dump(std::ostream& os, int indent) const {
     expression->dump(os, indent + 1);
     os << getIndent(indent) << "}\n";
 }
+
+#endif  // DEBUG
 
 }  // namespace ast
 }  // namespace manganese
