@@ -28,6 +28,7 @@
 #include "../io/include/reader.h"
 #include "../io/include/stringreader.h"
 #include "include/token.h"
+#include "lexer.h"
 
 namespace manganese {
 namespace lexer {
@@ -221,8 +222,8 @@ void Lexer::tokenizeCharLiteral() {
             break;
         }
         if (peekChar() == '\n') {
-            std::cerr << "Unclosed string literal (line " << startLine << ", column " << startCol << ")";
-            std::cerr << " If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line\n";
+            std::cerr << "Unclosed character literal";
+            LOG_LINE_COL(startLine, startCol);
 
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
@@ -238,7 +239,8 @@ void Lexer::tokenizeCharLiteral() {
         processCharEscapeSequence(charLiteral);
         return;
     } else if (charLiteral.length() > 1) {
-        std::cerr << "Error: Character literal exceeds 1 character limit (line " << startLine << ", column " << startCol << ").\n";
+        std::cerr << "Error: Character literal exceeds 1 character limit";
+        LOG_LINE_COL(startLine, startCol);
         tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", startLine, startCol);
         return;
     }
@@ -254,7 +256,8 @@ void Lexer::tokenizeStringLiteral() {
     // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
     while (true) {
         if (done()) {
-            std::cerr << "Unclosed string literal (line " << startLine << ", column " << startCol << ")\n";
+            std::cerr << "Unclosed string literal";
+            LOG_LINE_COL(startLine, startCol);
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -271,7 +274,10 @@ void Lexer::tokenizeStringLiteral() {
             stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
         } else if (peekChar() == '\n') {
-            std::cerr << "String literal cannot span multiple lines (line " << startLine << ", column " << startCol << ")\n";
+            std::cerr << "String literal cannot span multiple lines";
+            LOG_LINE_COL(startLine, startCol);
+            std::cerr << " If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line\n";
+
             tokenStream.emplace_back(TokenType::Invalid, "INVALID", startLine, startCol);
             return;
         }
@@ -306,45 +312,11 @@ void Lexer::tokenizeKeywordOrIdentifier() {
 void Lexer::tokenizeNumber() {
     size_t startLine = getLine(), startCol = getCol();
     str numberLiteral;
-    char currentChar = peekChar();
     bool isFloat = false;
-    uint8_t base = 10;  // Default base is decimal
     std::function<bool(char)> isValidBaseChar;
-    // TODO: Add floating point support for hex numbers (but not octal or binary)
-    if (currentChar == '0') {
-        // Could be a base indicator (0x, 0b, 0o) -- check next char
-        char baseChar = peekChar(1);
-        switch (baseChar) {
-            case 'x':
-            case 'X':
-                // Hexadecimal number
-                isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); };
-                advance(2);
-                numberLiteral += "0x";
-                base = 16;
-                break;
-            case 'b':
-            case 'B':
-                isValidBaseChar = [](char c) { return c == '0' || c == '1'; };
-                advance(2);
-                numberLiteral += "0b";
-                break;
-            case 'o':
-            case 'O':
-                isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; };
-                advance(2);
-                numberLiteral += "0o";
-                break;
-            default:
-                // Not a valid base indicator -- just treat it as a decimal number
-                isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); };
-                break;
-        }
-        currentChar = peekChar();  // if there was a base indicator, update the current char
-    } else {
-        // Decimal number
-        isValidBaseChar = [](char c) { return isdigit(c); };
-    }
+    NumberLiteralBase base = processNumberPrefix(isValidBaseChar, numberLiteral);
+
+    char currentChar = peekChar();  // If there was a number prefix, update the current char
 
     while (!done() && (isValidBaseChar(currentChar) || currentChar == '.' || currentChar == '_')) {
         if (currentChar == '_') {
@@ -353,19 +325,70 @@ void Lexer::tokenizeNumber() {
             currentChar = peekChar();
             continue;
         }
-        numberLiteral += consumeChar();
         if (currentChar == '.') {
             if (isFloat) {
                 // Invalid number -- two decimal points
-                std::cerr << "Error: Invalid number literal (line " << startLine << ", column " << startCol << ")\n";
+                std::cerr << "Error: Invalid number literal";
+                LOG_LINE_COL(startLine, startCol);
+                return;
+            }
+            // Reject floating point for octal and binary numbers
+            if (base == NumberLiteralBase::Octal || base == NumberLiteralBase::Binary) {
+                std::cerr << "Error: Floating point literals are not allowed for" << (base == NumberLiteralBase::Octal ? "octal" : "binary") << "numbers";
+                LOG_LINE_COL(startLine, startCol);
                 return;
             }
             isFloat = true;
         }
+        numberLiteral += consumeChar();
         currentChar = peekChar();
     }
     // Handle scientific notation (e.g., 1.23e4)
-    if ((currentChar == 'e' || currentChar == 'E') && base == 10) {
+    processNumberSuffix(base, numberLiteral, startLine, startCol, isFloat);
+    tokenStream.emplace_back(
+        isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral,
+        numberLiteral,
+        startLine, startCol);
+}
+
+NumberLiteralBase Lexer::processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral) {
+    char currentChar = peekChar();
+    if (currentChar != '0') {
+        // Decimal number
+        isValidBaseChar = [](char c) { return isdigit(c); };
+        return NumberLiteralBase::Decimal;
+    }
+    // Could be a base indicator (0x, 0b, 0o) -- check next char
+    switch (peekChar(1)) {
+        case 'x':
+        case 'X':
+            // Hexadecimal number
+            isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); };
+            advance(2);
+            numberLiteral += "0x";
+            return NumberLiteralBase::Hexadecimal;
+        case 'b':
+        case 'B':
+            isValidBaseChar = [](char c) { return c == '0' || c == '1'; };
+            advance(2);
+            numberLiteral += "0b";
+            return NumberLiteralBase::Binary;
+        case 'o':
+        case 'O':
+            isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; };
+            advance(2);
+            numberLiteral += "0o";
+            return NumberLiteralBase::Octal;
+        default:
+            // Not a valid base indicator -- just treat it as a decimal number
+            isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); };
+            return NumberLiteralBase::Decimal;
+    }
+}
+
+bool Lexer::processNumberSuffix(NumberLiteralBase base, str& numberLiteral, size_t& startLine, size_t& startCol, bool isFloat) {
+    char currentChar = peekChar();
+    if ((currentChar == 'e' || currentChar == 'E') && base == NumberLiteralBase::Decimal) {
         // Scientific notation
         numberLiteral += consumeChar();  // Add the 'e' or 'E'
         currentChar = peekChar();
@@ -374,41 +397,47 @@ void Lexer::tokenizeNumber() {
             currentChar = peekChar();
         }
         if (!isdigit(currentChar)) {
-            std::cerr << "Error: Invalid scientific notation (line " << startLine << ", column " << startCol << ")\n";
-            return;
+            std::cerr << "Error: Invalid scientific notation";
+            LOG_LINE_COL(startLine, startCol);
+            return false;
         }
         while (!done() && isdigit(currentChar)) {
             numberLiteral += consumeChar();
             currentChar = peekChar();
         }
-
-    } else if ((currentChar == 'p' || currentChar == 'P') && base == 16) {
-        // Hexadecimal exponentiation (e.g., 0x1.23p4)
-        numberLiteral += consumeChar();  // Add the 'p' or 'P'
-        currentChar = peekChar();
-        if (currentChar == '+' || currentChar == '-') {
-            numberLiteral += consumeChar();  // Add the sign
+    } else if (base == NumberLiteralBase::Hexadecimal) {
+        // Hexadecimal floats must have a 'p' or 'P' exponent if they are floats
+        if (isFloat) {
+            if (currentChar != 'p' && currentChar != 'P') {
+                std::cerr << "Error: Hexadecimal floating point literals must have a 'p' or 'P' exponent";
+                LOG_LINE_COL(startLine, startCol);
+                return false;
+            }
+            // Hexadecimal exponentiation (e.g., 0x1.23p4)
+            numberLiteral += consumeChar();  // Add the 'p' or 'P'
             currentChar = peekChar();
+            if (currentChar == '+' || currentChar == '-') {
+                numberLiteral += consumeChar();  // Add the sign
+                currentChar = peekChar();
+            }
+            if (!isdigit(currentChar)) {
+                std::cerr << "Error: Invalid hexadecimal exponentiation";
+                LOG_LINE_COL(startLine, startCol);
+                return false;
+            }
+            while (!done() && isdigit(currentChar)) {
+                numberLiteral += consumeChar();
+                currentChar = peekChar();
+            }
         }
-        if (!isdigit(currentChar)) {
-            std::cerr << "Error: Invalid hexadecimal exponentiation (line " << startLine << "column " << startCol << ")\n";
-            return;
-        }
-        while (!done() && isdigit(currentChar)) {
-            numberLiteral += consumeChar();
-            currentChar = peekChar();
-        }
-    } else if (isFloat && (currentChar == 'f' || currentChar == 'F')) {
+    }
+    if (isFloat && (currentChar == 'f' || currentChar == 'F') && base == NumberLiteralBase::Decimal) {
         // Floating point suffix (e.g., 1.23f)
         numberLiteral += consumeChar();  // Add the 'f' or 'F'
         currentChar = peekChar();
     }
-    tokenStream.emplace_back(
-        isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral,
-        numberLiteral,
-        startLine, startCol);
+    return true;
 }
-
 void Lexer::tokenizeSymbol() {
     size_t startLine = getLine(), startCol = getCol();
     TokenType type;
@@ -579,7 +608,8 @@ void Lexer::lex(size_t numTokens) {
                 advance();  // Skip the comment
             }
             if (done()) {
-                std::cerr << "Error: Unclosed comment (line " << startLine << ", column " << startCol << ")\n";
+                std::cerr << "Error: Unclosed comment";
+                LOG_LINE_COL(startLine, startCol);
                 return;
             }
             advance(2);  // Skip the */
