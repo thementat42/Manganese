@@ -117,14 +117,6 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             } else {
                 return make_unique<ast::NumberExpression>(stoi(numericPart, nullptr, base));
             }
-            // Check for floating-point suffixes
-            char lastChar = lexeme.back();
-            std::string numericPart = lexeme;
-            if (lastChar == 'f' || lastChar == 'F') {
-                return make_unique<ast::NumberExpression>(stof(numericPart));
-            } else {
-                return make_unique<ast::NumberExpression>(stod(numericPart));
-            }
         }
         case TokenType::FloatLiteral: {
             // Check for floating-point suffixes
