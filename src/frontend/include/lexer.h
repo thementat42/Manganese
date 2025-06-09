@@ -1,6 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <queue>
@@ -43,6 +44,13 @@ enum class Mode {
     File     // Filename passed in
 };
 
+enum NumberLiteralBase {
+    Binary = 2,
+    Octal = 8,
+    Decimal = 10,
+    Hexadecimal = 16
+};
+
 class Lexer {
    private:  // private variables
     std::unique_ptr<io::Reader> reader;
@@ -64,9 +72,30 @@ class Lexer {
     void tokenizeStringLiteral();
 
     /**
+     * @brief Processes the prefix of a number literal to determine its base.
+     * @details The valid prefixes are 0b for binary, 0o for octal and 0x for hexadecimal
+     * @param isValidBaseChar Output parameter: A reference to a function or lambda that takes a character and returns true
+     *                        if the character is valid for the intended base, false otherwise.
+     * @param numberLiteral Output parameter: The lexeme for the number literal (the base prefix will be appended if there is one)
+     * @return NumberLiteralBase The detected base of the number literal (e.g., decimal, hexadecimal, binary).
+     */
+    NumberLiteralBase processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral);
+
+    /**
      * @brief Process a number literal and generate a token
      */
     void tokenizeNumber();
+
+    /**
+     * @brief Process the suffix of a number literal (e.g., 'f' for float)
+     * @param base The base of the number literal 
+     * @param numberLiteral The lexeme for the number literal (the base prefix will be appended if there is one)
+     * @param startLine The line number where the number literal starts (for error reporting)
+     * @param startCol The column number where the number literal starts (for error reporting)
+     * @param isFloat Whether the number literal is a float (e.g., 1.23f)
+     * @return True if the suffix was processed successfully, false otherwise
+     */
+    bool processNumberSuffix(NumberLiteralBase base, str &numberLiteral, size_t &startLine, size_t &startCol, bool isFloat);
 
     /**
      * @brief Process any sequence of alphanumeric characters and underscores
