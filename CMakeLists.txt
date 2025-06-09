@@ -159,9 +159,6 @@ else()
                 -fomit-frame-pointer
                 -fstack-protector-strong
                 -march=native
-                -mspeculative-load-hardening
-                -mindirect-branch=thunk
-                -mfunction-return=thunk
                 -g0
             )
         endif()
