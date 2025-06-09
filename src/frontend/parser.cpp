@@ -55,24 +55,90 @@ ast::StatementPtr Parser::parseStatement() {
     return std::make_unique<ast::ExpressionStatement>(std::move(expression));
 }
 
+inline int determineNumberBase(const std::string& lexeme) {
+    if (lexeme.length() <= 2) {
+        return 10;  // Default to decimal if the lexeme is too short to be a valid base-prefixed number
+    }
+    if (lexeme[0] != '0') {
+        // No base prefix, assume decimal
+        return 10;
+    }
+    switch (lexeme[1]) {
+        case 'x':
+        case 'X':  // Hexadecimal
+            return 16;
+        case 'b':
+        case 'B':  // Binary
+            return 2;
+        case 'o':
+        case 'O':  // Octal
+            return 8;
+        default:  // No valid base prefix, assume decimal
+            return 10;
+    }
+}
+
 ExpressionPtr Parser::parsePrimaryExpression() {
     using lexer::TokenType;
-    using std::make_unique, std::stoi, std::stof, std::stod;
+    using std::make_unique, std::stoi, std::stol, std::stoll, std::stoul, std::stoull;
+    using std::stof, std::stod, std::stold;
     auto token = consumeToken();
     str lexeme = token.getLexeme();
     switch (token.getType()) {
-        case TokenType::IntegerLiteral:
-            return make_unique<ast::NumberExpression>(stoi(lexeme));
-        case TokenType::FloatLiteral:
-            if (lexeme.back() == 'f' || lexeme.back() == 'F') {
-                return make_unique<ast::NumberExpression>(stof(lexeme));
-            } else {
-                return make_unique<ast::NumberExpression>(stod(lexeme));
-            }
         case TokenType::StrLiteral:
             return make_unique<ast::StringExpression>(lexeme);
         case TokenType::Identifier:
             return make_unique<ast::SymbolExpression>(lexeme);
+        case TokenType::IntegerLiteral: {
+            // Extract integer suffix (u, l, ll, ul, ull, etc.)
+            int base = determineNumberBase(lexeme);
+            if (base != 10) {
+                // Strip the base prefix (the first two characters: 0x, 0b, 0o) from the lexeme
+                lexeme.erase(0, 2);
+            }
+            std::string numericPart = lexeme;
+            std::string suffix;
+            // Scan backwards for suffix letters
+            while (!numericPart.empty() && (isalpha(numericPart.back()) || numericPart.back() == '_')) {
+                suffix = std::string(1, tolower(numericPart.back())) + suffix;  // prepend to suffix, ignoring case for simplicity
+                numericPart.pop_back();
+            }
+
+            if (suffix == "ull" || suffix == "llu") {
+                return make_unique<ast::NumberExpression>(stoull(numericPart, nullptr, base));
+            } else if (suffix == "ll") {
+                return make_unique<ast::NumberExpression>(stoll(numericPart, nullptr, base));
+            } else if (suffix == "ul" || suffix == "lu") {
+                return make_unique<ast::NumberExpression>(stoul(numericPart, nullptr, base));
+            } else if (suffix == "u") {
+                return make_unique<ast::NumberExpression>(stoul(numericPart, nullptr, base));
+            } else if (suffix == "l") {
+                return make_unique<ast::NumberExpression>(stol(numericPart, nullptr, base));
+            } else {
+                return make_unique<ast::NumberExpression>(stoi(numericPart, nullptr, base));
+            }
+            // Check for floating-point suffixes
+            char lastChar = lexeme.back();
+            std::string numericPart = lexeme;
+            if (lastChar == 'f' || lastChar == 'F') {
+                return make_unique<ast::NumberExpression>(stof(numericPart));
+            } else {
+                return make_unique<ast::NumberExpression>(stod(numericPart));
+            }
+        }
+        case TokenType::FloatLiteral: {
+            // Check for floating-point suffixes
+            char lastChar = lexeme.back();
+            std::string numericPart = lexeme;
+
+            // Process float suffixes (f/F, d/D, l/L)
+            if (lastChar == 'f' || lastChar == 'F') {
+                numericPart.pop_back();
+                return make_unique<ast::NumberExpression>(stof(numericPart));
+            } else {
+                return make_unique<ast::NumberExpression>(stod(numericPart));
+            }
+        }
         default:
             UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + lexer::tokenTypeToString(token.getType()));
     }

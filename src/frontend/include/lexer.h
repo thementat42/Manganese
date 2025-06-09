@@ -58,6 +58,7 @@ str resolveEscapeCharacters(const str& escapeString);
 class Lexer {
    private:  // private variables
     std::unique_ptr<io::Reader> reader;
+    size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
     constexpr static const size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
 
    public:  // public variables
@@ -94,12 +95,10 @@ class Lexer {
      * @brief Process the suffix of a number literal (e.g., 'f' for float)
      * @param base The base of the number literal
      * @param numberLiteral The lexeme for the number literal (the base prefix will be appended if there is one)
-     * @param startLine The line number where the number literal starts (for error reporting)
-     * @param startCol The column number where the number literal starts (for error reporting)
      * @param isFloat Whether the number literal is a float (e.g., 1.23f)
      * @return True if the suffix was processed successfully, false otherwise
      */
-    bool processNumberSuffix(NumberLiteralBase base, str& numberLiteral, size_t& startLine, size_t& startCol, bool isFloat);
+    bool processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool isFloat);
 
     /**
      * @brief Process any sequence of alphanumeric characters and underscores
