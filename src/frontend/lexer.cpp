@@ -424,12 +424,11 @@ void Lexer::tokenizeSymbol() {
     }
     advance(lexeme.length());
     tokenStream.emplace_back(type, lexeme, startLine, startCol);
-
 }
 
 //~ Helper Functions
 
-static optional<wchar_t> resolveHexAndUnicodeCharacters(const str& esc, const bool& isUnicode, size_t& skipLength) {
+optional<wchar_t> resolveHexAndUnicodeCharacters(const str& esc, const bool& isUnicode, size_t& skipLength) {
     // Length is checked in caller (when passing in substring)
     auto isNotHex = [](char c) { return !std::isxdigit(static_cast<unsigned char>(c)); };
     auto x = std::find_if(esc.begin(), esc.begin() + (isUnicode ? 4 : 2), isNotHex);
@@ -464,7 +463,7 @@ static optional<wchar_t> resolveHexAndUnicodeCharacters(const str& esc, const bo
     return unicodeChar;
 }
 
-static inline optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
+inline optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
     // This is a separate function mainly for readability (hence inline)
     switch (escapeChar) {
         case '\\':
@@ -495,7 +494,7 @@ static inline optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
     }
 }
 
-static inline std::string convertWideCharToUTF8(uint32_t wideChar) {
+inline std::string convertWideCharToUTF8(uint32_t wideChar) {
     std::string result;
     if (wideChar <= UTF8_1B_MAX) {
         result += static_cast<char>(wideChar);  // Narrow character
@@ -518,7 +517,7 @@ static inline std::string convertWideCharToUTF8(uint32_t wideChar) {
     return result;
 }
 
-static str resolveEscapeCharacters(const str& escapeString) {
+str resolveEscapeCharacters(const str& escapeString) {
     str processed;
     processed.reserve(escapeString.length() - 1);
     size_t i = 0;
