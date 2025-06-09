@@ -74,6 +74,8 @@ using number_t = std::variant<
     uint16_t,
     int32_t,
     uint32_t,
+    long,
+    unsigned long,
     int64_t,
     uint64_t,
     float,
@@ -154,7 +156,7 @@ class NumberExpression : public Expression {
      * @brief Initialize a NumberExpression node
      * @param _value The numeric value of the expression (can be any numeric type)
      */
-    NumberExpression(number_t _value) : value(_value) {};
+    explicit NumberExpression(number_t _value) : value(_value) {};
 
     const number_t& getValue() const { return value; }
     AST_DEBUG_OVERRIDES
@@ -173,13 +175,13 @@ class StringExpression : public Expression {
      * @brief Initialize a StringExpression node
      * @param _value The string value of the expression (std::string)
      */
-    StringExpression(const std::string& _value) : value(std::move(_value)) {};
+    explicit StringExpression(const std::string& _value) : value(std::move(_value)) {};
 
     /**
      * @brief Initialize a StringExpression node
      * @param _value The string value of the expression (const char*)
      */
-    StringExpression(const char* _value) : value(_value) {};
+    explicit StringExpression(const char* _value) : value(_value) {};
 
     const std::string& getValue() const { return value; }
     AST_DEBUG_OVERRIDES
@@ -197,7 +199,7 @@ class SymbolExpression : public Expression {
      * @brief Initialize a SymbolExpression node
      * @param _value The symbol value of the expression (std::string)
      */
-    SymbolExpression(const std::string& _value) : value(std::move(_value)) {}
+    explicit SymbolExpression(const std::string& _value) : value(std::move(_value)) {}
 
     const std::string& getValue() const { return value; }
     AST_DEBUG_OVERRIDES
@@ -243,7 +245,7 @@ class ExpressionStatement : public Statement {
      * @brief Initialize an ExpressionStatement node
      * @param _expression The expression to wrap in the statement
      */
-    ExpressionStatement(ExpressionPtr _expression) : expression(std::move(_expression)) {};
+    explicit ExpressionStatement(ExpressionPtr _expression) : expression(std::move(_expression)) {};
 
     const Expression& getExpression() const { return *expression; }
     AST_DEBUG_OVERRIDES
