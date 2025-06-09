@@ -20,6 +20,9 @@
 #define __PRINT_LOCATION() \
     std::cerr << "\033[33m" << __FILE__ << ", " << __LINE__ << ": " << __func__ << "\033[0m\n";  // Used inside other macros only: Print the file, line number, and function name
 
+#define LOG_LINE_COL(line, col) \
+    std::cerr << "(line " << line << ", column " << col << ")\n";  // Used for error messages: Print the line and column number
+
 #define UNREACHABLE(message)                                                         \
     do {                                                                             \
         std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m"; \
