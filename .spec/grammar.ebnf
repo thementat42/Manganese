@@ -20,12 +20,19 @@ letter = "A" | "B" | "C" | "D" | "E" | "F" | "G"
        | "x" | "y" | "z" ;
 
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+octal_digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" ;
 hex_digit = digit | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b"
        | "c" | "d" | "e" | "f";
 
 literal = int_literal | float_literal | char_literal | string_literal | bool_literal;
-int_literal = ("-" | "+")? digit+;
-float_literal = ("-" | "+")? digit+ "." digit*;
+int_literal = ("-" | "+")? (decimal_literal | hex_literal | oct_literal | bin_literal);
+decimal_literal = digit+;
+hex_literal = "0x" hex_digit+;
+oct_literal = "0o" octal_digit+;
+bin_literal = "0b" ("0" | "1")+;
+float_literal = ("-" | "+")? (decimal_float "f" | hex_float) ;
+decimal_float = digit+ "." digit* ("e" digit+)?;
+hex_float = "0x" hex_digit+ "." hex_digit* "p" ("-" | "+")? decimal_literal
 char_literal = "'" [^'] "'";
 string_literal = '"' (unescaped_char | escape_seq)* '"';
 unescaped_char = [^"\];
