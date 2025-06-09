@@ -54,7 +54,7 @@ A block is a vector of statements
 #include "../../global_macros.h"
 #include "token.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 
 namespace parser {
 class Parser;
@@ -279,6 +279,6 @@ class VariableDeclarationStatement : public Statement {
 };
 
 }  // namespace ast
-}  // namespace manganese
+MANGANESE_END
 
 #endif  // AST_H

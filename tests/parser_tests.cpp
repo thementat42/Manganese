@@ -6,7 +6,7 @@
 #include "../src/global_macros.h"
 #include "testrunner.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace tests {
 
 bool testArithmeticOperators() {
@@ -149,4 +149,4 @@ int runParserTests(TestRunner& runner) {
     return 0;
 }
 }  // namespace tests
-}  // namespace manganese
+MANGANESE_END

@@ -11,7 +11,7 @@
 
 #include "../global_macros.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace lexer {
 Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column)
     : type(_type), lexeme(_lexeme), line(_line), column(_column) {
@@ -450,4 +450,4 @@ std::unordered_map<std::string, const TokenType> keywordMap = {
     {"while", TokenType::While}};
 
 }  // namespace lexer
-}  // namespace manganese
+MANGANESE_END

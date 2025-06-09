@@ -8,7 +8,7 @@
 #include "../src/global_macros.h"
 #include "testrunner.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace tests {
 void runLexerTests(TestRunner& runner);
 void runParserTests(TestRunner& runner);
@@ -16,5 +16,5 @@ void runSemanticAnalysisTests(TestRunner& runner);
 void runCodeGenerationTests(TestRunner& runner);
 
 }  // namespace tests
-}  // namespace manganese
+MANGANESE_END
 #endif  // MANGANESE_TESTS_H

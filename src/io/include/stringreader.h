@@ -13,7 +13,7 @@
 #include "../../global_macros.h"
 #include "reader.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace io {
 
 /**
@@ -42,6 +42,6 @@ class StringReader : public Reader {
     bool done() const noexcept override;
 };
 }  // namespace io
-}  // namespace manganese
+MANGANESE_END
 
 #endif  // STRING_READER_H

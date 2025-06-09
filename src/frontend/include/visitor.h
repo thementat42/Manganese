@@ -3,13 +3,13 @@
 
 #include "../../global_macros.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace visitor {
 
 class Visitor {
 };
 
 }  // namespace visitor
-}  // namespace manganese
+MANGANESE_END
 
 #endif  // VISITOR_H

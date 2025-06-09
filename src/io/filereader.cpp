@@ -14,7 +14,7 @@
 #include "../global_macros.h"
 #include "include/filereader.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace io {
 FileReader::FileReader(const std::string& filename, size_t _bufferCapacity) : position(0), line(1), column(1), bufferCapacity(_bufferCapacity) {
     fileStream.open(filename, std::ios::in);
@@ -142,4 +142,4 @@ inline bool FileReader::done() const noexcept {
 }
 
 }  // namespace io
-}  // namespace manganese
+MANGANESE_END

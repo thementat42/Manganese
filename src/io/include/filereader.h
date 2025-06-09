@@ -13,7 +13,7 @@
 #include "../../global_macros.h"
 #include "reader.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace io {
 /**
  * @brief A reader that extracts characters from a file, stored in memory, with built-in buffering behaviour
@@ -53,5 +53,5 @@ class FileReader : public Reader {
     bool done() const noexcept override;
 };
 }  // namespace io
-}  // namespace manganese
+MANGANESE_END
 #endif  // FILEREADER_H

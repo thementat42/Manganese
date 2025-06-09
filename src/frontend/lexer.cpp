@@ -30,7 +30,7 @@
 #include "include/token.h"
 #include "lexer.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace lexer {
 
 //~ Core Lexer Functions
@@ -239,19 +239,16 @@ void Lexer::tokenizeKeywordOrIdentifier() {
 void Lexer::tokenizeNumber() {
     str numberLiteral;
     bool isFloat = false;
-    bool seenNonZero = false;
     std::function<bool(char)> isValidBaseChar;
     NumberLiteralBase base = processNumberPrefix(isValidBaseChar, numberLiteral);
     char currentChar = peekChar();  // If there was a number prefix, update the current char
 
     while (!done() && (isValidBaseChar(currentChar) || currentChar == '.' || currentChar == '_')) {
-        if (currentChar == '_' || (currentChar == '0' && !seenNonZero)) {
-            // Ignore underscores and leading zeros in number literals
+        if (currentChar == '_') {
+            // Ignore underscores
             advance();
             currentChar = peekChar();
             continue;
-        } else if (currentChar != '0') {
-            seenNonZero = true;  // We have seen a non-zero digit, include zeroes from now on
         } else if (currentChar == '.') {
             if (isFloat) {
                 // Invalid number -- two decimal points
@@ -265,21 +262,12 @@ void Lexer::tokenizeNumber() {
                 LOG_LINE_COL(getLine(), getCol());
                 return;
             }
-            if (!seenNonZero) {
-                // something like 0.xxxxxxx
-                // Want to include the zero before the decimal point
-                seenNonZero = true;
-                numberLiteral += '0';
-            }
             isFloat = true;
         }
         numberLiteral += consumeChar();
         currentChar = peekChar();
     }
-    if (!seenNonZero) {
-        // The number was just zero (0, 0b0, 0x0, 000)
-        numberLiteral += '0';
-    }
+
     // Handle scientific notation (e.g., 1.23e4), size suffixes (e.g., 1.23f), etc.
     processNumberSuffix(base, numberLiteral, isFloat);
     tokenStream.emplace_back(
@@ -695,8 +683,6 @@ bool Lexer::processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool
 
     // Process integer suffixes
     bool hasUnsigned = false;
-    bool hasLong = false;
-    bool hasLongLong = false;
 
     // First suffix character
     if (currentChar == 'u' || currentChar == 'U') {
@@ -709,14 +695,11 @@ bool Lexer::processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool
     // Check for long/long long suffix
     if (currentChar == 'l' || currentChar == 'L') {
         numberLiteral += consumeChar();
-        hasLong = true;
         currentChar = peekChar();
 
         // Check for second 'l'/'L' (long long)
         if (currentChar == 'l' || currentChar == 'L') {
             numberLiteral += consumeChar();
-            hasLong = false;
-            hasLongLong = true;
             currentChar = peekChar();
         }
     }
@@ -730,4 +713,4 @@ bool Lexer::processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool
     return true;
 }
 }  // namespace lexer
-}  // namespace manganese
+MANGANESE_END

@@ -11,7 +11,7 @@
 #include "lexer.h"
 #include "token.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace parser {
 using ast::StatementPtr, ast::ExpressionPtr;
 using lexer::TokenType,

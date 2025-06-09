@@ -10,7 +10,7 @@
 
 #include "../global_macros.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace io {
 
 StringReader::StringReader(const std::string& _source) : position(0), line(1), column(1), source(_source) {}
@@ -62,4 +62,4 @@ inline bool StringReader::done() const noexcept {
 }
 
 }  // namespace io
-}  // namespace manganese
+MANGANESE_END

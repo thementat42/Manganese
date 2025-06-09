@@ -13,7 +13,7 @@
 
 #include "../../global_macros.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace lexer {
 
 /**
@@ -288,6 +288,6 @@ enum class TokenType : uint16_t {
 };
 
 }  // namespace lexer
-}  // namespace manganese
+MANGANESE_END
 
 #endif  // TOKEN

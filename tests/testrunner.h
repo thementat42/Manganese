@@ -10,7 +10,7 @@
 
 #include "../src/global_macros.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace tests {
 
 // ANSI color codes for terminal output
@@ -31,6 +31,6 @@ class TestRunner {
     bool allTestsPassed();
 };
 }  // namespace tests
-}  // namespace manganese
+MANGANESE_END
 
 #endif  // MANGANESE_TESTS_TEST_RUNNER_H

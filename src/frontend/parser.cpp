@@ -10,7 +10,7 @@
 //! Then re-parse the file using that table to handle the "less-than vs generic" ambiguity
 //! On the second pass, any time you see a function/bundle/blueprint name followed by a left angle bracket (<), treat it as a generic type (it's invalid to compare a function/bundle/blueprint name with something else)
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace parser {
 
 Parser::Parser(const str& source, lexer::Mode mode) : lexer(std::make_unique<lexer::Lexer>(source, mode)) {
@@ -100,8 +100,21 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             std::string suffix;
             // Scan backwards for suffix letters
             while (!numericPart.empty() && (isalpha(numericPart.back()) || numericPart.back() == '_')) {
-                suffix = std::string(1, tolower(numericPart.back())) + suffix;  // prepend to suffix, ignoring case for simplicity
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#elif defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4244)  // 4244 is a data loss warning
+#endif
+                suffix = std::string(1, std::tolower(numericPart.back())) + suffix;  // prepend to suffix, ignoring case for simplicity
                 numericPart.pop_back();
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#pragma warning(pop)
+#endif
             }
 
             if (suffix == "ull" || suffix == "llu") {
@@ -274,4 +287,4 @@ Token Parser::expectToken(const std::initializer_list<TokenType>& expectedTypes,
     exit(EXIT_FAILURE);
 }
 }  // namespace parser
-}  // namespace manganese
+MANGANESE_END

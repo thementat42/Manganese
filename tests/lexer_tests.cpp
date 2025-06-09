@@ -12,7 +12,7 @@
 
 // TODO: Replace this with purely file-based tests
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace tests {
 using lexer::Lexer;
 using lexer::Mode;
@@ -384,4 +384,4 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Complete Program", testCompleteProgram);
 }
 }  // namespace tests
-}  // namespace manganese
+MANGANESE_END

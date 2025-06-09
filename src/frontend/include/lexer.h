@@ -12,7 +12,7 @@
 #include "../../io/include/stringreader.h"
 #include "token.h"
 
-namespace manganese {
+MANGANESE_BEGIN
 namespace lexer {
 using str = std::string;
 using std::optional;
@@ -184,6 +184,6 @@ class Lexer {
     Token consumeToken() noexcept;
 };
 }  // namespace lexer
-}  // namespace manganese
+MANGANESE_END
 
 #endif  // LEXER_H

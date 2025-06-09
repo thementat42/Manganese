@@ -15,8 +15,32 @@
 #define DEBUG 0  // Default to release mode if not defined
 #endif           // DEBUG
 
+#define DISCARD(x) (void)(x)  // Explicitly discard a value
+#define DISABLE_COPY_AND_ASSIGN(ClassName) \
+    ClassName(const ClassName&) = delete;  \
+    ClassName& operator=(const ClassName&) = delete;  // Disable copy constructor and assignment operator
+#define DISABLE_MOVE(ClassName)      \
+    ClassName(ClassName&&) = delete; \
+    ClassName& operator=(ClassName&&) = delete;  // Disable move constructor and assignment operator
+#define DISABLE_COPY_MOVE(ClassName)   \
+    DISABLE_COPY_AND_ASSIGN(ClassName) \
+    DISABLE_MOVE(ClassName)  // Disable both copy and move semantics
+
+#ifdef __cplusplus
+#define EXT_C_BEGIN extern "C" {
+#define EXT_C_END }
+#define MANGANESE_BEGIN namespace manganese {
+#define MANGANESE_END }
+#else  // ^^ __cplusplus vv !__cplusplus
+#define EXT_C_BEGIN
+#define EXT_C_END
+#define MANGANESE_BEGIN
+#define MANGANESE_END
+#endif  // __cplusplus
+
 // TODO: Replace printing macros with a proper logging system
 
+//~ Logging Macros
 #define __PRINT_LOCATION() \
     std::cerr << "\033[33m" << __FILE__ << ", " << __LINE__ << ": " << __func__ << "\033[0m\n";  // Used inside other macros only: Print the file, line number, and function name
 
@@ -51,24 +75,5 @@
 // In release mode, inline the debug functions (since they do nothing)
 #define ASSERT_DEBUG(condition, message)  // no-op in release mode
 #endif                                    // DEBUG
-
-#define DISCARD(x) (void)(x)  // Explicitly discard a value
-#define DISABLE_COPY_AND_ASSIGN(ClassName) \
-    ClassName(const ClassName&) = delete;  \
-    ClassName& operator=(const ClassName&) = delete;  // Disable copy constructor and assignment operator
-#define DISABLE_MOVE(ClassName)      \
-    ClassName(ClassName&&) = delete; \
-    ClassName& operator=(ClassName&&) = delete;  // Disable move constructor and assignment operator
-#define DISABLE_COPY_MOVE(ClassName)   \
-    DISABLE_COPY_AND_ASSIGN(ClassName) \
-    DISABLE_MOVE(ClassName)  // Disable both copy and move semantics
-
-#ifdef __cplusplus
-#define EXT_C_BEGIN extern "C" {
-#define EXT_C_END }
-#else  // ^^ __cplusplus vv !__cplusplus
-#define EXT_C_BEGIN
-#define EXT_C_END
-#endif  // __cplusplus
 
 #endif  // GLOBAL_MACROS_H
