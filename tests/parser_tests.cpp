@@ -85,7 +85,7 @@ bool testExponentiationAssociativity() {
 
 bool testVariableDeclaration() {
     // Test parsing multiple variable declarations including float, variable reference, and const with comparison
-    std::string expression = "let foo = 45.5;\nlet bar = foo * 10;\nconst baz = foo + 10 ** 2;";
+    std::string expression = "let foo = 45.5;\nlet bar = foo * 10;\nconst baz = foo + 10 ** 2 * bar + foo % 7 + foo**2;";
     parser::Parser parser(expression, lexer::Mode::String);
 
     // Parse the expression
@@ -111,7 +111,7 @@ bool testVariableDeclaration() {
     // Define the expected string representations
     std::string expected1 = "(let foo = 45.5);";
     std::string expected2 = "(let bar = (foo * 10));";
-    std::string expected3 = "(const baz = (foo + (10 ** 2)));";
+    std::string expected3 = "(const baz = (((foo + ((10 ** 2) * bar)) + (foo % 7)) + (foo ** 2)));";
 
     // Compare the output with the expected strings
     bool success = true;
@@ -131,7 +131,7 @@ bool testVariableDeclaration() {
     }
 
     if (actual3 != expected3) {
-        std::cerr << "ERROR: Const declaration with comparison not parsed correctly." << std::endl;
+        std::cerr << "ERROR: Complex declaration not parsed correctly." << std::endl;
         std::cerr << "Expected: " << expected3 << std::endl;
         std::cerr << "Actual:   " << actual3 << std::endl;
         success = false;
