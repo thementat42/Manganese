@@ -261,9 +261,9 @@ std::string tokenTypeToString(TokenType type) noexcept {
             return "++";
         case TokenType::Dec:
             return "--";
-        case TokenType::PlusAssign:
+        case TokenType::PlusEq:
             return "+=";
-        case TokenType::MinusAssign:
+        case TokenType::MinusEq:
             return "-=";
         case TokenType::MulAssign:
             return "*=";
@@ -350,8 +350,8 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     {"--", TokenType::Dec},
 
     // Arithmetic Assignment Operators
-    {"+=", TokenType::PlusAssign},
-    {"-=", TokenType::MinusAssign},
+    {"+=", TokenType::PlusEq},
+    {"-=", TokenType::MinusEq},
     {"*=", TokenType::MulAssign},
     {"/=", TokenType::DivAssign},
     {"//=", TokenType::FloorDivAssign},

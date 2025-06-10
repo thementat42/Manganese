@@ -233,8 +233,8 @@ enum class TokenType : uint16_t {
 
     //* Arithmetic Assignment Operators
     // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)
-    PlusAssign,      // `+=`
-    MinusAssign,     // `-=`
+    PlusEq,      // `+=`
+    MinusEq,     // `-=`
     MulAssign,       // `*=`
     DivAssign,       // `/=`
     FloorDivAssign,  // `//=`

@@ -220,8 +220,8 @@ bool testOperators() {
            checkToken(tokens[6], TokenType::Exp, "**") &&
            checkToken(tokens[7], TokenType::Inc, "++") &&
            checkToken(tokens[8], TokenType::Dec, "--") &&
-           checkToken(tokens[9], TokenType::PlusAssign, "+=") &&
-           checkToken(tokens[10], TokenType::MinusAssign, "-=") &&
+           checkToken(tokens[9], TokenType::PlusEq, "+=") &&
+           checkToken(tokens[10], TokenType::MinusEq, "-=") &&
            checkToken(tokens[11], TokenType::MulAssign, "*=") &&
            checkToken(tokens[12], TokenType::DivAssign, "/=") &&
            checkToken(tokens[13], TokenType::FloorDivAssign, "//=") &&
