@@ -51,21 +51,40 @@ enum NumberLiteralBase {
     Hexadecimal = 16
 };
 
-// ~ Static helper functions
+//~ Static helper functions
 
-str resolveEscapeCharacters(const str& escapeString);
+/**
+ * @brief Map a character to its corresponding escape sequence (e.g. 'n' -> '\n')
+ * @param escapeChar The character to map
+ * @return An optional wide character representing the escape sequence, or NONE if the character is not a valid escape sequence
+ */
+optional<wchar_t> getEscapeCharacter(const char& escapeChar);
+
+/**
+ * @brief Convert a wide character to a UTF-8 encoded string
+ * @param wideChar The wide character to convert
+ * @return A string containing the UTF-8 encoded representation of the wide character
+ */
+std::string convertWideCharToUTF8(wchar_t wideChar);
 
 class Lexer {
    private:  // private variables
     std::unique_ptr<io::Reader> reader;
-    size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
+    size_t tokenStartLine, tokenStartCol;                      // Keep track of where the token started for error reporting
     constexpr static const size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
 
    public:  // public variables
     std::deque<Token> tokenStream;
 
    private:  // private methods
-             //~ Main tokenization functions
+    //~ Main tokenization functions
+
+    /**
+     * @brief Generates a certain number of tokens. Holds the main tokenization loop
+     * @param numTokens The number of tokens to generate (default is 1)
+     */
+    void lex(size_t numTokens = 1);
+
     /**
      * @brief Process a character literal and generate a token. Triggered when a single quote (') is encountered
      */
@@ -77,28 +96,9 @@ class Lexer {
     void tokenizeStringLiteral();
 
     /**
-     * @brief Processes the prefix of a number literal to determine its base.
-     * @details The valid prefixes are 0b for binary, 0o for octal and 0x for hexadecimal
-     * @param isValidBaseChar Output parameter: A reference to a function or lambda that takes a character and returns true
-     *                        if the character is valid for the intended base, false otherwise.
-     * @param numberLiteral Output parameter: The lexeme for the number literal (the base prefix will be appended if there is one)
-     * @return NumberLiteralBase The detected base of the number literal (e.g., decimal, hexadecimal, binary).
-     */
-    NumberLiteralBase processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral);
-
-    /**
      * @brief Process a number literal and generate a token
      */
     void tokenizeNumber();
-
-    /**
-     * @brief Process the suffix of a number literal (e.g., 'f' for float)
-     * @param base The base of the number literal
-     * @param numberLiteral The lexeme for the number literal (the base prefix will be appended if there is one)
-     * @param isFloat Whether the number literal is a float (e.g., 1.23f)
-     * @return True if the suffix was processed successfully, false otherwise
-     */
-    bool processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool isFloat);
 
     /**
      * @brief Process any sequence of alphanumeric characters and underscores
@@ -111,11 +111,30 @@ class Lexer {
      */
     void tokenizeSymbol();
 
+    //~ Helper functions
+
     /**
-     * @brief Generates a certain number of tokens. Holds the main tokenization loop
-     * @param numTokens The number of tokens to generate (default is 1)
+     * @brief Processes the prefix of a number literal to determine its base.
+     * @details The valid prefixes are 0b for binary, 0o for octal and 0x for hexadecimal
+     * @param isValidBaseChar Output parameter: A reference to a function or lambda that takes a character and returns true
+     *                        if the character is valid for the intended base, false otherwise.
+     * @param numberLiteral Output parameter: The lexeme for the number literal (the base prefix will be appended if there is one)
+     * @return NumberLiteralBase The detected base of the number literal (e.g., decimal, hexadecimal, binary).
      */
-    void lex(size_t numTokens = 1);
+    NumberLiteralBase processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral);
+
+    /**
+     * @brief Process the suffix of a number literal (e.g., 'f' for float)
+     * @param base The base of the number literal
+     * @param numberLiteral The lexeme for the number literal (the base prefix will be appended if there is one)
+     * @param isFloat Whether the number literal is a float (e.g., 1.23f)
+     * @return True if the suffix was processed successfully, false otherwise
+     */
+    bool processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool isFloat);
+
+    optional<wchar_t> resolveHexAndUnicodeCharacters(const str& esc, const bool& isUnicode, size_t& skipLength);
+
+    std::optional<str> resolveEscapeCharacters(const str& escapeString);
 
     /**
      * @brief Helper function specifically to handle escape sequences in char literals

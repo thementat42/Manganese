@@ -16,6 +16,13 @@
 #endif           // DEBUG
 
 #define DISCARD(x) (void)(x)  // Explicitly discard a value
+
+#ifdef __cplusplus
+#define EXT_C_BEGIN extern "C" {
+#define EXT_C_END }
+#define MANGANESE_BEGIN namespace manganese {
+#define MANGANESE_END }
+
 #define DISABLE_COPY_AND_ASSIGN(ClassName) \
     ClassName(const ClassName&) = delete;  \
     ClassName& operator=(const ClassName&) = delete;  // Disable copy constructor and assignment operator
@@ -26,33 +33,16 @@
     DISABLE_COPY_AND_ASSIGN(ClassName) \
     DISABLE_MOVE(ClassName)  // Disable both copy and move semantics
 
-#ifdef __cplusplus
-#define EXT_C_BEGIN extern "C" {
-#define EXT_C_END }
-#define MANGANESE_BEGIN namespace manganese {
-#define MANGANESE_END }
 #else  // ^^ __cplusplus vv !__cplusplus
+// Define empty macros so that they can be used in C code without causing compilation errors
 #define EXT_C_BEGIN
 #define EXT_C_END
 #define MANGANESE_BEGIN
 #define MANGANESE_END
+#define DISABLE_COPY_AND_ASSIGN(ClassName)
+#define DISABLE_MOVE(ClassName)
+#define DISABLE_COPY_MOVE(ClassName)
 #endif  // __cplusplus
-
-// TODO: Replace printing macros with a proper logging system
-
-//~ Logging Macros
-#define __PRINT_LOCATION() \
-    std::cerr << "\033[33m" << __FILE__ << ", " << __LINE__ << ": " << __func__ << "\033[0m\n";  // Used inside other macros only: Print the file, line number, and function name
-
-#define LOG_LINE_COL(line, col) \
-    std::cerr << "(line " << line << ", column " << col << ")\n";  // Used for error messages: Print the line and column number
-
-#define UNREACHABLE(message)                                                         \
-    do {                                                                             \
-        std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m"; \
-        __PRINT_LOCATION()                                                           \
-        exit(EXIT_FAILURE);                                                          \
-    } while (0)
 
 #define ASSERT_CRITICAL(condition, message)                                               \
     do {                                                                                  \

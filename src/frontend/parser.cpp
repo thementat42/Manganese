@@ -3,12 +3,17 @@
 #include <iostream>
 
 #include "../global_macros.h"
+#include "../io/include/logging.h"
 #include "include/ast.h"
 
-//! For generics, might have to do two passes
-//! First pass: just identify what the function/bundle/blueprint names are and keep those in a table
-//! Then re-parse the file using that table to handle the "less-than vs generic" ambiguity
-//! On the second pass, any time you see a function/bundle/blueprint name followed by a left angle bracket (<), treat it as a generic type (it's invalid to compare a function/bundle/blueprint name with something else)
+/*
+! For generics, might have to do two passes
+! First pass: just identify what the function/bundle/blueprint names are and keep those in a table
+! Then re-parse the file using that table to handle the "less-than vs generic" ambiguity
+! On the second pass, any time you see a function/bundle/blueprint name followed by a left angle bracket (<), treat it as a generic type (it's invalid to compare a function/bundle/blueprint name with something else)
+
+~ Alternative: use rust's turbofish syntax (foo::<T, U, ...>(args...))
+*/
 
 MANGANESE_BEGIN
 namespace parser {
@@ -38,6 +43,13 @@ ast::Block Parser::parse() {
         }
 
         // Flush the cache so there are no holdover tokens
+        if (!tokenCache.empty()) {
+            std::cout << "Cached tokens: ";
+            for (const auto& token : tokenCache) {
+                token.log();
+            }
+            std::cout << "\n";
+        }
         tokenCache.clear();
         tokenCachePosition = 0;
     }
@@ -83,6 +95,7 @@ ExpressionPtr Parser::parsePrimaryExpression() {
     using std::make_unique, std::stoi, std::stol, std::stoll, std::stoul, std::stoull;
     using std::stof, std::stod, std::stold;
     auto token = consumeToken();
+    tokenCache.push_back(token);
     str lexeme = token.getLexeme();
     switch (token.getType()) {
         case TokenType::StrLiteral:
@@ -150,14 +163,15 @@ ExpressionPtr Parser::parsePrimaryExpression() {
 }
 
 ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, OperatorBindingPower bindingPower) {
-    auto operatorToken = consumeToken();
+    auto operatorToken = tokenCache.back();  // Get the last consumed token from the cache
     auto right = parseExpression(bindingPower);
 
     return std::make_unique<ast::BinaryExpression>(std::move(left), operatorToken.getType(), std::move(right));
 }
 
 ExpressionPtr Parser::parseExponentiationExpression(ExpressionPtr left, OperatorBindingPower bindingPower) {
-    auto operatorToken = consumeToken();
+    auto operatorToken = tokenCache.back();
+    ;
 
     // For right associativity, use one less binding power for the right operand
     // This will allow nested exponentiations to be parsed from right to left
@@ -183,6 +197,7 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
             // End of the expression -- don't keep parsing
             break;
         }
+        // Override the type of a token based on context
 
         // Check if current token's binding power is high enough
         auto bindingPowerIt = bindingPowerLookup.find(type);
@@ -194,6 +209,10 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
         if (ledIt == leftDenotationLookup.end()) {
             UNREACHABLE("No left denotation function for token type: " + lexer::tokenTypeToString(type));
         }
+        // Consume the token and call the left denotation function
+        auto token = consumeToken();
+        token.overrideType(type, token.getLexeme());
+        tokenCache.push_back(token);  // Store the token in the cache for later use
         leftDenotationHandler_t leftDenotationFunction = ledIt->second;
         left = leftDenotationFunction(this, std::move(left), bindingPowerLookup[type]);
     }
@@ -201,7 +220,9 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
 }
 
 StatementPtr Parser::parseVariableDeclaration() {
-    bool isConst = (consumeToken().getType() == TokenType::Const);
+    auto declarationToken = consumeToken();
+    tokenCache.push_back(declarationToken);
+    bool isConst = (declarationToken.getType() == TokenType::Const);
 
     std::string name = expectToken(TokenType::Identifier, "Expected a variable name after " + (isConst ? str("'const'") : str("'let'"))).getLexeme();
 
@@ -252,16 +273,17 @@ Token Parser::expectToken(TokenType expectedType, const std::string& message) {
     auto token = peekToken();
     auto tokenType = token.getType();
     if (tokenType == expectedType) {
-        return consumeToken();
+        tokenCache.push_back(consumeToken());
+        return tokenCache.back();
     }
-    if (!message.empty()) {
-        std::cerr << message << "(";
-    }
-    std::cerr << "Expected " << lexer::tokenTypeToString(expectedType)
-              << ", got " << lexer::tokenTypeToString(tokenType) << " instead\n";
-    if (!message.empty()) {
-        std::cerr << message << ")";
-    }
+    logging::logUser(
+        {message,
+         "Expected ", lexer::tokenTypeToString(expectedType),
+         ", got ", lexer::tokenTypeToString(tokenType),
+         " instead"},
+        logging::LogLevel::Error,
+        token.getLine(), token.getColumn());
+
     exit(EXIT_FAILURE);
 }
 Token Parser::expectToken(const std::initializer_list<TokenType>& expectedTypes, const std::string& message) {
@@ -269,21 +291,25 @@ Token Parser::expectToken(const std::initializer_list<TokenType>& expectedTypes,
     auto tokenType = token.getType();
     for (auto expectedType : expectedTypes) {
         if (tokenType == expectedType) {
-            return consumeToken();
+            tokenCache.push_back(consumeToken());
+            return tokenCache.back();
         }
     }
+    std::string logMessage;
     if (!message.empty()) {
-        std::cerr << message << "(";
+        logMessage += (message);
     }
-    std::cerr << "Expected one of: ";
+    logMessage += ("Expected one of: ");
     for (auto expectedType : expectedTypes) {
-        std::cerr << lexer::tokenTypeToString(expectedType) << ", ";
+        logMessage += (lexer::tokenTypeToString(expectedType));
+        logMessage += (", ");
     }
-    std::cerr << "but got " << lexer::tokenTypeToString(tokenType) << " instead\n";
-    if (!message.empty()) {
-        std::cerr << message << ")";
-    }
-    std::cerr << "(line " << token.getLine() << " column " << token.getColumn() << ")\n";
+    logMessage += ("but got ");
+    logMessage += (lexer::tokenTypeToString(tokenType));
+    logMessage += (" instead");
+    logging::logUser(
+        logMessage, logging::LogLevel::Error,
+        token.getLine(), token.getColumn());
     exit(EXIT_FAILURE);
 }
 }  // namespace parser
