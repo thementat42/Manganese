@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 #define EXT_C_BEGIN extern "C" {
 #define EXT_C_END }
-#define MANGANESE_BEGIN namespace manganese {
+#define MANGANESE_BEGIN namespace Manganese {
 #define MANGANESE_END }
 
 #define DISABLE_COPY_AND_ASSIGN(ClassName) \
