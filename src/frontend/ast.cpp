@@ -116,6 +116,40 @@ void BinaryExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
+std::string PrefixExpression::toString() const {
+#if !DEBUG
+    return "";
+#endif
+    std::string opStr = lexer::tokenTypeToString(op);
+    return "(" + opStr + right->toString() + ")";
+}
+
+void PrefixExpression::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "PrefixExpression [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
+    os << getIndent(indent + 1) << "operand: \n";
+    right->dump(os, indent + 2);
+    os << getIndent(indent) << "}\n";
+}
+
+std::string AssignmentExpression::toString() const {
+#if !DEBUG
+    return "";
+#endif
+    std::string opStr = lexer::tokenTypeToString(op);
+    return "(" + assignee->toString() + " " + opStr + " " + value->toString() + ")";
+}
+
+void AssignmentExpression::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "AssignmentExpression [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
+    os << getIndent(indent + 1) << "assignee: \n";
+    assignee->dump(os, indent + 2);
+    os << getIndent(indent + 1) << "value: \n";
+    value->dump(os, indent + 2);
+    os << getIndent(indent) << "}\n";
+}
+
 std::string ExpressionStatement::toString() const {
 #if !DEBUG
     return "";
@@ -154,6 +188,8 @@ void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
     value->dump(os, indent + 2);
     os << getIndent(indent) << "}\n";
 }
+
+
 
 #endif  // DEBUG
 

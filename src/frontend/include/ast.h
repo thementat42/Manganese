@@ -44,7 +44,9 @@ A block is a vector of statements
     std::string toString() const override; \
     void dump(std::ostream& os, int indent = 0) const override;
 #else                        // ^^ DEBUG vv !DEBUG
-#define AST_DEBUG_OVERRIDES  // Don't have these methods in release builds
+#define AST_DEBUG_OVERRIDES \
+    std::string toString() const override { return ""; } \
+    void dump(std::ostream& os, int indent = 0) const override {}
 #endif                       // DEBUG
 
 #include <memory>
@@ -99,8 +101,6 @@ class ASTNode {
    public:
     virtual ~ASTNode() noexcept = default;
 
-    #if DEBUG
-
     /**
      * @brief Convert the AST node to a string representation
      * @return A string representation of the AST node
@@ -113,14 +113,12 @@ class ASTNode {
      * @param indent The indentation level for pretty-printing
      */
     virtual void dump(std::ostream& os, int indent = 0) const = 0;
-    #endif // DEBUG
 
     size_t getLine() const { return line; }
     size_t getColumn() const { return column; }
 
     friend parser::Parser;
 };
-
 
 /**
  * @brief The base class for all statements in the AST
@@ -129,7 +127,6 @@ class Statement : public ASTNode {
    public:
     virtual ~Statement() noexcept = default;
 };
-
 
 /**
  * @brief The base class for all expressions in the AST
@@ -151,7 +148,6 @@ class NumberExpression : public Expression {
     number_t value;
 
    public:
-
     /**
      * @brief Initialize a NumberExpression node
      * @param _value The numeric value of the expression (can be any numeric type)
@@ -170,7 +166,6 @@ class StringExpression : public Expression {
     std::string value;
 
    public:
-
     /**
      * @brief Initialize a StringExpression node
      * @param _value The string value of the expression (std::string)
@@ -231,6 +226,50 @@ class BinaryExpression : public Expression {
     AST_DEBUG_OVERRIDES
 };
 
+/**
+ * @brief Represents a prefixed unary expression in the AST
+ */
+class PrefixExpression : public Expression {
+   protected:
+    ExpressionPtr right;
+    lexer::TokenType op;
+
+   public:
+    /**
+     * @brief Initialize a PrefixExpression node
+     * @param _op The operator token type (e.g., ++, --, !)
+     * @param _right The operand of the expression
+     */
+    PrefixExpression(lexer::TokenType _op, ExpressionPtr _right)
+        : right(std::move(_right)), op(_op) {}
+
+    const Expression& getRight() const { return *right; }
+    lexer::TokenType getOperator() const { return op; }
+
+    AST_DEBUG_OVERRIDES
+};
+
+class AssignmentExpression : public Expression {
+   protected:
+    ExpressionPtr assignee, value;
+    lexer::TokenType op;
+
+   public:
+    /**
+     * @brief Initialize an AssignmentExpression node
+     * @param _assignee The expression being assigned to (left-hand side)
+     * @param _op The assignment operator token type (e.g., =, +=, -=)
+     * @param _value The value being assigned (right-hand side)
+     */
+    AssignmentExpression(ExpressionPtr _assignee, lexer::TokenType _op, ExpressionPtr _value)
+        : assignee(std::move(_assignee)), value(std::move(_value)), op(_op) {}
+
+    const Expression& getAssignee() const { return *assignee; }
+    const Expression& getValue() const { return *value; }
+    lexer::TokenType getOperator() const { return op; }
+    AST_DEBUG_OVERRIDES
+};
+
 //~ Statements
 
 /**
@@ -251,7 +290,6 @@ class ExpressionStatement : public Statement {
     AST_DEBUG_OVERRIDES
 };
 
-
 /**
  * @brief Represents a variable declaration statement in the AST
  */
@@ -264,14 +302,13 @@ class VariableDeclarationStatement : public Statement {
     // primitiveType type;
 
    public:
-
-   /**
-    * @brief Initialize a VariableDeclarationStatement node
-    * @param _name The name of the variable
-    * @param _isConst Whether the variable is a constant (immutable)
-    * @param _visibility The visibility of the variable (public, read-only, private)
-    * @param _value The initial value of the variable
-    */
+    /**
+     * @brief Initialize a VariableDeclarationStatement node
+     * @param _name The name of the variable
+     * @param _isConst Whether the variable is a constant (immutable)
+     * @param _visibility The visibility of the variable (public, read-only, private)
+     * @param _value The initial value of the variable
+     */
     VariableDeclarationStatement(std::string _name, bool _isConst, Visibility _visibility, ExpressionPtr _value)
         : name(std::move(_name)), isConst(_isConst), visibility(_visibility), value(std::move(_value)) {};
 
