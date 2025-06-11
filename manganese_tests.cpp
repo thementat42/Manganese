@@ -4,6 +4,7 @@
  * @note Run CMake with -DBUILD_TESTS=ON
  */
 
+
 // Includes for unity build
 #include <string.h>
 
@@ -17,6 +18,7 @@
 #include "src/io/include/stringreader.h"
 #include "tests/testrunner.h"
 #include "tests/tests.h"
+#include "src/io/include/logging.h"
 
 constexpr bool strneq(const char* a, const char* b,size_t max_count) {
     return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
@@ -55,28 +57,26 @@ int main(int argc, char const* argv[]) {
         }
     }
 
-    using namespace manganese::tests;
+    using namespace Manganese::tests;
     TestRunner runner;
-    const char* pink = "\033[95m";
-    const char* reset = "\033[0m";
 
     if (lexer) {
-        printf("%s=== Lexer Tests ===%s\n", pink, reset);
+        printf("%s=== Lexer Tests ===%s\n", PINK, RESET);
         runLexerTests(runner);
         printf("\n");
     }
     if (parser) {
-        printf("%s=== Parser Tests ===%s\n", pink, reset);
-        // TODO: Add once parser done
+        printf("%s=== Parser Tests ===%s\n", PINK, RESET);
+        runParserTests(runner);
         printf("\n");
     }
     if (semantic) {
-        printf("%s=== Semantic Analyzer Tests ===%s\n", pink, reset);
+        printf("%s=== Semantic Analyzer Tests ===%s\n", PINK, RESET);
         // TODO: Add once semantic analyzer done
         printf("\n");
     }
     if (codegen) {
-        printf("%s=== Codegen Tests ===%s\n", pink, reset);
+        printf("%s=== Codegen Tests ===%s\n", PINK, RESET);
         // TODO: Add once codegen done
         printf("\n");
     }
