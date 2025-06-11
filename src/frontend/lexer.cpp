@@ -29,9 +29,9 @@
 #include "../io/include/reader.h"
 #include "../io/include/stringreader.h"
 #include "include/token.h"
-#include "lexer.h"
 
 MANGANESE_BEGIN
+
 namespace lexer {
 
 //~ Core Lexer Functions
@@ -45,7 +45,6 @@ Lexer::Lexer(const str& source, const Mode mode) : tokenStartLine(1), tokenStart
             reader = std::make_unique<io::FileReader>(source);
             break;
     }
-    tokenStream = std::deque<Token>();
 }
 
 void Lexer::lex(size_t numTokens) {
@@ -70,6 +69,7 @@ void Lexer::lex(size_t numTokens) {
                 advance();  // Skip the comment
             }
             if (done()) {
+                logging::logUser("Unclosed multiline comment", logging::LogLevel::Error, getLine(), getCol());
                 return;
             }
             advance(2);  // Skip the */
@@ -434,23 +434,7 @@ optional<wchar_t> Lexer::resolveHexAndUnicodeCharacters(const str& esc, const bo
     size_t length = isUnicode ? 4 : 2;
     unicodeChar = 0;
     for (size_t i = 0; i < length; ++i) {
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#elif defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4244)  // 4244 is a data loss warning
-#endif
-
-        // this line converts 4 from an int to a wchar_t
-        // ignore the conversion warning (hence the pragma directives)
         unicodeChar <<= 4;
-
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#pragma warning(pop)
-#endif
         unicodeChar |= static_cast<wchar_t>(std::stoi(std::string(1, esc[i]), nullptr, 16));
     }
     skipLength = length;
