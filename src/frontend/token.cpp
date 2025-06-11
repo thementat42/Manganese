@@ -36,8 +36,6 @@ Token::Token(const TokenType _type, const std::string _lexeme, const size_t _lin
     }
 }
 
-Token::Token(const TokenType _type, const char _lexeme, const size_t _line, const size_t _column) : Token(_type, std::string(1, _lexeme), _line, _column) {}  // Defer to string constructor to avoid duplicating code
-
 std::optional<TokenType> operatorFromString(const std::string& op) {
     std::string op_str(op);
     auto it = operatorMap.find(op_str);

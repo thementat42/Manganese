@@ -3,8 +3,8 @@
  * @brief This file contains the definition of token functionality for the Manganese compiler.
  */
 
-#ifndef TOKEN
-#define TOKEN
+#ifndef TOKEN_H
+#define TOKEN_H
 
 #include <optional>
 #include <string>
@@ -25,21 +25,6 @@ namespace lexer {
  */
 enum class TokenType : uint16_t;  // Forward declaration -- implementation is at the end of this file for readability
 
-enum class OperatorBindingPower : uint8_t {
-    Default = 0,
-    Comma = 1,
-    Assignment = 2,
-    Logical = 3,
-    Relational = 4,
-    Additive = 5,
-    Multiplicative = 6,
-    Exponential = 7,
-    Unary = 8,
-    Call = 9,
-    Member = 10,
-    Primary = 11,
-};
-
 // TODO: Add debug check that these are in the right order
 
 /**
@@ -57,67 +42,39 @@ class Token {
    public:
     Token() = default;
     Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column);
-    Token(const TokenType type, const char lexeme, const size_t line, const size_t column);
-    Token(const Token& other) = default;
-    Token(Token&& other) = default;
-    Token& operator=(const Token& other) = default;
-    Token& operator=(Token&& other) = default;
     ~Token() = default;
 
     bool isKeyword() const noexcept;
     bool isOperator() const noexcept;
     bool isLiteral() const noexcept;
     bool isBracket() const noexcept;
+
     TokenType getType() const noexcept;
     std::string getLexeme() const noexcept;
     size_t getLine() const noexcept;
     size_t getColumn() const noexcept;
+
+    /**
+     * @note Parser only: be careful
+     */
     void overrideType(TokenType _type, std::string _lexeme = "");
 
     /**
-     * @brief Print out a token
      * @details This function is used for debugging purposes. (if the debug flag is not set, this function will be empty)
      */
     void log() const noexcept;
-
     static void log(const Token& token) noexcept;
 };
 
-/**
- * @brief Convert TokenType enum to string representation
- * @param type The TokenType to convert
- * @return String representation of the TokenType
- * @details Only used for debugging purposes. (if the debug flag is not set, this function will be empty)
- */
+//~ Helpers, not tied to the Token class
 std::string tokenTypeToString(TokenType type) noexcept;
-
-/**
- * @brief Maps string representations of keywords to their corresponding enum values.
- * Used by the lexer and parser for keyword identification and validation.
- */
 extern std::unordered_map<std::string, const TokenType> keywordMap;
-
-/**
- * @brief Maps string representations of operators to their corresponding enum values.
- */
 extern std::unordered_map<std::string, const TokenType> operatorMap;
-
-/**
- * @brief Convert a string to a keyword enum member
- * @param keyword The string to convert
- * @return The corresponding keyword enum value, or std::nullopt if not found
- */
 std::optional<TokenType> keywordFromString(const std::string& keyword);
-
-/**
- * @brief Convert a string to the corresponding enum value
- * @param op The string to convert
- * @return  The corresponding enum value, or std::nullopt if not found
- */
 std::optional<TokenType> operatorFromString(const std::string& op);
 
 // Implementation of TokenType
-enum class TokenType : uint16_t {
+enum class TokenType : uint8_t {
     //~ Basic
     Identifier,      // variables, functions
     StrLiteral,      // "text"
@@ -154,7 +111,7 @@ enum class TokenType : uint16_t {
     Invalid,
 
     //~ Keywords
-    __KeywordStart = 100,  // Marker for the start of keyword token types -- not to be used as an actual token type
+    __KeywordStart,  // Marker for the start of keyword token types -- not to be used as an actual token type
     //* Type Qualifiers
     Let,    // mutable variable
     Const,  // constant variable
@@ -222,7 +179,7 @@ enum class TokenType : uint16_t {
 
     //~ Operators
     //* Arithmetic Operators
-    __OperatorStart = 300,  // Marker for the start of operator token types -- not to be used as an actual token type
+    __OperatorStart,  // Marker for the start of operator token types -- not to be used as an actual token type
     Plus,                   // `+`
     Minus,                  // `-`
     Mul,                    // `*`
@@ -294,4 +251,4 @@ enum class TokenType : uint16_t {
 }  // namespace lexer
 MANGANESE_END
 
-#endif  // TOKEN
+#endif  // TOKEN_H
