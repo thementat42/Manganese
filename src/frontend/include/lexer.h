@@ -149,26 +149,26 @@ class Lexer {
      * @param offset How many characters to look ahead (default is 0 -- the current character)
      * @return The peeked character
      */
-    inline char peekChar(size_t offset = 0) noexcept { return reader->peekChar(offset); }
+    inline char peekChar(size_t offset = 0) const noexcept { return reader->peekChar(offset); }
 
     /**
      * @brief Consume the next character in the input stream
      * @details This will advance the reader position by 1
      * @return The consumed character
      */
-    [[nodiscard]] inline char consumeChar() noexcept { return reader->consumeChar(); }
+    [[nodiscard]] inline char consumeChar() const noexcept { return reader->consumeChar(); }
 
     /**
      * @brief Get the current line in the input stream
      * @return The current line number
      */
-    inline size_t getLine() noexcept { return reader->getLine(); }
+    inline size_t getLine() const noexcept { return reader->getLine(); }
 
     /**
      * @brief Get the current column in the input stream
      * @return The current column number
      */
-    inline size_t getCol() noexcept { return reader->getColumn(); }
+    inline size_t getCol() const noexcept { return reader->getColumn(); }
 
     /**
      * @brief Move forward in the input stream by a certain number of characters
@@ -177,11 +177,6 @@ class Lexer {
     inline void advance(size_t n = 1) noexcept {
         reader->setPosition(reader->getPosition() + n);
     }
-    /**
-     * @brief Check if the end of the input stream has been reached
-     * @return True if the end of the stream has been reached, false otherwise
-     */
-    inline bool done() noexcept { return reader->done(); }
 
    public:  // public methods
     Lexer(const str& source, const Mode mode = Mode::File);
@@ -201,6 +196,12 @@ class Lexer {
      * @details This function will advance the reader position by 1
      */
     Token consumeToken() noexcept;
+
+    /**
+     * @brief Check if the end of the input stream has been reached
+     * @return True if the end of the stream has been reached, false otherwise
+     */
+    bool done() const noexcept { return reader->done(); }
 };
 }  // namespace lexer
 MANGANESE_END
