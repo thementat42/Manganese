@@ -47,4 +47,4 @@ while
 
 -- Contextual --
 main
-    always interpereted as the entry point of the program
+    always interpreted as the entry point of the program
