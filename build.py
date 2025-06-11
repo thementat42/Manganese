@@ -8,13 +8,13 @@ Options:
     NOTE: For a the actual set of available arguments, run the script with the -h flag
     
     -b, --build-dir   Specify a custom build directory (default: 'build').
-    -c, --clean       Clean the build directory after the build.
+    -c, --clean       Clean the build directory after the build (removes everything except the output executable).
     -d, --debug       Build the compiler in debug mode instead of release mode.
     -f, --fresh       Run a fresh build by clearing the build directory before running CMake
     -g, --generator   Set a generator for CMake's build files.
     -h, --help        Print this help message
     -j, --jobs        Number of parallel build jobs.
-    --no-move         Don't move the executable from the build directory to the root directory.
+    --no-move         Leave the executable in the build directory after building (by default it will be moved to the root directory)
     -r, --run         Run the executable immediately after building.
     -t, --tests       Build the test suite instead of the main compiler.
     --target          Specific CMake target to build.
@@ -72,7 +72,8 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     "-c", "--clean",
     action = "store_true",
-    help = "Clean the build directory after the build is done"
+    help = "Clean the build directory after the build is done\
+        (removes everything except the executable)"
 )
 
 arg_parser.add_argument(
@@ -101,7 +102,7 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     "--no-move",
     action="store_true",
-    help="Don't move the executable from the build directory to the root directory"
+    help="Leave the executable in the build directory after building"
 )
 
 arg_parser.add_argument(
@@ -130,9 +131,18 @@ arg_parser.add_argument(
 args = arg_parser.parse_args()
 
 if args.clean and args.no_move:
-    print("\033[33mWarning: --clean supersedes --no-move.\
-          The output will be moved to the root directory.\033[0m")
+    print(
+        "\033[33mWarning: --clean supersedes --no-move.",
+        "The output will be moved to the root directory.\033[0m"
+    )
     args.no_move = False
+
+if not args.run and len(args.exec_args) > 0:
+    print(
+        "\033[33mWarning: positional arguments",
+        f"({', '.join(args.exec_args[1:])})",  # [1:] to skip "exec_args"
+        "were passed to the script but the run flag (-r) was not specified"
+    )
 
 BUILD_DIR = Path(args.build_dir)
 
