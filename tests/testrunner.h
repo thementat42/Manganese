@@ -13,13 +13,6 @@
 MANGANESE_BEGIN
 namespace tests {
 
-// ANSI color codes for terminal output
-constexpr const char* GREEN = "\033[32m";
-constexpr const char* RED = "\033[31m";
-constexpr const char* RESET = "\033[0m";
-constexpr const char* PINK = "\033[95m";
-constexpr const char* CYAN = "\033[36m";
-
 class TestRunner {
    private:
     int passed = 0;

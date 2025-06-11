@@ -21,8 +21,18 @@
 #define UNREACHABLE(message) __UNREACHABLE(message)  // Condition that should never be reached
 #endif                                               // __PRINT_LOCATION
 
+// ANSI color codes for terminal output
+constexpr const char* GREEN = "\033[32m";
+constexpr const char* PINK = "\033[95m";
+constexpr const char* RED = "\033[31m";
+constexpr const char* YELLOW = "\033[33m";
+constexpr const char* BLUE = "\033[34m";
+constexpr const char* CYAN = "\033[36m";
+constexpr const char* RESET = "\033[0m";
+
 MANGANESE_BEGIN
 namespace logging {
+
 enum class LogLevel {
     Info,
     Warning,
@@ -48,6 +58,7 @@ void logInternal(const std::string& message, LogLevel level = LogLevel::Info);
 void logUser(const std::string& message, LogLevel level = LogLevel::Warning, size_t line = 0, size_t col = 0);
 
 void logUser(std::initializer_list<std::string> messages, LogLevel level = LogLevel::Warning, size_t line = 0, size_t col = 0);
+
 }  // namespace logging
 MANGANESE_END
 

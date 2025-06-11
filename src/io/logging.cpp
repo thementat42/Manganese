@@ -5,16 +5,16 @@ namespace logging {
 void logInternal(const std::string& message, LogLevel level) {
     switch (level) {
         case LogLevel::Info:
-            std::cout << "\033[34m[INFO] " << message << "\033[0m\n";
+            std::cout << BLUE << "[INFO] " << message << RESET << "\n";
             break;
         case LogLevel::Warning:
-            std::cout << "\033[33m[WARNING] " << message << "\033[0m\n";
+            std::cout << YELLOW << "[WARNING] " << message << RESET << "\n";
             break;
         case LogLevel::Error:
-            std::cerr << "\033[31m[ERROR] " << message << "\033[0m\n";
+            std::cerr << RED << "[ERROR] " << message << RESET << "\n";
             break;
         case LogLevel::Critical:
-            std::cerr << "\033[91;1m[CRITICAL] " << message << "\033[0m\n";
+            std::cerr << RED << "[CRITICAL] " << message << RESET << "\n";
 
             break;
     }
