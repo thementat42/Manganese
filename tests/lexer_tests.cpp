@@ -9,6 +9,7 @@
 #include "../src/frontend/include/token.h"
 #include "../src/global_macros.h"
 #include "testrunner.h"
+#include "../src/io/include/logging.h"
 
 // TODO: Replace this with purely file-based tests
 
