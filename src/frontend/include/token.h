@@ -66,6 +66,8 @@ class Token {
 
     bool isKeyword() const noexcept;
     bool isOperator() const noexcept;
+    bool isLiteral() const noexcept;
+    bool isBracket() const noexcept;
     TokenType getType() const noexcept;
     std::string getLexeme() const noexcept;
     size_t getLine() const noexcept;
@@ -230,11 +232,13 @@ enum class TokenType : uint16_t {
     Exp,                    // `**`
     Inc,                    // `++`
     Dec,                    // `--`
+    UnaryPlus,              // `+` (unary plus)
+    UnaryMinus,             // `-` (unary minus)
 
     //* Arithmetic Assignment Operators
     // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)
-    PlusEq,      // `+=`
-    MinusEq,     // `-=`
+    PlusAssign,      // `+=`
+    MinusAssign,     // `-=`
     MulAssign,       // `*=`
     DivAssign,       // `/=`
     FloorDivAssign,  // `//=`

@@ -10,6 +10,7 @@
 #include <string>
 
 #include "../global_macros.h"
+#include "../io/include/logging.h"
 
 MANGANESE_BEGIN
 namespace lexer {
@@ -60,6 +61,22 @@ bool Token::isKeyword() const noexcept {
 
 bool Token::isOperator() const noexcept {
     return type >= TokenType::__OperatorStart && type <= TokenType::__OperatorEnd;
+}
+
+bool Token::isLiteral() const noexcept {
+    return type == TokenType::IntegerLiteral ||
+           type == TokenType::FloatLiteral ||
+           type == TokenType::StrLiteral ||
+           type == TokenType::CharLiteral ||
+           type == TokenType::True ||
+           type == TokenType::False;
+}
+
+bool Token::isBracket() const noexcept {
+    return type == TokenType::LeftParen || type == TokenType::RightParen ||
+           type == TokenType::LeftBrace || type == TokenType::RightBrace ||
+           type == TokenType::LeftSquare || type == TokenType::RightSquare ||
+              type == TokenType::LeftAngle || type == TokenType::RightAngle;
 }
 
 TokenType Token::getType() const noexcept {
@@ -214,6 +231,8 @@ std::string tokenTypeToString(TokenType type) noexcept {
             return "int64";
         case TokenType::Lambda:
             return "lambda";
+        case TokenType::Let:
+            return "let";
         case TokenType::Module:
             return "module";
         case TokenType::Ptr:
@@ -261,9 +280,13 @@ std::string tokenTypeToString(TokenType type) noexcept {
             return "++";
         case TokenType::Dec:
             return "--";
-        case TokenType::PlusEq:
+        case TokenType::UnaryPlus:
+            return "+ (unary)";
+        case TokenType::UnaryMinus:
+            return "- (unary)";
+        case TokenType::PlusAssign:
             return "+=";
-        case TokenType::MinusEq:
+        case TokenType::MinusAssign:
             return "-=";
         case TokenType::MulAssign:
             return "*=";
@@ -332,7 +355,7 @@ std::string tokenTypeToString(TokenType type) noexcept {
         case TokenType::Arrow:
             return "->";
         default:
-            return "Unknown Token Type";
+            UNREACHABLE("No string representation for TokenType: " + std::to_string(static_cast<uint16_t>(type)));
     }
 #endif  // DEBUG
 }
@@ -350,8 +373,8 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     {"--", TokenType::Dec},
 
     // Arithmetic Assignment Operators
-    {"+=", TokenType::PlusEq},
-    {"-=", TokenType::MinusEq},
+    {"+=", TokenType::PlusAssign},
+    {"-=", TokenType::MinusAssign},
     {"*=", TokenType::MulAssign},
     {"/=", TokenType::DivAssign},
     {"//=", TokenType::FloorDivAssign},
