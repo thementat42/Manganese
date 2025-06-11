@@ -38,7 +38,7 @@ class FileReader : public Reader {
    public:
     FileReader() = default;
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
-    ~FileReader() noexcept;
+    ~FileReader() noexcept = default;
 
     DISABLE_COPY_AND_ASSIGN(FileReader)
 

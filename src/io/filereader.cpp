@@ -5,84 +5,57 @@
 
 #include "include/filereader.h"
 
-#include <stdio.h>
-
 #include <fstream>
+#include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "../global_macros.h"
-#include "include/filereader.h"
+#include "include/logging.h"
 
 MANGANESE_BEGIN
 namespace io {
 FileReader::FileReader(const std::string& filename, size_t _bufferCapacity) : position(0), line(1), column(1), bufferCapacity(_bufferCapacity) {
     fileStream.open(filename, std::ios::in);
     if (!fileStream.is_open()) {
-        fprintf(stderr, "Error: Could not open file %s\n", filename.c_str());
-        exit(EXIT_FAILURE);
+        logging::logUser("Error: Could not open file " + filename, logging::LogLevel::Error);
+        throw std::runtime_error("Could not open file: " + filename);
     }
     buffer = std::make_unique<char[]>(_bufferCapacity + 1);                               // +1 for null terminator
-    fileStream.get(buffer.get(), static_cast<std::streamsize>(_bufferCapacity));          // Read the first chunk of data into the buffer
+    fileStream.read(buffer.get(), static_cast<std::streamsize>(_bufferCapacity));         // Read the first chunk of data into the buffer
     bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));  // Ensure non-negative before casting
 
     if (bufferSize == 0) {
-        fprintf(stderr, "Error: File %s is empty or could not be read\n", filename.c_str());
-        exit(EXIT_FAILURE);
+        logging::logUser(
+            "Error: File " + filename + " is empty or could not be read", logging::LogLevel::Error);
+        throw std::runtime_error(filename + " is empty or could not be read");
     }
-    buffer[bufferSize] = '\0';  // Null-terminate the buffer
-}
-
-FileReader::~FileReader() {
-    if (fileStream.is_open()) {
-        fileStream.close();
-    }
+    buffer[bufferSize] = '\0';  // Null-terminate the buffer since peekChar will rely on this to determine EOF
 }
 
 void FileReader::refillBuffer() {
     // Save any remaining data that hasn't been processed yet
-    size_t remainingSize = 0;
-    if (position < bufferSize) {
-        remainingSize = bufferSize - position;
-        // Move remaining data to beginning of buffer
-        memmove(buffer.get(), buffer.get() + position, remainingSize);
+    const size_t unreadBytes = bufferSize - position;
+    if (unreadBytes > 0) {
+        // Move remaining data to beginning of buffer, handling overlap
+        memmove(buffer.get(), buffer.get() + position, unreadBytes);
     }
 
-    // Reset position since we moved remaining data to front
-    position = 0;
+    const size_t remainingCapacity = bufferCapacity - unreadBytes;
+    // Read more data into the buffer
+    fileStream.read(buffer.get() + unreadBytes, static_cast<std::streamsize>(remainingCapacity));
+    const size_t bytesRead = static_cast<size_t>(fileStream.gcount());
 
-    // Read new data after the remaining data
-    if (!fileStream.eof()) {
-        fileStream.read(buffer.get() + remainingSize, static_cast<std::streamsize>(bufferCapacity - remainingSize));
-        bufferSize = remainingSize + static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));  // ensure non-negative before casting
-    } else {
-        bufferSize = remainingSize;
-    }
-
-    // Always null-terminate
+    bufferSize = unreadBytes + bytesRead;  // Update buffer size to include new data
+    position = 0;                          // We moved any remaining data to the front, so reset position to 0
+    // Always null-terminate since peeking/consuming determines EOF based on null terminator
     buffer[bufferSize] = '\0';
-
-    // If we're at a token boundary but not at EOF, try to read until a good stopping point
-    if (bufferSize > 0 && !fileStream.eof()) {
-        // Keep reading until we hit a good stopping point or reach buffer capacity
-        while (bufferSize < bufferCapacity && !fileStream.eof()) {
-            char nextChar;
-            fileStream.get(nextChar);
-            if (fileStream.eof()) break;
-
-            // Add the character to our buffer
-            buffer[bufferSize++] = nextChar;
-            buffer[bufferSize] = '\0';  // Null-terminate the buffer
-        }
-    }
 }
 
 char FileReader::peekChar(size_t offset) {
     // Check if we need more data
     if (position + offset >= bufferSize) {
-        if (fileStream.eof()) {
-            return EOF_CHAR;
-        }
         refillBuffer();
 
         // If still out of bounds after refill, return EOF
@@ -94,14 +67,9 @@ char FileReader::peekChar(size_t offset) {
 }
 
 char FileReader::consumeChar() {
-    // Check if we need more data
+    // Ensure buffer has data to consume
     if (position >= bufferSize) {
-        if (fileStream.eof() && position >= bufferSize) {
-            return EOF_CHAR;
-        }
         refillBuffer();
-
-        // If still out of bounds after refill, return EOF
         if (position >= bufferSize) {
             return EOF_CHAR;
         }
@@ -125,19 +93,19 @@ void FileReader::setPosition(size_t newPosition) noexcept {
     }
 }
 
-inline size_t FileReader::getPosition() const noexcept {
+size_t FileReader::getPosition() const noexcept {
     return position;
 }
 
-inline size_t FileReader::getLine() const noexcept {
+size_t FileReader::getLine() const noexcept {
     return line;
 }
 
-inline size_t FileReader::getColumn() const noexcept {
+size_t FileReader::getColumn() const noexcept {
     return column;
 }
 
-inline bool FileReader::done() const noexcept {
+bool FileReader::done() const noexcept {
     return position >= bufferSize && fileStream.eof();
 }
 
