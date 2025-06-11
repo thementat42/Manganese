@@ -10,7 +10,14 @@ MANGANESE_BEGIN
 namespace parser {
 
 StatementPtr Parser::parseStatement() {
-    throw std::runtime_error("parseStatement() not implemented yet");
+    auto it = statementLookup.find(currentToken().getType());
+    if (it != statementLookup.end()) {
+        // Call the handler for the current token type
+        return it->second(this);
+    }
+    ExpressionPtr expr = parseExpression(OperatorBindingPower::Default);
+    expectToken(TokenType::Semicolon, "Expected semicolon after expression");
+    return std::make_unique<ast::ExpressionStatement>(std::move(expr));
 }
 
 }  // namespace parser
