@@ -23,7 +23,7 @@ namespace lexer {
  * categorized by their functional purpose (keywords, identifiers, etc.).
  * Each token is documented with its corresponding
  */
-enum class TokenType : uint16_t;  // Forward declaration -- implementation is at the end of this file for readability
+enum class TokenType : uint8_t;  // Forward declaration -- implementation is at the end of this file for readability
 
 // TODO: Add debug check that these are in the right order
 
