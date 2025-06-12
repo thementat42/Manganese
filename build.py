@@ -130,6 +130,9 @@ arg_parser.add_argument(
 
 args = arg_parser.parse_args()
 
+BUILD_DIR = Path(args.build_dir)
+OUT_NAME = "manganese" + ("_tests" if args.tests else "") + (".exe" if os.name == "nt" else "")
+
 if args.clean and args.no_move:
     print(
         "\033[33mWarning: --clean supersedes --no-move.",
@@ -144,8 +147,6 @@ if not args.run and len(args.exec_args) > 0:
         "were passed to the script but the run flag (-r) was not specified"
     )
 
-BUILD_DIR = Path(args.build_dir)
-
 if args.fresh_build and BUILD_DIR.exists():
     print(f"\033[34mCleaning build directory before building ({BUILD_DIR})\033[0m")
     try:
@@ -158,26 +159,28 @@ if args.fresh_build and BUILD_DIR.exists():
 os.makedirs(BUILD_DIR, exist_ok=True)
 os.chdir(BUILD_DIR)
 
-OUT_NAME = "manganese" + ("_tests" if args.tests else "") + (".exe" if os.name == "nt" else "")
-
-#  Basic args
 cmake_args = [
     "cmake",
-    "..",  # since we switched to the build directory, but CMakeLists.txt is in root
+    "..",
     f"-DBUILD_TESTS={"ON" if args.tests else "OFF"}",
-    f"-DDEBUG={"ON" if args.debug else "OFF"}",
+    f"-DDEBUG={"ON" if args.debug or args.tests else "OFF"}",
+]
+
+cmake_build_args = [
+    "cmake",
+    "--build", ".",
 ]
 
 # Extra args
 if args.jobs:
-    cmake_args.extend(["--parallel", str(args.jobs)])
+    cmake_build_args.extend(["--parallel", str(args.jobs)])
 if args.target:
-    cmake_args.extend(["--target", args.target])
+    cmake_build_args.extend(["--target", args.target])
 if args.generator is not None:
     cmake_args.extend(["-G", args.generator])
 
 run_command(cmake_args)
-run_command(["cmake", "--build", "."])
+run_command(cmake_build_args)
 
 # Move the output file from build/bin to the root directory
 os.chdir("..")  # since the build directory path is relative to the root, go back there
