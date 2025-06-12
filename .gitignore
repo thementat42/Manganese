@@ -17,4 +17,5 @@ x.*
 # plans
 planning/
 # random other stuff, not directly related to the compiler
+misc/
 sandbox/
