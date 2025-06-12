@@ -51,7 +51,14 @@ if(BUILD_TESTS)
     # Create test executable with tests main file
     add_executable(${PROJECT_NAME}_tests ${TEST_SRC} ${TESTS_MAIN})
 
-    # Always include debug symbols and DEBUG definition for test builds
+    if (NOT DEBUG)
+        message(WARNING
+            "The test suite relies on the DEBUG macro being enabled.\n"
+            "DEBUG will be forcibly set to ON for test builds."
+        )
+    endif()
+
+    # Force DEBUG macro for the test target regardless of global option
     target_compile_definitions(${PROJECT_NAME}_tests PRIVATE DEBUG=1)
     
     if(MSVC)
