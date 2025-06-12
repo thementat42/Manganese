@@ -43,11 +43,11 @@ A block is a vector of statements
 #define AST_DEBUG_OVERRIDES                \
     std::string toString() const override; \
     void dump(std::ostream& os, int indent = 0) const override;
-#else                        // ^^ DEBUG vv !DEBUG
-#define AST_DEBUG_OVERRIDES \
+#else  // ^^ DEBUG vv !DEBUG
+#define AST_DEBUG_OVERRIDES                              \
     std::string toString() const override { return ""; } \
     void dump(std::ostream& os, int indent = 0) const override {}
-#endif                       // DEBUG
+#endif  // DEBUG
 
 #include <memory>
 #include <string>
@@ -295,8 +295,8 @@ class ExpressionStatement : public Statement {
  */
 class VariableDeclarationStatement : public Statement {
    protected:
-    std::string name;
     bool isConst;
+    std::string name;
     Visibility visibility;
     ExpressionPtr value;
     // primitiveType type;
@@ -309,8 +309,8 @@ class VariableDeclarationStatement : public Statement {
      * @param _visibility The visibility of the variable (public, read-only, private)
      * @param _value The initial value of the variable
      */
-    VariableDeclarationStatement(std::string _name, bool _isConst, Visibility _visibility, ExpressionPtr _value)
-        : name(std::move(_name)), isConst(_isConst), visibility(_visibility), value(std::move(_value)) {};
+    VariableDeclarationStatement(bool _isConst, std::string _name, Visibility _visibility, ExpressionPtr _value)
+        : isConst(_isConst), name(std::move(_name)), visibility(_visibility), value(std::move(_value)) {};
 
     AST_DEBUG_OVERRIDES
 };
