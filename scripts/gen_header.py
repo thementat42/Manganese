@@ -58,7 +58,8 @@ def generate_header_file(source_filename: str):
     with open(source_path, 'r', encoding = "utf8") as f:
         content = f.readlines()
 
-    includes, declarations, namespaces, manganese_macros = extract_includes_and_declarations(content, source_path.name)
+    includes, declarations,\
+        namespaces, manganese_macros = extract_includes_and_declarations(content, source_path.name)
 
     # Generate include guard name from filename
     filename_base = source_path.stem.upper()
