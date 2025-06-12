@@ -24,7 +24,9 @@ enum class OperatorBindingPower : uint8_t;
 class Parser {
    private:  // private variables
     std::unique_ptr<lexer::Lexer> lexer;
+    size_t tokenCachePosition = 0;
     std::vector<Token> tokenCache;  // Old tokens (for lookbehind)
+    ast::Visibility defaultVisibility = ast::Visibility::ReadOnly;
 
    public:   // public variables
    private:  // private methods
@@ -38,50 +40,34 @@ class Parser {
     std::unordered_map<TokenType, leftDenotationHandler_t> leftDenotationLookup;
     std::unordered_map<TokenType, OperatorBindingPower> bindingPowerLookup;
 
-    inline void led(TokenType type, OperatorBindingPower bindingPower,
-                    leftDenotationHandler_t handler);
-
-    inline void nud(TokenType type,
-                    nullDenotationHandler_t handler);
-
-    inline void stmt(TokenType type,
-                     statementHandler_t handler);
-
-    inline void initializeLookups();
-    static int determineNumberBase(const str &lexeme);
-
     //~ Parsing functions
-    ExpressionPtr parseExpression(OperatorBindingPower bindingPower);
 
+    //* Expression Parsing
+    ExpressionPtr parseExpression(OperatorBindingPower bindingPower);
     ExpressionPtr parsePrimaryExpression();
+    static int determineNumberBase(const str &lexeme);
     const ExpressionPtr createIntegerLiteralNode(str &suffix, str &numericPart, int base);
 
     ExpressionPtr parseBinaryExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
     ExpressionPtr parseExponentiationExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
 
+    //* Statement Parsing
+
     StatementPtr parseStatement();
+    StatementPtr parseVariableDeclarationStatement();
 
     // ~ Helpers
-    Token currentToken() {
-        if (tokenCache.empty()) {
-            tokenCache.push_back(lexer->consumeToken());
-        }
-        return tokenCache.front();
-    }
-
-    Token advance() {
-        if (tokenCache.empty()) {
-            tokenCache.push_back(lexer->consumeToken());
-        }
-        Token token = tokenCache.front();
-        tokenCache.erase(tokenCache.begin());
-        return token;
-    }
-
+    Token currentToken();
+    Token advance();
     Token expectToken(TokenType expectedType);
     Token expectToken(TokenType expectedType, const str &errorMessage);
 
-    bool done() const { return tokenCache.empty() && lexer->done(); }
+    void led(TokenType type, OperatorBindingPower bindingPower, leftDenotationHandler_t handler);
+    void nud(TokenType type, nullDenotationHandler_t handler);
+    void stmt(TokenType type, statementHandler_t handler);
+    void initializeLookups();
+
+    bool done() { return currentToken().getType() == TokenType::EndOfFile; }
 
    public:  // public methods
     Parser() = default;

@@ -15,8 +15,12 @@ ast::Block Parser::parse() {
 
     while (!done()) {
         // Move since parseStatement() returns a unique_ptr
-        // and we want to avoid copying it into the vector
         program.push_back(std::move(parseStatement()));
+        
+        // We don't need to look back at old tokens from previous statements,
+        // clear the cache to save memory
+        tokenCache.clear();
+        tokenCachePosition = 0;
     }
     return program;
 }
@@ -67,14 +71,36 @@ inline void Parser::initializeLookups() {
     nud(TokenType::CharLiteral, parsePrimaryExpression);
     nud(TokenType::StrLiteral, parsePrimaryExpression);
     nud(TokenType::Identifier, parsePrimaryExpression);
+
+    //~ Statements
+    stmt(TokenType::Const, parseVariableDeclarationStatement);
+    stmt(TokenType::Let, parseVariableDeclarationStatement);
+}
+
+Token Parser::currentToken() {
+    // Make sure we have enough tokens in the cache
+    while (tokenCachePosition >= tokenCache.size()) {
+        tokenCache.push_back(lexer->consumeToken());
+    }
+    // Return the token at current position
+    return tokenCache[tokenCachePosition];
+}
+
+Token Parser::advance() {
+    // Make sure we have enough tokens in the cache
+    while (tokenCachePosition >= tokenCache.size()) {
+        tokenCache.push_back(lexer->consumeToken());
+    }
+    return tokenCache[tokenCachePosition++];
 }
 
 Token Parser::expectToken(TokenType expectedType) {
-    return expectToken(expectedType,
-                       "Expected: " +
-                           lexer::tokenTypeToString(expectedType) +
-                           ", but found: " +
-                           lexer::tokenTypeToString(currentToken().getType()));
+    return expectToken(
+        expectedType,
+        "Expected: " +
+            lexer::tokenTypeToString(expectedType) +
+            ", but found: " +
+            lexer::tokenTypeToString(currentToken().getType()));
 }
 
 Token Parser::expectToken(TokenType expectedType, const str& errorMessage) {
