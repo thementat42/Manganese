@@ -14,8 +14,6 @@ __pycache__/
 # Convention: use files with the format x.* (e.g., x.py, x.cpp, x.txt) for testing small code snippets, 
 # quick one-off scripts, or temporary experiments that are not part of the main project.
 x.*
-# things to help generate code, not used in actual compiler
-helpers/
 # plans
 planning/
 # random other stuff, not directly related to the compiler
