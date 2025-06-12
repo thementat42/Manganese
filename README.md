@@ -28,14 +28,20 @@ git clone https://github.com/thementat42/Manganese.git
 cd Manganese
 ```
 
-Then, either use the Python script for a simple build:
+### === The Python Build Script ===
+
+If you have python installed, you can use the [`build.py`](/build.py) script to automatically invoke CMake.
+NOTE: The Python script requires `CMake` to be installed and available in the system's `PATH`.
 
 ```bash
 python build.py
 ```
 
+The Python script will automatically run CMake and build the executable using the system-configures build system (via `cmake --build`).
+It also automatically moves the executable to the root directory.
 The Python script has different command line arguments to control the build process. Run `python build.py --help` to see the available options.
-The python script requires `CMake` to be installed and available in the system's `PATH`.
+
+### === Building manually with CMake
 
 If you don't have python, you can install it from [the official Python website](https://www.python.org/) or use CMake directly:
 
@@ -46,10 +52,11 @@ cmake ..
 cmake --build .
 ```
 
-This will create an executable called `manganese`. To compile Manganese code, use:
+This will create an executable called `manganese` in the `build/bin` directory, which should be moved to the project root.
+To compile Manganese code, use:
 
 ```bash
-manganese <source file> -o <output file>
+./manganese <source file> -o <output file>
 ```
 
 If no output file is specified, the source file name will be used (e.g. `foo.mn` becomes `foo`).
@@ -71,7 +78,7 @@ cmake .. -DBUILD_TESTS=ON
 cmake --build .
 ```
 
-Then, move the `manganese-tests` executable to the root directory and run the tests:
+Then, move the `manganese-tests` executable to the root directory and run the tests (the python script will automatically move the executable):
 
 ```bash
 ./manganese_tests [options]
@@ -87,6 +94,8 @@ The tests executable takes the following command line arguments:
 - `--all`: Run all tests
 
 Running it with no arguments prints a help message. Any other arguments will be ignored.
+
+Note that the testing executable must be in the root directory since it relies on relative paths to access the source files used for testing.
 
 ## === File Structure ===
 
