@@ -20,6 +20,24 @@ StatementPtr Parser::parseStatement() {
     return std::make_unique<ast::ExpressionStatement>(std::move(expr));
 }
 
+StatementPtr Parser::parseVariableDeclarationStatement() {
+    Token declarationToken = advance();
+    bool isConstant = declarationToken.getType() == TokenType::Const;
+
+    str identifier = expectToken(
+                         TokenType::Identifier,
+                         "Expected a variable name after " + declarationToken.getLexeme())
+                         .getLexeme();
+
+    expectToken(TokenType::Assignment, "Expected an '=' after a variable declaration");
+    ExpressionPtr value = parseExpression(OperatorBindingPower::Assignment);
+    expectToken(TokenType::Semicolon, "Expected a ';' to end a variable declaration");
+
+    // TODO: Parse type declarations
+    return std::make_unique<ast::VariableDeclarationStatement>(
+        isConstant, identifier, defaultVisibility, std::move(value));
+}
+
 }  // namespace parser
 
 MANGANESE_END
