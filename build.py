@@ -2,10 +2,10 @@
 A small script that automates using CMake to build the manganese compiler.
 This script creates the cmake commands and runs them using Python's subprocess library
 Usage:
-    python build.py [options] [-- exec_args...]
+    python build.py [options] [-- exec_with...]
 Options:
     NOTE: These options may be out of date if the docstring has not been correctly updated.
-    NOTE: For a the actual set of available arguments, run the script with the -h flag
+    NOTE: For a the most recent set of available arguments, run the script with the -h flag
     
     -b, --build-dir   Specify a custom build directory (default: 'build').
     -c, --clean       Clean the build directory after the build (removes everything except the output executable).
@@ -20,11 +20,11 @@ Options:
     --target          Specific CMake target to build.
 
     positional arguments:
-    exec_args         Arguments to pass to the executable when using -r or --run.
+    exec_with         Arguments to pass to the executable when using -r or --run.
 
 Examples:
     python build.py -c -d -j 4
-    python build.py --tests --run exec_args --all
+    python build.py --tests --run --exec_with --all
 Requirements:
     - Python 3.8+
     - CMake installed and available in PATH
@@ -123,7 +123,7 @@ arg_parser.add_argument(
 )
 
 arg_parser.add_argument(
-    "exec_args",
+    "--exec-with",
     nargs=argparse.REMAINDER,
     help="Arguments to pass to the executable when using -r or --run"
 )
@@ -140,11 +140,17 @@ if args.clean and args.no_move:
     )
     args.no_move = False
 
-if not args.run and len(args.exec_args) > 0:
+if not args.run and len(args.exec_with) > 0:
     print(
         "\033[33mWarning: positional arguments",
-        f"({', '.join(args.exec_args[1:])})",  # [1:] to skip "exec_args"
+        f"({', '.join(args.exec_with)})",
         "were passed to the script but the run flag (-r) was not specified"
+    )
+
+if args.tests and not args.debug:
+    print(
+        "\033[33mWarning: --tests will compile in debug mode",
+         "even if the debug flag (-d or --debug) is not set"
     )
 
 if args.fresh_build and BUILD_DIR.exists():
@@ -214,4 +220,4 @@ if args.clean:
 if args.run:
     # If we chose not to move the file, it should be executed from the build/bin directory
     EXECUTE_PATH = str(bin_dir / OUT_NAME if args.no_move else Path.cwd() / OUT_NAME)
-    run_command([EXECUTE_PATH] + args.exec_args[1:])  # 1: to skip passing "exec_args"
+    run_command([EXECUTE_PATH] + args.exec_with)
