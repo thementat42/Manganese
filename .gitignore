@@ -11,8 +11,8 @@ release/
 *.s
 *.ll
 __pycache__/
-# Convention: use files with the format x.* (e.g., x.py, x.cpp, x.txt) for testing small code snippets, 
-# quick one-off scripts, or temporary experiments that are not part of the main project.
+# Convention: use files with the format x.* (e.g., x.py, x.something.cpp) for
+# temporary files, user files (e.g. helper scripts), etc. 
 x.*
 # plans
 planning/
