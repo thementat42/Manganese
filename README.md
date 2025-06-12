@@ -106,8 +106,10 @@ This project is divided into several directories:
   - [`Backend`](/src/backend): LLVM backend to generate machine code
   - Each of these directories has an `include` directory which contains the header files for that phase.
   - [`global_macros`](/src/global_macros.h): Contains some macros which are useful everywhere.
+- [`scripts`](/scripts/): Contains some Python scripts to help generate snippets of C++ code
 - [`Tests`](/tests): Compiler Tests
-
+  - [`gen_header.py`]: Python script to generate a header file from a .cpp file
+  - [`bool_expr.py`]: Convert a series of options into a single `or` (`||`) or `and` (`&&`) expression
 - [`manganese.cpp`](/manganese.cpp): Entry point for the compiler
 - [`manganese-tests.cpp`](/manganese-tests.cpp): Entry point for running tests
 
