@@ -8,6 +8,24 @@ set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese_tests.cpp")
 # Build options
 option(BUILD_TESTS "Build the test suite" OFF)
 option(DEBUG "Build with debug symbols and no optimization" OFF)
+option(MEMORY_TRACKING "Enable total memory allocation tracking (does not account for deallocations)" OFF)
+option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory usage tracking (detailed logging to file)" OFF)
+
+if(MEMORY_TRACKING)
+    add_compile_definitions(MEMORY_TRACKING=1)
+else()
+    add_compile_definitions(MEMORY_TRACKING=0)
+endif()
+
+if(CONTINUOUS_MEMORY_TRACKING)
+    if(NOT MEMORY_TRACKING)
+        message(WARNING "CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled. Continuous memory tracking will have no effect unless MEMORY_TRACKING is also enabled.")
+    endif()
+    message(WARNING "CONTINUOUS_MEMORY_TRACKING may not be 100% accurate and can vary between compilers and platforms.")
+    add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=1)
+else()
+    add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=0)
+endif()
 
 # Find LLVM package
 find_package(LLVM REQUIRED CONFIG)
@@ -72,7 +90,6 @@ if(BUILD_TESTS)
             /RTC1
             /RTCu
             /GS
-            /analyz
         )
     else()
         # be extra pedantic in debug test builds

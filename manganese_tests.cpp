@@ -1,26 +1,121 @@
 /**
- * @file tests-main.cpp
+ * @file manganese_tests.cpp
  * @brief Main file for running all tests.
  * @note Run CMake with -DBUILD_TESTS=ON
  */
 
+#if MEMORY_TRACKING && DEBUG
+
+#include <fstream>
+#include <iostream>
+
+size_t lifetimeBytesAllocated = 0;  // How much memory has been allocated in total (ignores deallocations)
+#ifdef CONTINUOUS_MEMORY_TRACKING
+size_t bytesCurrentlyAllocated = 0;  // How much memory is currently allocated (accounts for deallocations)
+std::ofstream memoryLogFile("memory_tracking.log", std::ios::out | std::ios::trunc);
+#endif  // CONTINUOUS_MEMORY_TRACKING
+
+void* operator new(size_t size) {
+    void* ptr = malloc(size);
+    if (ptr == nullptr) {
+        throw std::bad_alloc();
+    }
+    lifetimeBytesAllocated += size;
+#ifdef CONTINUOUS_MEMORY_TRACKING
+    bytesCurrentlyAllocated += size;
+    if (memoryLogFile.is_open()) {
+        memoryLogFile << "Allocated " << size << " bytes at " << ptr << " (estimation of total memory currently allocated: "
+                      << bytesCurrentlyAllocated << " bytes)" << std::endl;
+    }
+#endif  // CONTINUOUS_MEMORY_TRACKING
+    return ptr;
+}
+
+void* operator new[](size_t size) {
+    void* ptr = malloc(size);
+    if (ptr == nullptr) {
+        throw std::bad_alloc();
+    }
+    lifetimeBytesAllocated += size;
+#ifdef CONTINUOUS_MEMORY_TRACKING
+    bytesCurrentlyAllocated += size;
+    if (memoryLogFile.is_open()) {
+        memoryLogFile << "Allocated " << size << " bytes at " << ptr << " (estimation of total memory currently allocated: "
+                      << bytesCurrentlyAllocated << " bytes)" << std::endl;
+    }
+#endif  // CONTINUOUS_MEMORY_TRACKING
+    return ptr;
+}
+
+void operator delete(void* ptr, size_t size) noexcept {
+    if (ptr != nullptr) {
+#ifdef CONTINUOUS_MEMORY_TRACKING
+        bytesCurrentlyAllocated -= size;
+        if (memoryLogFile.is_open()) {
+            memoryLogFile << "Deallocated " << size << " bytes at " << ptr << " (estimation of total memory currently allocated: "
+                          << bytesCurrentlyAllocated << " bytes)" << std::endl;
+        }
+#endif  // CONTINUOUS_MEMORY_TRACKING
+        free(ptr);
+        (void)size;  // Avoid unused parameter warning
+    }
+}
+
+void operator delete[](void* ptr, size_t size) noexcept {
+    if (ptr != nullptr) {
+#ifdef CONTINUOUS_MEMORY_TRACKING
+        bytesCurrentlyAllocated -= size;
+        if (memoryLogFile.is_open()) {
+            memoryLogFile << "Deallocated " << size << " bytes at " << ptr << " (estimation of total memory currently allocated: "
+                          << bytesCurrentlyAllocated << " bytes)" << std::endl;
+        }
+#endif  // CONTINUOUS_MEMORY_TRACKING
+        free(ptr);
+        (void)size;  // Avoid unused parameter warning
+    }
+}
+
+void operator delete(void* ptr) noexcept {
+    if (ptr != nullptr) {
+#ifdef CONTINUOUS_MEMORY_TRACKING
+        if (memoryLogFile.is_open()) {
+            memoryLogFile << "Deallocated (unknown size) at " << ptr
+                          << " (cannot calculate number of bytes deallocated on a call to delete(void*))"
+                          << std::endl;
+        }
+#endif  // CONTINUOUS_MEMORY_TRACKING
+        free(ptr);
+    }
+}
+
+void operator delete[](void* ptr) noexcept {
+    if (ptr != nullptr) {
+#ifdef CONTINUOUS_MEMORY_TRACKING
+        if (memoryLogFile.is_open()) {
+            memoryLogFile << "Deallocated (unknown size) at " << ptr
+                          << " (cannot calculate number of bytes deallocated on a call to delete(void*))"
+                          << std::endl;
+        }
+#endif  // CONTINUOUS_MEMORY_TRACKING
+        free(ptr);
+    }
+}
+
+#endif  // MEMORY_TRACKING && DEBUG
 
 // Includes for unity build
 #include <string.h>
 
-#include "src/global_macros.h"
-
-#undef DEBUG
-#define DEBUG 1  // Force debug mode on
 #include "src/frontend/include/lexer.h"
 #include "src/frontend/include/token.h"
+#include "src/global_macros.h"
 #include "src/io/include/filereader.h"
+#include "src/io/include/logging.h"
 #include "src/io/include/stringreader.h"
 #include "tests/testrunner.h"
 #include "tests/tests.h"
-#include "src/io/include/logging.h"
 
-constexpr bool strneq(const char* a, const char* b,size_t max_count) {
+bool strneq(const char* a, const char* b, size_t max_count) {
     return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
 }
 
@@ -82,5 +177,9 @@ int main(int argc, char const* argv[]) {
     }
 
     runner.printSummary();
+
+#if MEMORY_TRACKING && DEBUG
+    std::cout << PINK << "Total memory allocated (over the course of the program): " << lifetimeBytesAllocated << " bytes" << RESET << std::endl;
+#endif  // MEMORY_TRACKING && DEBUG
     return runner.allTestsPassed() ? 0 : 1;
 }

@@ -7,17 +7,19 @@ Options:
     NOTE: These options may be out of date if the docstring has not been correctly updated.
     NOTE: For a the most recent set of available arguments, run the script with the -h flag
     
-    -b, --build-dir   Specify a custom build directory (default: 'build').
-    -c, --clean       Clean the build directory after the build (removes everything except the output executable).
-    -d, --debug       Build the compiler in debug mode instead of release mode.
-    -f, --fresh       Run a fresh build by clearing the build directory before running CMake
-    -g, --generator   Set a generator for CMake's build files.
-    -h, --help        Print this help message
-    -j, --jobs        Number of parallel build jobs.
-    --no-move         Leave the executable in the build directory after building (by default it will be moved to the root directory)
-    -r, --run         Run the executable immediately after building.
-    -t, --tests       Build the test suite instead of the main compiler.
-    --target          Specific CMake target to build.
+    -b, --build-dir                   Specify a custom build directory (default: 'build').
+    -c, --clean                       Clean the build directory after the build (removes everything except the output executable).
+    -d, --debug                       Build the compiler in debug mode instead of release mode.
+    -f, --fresh                       Run a fresh build by clearing the build directory before running CMake
+    -g, --generator                   Set a generator for CMake's build files.
+    -h, --help                        Print this help message
+    -j, --jobs                        Number of parallel build jobs.
+    -m, --memory-tracking             Track the total amount of heap-allocated memory the program uses (ignores deallocations)
+    -mc, --memory-tracking-continuous Continuously track the amount of heap-allocated memory (accounts for deallocations, accuracy may vary with different compilers)
+    --no-move                         Leave the executable in the build directory after building (by default it will be moved to the root directory)
+    -r, --run                         Run the executable immediately after building.
+    -t, --tests                       Build the test suite instead of the main compiler.
+    --target                          Specific CMake target to build.
 
     positional arguments:
     exec_with         Arguments to pass to the executable when using -r or --run.
@@ -79,7 +81,7 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     "-d", "--debug",
     action = "store_true",
-    help = "build the compiler in debug mode instead of release mode"
+    help = "Build the compiler in debug mode instead of release mode"
 )
 
 arg_parser.add_argument(
@@ -97,6 +99,18 @@ arg_parser.add_argument(
     "-j", "--jobs",
     type=int,
     help="Number of parallel build jobs"
+)
+
+arg_parser.add_argument(
+    "-m", "--memory-tracking",
+    action = "store_true",
+    help = "Track the total amount of heap-allocated memory the program uses (only available in debug mode)"
+)
+
+arg_parser.add_argument(
+    "-mc", "--memory-tracking-continuous",
+    action = "store_true",
+    help = "Enable detailed continuous memory tracking with allocation/deallocation logging to file (requires -m/--memory-tracking) (accuracy may vary depending on the compiler)"
 )
 
 arg_parser.add_argument(
@@ -140,11 +154,25 @@ if args.clean and args.no_move:
     )
     args.no_move = False
 
-if not args.run and len(args.exec_with) > 0:
+if not args.run and args.exec_with:
     print(
         "\033[33mWarning: positional arguments",
         f"({', '.join(args.exec_with)})",
         "were passed to the script but the run flag (-r) was not specified"
+    )
+
+if args.memory_tracking and not args.debug:
+    print(
+        "\033[33mWarning: --memory-tracking only has an effect in debug mode\033[0m"
+    )
+
+if args.memory_tracking_continuous:
+    if not args.memory_tracking:
+        print(
+            "\033[33mWarning: --memory-tracking-continuous has no effect if --memory-tracking is off\033[0m"
+        )
+    print(
+        "\033[33mWarning: --memory-tracking-continuous may not be completely accurate and can vary depending on the compiler \033[0m"
     )
 
 if args.tests and not args.debug:
@@ -170,6 +198,8 @@ cmake_args = [
     "..",
     f"-DBUILD_TESTS={"ON" if args.tests else "OFF"}",
     f"-DDEBUG={"ON" if args.debug or args.tests else "OFF"}",
+    f"-DMEMORY_TRACKING={"ON" if args.memory_tracking else "OFF"}",
+    f"-DCONTINUOUS_MEMORY_TRACKING={"ON" if args.memory_tracking_continuous else "OFF"}"
 ]
 
 cmake_build_args = [
