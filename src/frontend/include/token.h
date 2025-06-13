@@ -48,6 +48,8 @@ class Token {
     bool isOperator() const noexcept;
     bool isLiteral() const noexcept;
     bool isBracket() const noexcept;
+    bool hasUnaryCounterpart() const noexcept;
+    TokenType getUnaryCounterpart() const noexcept;
 
     TokenType getType() const noexcept;
     std::string getLexeme() const noexcept;

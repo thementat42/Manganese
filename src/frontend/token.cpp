@@ -77,6 +77,22 @@ bool Token::isBracket() const noexcept {
               type == TokenType::LeftAngle || type == TokenType::RightAngle;
 }
 
+bool Token::hasUnaryCounterpart() const noexcept {
+    return type == TokenType::Plus || type == TokenType::Minus;
+    // TODO: If change address of and dereference to & and *, update this
+}
+
+TokenType Token::getUnaryCounterpart() const noexcept {
+    switch (type) {
+        case TokenType::Plus:
+            return TokenType::UnaryPlus;
+        case TokenType::Minus:
+            return TokenType::UnaryMinus;
+        default:
+            UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(type));
+    }
+}
+
 TokenType Token::getType() const noexcept {
     return type;
 }
