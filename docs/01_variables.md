@@ -19,7 +19,7 @@ Where:
 - a [`type qualifier`](#-type-qualifiers-) provides extra information to the compiler on how the variable should be interpreted and/or stored. A type qualifier is optional.
 - `<type>` is one of the [primitive types](#-primitive-types-), a built-in [data structure](/docs/02_data_structures.md) or a [user-defined type](/docs/06_data_encapsulation.md)
 - `variable name` is an identifier to refer to the variable. Variable names can contain letters, underscores and numbers (but cannot start with numbers).
-- `value` is an optional initial value for the variable. If no value is provided, the variable will be default-initialized. See [here](#-default-initialization-)
+- `value` is an optional initial value for the variable. If no value is provided, the variable will be [default-initialized](#-default-initialization-)
 
 ## === Type Qualifiers ===
 
@@ -39,13 +39,13 @@ By default, all variables are private -- they cannot be accessed or modified out
 
 The primitive types in Manganese are:
 
-|   Type   |          Description           |                             Size                              |
-| -------- | ------------------------------ | ------------------------------------------------------------- |
-| `int`    | A signed integer               | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
-| `uint`   | An unsigned integer            | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
-| `float`  | A floating-point value         | 32 bits (see [here](#-integer-and-floating-point-precision-)) |
-| `char`   | A single character             | 8 bits                                                        |
-| `bool`   | A boolean (`true` or `false`)  | 8 bits                                                        |
+|   Type   |          Description           |                       Size                         |
+| -------- | ------------------------------ | -------------------------------------------------- |
+| `int`    | A signed integer               | [32 bits](#-integer-and-floating-point-precision-) |
+| `uint`   | An unsigned integer            | [32 bits](#-integer-and-floating-point-precision-) |
+| `float`  | A floating-point value         | [32 bits](#-integer-and-floating-point-precision-) |
+| `char`   | A single character             | 8 bits                                             |
+| `bool`   | A boolean (`true` or `false`)  | 8 bits                                             |
 
 Some example variable assignments in Manganese are:
 
