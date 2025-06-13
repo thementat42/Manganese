@@ -1,4 +1,4 @@
-# === Reading EBNF Notation: ===
+# === Reading Extended Backus-Naur Form (EBNF) Notation: ===
 # expression = value
 # * means 0 or more times
 # + means one or more times
