@@ -4,6 +4,8 @@
  * @note Run CMake with -DBUILD_TESTS=ON
  */
 
+// TODO: Organize the memory tracking code better, maybe put it in a separate file
+
 #if MEMORY_TRACKING && DEBUG
 
 #include <fstream>
@@ -25,7 +27,7 @@ void* operator new(size_t size) {
     bytesCurrentlyAllocated += size;
     if (memoryLogFile.is_open()) {
         memoryLogFile << "Allocated " << size << " bytes at " << ptr << " (estimation of total memory currently allocated: "
-                      << bytesCurrentlyAllocated << " bytes)" << std::endl;
+                      << bytesCurrentlyAllocated << " bytes)" << '\n';
     }
 #endif  // CONTINUOUS_MEMORY_TRACKING
     return ptr;
@@ -41,7 +43,7 @@ void* operator new[](size_t size) {
     bytesCurrentlyAllocated += size;
     if (memoryLogFile.is_open()) {
         memoryLogFile << "Allocated " << size << " bytes at " << ptr << " (estimation of total memory currently allocated: "
-                      << bytesCurrentlyAllocated << " bytes)" << std::endl;
+                      << bytesCurrentlyAllocated << " bytes)" << '\n';
     }
 #endif  // CONTINUOUS_MEMORY_TRACKING
     return ptr;
@@ -53,7 +55,7 @@ void operator delete(void* ptr, size_t size) noexcept {
         bytesCurrentlyAllocated -= size;
         if (memoryLogFile.is_open()) {
             memoryLogFile << "Deallocated " << size << " bytes at " << ptr << " (estimation of total memory currently allocated: "
-                          << bytesCurrentlyAllocated << " bytes)" << std::endl;
+                          << bytesCurrentlyAllocated << " bytes)" << '\n';
         }
 #endif  // CONTINUOUS_MEMORY_TRACKING
         free(ptr);
@@ -67,7 +69,7 @@ void operator delete[](void* ptr, size_t size) noexcept {
         bytesCurrentlyAllocated -= size;
         if (memoryLogFile.is_open()) {
             memoryLogFile << "Deallocated " << size << " bytes at " << ptr << " (estimation of total memory currently allocated: "
-                          << bytesCurrentlyAllocated << " bytes)" << std::endl;
+                          << bytesCurrentlyAllocated << " bytes)" << '\n';
         }
 #endif  // CONTINUOUS_MEMORY_TRACKING
         free(ptr);
@@ -81,7 +83,7 @@ void operator delete(void* ptr) noexcept {
         if (memoryLogFile.is_open()) {
             memoryLogFile << "Deallocated (unknown size) at " << ptr
                           << " (cannot calculate number of bytes deallocated on a call to delete(void*))"
-                          << std::endl;
+                          << '\n';
         }
 #endif  // CONTINUOUS_MEMORY_TRACKING
         free(ptr);
@@ -94,7 +96,7 @@ void operator delete[](void* ptr) noexcept {
         if (memoryLogFile.is_open()) {
             memoryLogFile << "Deallocated (unknown size) at " << ptr
                           << " (cannot calculate number of bytes deallocated on a call to delete(void*))"
-                          << std::endl;
+                          << '\n';
         }
 #endif  // CONTINUOUS_MEMORY_TRACKING
         free(ptr);
@@ -179,7 +181,7 @@ int main(int argc, char const* argv[]) {
     runner.printSummary();
 
 #if MEMORY_TRACKING && DEBUG
-    std::cout << PINK << "Total memory allocated (over the course of the program): " << lifetimeBytesAllocated << " bytes" << RESET << std::endl;
+    std::cout << PINK << "Total memory allocated (over the course of the program): " << lifetimeBytesAllocated << " bytes" << RESET << '\n';
 #endif  // MEMORY_TRACKING && DEBUG
     return runner.allTestsPassed() ? 0 : 1;
 }
