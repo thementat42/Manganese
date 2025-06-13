@@ -7,7 +7,7 @@ Manganese supports a variety of different operators, which can be grouped into d
 ## === Arithmetic Operators ===
 
 | Operator |            Name            |     Example    |
-| -------- | ---------------------------| -------------- |
+| -------- | -------------------------- | -------------- |
 | `+`      | Addition/Unary Positive    |  `x+y` or `+x` |
 | `-`      | Subtraction/Unary Negative | `x-y` or `-x`  |
 | `*`      | Multiplication             | `x*y`          |
@@ -19,6 +19,7 @@ Manganese supports a variety of different operators, which can be grouped into d
 | `--`     | Decrement                  | `--x` or `x--` |
 
 Note that the exponentiation operator is `^^`, not `**` as in some other languages. This is to avoid conflict with a double pointer dereference (e.g. `**pointer_to_pointer`).
+The exponentiation operator is nicknamed the "happy eyes" operator (from the emoticon `^^`).
 
 All the binary operators support the immediate re-assignment syntax using `op=`.
 
