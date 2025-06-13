@@ -74,12 +74,14 @@ bool Token::isBracket() const noexcept {
     return type == TokenType::LeftParen || type == TokenType::RightParen ||
            type == TokenType::LeftBrace || type == TokenType::RightBrace ||
            type == TokenType::LeftSquare || type == TokenType::RightSquare ||
-              type == TokenType::LeftAngle || type == TokenType::RightAngle;
+           type == TokenType::LeftAngle || type == TokenType::RightAngle;
 }
 
 bool Token::hasUnaryCounterpart() const noexcept {
-    return type == TokenType::Plus || type == TokenType::Minus;
-    // TODO: If change address of and dereference to & and *, update this
+    return type == TokenType::Plus ||    // + can be addition or unary plus
+           type == TokenType::Minus ||   // - can be subtraction or unary minus
+           type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
+           type == TokenType::Mul;       // * can be multiplication or dereference operator
 }
 
 TokenType Token::getUnaryCounterpart() const noexcept {
@@ -88,6 +90,10 @@ TokenType Token::getUnaryCounterpart() const noexcept {
             return TokenType::UnaryPlus;
         case TokenType::Minus:
             return TokenType::UnaryMinus;
+        case TokenType::BitAnd:
+            return TokenType::AddressOf;
+        case TokenType::Mul:
+            return TokenType::Dereference;
         default:
             UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(type));
     }
@@ -289,7 +295,7 @@ std::string tokenTypeToString(TokenType type) noexcept {
         case TokenType::Mod:
             return "%";
         case TokenType::Exp:
-            return "**";
+            return "^^";
         case TokenType::Inc:
             return "++";
         case TokenType::Dec:
@@ -311,7 +317,7 @@ std::string tokenTypeToString(TokenType type) noexcept {
         case TokenType::ModAssign:
             return "%=";
         case TokenType::ExpAssign:
-            return "**=";
+            return "^^=";
         case TokenType::GreaterThan:
             return ">";
         case TokenType::GreaterThanOrEqual:
@@ -355,9 +361,9 @@ std::string tokenTypeToString(TokenType type) noexcept {
         case TokenType::BitRShiftAssign:
             return ">>=";
         case TokenType::AddressOf:
-            return "?";
+            return "&";
         case TokenType::Dereference:
-            return "@";
+            return "*";
         case TokenType::MemberAccess:
             return ".";
         case TokenType::Ellipsis:
@@ -382,7 +388,7 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     {"/", TokenType::Div},
     {"//", TokenType::FloorDiv},
     {"%", TokenType::Mod},
-    {"**", TokenType::Exp},
+    {"^^", TokenType::Exp},
     {"++", TokenType::Inc},
     {"--", TokenType::Dec},
 
@@ -393,7 +399,7 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     {"/=", TokenType::DivAssign},
     {"//=", TokenType::FloorDivAssign},
     {"%=", TokenType::ModAssign},
-    {"**=", TokenType::ExpAssign},
+    {"^^=", TokenType::ExpAssign},
 
     // Comparison Operators
     {">", TokenType::GreaterThan},
@@ -424,9 +430,8 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     {"<<=", TokenType::BitLShiftAssign},
     {">>=", TokenType::BitRShiftAssign},
 
-    // Pointer Operators
-    {"?", TokenType::AddressOf},
-    {"@", TokenType::Dereference},
+    // Pointer Operators aren't here since they use the same symbols as bitwise AND and multiplication
+    // that would cause a duplicate key error
 
     // Access Operators
     {".", TokenType::MemberAccess},

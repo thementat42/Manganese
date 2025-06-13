@@ -335,6 +335,16 @@ void Lexer::tokenizeSymbol() {
             }
             break;
         case '^':  // XOR
+            type = TokenType::Operator;
+            if (next == '=') {
+                // Bitwise assignment operator (^=)
+                lexeme += '=';
+            } else if (next == '^') {
+                // Exponentiation operator (^^)
+                lexeme += '^';
+                lexeme += (nextnext == '=') ? "=" : "";  // ^^=, in place exponentiation
+            }
+            break;
         case '!':  // NOT
         case '~':  // Bitwise NOTE
         case '=':  // Assignment
@@ -355,9 +365,6 @@ void Lexer::tokenizeSymbol() {
             break;
         case '.':
             lexeme = (next == '.' && nextnext == '.') ? "..." : ".";
-            [[fallthrough]];  // Intentionally fall through to set the type
-        case '?':
-        case '@':
             type = TokenType::Operator;
             break;
         case ':':
@@ -392,10 +399,6 @@ void Lexer::tokenizeSymbol() {
             if (next == '=') {
                 //* *= (in-place multiplication)
                 lexeme += '=';
-            } else if (next == '*') {
-                // ** (exponentiation) or **= (in-place exponentiation)
-                lexeme += next;
-                lexeme += (nextnext == '=') ? "=" : "";
             }
             break;
         case '/':

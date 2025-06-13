@@ -205,10 +205,10 @@ bool testStringLiterals() {
 }
 
 bool testOperators() {
-    auto tokens = tokensFromString("+ - * / // % ** ++ -- += -= *= /= //= %= **= == != && || ! & | ~ ^ &= |= ~= ^=  ? @ . : :: = -> ...");
+    auto tokens = tokensFromString("+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ...");
     printAllTokens(tokens);
-    if (tokens.size() != 37) {
-        std::cout << "Expected 37 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 35) {
+        std::cout << "Expected 35 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
@@ -218,7 +218,7 @@ bool testOperators() {
            checkToken(tokens[3], TokenType::Div, "/") &&
            checkToken(tokens[4], TokenType::FloorDiv, "//") &&
            checkToken(tokens[5], TokenType::Mod, "%") &&
-           checkToken(tokens[6], TokenType::Exp, "**") &&
+           checkToken(tokens[6], TokenType::Exp, "^^") &&
            checkToken(tokens[7], TokenType::Inc, "++") &&
            checkToken(tokens[8], TokenType::Dec, "--") &&
            checkToken(tokens[9], TokenType::PlusAssign, "+=") &&
@@ -227,7 +227,7 @@ bool testOperators() {
            checkToken(tokens[12], TokenType::DivAssign, "/=") &&
            checkToken(tokens[13], TokenType::FloorDivAssign, "//=") &&
            checkToken(tokens[14], TokenType::ModAssign, "%=") &&
-           checkToken(tokens[15], TokenType::ExpAssign, "**=") &&
+           checkToken(tokens[15], TokenType::ExpAssign, "^^=") &&
            checkToken(tokens[16], TokenType::Equal, "==") &&
            checkToken(tokens[17], TokenType::NotEqual, "!=") &&
            checkToken(tokens[18], TokenType::And, "&&") &&
@@ -241,14 +241,12 @@ bool testOperators() {
            checkToken(tokens[26], TokenType::BitOrAssign, "|=") &&
            checkToken(tokens[27], TokenType::BitNotAssign, "~=") &&
            checkToken(tokens[28], TokenType::BitXorAssign, "^=") &&
-           checkToken(tokens[29], TokenType::AddressOf, "?") &&
-           checkToken(tokens[30], TokenType::Dereference, "@") &&
-           checkToken(tokens[31], TokenType::MemberAccess, ".") &&
-           checkToken(tokens[32], TokenType::Colon, ":") &&
-           checkToken(tokens[33], TokenType::ScopeResolution, "::") &&
-           checkToken(tokens[34], TokenType::Assignment, "=") &&
-           checkToken(tokens[35], TokenType::Arrow, "->") &&
-           checkToken(tokens[36], TokenType::Ellipsis, "...");
+           checkToken(tokens[29], TokenType::MemberAccess, ".") &&
+           checkToken(tokens[30], TokenType::Colon, ":") &&
+           checkToken(tokens[31], TokenType::ScopeResolution, "::") &&
+           checkToken(tokens[32], TokenType::Assignment, "=") &&
+           checkToken(tokens[33], TokenType::Arrow, "->") &&
+           checkToken(tokens[34], TokenType::Ellipsis, "...");
 }
 
 bool testBrackets() {
@@ -270,20 +268,18 @@ bool testBrackets() {
 }
 
 bool testPunctuation() {
-    auto tokens = tokensFromString("; , . ? @ : ::");
+    auto tokens = tokensFromString("; , . : ::");
     printAllTokens(tokens);
-    if (tokens.size() != 7) {
-        std::cout << "Expected 7 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 5) {
+        std::cout << "Expected 5 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
     return checkToken(tokens[0], TokenType::Semicolon, ";") &&
            checkToken(tokens[1], TokenType::Comma, ",") &&
            checkToken(tokens[2], TokenType::MemberAccess, ".") &&
-           checkToken(tokens[3], TokenType::AddressOf, "?") &&
-           checkToken(tokens[4], TokenType::Dereference, "@") &&
-           checkToken(tokens[5], TokenType::Colon, ":") &&
-           checkToken(tokens[6], TokenType::ScopeResolution, "::");
+           checkToken(tokens[3], TokenType::Colon, ":") &&
+           checkToken(tokens[4], TokenType::ScopeResolution, "::");
 }
 
 bool testCompleteProgram() {

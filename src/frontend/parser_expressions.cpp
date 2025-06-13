@@ -80,7 +80,7 @@ ExpressionPtr Parser::parseExponentiationExpression(ExpressionPtr left, Operator
     auto operatorToken = advance();
 
     // For right associativity we need to parse the right-hand side with one less binding power
-    // e.g. 2 ** 3 ** 4 should be parsed as 2 ** (3 ** 4) not (2 ** 3) ** 4
+    // e.g. 2 ^^ 3 ^^ 4 should be parsed as 2 ^^ (3 ^^ 4) not (2 ^^ 3) ^^ 4
     auto rightBindingPower = static_cast<OperatorBindingPower>(static_cast<int>(bindingPower) - 1);
 
     auto right = parseExpression(rightBindingPower);

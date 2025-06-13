@@ -11,7 +11,7 @@ namespace tests {
 
 bool testArithmeticOperators() {
     // Test all arithmetic operators including their precedence and associativity
-    std::string expression = "8 - 4 + 6 * 2 // 5 % 3 ** 2 ** 2 / 7;";
+    std::string expression = "8 - 4 + 6 * 2 // 5 % 3 ^^ 2 ^^ 2 / 7;";
     parser::Parser parser(expression, lexer::Mode::String);
 
     // Parse the expression
@@ -32,7 +32,7 @@ bool testArithmeticOperators() {
     // Get the actual string representation of the AST
     std::string actual = block[0]->toString();
 
-    std::string expected = "((8 - 4) + ((((6 * 2) // 5) % (3 ** (2 ** 2))) / 7));";
+    std::string expected = "((8 - 4) + ((((6 * 2) // 5) % (3 ^^ (2 ^^ 2))) / 7));";
 
     // Compare the output with the expected string
     if (actual != expected) {
@@ -47,9 +47,9 @@ bool testArithmeticOperators() {
 
 bool testExponentiationAssociativity() {
     // Test that exponentiation is right-associative:
-    // 2 ** 3 ** 4 should be 2 ** (3 ** 4) = 2 ** 81 = a very large number
-    // Not (2 ** 3) ** 4 = 8 ** 4 = 4096
-    std::string expression = "2 ** 3 ** 4;";
+    // 2 ^^ 3 ^^ 4 should be 2 ^^ (3 ^^ 4) = 2 ^^ 81 = a very large number
+    // Not (2 ^^ 3) ^^ 4 = 8 ^^ 4 = 4096
+    std::string expression = "2 ^^ 3 ^^ 4;";
     parser::Parser parser(expression, lexer::Mode::String);
 
     // Parse the expression
@@ -71,7 +71,7 @@ bool testExponentiationAssociativity() {
     std::string actual = block[0]->toString();
 
     // Define the expected string representation with right associativity
-    std::string expected = "(2 ** (3 ** 4));";
+    std::string expected = "(2 ^^ (3 ^^ 4));";
 
     // Compare the output with the expected string
     if (actual != expected) {
@@ -86,7 +86,7 @@ bool testExponentiationAssociativity() {
 
 bool testVariableDeclaration() {
     // Test parsing multiple variable declarations including float, variable reference, and const with comparison
-    std::string expression = "let foo = 45.5;\nlet bar = foo * 10;\nconst baz = foo + 10 ** 2 * bar + foo % 7 + foo**2;";
+    std::string expression = "let foo = 45.5;\nlet bar = foo * 10;\nconst baz = foo + 10 ^^ 2 * bar + foo % 7 + foo^^2;";
     parser::Parser parser(expression, lexer::Mode::String);
 
     // Parse the expression
@@ -112,7 +112,7 @@ bool testVariableDeclaration() {
     // Define the expected string representations
     std::string expected1 = "(let foo = 45.5);";
     std::string expected2 = "(let bar = (foo * 10));";
-    std::string expected3 = "(const baz = (((foo + ((10 ** 2) * bar)) + (foo % 7)) + (foo ** 2)));";
+    std::string expected3 = "(const baz = (((foo + ((10 ^^ 2) * bar)) + (foo % 7)) + (foo ^^ 2)));";
 
     // Compare the output with the expected strings
     bool success = true;
@@ -151,7 +151,7 @@ bool testAssignmentExpressions() {
     "e *= f + 1;\n"
     "g /= h - -2;\n"
     "i %= 4;\n"
-    "j **= 2;\n"
+    "j ^^= 2;\n"
     "k //= 3;";
     parser::Parser parser(expression, lexer::Mode::String);
     
@@ -179,7 +179,7 @@ bool testAssignmentExpressions() {
                 "(e *= (f + 1));",
                 "(g /= (h - (-2)));",
                 "(i %= 4);",
-                "(j **= 2);",
+                "(j ^^= 2);",
                 "(k //= 3);"};
 
                 bool success = true;
@@ -255,7 +255,7 @@ bool testParenthesizedExpressions() {
         "(2 + 3) * 4;\n"
         "2 * (3 + 4);\n"
         "((5 + 2) * (8 - 3)) / 2;\n"
-        "1 + (2 ** (3 + 1));\n"
+        "1 + (2 ^^ (3 + 1));\n"
         "((2 + 3) * 4) - (6 / (1 + 1));";
     parser::Parser parser(expression, lexer::Mode::String);
 
@@ -279,7 +279,7 @@ bool testParenthesizedExpressions() {
         "((2 + 3) * 4);",
         "(2 * (3 + 4));",
         "(((5 + 2) * (8 - 3)) / 2);",
-        "(1 + (2 ** (3 + 1)));",
+        "(1 + (2 ^^ (3 + 1)));",
         "(((2 + 3) * 4) - (6 / (1 + 1)));"
     };
 
@@ -297,6 +297,29 @@ bool testParenthesizedExpressions() {
     return success;
 }
 
+bool foo() {
+    // Test parsing address-of (&) and dereference (*) operators
+    std::string expression = 
+        "&variable;\n"
+        "*pointer;\n"
+        "**doublePointer;\n"
+        "&(x + y);\n"
+        "*p + 5;\n";
+    parser::Parser parser(expression, lexer::Mode::String);
+
+    // Parse the expression
+    ast::Block block = parser.parse();
+
+    // Print the parsed AST
+    std::cout << "Parsed address and dereference operators AST:" << std::endl;
+    for (const auto& stmt : block) {
+        std::cout << stmt->toString() << std::endl;
+    }
+    
+    // No validation needed - this is just to check that parsing works
+    return true;
+}
+
 
 int runParserTests(TestRunner& runner) {
     runner.runTest("Simple Arithmetic Expression", testArithmeticOperators);
@@ -305,6 +328,7 @@ int runParserTests(TestRunner& runner) {
     runner.runTest("Assignment Expressions", testAssignmentExpressions);
     runner.runTest("Prefix Operators", testPrefixOperators);
     runner.runTest("Parenthesized Expressions", testParenthesizedExpressions);
+    runner.runTest("Address and Dereference Operators", foo);
 
     return runner.allTestsPassed() ? 0 : 1;
 }

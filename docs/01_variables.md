@@ -102,7 +102,7 @@ let b: float64;  # b is initialized to 0.0
 let c: char;  # c is initialized to '\0`
 let d: bool;  # d is initialized to false
 let f : ptr int;  # f is a null pointer
-let h : ptr int = ?a;  # no default initialization, h points to a
+let h : ptr int = &a;  # no default initialization, h points to a
 ```
 
 ## === Type Casting ===

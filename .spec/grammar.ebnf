@@ -61,13 +61,13 @@ int_suffix = ("u" | "U") (("l" | "L") | ("ll" | "LL"))? |
 float_suffix = "f" | "F" | "d" | "D";
 
 #* Operators
-arithmetic_op = "+" | "-" | "*" | "/" | "//" | "%" | "**";
+arithmetic_op = "+" | "-" | "*" | "/" | "//" | "%" | "^^";  # ^^ is exponentiation
 comparison_op = "<" | "<=" | ">" | ">=" | "==" | "!=";
 boolean_op = "&&" | "||" | "!";
 bitwise_op = "&" | "|" | "~" | "^" | "<<" | ">>";
 access_op = "::" | "."  # Scope resolution / member access
 other_op = "cast" "<" type ">" | "typeof"
-prefix_unary_op = "++" | "--" | "!" | "~" | "?" | "@";
+prefix_unary_op = "++" | "--" | "!" | "~" | "&" | "*";  # & and * are parsed as unary if the previous token is an operator or a left paren
 postfix_unary_op = "++" | "--";
 binary_op = arithmetic_op | comparison_op | boolean_op | bitwise_op;
 binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)

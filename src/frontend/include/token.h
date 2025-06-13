@@ -188,7 +188,7 @@ enum class TokenType : uint8_t {
     Div,                    // `/`
     FloorDiv,               // `//`
     Mod,                    // `%`
-    Exp,                    // `**`
+    Exp,                    // `^^`
     Inc,                    // `++`
     Dec,                    // `--`
     UnaryPlus,              // `+` (unary plus)
@@ -202,7 +202,7 @@ enum class TokenType : uint8_t {
     DivAssign,       // `/=`
     FloorDivAssign,  // `//=`
     ModAssign,       // `%=`
-    ExpAssign,       // `**=`
+    ExpAssign,       // `^^=`
 
     //* Comparison Operators
     GreaterThan,         // `>`
@@ -235,8 +235,8 @@ enum class TokenType : uint8_t {
     BitRShiftAssign,  // `>>=`
 
     //* Pointer Operators
-    AddressOf,    // `?`
-    Dereference,  // `@`
+    AddressOf,    // `&`
+    Dereference,  // `*`
 
     //* Access Operators
     MemberAccess,     // `.`
