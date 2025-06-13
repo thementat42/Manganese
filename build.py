@@ -160,10 +160,18 @@ if not args.run and args.exec_with:
         f"({', '.join(args.exec_with)})",
         "were passed to the script but the run flag (-r) was not specified"
     )
+else:
+    print(
+        "\033[34mRunning with positional arguments:", *args.exec_with, "\033[0m"
+    )
 
 if args.memory_tracking and not args.debug:
     print(
         "\033[33mWarning: --memory-tracking only has an effect in debug mode\033[0m"
+    )
+else:
+    print(
+        "\033[34mTracking cumulative memory usage\033[0m"
     )
 
 if args.memory_tracking_continuous:
@@ -174,11 +182,19 @@ if args.memory_tracking_continuous:
     print(
         "\033[33mWarning: --memory-tracking-continuous may not be completely accurate and can vary depending on the compiler \033[0m"
     )
+else:
+    print(
+        "\033[34mTracking estimated continuous memory usage\033[0m"
+    )
 
 if args.tests and not args.debug:
     print(
         "\033[33mWarning: --tests will compile in debug mode",
          "even if the debug flag (-d or --debug) is not set"
+    )
+else:
+    print(
+        "\033[34mBuliding tests\033[0m"
     )
 
 if args.fresh_build and BUILD_DIR.exists():
