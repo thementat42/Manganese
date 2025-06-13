@@ -7,7 +7,7 @@
 
 #ifndef __PRINT_LOCATION
 #define __PRINT_LOCATION \
-    std::cerr << "\033[33m In file:" << __FILE__ << ", at" << __LINE__ << ": when running" << __func__ << "\033[0m\n";
+    std::cerr << "\033[33m In file:" << __FILE__ << ", at" << __LINE__ << ": when running " << __func__ << "\033[0m\n";
 
 #define PRINT_LOCATION __PRINT_LOCATION  // Print the location of the log message (in the compiler source, not the user code)
 
