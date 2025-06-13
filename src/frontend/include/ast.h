@@ -62,6 +62,8 @@ namespace parser {
 class Parser;
 }
 
+//TODO: Add line and column setting methods to the derived classes
+
 namespace ast {
 class Expression;
 class Statement;
@@ -311,6 +313,12 @@ class VariableDeclarationStatement : public Statement {
      */
     VariableDeclarationStatement(bool _isConst, std::string _name, Visibility _visibility, ExpressionPtr _value)
         : isConst(_isConst), name(std::move(_name)), visibility(_visibility), value(std::move(_value)) {};
+    
+    bool isConstant() const { return isConst; }
+    const std::string& getName() const { return name; }
+    Visibility getVisibility() const { return visibility; }
+    const Expression& getValue() const { return *value; }
+    // const primitiveType& getType() const { return type; }  
 
     AST_DEBUG_OVERRIDES
 };
