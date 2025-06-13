@@ -1,11 +1,13 @@
-#~ expression ::= <value>  (BNF)
-#~ * means 0 or more times
-#~ + means one or more times
-#~ | indicates an alternative
-#~ ; ends a statement
-#~ () group statements
-#~ ? means optional
+# === Reading EBNF Notation: ===
+# expression = value
+# * means 0 or more times
+# + means one or more times
+# | indicates an alternative
+# ; ends a statement
+# () group statements
+# ? means optional
 
+# === Formal Grammar ===
 #* Basics
 single_line_comment = "#" [^\n]*;
 multi_line_comment = "/*" [^*]* ("*" [^/])* "*/";
