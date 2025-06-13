@@ -44,6 +44,22 @@ inline void Parser::stmt(TokenType type,
 }
 
 inline void Parser::initializeLookups() {
+    //~ Assignments (updating variables, not initializing them)
+    led(TokenType::Assignment, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::PlusAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::MinusAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::MulAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::DivAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::FloorDivAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::ModAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::ExpAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::BitAndAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::BitOrAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::BitNotAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::BitXorAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::BitLShiftAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::BitRShiftAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+
     //~ Logical
     led(TokenType::And, OperatorBindingPower::Logical, parseBinaryExpression);
     led(TokenType::Or, OperatorBindingPower::Logical, parseBinaryExpression);
@@ -71,13 +87,30 @@ inline void Parser::initializeLookups() {
     nud(TokenType::CharLiteral, parsePrimaryExpression);
     nud(TokenType::StrLiteral, parsePrimaryExpression);
     nud(TokenType::Identifier, parsePrimaryExpression);
+    nud(TokenType::LeftParen, parseParenthesizedExpression);
+
+    //~ Prefix Operators
+    nud(TokenType::UnaryPlus, parsePrefixExpression);
+    nud(TokenType::UnaryMinus, parsePrefixExpression);
+    nud(TokenType::Not, parsePrefixExpression);
+    nud(TokenType::AddressOf, parsePrefixExpression);
+    nud(TokenType::Dereference, parsePrefixExpression);
+    nud(TokenType::BitNot, parsePrefixExpression);
+    nud(TokenType::Inc, parsePrefixExpression);
+    nud(TokenType::Dec, parsePrefixExpression);
 
     //~ Statements
     stmt(TokenType::Const, parseVariableDeclarationStatement);
     stmt(TokenType::Let, parseVariableDeclarationStatement);
 }
 
-Token Parser::currentToken() {
+bool Parser::isUnaryContext() const {
+    return (tokenCache.empty() || tokenCachePosition == 0 ||
+            tokenCache[tokenCachePosition - 1].getType() == lexer::TokenType::LeftParen ||
+            tokenCache[tokenCachePosition - 1].isOperator());
+}
+
+[[nodiscard]] Token Parser::currentToken() {
     // Make sure we have enough tokens in the cache
     while (tokenCachePosition >= tokenCache.size()) {
         tokenCache.push_back(lexer->consumeToken());
@@ -86,7 +119,7 @@ Token Parser::currentToken() {
     return tokenCache[tokenCachePosition];
 }
 
-Token Parser::advance() {
+[[nodiscard]] Token Parser::advance() {
     // Make sure we have enough tokens in the cache
     while (tokenCachePosition >= tokenCache.size()) {
         tokenCache.push_back(lexer->consumeToken());

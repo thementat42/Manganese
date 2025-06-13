@@ -16,33 +16,64 @@ constexpr uint8_t DECIMAL = 10;
 constexpr uint8_t HEXADECIMAL = 16;
 
 ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
-    TokenType type = currentToken().getType();
+    Token token = currentToken();
+
+    // Handle operators which have a unary and a binary version (e.g. `-` can be a unary negation or a binary subtraction)
+    if (isUnaryContext() && token.hasUnaryCounterpart()) {
+        token.overrideType(token.getUnaryCounterpart());
+        bindingPower = OperatorBindingPower::Unary;
+    }
+    TokenType type = token.getType();
+
     auto nudIterator = nullDenotationLookup.find(type);
     if (nudIterator == nullDenotationLookup.end()) {
         UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
     ExpressionPtr left = nudIterator->second(this);
-    
-    //! NOTE: For some bizzare reason, the only way this works is to first update the type outside the loop once, then update it inside the loop.
-    //! Updating the type at the start of the loop but not outside it also doesn't work
-    // ! I don't know why this is the case, but DO NOT REMOVE THIS OUTSIDE UPDATE
 
-    type = currentToken().getType();  // update the type since the null denotation handler will have advanced the token
     while (!done()) {
+        token = currentToken();
+        
+        if (isUnaryContext() && token.hasUnaryCounterpart()) {
+            token.overrideType(token.getUnaryCounterpart());
+            bindingPower = OperatorBindingPower::Unary;
+        }
+        type = token.getType();
+
         auto bindingPowerIterator = bindingPowerLookup.find(type);
         if (bindingPowerIterator == bindingPowerLookup.end() ||
-        bindingPowerIterator->second <= bindingPower) {
+            bindingPowerIterator->second <= bindingPower) {
             break;
         }
-        
+
         auto ledIterator = leftDenotationLookup.find(type);
         if (ledIterator == leftDenotationLookup.end()) {
             UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
         left = ledIterator->second(this, std::move(left), bindingPowerLookup[type]);
-        type = currentToken().getType();  // update the type since the left denotation handler will have advanced the token
     }
     return left;
+}
+
+ExpressionPtr Parser::parseAssignmentExpression(ExpressionPtr left, OperatorBindingPower bindingPower) {
+    TokenType op = advance().getType();
+    ExpressionPtr right = parseExpression(bindingPower);
+
+    return std::make_unique<ast::AssignmentExpression>(std::move(left), op, std::move(right));
+}
+
+ExpressionPtr Parser::parseParenthesizedExpression() {
+    DISCARD(advance());  // Consume the left parenthesis
+    ExpressionPtr expr = parseExpression(OperatorBindingPower::Default);
+    expectToken(lexer::TokenType::RightParen, "Expected a right parenthesis to close the expression");
+    return expr;
+}
+
+ExpressionPtr Parser::parsePrefixExpression() {
+    TokenType op = advance().getType();
+    auto right = parseExpression(OperatorBindingPower::Default);
+
+    return std::make_unique<ast::PrefixExpression>(op, std::move(right));
 }
 
 ExpressionPtr Parser::parseExponentiationExpression(ExpressionPtr left, OperatorBindingPower bindingPower) {
@@ -107,7 +138,7 @@ ExpressionPtr Parser::parsePrimaryExpression() {
     }
 }
 
-const ExpressionPtr Parser::createIntegerLiteralNode(str& suffix, str& numericPart, int base) {
+ExpressionPtr Parser::createIntegerLiteralNode(str& suffix, str& numericPart, int base) {
     if (suffix == "ull" || suffix == "llu") {
         return make_unique<ast::NumberExpression>(stoull(numericPart, nullptr, base));
     } else if (suffix == "ll") {

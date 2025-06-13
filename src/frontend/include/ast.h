@@ -231,8 +231,8 @@ class BinaryExpression : public Expression {
  */
 class PrefixExpression : public Expression {
    protected:
-    ExpressionPtr right;
-    lexer::TokenType op;
+   lexer::TokenType op;
+   ExpressionPtr right;
 
    public:
     /**
@@ -241,7 +241,7 @@ class PrefixExpression : public Expression {
      * @param _right The operand of the expression
      */
     PrefixExpression(lexer::TokenType _op, ExpressionPtr _right)
-        : right(std::move(_right)), op(_op) {}
+        : op(_op), right(std::move(_right)) {}
 
     const Expression& getRight() const { return *right; }
     lexer::TokenType getOperator() const { return op; }

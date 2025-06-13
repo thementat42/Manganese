@@ -44,12 +44,17 @@ class Parser {
 
     //* Expression Parsing
     ExpressionPtr parseExpression(OperatorBindingPower bindingPower);
+    bool isUnaryContext() const;
     ExpressionPtr parsePrimaryExpression();
     static int determineNumberBase(const str &lexeme);
-    const ExpressionPtr createIntegerLiteralNode(str &suffix, str &numericPart, int base);
+    ExpressionPtr createIntegerLiteralNode(str &suffix, str &numericPart, int base);
 
     ExpressionPtr parseBinaryExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
     ExpressionPtr parseExponentiationExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
+
+    ExpressionPtr parseAssignmentExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
+    ExpressionPtr parsePrefixExpression();
+    ExpressionPtr parseParenthesizedExpression();
 
     //* Statement Parsing
 
@@ -57,8 +62,8 @@ class Parser {
     StatementPtr parseVariableDeclarationStatement();
 
     // ~ Helpers
-    Token currentToken();
-    Token advance();
+    [[nodiscard]] Token currentToken();
+    [[nodiscard]] Token advance();
     Token expectToken(TokenType expectedType);
     Token expectToken(TokenType expectedType, const str &errorMessage);
 
