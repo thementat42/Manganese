@@ -142,11 +142,7 @@ void Token::log(const Token& token) noexcept {
 
 // ! === Really Long Stuff ===
 
-std::string tokenTypeToString(TokenType type) noexcept {
-#if !DEBUG
-    return "";
-#else   // ^^ !DEBUG vv DEBUG
-
+std::string tokenTypeToString(TokenType type) {
     switch (type) {
         // Basic
         case TokenType::Identifier:
@@ -377,7 +373,6 @@ std::string tokenTypeToString(TokenType type) noexcept {
         default:
             UNREACHABLE("No string representation for TokenType: " + std::to_string(static_cast<uint16_t>(type)));
     }
-#endif  // DEBUG
 }
 
 std::unordered_map<std::string, const TokenType> operatorMap = {

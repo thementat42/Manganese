@@ -69,7 +69,7 @@ class Token {
 };
 
 //~ Helpers, not tied to the Token class
-std::string tokenTypeToString(TokenType type) noexcept;
+std::string tokenTypeToString(TokenType type);
 extern std::unordered_map<std::string, const TokenType> keywordMap;
 extern std::unordered_map<std::string, const TokenType> operatorMap;
 std::optional<TokenType> keywordFromString(const std::string& keyword);
