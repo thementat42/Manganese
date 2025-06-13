@@ -1,5 +1,6 @@
 # Private workspace configurations
 .vscode/
+
 # Builds and compiled code
 build/
 release/
@@ -11,11 +12,15 @@ release/
 *.s
 *.ll
 __pycache__/
+
+# logs
+*.log
+
 # Convention: use files with the format x.* (e.g., x.py, x.something.cpp) for
 # temporary files, user files (e.g. helper scripts), etc. 
 x.*
-# plans
-planning/
+
 # random other stuff, not directly related to the compiler
+planning/
 misc/
 sandbox/
