@@ -1,5 +1,3 @@
-
-
 /**
  * @file lexer.cpp
  * @brief This file contains the implementation of the lexer for the Manganese compiler.
@@ -20,6 +18,7 @@
 #include "include/lexer.h"
 
 #include <algorithm>
+#include <format>
 #include <functional>
 #include <iostream>
 
@@ -68,14 +67,14 @@ void Lexer::lex(size_t numTokens) {
             while (!done() && !(peekChar() == '*' && peekChar(1) == '/')) {
                 advance();  // Skip the comment
             }
-            if (done()) {
+            if (done()) [[unlikely]] {
                 logging::logUser("Unclosed multiline comment", logging::LogLevel::Error, getLine(), getCol());
                 return;
             }
             advance(2);  // Skip the */
-        } else if (std::isspace(currentChar)) {
+        } else if (std::isspace(currentChar)) [[likely]] {
             advance();  // Skip whitespace
-        } else if (isalpha(currentChar) || currentChar == '_') {
+        } else if (isalpha(currentChar) || currentChar == '_') [[likely]] {
             tokenizeKeywordOrIdentifier();
             numTokensMade++;
         } else if (currentChar == '\'') {
@@ -252,9 +251,10 @@ void Lexer::tokenizeNumber() {
             }
             // Reject floating point for octal and binary numbers
             if (base == NumberLiteralBase::Octal || base == NumberLiteralBase::Binary) {
-                logging::logUser({"Invalid number literal: floating point not allowed for",
-                                  (base == NumberLiteralBase::Octal ? "octal" : "binary"), "numbers"},
-                                 logging::LogLevel::Error, getLine(), getCol());
+                logging::logUser(
+                    std::format("Invalid number literal: floating point not allowed for {} numbers",
+                                (base == NumberLiteralBase::Octal ? "octal" : "binary")),
+                    logging::LogLevel::Error, getLine(), getCol());
                 tokenStream.emplace_back(TokenType::Invalid, numberLiteral, tokenStartLine, tokenStartCol);
                 return;
             }
@@ -407,7 +407,7 @@ void Lexer::tokenizeSymbol() {
             break;
         default:
             type = TokenType::Invalid;
-            logging::logUser({"Invalid character: '", std::string(1, current), "'"}, logging::LogLevel::Error, getLine(), getCol());
+            logging::logUser(std::format("Invalid character: '{}'", current), logging::LogLevel::Error, getLine(), getCol());
             tokenStream.emplace_back(TokenType::Invalid, lexeme, tokenStartLine, tokenStartCol);
             break;
     }
@@ -422,7 +422,12 @@ optional<wchar_t> Lexer::resolveHexAndUnicodeCharacters(const str& esc, const bo
     auto isNotHex = [](char c) { return !std::isxdigit(static_cast<unsigned char>(c)); };
     auto x = std::find_if(esc.begin(), esc.begin() + (isUnicode ? 4 : 2), isNotHex);
     if (x != esc.end()) {
-        logging::logUser({"Error: Invalid ", (isUnicode ? "unicode" : "hex"), " escape sequence: \\", (isUnicode ? "u" : "x"), esc}, logging::LogLevel::Error, getLine(), getCol());
+        logging::logUser(
+            std::format("Error: Invalid {} escape sequence: \\{}{}", 
+                (isUnicode ? "unicode" : "hex"), 
+                (isUnicode ? "u" : "x"), 
+                esc),
+            logging::LogLevel::Error, getLine(), getCol());
         return NONE;
     }
     wchar_t unicodeChar = 0;
@@ -475,7 +480,11 @@ std::optional<str> Lexer::resolveEscapeCharacters(const str& escapeString) {
         // Convert the escape sequence to a string and add it to the processed string
         wchar_t wideChar = *escapeSequence;
         if (wideChar > UTF8_4B_MAX) {
-            logging::logUser("Error: invalid unicode escape sequence", logging::LogLevel::Error, 0, 0);
+            logging::logUser(
+                std::format(
+                    "Error: invalid unicode escape sequence: \\u{:X}", 
+                    static_cast<unsigned int>(wideChar)),
+                    logging::LogLevel::Error, tokenStartLine, tokenStartCol);
             return NONE;
         }
         processed += convertWideCharToUTF8(wideChar);
@@ -658,7 +667,11 @@ optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
         case '0':
             return '\0';
         default:
-            logging::logUser({"\\", std::string(1, escapeChar), " is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ('\\\\'", std::string(1, escapeChar), "')"}, logging::LogLevel::Error, 0, 0);
+            logging::logUser(
+                std::format(
+                    "\\{} is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ('\\\\{}')",
+                    escapeChar, escapeChar),
+                logging::LogLevel::Error, 0, 0);
             return NONE;
     }
 }

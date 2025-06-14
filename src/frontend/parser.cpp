@@ -1,5 +1,7 @@
 #include "include/parser.h"
 
+#include <format>
+
 #include "../global_macros.h"
 #include "../io/include/logging.h"
 
@@ -16,7 +18,7 @@ ast::Block Parser::parse() {
     while (!done()) {
         // Move since parseStatement() returns a unique_ptr
         program.push_back(std::move(parseStatement()));
-        
+
         // We don't need to look back at old tokens from previous statements,
         // clear the cache to save memory
         tokenCache.clear();
@@ -130,10 +132,10 @@ bool Parser::isUnaryContext() const {
 Token Parser::expectToken(TokenType expectedType) {
     return expectToken(
         expectedType,
-        "Expected: " +
-            lexer::tokenTypeToString(expectedType) +
-            ", but found: " +
-            lexer::tokenTypeToString(currentToken().getType()));
+        std::format(
+            "Expected: {}, but found: {}",
+            lexer::tokenTypeToString(expectedType),
+            lexer::tokenTypeToString(currentToken().getType())));
 }
 
 Token Parser::expectToken(TokenType expectedType, const str& errorMessage) {

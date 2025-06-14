@@ -6,6 +6,8 @@
 #include "../global_macros.h"
 #include "include/parser.h"
 
+#include <format>
+
 MANGANESE_BEGIN
 namespace parser {
 
@@ -26,7 +28,7 @@ StatementPtr Parser::parseVariableDeclarationStatement() {
 
     str identifier = expectToken(
                          TokenType::Identifier,
-                         "Expected a variable name after " + declarationToken.getLexeme())
+                         std::format("Expected a variable name after {}", declarationToken.getLexeme()))
                          .getLexeme();
 
     expectToken(TokenType::Assignment, "Expected an '=' after a variable declaration");

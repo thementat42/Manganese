@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(manganese)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(COMPILER_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese.cpp")
 set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese_tests.cpp")
 

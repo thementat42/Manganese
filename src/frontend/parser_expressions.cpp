@@ -110,6 +110,10 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             return make_unique<ast::StringExpression>(lexeme);
         case TokenType::Identifier:
             return make_unique<ast::SymbolExpression>(lexeme);
+        case TokenType::FloatLiteral:
+            // Check for floating-point suffixes
+            return make_unique<ast::NumberExpression>(
+                tolower(lexeme.back()) == 'f' ? stof(lexeme) : stod(lexeme));
         case TokenType::IntegerLiteral: {
             // Extract integer suffix (u, l, ll, ul, ull, etc.)
             int base = determineNumberBase(lexeme);
@@ -120,25 +124,21 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             std::string numericPart = lexeme;
             std::string suffix;
             // Scan backwards for suffix letters
+            DISABLE_CONVERSION_WARNING
             while (!numericPart.empty() && (isalpha(numericPart.back()) || numericPart.back() == '_')) {
-                char c = static_cast<char>(tolower(numericPart.back()));
-                suffix = std::string(1, c) + suffix;  // prepend to suffix, ignoring case for simplicity
-                numericPart.pop_back();
+                suffix.insert(suffix.begin(), tolower(numericPart.back()));  // Convert to lowercase
+                numericPart.pop_back();  // Remove the suffix letter
             }
+            ENABLE_CONVERSION_WARNING
 
             return createIntegerLiteralNode(suffix, numericPart, base);
         }
-        case TokenType::FloatLiteral:
-            // Check for floating-point suffixes
-            return make_unique<ast::NumberExpression>(
-                tolower(lexeme.back()) == 'f' ? stof(lexeme) : stod(lexeme));
-
         default:
             UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + lexer::tokenTypeToString(token.getType()));
     }
 }
 
-ExpressionPtr Parser::createIntegerLiteralNode(str& suffix, str& numericPart, int base) {
+ExpressionPtr createIntegerLiteralNode(str& suffix, str& numericPart, int base) {
     if (suffix == "ull" || suffix == "llu") {
         return make_unique<ast::NumberExpression>(stoull(numericPart, nullptr, base));
     } else if (suffix == "ll") {
@@ -154,13 +154,13 @@ ExpressionPtr Parser::createIntegerLiteralNode(str& suffix, str& numericPart, in
     }
 }
 
-int Parser::determineNumberBase(const str& lexeme) {
+int determineNumberBase(const str& lexeme) {
     if (lexeme.length() <= 2) {
-        return 10;  // Default to decimal if the lexeme is too short to be a valid base-prefixed number
+        return DECIMAL;  // Default to decimal if the lexeme is too short to be a valid base-prefixed number
     }
     if (lexeme[0] != '0') {
         // No base prefix, assume decimal
-        return 10;
+        return DECIMAL;
     }
     switch (lexeme[1]) {
         case 'x':

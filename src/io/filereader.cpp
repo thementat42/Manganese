@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <format>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -19,7 +20,7 @@ namespace io {
 FileReader::FileReader(const std::string& filename, size_t _bufferCapacity) : position(0), line(1), column(1), bufferCapacity(_bufferCapacity) {
     fileStream.open(filename, std::ios::in);
     if (!fileStream.is_open()) {
-        logging::logUser("Error: Could not open file " + filename, logging::LogLevel::Error);
+        logging::logUser(std::format("Error: Could not open file {}", filename), logging::LogLevel::Error);
         throw std::runtime_error("Could not open file: " + filename);
     }
     buffer = std::make_unique<char[]>(_bufferCapacity + 1);                               // +1 for null terminator
@@ -28,7 +29,7 @@ FileReader::FileReader(const std::string& filename, size_t _bufferCapacity) : po
 
     if (bufferSize == 0) {
         logging::logUser(
-            "Error: File " + filename + " is empty or could not be read", logging::LogLevel::Error);
+            std::format("Error: File {} is empty or could not be read", filename), logging::LogLevel::Error);
         throw std::runtime_error(filename + " is empty or could not be read");
     }
     buffer[bufferSize] = '\0';  // Null-terminate the buffer since peekChar will rely on this to determine EOF
