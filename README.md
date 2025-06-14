@@ -17,11 +17,13 @@ Manganese requires the following dependencies to be installed:
 
 - [LLVM](https://llvm.org/) (version 16 or later)
 - [CMake](https://cmake.org/) (version 3.10 or later)
-- [Python](https://www.python.org/) (version 3.8 or later), if you want to use the `build.py` script
+- [Python](https://www.python.org/) (version 3.8 or later), if you want to use the `build.py` scriptDependencies
 
 ## === Building ===
 
-To build from source, first clone the repository:
+To build from source, first make sure you have the [dependencies](#-dependencies-) installed.
+
+Then, clone this repository:
 
 ```bash
 git clone https://github.com/thementat42/Manganese.git
