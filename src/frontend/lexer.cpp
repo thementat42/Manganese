@@ -320,21 +320,17 @@ void Lexer::tokenizeSymbol() {
             break;
 
         // ~ Boolean / Bitwise operators
-        case '&':
+        case '&':  // Let the parser decide if '&' is a bitwise AND or an address-of operator, default to bitwise AND
         case '|':
             type = TokenType::Operator;
-            if (next == current) {
-                // Logical operator (&& or ||)
-                lexeme += current;
-            } else if (next == '=') {
-                // Bitwise assignment operator (&= or |=)
-                lexeme += '=';
-            } else {
-                // Bitwise operator (& or |)
-                // Do nothing
+            if (next == current || next == '=') {
+                // If next is the same character, it's a logical operator (&& or ||)
+                // or a bitwise assignment operator (&= or |=)
+                lexeme += next;
             }
+            // Otherwise, just a single & or | operator
             break;
-        case '^':  // XOR
+        case '^':  // Bitwise XOR
             type = TokenType::Operator;
             if (next == '=') {
                 // Bitwise assignment operator (^=)
@@ -346,11 +342,11 @@ void Lexer::tokenizeSymbol() {
             }
             break;
         case '!':  // NOT
-        case '~':  // Bitwise NOTE
+        case '~':  // Bitwise NOT
         case '=':  // Assignment
             type = TokenType::Operator;
             if (next == '=') {
-                // Assignment operator (^=, != or ~=)
+                // Assignment operator (!= or ~=)
                 // or equality check (==)
                 lexeme += '=';
             }
@@ -364,7 +360,9 @@ void Lexer::tokenizeSymbol() {
             type = TokenType::Comma;
             break;
         case '.':
-            lexeme = (next == '.' && nextnext == '.') ? "..." : ".";
+            if (next == '.' && nextnext == '.') {
+                lexeme = "...";
+            }
             type = TokenType::Operator;
             break;
         case ':':
@@ -376,7 +374,7 @@ void Lexer::tokenizeSymbol() {
         case '+':
             type = TokenType::Operator;
             if (next == '+' || next == '=') {
-                //* ++ (increment) or += (in-place addition)
+                // ++ (increment) or += (in-place addition)
                 lexeme += next;
             }
             break;
@@ -388,16 +386,10 @@ void Lexer::tokenizeSymbol() {
             }
             break;
         case '%':
-            type = TokenType::Operator;
-            if (next == '=') {
-                // %= (in-place modulus)
-                lexeme += '=';
-            }
-            break;
         case '*':
             type = TokenType::Operator;
             if (next == '=') {
-                //* *= (in-place multiplication)
+                // %= or *= (in-place modulus or multiplication)
                 lexeme += '=';
             }
             break;
