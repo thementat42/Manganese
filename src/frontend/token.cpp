@@ -142,6 +142,10 @@ void Token::log(const Token& token) noexcept {
 
 // ! === Really Long Stuff ===
 
+//TODO: Make one master map of token types to strings. 
+//TODO: have helper functions that go through the map initialize the keyword and operator maps (by flipping the mappings in the master map)
+
+
 std::string tokenTypeToString(TokenType type) {
     switch (type) {
         // Basic
