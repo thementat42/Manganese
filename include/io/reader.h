@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <string>
 
-#include "../../global_macros.h"
+#include <global_macros.h>
 
 MANGANESE_BEGIN
 namespace io {

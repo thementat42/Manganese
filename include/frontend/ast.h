@@ -53,7 +53,7 @@ A block is a vector of statements
 #include <string>
 #include <vector>
 
-#include "../../global_macros.h"
+#include <global_macros.h>
 #include "token.h"
 
 MANGANESE_BEGIN

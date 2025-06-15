@@ -6,10 +6,10 @@
 #include <optional>
 #include <queue>
 
-#include "../../global_macros.h"
-#include "../../io/include/filereader.h"
-#include "../../io/include/reader.h"
-#include "../../io/include/stringreader.h"
+#include <global_macros.h>
+#include <io/filereader.h>
+#include <io/reader.h>
+#include <io/stringreader.h>
 #include "token.h"
 
 MANGANESE_BEGIN

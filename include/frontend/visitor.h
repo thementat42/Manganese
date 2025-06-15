@@ -1,7 +1,7 @@
 #ifndef VISITOR_H
 #define VISITOR_H
 
-#include "../../global_macros.h"
+#include <global_macros.h>
 
 MANGANESE_BEGIN
 namespace visitor {

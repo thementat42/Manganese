@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 
-#include "../../global_macros.h"
+#include <global_macros.h>
 #include "reader.h"
 
 MANGANESE_BEGIN

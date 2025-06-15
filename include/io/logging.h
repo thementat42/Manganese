@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../../global_macros.h"
+#include <global_macros.h>
 
 #ifndef __PRINT_LOCATION
 #define __PRINT_LOCATION \
