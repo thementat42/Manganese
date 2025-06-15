@@ -1,9 +1,9 @@
 #ifndef LOGGING_H
 #define LOGGING_H
 
-#include <iostream>
-
 #include <global_macros.h>
+
+#include <iostream>
 
 #ifndef __PRINT_LOCATION
 #define __PRINT_LOCATION \

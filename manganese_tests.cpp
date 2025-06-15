@@ -105,15 +105,14 @@ void operator delete[](void* ptr) noexcept {
 
 #endif  // MEMORY_TRACKING && DEBUG
 
-// Includes for unity build
-#include <string.h>
-
 #include <frontend/lexer.h>
 #include <frontend/token.h>
 #include <global_macros.h>
 #include <io/filereader.h>
 #include <io/logging.h>
 #include <io/stringreader.h>
+#include <string.h>
+
 #include "tests/testrunner.h"
 #include "tests/tests.h"
 

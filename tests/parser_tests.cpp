@@ -1,9 +1,10 @@
+#include <frontend/parser.h>
+#include <global_macros.h>
+
 #include <iostream>
 #include <memory>
 #include <string>
 
-#include <frontend/parser.h>
-#include <global_macros.h>
 #include "testrunner.h"
 
 MANGANESE_BEGIN
@@ -144,45 +145,45 @@ bool testVariableDeclaration() {
 bool testAssignmentExpressions() {
     // Test parsing assignment expressions including compound assignments
     std::string expression =
-    "a = 5;\n"
-    "b += 3;\n"
-    "c -= 2 * b;\n"
-    "d = -(c + 3);\n"
-    "e *= f + 1;\n"
-    "g /= h - -2;\n"
-    "i %= 4;\n"
-    "j ^^= 2;\n"
-    "k //= 3;";
+        "a = 5;\n"
+        "b += 3;\n"
+        "c -= 2 * b;\n"
+        "d = -(c + 3);\n"
+        "e *= f + 1;\n"
+        "g /= h - -2;\n"
+        "i %= 4;\n"
+        "j ^^= 2;\n"
+        "k //= 3;";
     parser::Parser parser(expression, lexer::Mode::String);
-    
+
     // Parse the expression
     ast::Block block = parser.parse();
-    
+
     // Print the parsed AST
     std::cout << "Parsed assignment expressions AST:" << std::endl;
     for (const auto& stmt : block) {
         std::cout << stmt->toString() << std::endl;
-        }
-        
-        // Check that we have exactly eight statements
-        if (block.size() != 9) {
-            std::cerr << "ERROR: Expected 9 statements, got " << block.size() << std::endl;
-            return false;
-            }
-            
-            // Define the expected string representations
-            std::string expected[] = {
-                "(a = 5);",
-                "(b += 3);",
-                "(c -= (2 * b));",
-                "(d = (-(c + 3)));",
-                "(e *= (f + 1));",
-                "(g /= (h - (-2)));",
-                "(i %= 4);",
-                "(j ^^= 2);",
-                "(k //= 3);"};
+    }
 
-                bool success = true;
+    // Check that we have exactly eight statements
+    if (block.size() != 9) {
+        std::cerr << "ERROR: Expected 9 statements, got " << block.size() << std::endl;
+        return false;
+    }
+
+    // Define the expected string representations
+    std::string expected[] = {
+        "(a = 5);",
+        "(b += 3);",
+        "(c -= (2 * b));",
+        "(d = (-(c + 3)));",
+        "(e *= (f + 1));",
+        "(g /= (h - (-2)));",
+        "(i %= 4);",
+        "(j ^^= 2);",
+        "(k //= 3);"};
+
+    bool success = true;
     for (size_t i = 0; i < 8; ++i) {
         std::string actual = block[i]->toString();
         if (actual != expected[i]) {
@@ -190,12 +191,11 @@ bool testAssignmentExpressions() {
             std::cerr << "Expected: " << expected[i] << std::endl;
             std::cerr << "Actual:   " << actual << std::endl;
             success = false;
-            }
-            }
-            
-            return success;
-            }
-            
+        }
+    }
+
+    return success;
+}
 
 bool testPrefixOperators() {
     // Test parsing prefix operators: ++, --, -, +, !
@@ -232,8 +232,7 @@ bool testPrefixOperators() {
         "(+a);",
         "(!b);",
         "(-(d + 3));",
-        "((++c) * 2);"
-    };
+        "((++c) * 2);"};
 
     bool success = true;
     for (size_t i = 0; i < 7; ++i) {
@@ -251,7 +250,7 @@ bool testPrefixOperators() {
 
 bool testParenthesizedExpressions() {
     // Test that parentheses correctly override the default operator precedence
-    std::string expression = 
+    std::string expression =
         "(2 + 3) * 4;\n"
         "2 * (3 + 4);\n"
         "((5 + 2) * (8 - 3)) / 2;\n"
@@ -280,8 +279,7 @@ bool testParenthesizedExpressions() {
         "(2 * (3 + 4));",
         "(((5 + 2) * (8 - 3)) / 2);",
         "(1 + (2 ^^ (3 + 1)));",
-        "(((2 + 3) * 4) - (6 / (1 + 1)));"
-    };
+        "(((2 + 3) * 4) - (6 / (1 + 1)));"};
 
     bool success = true;
     for (size_t i = 0; i < 5; ++i) {
@@ -299,7 +297,7 @@ bool testParenthesizedExpressions() {
 
 bool foo() {
     // Test parsing address-of (&) and dereference (*) operators
-    std::string expression = 
+    std::string expression =
         "&variable;\n"
         "*pointer;\n"
         "**doublePointer;\n"
@@ -315,11 +313,10 @@ bool foo() {
     for (const auto& stmt : block) {
         std::cout << stmt->toString() << std::endl;
     }
-    
+
     // No validation needed - this is just to check that parsing works
     return true;
 }
-
 
 int runParserTests(TestRunner& runner) {
     runner.runTest("Simple Arithmetic Expression", testArithmeticOperators);

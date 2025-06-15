@@ -6,10 +6,10 @@
 #ifndef READER_H
 #define READER_H
 
+#include <global_macros.h>
+
 #include <cstddef>
 #include <string>
-
-#include <global_macros.h>
 
 MANGANESE_BEGIN
 namespace io {

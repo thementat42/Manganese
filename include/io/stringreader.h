@@ -8,9 +8,10 @@
 
 #ifndef STRING_READER_H
 #define STRING_READER_H
+#include <global_macros.h>
+
 #include <string>
 
-#include <global_macros.h>
 #include "reader.h"
 
 MANGANESE_BEGIN

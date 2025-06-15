@@ -16,18 +16,17 @@
  */
 
 #include <frontend/lexer.h>
-
-#include <algorithm>
-#include <format>
-#include <functional>
-#include <iostream>
-
+#include <frontend/token.h>
 #include <global_macros.h>
 #include <io/filereader.h>
 #include <io/logging.h>
 #include <io/reader.h>
 #include <io/stringreader.h>
-#include <frontend/token.h>
+
+#include <algorithm>
+#include <format>
+#include <functional>
+#include <iostream>
 
 MANGANESE_BEGIN
 
@@ -423,10 +422,10 @@ optional<wchar_t> Lexer::resolveHexAndUnicodeCharacters(const str& esc, const bo
     auto x = std::find_if(esc.begin(), esc.begin() + (isUnicode ? 4 : 2), isNotHex);
     if (x != esc.end()) {
         logging::logUser(
-            std::format("Error: Invalid {} escape sequence: \\{}{}", 
-                (isUnicode ? "unicode" : "hex"), 
-                (isUnicode ? "u" : "x"), 
-                esc),
+            std::format("Error: Invalid {} escape sequence: \\{}{}",
+                        (isUnicode ? "unicode" : "hex"),
+                        (isUnicode ? "u" : "x"),
+                        esc),
             logging::LogLevel::Error, getLine(), getCol());
         return NONE;
     }
@@ -479,17 +478,17 @@ std::optional<str> Lexer::resolveEscapeCharacters(const str& escapeString) {
         }
         // Convert the escape sequence to a string and add it to the processed string
         wchar_t wideChar = *escapeSequence;
-        #ifndef _WIN32
+#ifndef _WIN32
         // On unix, wchar_t exceeds the UTF-8 4-byte limit, so we need an additional range check
         if (wideChar > UTF8_4B_MAX) {
             logging::logUser(
                 std::format(
-                    "Error: invalid unicode escape sequence: \\u{:X}", 
+                    "Error: invalid unicode escape sequence: \\u{:X}",
                     static_cast<unsigned int>(wideChar)),
-                    logging::LogLevel::Error, tokenStartLine, tokenStartCol);
+                logging::LogLevel::Error, tokenStartLine, tokenStartCol);
             return NONE;
         }
-        #endif  // _WIN32
+#endif  // _WIN32
         processed += convertWideCharToUTF8(wideChar);
     }
     return processed;
@@ -692,8 +691,8 @@ std::string convertWideCharToUTF8(wchar_t wideChar) {
         result += static_cast<char>(UTF8_3B_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_3B_MASK));
         result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
         result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
-    } 
-    
+    }
+
     else {  // No need to check the upper limit -- that was done in the escape sequence resolver
         // 4-byte UTF-8 character (outside the Basic Multilingual Plane)
         result += static_cast<char>(UTF8_4B_PRE | ((wideChar >> UTF8_3B_SHIFT) & UTF8_4B_MASK));

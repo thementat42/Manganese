@@ -7,15 +7,14 @@
 #
 # Main Features:
 #  - Requires CMake 3.10+ and LLVM (via find_package).
+#  - Requires C++20
 #  - Prevents in-source builds to keep source tree clean.
-#  - Supports C++20 standard.
 #  - Options:
 #      * BUILD_TESTS: Enable building the test suite (default: OFF).
 #      * DEBUG: Enable debug symbols and disable optimizations (default: OFF).
 #      * MEMORY_TRACKING: Enable memory allocation tracking (default: OFF).
 #      * CONTINUOUS_MEMORY_TRACKING: Enable detailed memory tracking (default: OFF). Requires MEMORY_TRACKING.
 #  - Automatically defines preprocessor macros for memory/debug options.
-#  - Collects all source files recursively from src/ and (optionally) tests/.
 #  - Configures strict compiler warnings and debug flags for test and debug builds.
 #  - Links against LLVM and (for tests) gcov for coverage.
 #  - Outputs binaries to the build/bin directory.
@@ -27,11 +26,10 @@
 #   cmake --build .
 #
 # Notes:
-#  - The test suite forcibly enables the DEBUG macro for more thorough checking.
-#  - CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled.
+#  - When BUILD_TESTS is ON, the test suite will be built with the DEBUG macro enabled regardless of whetner DEBUG is ON or OFF.
+#  - CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled. If it is not, a warning will be issued.
 #  - Compiler flags are set to be extra strict in debug/test builds.
-#  - Release builds use aggressive optimizations.
-#  - All include directories are set up for both main and test targets.
+#  - Release builds use more aggressive optimizations.
 # ==============================================================================
 
 

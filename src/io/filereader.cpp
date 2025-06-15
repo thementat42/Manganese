@@ -3,17 +3,16 @@
  * @brief This file contains the implementation of the FileReader class
  */
 
+#include <global_macros.h>
 #include <io/filereader.h>
+#include <io/logging.h>
 
+#include <format>
 #include <fstream>
 #include <iostream>
-#include <format>
 #include <memory>
 #include <stdexcept>
 #include <string>
-
-#include <global_macros.h>
-#include <io/logging.h>
 
 MANGANESE_BEGIN
 namespace io {

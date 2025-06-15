@@ -1,15 +1,14 @@
+#include <frontend/lexer.h>
+#include <frontend/token.h>
+#include <global_macros.h>
+#include <io/logging.h>
+
 #include <cassert>
 #include <filesystem>
 #include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include <frontend/lexer.h>
-#include <frontend/token.h>
-#include <global_macros.h>
-#include <io/logging.h>
-
 
 #include "testrunner.h"
 

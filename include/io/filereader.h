@@ -6,11 +6,12 @@
 #ifndef FILEREADER_H
 #define FILEREADER_H
 
+#include <global_macros.h>
+
 #include <fstream>
 #include <memory>
 #include <string>
 
-#include <global_macros.h>
 #include "reader.h"
 
 MANGANESE_BEGIN

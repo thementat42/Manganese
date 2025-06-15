@@ -3,9 +3,9 @@
  * @brief This file contains the implementation of expression parsing in the parser. It is split into its own file for readability and maintainability.
  */
 
+#include <frontend/parser.h>
 #include <global_macros.h>
 #include <io/logging.h>
-#include <frontend/parser.h>
 
 MANGANESE_BEGIN
 
@@ -33,7 +33,7 @@ ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
 
     while (!done()) {
         token = currentToken();
-        
+
         if (isUnaryContext() && token.hasUnaryCounterpart()) {
             token.overrideType(token.getUnaryCounterpart());
             bindingPower = OperatorBindingPower::Unary;
@@ -127,7 +127,7 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             DISABLE_CONVERSION_WARNING
             while (!numericPart.empty() && (isalpha(numericPart.back()) || numericPart.back() == '_')) {
                 suffix.insert(suffix.begin(), tolower(numericPart.back()));  // Convert to lowercase
-                numericPart.pop_back();  // Remove the suffix letter
+                numericPart.pop_back();                                      // Remove the suffix letter
             }
             ENABLE_CONVERSION_WARNING
 

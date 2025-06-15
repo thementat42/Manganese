@@ -6,9 +6,8 @@
 //! Note: This is a temporary file, mainly for testing purposes.
 //! Once the compiler is complete, this will be removed, and only the FileReader will be used.
 
-#include <io/stringreader.h>
-
 #include <global_macros.h>
+#include <io/stringreader.h>
 
 MANGANESE_BEGIN
 namespace io {

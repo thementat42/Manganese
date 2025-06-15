@@ -1,11 +1,11 @@
 #include "testrunner.h"
 
 #include <functional>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <string>
 
-#define TO_2_DP(value)\
+#define TO_2_DP(value) \
     std::fixed << std::setprecision(2) << value
 
 #include <global_macros.h>

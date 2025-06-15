@@ -1,15 +1,16 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include <global_macros.h>
+#include <io/filereader.h>
+#include <io/reader.h>
+#include <io/stringreader.h>
+
 #include <functional>
 #include <memory>
 #include <optional>
 #include <queue>
 
-#include <global_macros.h>
-#include <io/filereader.h>
-#include <io/reader.h>
-#include <io/stringreader.h>
 #include "token.h"
 
 MANGANESE_BEGIN

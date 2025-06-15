@@ -49,11 +49,12 @@ A block is a vector of statements
     void dump(std::ostream& os, int indent = 0) const override {}
 #endif  // DEBUG
 
+#include <global_macros.h>
+
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <global_macros.h>
 #include "token.h"
 
 MANGANESE_BEGIN
@@ -62,7 +63,7 @@ namespace parser {
 class Parser;
 }
 
-//TODO: Add line and column setting methods to the derived classes
+// TODO: Add line and column setting methods to the derived classes
 
 namespace ast {
 class Expression;
@@ -233,8 +234,8 @@ class BinaryExpression : public Expression {
  */
 class PrefixExpression : public Expression {
    protected:
-   lexer::TokenType op;
-   ExpressionPtr right;
+    lexer::TokenType op;
+    ExpressionPtr right;
 
    public:
     /**
@@ -313,12 +314,12 @@ class VariableDeclarationStatement : public Statement {
      */
     VariableDeclarationStatement(bool _isConst, std::string _name, Visibility _visibility, ExpressionPtr _value)
         : isConst(_isConst), name(std::move(_name)), visibility(_visibility), value(std::move(_value)) {};
-    
+
     bool isConstant() const { return isConst; }
     const std::string& getName() const { return name; }
     Visibility getVisibility() const { return visibility; }
     const Expression& getValue() const { return *value; }
-    // const primitiveType& getType() const { return type; }  
+    // const primitiveType& getType() const { return type; }
 
     AST_DEBUG_OVERRIDES
 };

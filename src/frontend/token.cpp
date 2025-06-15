@@ -4,13 +4,12 @@
  */
 
 #include <frontend/token.h>
+#include <global_macros.h>
+#include <io/logging.h>
 
 #include <iostream>
 #include <optional>
 #include <string>
-
-#include <global_macros.h>
-#include <io/logging.h>
 
 MANGANESE_BEGIN
 namespace lexer {
@@ -142,9 +141,8 @@ void Token::log(const Token& token) noexcept {
 
 // ! === Really Long Stuff ===
 
-//TODO: Make one master map of token types to strings. 
-//TODO: have helper functions that go through the map initialize the keyword and operator maps (by flipping the mappings in the master map)
-
+// TODO: Make one master map of token types to strings.
+// TODO: have helper functions that go through the map initialize the keyword and operator maps (by flipping the mappings in the master map)
 
 std::string tokenTypeToString(TokenType type) {
     switch (type) {

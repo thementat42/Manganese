@@ -1,12 +1,13 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include <global_macros.h>
+
 #include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>
 
-#include <global_macros.h>
 #include "ast.h"
 #include "lexer.h"
 #include "token.h"
@@ -21,11 +22,9 @@ using std::make_unique;
 
 enum class OperatorBindingPower : uint8_t;
 
-
 //~ Helper functions that don't depend on the parser class's methods/variables
 int determineNumberBase(const str &lexeme);
 ExpressionPtr createIntegerLiteralNode(str &suffix, str &numericPart, int base);
-
 
 class Parser {
    private:  // private variables

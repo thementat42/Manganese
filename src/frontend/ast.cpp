@@ -1,16 +1,15 @@
 #include <frontend/ast.h>
+#include <global_macros.h>
 
 #include <iomanip>
 #include <sstream>
 #include <string>
 #include <variant>
 
-#include <global_macros.h>
-
 MANGANESE_BEGIN
 namespace ast {
 
-# if DEBUG  // Thse functions are only used in debug mode
+#if DEBUG  // Thse functions are only used in debug mode
 // Helper function to create indentation
 inline static std::string getIndent(int indent) {
     return std::string(indent * 2, ' ');
@@ -175,21 +174,25 @@ void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "VariableDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "isConst: " << (isConst ? "true" : "false") << "\n";
-    
+
     std::string visString;
     switch (visibility) {
-        case Visibility::Public:    visString = "Public"; break;
-        case Visibility::ReadOnly:  visString = "ReadOnly"; break;
-        case Visibility::Private:   visString = "Private"; break;
+        case Visibility::Public:
+            visString = "Public";
+            break;
+        case Visibility::ReadOnly:
+            visString = "ReadOnly";
+            break;
+        case Visibility::Private:
+            visString = "Private";
+            break;
     }
     os << getIndent(indent + 1) << "visibility: " << visString << "\n";
-    
+
     os << getIndent(indent + 1) << "value: \n";
     value->dump(os, indent + 2);
     os << getIndent(indent) << "}\n";
 }
-
-
 
 #endif  // DEBUG
 

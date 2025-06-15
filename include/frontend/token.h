@@ -6,12 +6,12 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#include <global_macros.h>
+
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <variant>
-
-#include <global_macros.h>
 
 MANGANESE_BEGIN
 namespace lexer {
@@ -182,17 +182,17 @@ enum class TokenType : uint8_t {
     //~ Operators
     //* Arithmetic Operators
     __OperatorStart,  // Marker for the start of operator token types -- not to be used as an actual token type
-    Plus,                   // `+`
-    Minus,                  // `-`
-    Mul,                    // `*`
-    Div,                    // `/`
-    FloorDiv,               // `//`
-    Mod,                    // `%`
-    Exp,                    // `^^`
-    Inc,                    // `++`
-    Dec,                    // `--`
-    UnaryPlus,              // `+` (unary plus)
-    UnaryMinus,             // `-` (unary minus)
+    Plus,             // `+`
+    Minus,            // `-`
+    Mul,              // `*`
+    Div,              // `/`
+    FloorDiv,         // `//`
+    Mod,              // `%`
+    Exp,              // `^^`
+    Inc,              // `++`
+    Dec,              // `--`
+    UnaryPlus,        // `+` (unary plus)
+    UnaryMinus,       // `-` (unary minus)
 
     //* Arithmetic Assignment Operators
     // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)

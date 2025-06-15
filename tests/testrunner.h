@@ -6,7 +6,7 @@
 
 #ifndef DEBUG
 #define DEBUG 1  // Force debug on in tests
-#endif  // DEBUG
+#endif           // DEBUG
 
 #include <global_macros.h>
 
