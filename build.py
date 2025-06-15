@@ -160,7 +160,7 @@ if not args.run and args.exec_with:
         f"({', '.join(args.exec_with)})",
         "were passed to the script but the run flag (-r) was not specified"
     )
-else:
+elif args.exec_with:
     print(
         "\033[34mRunning with positional arguments:", *args.exec_with, "\033[0m"
     )
