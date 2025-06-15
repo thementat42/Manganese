@@ -1,3 +1,40 @@
+# ==============================================================================
+# CMakeLists.txt for the Manganese Project
+#
+# This CMake configuration builds the Manganese compiler and its optional test
+# suite. It supports various build options for debugging and memory tracking,
+# and enforces best practices for build directory structure and compiler flags.
+#
+# Main Features:
+#  - Requires CMake 3.10+ and LLVM (via find_package).
+#  - Prevents in-source builds to keep source tree clean.
+#  - Supports C++20 standard.
+#  - Options:
+#      * BUILD_TESTS: Enable building the test suite (default: OFF).
+#      * DEBUG: Enable debug symbols and disable optimizations (default: OFF).
+#      * MEMORY_TRACKING: Enable memory allocation tracking (default: OFF).
+#      * CONTINUOUS_MEMORY_TRACKING: Enable detailed memory tracking (default: OFF). Requires MEMORY_TRACKING.
+#  - Automatically defines preprocessor macros for memory/debug options.
+#  - Collects all source files recursively from src/ and (optionally) tests/.
+#  - Configures strict compiler warnings and debug flags for test and debug builds.
+#  - Links against LLVM and (for tests) gcov for coverage.
+#  - Outputs binaries to the build/bin directory.
+#
+# Usage:
+#   mkdir build
+#   cd build
+#   cmake .. [-DBUILD_TESTS=ON] [-DDEBUG=ON] [-DMEMORY_TRACKING=ON] [-DCONTINUOUS_MEMORY_TRACKING=ON]
+#   cmake --build .
+#
+# Notes:
+#  - The test suite forcibly enables the DEBUG macro for more thorough checking.
+#  - CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled.
+#  - Compiler flags are set to be extra strict in debug/test builds.
+#  - Release builds use aggressive optimizations.
+#  - All include directories are set up for both main and test targets.
+# ==============================================================================
+
+
 cmake_minimum_required(VERSION 3.10)
 project(manganese)
 
