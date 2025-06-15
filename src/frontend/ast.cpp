@@ -1,11 +1,11 @@
-#include "include/ast.h"
+#include <frontend/ast.h>
 
 #include <iomanip>
 #include <sstream>
 #include <string>
 #include <variant>
 
-#include "../global_macros.h"
+#include <global_macros.h>
 
 MANGANESE_BEGIN
 namespace ast {

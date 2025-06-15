@@ -2,8 +2,8 @@
 #include <memory>
 #include <string>
 
-#include "../src/frontend/include/parser.h"
-#include "../src/global_macros.h"
+#include <frontend/parser.h>
+#include <global_macros.h>
 #include "testrunner.h"
 
 MANGANESE_BEGIN

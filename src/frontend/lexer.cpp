@@ -15,19 +15,19 @@
  *  E.g. the string tokenizing function will advance the reader past the quotes, the operator tokenizing function will advance the reader past the operator, etc.
  */
 
-#include "include/lexer.h"
+#include <frontend/lexer.h>
 
 #include <algorithm>
 #include <format>
 #include <functional>
 #include <iostream>
 
-#include "../global_macros.h"
-#include "../io/include/filereader.h"
-#include "../io/include/logging.h"
-#include "../io/include/reader.h"
-#include "../io/include/stringreader.h"
-#include "include/token.h"
+#include <global_macros.h>
+#include <io/filereader.h>
+#include <io/logging.h>
+#include <io/reader.h>
+#include <io/stringreader.h>
+#include <frontend/token.h>
 
 MANGANESE_BEGIN
 

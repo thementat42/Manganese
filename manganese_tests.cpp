@@ -108,12 +108,12 @@ void operator delete[](void* ptr) noexcept {
 // Includes for unity build
 #include <string.h>
 
-#include "src/frontend/include/lexer.h"
-#include "src/frontend/include/token.h"
-#include "src/global_macros.h"
-#include "src/io/include/filereader.h"
-#include "src/io/include/logging.h"
-#include "src/io/include/stringreader.h"
+#include <frontend/lexer.h>
+#include <frontend/token.h>
+#include <global_macros.h>
+#include <io/filereader.h>
+#include <io/logging.h>
+#include <io/stringreader.h>
 #include "tests/testrunner.h"
 #include "tests/tests.h"
 

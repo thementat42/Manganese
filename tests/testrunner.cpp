@@ -8,8 +8,8 @@
 #define TO_2_DP(value)\
     std::fixed << std::setprecision(2) << value
 
-#include "../src/global_macros.h"
-#include "../src/io/include/logging.h"
+#include <global_macros.h>
+#include <io/logging.h>
 
 constexpr inline float percentage(const int part, const int total) {
     return static_cast<float>(part) / static_cast<float>(total) * 100.0f;

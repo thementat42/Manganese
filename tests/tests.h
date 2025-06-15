@@ -5,7 +5,7 @@
 
 #ifndef MANGANESE_TESTS_H
 #define MANGANESE_TESTS_H
-#include "../src/global_macros.h"
+#include <global_macros.h>
 #include "testrunner.h"
 
 MANGANESE_BEGIN
