@@ -16,8 +16,8 @@ ast::Block Parser::parse() {
     ast::Block program;
 
     while (!done()) {
-        // Move since parseStatement() returns a unique_ptr
-        program.push_back(std::move(parseStatement()));
+        // No need to move thanks to copy elision
+        program.push_back(parseStatement());
 
         // We don't need to look back at old tokens from previous statements,
         // clear the cache to save memory
@@ -47,63 +47,63 @@ inline void Parser::stmt(TokenType type,
 
 inline void Parser::initializeLookups() {
     //~ Assignments (updating variables, not initializing them)
-    led(TokenType::Assignment, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::PlusAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::MinusAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::MulAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::DivAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::FloorDivAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::ModAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::ExpAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::BitAndAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::BitOrAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::BitNotAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::BitXorAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::BitLShiftAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
-    led(TokenType::BitRShiftAssign, OperatorBindingPower::Assignment, parseAssignmentExpression);
+    led(TokenType::Assignment, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::PlusAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::MinusAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::MulAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::DivAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::FloorDivAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::ModAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::ExpAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::BitAndAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::BitOrAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::BitNotAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::BitXorAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::BitLShiftAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
+    led(TokenType::BitRShiftAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
 
     //~ Logical
-    led(TokenType::And, OperatorBindingPower::Logical, parseBinaryExpression);
-    led(TokenType::Or, OperatorBindingPower::Logical, parseBinaryExpression);
+    led(TokenType::And, OperatorBindingPower::Logical, &Parser::parseBinaryExpression);
+    led(TokenType::Or, OperatorBindingPower::Logical, &Parser::parseBinaryExpression);
 
     //~ Relational
-    led(TokenType::LessThan, OperatorBindingPower::Relational, parseBinaryExpression);
-    led(TokenType::GreaterThan, OperatorBindingPower::Relational, parseBinaryExpression);
-    led(TokenType::LessThanOrEqual, OperatorBindingPower::Relational, parseBinaryExpression);
-    led(TokenType::GreaterThanOrEqual, OperatorBindingPower::Relational, parseBinaryExpression);
-    led(TokenType::Equal, OperatorBindingPower::Relational, parseBinaryExpression);
-    led(TokenType::NotEqual, OperatorBindingPower::Relational, parseBinaryExpression);
+    led(TokenType::LessThan, OperatorBindingPower::Relational, &Parser::parseBinaryExpression);
+    led(TokenType::GreaterThan, OperatorBindingPower::Relational, &Parser::parseBinaryExpression);
+    led(TokenType::LessThanOrEqual, OperatorBindingPower::Relational, &Parser::parseBinaryExpression);
+    led(TokenType::GreaterThanOrEqual, OperatorBindingPower::Relational, &Parser::parseBinaryExpression);
+    led(TokenType::Equal, OperatorBindingPower::Relational, &Parser::parseBinaryExpression);
+    led(TokenType::NotEqual, OperatorBindingPower::Relational, &Parser::parseBinaryExpression);
 
     //~ Additive, Multiplicative, Exponential
-    led(TokenType::Plus, OperatorBindingPower::Additive, parseBinaryExpression);
-    led(TokenType::Minus, OperatorBindingPower::Additive, parseBinaryExpression);
-    led(TokenType::Mul, OperatorBindingPower::Multiplicative, parseBinaryExpression);
-    led(TokenType::Div, OperatorBindingPower::Multiplicative, parseBinaryExpression);
-    led(TokenType::FloorDiv, OperatorBindingPower::Multiplicative, parseBinaryExpression);
-    led(TokenType::Mod, OperatorBindingPower::Multiplicative, parseBinaryExpression);
-    led(TokenType::Exp, OperatorBindingPower::Exponential, parseExponentiationExpression);
+    led(TokenType::Plus, OperatorBindingPower::Additive, &Parser::parseBinaryExpression);
+    led(TokenType::Minus, OperatorBindingPower::Additive, &Parser::parseBinaryExpression);
+    led(TokenType::Mul, OperatorBindingPower::Multiplicative, &Parser::parseBinaryExpression);
+    led(TokenType::Div, OperatorBindingPower::Multiplicative, &Parser::parseBinaryExpression);
+    led(TokenType::FloorDiv, OperatorBindingPower::Multiplicative, &Parser::parseBinaryExpression);
+    led(TokenType::Mod, OperatorBindingPower::Multiplicative, &Parser::parseBinaryExpression);
+    led(TokenType::Exp, OperatorBindingPower::Exponential, &Parser::parseExponentiationExpression);
 
     //~ Literals and Symbols
-    nud(TokenType::IntegerLiteral, parsePrimaryExpression);
-    nud(TokenType::FloatLiteral, parsePrimaryExpression);
-    nud(TokenType::CharLiteral, parsePrimaryExpression);
-    nud(TokenType::StrLiteral, parsePrimaryExpression);
-    nud(TokenType::Identifier, parsePrimaryExpression);
-    nud(TokenType::LeftParen, parseParenthesizedExpression);
+    nud(TokenType::IntegerLiteral, &Parser::parsePrimaryExpression);
+    nud(TokenType::FloatLiteral, &Parser::parsePrimaryExpression);
+    nud(TokenType::CharLiteral, &Parser::parsePrimaryExpression);
+    nud(TokenType::StrLiteral, &Parser::parsePrimaryExpression);
+    nud(TokenType::Identifier, &Parser::parsePrimaryExpression);
+    nud(TokenType::LeftParen, &Parser::parseParenthesizedExpression);
 
     //~ Prefix Operators
-    nud(TokenType::UnaryPlus, parsePrefixExpression);
-    nud(TokenType::UnaryMinus, parsePrefixExpression);
-    nud(TokenType::Not, parsePrefixExpression);
-    nud(TokenType::AddressOf, parsePrefixExpression);
-    nud(TokenType::Dereference, parsePrefixExpression);
-    nud(TokenType::BitNot, parsePrefixExpression);
-    nud(TokenType::Inc, parsePrefixExpression);
-    nud(TokenType::Dec, parsePrefixExpression);
+    nud(TokenType::UnaryPlus, &Parser::parsePrefixExpression);
+    nud(TokenType::UnaryMinus, &Parser::parsePrefixExpression);
+    nud(TokenType::Not, &Parser::parsePrefixExpression);
+    nud(TokenType::AddressOf, &Parser::parsePrefixExpression);
+    nud(TokenType::Dereference, &Parser::parsePrefixExpression);
+    nud(TokenType::BitNot, &Parser::parsePrefixExpression);
+    nud(TokenType::Inc, &Parser::parsePrefixExpression);
+    nud(TokenType::Dec, &Parser::parsePrefixExpression);
 
     //~ Statements
-    stmt(TokenType::Const, parseVariableDeclarationStatement);
-    stmt(TokenType::Let, parseVariableDeclarationStatement);
+    stmt(TokenType::Const, &Parser::parseVariableDeclarationStatement);
+    stmt(TokenType::Let, &Parser::parseVariableDeclarationStatement);
 }
 
 bool Parser::isUnaryContext() const {
