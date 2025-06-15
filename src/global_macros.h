@@ -65,16 +65,6 @@
 #define DISABLE_COPY_MOVE(ClassName)   \
     DISABLE_COPY_AND_ASSIGN(ClassName) \
     DISABLE_MOVE(ClassName)  // Disable both copy and move semantics
-
-#else  // ^^ __cplusplus vv !__cplusplus
-// Define empty macros so that they can be used in C code without causing compilation errors
-#define EXT_C_BEGIN
-#define EXT_C_END
-#define MANGANESE_BEGIN
-#define MANGANESE_END
-#define DISABLE_COPY_AND_ASSIGN(ClassName)
-#define DISABLE_MOVE(ClassName)
-#define DISABLE_COPY_MOVE(ClassName)
 #endif  // __cplusplus
 
 #define ASSERT_CRITICAL(condition, message)                                               \
