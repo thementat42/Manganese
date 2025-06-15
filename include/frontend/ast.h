@@ -79,8 +79,6 @@ using number_t = std::variant<
     uint16_t,
     int32_t,
     uint32_t,
-    long,
-    unsigned long,
     int64_t,
     uint64_t,
     float,
