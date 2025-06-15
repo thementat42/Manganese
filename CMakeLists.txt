@@ -85,12 +85,7 @@ file(GLOB_RECURSE SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
-set(INCLUDE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/io/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/include
-)
+set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(BUILD_TESTS)
     file(GLOB_RECURSE TEST_SOURCES
@@ -152,10 +147,7 @@ if(BUILD_TESTS)
     endif()
     
     # Include directories
-    target_include_directories(${PROJECT_NAME}_tests PRIVATE 
-        ${INCLUDE_DIRS}
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-    )
+    target_include_directories(${PROJECT_NAME}_tests PRIVATE ${INCLUDE_DIRS})
     
     # Output binary to bin directory
     set_target_properties(${PROJECT_NAME}_tests PROPERTIES
