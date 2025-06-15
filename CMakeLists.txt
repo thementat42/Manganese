@@ -38,9 +38,21 @@
 cmake_minimum_required(VERSION 3.10)
 project(manganese)
 
+# ==============================================================================
+# Build configuration and options
+# ==============================================================================
+
 set(CMAKE_CXX_STANDARD 20)
 set(COMPILER_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese.cpp")
 set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese_tests.cpp")
+
+# Prevent in-source builds
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  message(FATAL_ERROR "In-source builds not allowed. Please make a new build directory and run CMake from there.")
+endif()
+
+# Define include directories
+set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Build options
 option(BUILD_TESTS "Build the test suite" OFF)
@@ -48,8 +60,13 @@ option(DEBUG "Build with debug symbols and no optimization" OFF)
 option(MEMORY_TRACKING "Enable total memory allocation tracking (does not account for deallocations)" OFF)
 option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory usage tracking (detailed logging to file)" OFF)
 
+# ==============================================================================
+# Memory tracking configuration
+# ==============================================================================
+
 if(MEMORY_TRACKING)
     add_compile_definitions(MEMORY_TRACKING=1)
+    message(WARNING "Memory tracking is enabled. This will track total memory allocations but may not be 100% accurate, and will vary by compiler")
 else()
     add_compile_definitions(MEMORY_TRACKING=0)
 endif()
@@ -64,20 +81,23 @@ else()
     add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=0)
 endif()
 
+# ==============================================================================
+# LLVM configuration
+# ==============================================================================
+
 # Find LLVM package
 find_package(LLVM REQUIRED CONFIG)
 
 if(NOT LLVM_FOUND)
-  message(FATAL_ERROR "LLVM not found. Please install LLVM and make sure it's in your path.")
+  message(FATAL_ERROR "LLVM not found. Please install LLVM and make sure it is in the system PATH.")
 endif()
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-# Prevent in-source builds
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-  message(FATAL_ERROR "In-source builds not allowed. Please make a new build directory and run CMake from there.")
-endif()
+# ==============================================================================
+# Source files configuration
+# ==============================================================================
 
 # Common source files for tests and compiler build
 file(GLOB_RECURSE SRC 
@@ -85,16 +105,11 @@ file(GLOB_RECURSE SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
-set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
 if(BUILD_TESTS)
     file(GLOB_RECURSE TEST_SOURCES
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp"
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c"
         )
-    list(APPEND INCLUDE_DIRS
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-    )
 
     set(TEST_SRC ${SRC} ${TEST_SOURCES})
 
@@ -225,7 +240,6 @@ else()
     set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
-    
     message(STATUS "Configured to build main compiler")
 endif()
 
