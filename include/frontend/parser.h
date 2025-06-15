@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../global_macros.h"
+#include <global_macros.h>
 #include "ast.h"
 #include "lexer.h"
 #include "token.h"

@@ -3,9 +3,9 @@
  * @brief This file contains the implementation of expression parsing in the parser. It is split into its own file for readability and maintainability.
  */
 
-#include "../global_macros.h"
-#include "../io/include/logging.h"
-#include "include/parser.h"
+#include <global_macros.h>
+#include <io/logging.h>
+#include <frontend/parser.h>
 
 MANGANESE_BEGIN
 

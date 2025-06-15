@@ -1,9 +1,58 @@
+# ==============================================================================
+# CMakeLists.txt for the Manganese Project
+#
+# This CMake configuration builds the Manganese compiler and its optional test
+# suite. It supports various build options for debugging and memory tracking,
+# and enforces best practices for build directory structure and compiler flags.
+#
+# Main Features:
+#  - Requires CMake 3.10+ and LLVM (via find_package).
+#  - Prevents in-source builds to keep source tree clean.
+#  - Supports C++20 standard.
+#  - Options:
+#      * BUILD_TESTS: Enable building the test suite (default: OFF).
+#      * DEBUG: Enable debug symbols and disable optimizations (default: OFF).
+#      * MEMORY_TRACKING: Enable memory allocation tracking (default: OFF).
+#      * CONTINUOUS_MEMORY_TRACKING: Enable detailed memory tracking (default: OFF). Requires MEMORY_TRACKING.
+#  - Automatically defines preprocessor macros for memory/debug options.
+#  - Collects all source files recursively from src/ and (optionally) tests/.
+#  - Configures strict compiler warnings and debug flags for test and debug builds.
+#  - Links against LLVM and (for tests) gcov for coverage.
+#  - Outputs binaries to the build/bin directory.
+#
+# Usage:
+#   mkdir build
+#   cd build
+#   cmake .. [-DBUILD_TESTS=ON] [-DDEBUG=ON] [-DMEMORY_TRACKING=ON] [-DCONTINUOUS_MEMORY_TRACKING=ON]
+#   cmake --build .
+#
+# Notes:
+#  - The test suite forcibly enables the DEBUG macro for more thorough checking.
+#  - CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled.
+#  - Compiler flags are set to be extra strict in debug/test builds.
+#  - Release builds use aggressive optimizations.
+#  - All include directories are set up for both main and test targets.
+# ==============================================================================
+
+
 cmake_minimum_required(VERSION 3.10)
 project(manganese)
+
+# ==============================================================================
+# Build configuration and options
+# ==============================================================================
 
 set(CMAKE_CXX_STANDARD 20)
 set(COMPILER_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese.cpp")
 set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese_tests.cpp")
+
+# Prevent in-source builds
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  message(FATAL_ERROR "In-source builds not allowed. Please make a new build directory and run CMake from there.")
+endif()
+
+# Define include directories
+set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Build options
 option(BUILD_TESTS "Build the test suite" OFF)
@@ -11,8 +60,13 @@ option(DEBUG "Build with debug symbols and no optimization" OFF)
 option(MEMORY_TRACKING "Enable total memory allocation tracking (does not account for deallocations)" OFF)
 option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory usage tracking (detailed logging to file)" OFF)
 
+# ==============================================================================
+# Memory tracking configuration
+# ==============================================================================
+
 if(MEMORY_TRACKING)
     add_compile_definitions(MEMORY_TRACKING=1)
+    message(WARNING "Memory tracking is enabled. This will track total memory allocations but may not be 100% accurate, and will vary by compiler")
 else()
     add_compile_definitions(MEMORY_TRACKING=0)
 endif()
@@ -27,20 +81,23 @@ else()
     add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=0)
 endif()
 
+# ==============================================================================
+# LLVM configuration
+# ==============================================================================
+
 # Find LLVM package
 find_package(LLVM REQUIRED CONFIG)
 
 if(NOT LLVM_FOUND)
-  message(FATAL_ERROR "LLVM not found. Please install LLVM and make sure it's in your path.")
+  message(FATAL_ERROR "LLVM not found. Please install LLVM and make sure it is in the system PATH.")
 endif()
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-# Prevent in-source builds
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-  message(FATAL_ERROR "In-source builds not allowed. Please make a new build directory and run CMake from there.")
-endif()
+# ==============================================================================
+# Source files configuration
+# ==============================================================================
 
 # Common source files for tests and compiler build
 file(GLOB_RECURSE SRC 
@@ -48,21 +105,11 @@ file(GLOB_RECURSE SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
-set(INCLUDE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/io/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/include
-)
-
 if(BUILD_TESTS)
     file(GLOB_RECURSE TEST_SOURCES
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp"
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c"
         )
-    list(APPEND INCLUDE_DIRS
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-    )
 
     set(TEST_SRC ${SRC} ${TEST_SOURCES})
 
@@ -115,10 +162,7 @@ if(BUILD_TESTS)
     endif()
     
     # Include directories
-    target_include_directories(${PROJECT_NAME}_tests PRIVATE 
-        ${INCLUDE_DIRS}
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-    )
+    target_include_directories(${PROJECT_NAME}_tests PRIVATE ${INCLUDE_DIRS})
     
     # Output binary to bin directory
     set_target_properties(${PROJECT_NAME}_tests PROPERTIES
@@ -196,7 +240,6 @@ else()
     set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
-    
     message(STATUS "Configured to build main compiler")
 endif()
 

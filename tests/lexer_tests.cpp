@@ -5,11 +5,13 @@
 #include <string>
 #include <vector>
 
-#include "../src/frontend/include/lexer.h"
-#include "../src/frontend/include/token.h"
-#include "../src/global_macros.h"
+#include <frontend/lexer.h>
+#include <frontend/token.h>
+#include <global_macros.h>
+#include <io/logging.h>
+
+
 #include "testrunner.h"
-#include "../src/io/include/logging.h"
 
 // TODO: Replace this with purely file-based tests
 

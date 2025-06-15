@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <variant>
 
-#include "../../global_macros.h"
+#include <global_macros.h>
 
 MANGANESE_BEGIN
 namespace lexer {

@@ -1,9 +1,9 @@
-#include "include/parser.h"
+#include <frontend/parser.h>
 
 #include <format>
 
-#include "../global_macros.h"
-#include "../io/include/logging.h"
+#include <global_macros.h>
+#include <io/logging.h>
 
 MANGANESE_BEGIN
 namespace parser {

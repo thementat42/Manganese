@@ -8,7 +8,7 @@
 #define DEBUG 1  // Force debug on in tests
 #endif  // DEBUG
 
-#include "../src/global_macros.h"
+#include <global_macros.h>
 
 MANGANESE_BEGIN
 namespace tests {
