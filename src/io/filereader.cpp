@@ -7,6 +7,7 @@
 #include <io/filereader.h>
 #include <io/logging.h>
 
+#include <cstring>  // For memmove
 #include <format>
 #include <fstream>
 #include <iostream>
