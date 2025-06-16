@@ -68,7 +68,7 @@ comparison_op = "<" | "<=" | ">" | ">=" | "==" | "!=";
 boolean_op = "&&" | "||" | "!";
 bitwise_op = "&" | "|" | "~" | "^" | "<<" | ">>";
 access_op = "::" | "."  # Scope resolution / member access
-other_op = "cast" "<" type ">" | "typeof"
+other_op = "as" type | "typeof"
 prefix_unary_op = "++" | "--" | "!" | "~" | "&" | "*";  # & and * are parsed as unary if the previous token is an operator or a left paren
 postfix_unary_op = "++" | "--";
 binary_op = arithmetic_op | comparison_op | boolean_op | bitwise_op;
@@ -126,12 +126,12 @@ do_while_loop = "do" "{" block "}" "while" "(" expression ")" ";";
 
 #* Functions
 function_decl = "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
-generic_parameters = "<" identifier ("," identifier)* ">";
+generic_parameters = "[" identifier ("," identifier)* "]";
 parameter_list = (variable_name "const"? ":" (type_qualifiers? type)? ("=" literal)? ",")+;
 
 lambda_statement = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";
 
-function_call = expression "(" ( expression ("," expression)*)? ")";
+function_call = expression ("@" "["type ("," type)* "]")? "(" ( expression ("," expression)*)? ")";
 
 #* Data Encapsulation
 bundle_decl = "bundle" "{" bundle_member_decl+ "}"
