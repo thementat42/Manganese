@@ -62,8 +62,8 @@ inline void Parser::initializeLookups() {
     led(TokenType::BitRShiftAssign, OperatorBindingPower::Assignment, &Parser::parseAssignmentExpression);
 
     //~ Logical
-    led(TokenType::And, OperatorBindingPower::Logical, &Parser::parseBinaryExpression);
-    led(TokenType::Or, OperatorBindingPower::Logical, &Parser::parseBinaryExpression);
+    led(TokenType::And, OperatorBindingPower::LogicalAnd, &Parser::parseBinaryExpression);
+    led(TokenType::Or, OperatorBindingPower::LogicalOr, &Parser::parseBinaryExpression);
 
     //~ Relational
     led(TokenType::LessThan, OperatorBindingPower::Relational, &Parser::parseBinaryExpression);
