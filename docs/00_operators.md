@@ -91,10 +91,12 @@ These operators don't fit in any other category
 |    `&`   | Address of       | `&x`                |
 |    `*`   | Dereference      | `*p_x`              |
 |    `.`   | Member access    | `x.y`               |
+|    `:`   | Type annotation   | `x: int`           |
 |   `::`   | Scope Resolution | `module::y`         |
 |    `=`   | Assignment       | `x = y`             |
 |   `->`   | Arrow            | `func foo() -> int` |
-| `cast<>` | Type cast        | `cast<int> x`       |
+|   `as`   | Type cast        | `x as int`          |
+|   `@`    | Generic List     | `func foo@[int]()`  |
 
 Manganese uses copy-based assignment. An expression like `x = y` copies the value of `y` into `x`
 <!-- Todo? Move? (rust-like) -->
@@ -120,10 +122,10 @@ Comments are stripped during lexing, so don't play a role in operator precedence
 
 | Precedence | Operator | Description | Associativity|
 | ---------- | -------- | ------------------ | ----- |
-| 1          | `::` | Scope Resolution | Left |
+| 1          | `::` <br> `@` | Scope Resolution <br> Generic List | Left |
 | 2          | `.` | Member access | Left |
 | 3          | `x++` <br> `x--` <br> `x()` <br> `x[]` | Postfix Increment <br> Postfix Decrement <br> Function Call <br> Indexing | Left |
-| 4          | `++x` <br> `--x` <br> `+x` <br> `-x` <br> `!` <br> `~` <br> `cast<>` <br> `*` <br> `&` | Prefix Increment <br> Prefix Decrement <br> Unary Positive <br> Unary Negative <br> Logical NOT <br> Bitwise NOT <br> Type Cast <br> Dereference <br> Address-of | Right |
+| 4          | `++x` <br> `--x` <br> `+x` <br> `-x` <br> `!` <br> `~` <br> `*` <br> `&` | Prefix Increment <br> Prefix Decrement <br> Unary Positive <br> Unary Negative <br> Logical NOT <br> Bitwise NOT <br> Dereference <br> Address-of | Right |
 | 5          | `^^` | Exponentiation | Right |
 | 6          | `*` <br> `/` <br> `//` <br> `%` | Multiplication <br> Floating-point Division <br> Integer Division <br> Modulus | Left |
 | 7          | `+` <br> `-` | Addition <br> Subtraction | Left |
@@ -135,5 +137,5 @@ Comments are stripped during lexing, so don't play a role in operator precedence
 | 13         | `\|`  |  Bitwise OR | Left |
 | 14         | `&&` | Logical AND | Left |
 | 15         | `\|\|` | Logical OR | Left |
-| 16         | `=` <br> `<op> =` | Assignment <br> Immediate Reassignment | Right |
-| 17         | `->` | Arrow operator | Left |
+| 16         | `as` <br> `=` <br> `<op> =` <br> `:` | Type Cast (infix) <br> Assignment <br> Immediate Reassignment <br> Type Annotation | Right |
+| 17         | `->` | Arrow operator | Syntax only |

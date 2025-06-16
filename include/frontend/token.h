@@ -166,7 +166,7 @@ enum class TokenType : uint8_t {
     //* Modules & Scoping
     Import,  // bring in another module
     Module,  // declare as a module
-    As,      // alias a module
+    As,      // type casting, or module aliasing in an import statement
 
     //* Encapsulation
     Bundle,     // like C's struct
@@ -176,7 +176,6 @@ enum class TokenType : uint8_t {
     //* Misc Operators
     Alias,         // type aliasing (alias `a` as `b`)
     TypeOf,        // get the type of a variable
-    Cast,          // cast to a new type (e.g., cast<new_type>)
     __KeywordEnd,  // Marker for the end of keyword token types -- not to be used as an actual token type
 
     //~ Operators
@@ -246,6 +245,7 @@ enum class TokenType : uint8_t {
     Assignment,     // `=`
     Arrow,          // `->`
     Ellipsis,       // `...`
+    At,             // `@`
     __OperatorEnd,  // Marker for the end of operator token types -- not to be used as an actual token type
 
 };

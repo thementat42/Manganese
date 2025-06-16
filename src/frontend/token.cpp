@@ -207,8 +207,6 @@ std::string tokenTypeToString(TokenType type) {
             return "bundle";
         case TokenType::Case:
             return "case";
-        case TokenType::Cast:
-            return "cast";
         case TokenType::Char:
             return "char";
         case TokenType::Const:
@@ -372,6 +370,8 @@ std::string tokenTypeToString(TokenType type) {
             return "=";
         case TokenType::Arrow:
             return "->";
+        case TokenType::At:
+            return "@";
         default:
             UNREACHABLE("No string representation for TokenType: " + std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
     }
@@ -437,7 +437,9 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
 
     // Misc
     {"=", TokenType::Assignment},
-    {"->", TokenType::Arrow}};
+    {"->", TokenType::Arrow},
+    {"@", TokenType::At}
+};
 
 std::unordered_map<std::string, const TokenType> keywordMap = {
     {"alias", TokenType::Alias},
@@ -447,7 +449,6 @@ std::unordered_map<std::string, const TokenType> keywordMap = {
     {"break", TokenType::Break},
     {"bundle", TokenType::Bundle},
     {"case", TokenType::Case},
-    {"cast", TokenType::Cast},
     {"char", TokenType::Char},
     {"const", TokenType::Const},
     {"continue", TokenType::Continue},

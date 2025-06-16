@@ -125,7 +125,7 @@ bool testIdentifiers() {
 }
 
 bool testKeywords() {
-    auto tokens = tokensFromString("alias as blueprint bool break bundle case cast char const foo");
+    auto tokens = tokensFromString("alias as blueprint bool break bundle case char const foo while");
     printAllTokens(tokens);
     if (tokens.size() != 11) {
         std::cout << "Expected 11 tokens, got " << tokens.size() << std::endl;
@@ -139,10 +139,10 @@ bool testKeywords() {
            checkToken(tokens[4], TokenType::Break, "break") &&
            checkToken(tokens[5], TokenType::Bundle, "bundle") &&
            checkToken(tokens[6], TokenType::Case, "case") &&
-           checkToken(tokens[7], TokenType::Cast, "cast") &&
-           checkToken(tokens[8], TokenType::Char, "char") &&
-           checkToken(tokens[9], TokenType::Const, "const") &&
-           checkToken(tokens[10], TokenType::Identifier, "foo");
+           checkToken(tokens[7], TokenType::Char, "char") &&
+           checkToken(tokens[8], TokenType::Const, "const") &&
+           checkToken(tokens[9], TokenType::Identifier, "foo") &&
+           checkToken(tokens[10], TokenType::While, "while");
 }
 
 bool testIntegerLiterals() {
@@ -206,10 +206,10 @@ bool testStringLiterals() {
 }
 
 bool testOperators() {
-    auto tokens = tokensFromString("+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ...");
+    auto tokens = tokensFromString("+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @");
     printAllTokens(tokens);
-    if (tokens.size() != 35) {
-        std::cout << "Expected 35 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 36) {
+        std::cout << "Expected 36 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
@@ -247,7 +247,8 @@ bool testOperators() {
            checkToken(tokens[31], TokenType::ScopeResolution, "::") &&
            checkToken(tokens[32], TokenType::Assignment, "=") &&
            checkToken(tokens[33], TokenType::Arrow, "->") &&
-           checkToken(tokens[34], TokenType::Ellipsis, "...");
+           checkToken(tokens[34], TokenType::Ellipsis, "...") &&
+           checkToken(tokens[35], TokenType::At, "@");
 }
 
 bool testBrackets() {

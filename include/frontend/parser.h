@@ -84,19 +84,32 @@ class Parser {
     ast::Block parse();
 };
 
+
+/**
+ * See the operator precedence table in the operators documentation
+ * Note: This enum is the reverse of the table (operators with higher precedences have bigger values in this enum)
+ */
 enum class OperatorBindingPower : uint8_t {
     Default = 0,
-    Comma = 1,
+    // Arrow = 1,   // Not really needed
     Assignment = 2,
-    Logical = 3,
-    Relational = 4,
-    Additive = 5,
-    Multiplicative = 6,
-    Exponential = 7,
-    Unary = 8,
-    Call = 9,
-    Member = 10,
-    Primary = 11,
+    LogicalOr = 3,
+    LogicalAnd = 4,
+    BitwiseOr = 5,
+    BitwiseXor = 6,
+    BitwiseAnd = 7,
+    Equality = 8,
+    Relational = 9,
+    BitwiseShift = 10,
+    Additive = 11,
+    Multiplicative = 12,
+    Exponential = 13,
+    Unary = 14,
+    Postfix = 15,
+    Member = 16,
+    Scope = 17,
+    Generic = 17,
+    Primary = 18
 };
 
 }  // namespace parser
