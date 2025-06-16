@@ -245,6 +245,7 @@ enum class TokenType : uint8_t {
     Assignment,     // `=`
     Arrow,          // `->`
     Ellipsis,       // `...`
+    At,             // `@`
     __OperatorEnd,  // Marker for the end of operator token types -- not to be used as an actual token type
 
 };

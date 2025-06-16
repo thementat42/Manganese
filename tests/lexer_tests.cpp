@@ -206,10 +206,10 @@ bool testStringLiterals() {
 }
 
 bool testOperators() {
-    auto tokens = tokensFromString("+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ...");
+    auto tokens = tokensFromString("+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @");
     printAllTokens(tokens);
-    if (tokens.size() != 35) {
-        std::cout << "Expected 35 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 36) {
+        std::cout << "Expected 36 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
@@ -247,7 +247,8 @@ bool testOperators() {
            checkToken(tokens[31], TokenType::ScopeResolution, "::") &&
            checkToken(tokens[32], TokenType::Assignment, "=") &&
            checkToken(tokens[33], TokenType::Arrow, "->") &&
-           checkToken(tokens[34], TokenType::Ellipsis, "...");
+           checkToken(tokens[34], TokenType::Ellipsis, "...") &&
+           checkToken(tokens[35], TokenType::At, "@");
 }
 
 bool testBrackets() {

@@ -368,6 +368,9 @@ void Lexer::tokenizeSymbol() {
             type = (next == ':') ? TokenType::Operator : TokenType::Colon;
             lexeme = (next == ':') ? "::" : ":";
             break;
+        case '@':
+            type = TokenType::Operator;
+            break;
 
         //~ Arithmetic operators
         case '+':

@@ -370,6 +370,8 @@ std::string tokenTypeToString(TokenType type) {
             return "=";
         case TokenType::Arrow:
             return "->";
+        case TokenType::At:
+            return "@";
         default:
             UNREACHABLE("No string representation for TokenType: " + std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
     }
@@ -435,7 +437,9 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
 
     // Misc
     {"=", TokenType::Assignment},
-    {"->", TokenType::Arrow}};
+    {"->", TokenType::Arrow},
+    {"@", TokenType::At}
+};
 
 std::unordered_map<std::string, const TokenType> keywordMap = {
     {"alias", TokenType::Alias},
