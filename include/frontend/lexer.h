@@ -45,7 +45,7 @@ enum class Mode {
     File     // Filename passed in
 };
 
-enum NumberLiteralBase {
+enum Base {
     Binary = 2,
     Octal = 8,
     Decimal = 10,
@@ -120,9 +120,9 @@ class Lexer {
      * @param isValidBaseChar Output parameter: A reference to a function or lambda that takes a character and returns true
      *                        if the character is valid for the intended base, false otherwise.
      * @param numberLiteral Output parameter: The lexeme for the number literal (the base prefix will be appended if there is one)
-     * @return NumberLiteralBase The detected base of the number literal (e.g., decimal, hexadecimal, binary).
+     * @return Base The base of the number literal (decimal/hexadecimal/octal/binary).
      */
-    NumberLiteralBase processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral);
+    Base processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral);
 
     /**
      * @brief Process the suffix of a number literal (e.g., 'f' for float)
@@ -131,7 +131,7 @@ class Lexer {
      * @param isFloat Whether the number literal is a float (e.g., 1.23f)
      * @return True if the suffix was processed successfully, false otherwise
      */
-    bool processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool isFloat);
+    bool processNumberSuffix(Base base, str& numberLiteral, bool isFloat);
 
     optional<wchar_t> resolveHexAndUnicodeCharacters(const str& esc, const bool& isUnicode, size_t& skipLength);
 
