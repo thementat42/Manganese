@@ -107,10 +107,10 @@ let h : ptr int = &a;  # no default initialization, h points to a
 
 ## === Type Casting ===
 
-Manganese allows casting between all the primitive types using the `cast<>` operator (with the output type in the angle brackets). The general syntax for a type cast is:
+Manganese allows casting between all the primitive types using the `as` keyword The general syntax for a type cast is:
 
 ```manganese
-let <variable name> : <new type> = cast<new type>(<value>)
+let <variable name> : <new type> = <value> as <new type>;
 ```
 
 Casts can also be done in-place (e.g., when passing a variable to a function).

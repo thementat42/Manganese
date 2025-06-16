@@ -207,8 +207,6 @@ std::string tokenTypeToString(TokenType type) {
             return "bundle";
         case TokenType::Case:
             return "case";
-        case TokenType::Cast:
-            return "cast";
         case TokenType::Char:
             return "char";
         case TokenType::Const:
@@ -447,7 +445,6 @@ std::unordered_map<std::string, const TokenType> keywordMap = {
     {"break", TokenType::Break},
     {"bundle", TokenType::Bundle},
     {"case", TokenType::Case},
-    {"cast", TokenType::Cast},
     {"char", TokenType::Char},
     {"const", TokenType::Const},
     {"continue", TokenType::Continue},

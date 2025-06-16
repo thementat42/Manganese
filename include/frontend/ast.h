@@ -9,7 +9,7 @@ In Manganese, there are:
     - Expressions (produce a value) -- Have to handle the angle bracket ambiguity here once generics get implemented
         - Binary Operator Expressions (x + y, x && y)
         - Unary Operator Expressions (++x, *y)
-        - Cast expressions (cast<int>(x))
+        - Cast expressions (x as int)
         - Variable Expressions
         - Member Access
         - Scope Resolution
