@@ -3,9 +3,14 @@
  * @brief This file contains the implementation of expression parsing in the parser. It is split into its own file for readability and maintainability.
  */
 
+#include <frontend/ast.h>
 #include <frontend/parser.h>
+#include <frontend/token.h>
 #include <global_macros.h>
 #include <io/logging.h>
+#include <utils/stox.h>
+
+#include <format>
 
 MANGANESE_BEGIN
 
@@ -131,32 +136,24 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             }
             ENABLE_CONVERSION_WARNING
 
-            return createIntegerLiteralNode(suffix, numericPart, base);
+            std::optional<number_t> value = utils::stonum(numericPart, base, false, suffix);
+            if (!value) {
+                logging::logUser(
+                    std::format("Error: Invalid integer literal '{}'", lexeme),
+                    logging::LogLevel::Error, token.getLine(), token.getColumn());
+                return make_unique<ast::NumberExpression>(0);
+                // Error tolerance: return a default value of 0
+            }
+            return make_unique<ast::NumberExpression>(*value);
         }
         default:
             UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + lexer::tokenTypeToString(token.getType()));
     }
 }
 
-ExpressionPtr createIntegerLiteralNode(str& suffix, str& numericPart, int base) {
-    if (suffix == "ull" || suffix == "llu") {
-        return make_unique<ast::NumberExpression>(stoull(numericPart, nullptr, base));
-    } else if (suffix == "ll") {
-        return make_unique<ast::NumberExpression>(stoll(numericPart, nullptr, base));
-    } else if (suffix == "ul" || suffix == "lu") {
-        return make_unique<ast::NumberExpression>(stoul(numericPart, nullptr, base));
-    } else if (suffix == "u") {
-        return make_unique<ast::NumberExpression>(stoul(numericPart, nullptr, base));
-    } else if (suffix == "l") {
-        return make_unique<ast::NumberExpression>(stol(numericPart, nullptr, base));
-    } else {
-        return make_unique<ast::NumberExpression>(stoi(numericPart, nullptr, base));
-    }
-}
-
 int determineNumberBase(const str& lexeme) {
     if (lexeme.length() <= 2) {
-        return DECIMAL;  // Default to decimal if the lexeme is too short to be a valid base-prefixed number
+        return DECIMAL;  // Prefixed literals are at least 3 characters long (0x/0b/0o + at least one digit)
     }
     if (lexeme[0] != '0') {
         // No base prefix, assume decimal
@@ -172,7 +169,7 @@ int determineNumberBase(const str& lexeme) {
         case 'o':
         case 'O':
             return OCTAL;
-        default:  // No valid base prefix, assume decimal
+        default:  // Not a base prefix (just leading zero), assume decimal
             return DECIMAL;
     }
 }
