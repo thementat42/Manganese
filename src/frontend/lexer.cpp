@@ -232,7 +232,7 @@ void Lexer::tokenizeNumber() {
     str numberLiteral;
     bool isFloat = false;
     std::function<bool(char)> isValidBaseChar;
-    NumberLiteralBase base = processNumberPrefix(isValidBaseChar, numberLiteral);
+    Base base = processNumberPrefix(isValidBaseChar, numberLiteral);
     char currentChar = peekChar();  // If there was a number prefix, update the current char
 
     while (!done() && (isValidBaseChar(currentChar) || currentChar == '.' || currentChar == '_')) {
@@ -249,10 +249,10 @@ void Lexer::tokenizeNumber() {
                 return;
             }
             // Reject floating point for octal and binary numbers
-            if (base == NumberLiteralBase::Octal || base == NumberLiteralBase::Binary) {
+            if (base == Base::Octal || base == Base::Binary) {
                 logging::logUser(
                     std::format("Invalid number literal: floating point not allowed for {} numbers",
-                                (base == NumberLiteralBase::Octal ? "octal" : "binary")),
+                                (base == Base::Octal ? "octal" : "binary")),
                     logging::LogLevel::Error, getLine(), getCol());
                 tokenStream.emplace_back(TokenType::Invalid, numberLiteral, tokenStartLine, tokenStartCol);
                 return;
@@ -520,12 +520,12 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
     tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
 }
 
-NumberLiteralBase Lexer::processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral) {
+Base Lexer::processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral) {
     char currentChar = peekChar();
     if (currentChar != '0') {
         // Decimal number
         isValidBaseChar = [](char c) { return isdigit(c); };
-        return NumberLiteralBase::Decimal;
+        return Base::Decimal;
     }
     // Could be a base indicator (0x, 0b, 0o) -- check next char
     switch (peekChar(1)) {
@@ -535,29 +535,29 @@ NumberLiteralBase Lexer::processNumberPrefix(std::function<bool(char)>& isValidB
             isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); };
             advance(2);
             numberLiteral += "0x";
-            return NumberLiteralBase::Hexadecimal;
+            return Base::Hexadecimal;
         case 'b':
         case 'B':
             isValidBaseChar = [](char c) { return c == '0' || c == '1'; };
             advance(2);
             numberLiteral += "0b";
-            return NumberLiteralBase::Binary;
+            return Base::Binary;
         case 'o':
         case 'O':
             isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; };
             advance(2);
             numberLiteral += "0o";
-            return NumberLiteralBase::Octal;
+            return Base::Octal;
         default:
             // Not a valid base indicator -- just treat it as a decimal number
             isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); };
-            return NumberLiteralBase::Decimal;
+            return Base::Decimal;
     }
 }
 
-bool Lexer::processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool isFloat) {
+bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
     char currentChar = peekChar();
-    if ((currentChar == 'e' || currentChar == 'E') && base == NumberLiteralBase::Decimal) {
+    if ((currentChar == 'e' || currentChar == 'E') && base == Base::Decimal) {
         // Scientific notation
         numberLiteral += consumeChar();  // Add the 'e' or 'E'
         currentChar = peekChar();
@@ -573,7 +573,7 @@ bool Lexer::processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool
             numberLiteral += consumeChar();
             currentChar = peekChar();
         }
-    } else if (base == NumberLiteralBase::Hexadecimal) {
+    } else if (base == Base::Hexadecimal) {
         // Hexadecimal floats must have a 'p' or 'P' exponent if they are floats
         if (isFloat) {
             if (currentChar != 'p' && currentChar != 'P') {
@@ -599,45 +599,58 @@ bool Lexer::processNumberSuffix(NumberLiteralBase base, str& numberLiteral, bool
     }
 
     // Update current character as it might have changed
-    currentChar = peekChar();
-
-    // Process type suffixes for floating-point literals
-    if (isFloat) {
-        // Handle floating-point type suffixes (f/F, d/D)
-        if (currentChar == 'f' || currentChar == 'F' ||
-            currentChar == 'd' || currentChar == 'D') {
-            numberLiteral += consumeChar();
-        }
+    // Do tolower for convenience, as the suffixes are case-insensitive
+    DISABLE_CONVERSION_WARNING
+    currentChar = tolower(peekChar());
+    ENABLE_CONVERSION_WARNING
+    if (currentChar != 'i' && currentChar != 'u' && currentChar != 'f') {
+        // No suffix, just return
         return true;
     }
+    /*
+    The valid numeric suffixes are:
+    - i8, i16, i32, i64 (signed integers with the corresponding bit width)
+    - u8, u16, u32, u64 (unsigned integers with the corresponding bit width)
+    - f32, f64 (floating-point numbers with the corresponding bit width)
+    NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
+    */
 
-    // Process integer suffixes
-    bool hasUnsigned = false;
+    std::string suffix;    // Handle 'i', 'u', or 'f' prefix
+    suffix += consumeChar();
+    currentChar = peekChar();
 
-    // First suffix character
-    if (currentChar == 'u' || currentChar == 'U') {
-        // Unsigned suffix
-        numberLiteral += consumeChar();
-        hasUnsigned = true;
+    // Read the numeric part of the suffix
+    std::string numPart;
+    while (!done() && isdigit(currentChar)) {
+        numPart += consumeChar();
         currentChar = peekChar();
-    }
-
-    // Check for long/long long suffix
-    if (currentChar == 'l' || currentChar == 'L') {
-        numberLiteral += consumeChar();
-        currentChar = peekChar();
-
-        // Check for second 'l'/'L' (long long)
-        if (currentChar == 'l' || currentChar == 'L') {
-            numberLiteral += consumeChar();
-            currentChar = peekChar();
+    }    // Validate the numeric part
+    if (suffix[0] == 'i' || suffix[0] == 'u') {
+        // Integer types: i8, i16, i32, i64, u8, u16, u32, u64
+        if (numPart != "8" && numPart != "16" && numPart != "32" && numPart != "64") {
+            logging::logUser("Invalid integer suffix: must be 8, 16, 32, or 64", logging::LogLevel::Error, getLine(), getCol());
+            return false;
+        }
+    } else if (suffix[0] == 'f') {
+        // Float types: f32, f64
+        if (numPart != "32" && numPart != "64") {
+            logging::logUser("Invalid float suffix: must be 32 or 64", logging::LogLevel::Error, getLine(), getCol());
+            return false;
         }
     }
 
-    // Check for unsigned after long/long long (e.g., 123lu, 123LLU)
-    if (!hasUnsigned && (currentChar == 'u' || currentChar == 'U')) {
-        numberLiteral += consumeChar();
-        hasUnsigned = true;
+    // Add the numeric part to the suffix
+    suffix += numPart;
+    numberLiteral += suffix;
+
+    // Type validation - float suffix only for float literals and vice versa
+    if (suffix[0] == 'f' && !isFloat) {
+        logging::logUser("Float suffix can only be used with floating-point literals", logging::LogLevel::Error, getLine(), getCol());
+        return false;
+    }
+    if ((suffix[0] == 'i' || suffix[0] == 'u') && isFloat) {
+        logging::logUser("Integer suffix cannot be used with floating-point literals", logging::LogLevel::Error, getLine(), getCol());
+        return false;
     }
 
     return true;
