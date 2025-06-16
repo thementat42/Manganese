@@ -148,6 +148,22 @@ class NumberExpression : public Expression {
     AST_DEBUG_OVERRIDES
 };
 
+class CharExpression : public Expression {
+   protected:
+    wchar_t value;
+
+   public:
+    /**
+     * @brief Initialize a CharExpression node
+     * @param _value The character value of the expression (wchar_t)
+     */
+    explicit CharExpression(wchar_t _value) : value(_value) {};
+    explicit CharExpression(char _value) : value(static_cast<wchar_t>(_value)) {};  
+
+    wchar_t getValue() const { return value; }
+    AST_DEBUG_OVERRIDES
+};
+
 /**
  * @brief Represents a string literal in the AST
  */

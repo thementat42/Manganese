@@ -111,6 +111,8 @@ ExpressionPtr Parser::parsePrimaryExpression() {
     str lexeme = token.getLexeme();
 
     switch (token.getType()) {
+        case TokenType::CharLiteral:
+            return make_unique<ast::CharExpression>(lexeme[0]);  // Single character
         case TokenType::StrLiteral:
             return make_unique<ast::StringExpression>(lexeme);
         case TokenType::Identifier:
