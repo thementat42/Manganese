@@ -24,7 +24,6 @@ enum class OperatorBindingPower : uint8_t;
 
 //~ Helper functions that don't depend on the parser class's methods/variables
 int determineNumberBase(const str &lexeme);
-ExpressionPtr createIntegerLiteralNode(str &suffix, str &numericPart, int base);
 
 class Parser {
    private:  // private variables
