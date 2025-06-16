@@ -206,10 +206,10 @@ bool testStringLiterals() {
 }
 
 bool testOperators() {
-    auto tokens = tokensFromString("+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @");
+    auto tokens = tokensFromString("+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
     printAllTokens(tokens);
-    if (tokens.size() != 36) {
-        std::cout << "Expected 36 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 44) {
+        std::cout << "Expected 44 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
@@ -248,14 +248,22 @@ bool testOperators() {
            checkToken(tokens[32], TokenType::Assignment, "=") &&
            checkToken(tokens[33], TokenType::Arrow, "->") &&
            checkToken(tokens[34], TokenType::Ellipsis, "...") &&
-           checkToken(tokens[35], TokenType::At, "@");
+           checkToken(tokens[35], TokenType::At, "@") &&
+           checkToken(tokens[36], TokenType::LessThan, "<") &&
+           checkToken(tokens[37], TokenType::LessThanOrEqual, "<=") &&
+           checkToken(tokens[38], TokenType::GreaterThan, ">") &&
+           checkToken(tokens[39], TokenType::GreaterThanOrEqual, ">=") &&
+           checkToken(tokens[40], TokenType::BitLShift, "<<") &&
+           checkToken(tokens[41], TokenType::BitRShift, ">>") &&
+           checkToken(tokens[42], TokenType::BitLShiftAssign, "<<=") &&
+           checkToken(tokens[43], TokenType::BitRShiftAssign, ">>=");
 }
 
 bool testBrackets() {
-    auto tokens = tokensFromString("( ) { } [ ] < >");
+    auto tokens = tokensFromString("( ) { } [ ]");
     printAllTokens(tokens);
-    if (tokens.size() != 8) {
-        std::cout << "Expected 8 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 6) {
+        std::cout << "Expected 6 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
@@ -264,9 +272,7 @@ bool testBrackets() {
            checkToken(tokens[2], TokenType::LeftBrace, "{") &&
            checkToken(tokens[3], TokenType::RightBrace, "}") &&
            checkToken(tokens[4], TokenType::LeftSquare, "[") &&
-           checkToken(tokens[5], TokenType::RightSquare, "]") &&
-           checkToken(tokens[6], TokenType::LeftAngle, "<") &&
-           checkToken(tokens[7], TokenType::RightAngle, ">");
+           checkToken(tokens[5], TokenType::RightSquare, "]");
 }
 
 bool testPunctuation() {
@@ -322,21 +328,23 @@ bool testCompleteProgram() {
 }
 
 bool testNestedBrackets() {
-    auto tokens = tokensFromString("arr<arr<int16>> foo");
+    auto tokens = tokensFromString("arr@[arr@[int16]] foo");
     printAllTokens(tokens);
-    if (tokens.size() != 8) {
-        std::cout << "Expected 8 tokens, got " << tokens.size() << std::endl;
+    if (tokens.size() != 10) {
+        std::cout << "Expected 10 tokens, got " << tokens.size() << std::endl;
         return false;
     }
 
     return checkToken(tokens[0], TokenType::Identifier, "arr") &&
-           checkToken(tokens[1], TokenType::LeftAngle, "<") &&
-           checkToken(tokens[2], TokenType::Identifier, "arr") &&
-           checkToken(tokens[3], TokenType::LeftAngle, "<") &&
-           checkToken(tokens[4], TokenType::Int16, "int16") &&
-           checkToken(tokens[5], TokenType::RightAngle, ">") &&
-           checkToken(tokens[6], TokenType::RightAngle, ">") &&
-           checkToken(tokens[7], TokenType::Identifier, "foo");
+           checkToken(tokens[1], TokenType::At, "@") &&
+           checkToken(tokens[2], TokenType::LeftSquare, "[") &&
+           checkToken(tokens[3], TokenType::Identifier, "arr") &&
+           checkToken(tokens[4], TokenType::At, "@") &&
+           checkToken(tokens[5], TokenType::LeftSquare, "[") &&
+           checkToken(tokens[6], TokenType::Int16, "int16") &&
+           checkToken(tokens[7], TokenType::RightSquare, "]") &&
+           checkToken(tokens[8], TokenType::RightSquare, "]") &&
+           checkToken(tokens[9], TokenType::Identifier, "foo");
 }
 
 bool testInvalidChar() {

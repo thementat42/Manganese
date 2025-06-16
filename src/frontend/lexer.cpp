@@ -288,22 +288,6 @@ void Lexer::tokenizeSymbol() {
         case '[':
             type = TokenType::LeftSquare;
             break;
-        case '<':
-            // Don't handle all the possible cases here -- let parser handle it
-            if (next == '=') {
-                // <= (less than or equal to)
-                lexeme += '=';
-                type = TokenType::Operator;
-            } else if (next == '<') {
-                // << (bitwise left shift)
-                lexeme += next;
-                lexeme += (nextnext == '=') ? "=" : "";  // <<=, in place left shift
-                type = TokenType::Operator;
-            } else {
-                // Left angle -- can't tell if it's a comparison or a generic
-                type = TokenType::LeftAngle;
-            }
-            break;
         case ')':
             type = TokenType::RightParen;
             break;
@@ -312,10 +296,6 @@ void Lexer::tokenizeSymbol() {
             break;
         case ']':
             type = TokenType::RightSquare;
-            break;
-        case '>':
-            // Don't handle all the possible cases here -- let parser handle it
-            type = TokenType::RightAngle;
             break;
 
         // ~ Boolean / Bitwise operators
@@ -349,6 +329,20 @@ void Lexer::tokenizeSymbol() {
                 // or equality check (==)
                 lexeme += '=';
             }
+            break;
+        case '<':
+        case '>':
+            type = TokenType::Operator;
+            if (next == '=') {
+                // <= (less than or equal to) or >= (greater than or equal to)
+                lexeme += '=';
+            } else if (next == current) {
+                // << (bitwise left shift) or >> (bitwise right shift)
+                lexeme += next;
+                // <<= (in place left shift) or >>= (in place right shift)
+                lexeme += (nextnext == '=') ? "=" : "";
+            }
+            // Otherwise, just a regular comparison
             break;
 
         // ~ Other punctuation
