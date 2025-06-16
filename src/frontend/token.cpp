@@ -373,7 +373,7 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::Arrow:
             return "->";
         default:
-            UNREACHABLE("No string representation for TokenType: " + std::to_string(static_cast<uint16_t>(type)));
+            UNREACHABLE("No string representation for TokenType: " + std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
     }
 }
 
