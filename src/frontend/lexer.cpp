@@ -556,10 +556,62 @@ Base Lexer::processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str&
 }
 
 bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
-    char currentChar = peekChar();
-    if ((currentChar == 'e' || currentChar == 'E') && base == Base::Decimal) {
+    DISABLE_CONVERSION_WARNING
+    // All suffixes are case-insensitive, so use tolower for simplicity
+
+    char currentChar = tolower(peekChar());
+    auto readDigits = [this]() -> std::string {
+        std::string digits;
+        while (!done() && isdigit(peekChar())) {
+            digits += consumeChar();
+        }
+        return digits;
+    };
+
+    if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {
+        /*
+        The valid numeric suffixes are:
+        - i8, i16, i32, i64 (signed integers with the corresponding bit width)
+        - u8, u16, u32, u64 (unsigned integers with the corresponding bit width)
+        - f32, f64 (floating-point numbers with the corresponding bit width)
+        NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
+        */
+
+        std::string suffix;
+        suffix += tolower(consumeChar());
+        currentChar = peekChar();
+
+        // Read the numeric part of the suffix
+        std::string numPart = readDigits();
+        if (suffix[0] == 'i' || suffix[0] == 'u') {
+            // Integer types: i8, i16, i32, i64, u8, u16, u32, u64
+            if (numPart != "8" && numPart != "16" && numPart != "32" && numPart != "64") {
+                logging::logUser("Invalid integer suffix: must be 8, 16, 32, or 64", logging::LogLevel::Error, getLine(), getCol());
+                return false;
+            }
+        } else if (numPart != "32" && numPart != "64") {
+            // Float types: f32, f64
+            logging::logUser("Invalid float suffix: must be 32 or 64", logging::LogLevel::Error, getLine(), getCol());
+            return false;
+        }
+
+        numberLiteral += suffix + numPart;  // Append the suffix to the number literal
+
+        // Type validation - float suffix only for float literals and vice versa
+        if (suffix[0] == 'f' && !isFloat) {
+            logging::logUser("Float suffix can only be used with floating-point literals", logging::LogLevel::Error, getLine(), getCol());
+            return false;
+        }
+        if ((suffix[0] == 'i' || suffix[0] == 'u') && isFloat) {
+            logging::logUser("Integer suffix cannot be used with floating-point literals", logging::LogLevel::Error, getLine(), getCol());
+            return false;
+        }
+    }
+    currentChar = tolower(peekChar());  // Update current character after processing the suffix
+    // Scientific notation handling
+    if (currentChar == 'e' && base == Base::Decimal) {
         // Scientific notation
-        numberLiteral += consumeChar();  // Add the 'e' or 'E'
+        numberLiteral += tolower(consumeChar());  // Add the 'e' or 'E'
         currentChar = peekChar();
         if (currentChar == '+' || currentChar == '-') {
             numberLiteral += consumeChar();  // Add the sign
@@ -569,19 +621,16 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
             logging::logUser("Invalid scientific notation: exponent must be a number", logging::LogLevel::Error, getLine(), getCol());
             return false;
         }
-        while (!done() && isdigit(currentChar)) {
-            numberLiteral += consumeChar();
-            currentChar = peekChar();
-        }
+        numberLiteral += readDigits();
     } else if (base == Base::Hexadecimal) {
         // Hexadecimal floats must have a 'p' or 'P' exponent if they are floats
         if (isFloat) {
-            if (currentChar != 'p' && currentChar != 'P') {
+            if (currentChar != 'p') {
                 logging::logUser("Invalid hexadecimal float: must have 'p' or 'P' exponent", logging::LogLevel::Error, getLine(), getCol());
                 return false;
             }
             // Hexadecimal exponentiation (e.g., 0x1.23p4)
-            numberLiteral += consumeChar();  // Add the 'p' or 'P'
+            numberLiteral += tolower(consumeChar());  // Add the 'p' or 'P'
             currentChar = peekChar();
             if (currentChar == '+' || currentChar == '-') {
                 numberLiteral += consumeChar();  // Add the sign
@@ -591,67 +640,10 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
                 logging::logUser("Invalid hexadecimal float: exponent must be a decimal number", logging::LogLevel::Error, getLine(), getCol());
                 return false;
             }
-            while (!done() && isdigit(currentChar)) {
-                numberLiteral += consumeChar();
-                currentChar = peekChar();
-            }
+            numberLiteral += readDigits();  // Add the exponent digits
         }
     }
-
-    // Update current character as it might have changed
-    // Do tolower for convenience, as the suffixes are case-insensitive
-    DISABLE_CONVERSION_WARNING
-    currentChar = tolower(peekChar());
     ENABLE_CONVERSION_WARNING
-    if (currentChar != 'i' && currentChar != 'u' && currentChar != 'f') {
-        // No suffix, just return
-        return true;
-    }
-    /*
-    The valid numeric suffixes are:
-    - i8, i16, i32, i64 (signed integers with the corresponding bit width)
-    - u8, u16, u32, u64 (unsigned integers with the corresponding bit width)
-    - f32, f64 (floating-point numbers with the corresponding bit width)
-    NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
-    */
-
-    std::string suffix;    // Handle 'i', 'u', or 'f' prefix
-    suffix += consumeChar();
-    currentChar = peekChar();
-
-    // Read the numeric part of the suffix
-    std::string numPart;
-    while (!done() && isdigit(currentChar)) {
-        numPart += consumeChar();
-        currentChar = peekChar();
-    }    // Validate the numeric part
-    if (suffix[0] == 'i' || suffix[0] == 'u') {
-        // Integer types: i8, i16, i32, i64, u8, u16, u32, u64
-        if (numPart != "8" && numPart != "16" && numPart != "32" && numPart != "64") {
-            logging::logUser("Invalid integer suffix: must be 8, 16, 32, or 64", logging::LogLevel::Error, getLine(), getCol());
-            return false;
-        }
-    } else if (suffix[0] == 'f') {
-        // Float types: f32, f64
-        if (numPart != "32" && numPart != "64") {
-            logging::logUser("Invalid float suffix: must be 32 or 64", logging::LogLevel::Error, getLine(), getCol());
-            return false;
-        }
-    }
-
-    // Add the numeric part to the suffix
-    suffix += numPart;
-    numberLiteral += suffix;
-
-    // Type validation - float suffix only for float literals and vice versa
-    if (suffix[0] == 'f' && !isFloat) {
-        logging::logUser("Float suffix can only be used with floating-point literals", logging::LogLevel::Error, getLine(), getCol());
-        return false;
-    }
-    if ((suffix[0] == 'i' || suffix[0] == 'u') && isFloat) {
-        logging::logUser("Integer suffix cannot be used with floating-point literals", logging::LogLevel::Error, getLine(), getCol());
-        return false;
-    }
 
     return true;
 }

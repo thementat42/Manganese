@@ -119,6 +119,7 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             // Check for floating-point suffixes
             return make_unique<ast::NumberExpression>(
                 tolower(lexeme.back()) == 'f' ? stof(lexeme) : stod(lexeme));
+        // TODO: Expand suffix handling to allow scientific notation without stopping early
         case TokenType::IntegerLiteral: {
             // Extract integer suffix (u, l, ll, ul, ull, etc.)
             int base = determineNumberBase(lexeme);
