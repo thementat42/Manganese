@@ -138,5 +138,6 @@ The root directory has some other files as well:
 - [`.clang-format`](/.clang-format)
 - [`CMakeLists.txt`](/CMakeLists.txt): CMake build script
 - [`LICENSE-MIT`](/LICENSE-MIT) and [`LICENSE-APACHE`](/LICENSE-APACHE): License files
-  - The project is dual-licensed under the MIT License. LLVM is licensed under the Apache License 2.0 with LLVM Exceptions.
+  - This project is licensed under the MIT License.
+  - LLVM is licensed under the Apache License 2.0 with LLVM Exceptions.
 - [`logo.svg`](/logo.svg): The Manganese logo
