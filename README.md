@@ -111,16 +111,22 @@ This project is divided into several directories:
 
 - [`Examples`](/examples): Sample Manganese programs
 
-- [`Src`](/src): The compiler source code, split into three phases
+- [`include`](/include): Contains the header files for the compiler, defining the public interface of the compiler, split by phase
+  - [`frontend`](/include/frontend): Header files for the frontend phase (lexer, parser, semantic analyzer)
+  - [`middleend`](/include/middleend): Header files for the middleend phase (LLVM IR generation, optimization passes)
+  - [`backend`](/include/backend): Header files for the backend phase (LLVM backend to generate machine code)
+  - [`io`](/include/io): Header files for the I/O library, which handles things like logging and file I/O
+
+- [`Src`](/src): The implementation of the compiler, split by phase. This mirrors the structure of the [`include`](/include/) directory.
   - [`Frontend`](/src/frontend): Lexer, parser, semantic analyzer
   - [`Middleend`](/src/middleend): Generates LLVM IR, runs LLVM's optimization passes
   - [`Backend`](/src/backend): LLVM backend to generate machine code
-  - Each of these directories has an `include` directory which contains the header files for that phase.
-  - [`global_macros`](/src/global_macros.h): Contains some macros which are useful everywhere.
+  - [`IO`](/src/io): I/O library implementation, which handles things like logging and file I/O
+
 - [`scripts`](/scripts/): Contains some Python scripts to help generate snippets of C++ code
-- [`Tests`](/tests): Compiler Tests
   - [`gen_header.py`]: Python script to generate a header file from a .cpp file
   - [`bool_expr.py`]: Convert a series of options into a single `or` (`||`) or `and` (`&&`) expression
+- [`Tests`](/tests): Compiler Tests
 - [`manganese.cpp`](/manganese.cpp): Entry point for the compiler
 - [`manganese-tests.cpp`](/manganese-tests.cpp): Entry point for running tests
 
