@@ -50,6 +50,7 @@ A block is a vector of statements
 #endif  // DEBUG
 
 #include <global_macros.h>
+#include <utils/stox.h>
 
 #include <memory>
 #include <string>
@@ -71,18 +72,6 @@ class Statement;
 using ExpressionPtr = std::unique_ptr<Expression>;
 using StatementPtr = std::unique_ptr<Statement>;
 using Block = std::vector<StatementPtr>;
-
-using number_t = std::variant<
-    int8_t,
-    uint8_t,
-    int16_t,
-    uint16_t,
-    int32_t,
-    uint32_t,
-    int64_t,
-    uint64_t,
-    float,
-    double>;
 
 enum class Visibility : char {
     Public = 0,
