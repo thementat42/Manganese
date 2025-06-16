@@ -67,6 +67,22 @@ void NumberExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
+std::string CharExpression::toString() const {
+#if !DEBUG
+    return "";
+#endif
+    std::ostringstream oss;
+    oss << "'" << static_cast<char>(value) << "'";
+    return oss.str();
+}
+
+void CharExpression::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "CharExpression [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "value: '" << static_cast<char>(value) << "'\n";
+    os << getIndent(indent + 1) << "code point: " << static_cast<int>(value) << "\n";
+    os << getIndent(indent) << "}\n";
+}
+
 std::string StringExpression::toString() const {
 #if !DEBUG
     return "";
