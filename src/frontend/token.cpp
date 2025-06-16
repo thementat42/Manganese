@@ -72,8 +72,7 @@ bool Token::isLiteral() const noexcept {
 bool Token::isBracket() const noexcept {
     return type == TokenType::LeftParen || type == TokenType::RightParen ||
            type == TokenType::LeftBrace || type == TokenType::RightBrace ||
-           type == TokenType::LeftSquare || type == TokenType::RightSquare ||
-           type == TokenType::LeftAngle || type == TokenType::RightAngle;
+           type == TokenType::LeftSquare || type == TokenType::RightSquare;
 }
 
 bool Token::hasUnaryCounterpart() const noexcept {
@@ -173,11 +172,6 @@ std::string tokenTypeToString(TokenType type) {
             return "Left Square";
         case TokenType::RightSquare:
             return "Right Square";
-        case TokenType::LeftAngle:
-            return "Left Angle";
-        case TokenType::RightAngle:
-            return "Right Angle";
-
         // Punctuation
         case TokenType::Semicolon:
             return "Semicolon";

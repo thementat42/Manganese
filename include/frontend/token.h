@@ -100,8 +100,6 @@ enum class TokenType : uint8_t {
     RightBrace,   // }
     LeftSquare,   // [
     RightSquare,  // ]
-    LeftAngle,    // <
-    RightAngle,   // >
 
     //~ Punctuation
     Semicolon,  // ;
