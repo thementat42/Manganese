@@ -59,6 +59,8 @@ let result2 = add@[float](5.5, 10.2); // Calls add with float type
 
 (The reason the `@` operator is used is to make parsing easier, to avoid ambiguity with the `[]` operator).
 
+> TODO: Constraints
+
 ## === Lambdas ===
 
 > TODO: Review this section (just have func without an identifier?)
