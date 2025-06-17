@@ -8,7 +8,7 @@
 
 #include <format>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace parser {
 
 StatementPtr Parser::parseStatement() {
@@ -42,4 +42,4 @@ StatementPtr Parser::parseVariableDeclarationStatement() {
 
 }  // namespace parser
 
-MANGANESE_END
+}  // namespace Manganese

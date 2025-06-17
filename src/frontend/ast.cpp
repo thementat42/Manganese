@@ -6,7 +6,7 @@
 #include <string>
 #include <variant>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace ast {
 
 #if DEBUG  // Thse functions are only used in debug mode
@@ -213,4 +213,4 @@ void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
 #endif  // DEBUG
 
 }  // namespace ast
-MANGANESE_END
+}  // namespace Manganese

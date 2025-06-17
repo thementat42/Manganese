@@ -39,16 +39,6 @@ A block is a vector of statements
 #ifndef AST_H
 #define AST_H
 
-#if DEBUG
-#define AST_DEBUG_OVERRIDES                \
-    std::string toString() const override; \
-    void dump(std::ostream& os, int indent = 0) const override;
-#else  // ^^ DEBUG vv !DEBUG
-#define AST_DEBUG_OVERRIDES                              \
-    std::string toString() const override { return ""; } \
-    void dump(std::ostream& os, int indent = 0) const override {}
-#endif  // DEBUG
-
 #include <global_macros.h>
 #include <utils/stox.h>
 
@@ -58,7 +48,7 @@ A block is a vector of statements
 
 #include "token.h"
 
-MANGANESE_BEGIN
+namespace Manganese {
 
 namespace parser {
 class Parser;
@@ -145,7 +135,8 @@ class NumberExpression : public Expression {
     explicit NumberExpression(number_t _value) : value(_value) {};
 
     const number_t& getValue() const { return value; }
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 class CharExpression : public Expression {
@@ -158,10 +149,11 @@ class CharExpression : public Expression {
      * @param _value The character value of the expression (wchar_t)
      */
     explicit CharExpression(wchar_t _value) : value(_value) {};
-    explicit CharExpression(char _value) : value(static_cast<wchar_t>(_value)) {};  
+    explicit CharExpression(char _value) : value(static_cast<wchar_t>(_value)) {};
 
     wchar_t getValue() const { return value; }
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 /**
@@ -185,7 +177,8 @@ class StringExpression : public Expression {
     explicit StringExpression(const char* _value) : value(_value) {};
 
     const std::string& getValue() const { return value; }
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 /**
@@ -203,7 +196,8 @@ class SymbolExpression : public Expression {
     explicit SymbolExpression(const std::string& _value) : value(std::move(_value)) {}
 
     const std::string& getValue() const { return value; }
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 //* Complex Expressions
@@ -229,7 +223,8 @@ class BinaryExpression : public Expression {
     const Expression& getLeft() const { return *left; }
     const Expression& getRight() const { return *right; }
     lexer::TokenType getOperator() const { return op; }
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 /**
@@ -252,7 +247,8 @@ class PrefixExpression : public Expression {
     const Expression& getRight() const { return *right; }
     lexer::TokenType getOperator() const { return op; }
 
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 class AssignmentExpression : public Expression {
@@ -273,7 +269,8 @@ class AssignmentExpression : public Expression {
     const Expression& getAssignee() const { return *assignee; }
     const Expression& getValue() const { return *value; }
     lexer::TokenType getOperator() const { return op; }
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 //~ Statements
@@ -293,7 +290,8 @@ class ExpressionStatement : public Statement {
     explicit ExpressionStatement(ExpressionPtr _expression) : expression(std::move(_expression)) {};
 
     const Expression& getExpression() const { return *expression; }
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 /**
@@ -324,10 +322,11 @@ class VariableDeclarationStatement : public Statement {
     const Expression& getValue() const { return *value; }
     // const primitiveType& getType() const { return type; }
 
-    AST_DEBUG_OVERRIDES
+    std::string toString() const override { return ""; }
+    void dump(std::ostream& os, int indent = 0) const override {}
 };
 
 }  // namespace ast
-MANGANESE_END
+}  // namespace Manganese
 
 #endif  // AST_H

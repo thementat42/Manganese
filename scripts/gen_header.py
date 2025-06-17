@@ -9,24 +9,19 @@ def extract_includes_and_declarations(file_content: list[str], source_filename: 
     includes: list[str] = []
     declarations: list[str] = []
     namespaces: list[str] = []
-    manganese_macros: list[str] = []
 
     # Regular expressions
     include_pattern = re.compile(r'^\s*#include\s+[<"](.+)[>"]')
     func_pattern = re.compile(r'^\s*([a-zA-Z_][\w:<>\s*&]*?)\s+([a-zA-Z_][\w]*)\s*\(([^)]*)\)\s*\{')
     namespace_pattern = re.compile(r'^\s*namespace\s+([a-zA-Z_][\w]*)\s*\{')
-    define_pattern = re.compile(r'^\s*#define\s+(MANGANESE_(?:BEGIN|END)).*')
 
     for line in file_content:
         include_match = include_pattern.match(line)
-        define_match = define_pattern.match(line)
 
         if include_match:
             included_file = include_match.group(1)
             if included_file != source_filename:  # don't include a file in itself
                 includes.append(line.strip())
-        elif define_match:
-            manganese_macros.append(line.strip())
         elif func_match := func_pattern.match(line):
             return_type = func_match.group(1).strip()
             name = func_match.group(2).strip()
@@ -36,7 +31,7 @@ def extract_includes_and_declarations(file_content: list[str], source_filename: 
             namespace_name = namespace_match.group(1).strip()
             namespaces.append(namespace_name)
 
-    return includes, declarations, namespaces, manganese_macros
+    return includes, declarations, namespaces
 
 
 def find_source_file(filename: str):
@@ -58,8 +53,7 @@ def generate_header_file(source_filename: str):
     with open(source_path, 'r', encoding = "utf8") as f:
         content = f.readlines()
 
-    includes, declarations,\
-        namespaces, manganese_macros = extract_includes_and_declarations(content, source_path.name)
+    includes, declarations, namespaces = extract_includes_and_declarations(content, source_path.name)
 
     # Generate include guard name from filename
     filename_base = source_path.stem.upper()
@@ -75,9 +69,6 @@ def generate_header_file(source_filename: str):
             f.write(inc + '\n')
         f.write('\n')
 
-        if manganese_macros:
-            f.write("MANGANESE_BEGIN\n")
-
         # Start namespace blocks if any
         for namespace in namespaces:
             f.write(f"namespace {namespace} {{\n\n")
@@ -89,10 +80,6 @@ def generate_header_file(source_filename: str):
           # Close namespace blocks if any
         for _ in namespaces:
             f.write("}\n")
-
-        # Close the Manganese namespace
-        if manganese_macros:
-            f.write("\nMANGANESE_END\n\n")
 
         # Close header guard
         f.write(f"#endif // {include_guard}\n")

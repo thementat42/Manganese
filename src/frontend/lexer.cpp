@@ -28,7 +28,7 @@
 #include <functional>
 #include <iostream>
 
-MANGANESE_BEGIN
+namespace Manganese {
 
 namespace lexer {
 
@@ -707,4 +707,4 @@ std::string convertWideCharToUTF8(wchar_t wideChar) {
 }
 
 }  // namespace lexer
-MANGANESE_END
+}  // namespace Manganese

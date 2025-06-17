@@ -14,7 +14,7 @@
 
 #include "reader.h"
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace io {
 /**
  * @brief A reader that extracts characters from a file, stored in memory, with built-in buffering behaviour
@@ -41,7 +41,8 @@ class FileReader : public Reader {
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
     ~FileReader() noexcept = default;
 
-    DISABLE_COPY_AND_ASSIGN(FileReader)
+    FileReader(const FileReader&) = delete;
+    FileReader& operator=(const FileReader&) = delete;
 
     char peekChar(size_t offset = 0) override;
     [[nodiscard]] char consumeChar() override;
@@ -54,5 +55,5 @@ class FileReader : public Reader {
     bool done() const noexcept override;
 };
 }  // namespace io
-MANGANESE_END
+}  // namespace Manganese
 #endif  // FILEREADER_H

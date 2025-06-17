@@ -13,7 +13,7 @@
 
 #include "token.h"
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace lexer {
 using str = std::string;
 using std::optional;
@@ -205,6 +205,6 @@ class Lexer {
     bool done() const noexcept { return reader->done(); }
 };
 }  // namespace lexer
-MANGANESE_END
+}  // namespace Manganese
 
 #endif  // LEXER_H

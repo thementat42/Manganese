@@ -14,7 +14,7 @@
 
 #include "reader.h"
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace io {
 
 /**
@@ -30,7 +30,8 @@ class StringReader : public Reader {
     StringReader(const std::string& source);
     ~StringReader() noexcept = default;
 
-    DISABLE_COPY_AND_ASSIGN(StringReader)
+    StringReader(const StringReader&) = delete;
+    StringReader& operator=(const StringReader&) = delete;
 
     char peekChar(size_t offset = 0) noexcept override;
     [[nodiscard]] char consumeChar() noexcept override;
@@ -43,6 +44,6 @@ class StringReader : public Reader {
     bool done() const noexcept override;
 };
 }  // namespace io
-MANGANESE_END
+}  // namespace Manganese
 
 #endif  // STRING_READER_H

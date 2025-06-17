@@ -10,7 +10,7 @@
 
 #include <global_macros.h>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace tests {
 
 class TestRunner {
@@ -24,6 +24,6 @@ class TestRunner {
     bool allTestsPassed();
 };
 }  // namespace tests
-MANGANESE_END
+} // namespace Manganese
 
 #endif  // MANGANESE_TESTS_TEST_RUNNER_H

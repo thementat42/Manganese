@@ -15,12 +15,12 @@
 
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
-#include <optional>
 
-MANGANESE_BEGIN
+namespace Manganese {
 
 using number_t = std::variant<
     int8_t,
@@ -51,6 +51,6 @@ std::optional<number_t> stonum(const std::string& str, int base = 10, bool isFlo
 
 }  // namespace utils
 
-MANGANESE_END
+}  // namespace Manganese
 
 #endif  // UTILS_STOX_H

@@ -15,7 +15,7 @@
 #include <stdexcept>
 #include <string>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace io {
 FileReader::FileReader(const std::string& filename, size_t _bufferCapacity) : position(0), line(1), column(1), bufferCapacity(_bufferCapacity) {
     fileStream.open(filename, std::ios::in);
@@ -111,4 +111,4 @@ bool FileReader::done() const noexcept {
 }
 
 }  // namespace io
-MANGANESE_END
+}  // namespace Manganese

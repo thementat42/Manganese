@@ -15,7 +15,7 @@ constexpr inline float percentage(const int part, const int total) {
     return static_cast<float>(part) / static_cast<float>(total) * 100.0f;
 }
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace tests {
 void TestRunner::runTest(const std::string& testName, std::function<bool()> testFunction) {
     std::cout << "Running test: " << testName << "... ";
@@ -45,4 +45,4 @@ bool TestRunner::allTestsPassed() {
     return failed == 0;
 }
 }  // namespace tests
-MANGANESE_END
+} // namespace Manganese

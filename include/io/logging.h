@@ -4,6 +4,17 @@
 #include <global_macros.h>
 
 #include <iostream>
+#if __cplusplus >= 202302L
+#include <utility>
+#define COMPILER_UNREACHABLE std::unreachable()  // compiler agnostic, but still allows for optimisation
+// If < C++23, use a compiler-specific implementation
+#elif defined(__GNUC__) || defined(__clang__)
+#define COMPILER_UNREACHABLE __builtin_unreachable()
+#elif defined(_MSC_VER)
+#define COMPILER_UNREACHABLE __assume(false)
+#else
+#define COMPILER_UNREACHABLE
+#endif  // __cplusplus >= 202302L
 
 #ifndef __PRINT_LOCATION
 #define __PRINT_LOCATION \
@@ -15,6 +26,7 @@
     do {                                                                             \
         std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m"; \
         PRINT_LOCATION                                                               \
+        COMPILER_UNREACHABLE                                                         \
         exit(EXIT_FAILURE);                                                          \
     } while (0)
 
@@ -30,7 +42,7 @@ constexpr const char* BLUE = "\033[34m";
 constexpr const char* CYAN = "\033[36m";
 constexpr const char* RESET = "\033[0m";
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace logging {
 
 enum class LogLevel {
@@ -60,6 +72,6 @@ void logUser(const std::string& message, LogLevel level = LogLevel::Warning, siz
 void logUser(std::initializer_list<std::string> messages, LogLevel level = LogLevel::Warning, size_t line = 0, size_t col = 0);
 
 }  // namespace logging
-MANGANESE_END
+}  // namespace Manganese
 
 #endif  // LOGGING_H

@@ -7,7 +7,7 @@
 
 #include "testrunner.h"
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace tests {
 
 bool testArithmeticOperators() {
@@ -330,4 +330,4 @@ int runParserTests(TestRunner& runner) {
     return runner.allTestsPassed() ? 0 : 1;
 }
 }  // namespace tests
-MANGANESE_END
+} // namespace Manganese

@@ -4,7 +4,7 @@
 
 #include <format>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace parser {
 
 Parser::Parser(const str& source, lexer::Mode mode) : lexer(make_unique<lexer::Lexer>(source, mode)) {
@@ -149,4 +149,4 @@ Token Parser::expectToken(TokenType expectedType, const str& errorMessage) {
     return advance();
 }
 }  // namespace parser
-MANGANESE_END
+}  // namespace Manganese

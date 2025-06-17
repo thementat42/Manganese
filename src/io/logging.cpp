@@ -1,6 +1,6 @@
 #include <io/logging.h>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace logging {
 void logInternal(const std::string& message, LogLevel level) {
     switch (level) {
@@ -72,4 +72,4 @@ void logUser(std::initializer_list<std::string> messages, LogLevel level, size_t
     }
 }
 }  // namespace logging
-MANGANESE_END
+}  // namespace Manganese

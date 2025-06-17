@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <variant>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace lexer {
 
 /**
@@ -249,6 +249,6 @@ enum class TokenType : uint8_t {
 };
 
 }  // namespace lexer
-MANGANESE_END
+}  // namespace Manganese
 
 #endif  // TOKEN_H

@@ -7,7 +7,7 @@
 #include <optional>
 #include <stdexcept>
 
-MANGANESE_BEGIN
+namespace Manganese {
 
 /**
  * @brief Range checking for signed numeric types
@@ -175,4 +175,4 @@ inline double stof64(const std::string& str) {
 }
 }  // namespace utils
 
-MANGANESE_END
+} // namespace Manganese

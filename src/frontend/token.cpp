@@ -11,7 +11,7 @@
 #include <optional>
 #include <string>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace lexer {
 Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column)
     : type(_type), lexeme(_lexeme), line(_line), column(_column) {
@@ -432,8 +432,7 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     // Misc
     {"=", TokenType::Assignment},
     {"->", TokenType::Arrow},
-    {"@", TokenType::At}
-};
+    {"@", TokenType::At}};
 
 std::unordered_map<std::string, const TokenType> keywordMap = {
     {"alias", TokenType::Alias},
@@ -484,4 +483,4 @@ std::unordered_map<std::string, const TokenType> keywordMap = {
     {"while", TokenType::While}};
 
 }  // namespace lexer
-MANGANESE_END
+}  // namespace Manganese

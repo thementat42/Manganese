@@ -9,7 +9,7 @@
 
 #include "testrunner.h"
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace tests {
 void runLexerTests(TestRunner& runner);
 void runParserTests(TestRunner& runner);
@@ -17,5 +17,5 @@ void runSemanticAnalysisTests(TestRunner& runner);
 void runCodeGenerationTests(TestRunner& runner);
 
 }  // namespace tests
-MANGANESE_END
+} // namespace Manganese
 #endif  // MANGANESE_TESTS_H

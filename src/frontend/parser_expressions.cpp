@@ -12,7 +12,7 @@
 
 #include <format>
 
-MANGANESE_BEGIN
+namespace Manganese {
 
 namespace parser {
 constexpr uint8_t BINARY = 2;
@@ -179,4 +179,4 @@ int determineNumberBase(const str& lexeme) {
 
 }  // namespace parser
 
-MANGANESE_END
+}  // namespace Manganese

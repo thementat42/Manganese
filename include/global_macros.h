@@ -7,16 +7,16 @@
 #ifndef GLOBAL_MACROS_H
 #define GLOBAL_MACROS_H
 
-#include <utils/compiler_config.h>
-
 #include <stdint.h>
+#include <utils/compiler_config.h>
 
 #include <iostream>
 
-#define EXT_C_BEGIN extern "C" {
-#define EXT_C_END }
-#define MANGANESE_BEGIN namespace Manganese {
-#define MANGANESE_END }
+#ifndef DEBUG    // Defined by CMake (see CMakeLists.txt)
+#define DEBUG 0  // Default to release mode if not defined
+#endif           // DEBUG
+
+#define DISCARD(x) (void)(x)  // Explicitly discard a value
 
 #define DISABLE_COPY_AND_ASSIGN(ClassName) \
     ClassName(const ClassName&) = delete;  \

@@ -11,7 +11,7 @@
 #include <cstddef>
 #include <string>
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace io {
 
 /**
@@ -70,6 +70,6 @@ class Reader {
     virtual bool done() const = 0;
 };
 }  // namespace io
-MANGANESE_END
+}  // namespace Manganese
 
 #endif  // READER_H

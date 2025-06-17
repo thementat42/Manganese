@@ -8,12 +8,6 @@
 #ifndef COMPILER_CONFIG_H
 #define COMPILER_CONFIG_H
 
-#ifndef DEBUG    // Defined by CMake (see CMakeLists.txt)
-#define DEBUG 0  // Default to release mode if not defined
-#endif           // DEBUG
-
-#define DISCARD(x) (void)(x)  // Explicitly discard a value
-
 #if defined(__clang__)
 #define __DISABLE_CONVERSION_WARNING \
     _Pragma("clang diagnostic push") \

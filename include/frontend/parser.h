@@ -12,7 +12,7 @@
 #include "lexer.h"
 #include "token.h"
 
-MANGANESE_BEGIN
+namespace Manganese {
 namespace parser {
 using ast::StatementPtr, ast::ExpressionPtr;
 using lexer::TokenType,
@@ -84,7 +84,6 @@ class Parser {
     ast::Block parse();
 };
 
-
 /**
  * See the operator precedence table in the operators documentation
  * Note: This enum is the reverse of the table (operators with higher precedences have bigger values in this enum)
@@ -113,6 +112,6 @@ enum class OperatorBindingPower : uint8_t {
 };
 
 }  // namespace parser
-MANGANESE_END
+}  // namespace Manganese
 
 #endif  // PARSER_H
