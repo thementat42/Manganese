@@ -30,7 +30,7 @@ The exception are the division operators:
 - `/` will always return a float
 - `//` and `%` will always return an int
 
-Unary operators will preserve the type they act on. The increment and decrement operators can be used either as prefix or as postfix operators (e.g. `x++` vs `++x`). The postfix version increments the value of `x` after using it, whereas the prefix version uses the value after incrementing it.
+Unary operators will preserve the type they act on. The increment and decrement operators can be used either as prefix or as postfix operators (e.g. `x++` vs `++x`). The postfix version increments the value of `x` after using it, whereas the prefix version increments the value of `x` before using it.
 
 ## === Comparison Operators ===
 
@@ -84,7 +84,7 @@ Bitwise operators support the immediate re-assignment syntax (`op=`)
 
 ## === Miscellaneous Operators ===  
 
-These operators don't fit in any other category
+These operators don't fit in any other category:
 
 | Operator |       Name       |       Example       |
 | -------- | ---------------- | ------------------- |
@@ -98,12 +98,12 @@ These operators don't fit in any other category
 |   `as`   | Type cast        | `x as int`          |
 |   `@`    | Generic List     | `func foo@[int]()`  |
 
-Manganese uses copy-based assignment. An expression like `x = y` copies the value of `y` into `x`
+Manganese uses copy-based assignment. An expression like `x = y` copies the value of `y` into `x`.
 <!-- Todo? Move? (rust-like) -->
 
 ## === Non-operator symbols ===
 
-The following aren't really operators, but are symbols interpreted in a specific way
+The following aren't really operators, but are symbols interpreted in a specific way:
 
 |  Symbol |      Purpose         |           Example           |
 | ------- | -------------------- | --------------------------- |
