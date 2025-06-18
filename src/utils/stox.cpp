@@ -7,156 +7,110 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <charconv>
+#include <unordered_map>
+#include <functional>
+#include <string_view>
 
 namespace Manganese {
 
-/**
- * @brief Range checking for signed numeric types
- * @tparam T The type
- * @param value The value to check
- * @return true if the value is out of range for the type, false otherwise
- */
-template <typename T>
-bool isOutOfRange(const int64_t value) {
-    return value < std::numeric_limits<T>::min() || value > std::numeric_limits<T>::max();
-}
-
-/**
- * @brief Range checking for unsigned numeric types
- * @tparam T The type
- * @param value The value to check
- * @return true if the value is out of range for the type, false otherwise
- */
-template <typename T>
-bool isOutOfRange(const uint64_t value) {
-    return value > std::numeric_limits<T>::max();
-}
-
 namespace utils {
-std::optional<number_t> stringToNumber(const std::string& str, int base, bool isFloat, const std::string& suffix) noexcept_except_catastrophic {
+std::optional<number_t> stringToNumber(std::string_view str, int base, bool isFloat, const std::string& suffix) noexcept_except_catastrophic {
     if (isFloat) {
         if (suffix == "f" || suffix == "F") {
-            return stof32_(str);
+            return stof32(str);
         } else if (suffix == "") {
-            auto val = stof32_(str);
+            auto val = stof32(str);
             if (val) {
                 return *val;
             }
             // fallback to f64
         }
-        return stof64_(str);
+        return stof64(str);
     }
-    if (suffix == "u8" || suffix == "U8") {
-        return stoui8_(str, base);
-    } else if (suffix == "u16" || suffix == "U16") {
-        return stoui16_(str, base);
-    } else if (suffix == "u32" || suffix == "U32") {
-        return stoui32_(str, base);
-    } else if (suffix == "u64" || suffix == "U64") {
-        return stoui64_(str, base);
-    } else if (suffix == "i8" || suffix == "I8") {
-        return stoi8_(str, base);
-    } else if (suffix == "i16" || suffix == "I16") {
-        return stoi16_(str, base);
-    } else if (suffix == "i32" || suffix == "I32") {
-        return stoi32_(str, base);
-    } else if (suffix == "i64" || suffix == "I64") {
-        return stoi64_(str, base);
+    static const std::unordered_map<std::string, std::function<std::optional<number_t>(std::string_view, int)>> suffixMap = {
+        {"u8",  stoui8},  {"U8",  stoui8},
+        {"u16", stoui16}, {"U16", stoui16},
+        {"u32", stoui32}, {"U32", stoui32},
+        {"u64", stoui64}, {"U64", stoui64},
+        {"i8",  stoi8},   {"I8",  stoi8},
+        {"i16", stoi16},  {"I16", stoi16},
+        {"i32", stoi32},  {"I32", stoi32},
+        {"i64", stoi64},  {"I64", stoi64},
+    };
+    auto it = suffixMap.find(suffix);
+    if (it != suffixMap.end()) {
+        return it->second(str, base);
     } else if (suffix == "") {
-        auto i32 = stoi32_(str, base);
+        auto i32 = stoi32(str, base);
         if (i32) {
             return *i32;
         }
         // If i32 fails, try i64
-        auto i64 = stoi64_(str, base);
+        auto i64 = stoi64(str, base);
         if (i64) {
             return *i64;
         }
         // If i64 fails, try ui64
-        return stoui64_(str, base);
+        return stoui64(str, base);
     } else {
         UNREACHABLE("Invalid Number Suffix: " + suffix);
     }
 }
 
-std::optional<int8_t> stoi8_(const std::string& str, int base) {
-    int64_t temp = std::stoll(str, nullptr, base);
-    if (isOutOfRange<int8_t>(temp)) {
-        return std::nullopt;
+template <typename T>
+std::optional<T> __stox(std::string_view str, int base = 10) {
+    T temp;
+    const char* begin = str.data();
+    const char* end = str.data() + str.size();
+    auto [ptr, errorCode] = std::from_chars(begin, end, temp, base);
+    if (errorCode == std::errc() && ptr == end) {
+        return temp;
     }
-    return static_cast<int8_t>(temp);
+    return std::nullopt;
 }
 
-std::optional<int16_t> stoi16_(const std::string& str, int base) {
-    int64_t temp = std::stoll(str, nullptr, base);
-    if (isOutOfRange<int16_t>(temp)) {
-        return std::nullopt;
-    }
-    return static_cast<int16_t>(temp);
+//~ Wrapper methods for convenience
+
+std::optional<int8_t> stoi8(std::string_view str, int base) {
+    return __stox<int8_t>(str, base);
 }
 
-std::optional<int32_t> stoi32_(const std::string& str, int base) {
-    int64_t temp = std::stoll(str, nullptr, base);
-    if (isOutOfRange<int32_t>(temp)) {
-        return std::nullopt;
-    }
-    return static_cast<int32_t>(temp);
+std::optional<int16_t> stoi16(std::string_view str, int base) {
+    return __stox<int16_t>(str, base);
 }
 
-std::optional<int64_t> stoi64_(const std::string& str, int base) {
-    int64_t temp = std::stoll(str, nullptr, base);
-    if (isOutOfRange<int64_t>(temp)) {
-        return std::nullopt;
-    }
-    return static_cast<int64_t>(temp);
+std::optional<int32_t> stoi32(std::string_view str, int base) {
+    return __stox<int32_t>(str, base);
 }
 
-std::optional<uint8_t> stoui8_(const std::string& str, int base) {
-    uint64_t temp = std::stoull(str, nullptr, base);
-    if (isOutOfRange<uint8_t>(temp)) {
-        return std::nullopt;
-    }
-    return static_cast<uint8_t>(temp);
+std::optional<int64_t> stoi64(std::string_view str, int base) {
+    return __stox<int64_t>(str, base);
 }
 
-std::optional<uint16_t> stoui16_(const std::string& str, int base) {
-    uint64_t temp = std::stoull(str, nullptr, base);
-    if (isOutOfRange<uint16_t>(temp)) {
-        return std::nullopt;
-    }
-    return static_cast<uint16_t>(temp);
+std::optional<uint8_t> stoui8(std::string_view str, int base) {
+    return __stox<uint8_t>(str, base);
 }
 
-std::optional<uint32_t> stoui32_(const std::string& str, int base) {
-    uint64_t temp = std::stoull(str, nullptr, base);
-    if (isOutOfRange<uint32_t>(temp)) {
-        return std::nullopt;
-    }
-    return static_cast<uint32_t>(temp);
+std::optional<uint16_t> stoui16(std::string_view str, int base) {
+    return __stox<uint16_t>(str, base);
 }
 
-std::optional<uint64_t> stoui64_(const std::string& str, int base) {
-    uint64_t temp = std::stoull(str, nullptr, base);
-    if (isOutOfRange<uint64_t>(temp)) {
-        return std::nullopt;
-    }
-    return static_cast<uint64_t>(temp);
+std::optional<uint32_t> stoui32(std::string_view str, int base) {
+    return __stox<uint32_t>(str, base);
 }
 
-std::optional<float> stof32_(const std::string& str) {
-    try {
-        return std::stof(str);
-    } catch (const std::out_of_range&) {
-        return std::nullopt;
-    }
+std::optional<uint64_t> stoui64(std::string_view str, int base) {
+    return __stox<uint64_t>(str, base);
 }
 
-std::optional<double> stof64_(const std::string& str) {
-    try {
-        return std::stod(str);
-    } catch (const std::out_of_range&) {
-        return std::nullopt;
-    }
+// from_chars doesn't always support floats so fall back to stl functions
+std::optional<float> stof32(std::string_view str) {
+    return std::stof(std::string(str));
+}
+
+std::optional<double> stof64(std::string_view str) {
+    return std::stod(std::string(str));
 }
 }  // namespace utils
 }  // namespace Manganese
