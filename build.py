@@ -154,37 +154,39 @@ if args.clean and args.no_move:
     )
     args.no_move = False
 
-if not args.run and args.exec_with:
-    print(
-        "\033[33mWarning: positional arguments",
-        f"({', '.join(args.exec_with)})",
-        "were passed to the script but the run flag (-r) was not specified"
-    )
-elif args.exec_with:
-    print(
-        "\033[34mRunning with positional arguments:", *args.exec_with, "\033[0m"
-    )
+if args.exec_with:
+    if not args.run:
+        print(
+            "\033[33mWarning: positional arguments",
+            f"({', '.join(args.exec_with)})",
+            "were passed to the script but the run flag (-r) was not specified"
+        )
+    else:
+        print(
+            "\033[34mRunning with positional arguments:", *args.exec_with, "\033[0m"
+        )
 
-if args.memory_tracking and not args.debug:
-    print(
-        "\033[33mWarning: --memory-tracking only has an effect in debug mode\033[0m"
-    )
-else:
-    print(
-        "\033[34mTracking cumulative memory usage\033[0m"
-    )
+if args.memory_tracking:
+    if not args.debug:
+        print(
+            "\033[33mWarning: --memory-tracking only has an effect in debug mode\033[0m"
+        )
+    else:
+        print(
+            "\033[34mTracking cumulative memory usage\033[0m"
+        )
 
 if args.memory_tracking_continuous:
     if not args.memory_tracking:
         print(
             "\033[33mWarning: --memory-tracking-continuous has no effect if --memory-tracking is off\033[0m"
         )
+    else:
+        print(
+            "\033[34mTracking estimated continuous memory usage\033[0m"
+        )
     print(
         "\033[33mWarning: --memory-tracking-continuous may not be completely accurate and can vary depending on the compiler \033[0m"
-    )
-else:
-    print(
-        "\033[34mTracking estimated continuous memory usage\033[0m"
     )
 
 if args.tests and not args.debug:
