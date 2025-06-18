@@ -4,6 +4,7 @@
 #include <global_macros.h>
 
 #include <iostream>
+#include <stdexcept>
 #if __cplusplus >= 202302L
 #include <utility>
 #define COMPILER_UNREACHABLE std::unreachable();  // compiler agnostic, but still allows for optimisation
@@ -27,8 +28,8 @@
         std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m"; \
         PRINT_LOCATION                                                               \
         COMPILER_UNREACHABLE                                                         \
-        exit(EXIT_FAILURE);                                                          \
-    } while (0)
+        throw std::runtime_error(message);                                           \
+    } while (0);
 
 #define UNREACHABLE(message) __UNREACHABLE(message)  // Condition that should never be reached
 #endif                                               // __PRINT_LOCATION

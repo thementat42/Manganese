@@ -24,7 +24,7 @@ FileReader::FileReader(const std::string& filename, size_t _bufferCapacity): pos
                                                                               bufferCapacity(_bufferCapacity) {
     fileStream.open(filename, std::ios::in);
     if (!fileStream.is_open()) {
-        logging::logUser(std::format("Error: Could not open file {}", filename), logging::LogLevel::Error);
+        logging::logUser(std::format("Error: Could not open file {}", filename), logging::LogLevel::Critical);
         throw std::runtime_error("Could not open file: " + filename);
     }
     buffer = std::make_unique<char[]>(_bufferCapacity + 1);                               // +1 for null terminator
@@ -33,7 +33,7 @@ FileReader::FileReader(const std::string& filename, size_t _bufferCapacity): pos
 
     if (bufferSize == 0) {
         logging::logUser(
-            std::format("Error: File {} is empty or could not be read", filename), logging::LogLevel::Error);
+            std::format("Error: File {} is empty or could not be read", filename), logging::LogLevel::Critical);
         throw std::runtime_error(filename + " is empty or could not be read");
     }
     buffer[bufferSize] = '\0';  // Null-terminate the buffer since peekChar will rely on this to determine EOF

@@ -11,6 +11,7 @@
 #include <utils/compiler_config.h>
 
 #include <iostream>
+#include <stdexcept>
 
 #ifndef DEBUG    // Defined by CMake (see CMakeLists.txt)
 #define DEBUG 0  // Default to release mode if not defined
@@ -33,9 +34,9 @@
         if (!(condition)) {                                                               \
             std::cerr << "\033[31mCritical assertion failed: " << message << "\n\033[0m"; \
             __PRINT_LOCATION()                                                            \
-            exit(EXIT_FAILURE);                                                           \
+            throw std::runtime_error(message);                                            \
         }                                                                                 \
-    } while (0)
+    } while (0);
 
 #if DEBUG
 #define ASSERT_DEBUG(condition, message)                                               \
@@ -44,7 +45,7 @@
             std::cerr << "\033[31mDebug assertion failed: " << message << "\n\033[0m"; \
             __PRINT_LOCATION()                                                         \
         }                                                                              \
-    } while (0)
+    } while (0);
 #else                                     // ^ DEBUG ^ | v !DEBUG v
 // In release mode, inline the debug functions (since they do nothing)
 #define ASSERT_DEBUG(condition, message)  // no-op in release mode

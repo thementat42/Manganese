@@ -44,7 +44,7 @@ void logUser(const std::string& message, LogLevel level, size_t line, size_t col
     }
     std::cerr << "(line " << line << ", column " << col << ")\n";
     if (level == LogLevel::Critical) {
-        exit(EXIT_FAILURE);
+        throw std::runtime_error(message);
     }
 }
 
@@ -71,7 +71,7 @@ void logUser(std::initializer_list<std::string> messages, LogLevel level, size_t
     }
     if (level == LogLevel::Critical) {
         std::cerr << "Compilation aborted.\n";
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("Critical Error encountered");
     }
 }
 }  // namespace logging
