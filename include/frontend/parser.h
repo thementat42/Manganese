@@ -28,9 +28,11 @@ int determineNumberBase(const str &lexeme);
 class Parser {
    private:  // private variables
     std::unique_ptr<lexer::Lexer> lexer;
-    size_t tokenCachePosition = 0;
+    size_t tokenCachePosition;
+    ast::Visibility defaultVisibility;
+    bool hasError;
+
     std::vector<Token> tokenCache;  // Old tokens (for lookbehind)
-    ast::Visibility defaultVisibility = ast::Visibility::ReadOnly;
 
    public:   // public variables
    private:  // private methods

@@ -1,4 +1,5 @@
 #include <frontend/parser.h>
+#include <frontend/ast.h>
 #include <global_macros.h>
 #include <io/logging.h>
 
@@ -8,7 +9,7 @@
 namespace Manganese {
 namespace parser {
 
-Parser::Parser(const str& source, lexer::Mode mode) : lexer(make_unique<lexer::Lexer>(source, mode)) {
+Parser::Parser(const str& source, lexer::Mode mode) : lexer(make_unique<lexer::Lexer>(source, mode)), tokenCachePosition(0), defaultVisibility(ast::Visibility::ReadOnly), hasError(false) {
     initializeLookups();
 }
 

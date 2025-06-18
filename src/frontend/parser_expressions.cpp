@@ -143,11 +143,12 @@ ExpressionPtr Parser::parsePrimaryExpression() {
             }
             ENABLE_CONVERSION_WARNING
 
-            std::optional<number_t> value = utils::stonum(numericPart, base, false, suffix);
+            std::optional<number_t> value = utils::stringToNumber(numericPart, base, false, suffix);
             if (!value) {
                 logging::logUser(
                     std::format("Error: Invalid integer literal '{}'", lexeme),
                     logging::LogLevel::Error, token.getLine(), token.getColumn());
+                hasError = true;
                 return make_unique<ast::NumberExpression>(0);
                 // Error tolerance: return a default value of 0
             }
