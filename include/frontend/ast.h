@@ -135,8 +135,8 @@ class NumberExpression : public Expression {
     explicit NumberExpression(number_t _value) : value(_value) {};
 
     const number_t& getValue() const { return value; }
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 class CharExpression : public Expression {
@@ -152,8 +152,8 @@ class CharExpression : public Expression {
     explicit CharExpression(char _value) : value(static_cast<wchar_t>(_value)) {};
 
     wchar_t getValue() const { return value; }
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 /**
@@ -177,8 +177,8 @@ class StringExpression : public Expression {
     explicit StringExpression(const char* _value) : value(_value) {};
 
     const std::string& getValue() const { return value; }
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 /**
@@ -196,8 +196,8 @@ class SymbolExpression : public Expression {
     explicit SymbolExpression(const std::string& _value) : value(std::move(_value)) {}
 
     const std::string& getValue() const { return value; }
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 //* Complex Expressions
@@ -223,8 +223,8 @@ class BinaryExpression : public Expression {
     const Expression& getLeft() const { return *left; }
     const Expression& getRight() const { return *right; }
     lexer::TokenType getOperator() const { return op; }
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 /**
@@ -247,8 +247,8 @@ class PrefixExpression : public Expression {
     const Expression& getRight() const { return *right; }
     lexer::TokenType getOperator() const { return op; }
 
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 class AssignmentExpression : public Expression {
@@ -269,8 +269,8 @@ class AssignmentExpression : public Expression {
     const Expression& getAssignee() const { return *assignee; }
     const Expression& getValue() const { return *value; }
     lexer::TokenType getOperator() const { return op; }
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 //~ Statements
@@ -290,8 +290,8 @@ class ExpressionStatement : public Statement {
     explicit ExpressionStatement(ExpressionPtr _expression) : expression(std::move(_expression)) {};
 
     const Expression& getExpression() const { return *expression; }
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 /**
@@ -322,8 +322,8 @@ class VariableDeclarationStatement : public Statement {
     const Expression& getValue() const { return *value; }
     // const primitiveType& getType() const { return type; }
 
-    std::string toString() const override { return ""; }
-    void dump(std::ostream& os, int indent = 0) const override {}
+    std::string toString() const override;
+    void dump(std::ostream& os, int indent = 0) const override;
 };
 
 }  // namespace ast

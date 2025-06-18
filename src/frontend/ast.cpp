@@ -8,8 +8,6 @@
 
 namespace Manganese {
 namespace ast {
-
-#if DEBUG  // Thse functions are only used in debug mode
 // Helper function to create indentation
 inline static std::string getIndent(int indent) {
     return std::string(indent * 2, ' ');
@@ -48,7 +46,7 @@ static std::string getNumberTypeName(const number_t& value) {
 std::string NumberExpression::toString() const {
 #if !DEBUG
     return "";
-#endif
+#endif  // DEBUG
     std::ostringstream oss;
 
     std::visit([&oss](auto&& arg) {
@@ -60,6 +58,9 @@ std::string NumberExpression::toString() const {
 }
 
 void NumberExpression::dump(std::ostream& os, int indent) const {
+#if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "NumberExpression [" << getLine()
        << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << getNumberTypeName(value) << "\n";
@@ -77,6 +78,9 @@ std::string CharExpression::toString() const {
 }
 
 void CharExpression::dump(std::ostream& os, int indent) const {
+    #if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "CharExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "value: '" << static_cast<char>(value) << "'\n";
     os << getIndent(indent + 1) << "code point: " << static_cast<int>(value) << "\n";
@@ -91,6 +95,9 @@ std::string StringExpression::toString() const {
 }
 
 void StringExpression::dump(std::ostream& os, int indent) const {
+    #if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "StringExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
     os << getIndent(indent + 1) << "length: " << value.length() << "\n";
@@ -105,6 +112,9 @@ std::string SymbolExpression::toString() const {
 }
 
 void SymbolExpression::dump(std::ostream& os, int indent) const {
+    #if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "SymbolExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << value << "\n";
     os << getIndent(indent) << "}\n";
@@ -122,6 +132,9 @@ std::string BinaryExpression::toString() const {
 }
 
 void BinaryExpression::dump(std::ostream& os, int indent) const {
+    #if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "BinaryExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << getIndent(indent + 1) << "left: \n";
@@ -140,6 +153,9 @@ std::string PrefixExpression::toString() const {
 }
 
 void PrefixExpression::dump(std::ostream& os, int indent) const {
+    #if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "PrefixExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << getIndent(indent + 1) << "operand: \n";
@@ -156,6 +172,9 @@ std::string AssignmentExpression::toString() const {
 }
 
 void AssignmentExpression::dump(std::ostream& os, int indent) const {
+    #if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "AssignmentExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << getIndent(indent + 1) << "assignee: \n";
@@ -173,6 +192,9 @@ std::string ExpressionStatement::toString() const {
 }
 
 void ExpressionStatement::dump(std::ostream& os, int indent) const {
+    #if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "ExpressionStatement [" << getLine() << ":" << getColumn() << "] {\n";
     expression->dump(os, indent + 1);
     os << getIndent(indent) << "}\n";
@@ -187,6 +209,9 @@ std::string VariableDeclarationStatement::toString() const {
 }
 
 void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
+    #if !DEBUG
+    return;
+#endif  // DEBUG
     os << getIndent(indent) << "VariableDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "isConst: " << (isConst ? "true" : "false") << "\n";
@@ -209,8 +234,6 @@ void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
     value->dump(os, indent + 2);
     os << getIndent(indent) << "}\n";
 }
-
-#endif  // DEBUG
 
 }  // namespace ast
 }  // namespace Manganese
