@@ -24,14 +24,18 @@ using lexer::TokenType;
 using lexer::tokenTypeToString;
 
 // Utility function to print tokens in cyan color
-inline void printAllTokens(const std::vector<Token>& tokens) {
+inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = false) {
     if (tokens.empty()) {
         std::cout << "No tokens found." << std::endl;
         return;
     }
     std::cout << "Tokens: " << CYAN;
     for (const auto& token : tokens) {
-        token.log();
+        if (verbose) {
+            token.log();
+        } else {
+            std::cout << token.getLexeme() << " (" << tokenTypeToString(token.getType()) << ") ";
+        }
     }
     std::cout << RESET << std::endl;
 }
@@ -354,8 +358,6 @@ bool testInvalidChar() {
         std::cout << "Expected 3 token, got " << tokens.size() << std::endl;
         return false;
     }
-
-
 
     return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid() &&
            tokens[1].getType() == TokenType::CharLiteral && tokens[1].isInvalid() &&
