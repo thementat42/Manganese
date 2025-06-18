@@ -17,7 +17,7 @@ namespace Manganese {
  * @return true if the value is out of range for the type, false otherwise
  */
 template <typename T>
-inline bool isOutOfRange(const int64_t value) {
+bool isOutOfRange(const int64_t value) {
     return value < std::numeric_limits<T>::min() || value > std::numeric_limits<T>::max();
 }
 
@@ -28,152 +28,135 @@ inline bool isOutOfRange(const int64_t value) {
  * @return true if the value is out of range for the type, false otherwise
  */
 template <typename T>
-inline bool isOutOfRange(const size_t value) {
+bool isOutOfRange(const uint64_t value) {
     return value > std::numeric_limits<T>::max();
 }
 
 namespace utils {
-std::optional<number_t> stonum(const std::string& str, int base, bool isFloat, const std::string& suffix) {
+std::optional<number_t> stringToNumber(const std::string& str, int base, bool isFloat, const std::string& suffix) {
     if (isFloat) {
         if (suffix == "f" || suffix == "F") {
-            try {
-                return stof32(str);
-            } catch (const std::out_of_range& e) {
-                goto f64_conversion;
+            return stof32_(str);
+        } else if (suffix == "") {
+            auto val = stof32_(str);
+            if (val) {
+                return *val;
             }
+            // fallback to f64
         }
-    f64_conversion:
-        return stof64(str);
+        return stof64_(str);
     }
     if (suffix == "u8" || suffix == "U8") {
-        try {
-            return stou8(str, base);
-        } catch (const std::out_of_range& e) {
-            goto ui16_conversion;
-        }
+        return stoui8_(str, base);
     } else if (suffix == "u16" || suffix == "U16") {
-    ui16_conversion:
-        try {
-            return stou16(str, base);
-        } catch (const std::out_of_range& e) {
-            goto ui32_conversion;
-        }
+        return stoui16_(str, base);
     } else if (suffix == "u32" || suffix == "U32") {
-    ui32_conversion:
-        try {
-            return stou32(str, base);
-        } catch (const std::out_of_range& e) {
-            goto ui64_conversion;
-        }
+        return stoui32_(str, base);
     } else if (suffix == "u64" || suffix == "U64") {
-    ui64_conversion:
-        try {
-            return stou64(str, base);
-        } catch (const std::out_of_range& e) {
-            return std::nullopt;  // If all conversions fail, return nullopt
-        }
+        return stoui64_(str, base);
     } else if (suffix == "i8" || suffix == "I8") {
-        try {
-            return stoi8(str, base);
-        } catch (const std::out_of_range& e) {
-            goto i16_conversion;
-        }
+        return stoi8_(str, base);
     } else if (suffix == "i16" || suffix == "I16") {
-    i16_conversion:
-        try {
-            return stoi16(str, base);
-        } catch (const std::out_of_range& e) {
-            goto i32_conversion;
-        }
-    } else if (suffix == "i32" || suffix == "I32" || suffix.empty()) {  // empty suffix defaults to i32
-    i32_conversion:
-        try {
-            return stoi32(str, base);
-        } catch (const std::out_of_range& e) {
-            goto i64_conversion;
-        }
+        return stoi16_(str, base);
+    } else if (suffix == "i32" || suffix == "I32") {
+        return stoi32_(str, base);
     } else if (suffix == "i64" || suffix == "I64") {
-    i64_conversion:
-        try {
-            return stoi64(str, base);
-        } catch (const std::out_of_range& e) {
-            return std::nullopt;  // If all conversions fail, return nullopt
+        return stoi64_(str, base);
+    } else if (suffix == "") {
+        auto i32 = stoi32_(str, base);
+        if (i32) {
+            return *i32;
         }
+        // If i32 fails, try i64
+        auto i64 = stoi64_(str, base);
+        if (i64) {
+            return *i64;
+        }
+        // If i64 fails, try ui64
+        return stoui64_(str, base);
     } else {
-        UNREACHABLE("Invalid numeric suffix: " + suffix);
+        UNREACHABLE("Invalid Number Suffix: " + suffix);
     }
 }
 
-inline int8_t stoi8(const std::string& str, int base) {
+std::optional<int8_t> stoi8_(const std::string& str, int base) {
     int64_t temp = std::stoll(str, nullptr, base);
     if (isOutOfRange<int8_t>(temp)) {
-        throw std::out_of_range("stoi8: value out of range for int8_t");
+        return std::nullopt;
     }
     return static_cast<int8_t>(temp);
 }
-inline int16_t stoi16(const std::string& str, int base) {
+
+std::optional<int16_t> stoi16_(const std::string& str, int base) {
     int64_t temp = std::stoll(str, nullptr, base);
-    if (isOutOfRange<int8_t>(temp)) {
-        throw std::out_of_range("stoi16: value out of range for int16_t");
+    if (isOutOfRange<int16_t>(temp)) {
+        return std::nullopt;
     }
     return static_cast<int16_t>(temp);
 }
-inline int32_t stoi32(const std::string& str, int base) {
+
+std::optional<int32_t> stoi32_(const std::string& str, int base) {
     int64_t temp = std::stoll(str, nullptr, base);
-    if (isOutOfRange<int8_t>(temp)) {
-        throw std::out_of_range("stoi32: value out of range for int32_t");
+    if (isOutOfRange<int32_t>(temp)) {
+        return std::nullopt;
     }
     return static_cast<int32_t>(temp);
 }
-inline int64_t stoi64(const std::string& str, int base) {
+
+std::optional<int64_t> stoi64_(const std::string& str, int base) {
     int64_t temp = std::stoll(str, nullptr, base);
-    if (isOutOfRange<int8_t>(temp)) {
-        throw std::out_of_range("stoi64: value out of range for int64_t");
+    if (isOutOfRange<int64_t>(temp)) {
+        return std::nullopt;
     }
     return static_cast<int64_t>(temp);
 }
-inline uint8_t stou8(const std::string& str, int base) {
-    size_t temp = std::stoull(str, nullptr, base);
-    if (temp > std::numeric_limits<uint8_t>::max()) {
-        throw std::out_of_range("stou8: value out of range for uint8_t");
+
+std::optional<uint8_t> stoui8_(const std::string& str, int base) {
+    uint64_t temp = std::stoull(str, nullptr, base);
+    if (isOutOfRange<uint8_t>(temp)) {
+        return std::nullopt;
     }
     return static_cast<uint8_t>(temp);
 }
-inline uint16_t stou16(const std::string& str, int base) {
-    size_t temp = std::stoull(str, nullptr, base);
-    if (temp > std::numeric_limits<uint16_t>::max()) {
-        throw std::out_of_range("stou16: value out of range for uint16_t");
+
+std::optional<uint16_t> stoui16_(const std::string& str, int base) {
+    uint64_t temp = std::stoull(str, nullptr, base);
+    if (isOutOfRange<uint16_t>(temp)) {
+        return std::nullopt;
     }
     return static_cast<uint16_t>(temp);
 }
-inline uint32_t stou32(const std::string& str, int base) {
-    size_t temp = std::stoull(str, nullptr, base);
-    if (temp > std::numeric_limits<uint32_t>::max()) {
-        throw std::out_of_range("stou32: value out of range for uint32_t");
+
+std::optional<uint32_t> stoui32_(const std::string& str, int base) {
+    uint64_t temp = std::stoull(str, nullptr, base);
+    if (isOutOfRange<uint32_t>(temp)) {
+        return std::nullopt;
     }
     return static_cast<uint32_t>(temp);
 }
-inline uint64_t stou64(const std::string& str, int base) {
-    size_t temp = std::stoull(str, nullptr, base);
-    if (temp > std::numeric_limits<uint64_t>::max()) {
-        throw std::out_of_range("stou64: value out of range for uint64_t");
+
+std::optional<uint64_t> stoui64_(const std::string& str, int base) {
+    uint64_t temp = std::stoull(str, nullptr, base);
+    if (isOutOfRange<uint64_t>(temp)) {
+        return std::nullopt;
     }
     return static_cast<uint64_t>(temp);
 }
-inline float stof32(const std::string& str) {
+
+std::optional<float> stof32_(const std::string& str) {
     try {
         return std::stof(str);
-    } catch (const std::out_of_range& e) {
-        throw std::out_of_range("stof32: value out of range for float");
+    } catch (const std::out_of_range&) {
+        return std::nullopt;
     }
 }
-inline double stof64(const std::string& str) {
+
+std::optional<double> stof64_(const std::string& str) {
     try {
         return std::stod(str);
-    } catch (const std::out_of_range& e) {
-        throw std::out_of_range("stof64: value out of range for double");
+    } catch (const std::out_of_range&) {
+        return std::nullopt;
     }
 }
 }  // namespace utils
-
 }  // namespace Manganese
