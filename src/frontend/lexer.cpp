@@ -423,110 +423,6 @@ void Lexer::tokenizeSymbol() {
 
 //~ Helper Functions
 
-optional<wchar_t> Lexer::resolveHexAndUnicodeCharacters(const str& esc, const bool& isUnicode, size_t& skipLength) {
-    // Length is checked in caller (when passing in substring)
-    auto isNotHex = [](char c) { return !std::isxdigit(static_cast<unsigned char>(c)); };
-    auto x = std::find_if(esc.begin(), esc.begin() + (isUnicode ? 4 : 2), isNotHex);
-    if (x != esc.end()) {
-        logging::logUser(
-            std::format("Error: Invalid {} escape sequence: \\{}{}",
-                        (isUnicode ? "unicode" : "hex"),
-                        (isUnicode ? "u" : "x"),
-                        esc),
-            logging::LogLevel::Error, getLine(), getCol());
-        return NONE;
-    }
-    wchar_t unicodeChar = 0;
-    size_t length = isUnicode ? 4 : 2;
-    unicodeChar = 0;
-    for (size_t i = 0; i < length; ++i) {
-        unicodeChar <<= 4;
-        unicodeChar |= static_cast<wchar_t>(std::stoi(std::string(1, esc[i]), nullptr, 16));
-    }
-    skipLength = length;
-    return unicodeChar;
-}
-
-std::optional<str> Lexer::resolveEscapeCharacters(const str& escapeString) {
-    str processed;
-    processed.reserve(escapeString.length() - 1);
-    size_t i = 0;
-    while (i < escapeString.length()) {
-        if (escapeString[i] != '\\') {
-            processed += escapeString[i];
-            ++i;
-            continue;
-        }
-        ++i;  // skip the backslash
-        if (i >= escapeString.length()) {
-            logging::logUser("Error: incomplete escape sequence at end of string", logging::LogLevel::Error, 0, 0);
-            return NONE;
-        }
-        optional<wchar_t> escapeSequence;
-        if (escapeString[i] == 'u' || escapeString[i] == 'x') {
-            unsigned int length = (escapeString[i] == 'u') ? 4 : 2;
-            if (i + length >= escapeString.length()) {
-                logging::logUser("Error: incomplete escape sequence at end of string", logging::LogLevel::Error, 0, 0);
-                return NONE;
-            }
-            str escDigits = escapeString.substr(i + 1, length);
-            size_t skipLength;
-            escapeSequence = resolveHexAndUnicodeCharacters(escDigits, escapeString[i] == 'u', skipLength);
-            if (!escapeSequence) {
-                return NONE;
-            }
-            i += skipLength + 1;  // skip the escape sequence (u or x) and the digits
-        } else {
-            escapeSequence = getEscapeCharacter(escapeString[i]);
-            ++i;
-        }
-        if (!escapeSequence) {
-            return NONE;
-        }
-        // Convert the escape sequence to a string and add it to the processed string
-        wchar_t wideChar = *escapeSequence;
-#ifndef _WIN32
-        // On unix, wchar_t exceeds the UTF-8 4-byte limit, so we need an additional range check
-        if (wideChar > UTF8_4B_MAX) {
-            logging::logUser(
-                std::format(
-                    "Error: invalid unicode escape sequence: \\u{:X}",
-                    static_cast<unsigned int>(wideChar)),
-                logging::LogLevel::Error, tokenStartLine, tokenStartCol);
-            return NONE;
-        }
-#endif  // _WIN32
-        processed += convertWideCharToUTF8(wideChar);
-    }
-    return processed;
-}
-
-void Lexer::processCharEscapeSequence(const str& charLiteral) {
-    std::optional<str> resolved = resolveEscapeCharacters(charLiteral);
-    if (!resolved) {
-        logging::logUser("Error: Invalid character literal", logging::LogLevel::Error, getLine(), getCol());
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), true);
-        return;
-    }
-    str processed = *resolved;
-    // For escaped characters, we need to check if it represents a single code point
-    // not necessarily the same as the length of the resolved string being 1
-    size_t byteCount = processed.length();
-    bool isValidSingleCodePoint = true;
-    if (byteCount > 1) {
-        unsigned char firstByte = static_cast<unsigned char>(processed[0]);
-        isValidSingleCodePoint = (byteCount == 2 && (firstByte & 0xE0) == 0xC0) ||  // 2-byte UTF-8 character
-                                 (byteCount == 3 && (firstByte & 0xF0) == 0xE0) ||  // 3-byte UTF-8 character
-                                 (byteCount == 4 && (firstByte & 0xF8) == 0xF0);    // 4-byte UTF-8 character
-    }
-    if (!isValidSingleCodePoint) {
-        logging::logUser("Error: Invalid character literal", logging::LogLevel::Error, getLine(), getCol());
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
-        return;
-    }
-    tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
-}
-
 Base Lexer::processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str& numberLiteral) {
     char currentChar = peekChar();
     if (currentChar != '0') {
@@ -563,8 +459,15 @@ Base Lexer::processNumberPrefix(std::function<bool(char)>& isValidBaseChar, str&
 }
 
 bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
+    /*
+        The valid numeric suffixes are:
+        - i8, i16, i32, i64 (signed integers with the corresponding bit width)
+        - u8, u16, u32, u64 (unsigned integers with the corresponding bit width)
+        - f32, f64 (floating-point numbers with the corresponding bit width)
+        NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
+        */
+
     DISABLE_CONVERSION_WARNING
-    // All suffixes are case-insensitive, so use tolower for simplicity
 
     char currentChar = tolower(peekChar());
     auto readDigits = [this]() -> std::string {
@@ -575,15 +478,7 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
         return digits;
     };
 
-    if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {
-        /*
-        The valid numeric suffixes are:
-        - i8, i16, i32, i64 (signed integers with the corresponding bit width)
-        - u8, u16, u32, u64 (unsigned integers with the corresponding bit width)
-        - f32, f64 (floating-point numbers with the corresponding bit width)
-        NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
-        */
-
+    if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {        
         std::string suffix;
         suffix += tolower(consumeChar());
         currentChar = peekChar();
@@ -674,66 +569,6 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
     ENABLE_CONVERSION_WARNING
 
     return true;
-}
-
-//~ Static Helper Functions
-optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
-    switch (escapeChar) {
-        case '\\':
-            return '\\';
-        case '\'':
-            return '\'';
-        case '\"':
-            return '\"';
-        case 'a':
-            return '\a';
-        case 'b':
-            return '\b';
-        case 'f':
-            return '\f';
-        case 'n':
-            return '\n';
-        case 'r':
-            return '\r';
-        case 't':
-            return '\t';
-        case 'v':
-            return '\v';
-        case '0':
-            return '\0';
-        default:
-            logging::logUser(
-                {std::format(
-                    "\\{} is not a valid escape sequence.",
-                    escapeChar),
-                    "If you meant to type a backslash ('\\'), use two backslashes "},
-                logging::LogLevel::Error, 0, 0);
-            return NONE;
-    }
-}
-
-std::string convertWideCharToUTF8(wchar_t wideChar) {
-    std::string result;
-    if (wideChar <= UTF8_1B_MAX) {
-        result += static_cast<char>(wideChar);  // Narrow character
-    } else if (wideChar <= UTF8_2B_MAX) {
-        // 2-byte UTF-8 character
-        result += static_cast<char>(UTF8_2B_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_2B_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
-    } else if (wideChar <= UTF8_3B_MAX) {
-        // 3-byte UTF-8 character
-        result += static_cast<char>(UTF8_3B_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_3B_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
-    } else {  // No need to check the upper limit -- that was done in the escape sequence resolver
-        // 4-byte UTF-8 character (outside the Basic Multilingual Plane)
-        result += static_cast<char>(UTF8_4B_PRE | ((wideChar >> UTF8_3B_SHIFT) & UTF8_4B_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_CONT_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
-    }
-
-    return result;
 }
 
 }  // namespace lexer

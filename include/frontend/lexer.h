@@ -19,27 +19,6 @@ using str = std::string;
 using std::optional;
 constexpr auto NONE = std::nullopt;
 
-// ~ Constants for UTF-8 encoding
-constexpr uint32_t UTF8_1B_MAX = 0x7F;
-constexpr uint32_t UTF8_2B_MAX = 0x7FF;
-constexpr uint32_t UTF8_3B_MAX = 0xFFFF;
-constexpr uint32_t UTF8_4B_MAX = 0x10FFFF;
-
-constexpr uint8_t UTF8_2B_PRE = 0xC0;
-constexpr uint8_t UTF8_3B_PRE = 0xE0;
-constexpr uint8_t UTF8_4B_PRE = 0xF0;
-constexpr uint8_t UTF8_CONT_PRE = 0x80;
-
-constexpr uint8_t UTF8_1B_MASK = 0x7F;
-constexpr uint8_t UTF8_2B_MASK = 0x1F;
-constexpr uint8_t UTF8_3B_MASK = 0x0F;
-constexpr uint8_t UTF8_4B_MASK = 0x07;
-constexpr uint8_t UTF8_CONT_MASK = 0x3F;
-
-constexpr uint8_t UTF8_CONT_SHIFT = 6;
-constexpr uint8_t UTF8_2B_SHIFT = 12;
-constexpr uint8_t UTF8_3B_SHIFT = 18;
-
 enum class Mode {
     String,  // Source code passed in as a string
     File     // Filename passed in
@@ -57,16 +36,19 @@ enum Base {
 /**
  * @brief Map a character to its corresponding escape sequence (e.g. 'n' -> '\n')
  * @param escapeChar The character to map
- * @return An optional wide character representing the escape sequence, or NONE if the character is not a valid escape sequence
+ * @return An optional character representing the escape sequence, or NONE if the character is not a valid escape sequence
  */
-optional<wchar_t> getEscapeCharacter(const char& escapeChar);
+optional<char> getEscapeCharacter(const char escapeChar);
 
 /**
  * @brief Convert a wide character to a UTF-8 encoded string
  * @param wideChar The wide character to convert
  * @return A string containing the UTF-8 encoded representation of the wide character
  */
-std::string convertWideCharToUTF8(wchar_t wideChar);
+std::string wcharToString(wchar_t wideChar);
+
+optional<wchar_t> resolveHexCharacters(const str& escDigits);
+optional<wchar_t> resolveUnicodeCharacters(const str& escDigits);
 
 class Lexer {
    private:  // private variables
