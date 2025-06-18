@@ -15,8 +15,8 @@
 
 namespace Manganese {
 namespace lexer {
-Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column)
-    : type(_type), lexeme(_lexeme), line(_line), column(_column) {
+Token::Token(const TokenType _type, const std::string _lexeme, const size_t _line, const size_t _column, bool _invalid)
+    : type(_type), lexeme(_lexeme), line(_line), column(_column), invalid(_invalid) {
     // Set a specific enum value for operators and keywords based on the lexeme
     if (_type == TokenType::Operator) {
         auto op = operatorFromString(_lexeme);
@@ -54,6 +54,10 @@ std::optional<TokenType> keywordFromString(const std::string& keyword) {
     return std::nullopt;
 }
 
+bool Token::isInvalid() const noexcept {
+    return invalid;
+}
+
 bool Token::isKeyword() const noexcept {
     return type >= TokenType::__KeywordStart && type <= TokenType::__KeywordEnd;
 }
@@ -84,7 +88,7 @@ bool Token::hasUnaryCounterpart() const noexcept {
            type == TokenType::Mul;       // * can be multiplication or dereference operator
 }
 
-TokenType Token::getUnaryCounterpart() const noexcept {
+TokenType Token::getUnaryCounterpart() const noexcept_except_catastrophic {
     switch (type) {
         case TokenType::Plus:
             return TokenType::UnaryPlus;
@@ -146,7 +150,7 @@ void Token::log(const Token& token) noexcept {
 // TODO: have helper functions that go through the map initialize the keyword and operator maps
 // (by flipping the mappings in the master map)
 
-std::string tokenTypeToString(TokenType type) {
+std::string tokenTypeToString(TokenType type) noexcept_except_catastrophic {
     switch (type) {
         // Basic
         case TokenType::Identifier:
@@ -186,8 +190,6 @@ std::string tokenTypeToString(TokenType type) {
         // Misc
         case TokenType::EndOfFile:
             return "End Of File";
-        case TokenType::Invalid:
-            return "Invalid";
 
         // Keywords
         case TokenType::Alias:

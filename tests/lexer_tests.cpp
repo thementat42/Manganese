@@ -31,7 +31,7 @@ inline void printAllTokens(const std::vector<Token>& tokens) {
     }
     std::cout << "Tokens: " << CYAN;
     for (const auto& token : tokens) {
-        std::cout << token.getLexeme() << " ";
+        token.log();
     }
     std::cout << RESET << std::endl;
 }
@@ -355,9 +355,11 @@ bool testInvalidChar() {
         return false;
     }
 
-    return tokens[0].getType() == TokenType::Invalid &&
-           tokens[1].getType() == TokenType::Invalid &&
-           tokens[2].getType() == TokenType::Invalid;
+
+
+    return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid() &&
+           tokens[1].getType() == TokenType::CharLiteral && tokens[1].isInvalid() &&
+           tokens[2].getType() == TokenType::CharLiteral && tokens[2].isInvalid();
 }
 
 bool testInvalidEscapeSequence() {
@@ -368,7 +370,7 @@ bool testInvalidEscapeSequence() {
         return false;
     }
 
-    return tokens[0].getType() == TokenType::Invalid;
+    return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid();
 }
 
 void runLexerTests(TestRunner& runner) {
@@ -391,4 +393,4 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Complete Program", testCompleteProgram);
 }
 }  // namespace tests
-} // namespace Manganese
+}  // namespace Manganese

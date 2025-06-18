@@ -38,18 +38,20 @@ class Token {
     // std::string is for tokens with no enum representation (identifiers, numbers, etc.)
     std::string lexeme;
     size_t line, column;
+    bool invalid;
 
    public:
     Token() = default;
-    Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column);
+    Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column, bool invalid = false);
     ~Token() = default;
 
+    bool isInvalid() const noexcept;
     bool isKeyword() const noexcept;
     bool isOperator() const noexcept;
     bool isLiteral() const noexcept;
     bool isBracket() const noexcept;
     bool hasUnaryCounterpart() const noexcept;
-    TokenType getUnaryCounterpart() const noexcept;
+    TokenType getUnaryCounterpart() const noexcept_except_catastrophic;
 
     TokenType getType() const noexcept;
     std::string getLexeme() const noexcept;
@@ -69,7 +71,7 @@ class Token {
 };
 
 //~ Helpers, not tied to the Token class
-std::string tokenTypeToString(TokenType type);
+std::string tokenTypeToString(TokenType type) noexcept_except_catastrophic;
 extern std::unordered_map<std::string, const TokenType> keywordMap;
 extern std::unordered_map<std::string, const TokenType> operatorMap;
 std::optional<TokenType> keywordFromString(const std::string& keyword);
@@ -108,7 +110,6 @@ enum class TokenType : uint8_t {
 
     //~ Misc
     EndOfFile,
-    Invalid,
 
     //~ Keywords
     __KeywordStart,  // Marker for the start of keyword token types -- not to be used as an actual token type
@@ -245,6 +246,7 @@ enum class TokenType : uint8_t {
     Ellipsis,       // `...`
     At,             // `@`
     __OperatorEnd,  // Marker for the end of operator token types -- not to be used as an actual token type
+    Unknown,        // For truly catastrophic failures (e.g, unrecognized character)
 
 };
 

@@ -141,7 +141,7 @@ void Lexer::tokenizeCharLiteral() {
     while (true) {
         if (done()) {
             logging::logUser("Unclosed character literal", logging::LogLevel::Error, getLine(), getCol());
-            tokenStream.emplace_back(TokenType::Invalid, "INVALID", tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
             return;
         }
         if (peekChar() == '\'') {
@@ -150,7 +150,7 @@ void Lexer::tokenizeCharLiteral() {
         if (peekChar() == '\n') {
             logging::logUser("Unclosed character literal", logging::LogLevel::Error, getLine(), getCol());
 
-            tokenStream.emplace_back(TokenType::Invalid, "INVALID", tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
             return;
         }
         if (peekChar() == '\\') {
@@ -165,7 +165,7 @@ void Lexer::tokenizeCharLiteral() {
         return;
     } else if (charLiteral.length() > 1) {
         logging::logUser("Character literal exceeds 1 character limit", logging::LogLevel::Error, getLine(), getCol());
-        tokenStream.emplace_back(TokenType::Invalid, charLiteral, tokenStartLine, tokenStartCol);
+        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
         return;
     }
     tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
@@ -180,7 +180,7 @@ void Lexer::tokenizeStringLiteral() {
     while (true) {
         if (done()) {
             logging::logUser("Unclosed string literal", logging::LogLevel::Error, getLine(), getCol());
-            tokenStream.emplace_back(TokenType::Invalid, "INVALID", tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
             return;
         }
         if (peekChar() == '"') {
@@ -202,7 +202,7 @@ void Lexer::tokenizeStringLiteral() {
                  "add a backslash ('\\') at the end of the line"},
                 logging::LogLevel::Error, getLine(), getCol());
 
-            tokenStream.emplace_back(TokenType::Invalid, stringLiteral, tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
             return;
         }
         stringLiteral += consumeChar();  // Add the character to the string
@@ -212,7 +212,7 @@ void Lexer::tokenizeStringLiteral() {
     if (containsEscapeSequence) {
         auto result = resolveEscapeCharacters(stringLiteral);
         if (!result) {
-            tokenStream.emplace_back(TokenType::Invalid, "INVALID", tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
             return;
         }
         stringLiteral = std::move(result.value());
@@ -252,7 +252,7 @@ void Lexer::tokenizeNumber() {
                 logging::logUser("Invalid number literal: multiple decimal points",
                                  logging::LogLevel::Error,
                                  getLine(), getCol());
-                tokenStream.emplace_back(TokenType::Invalid, numberLiteral, tokenStartLine, tokenStartCol);
+                tokenStream.emplace_back(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
                 return;
             }
             // Reject floating point for octal and binary numbers
@@ -261,7 +261,7 @@ void Lexer::tokenizeNumber() {
                     std::format("Invalid number literal: floating point not allowed for {} numbers",
                                 (base == Base::Octal ? "octal" : "binary")),
                     logging::LogLevel::Error, getLine(), getCol());
-                tokenStream.emplace_back(TokenType::Invalid, numberLiteral, tokenStartLine, tokenStartCol);
+                tokenStream.emplace_back(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
                 return;
             }
             isFloat = true;
@@ -409,12 +409,12 @@ void Lexer::tokenizeSymbol() {
             // Multiline comments handled in the main loop
             break;
         default:
-            type = TokenType::Invalid;
+            type = TokenType::Unknown;
             logging::logUser(
                 std::format("Invalid character: '{}'", current),
                 logging::LogLevel::Error,
                 getLine(), getCol());
-            tokenStream.emplace_back(TokenType::Invalid, lexeme, tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol, true);
             break;
     }
     advance(lexeme.length());
@@ -505,7 +505,7 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
     std::optional<str> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
         logging::logUser("Error: Invalid character literal", logging::LogLevel::Error, getLine(), getCol());
-        tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
+        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), true);
         return;
     }
     str processed = *resolved;
@@ -521,7 +521,7 @@ void Lexer::processCharEscapeSequence(const str& charLiteral) {
     }
     if (!isValidSingleCodePoint) {
         logging::logUser("Error: Invalid character literal", logging::LogLevel::Error, getLine(), getCol());
-        tokenStream.emplace_back(TokenType::Invalid, "INVALID CHARACTER LITERAL", getLine(), getCol());
+        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
         return;
     }
     tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
@@ -703,10 +703,10 @@ optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
             return '\0';
         default:
             logging::logUser(
-                std::format(
-                    "\\{} is not a valid escape sequence.\
-                    If you meant to type a backslash ('\\'), use two backslashes ('\\\\{}')",
-                    escapeChar, escapeChar),
+                {std::format(
+                    "\\{} is not a valid escape sequence.",
+                    escapeChar),
+                    "If you meant to type a backslash ('\\'), use two backslashes "},
                 logging::LogLevel::Error, 0, 0);
             return NONE;
     }
