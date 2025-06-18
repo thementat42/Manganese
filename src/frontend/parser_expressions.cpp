@@ -11,6 +11,9 @@
 #include <utils/stox.h>
 
 #include <format>
+#include <utility>
+#include <string>
+#include <memory>
 
 namespace Manganese {
 
@@ -23,7 +26,8 @@ constexpr uint8_t HEXADECIMAL = 16;
 ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
     Token token = currentToken();
 
-    // Handle operators which have a unary and a binary version (e.g. `-` can be a unary negation or a binary subtraction)
+    // Handle operators which have a unary and a binary version
+    // (e.g. `-` can be a unary negation or a binary subtraction)
     if (isUnaryContext() && token.hasUnaryCounterpart()) {
         token.overrideType(token.getUnaryCounterpart());
         bindingPower = OperatorBindingPower::Unary;
@@ -178,5 +182,4 @@ int determineNumberBase(const str& lexeme) {
 }
 
 }  // namespace parser
-
 }  // namespace Manganese

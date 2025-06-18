@@ -7,6 +7,8 @@
 #include <global_macros.h>
 
 #include <format>
+#include <memory>
+#include <utility>
 
 namespace Manganese {
 namespace parser {
@@ -41,5 +43,4 @@ StatementPtr Parser::parseVariableDeclarationStatement() {
 }
 
 }  // namespace parser
-
 }  // namespace Manganese

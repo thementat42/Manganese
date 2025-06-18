@@ -14,10 +14,14 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <algorithm>
 
 namespace Manganese {
 namespace io {
-FileReader::FileReader(const std::string& filename, size_t _bufferCapacity) : position(0), line(1), column(1), bufferCapacity(_bufferCapacity) {
+FileReader::FileReader(const std::string& filename, size_t _bufferCapacity): position(0),
+                                                                              line(1),
+                                                                              column(1),
+                                                                              bufferCapacity(_bufferCapacity) {
     fileStream.open(filename, std::ios::in);
     if (!fileStream.is_open()) {
         logging::logUser(std::format("Error: Could not open file {}", filename), logging::LogLevel::Error);

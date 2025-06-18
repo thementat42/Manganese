@@ -6,12 +6,12 @@
 #include <iostream>
 #if __cplusplus >= 202302L
 #include <utility>
-#define COMPILER_UNREACHABLE std::unreachable()  // compiler agnostic, but still allows for optimisation
+#define COMPILER_UNREACHABLE std::unreachable();  // compiler agnostic, but still allows for optimisation
 // If < C++23, use a compiler-specific implementation
 #elif defined(__GNUC__) || defined(__clang__)
-#define COMPILER_UNREACHABLE __builtin_unreachable()
+#define COMPILER_UNREACHABLE __builtin_unreachable();
 #elif defined(_MSC_VER)
-#define COMPILER_UNREACHABLE __assume(false)
+#define COMPILER_UNREACHABLE __assume(false);
 #else
 #define COMPILER_UNREACHABLE
 #endif  // __cplusplus >= 202302L

@@ -5,14 +5,12 @@
  * The lexer takes the source code and splits it into tokens (see token.h)
  * These tokens are then passed on to the parser to build the AST.
  *
- * @note: all angle brackets are tokenized as angle brackets, even if they are actually comparison or bitwise shift operators.
- * This is because determining which operator it is would require looking ahead in the source code, which is not possible in a single-pass lexer.
- * The parser will handle this ambiguity and determine the correct operator.
  *
- * @note: The lexer strips out comments and whitespace -- the parser never sees this
+ * @note: The lexer strips out comments and whitespace; the parser never sees this
  *
- * @note: The main loop does not advance the reader position, it just peeks the current character. Each specific tokenization function should advance the reader position once its token has been generated.
- *  E.g. the string tokenizing function will advance the reader past the quotes, the operator tokenizing function will advance the reader past the operator, etc.
+ * @note: The main loop does not advance the reader position, it just peeks the current character.
+ * Each specific tokenization function should advance the reader position once its token has been generated.
+ * E.g. the string tokenizing function will advance the reader past the quotes
  */
 
 #include <frontend/lexer.h>
@@ -27,6 +25,9 @@
 #include <format>
 #include <functional>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace Manganese {
 
@@ -195,7 +196,11 @@ void Lexer::tokenizeStringLiteral() {
             stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
         } else if (peekChar() == '\n') {
-            logging::logUser("String literal cannot span multiple lines. If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line", logging::LogLevel::Error, getLine(), getCol());
+            logging::logUser(
+                {"String literal cannot span multiple lines.",
+                 "If you wanted a string literal that spans lines,\
+                add a backslash ('\\') at the end of the line"},
+                logging::LogLevel::Error, getLine(), getCol());
 
             tokenStream.emplace_back(TokenType::Invalid, stringLiteral, tokenStartLine, tokenStartCol);
             return;
@@ -244,7 +249,9 @@ void Lexer::tokenizeNumber() {
         } else if (currentChar == '.') {
             if (isFloat) {
                 // Invalid number -- two decimal points
-                logging::logUser("Invalid number literal: multiple decimal points", logging::LogLevel::Error, getLine(), getCol());
+                logging::logUser("Invalid number literal: multiple decimal points",
+                                 logging::LogLevel::Error,
+                                 getLine(), getCol());
                 tokenStream.emplace_back(TokenType::Invalid, numberLiteral, tokenStartLine, tokenStartCol);
                 return;
             }
@@ -403,7 +410,10 @@ void Lexer::tokenizeSymbol() {
             break;
         default:
             type = TokenType::Invalid;
-            logging::logUser(std::format("Invalid character: '{}'", current), logging::LogLevel::Error, getLine(), getCol());
+            logging::logUser(
+                std::format("Invalid character: '{}'", current),
+                logging::LogLevel::Error,
+                getLine(), getCol());
             tokenStream.emplace_back(TokenType::Invalid, lexeme, tokenStartLine, tokenStartCol);
             break;
     }
@@ -583,7 +593,11 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
         if (suffix[0] == 'i' || suffix[0] == 'u') {
             // Integer types: i8, i16, i32, i64, u8, u16, u32, u64
             if (numPart != "8" && numPart != "16" && numPart != "32" && numPart != "64") {
-                logging::logUser("Invalid integer suffix: must be 8, 16, 32, or 64", logging::LogLevel::Error, getLine(), getCol());
+                logging::logUser(
+                    "Invalid integer suffix: must be 8, 16, 32, or 64",
+                    logging::LogLevel::Error,
+                    getLine(),
+                    getCol());
                 return false;
             }
         } else if (numPart != "32" && numPart != "64") {
@@ -596,11 +610,17 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
 
         // Type validation - float suffix only for float literals and vice versa
         if (suffix[0] == 'f' && !isFloat) {
-            logging::logUser("Float suffix can only be used with floating-point literals", logging::LogLevel::Error, getLine(), getCol());
+            logging::logUser(
+                "Float suffix can only be used with floating-point literals",
+                logging::LogLevel::Error,
+                getLine(), getCol());
             return false;
         }
         if ((suffix[0] == 'i' || suffix[0] == 'u') && isFloat) {
-            logging::logUser("Integer suffix cannot be used with floating-point literals", logging::LogLevel::Error, getLine(), getCol());
+            logging::logUser("Integer suffix cannot be used with floating-point literals",
+                             logging::LogLevel::Error,
+                             getLine(),
+                             getCol());
             return false;
         }
     }
@@ -615,7 +635,11 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
             currentChar = peekChar();
         }
         if (!isdigit(currentChar)) {
-            logging::logUser("Invalid scientific notation: exponent must be a number", logging::LogLevel::Error, getLine(), getCol());
+            logging::logUser(
+                "Invalid scientific notation: exponent must be a number",
+                logging::LogLevel::Error,
+                getLine(),
+                getCol());
             return false;
         }
         numberLiteral += readDigits();
@@ -623,7 +647,11 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
         // Hexadecimal floats must have a 'p' or 'P' exponent if they are floats
         if (isFloat) {
             if (currentChar != 'p') {
-                logging::logUser("Invalid hexadecimal float: must have 'p' or 'P' exponent", logging::LogLevel::Error, getLine(), getCol());
+                logging::logUser(
+                    "Invalid hexadecimal float: must have 'p' or 'P' exponent",
+                    logging::LogLevel::Error,
+                    getLine(),
+                    getCol());
                 return false;
             }
             // Hexadecimal exponentiation (e.g., 0x1.23p4)
@@ -634,7 +662,10 @@ bool Lexer::processNumberSuffix(Base base, str& numberLiteral, bool isFloat) {
                 currentChar = peekChar();
             }
             if (!isdigit(currentChar)) {
-                logging::logUser("Invalid hexadecimal float: exponent must be a decimal number", logging::LogLevel::Error, getLine(), getCol());
+                logging::logUser("Invalid hexadecimal float: exponent must be a decimal number",
+                                 logging::LogLevel::Error,
+                                 getLine(),
+                                 getCol());
                 return false;
             }
             numberLiteral += readDigits();  // Add the exponent digits
@@ -673,7 +704,8 @@ optional<wchar_t> getEscapeCharacter(const char& escapeChar) {
         default:
             logging::logUser(
                 std::format(
-                    "\\{} is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ('\\\\{}')",
+                    "\\{} is not a valid escape sequence.\
+                    If you meant to type a backslash ('\\'), use two backslashes ('\\\\{}')",
                     escapeChar, escapeChar),
                 logging::LogLevel::Error, 0, 0);
             return NONE;
@@ -693,9 +725,7 @@ std::string convertWideCharToUTF8(wchar_t wideChar) {
         result += static_cast<char>(UTF8_3B_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_3B_MASK));
         result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
         result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
-    }
-
-    else {  // No need to check the upper limit -- that was done in the escape sequence resolver
+    } else {  // No need to check the upper limit -- that was done in the escape sequence resolver
         // 4-byte UTF-8 character (outside the Basic Multilingual Plane)
         result += static_cast<char>(UTF8_4B_PRE | ((wideChar >> UTF8_3B_SHIFT) & UTF8_4B_MASK));
         result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_CONT_MASK));

@@ -6,6 +6,7 @@
 #include <limits>
 #include <optional>
 #include <stdexcept>
+#include <string>
 
 namespace Manganese {
 
@@ -16,7 +17,7 @@ namespace Manganese {
  * @return true if the value is out of range for the type, false otherwise
  */
 template <typename T>
-inline bool isOutOfRange(const long long int value) {
+inline bool isOutOfRange(const int64_t value) {
     return value < std::numeric_limits<T>::min() || value > std::numeric_limits<T>::max();
 }
 
@@ -104,28 +105,28 @@ std::optional<number_t> stonum(const std::string& str, int base, bool isFloat, c
 }
 
 inline int8_t stoi8(const std::string& str, int base) {
-    long long int temp = std::stoll(str, nullptr, base);
+    int64_t temp = std::stoll(str, nullptr, base);
     if (isOutOfRange<int8_t>(temp)) {
         throw std::out_of_range("stoi8: value out of range for int8_t");
     }
     return static_cast<int8_t>(temp);
 }
 inline int16_t stoi16(const std::string& str, int base) {
-    long long int temp = std::stoll(str, nullptr, base);
+    int64_t temp = std::stoll(str, nullptr, base);
     if (isOutOfRange<int8_t>(temp)) {
         throw std::out_of_range("stoi16: value out of range for int16_t");
     }
     return static_cast<int16_t>(temp);
 }
 inline int32_t stoi32(const std::string& str, int base) {
-    long long int temp = std::stoll(str, nullptr, base);
+    int64_t temp = std::stoll(str, nullptr, base);
     if (isOutOfRange<int8_t>(temp)) {
         throw std::out_of_range("stoi32: value out of range for int32_t");
     }
     return static_cast<int32_t>(temp);
 }
 inline int64_t stoi64(const std::string& str, int base) {
-    long long int temp = std::stoll(str, nullptr, base);
+    int64_t temp = std::stoll(str, nullptr, base);
     if (isOutOfRange<int8_t>(temp)) {
         throw std::out_of_range("stoi64: value out of range for int64_t");
     }
@@ -175,4 +176,4 @@ inline double stof64(const std::string& str) {
 }
 }  // namespace utils
 
-} // namespace Manganese
+}  // namespace Manganese

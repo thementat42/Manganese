@@ -3,6 +3,7 @@
 #include <io/logging.h>
 
 #include <format>
+#include <memory>
 
 namespace Manganese {
 namespace parser {

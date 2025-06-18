@@ -10,6 +10,8 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <utility>
 
 namespace Manganese {
 namespace lexer {
@@ -141,7 +143,8 @@ void Token::log(const Token& token) noexcept {
 // ! === Really Long Stuff ===
 
 // TODO: Make one master map of token types to strings.
-// TODO: have helper functions that go through the map initialize the keyword and operator maps (by flipping the mappings in the master map)
+// TODO: have helper functions that go through the map initialize the keyword and operator maps
+// (by flipping the mappings in the master map)
 
 std::string tokenTypeToString(TokenType type) {
     switch (type) {
@@ -367,7 +370,8 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::At:
             return "@";
         default:
-            UNREACHABLE("No string representation for TokenType: " + std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
+            UNREACHABLE("No string representation for TokenType: " +
+                        std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
     }
 }
 

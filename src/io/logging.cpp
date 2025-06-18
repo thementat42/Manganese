@@ -1,5 +1,8 @@
 #include <io/logging.h>
 
+#include <iostream>
+#include <string>
+
 namespace Manganese {
 namespace logging {
 void logInternal(const std::string& message, LogLevel level) {

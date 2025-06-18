@@ -48,7 +48,6 @@ static std::string getNumberTypeName(const number_t& value) {
 std::string NumberExpression::toString() const {
 #if !DEBUG
     return "";
-    ;
 #endif
     std::ostringstream oss;
 
@@ -61,7 +60,8 @@ std::string NumberExpression::toString() const {
 }
 
 void NumberExpression::dump(std::ostream& os, int indent) const {
-    os << getIndent(indent) << "NumberExpression [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent) << "NumberExpression [" << getLine()
+       << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << getNumberTypeName(value) << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
     os << getIndent(indent) << "}\n";

@@ -9,6 +9,8 @@
 #include <global_macros.h>
 #include <io/stringreader.h>
 
+#include <string>
+
 namespace Manganese {
 namespace io {
 
