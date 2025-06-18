@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <optional>
 #include <stdexcept>
-#include <string>
+#include <string_view>
 #include <variant>
 
 namespace Manganese {
@@ -33,16 +33,16 @@ using number_t = std::variant<
 
 namespace utils {
 
-std::optional<int8_t> stoi8_(const std::string& str, int base = 10);
-std::optional<int16_t> stoi16_(const std::string& str, int base = 10);
-std::optional<int32_t> stoi32_(const std::string& str, int base = 10);
-std::optional<int64_t> stoi64_(const std::string& str, int base = 10);
-std::optional<uint8_t> stoui8_(const std::string& str, int base = 10);
-std::optional<uint16_t> stoui16_(const std::string& str, int base = 10);
-std::optional<uint32_t> stoui32_(const std::string& str, int base = 10);
-std::optional<uint64_t> stoui64_(const std::string& str, int base = 10);
-std::optional<float> stof32_(const std::string& str);
-std::optional<double> stof64_(const std::string& str);
+std::optional<int8_t> stoi8(std::string_view str, int base = 10);
+std::optional<int16_t> stoi16(std::string_view str, int base = 10);
+std::optional<int32_t> stoi32(std::string_view str, int base = 10);
+std::optional<int64_t> stoi64(std::string_view str, int base = 10);
+std::optional<uint8_t> stoui8(std::string_view str, int base = 10);
+std::optional<uint16_t> stoui16(std::string_view str, int base = 10);
+std::optional<uint32_t> stoui32(std::string_view str, int base = 10);
+std::optional<uint64_t> stoui64(std::string_view str, int base = 10);
+std::optional<float> stof32(std::string_view str);
+std::optional<double> stof64(std::string_view str);
 
 
 /**
@@ -53,7 +53,7 @@ std::optional<double> stof64_(const std::string& str);
  * @param suffix Whether a type suffix was specified (see the lexer for the acceptable type suffixes)
  * @return The string as a number, or nullopt_t if it failed
  */
-std::optional<number_t> stringToNumber(const std::string& str, int base = 10, bool isFloat = false, const std::string& suffix = "") noexcept_except_catastrophic;
+std::optional<number_t> stringToNumber(std::string_view str, int base = 10, bool isFloat = false, const std::string& suffix = "") noexcept_except_catastrophic;
 
 }  // namespace utils
 
