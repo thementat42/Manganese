@@ -53,7 +53,7 @@ std::optional<double> stof64_(const std::string& str);
  * @param suffix Whether a type suffix was specified (see the lexer for the acceptable type suffixes)
  * @return The string as a number, or nullopt_t if it failed
  */
-std::optional<number_t> stringToNumber(const std::string& str, int base = 10, bool isFloat = false, const std::string& suffix = "");
+std::optional<number_t> stringToNumber(const std::string& str, int base = 10, bool isFloat = false, const std::string& suffix = "") noexcept_except_catastrophic;
 
 }  // namespace utils
 

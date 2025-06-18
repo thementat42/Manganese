@@ -23,7 +23,7 @@ constexpr uint8_t OCTAL = 8;
 constexpr uint8_t DECIMAL = 10;
 constexpr uint8_t HEXADECIMAL = 16;
 
-ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) {
+ExpressionPtr Parser::parseExpression(OperatorBindingPower bindingPower) noexcept_except_catastrophic {
     Token token = currentToken();
 
     // Handle operators which have a unary and a binary version
@@ -106,7 +106,7 @@ ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, OperatorBindingP
         std::move(left), op, std::move(right));
 }
 
-ExpressionPtr Parser::parsePrimaryExpression() {
+ExpressionPtr Parser::parsePrimaryExpression() noexcept_except_catastrophic {
     using lexer::TokenType;
     using std::stof, std::stod;
     using std::stoi, std::stol, std::stoll, std::stoul, std::stoull;

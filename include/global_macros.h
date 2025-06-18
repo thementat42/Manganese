@@ -17,6 +17,19 @@
 #define DEBUG 0  // Default to release mode if not defined
 #endif           // DEBUG
 
+
+/**
+ * This function is intended to be noexcept,
+ * except for a default case that should logically never happen
+ * If that case happens, something has gone horribly wrong, and the function will throw an exception
+ * 
+ * This serves as a two way check -- functions marked with this should have a fallback case that throws -- if it doesn't add one
+ * If a function has a fallback throw case but not this macro, add it
+ * 
+ * NOTE: This should only be used on functions that throw on catastrophic failures (e.g. use the UNREACHABLE macro from the logging library). It should not be used on functions that just never throw (those should be marked noexcept)
+ */
+#define noexcept_except_catastrophic
+
 #define DISCARD(x) (void)(x)  // Explicitly discard a value
 
 #define DISABLE_COPY_AND_ASSIGN(ClassName) \

@@ -33,7 +33,7 @@ bool isOutOfRange(const uint64_t value) {
 }
 
 namespace utils {
-std::optional<number_t> stringToNumber(const std::string& str, int base, bool isFloat, const std::string& suffix) {
+std::optional<number_t> stringToNumber(const std::string& str, int base, bool isFloat, const std::string& suffix) noexcept_except_catastrophic {
     if (isFloat) {
         if (suffix == "f" || suffix == "F") {
             return stof32_(str);

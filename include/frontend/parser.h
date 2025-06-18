@@ -49,9 +49,9 @@ class Parser {
     //~ Parsing functions
 
     //* Expression Parsing
-    ExpressionPtr parseExpression(OperatorBindingPower bindingPower);
+    ExpressionPtr parseExpression(OperatorBindingPower bindingPower) noexcept_except_catastrophic;
     bool isUnaryContext() const;
-    ExpressionPtr parsePrimaryExpression();
+    ExpressionPtr parsePrimaryExpression() noexcept_except_catastrophic;
 
     ExpressionPtr parseBinaryExpression(ExpressionPtr left, OperatorBindingPower bindingPower);
     ExpressionPtr parseExponentiationExpression(ExpressionPtr left, OperatorBindingPower bindingPower);

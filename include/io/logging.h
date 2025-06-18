@@ -17,7 +17,6 @@
 #define COMPILER_UNREACHABLE
 #endif  // __cplusplus >= 202302L
 
-#ifndef __PRINT_LOCATION
 #define __PRINT_LOCATION \
     std::cerr << "\033[33m In file:" << __FILE__ << ", at" << __LINE__ << ": when running " << __func__ << "\033[0m\n";
 
@@ -32,7 +31,7 @@
     } while (0);
 
 #define UNREACHABLE(message) __UNREACHABLE(message)  // Condition that should never be reached
-#endif                                               // __PRINT_LOCATION
+
 
 // ANSI color codes for terminal output
 constexpr const char* GREEN = "\033[32m";
