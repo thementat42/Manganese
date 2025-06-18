@@ -198,8 +198,8 @@ void Lexer::tokenizeStringLiteral() {
         } else if (peekChar() == '\n') {
             logging::logUser(
                 {"String literal cannot span multiple lines.",
-                 "If you wanted a string literal that spans lines,\
-                add a backslash ('\\') at the end of the line"},
+                 "If you wanted a string literal that spans lines,",
+                 "add a backslash ('\\') at the end of the line"},
                 logging::LogLevel::Error, getLine(), getCol());
 
             tokenStream.emplace_back(TokenType::Invalid, stringLiteral, tokenStartLine, tokenStartCol);
