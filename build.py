@@ -267,5 +267,8 @@ if args.clean:
 
 if args.run:
     # If we chose not to move the file, it should be executed from the build/bin directory
-    EXECUTE_PATH = str(bin_dir / OUT_NAME if args.no_move else Path.cwd() / OUT_NAME)
-    run_command([EXECUTE_PATH] + args.exec_with)
+    EXECUTE_PATH = str((bin_dir if args.no_move else Path.cwd()) / OUT_NAME)
+    cmd = [EXECUTE_PATH]
+    if args.exec_with:
+        cmd.extend(args.exec_with)
+    run_command(cmd)
