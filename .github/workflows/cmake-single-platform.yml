@@ -30,7 +30,3 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: python build.py -t -d -r --exec-with --all
-
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
-
