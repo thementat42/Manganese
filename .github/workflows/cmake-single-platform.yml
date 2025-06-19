@@ -19,6 +19,7 @@ jobs:
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
 
     #TODO: Make this a matrix build
+    # Add windows, and an ubuntu build with clang
     runs-on: ubuntu-latest
 
     steps:
