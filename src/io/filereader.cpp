@@ -26,8 +26,8 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_)
         throw std::runtime_error("Could not open file: " + filename);
     }
     buffer = std::make_unique<char[]>(bufferCapacity_ + 1);                               // +1 for null terminator
-    fileStream.read(buffer.get(), static_cast<std::streamsize>(bufferCapacity_));         // Read the first chunk of data into the buffer
-    bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));  // Ensure non-negative before casting
+    fileStream.read(buffer.get(), static_cast<std::streamsize>(bufferCapacity_));
+    bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));
 
     if (bufferSize == 0) {
         logging::log(

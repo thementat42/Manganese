@@ -10,7 +10,11 @@ namespace ast {
 
 VariableDeclarationStatement::VariableDeclarationStatement(
     bool isConst_, std::string name_, Visibility visibility_, ExpressionPtr _value, TypePtr _type)
-    : isConst(isConst_), name(std::move(name_)), visibility(visibility_), value(std::move(_value)), type(std::move(_type)) {
+    : isConst(isConst_),
+      name(std::move(name_)),
+      visibility(visibility_),
+      value(std::move(_value)),
+      type(std::move(_type)) {
     if (type == nullptr && value) {
         type = value->getType();
     }

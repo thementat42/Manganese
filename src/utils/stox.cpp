@@ -15,7 +15,8 @@
 namespace Manganese {
 
 namespace utils {
-std::optional<number_t> stringToNumber(std::string_view str, int base, bool isFloat, const std::string& suffix) noexcept_except_catastrophic {
+std::optional<number_t> stringToNumber(std::string_view str, int base,
+                                       bool isFloat, const std::string& suffix) noexcept_except_catastrophic {
     if (isFloat) {
         if (suffix == "f" || suffix == "F") {
             return stof32(str);
@@ -28,7 +29,8 @@ std::optional<number_t> stringToNumber(std::string_view str, int base, bool isFl
         }
         return stof64(str);
     }
-    static const std::unordered_map<std::string, std::function<std::optional<number_t>(std::string_view, int)>> suffixMap = {
+    using suffixMap_t = std::unordered_map<std::string, std::function<std::optional<number_t>(std::string_view, int)>>;
+    static const suffixMap_t suffixMap = {
         {"u8", stoui8},
         {"U8", stoui8},
         {"u16", stoui16},

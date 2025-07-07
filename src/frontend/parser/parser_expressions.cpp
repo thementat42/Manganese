@@ -207,7 +207,8 @@ ExpressionPtr Parser::parsePrimaryExpression() noexcept_except_catastrophic {
             return make_unique<ast::NumberLiteralExpression>(*value);
         }
         default:
-            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + lexer::tokenTypeToString(token.getType()));
+            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + 
+                lexer::tokenTypeToString(token.getType()));
     }
 }
 

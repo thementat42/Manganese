@@ -147,7 +147,8 @@ size_t Token::getColumn() const noexcept {
 void Token::overrideType(TokenType type_, std::string lexeme_) {
 #if DEBUG
     logging::logInternal(
-        std::format("Overriding token type from {} to {} with lexeme '{}'", tokenTypeToString(type), tokenTypeToString(type_), lexeme_));
+        std::format("Overriding token type from {} to {} with lexeme '{}'", 
+            tokenTypeToString(type), tokenTypeToString(type_), lexeme_));
 #endif  // DEBUG
     type = type_;
     if (lexeme != "") {
