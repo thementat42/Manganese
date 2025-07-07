@@ -124,118 +124,7 @@ ExpressionPtr Parser::parseExpression(Precedence precedence) noexcept_except_cat
     return left;
 }
 
-ExpressionPtr Parser::parseAssignmentExpression(ExpressionPtr left, Precedence precedence) {
-    TokenType op = advance().getType();
-    ExpressionPtr right = parseExpression(precedence);
-
-    return std::make_unique<ast::AssignmentExpression>(std::move(left), op, std::move(right));
-}
-
-ExpressionPtr Parser::parseTypeCastExpression(ExpressionPtr left, Precedence precedence) {
-    DISCARD(advance());  // Consume the 'as' token
-    TypePtr type = parseType(precedence);
-    return std::make_unique<ast::TypeCastExpression>(std::move(left), std::move(type));
-}
-
-ExpressionPtr Parser::parseParenthesizedExpression() {
-    DISCARD(advance());  // Consume the left parenthesis
-    ExpressionPtr expr = parseExpression(Precedence::Default);
-    expectToken(lexer::TokenType::RightParen, "Expected a right parenthesis to close the expression");
-    return expr;
-}
-
-ExpressionPtr Parser::parsePrefixExpression() {
-    TokenType op = advance().getType();
-    auto right = parseExpression(Precedence::Unary);
-
-    return std::make_unique<ast::PrefixExpression>(op, std::move(right));
-}
-
-ExpressionPtr Parser::parsePostfixExpression(ExpressionPtr left, Precedence precedence) {
-    TokenType op = advance().getType();
-    DISCARD(precedence);  // Avoid unused variable warning
-    return std::make_unique<ast::PostfixExpression>(std::move(left), op);
-}
-
-ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, Precedence precedence) {
-    auto op = advance().getType();
-    auto right = parseExpression(precedence);
-
-    return std::make_unique<ast::BinaryExpression>(
-        std::move(left), op, std::move(right));
-}
-
-ExpressionPtr Parser::parsePrimaryExpression() noexcept_except_catastrophic {
-    using lexer::TokenType;
-    using std::stof, std::stod;
-    using std::stoi, std::stol, std::stoll, std::stoul, std::stoull;
-    using std::tolower;
-    auto token = advance();
-    std::string lexeme = token.getLexeme();
-
-    switch (token.getType()) {
-        case TokenType::CharLiteral:
-            return make_unique<ast::CharLiteralExpression>(lexeme[0]);  // Single character
-        case TokenType::StrLiteral:
-            return make_unique<ast::StringLiteralExpression>(lexeme);
-        case TokenType::Identifier:
-            return make_unique<ast::IdentifierExpression>(lexeme);
-        case TokenType::True:
-            return make_unique<ast::BoolLiteralExpression>(true);
-        case TokenType::False:
-            return make_unique<ast::BoolLiteralExpression>(false);
-        case TokenType::FloatLiteral:
-            // Check for floating-point suffixes
-            return make_unique<ast::NumberLiteralExpression>(
-                lexeme.ends_with("f32") ? stof(lexeme) : stod(lexeme));
-        case TokenType::IntegerLiteral: {
-            // Extract integer suffix
-            int base = determineNumberBase(lexeme);
-            if (base != 10) {
-                // Strip the base prefix (the first two characters: 0x, 0b, 0o) from the lexeme
-                lexeme.erase(0, 2);
-            }
-            std::string numericPart = lexeme;
-            std::string suffix;
-            extractSuffix(numericPart, suffix);
-
-            std::optional<number_t> value = utils::stringToNumber(numericPart, base, false, suffix);
-            if (!value) {
-                logError(
-                    std::format("Invalid integer literal '{}'", lexeme),
-                    token.getLine(), token.getColumn());
-                return make_unique<ast::NumberLiteralExpression>(0);
-                // Error tolerance: return a default value of 0
-            }
-            return make_unique<ast::NumberLiteralExpression>(*value);
-        }
-        default:
-            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + 
-                lexer::tokenTypeToString(token.getType()));
-    }
-}
-
-void extractSuffix(std::string& lexeme, std::string& suffix) {
-    if (lexeme.ends_with("i8") || lexeme.ends_with("I8") || lexeme.ends_with("u8") || lexeme.ends_with("U8")) {
-        suffix = lexeme.substr(lexeme.length() - 2);
-        lexeme.erase(lexeme.length() - 2);
-    } else if (lexeme.ends_with("i16") || lexeme.ends_with("I16") || lexeme.ends_with("u16") || lexeme.ends_with("U16")) {
-        suffix = lexeme.substr(lexeme.length() - 3);
-        lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("i32") || lexeme.ends_with("I32") || lexeme.ends_with("u32") || lexeme.ends_with("U32")) {
-        suffix = lexeme.substr(lexeme.length() - 3);
-        lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("i64") || lexeme.ends_with("I64") || lexeme.ends_with("u64") || lexeme.ends_with("U64")) {
-        suffix = lexeme.substr(lexeme.length() - 3);
-        lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
-        suffix = "f32";
-        lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("f64") || lexeme.ends_with("F64")) {
-        suffix = "f64";
-        lexeme.erase(lexeme.length() - 3);
-    }
-}
+// === Specific expression parsing methods ===
 
 ExpressionPtr Parser::parseArrayInstantiationExpression() {
     DISCARD(advance());  // Consume the left square bracket
@@ -257,41 +146,19 @@ ExpressionPtr Parser::parseArrayInstantiationExpression() {
         std::move(elements));
 }
 
-ExpressionPtr Parser::parseFunctionCallExpression(ExpressionPtr left, Precedence precedence) {
-    DISCARD(advance());
-    DISCARD(precedence);  // Avoid unused variable warning
-    std::vector<ExpressionPtr> arguments;
+ExpressionPtr Parser::parseAssignmentExpression(ExpressionPtr left, Precedence precedence) {
+    TokenType op = advance().getType();
+    ExpressionPtr right = parseExpression(precedence);
 
-    while (!done()) {
-        if (currentToken().getType() == lexer::TokenType::RightParen) {
-            break;  // Done with arguments
-        }
-        arguments.push_back(parseExpression(Precedence::Assignment));
-        if (currentToken().getType() != lexer::TokenType::RightParen && currentToken().getType() != lexer::TokenType::EndOfFile) {
-            expectToken(lexer::TokenType::Comma, "Expected ',' to separate function arguments");
-        }
-    }
-    expectToken(lexer::TokenType::RightParen, "Expected ')' to end function call");
-    return std::make_unique<ast::FunctionCallExpression>(std::move(left), std::move(arguments));
+    return std::make_unique<ast::AssignmentExpression>(std::move(left), op, std::move(right));
 }
 
-ExpressionPtr Parser::parseGenericExpression(ExpressionPtr left, Precedence precedence) {
-    DISCARD(advance());   // Consume the '@' token
-    DISCARD(precedence);  // Avoid unused variable warning
-    expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
-    std::vector<TypePtr> typeParameters;
-    while (!done()) {
-        if (currentToken().getType() == lexer::TokenType::RightSquare) {
-            break;  // Done with type parameters
-        }
-        typeParameters.push_back(parseType(Precedence::Default));
-        if (currentToken().getType() != lexer::TokenType::RightSquare) {
-            expectToken(lexer::TokenType::Comma, "Expected ',' to separate generic types");
-        }
-    }
-    expectToken(lexer::TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return std::make_unique<ast::GenericExpression>(
-        std::move(left), std::move(typeParameters));
+ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, Precedence precedence) {
+    auto op = advance().getType();
+    auto right = parseExpression(precedence);
+
+    return std::make_unique<ast::BinaryExpression>(
+        std::move(left), op, std::move(right));
 }
 
 ExpressionPtr Parser::parseBundleInstantiationExpression(ExpressionPtr left, Precedence precedence) {
@@ -349,11 +216,41 @@ ExpressionPtr Parser::parseBundleInstantiationExpression(ExpressionPtr left, Pre
         bundleName, std::move(genericTypes), std::move(fields));
 }
 
-ExpressionPtr Parser::parseMemberAccessExpression(ExpressionPtr left, Precedence precedence) {
-    DISCARD(advance());   // Consume the member access operator (.)
+ExpressionPtr Parser::parseFunctionCallExpression(ExpressionPtr left, Precedence precedence) {
+    DISCARD(advance());
     DISCARD(precedence);  // Avoid unused variable warning
-    return std::make_unique<ast::MemberAccessExpression>(
-        std::move(left), expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
+    std::vector<ExpressionPtr> arguments;
+
+    while (!done()) {
+        if (currentToken().getType() == lexer::TokenType::RightParen) {
+            break;  // Done with arguments
+        }
+        arguments.push_back(parseExpression(Precedence::Assignment));
+        if (currentToken().getType() != lexer::TokenType::RightParen && currentToken().getType() != lexer::TokenType::EndOfFile) {
+            expectToken(lexer::TokenType::Comma, "Expected ',' to separate function arguments");
+        }
+    }
+    expectToken(lexer::TokenType::RightParen, "Expected ')' to end function call");
+    return std::make_unique<ast::FunctionCallExpression>(std::move(left), std::move(arguments));
+}
+
+ExpressionPtr Parser::parseGenericExpression(ExpressionPtr left, Precedence precedence) {
+    DISCARD(advance());   // Consume the '@' token
+    DISCARD(precedence);  // Avoid unused variable warning
+    expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
+    std::vector<TypePtr> typeParameters;
+    while (!done()) {
+        if (currentToken().getType() == lexer::TokenType::RightSquare) {
+            break;  // Done with type parameters
+        }
+        typeParameters.push_back(parseType(Precedence::Default));
+        if (currentToken().getType() != lexer::TokenType::RightSquare) {
+            expectToken(lexer::TokenType::Comma, "Expected ',' to separate generic types");
+        }
+    }
+    expectToken(lexer::TokenType::RightSquare, "Expected ']' to end generic type parameters");
+    return std::make_unique<ast::GenericExpression>(
+        std::move(left), std::move(typeParameters));
 }
 
 ExpressionPtr Parser::parseIndexingExpression(ExpressionPtr left, Precedence precedence) {
@@ -365,11 +262,114 @@ ExpressionPtr Parser::parseIndexingExpression(ExpressionPtr left, Precedence pre
     return std::make_unique<ast::IndexExpression>(std::move(left), std::move(index));
 }
 
+ExpressionPtr Parser::parseMemberAccessExpression(ExpressionPtr left, Precedence precedence) {
+    DISCARD(advance());   // Consume the member access operator (.)
+    DISCARD(precedence);  // Avoid unused variable warning
+    return std::make_unique<ast::MemberAccessExpression>(
+        std::move(left), expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
+}
+
+ExpressionPtr Parser::parseParenthesizedExpression() {
+    DISCARD(advance());  // Consume the left parenthesis
+    ExpressionPtr expr = parseExpression(Precedence::Default);
+    expectToken(lexer::TokenType::RightParen, "Expected a right parenthesis to close the expression");
+    return expr;
+}
+
+ExpressionPtr Parser::parsePostfixExpression(ExpressionPtr left, Precedence precedence) {
+    TokenType op = advance().getType();
+    DISCARD(precedence);  // Avoid unused variable warning
+    return std::make_unique<ast::PostfixExpression>(std::move(left), op);
+}
+
+ExpressionPtr Parser::parsePrefixExpression() {
+    TokenType op = advance().getType();
+    auto right = parseExpression(Precedence::Unary);
+
+    return std::make_unique<ast::PrefixExpression>(op, std::move(right));
+}
+
+ExpressionPtr Parser::parsePrimaryExpression() noexcept_except_catastrophic {
+    auto token = advance();
+    std::string lexeme = token.getLexeme();
+
+    switch (token.getType()) {
+        case TokenType::CharLiteral:
+            return std::make_unique<ast::CharLiteralExpression>(lexeme[0]);  // Single character
+        case TokenType::StrLiteral:
+            return std::make_unique<ast::StringLiteralExpression>(lexeme);
+        case TokenType::Identifier:
+            return std::make_unique<ast::IdentifierExpression>(lexeme);
+        case TokenType::True:
+            return std::make_unique<ast::BoolLiteralExpression>(true);
+        case TokenType::False:
+            return std::make_unique<ast::BoolLiteralExpression>(false);
+        case TokenType::FloatLiteral:
+            // Check for floating-point suffixes
+            return std::make_unique<ast::NumberLiteralExpression>(
+                lexeme.ends_with("f32") ? stof(lexeme) : stod(lexeme));
+        case TokenType::IntegerLiteral: {
+            // Extract integer suffix
+            int base = determineNumberBase(lexeme);
+            if (base != 10) {
+                // Strip the base prefix (the first two characters: 0x, 0b, 0o) from the lexeme
+                lexeme.erase(0, 2);
+            }
+            std::string numericPart = lexeme;
+            std::string suffix;
+            extractSuffix(numericPart, suffix);
+
+            std::optional<number_t> value = utils::stringToNumber(numericPart, base, false, suffix);
+            if (!value) {
+                logError(
+                    std::format("Invalid integer literal '{}'", lexeme),
+                    token.getLine(), token.getColumn());
+                return std::make_unique<ast::NumberLiteralExpression>(0);
+                // Error tolerance: return a default value of 0
+            }
+            return std::make_unique<ast::NumberLiteralExpression>(*value);
+        }
+        default:
+            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + 
+                lexer::tokenTypeToString(token.getType()));
+    }
+}
+
 ExpressionPtr Parser::parseScopeResolutionExpression(ExpressionPtr left, Precedence precedence) {
     DISCARD(advance());   // Consume the scope resolution operator (::)
     DISCARD(precedence);  // Avoid unused variable warning
     auto element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
     return std::make_unique<ast::ScopeResolutionExpression>(std::move(left), element);
+}
+
+ExpressionPtr Parser::parseTypeCastExpression(ExpressionPtr left, Precedence precedence) {
+    DISCARD(advance());  // Consume the 'as' token
+    TypePtr type = parseType(precedence);
+    return std::make_unique<ast::TypeCastExpression>(std::move(left), std::move(type));
+}
+
+// ===== Helper Functions =====
+
+void extractSuffix(std::string& lexeme, std::string& suffix) {
+    if (lexeme.ends_with("i8") || lexeme.ends_with("I8") || lexeme.ends_with("u8") || lexeme.ends_with("U8")) {
+        suffix = lexeme.substr(lexeme.length() - 2);
+        lexeme.erase(lexeme.length() - 2);
+    } else if (lexeme.ends_with("i16") || lexeme.ends_with("I16") || lexeme.ends_with("u16") || lexeme.ends_with("U16")) {
+        suffix = lexeme.substr(lexeme.length() - 3);
+        lexeme.erase(lexeme.length() - 3);
+    } else if (lexeme.ends_with("i32") || lexeme.ends_with("I32") || lexeme.ends_with("u32") || lexeme.ends_with("U32")) {
+        suffix = lexeme.substr(lexeme.length() - 3);
+        lexeme.erase(lexeme.length() - 3);
+    } else if (lexeme.ends_with("i64") || lexeme.ends_with("I64") || lexeme.ends_with("u64") || lexeme.ends_with("U64")) {
+        suffix = lexeme.substr(lexeme.length() - 3);
+        lexeme.erase(lexeme.length() - 3);
+    } else if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
+        suffix = "f32";
+        lexeme.erase(lexeme.length() - 3);
+    } else if (lexeme.ends_with("f64") || lexeme.ends_with("F64")) {
+        suffix = "f64";
+        lexeme.erase(lexeme.length() - 3);
+    }
 }
 
 int determineNumberBase(const std::string& lexeme) {

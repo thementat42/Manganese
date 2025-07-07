@@ -33,6 +33,56 @@ ast::Block Parser::parse() {
     return program;
 }
 
+// ===== Helper functions =====
+bool Parser::isUnaryContext() const {
+    if (tokenCache.empty() || tokenCachePosition == 0) {
+        return true;  // If the cache is empty or we're at the start, it's a unary context
+    }
+    auto lastToken = tokenCache[tokenCachePosition - 1];
+
+    return lastToken.getType() == TokenType::LeftParen ||
+           (lastToken.isOperator() && lastToken.getType() != TokenType::Inc &&
+            lastToken.getType() != TokenType::Dec);
+}
+
+[[nodiscard]] Token Parser::currentToken() {
+    while (tokenCachePosition >= tokenCache.size()) {
+        tokenCache.push_back(lexer->consumeToken());
+    }
+    return tokenCache[tokenCachePosition];
+}
+
+[[nodiscard]] Token Parser::advance() {
+    while (tokenCachePosition >= tokenCache.size()) {
+        tokenCache.push_back(lexer->consumeToken());
+    }
+    return tokenCache[tokenCachePosition++];
+}
+
+Token Parser::expectToken(TokenType expectedType) {
+    return expectToken(
+        expectedType, "Unexpected token: ");
+}
+
+Token Parser::expectToken(TokenType expectedType, const std::string& errorMessage) {
+    TokenType type = currentToken().getType();
+    if (type == expectedType) {
+        return advance();
+    }
+    std::string message = errorMessage +
+                          " (expected " + lexer::tokenTypeToString(expectedType) +
+                          ", but found " + lexer::tokenTypeToString(type) + ")";
+    logError(
+        message,
+        currentToken().getLine(),
+        currentToken().getColumn());
+    hasError = true;
+
+    return advance();
+}
+
+// ===== Lookup Registration Methods =====
+
 void Parser::led_binary(TokenType type, Precedence bindingPower, leftDenotationHandler_t handler) {
     operatorPrecedenceMap[type] = Operator::binary(bindingPower);
     leftDenotationLookup[type] = handler;
@@ -222,53 +272,6 @@ void Parser::initializeLookups() {
     stmt(TokenType::If, &Parser::parseIfStatement);
     stmt(TokenType::Enum, &Parser::parseEnumDeclarationStatement);
     stmt(TokenType::Switch, &Parser::parseSwitchStatement);
-}
-
-bool Parser::isUnaryContext() const {
-    if (tokenCache.empty() || tokenCachePosition == 0) {
-        return true;  // If the cache is empty or we're at the start, it's a unary context
-    }
-    auto lastToken = tokenCache[tokenCachePosition - 1];
-
-    return lastToken.getType() == TokenType::LeftParen ||
-           (lastToken.isOperator() && lastToken.getType() != TokenType::Inc &&
-            lastToken.getType() != TokenType::Dec);
-}
-
-[[nodiscard]] Token Parser::currentToken() {
-    while (tokenCachePosition >= tokenCache.size()) {
-        tokenCache.push_back(lexer->consumeToken());
-    }
-    return tokenCache[tokenCachePosition];
-}
-
-[[nodiscard]] Token Parser::advance() {
-    while (tokenCachePosition >= tokenCache.size()) {
-        tokenCache.push_back(lexer->consumeToken());
-    }
-    return tokenCache[tokenCachePosition++];
-}
-
-Token Parser::expectToken(TokenType expectedType) {
-    return expectToken(
-        expectedType, "Unexpected token: ");
-}
-
-Token Parser::expectToken(TokenType expectedType, const std::string& errorMessage) {
-    TokenType type = currentToken().getType();
-    if (type == expectedType) {
-        return advance();
-    }
-    std::string message = errorMessage +
-                          " (expected " + lexer::tokenTypeToString(expectedType) +
-                          ", but found " + lexer::tokenTypeToString(type) + ")";
-    logError(
-        message,
-        currentToken().getLine(),
-        currentToken().getColumn());
-    hasError = true;
-
-    return advance();
 }
 }  // namespace parser
 }  // namespace Manganese

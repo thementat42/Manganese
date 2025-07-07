@@ -15,12 +15,7 @@
 
 namespace Manganese {
 namespace tests {
-using lexer::Lexer;
-using lexer::Mode;
-using lexer::Token;
-using TokenList = std::vector<Token>;
-using lexer::TokenType;
-using lexer::tokenTypeToString;
+using lexer::Token, lexer::TokenType;
 
 inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = false) {
     if (tokens.empty()) {
@@ -39,7 +34,7 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = fals
 }
 
 std::vector<Token> tokensFromString(const std::string& source) {
-    Lexer lexer(source, Mode::String);
+    lexer::Lexer lexer(source, lexer::Mode::String);
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
@@ -56,7 +51,7 @@ std::vector<Token> tokensFromString(const std::string& source) {
 
 std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
     std::filesystem::path fullPath = std::filesystem::current_path() / filename;
-    Lexer lexer(fullPath.string(), Mode::File);
+    lexer::Lexer lexer(fullPath.string(), lexer::Mode::File);
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF

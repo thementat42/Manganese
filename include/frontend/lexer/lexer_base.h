@@ -16,7 +16,6 @@
 
 namespace Manganese {
 namespace lexer {
-using std::optional;
 constexpr auto NONE = std::nullopt;
 
 enum class Mode {
@@ -38,7 +37,7 @@ enum class Base {
  * @param escapeChar The character to map
  * @return An optional character representing the escape sequence, or NONE if the character is not a valid escape sequence
  */
-optional<char> getEscapeCharacter(const char escapeChar);
+std::optional<char> getEscapeCharacter(const char escapeChar);
 
 /**
  * @brief Convert a wide character to a UTF-8 encoded string
@@ -52,7 +51,7 @@ std::string encodeUTF8String(char32_t wideChar);
  * @param escDigits The hexadecimal digits following the escape sequence (e.g. "1F")
  * @return An optional character representing the resolved escape sequence, or NONE if the sequence is invalid
  */
-optional<char32_t> resolveHexCharacters(const std::string& escDigits);
+std::optional<char32_t> resolveHexCharacters(const std::string& escDigits);
 
 /**
  * @brief Resolves escape sequences of the form \uXXXX or \UXXXXXXXX
@@ -60,7 +59,7 @@ optional<char32_t> resolveHexCharacters(const std::string& escDigits);
  * @param isLongUnicode Whether the escape sequence is a long Unicode escape sequence (\UXXXXXXXX)
  * @return An optional character representing the resolved escape sequence, or NONE if the sequence is invalid
  */
-optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, bool isLongUnicode = false);
+std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, bool isLongUnicode = false);
 
 /**
  * @brief The lexer is responsible for turning the source code into a non-textual representation that the parser can understand.

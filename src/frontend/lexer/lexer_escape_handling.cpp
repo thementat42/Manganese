@@ -45,7 +45,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
             logging::logError("Error: incomplete escape sequence at end of string", 0, 0);
             return NONE;
         }
-        optional<char32_t> escapeChar;
+        std::optional<char32_t> escapeChar;
         uint8_t skipLength = 1;
         if (escapeString[i] == 'u') {
             std::string escDigits = escapeString.substr(i + 1, 4);  // 4 for uXXXX
@@ -102,7 +102,7 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
 }
 
-optional<char> getEscapeCharacter(const char escapeChar) {
+std::optional<char> getEscapeCharacter(const char escapeChar) {
     switch (escapeChar) {
         case '\\':
             return '\\';
@@ -144,7 +144,7 @@ inline int hexDigitToInt(char c) {
     return -1;  // Not a valid hex digit
 }
 
-optional<char32_t> resolveHexCharacters(const std::string& esc) {
+std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
     // Check that the string is exactly 2 characters long
     if (esc.length() != 2) {
         return NONE;
@@ -159,7 +159,7 @@ optional<char32_t> resolveHexCharacters(const std::string& esc) {
     return hexChar;
 }
 
-optional<char32_t> resolveUnicodeCharacters(const std::string& esc, bool isLongUnicode) {
+std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, bool isLongUnicode) {
     size_t expectedLength = isLongUnicode ? 8 : 4;  // 8 for \UXXXXXXXX, 4 for \uXXXX
     if (esc.length() != expectedLength) {
         return NONE;
