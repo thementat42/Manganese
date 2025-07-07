@@ -1,0 +1,144 @@
+# === Reading Extended Backus-Naur Form (EBNF) Notation: ===
+# expression = value
+# * means 0 or more times
+# + means one or more times
+# | indicates an alternative
+# ; ends a statement
+# () group statements
+# ? means optional
+
+# === Formal Grammar ===
+#* Basics
+single_line_comment = "#" [^\n]*;
+multi_line_comment = "/*" [^*]* ("*" [^/])* "*/";
+
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G"
+       | "H" | "I" | "J" | "K" | "L" | "M" | "N"
+       | "O" | "P" | "Q" | "R" | "S" | "T" | "U"
+       | "V" | "W" | "X" | "Y" | "Z" | "a" | "b"
+       | "c" | "d" | "e" | "f" | "g" | "h" | "i"
+       | "j" | "k" | "l" | "m" | "n" | "o" | "p"
+       | "q" | "r" | "s" | "t" | "u" | "v" | "w"
+       | "x" | "y" | "z" ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+octal_digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" ;
+hex_digit = digit | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b"
+       | "c" | "d" | "e" | "f";
+
+literal = int_literal |
+          float_literal |
+          char_literal |
+          string_literal |
+          bool_literal;
+
+int_literal = ("-" | "+")? (decimal_int | hex_int | octal_int | binary_int) int_suffix?;
+float_literal = ("-" | "+")? (decimal_float | hex_float) float_suffix?;
+
+char_literal = "'" [^'] "'";
+
+string_literal = '"' (unescaped_char | escape_seq)* '"';
+
+unescaped_char = [^"\];
+
+escape_seq = "\\" ("n" | "t" | "\\" | "\"" | "u" hex_digit{4} | "a" | "b" | "x");
+
+bool_literal = "true" | "false";
+
+decimal_int = digit+;
+
+hex_int = "0x" hex_digit+;
+
+octal_int = "0o" octal_digit+;
+
+binary_int = "0b" ("0" | "1")+;
+
+decimal_float = digit+ "." digit* ("e" ("+" | "-")? digit+)?;
+
+hex_float = "0x" hex_digit+ "." hex_digit* "p" ("-" | "+")? decimal_int
+
+int_suffix = ("u" | "U") (("l" | "L") | ("ll" | "LL"))? |
+              (("l" | "L") | ("ll" | "LL")) ("u" | "U")?;
+
+float_suffix = "f" | "F" | "d" | "D";
+
+#* Operators
+arithmetic_op = "+" | "-" | "*" | "/" | "//" | "%" | "^^";  # ^^ is exponentiation
+comparison_op = "<" | "<=" | ">" | ">=" | "==" | "!=";
+boolean_op = "&&" | "||" | "!";
+bitwise_op = "&" | "|" | "~" | "^" | "<<" | ">>";
+access_op = "::" | "."  # Scope resolution / member access
+other_op = "as" type | "typeof"
+prefix_unary_op = "++" | "--" | "!" | "~" | "&" | "*";  # & and * are parsed as unary if the previous token is an operator or a left paren
+postfix_unary_op = "++" | "--";
+binary_op = arithmetic_op | comparison_op | boolean_op | bitwise_op;
+binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)
+
+#* Variables
+variable_decl = ("let" | "const") variable_name (":" access_modifer? type)? ("=" expression)? ";"  # semantically, the expression must match the given type
+access_modifer = "public" | "readonly" | "private"  # default access is readonly
+type = primitive_type | user_type | pointer_type;
+pointer_type = "ptr" "const"? type  # recursive: allows for ptr ptr ptr ... x
+primitive_type = int_type | float_type | "char" | "bool";
+
+int_type = ("u"?)"int"(int_width?);  # u makes it unsigned, if no width specified, defaults to 32 bits
+float_type = "float"(float_width?);  # if no width specified, defaults to 32 bits
+
+int_width = "8" | "16" | "32" | "64";
+float_width = "32" | "64";
+
+user_type = identifier;
+variable_name = identifier;
+identifier = (letter | "_") (letter | digit | "_")*;  # starts with letter or _, can contain letters, digits or _
+
+#* Expressions
+expression = unary_expression |
+             (expression | literal) binary_op (expression | literal) |
+             "(" expression ")" |
+             identifier binary_op_eq (identifier | literal) |
+             function_call;
+
+expression_statement = expression ";";
+
+unary_expression = prefix_unary_op expression | expression postfix_unary_op;
+
+#* Statements
+block = statement*;
+
+statement = variable_decl | expression_statement | conditional_statement | switch_statement | return_statement | loop_statement;
+
+conditional_statement = "if" "(" expression ")" "{" block "}"
+                        ("else if" "(" expression ")" "{" block "}")*
+                        ("else" "{" block "}")?;
+
+switch_statement = "switch" "(" expression ")"
+                   "{" ("case" literal ":" block "break;"?)* "}"
+                   ("default" ":" block)? ;
+
+return_statement = "return" expression ";";
+
+loop_statement = for_loop | repeat_loop | while_loop | do_while_loop | "break;" | "continue;";
+
+for_loop = "for" "(" (variable_decl | expression)* ";" expression? ";" expression* ")" "{" block "}";
+
+while_loop = "while" "(" expression ")" "{" block "}";
+
+do_while_loop = "do" "{" block "}" "while" "(" expression ")" ";";
+
+#* Functions
+function_decl = "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
+generic_parameters = "[" identifier ("," identifier)* "]";
+parameter_list = (variable_name "const"? ":" (type_qualifiers? type)? ("=" literal)? ",")+;
+
+lambda_statement = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";
+
+function_call = expression ("@" "["type ("," type)* "]")? "(" ( expression ("," expression)*)? ")";
+
+#* Data Encapsulation
+bundle_decl = "bundle" "{" bundle_member_decl+ "}"
+
+bundle_member_decl = "static"? variable_name ":" type_qualifiers? type ";"
+
+enum_decl = "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}"
+
+#? Add blueprint decl

@@ -1,0 +1,497 @@
+#include <frontend/parser.h>
+#include <global_macros.h>
+
+#include <array>
+#include <iostream>
+#include <memory>
+#include <string>
+
+#include "testrunner.h"
+
+// NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
+// The semantic analysis phase is responsible for resolving the actual type
+// So testing for a correct type resolution is outside the scope of these tests
+// The only cases where the parser does type resolution are when a variable is declared with:
+// a literal value since the parser can just get the type from the literal value node
+// a struct instantiation, since the type has to be that struct (though the parser does not verify the instantiation is correct)
+
+namespace Manganese {
+namespace tests {
+
+template <size_t N>
+bool validateStatements(const ast::Block& block, const std::array<std::string, N>& expected, const char* testName) {
+    std::cout << "Parsed " << testName << " AST:" << '\n';
+    for (const auto& stmt : block) {
+        std::cout << stmt->toString() << '\n';
+    }
+
+    if (block.size() != N) {
+        std::cerr << "ERROR: Expected " << N << " statements, got " << block.size() << " in test: " << testName << '\n';
+        return false;
+    }
+
+    for (size_t i = 0; i < N; ++i) {
+        std::string actual = block[i]->toString();
+        if (actual != expected[i]) {
+            std::cerr << "ERROR: Statement " << (i + 1) << " does not match expected in test: " << testName << '\n';
+            std::cerr << "Expected: " << expected[i] << '\n';
+            std::cerr << "Actual:   " << actual << '\n';
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool validateStatement(const ast::Block& block, const std::string& expected, const std::string& testName) {
+    std::cout << "Parsed " << testName << " AST:" << '\n';
+    for (const auto& stmt : block) {
+        std::cout << stmt->toString() << '\n';
+    }
+
+    if (block.size() != 1) {
+        std::cerr << "ERROR: Expected 1 statement, got " << block.size() << " in test: " << testName << '\n';
+        return false;
+    }
+
+    std::string actual = block[0]->toString();
+    if (actual != expected) {
+        std::cerr << "ERROR: Statement does not match expected in test: " << testName << '\n';
+        std::cerr << "Expected: " << expected << '\n';
+        std::cerr << "Actual:   " << actual << '\n';
+        return false;
+    }
+
+    return true;
+}
+
+bool testArithmeticOperatorsAndCasting() {
+    // Test all arithmetic operators including their precedence and associativity
+    // Also test type casting with 'as' operator
+    std::string expression = "8 - 4 + 6 * 2 // 5 % 3 ^^ 2 ^^ 2 / 7 as float32;";
+    std::string expected = "(((8 - 4) + ((((6 * 2) // 5) % (3 ^^ (2 ^^ 2))) / 7)) as float32);";
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatement(parser.parse(), expected, "Arithmetic Operators and Casting");
+}
+
+bool testExponentiationAssociativity() {
+    // Test that exponentiation is right-associative:
+    // i.e. Evaluate the exponent before grouping it with the base
+    std::string expression = "2 ^^ 3 ^^ 2;";
+    std::string expected = "(2 ^^ (3 ^^ 2));";
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatement(parser.parse(), expected, "Exponentiation Associativity");
+}
+
+bool testVariableDeclaration() {
+    std::string expression = "let foo = 45.5;\nlet bar = foo * 10;\nconst baz : public uint32 = foo + 10 ^^ 2 * bar + foo % 7 + foo^^2; let boolean = true;";
+
+    std::array<std::string, 4> expected = {
+        "(let foo: readonly float64 = 45.5);",
+        "(let bar: readonly auto = (foo * 10));",
+        "(const baz: public uint32 = (((foo + ((10 ^^ 2) * bar)) + (foo % 7)) + (foo ^^ 2)));",
+        "(let boolean: readonly bool = true);"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+
+    return validateStatements(parser.parse(), expected, "Variable Declaration");
+}
+
+bool testAssignmentExpressions() {
+    std::string expression =
+        "a = 5;\n"
+        "b += 3;\n"
+        "c -= 2 * b;\n"
+        "d = -(c + 3);\n"
+        "e *= f + 1;\n"
+        "g /= h - -2;\n"
+        "i %= 4;\n"
+        "j ^^= 2;\n"
+        "k //= 3;"
+        "l = (3 + 4) * 2 - (1 + 1) ^^ 5;"
+        "a &= b;\n"
+        "c |= d;\n"
+        "e ^= f;\n"
+        "g <<= 2;\n"
+        "h >>= 3;\n"
+        "i &= j | k;\n"
+        "m |= n & p;\n"
+        "x ^= ~y;\n";
+
+    std::array<std::string, 18> expected = {
+        "(a = 5);",
+        "(b += 3);",
+        "(c -= (2 * b));",
+        "(d = (-(c + 3)));",
+        "(e *= (f + 1));",
+        "(g /= (h - (-2)));",
+        "(i %= 4);",
+        "(j ^^= 2);",
+        "(k //= 3);",
+        "(l = (((3 + 4) * 2) - ((1 + 1) ^^ 5)));",
+        "(a &= b);",
+        "(c |= d);",
+        "(e ^= f);",
+        "(g <<= 2);",
+        "(h >>= 3);",
+        "(i &= (j | k));",
+        "(m |= (n & p));",
+        "(x ^= (~y));"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Assignment Expressions");
+}
+
+bool testPrefixOperators() {
+    std::string expression =
+        "++x;\n"
+        "--y;\n"
+        "-z;\n"
+        "+a;\n"
+        "!b;\n"
+        "-(d + 3);"
+        "++c * 2;\n";
+
+    std::array<std::string, 7> expected = {
+        "(++x);",
+        "(--y);",
+        "(-z);",
+        "(+a);",
+        "(!b);",
+        "(-(d + 3));",
+        "((++c) * 2);"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Prefix Operators");
+}
+
+bool testParenthesizedExpressions() {
+    // Parentheses should override operator precedence
+    std::string expression =
+        "(2 + 3) * 4;\n"
+        "2 * (3 + 4);\n"
+        "((5 + 2) * (8 - 3)) / 2;\n"
+        "1 + (2 ^^ (3 + 1));\n"
+        "((2 + 3) * 4) - (6 / (1 + 1));";
+
+    std::array<std::string, 5> expected = {
+        "((2 + 3) * 4);",
+        "(2 * (3 + 4));",
+        "(((5 + 2) * (8 - 3)) / 2);",
+        "(1 + (2 ^^ (3 + 1)));",
+        "(((2 + 3) * 4) - (6 / (1 + 1)));"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Parenthesized Expressions");
+}
+
+bool testPointerOperators() {
+    // Test that & and * get correctly interpreted as pointer operators
+    std::string expression =
+        "&variable;\n"
+        "*pointer;\n"
+        "**doublePointer;\n"
+        "&(x + y);\n"
+        "*p + 5;\n";
+
+    std::array<std::string, 5> expected = {
+        "(&variable);",
+        "(*pointer);",
+        "(*(*doublePointer));",
+        "(&(x + y));",
+        "((*p) + 5);"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Pointer Operators");
+}
+
+bool testTypedVariableDeclaration() {
+    std::string expression =
+        "let x: int32 = 42;\n"
+        "const y: public float64 = 3.14159;\n"
+        "let z: char = 'A';\n"
+        "let numbers: int32[3^^2];\n"
+        "const matrix: private float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
+
+    std::array<std::string, 5> expected = {
+        "(let x: readonly int32 = 42);",
+        "(const y: public float64 = 3.14159);",
+        "(let z: readonly char = 'A');",
+        "(let numbers: readonly int32[(3 ^^ 2)]);",
+        "(const matrix: private float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Typed Variable Declarations");
+}
+
+bool testPostfixOperators() {
+    std::string expression =
+        "x++;\n"
+        "y--;\n"
+        "(a + b)++;\n"
+        // "arr[i]--;\n"
+        "++x--;\n"
+        "x++ + y--;\n";
+
+    std::array<std::string, 5> expected = {
+        "(x++);",
+        "(y--);",
+        "((a + b)++);",
+        // "(arr[i]--);",
+        "(++(x--));",  // Postfix should be applied first, then prefix
+        "((x++) + (y--));"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Postfix Operators");
+}
+
+bool testBitwiseOperators() {
+    std::string expression =
+        "a & b;\n"
+        "c | d;\n"
+        "e ^ f;\n"
+        "~g;\n"
+        "h << 2;\n"
+        "i >> 3;\n"
+        "(a & b) | (c ^ d);\n"
+        "a & (b | c);\n"
+        "~(a & b) | c;\n"
+        "a & b & c | d ^ e;\n";
+
+    std::array<std::string, 10> expected = {
+        "(a & b);",
+        "(c | d);",
+        "(e ^ f);",
+        "(~g);",
+        "(h << 2);",
+        "(i >> 3);",
+        "((a & b) | (c ^ d));",
+        "(a & (b | c));",
+        "((~(a & b)) | c);",
+        "(((a & b) & c) | (d ^ e));"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Bitwise Operators");
+}
+
+bool testBundleDeclarationAndInstantiation() {
+    std::string expression =
+        "bundle Point {\n"
+        "    x: int32;\n"
+        "    y: int32;\n"
+        "    some_field: static float64;\n"
+        "}\n"
+        "bundle Rectangle {\n"
+        "    topLeft: Point;\n"
+        "    bottomRight: Point;\n"
+        "    color: uint32;\n"
+        "}\n"
+        "let p1 = Point{x = 10, y = 20};\n"
+        "let p2: Point = Point{x = 30, y = 40};\n"
+        "const rect = Rectangle{\n"
+        "    topLeft = Point{x = 0, y = 0},\n"
+        "    bottomRight = p2,\n"
+        "    color = 0xFF0000\n"
+        "};\n";
+
+    // Note: In the final declaration, the numeric value for the colour is the decimal equivalent of 0xFF0000
+    std::array<std::string, 5> expected = {
+        "bundle Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: static float64;\n}",
+        "bundle Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
+        "(let p1: readonly Point = Point {x = 10, y = 20});",
+        "(let p2: readonly Point = Point {x = 30, y = 40});",
+        "(const rect: readonly Rectangle = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Bundle Declaration and Instantiation");
+}
+
+bool testFunctionDeclarationAndCall() {
+    std::string expression =
+        "func add(a: int32, b: int32) -> int32 {\n"
+        "    return a + b;\n"
+        "}\n"
+        "func greet(name: string) {\n"
+        "    print(\"Hello, \" + name);\n"
+        "}\n"
+        "func calculate(x: float64, y: const float64) -> float64 {\n"
+        "    let result = x * y;\n"
+        "    return result;\n"
+        "}\n"
+        "let sum = add(5u32, 3i16);\n"
+        "greet(\"World\");\n"
+        "let product = calculate(2.5f64, 3.01);\n";
+
+    std::array<std::string, 6> expected = {
+        "func add(a: int32, b: int32) -> int32 {\nreturn (a + b);\n}",
+        "func greet(name: string) {\nprint((\"Hello, \" + name));\n}",
+        "func calculate(x: float64, y: const float64) -> float64 {\n(let result: readonly auto = (x * y));\nreturn result;\n}",
+        "(let sum: readonly auto = add(5, 3));",
+        "greet(\"World\");",
+        "(let product: readonly auto = calculate(2.5, 3.01));"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Function Declaration and Call");
+}
+
+bool testLoops() {
+    std::string expression =
+        "let i = 0;"
+        "do {++i; print(i); } while (i < 5);"
+        "let j = 10;"
+        "while (j > 0) {"
+        "    print(j--);"
+        "}"
+        "repeat ((5 + 30 - 2 ^^ 3) << 2) {print(\"Hello\");}";
+
+    std::array<std::string, 5> expected = {
+        "(let i: readonly int32 = 0);",
+        "do {\n\t(++i);\n\tprint(i);\n} while ((i < 5));",
+        "(let j: readonly int32 = 10);",
+        "while ((j > 0)) {\n\tprint((j--));\n}",
+        "repeat ((((5 + 30) - (2 ^^ 3)) << 2)) {\n\tprint(\"Hello\");\n}"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Loops");
+}
+
+bool testIfElseStatements() {
+    std::string expression =
+        "if (a < b) {\n"
+        "    let result = a + b;\n"
+        "    print(result);\n"
+        "} elif (a > b) {\n"
+        "    let result = a - b;\n"
+        "    print(result);\n"
+        "} else {\n"
+        "    print(\"Equal\");\n"
+        "}";
+
+    std::string expected =
+        "if ((a < b)) {\n"
+        "\t(let result: readonly auto = (a + b));\n"
+        "\tprint(result);\n"
+        "} elif ((a > b)) {\n"
+        "\t(let result: readonly auto = (a - b));\n"
+        "\tprint(result);\n"
+        "} else {\n"
+        "\tprint(\"Equal\");\n"
+        "}";
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatement(parser.parse(), expected, "If/Else If/Else Statements");
+}
+
+bool testEnumDeclarationStatement() {
+    std::string expression =
+        "enum Color {\n"
+        "    Red,\n"
+        "    Green,\n"
+        "    Blue,\n"
+        "}\n"
+        "enum Status: float64 {\n"
+        "    Success = 0,\n"
+        "    Error = 1,\n"
+        "    Unknown = -1,\n"
+        "}";
+
+    std::array<std::string, 2> expected = {
+        "enum Color: int32 {\n\tRed,\n\tGreen,\n\tBlue,\n}",
+        "enum Status: float64 {\n\tSuccess = 0,\n\tError = 1,\n\tUnknown = (-1),\n}"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Enum Declaration Statement");
+}
+
+bool testSwitchStatement() {
+    std::string expression =
+        "switch (variable) {"
+        "case 1:"
+        "    print(\"One\");"
+        "    ++i;"
+        "case 2:"
+        "    print(\"Two\");"
+        "    --i;"
+        "default:"
+        "    print(\"Default case\");"
+        "}";
+    std::string expected =
+        "switch (variable) {\n"
+        "\tcase 1:\n"
+        "\t\tprint(\"One\");\n"
+        "\t\t(++i);\n"
+        "\tcase 2:\n"
+        "\t\tprint(\"Two\");\n"
+        "\t\t(--i);\n"
+        "\tdefault:\n"
+        "\t\tprint(\"Default case\");\n"
+        "}";
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatement(parser.parse(), expected, "Switch Statement");
+}
+
+bool testAccessExpressions() {
+    std::string expression =
+        "let point = Point{x = 10, y = 20};\n"
+        "let xCoord = point.x;\n"
+        "let yCoord = point.y;\n"
+        "let color = rect.color;"
+        "const array = [1, 2, 3];\n"
+        "let firstElement = array[0];\n"
+        "let foo = lib::module_::function(a, b, c);\n";
+
+    std::array<std::string, 7>
+        expected = {
+            "(let point: readonly Point = Point {x = 10, y = 20});",
+            "(let xCoord: readonly auto = point.x);",
+            "(let yCoord: readonly auto = point.y);",
+            "(let color: readonly auto = rect.color);",
+            "(const array: readonly auto = [1, 2, 3]);",
+            "(let firstElement: readonly auto = array[0]);",
+            "(let foo: readonly auto = lib::module_::function(a, b, c));"};
+
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Member Access Expression");
+}
+
+bool testGenerics() {
+    std::string expression =
+        "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\n"
+        "    return 3 + valueT + valueU * valueV;\n"
+        "}\n"
+        "let result = genericFunction@[int32, float64, char](5, 2.5, (65 as char));"
+        "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n";
+    std::array<std::string, 2>
+        expected = {
+            "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
+            "(let result: readonly auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));"};
+    parser::Parser parser(expression, lexer::Mode::String);
+    return validateStatements(parser.parse(), expected, "Generic Function Declaration");
+}
+
+int runParserTests(TestRunner& runner) {
+    runner.runTest("Arithmetic Expression and Casting", testArithmeticOperatorsAndCasting);
+    runner.runTest("Exponentiation Right Associativity", testExponentiationAssociativity);
+    runner.runTest("Variable Declaration", testVariableDeclaration);
+    runner.runTest("Assignment Expressions", testAssignmentExpressions);
+    runner.runTest("Prefix Operators", testPrefixOperators);
+    runner.runTest("Parenthesized Expressions", testParenthesizedExpressions);
+    runner.runTest("Address and Dereference Operators", testPointerOperators);
+    runner.runTest("Typed Variable Declaration", testTypedVariableDeclaration);
+    runner.runTest("Postfix Operators", testPostfixOperators);
+    runner.runTest("Bitwise Operators", testBitwiseOperators);
+    runner.runTest("Bundle Declaration and Instantiation", testBundleDeclarationAndInstantiation);
+    runner.runTest("Function Declaration and Call", testFunctionDeclarationAndCall);
+    runner.runTest("Loops", testLoops);
+    runner.runTest("If/Elif/Else Statements", testIfElseStatements);
+    runner.runTest("Enum Declaration Statement", testEnumDeclarationStatement);
+    runner.runTest("Switch Statement", testSwitchStatement);
+    runner.runTest("Access Expressions", testAccessExpressions);
+    runner.runTest("Generics", testGenerics);
+
+    return runner.allTestsPassed() ? 0 : 1;
+}
+}  // namespace tests
+}  // namespace Manganese
