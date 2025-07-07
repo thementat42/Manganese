@@ -187,6 +187,8 @@ class Parser {
      */
     TypePtr parseArrayType(TypePtr left, Precedence rightBindingPower);
 
+    TypePtr parseGenericType(TypePtr left, Precedence rightBindingPower);
+
     // ~ Helpers
     /**
      * @brief Gets the current token without consuming it.

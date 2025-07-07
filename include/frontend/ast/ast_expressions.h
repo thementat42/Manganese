@@ -252,16 +252,18 @@ class FunctionCallExpression : public Expression {
 };
 
 class GenericExpression : public Expression {
-    protected:
-    ExpressionPtr identifier;  // The thing to which the generic types are passed
+   protected:
+    ExpressionPtr identifier;    // The thing to which the generic types are passed
     std::vector<TypePtr> types;  // The types passed to the generic expression
-    public:
-     GenericExpression(ExpressionPtr identifier_, std::vector<TypePtr> types_)
-         : identifier(std::move(identifier_)), types(std::move(types_)) {}
-     TypePtr getType() const override {
-         // The type of a generic expression is the type of the identifier expression
-         return identifier->getType();
-     }
+   public:
+    GenericExpression(ExpressionPtr identifier_, std::vector<TypePtr> types_)
+        : identifier(std::move(identifier_)), types(std::move(types_)) {}
+    TypePtr getType() const override {
+        // The type of a generic expression is the type of the identifier expression
+        return identifier->getType();
+    }
+    Expression* getIdentifier() const { return identifier.get(); }
+    std::vector<TypePtr> getTypeParameters() { return std::move(types); }
     NODE_OVERRIDES;
 };
 
@@ -276,15 +278,12 @@ struct BundleInstantiationField {
 class BundleInstantiationExpression : public Expression {
    protected:
     std::string name;
+    std::vector<TypePtr> genericTypes;
     std::vector<BundleInstantiationField> fields;
 
    public:
-    /**
-     * @param name_ The name of the bundle being instantiated
-     * @param fields_ The fields to initialize in the bundle
-     */
-    BundleInstantiationExpression(std::string name_, std::vector<BundleInstantiationField> fields_)
-        : name(std::move(name_)), fields(std::move(fields_)) {}
+    BundleInstantiationExpression(std::string name_, std::vector<TypePtr> genericTypes_, std::vector<BundleInstantiationField> fields_)
+        : name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
 
     const std::string& getName() const { return name; }
     const std::vector<BundleInstantiationField>& getFields() const { return fields; }

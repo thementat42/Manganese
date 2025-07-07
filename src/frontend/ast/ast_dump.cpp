@@ -247,6 +247,21 @@ void ArrayType::dump(std::ostream& os, int indent) const {
     }
 }
 
+void GenericType::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "GenericType [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "base: ";
+    baseType->dump(os, indent + 1);
+    os << "\n";
+    os << getIndent(indent + 1) << "generic types: [\n";
+
+    for (const auto& type : typeParameters) {
+        type->dump(os, indent + 2);
+    }
+
+    os << getIndent(indent + 1) << "]\n";
+    os << getIndent(indent) << "}\n";
+}
+
 void ExpressionStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "ExpressionStatement [" << getLine() << ":" << getColumn() << "] {\n";
     expression->dump(os, indent + 1);

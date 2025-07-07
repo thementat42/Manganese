@@ -42,6 +42,20 @@ class ArrayType : public Type {  // e.g. int[]
     NODE_OVERRIDES;
 };
 
+class GenericType : public Type {  // e.g. [T, U]
+    protected:
+    std::unique_ptr<Type> baseType;  // The base type to which the generics are applied
+    std::vector<TypePtr> typeParameters;  // The generic type parameters
+    public:
+    /**
+     * @param baseType_ The base type to which the generics are applied
+     * @param typeParameters_ The generic type parameters
+     */
+    GenericType(std::unique_ptr<Type> baseType_, std::vector<TypePtr> typeParameters_)
+        : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
+    NODE_OVERRIDES;
+};
+
 } // namespace ast
 
 } // namespace Manganese

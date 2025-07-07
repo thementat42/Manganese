@@ -144,12 +144,26 @@ std::string SymbolType::toString() const {
     return name;
 }
 std::string ArrayType::toString() const {
-    std::string result = elementType->toString() + "[";
+    std::ostringstream oss;
+    oss << elementType->toString() << "[";
     if (lengthExpression) {
-        result += lengthExpression->toString();
+        oss << lengthExpression->toString();
     }
-    result += "]";
-    return result;
+    oss << "]";
+    return oss.str();
+}
+
+std::string GenericType::toString() const {
+    std::ostringstream oss;
+    oss << baseType->toString() << "@[";
+    for (size_t i = 0; i < typeParameters.size(); ++i) {
+        oss << typeParameters[i]->toString();
+        if (i < typeParameters.size() - 1) [[likely]] {
+            oss << ", ";
+        }
+    }
+    oss << "]";
+    return oss.str();
 }
 
 std::string VariableDeclarationStatement::toString() const {
@@ -290,7 +304,18 @@ std::string BundleDeclarationStatement::toString() const {
 
 std::string BundleInstantiationExpression::toString() const {
     std::ostringstream oss;
-    oss << name << " {";
+    oss << name;
+    if (!genericTypes.empty()) {
+        oss << "@[";
+        for (size_t i = 0; i < genericTypes.size(); ++i) {
+            oss << genericTypes[i]->toString();
+            if (i < genericTypes.size() - 1) [[likely]] {
+                oss << ", ";
+            }
+        }
+        oss << "]";
+    }
+    oss << " {";
 
     bool first = true;
     for (const auto& field : fields) {

@@ -50,6 +50,25 @@ TypePtr Parser::parseArrayType(TypePtr left, Precedence rightBindingPower) {
     return std::make_unique<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
+TypePtr Parser::parseGenericType(TypePtr left, Precedence rightBindingPower) {
+    DISCARD(advance());
+    expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
+    std::vector<TypePtr> typeParameters;
+    while (!done()) {
+        if (currentToken().getType() == TokenType::RightSquare) {
+            break;  // Done with type parameters
+        }
+        auto nextBindingPower = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+        typeParameters.push_back(parseType(static_cast<Precedence>(nextBindingPower)));
+        if (currentToken().getType() != TokenType::RightSquare) {
+            expectToken(TokenType::Comma, "Expected ',' to separate generic types");
+        }
+    }
+    expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
+    DISCARD(rightBindingPower);  // Avoid unused variable warning
+    return std::make_unique<ast::GenericType>(std::move(left), std::move(typeParameters));
+}
+
 void Parser::initializeTypeLookups() {
     //~ Variable declarations with primitive types
     type_nud(TokenType::Identifier, &Parser::parseSymbolType);
@@ -66,8 +85,9 @@ void Parser::initializeTypeLookups() {
     type_nud(TokenType::Char, &Parser::parseSymbolType);
     type_nud(TokenType::Bool, &Parser::parseSymbolType);
 
-    //~ Array types
+    //~ Complex types
     type_led(TokenType::LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
+    type_led(TokenType::At, Precedence::Generic, &Parser::parseGenericType);
 }
 
 TypePtr Parser::parseType(Precedence precedence) noexcept_except_catastrophic {

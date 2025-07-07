@@ -103,7 +103,10 @@ ExpressionPtr Parser::parseExpression(Precedence precedence) noexcept_except_cat
             ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
 
-        if (type == TokenType::LeftBrace && !dynamic_cast<ast::IdentifierExpression*>(left.get())) [[unlikely]] {
+        if (type == TokenType::LeftBrace &&
+            !dynamic_cast<ast::IdentifierExpression*>(left.get()) &&
+            !dynamic_cast<ast::GenericExpression*>(left.get())
+        ) [[unlikely]] {
             // TODO: Add support for generics in bundles
             if (isParsingBlockPrecursor) {
                 // Left braces after an expression can either start a block or a bundle instantiation
@@ -241,7 +244,7 @@ ExpressionPtr Parser::parseArrayInstantiationExpression() {
         if (currentToken().getType() == lexer::TokenType::RightSquare) {
             break;  // Done instantiation
         }
-        auto precedence = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+        constexpr auto precedence = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
         auto element = parseExpression(static_cast<Precedence>(precedence));
         elements.push_back(std::move(element));
         if (currentToken().getType() != lexer::TokenType::RightSquare) {
@@ -292,15 +295,31 @@ ExpressionPtr Parser::parseGenericExpression(ExpressionPtr left, Precedence prec
 }
 
 ExpressionPtr Parser::parseBundleInstantiationExpression(ExpressionPtr left, Precedence precedence) {
-    auto underlying = dynamic_cast<ast::IdentifierExpression*>(left.get());
-    if (!underlying) {
-        [[unlikely]] logError(
-            std::format("Bundle instantiation expression must start with a bundle name, not {}", left->toString()),
-            left->getLine(), left->getColumn());
-    }
+    DISCARD(precedence)
+    std::string bundleName;
+    std::vector<TypePtr> genericTypes;
     // Parse out a bundle instantiation even if there's an error
     expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start bundle instantiation");
     std::vector<ast::BundleInstantiationField> fields;
+
+    if (auto genericExpr = dynamic_cast<ast::GenericExpression*>(left.get())) {
+        const auto identifierExpr = dynamic_cast<ast::IdentifierExpression*>(genericExpr->getIdentifier());
+        if (!identifierExpr) {
+            logError(
+                "Generic bundle instantiation must start with a bundle name",
+                left->getLine(), left->getColumn());
+        } else {
+            bundleName = identifierExpr->getValue();
+            genericTypes = genericExpr->getTypeParameters();
+        }
+    } else if (auto underlying = dynamic_cast<ast::IdentifierExpression*>(left.get())) {
+        bundleName = underlying->getValue();
+    } else {
+        logError(
+            std::format("Bundle instantiation expression must start with a bundle name, not {}", left->toString()),
+            left->getLine(), left->getColumn());
+    }
+
     while (!done()) {
         if (currentToken().getType() == lexer::TokenType::RightBrace) {
             break;  // Done instantiation
@@ -308,16 +327,15 @@ ExpressionPtr Parser::parseBundleInstantiationExpression(ExpressionPtr left, Pre
         auto propertyName = expectToken(lexer::TokenType::Identifier, "Expected field name in bundle instantiation").getLexeme();
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to bundle field");
         // want precedence to be 1 higher than assignment (e.g. field = x = 10 is invalid)
-        auto allowableBindingPower = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
-        precedence = static_cast<Precedence>(allowableBindingPower);
-        auto value = parseExpression(precedence);
+        constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+        auto value = parseExpression(static_cast<Precedence>(precedence_));
 
         auto duplicate = std::find_if(
             fields.begin(), fields.end(),
             [propertyName](const ast::BundleInstantiationField& field) { return field.name == propertyName; });
         if (duplicate != fields.end()) {
             logError(
-                std::format("Duplicate field '{}' in bundle instantiation of '{}'", propertyName, underlying->getValue()),
+                std::format("Duplicate field '{}' in bundle instantiation of '{}'", propertyName, bundleName),
                 value->getLine(), value->getColumn());
         } else {
             fields.emplace_back(propertyName, std::move(value));
@@ -328,7 +346,7 @@ ExpressionPtr Parser::parseBundleInstantiationExpression(ExpressionPtr left, Pre
     }
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end bundle instantiation");
     return std::make_unique<ast::BundleInstantiationExpression>(
-        underlying->getValue(), std::move(fields));
+        bundleName, std::move(genericTypes), std::move(fields));
 }
 
 ExpressionPtr Parser::parseMemberAccessExpression(ExpressionPtr left, Precedence precedence) {
@@ -341,8 +359,8 @@ ExpressionPtr Parser::parseMemberAccessExpression(ExpressionPtr left, Precedence
 ExpressionPtr Parser::parseIndexingExpression(ExpressionPtr left, Precedence precedence) {
     DISCARD(advance());   // Consume the left square bracket
     DISCARD(precedence);  // Avoid unused variable warning
-    auto nextPrecedence = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
-    ExpressionPtr index = parseExpression(static_cast<Precedence>(nextPrecedence));
+    constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+    ExpressionPtr index = parseExpression(static_cast<Precedence>(precedence_));
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
     return std::make_unique<ast::IndexExpression>(std::move(left), std::move(index));
 }
