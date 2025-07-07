@@ -5,7 +5,6 @@
  */
 
 #include <frontend/lexer.h>
-#include <frontend/token.h>
 #include <global_macros.h>
 #include <io/filereader.h>
 #include <io/logging.h>

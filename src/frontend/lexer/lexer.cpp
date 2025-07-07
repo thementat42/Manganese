@@ -84,7 +84,6 @@ if current char is an operator (after doing the above checks), look at the next 
 */
 
 #include <frontend/lexer.h>
-#include <frontend/token.h>
 #include <global_macros.h>
 #include <io/filereader.h>
 #include <io/logging.h>

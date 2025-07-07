@@ -1,0 +1,94 @@
+#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
+#define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
+
+#include <frontend/lexer.h>
+
+#include <global_macros.h>
+#include <utils/stox.h>
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#if DEBUG
+#define __DUMP_OVERRIDE void dump(std::ostream& os, int indent = 0) const override;  // Makes overriding dump() less cumbersome to type
+#else
+#define __DUMP_OVERRIDE  // Don't dump in non-debug builds
+#endif
+
+#define __STRING_OVERRIDE std::string toString() const override;  // Makes overriding toString() less cumbersome to type
+
+#define __NODE_OVERRIDES \
+    __STRING_OVERRIDE    \
+    __DUMP_OVERRIDE
+
+#define NODE_OVERRIDES __NODE_OVERRIDES  // Makes overriding toString() and dump() less cumbersome to type
+
+namespace Manganese {
+
+namespace parser {
+class Parser;
+}  // namespace parser
+
+namespace ast {
+class Expression;
+class Statement;
+class Type;
+using ExpressionPtr = std::unique_ptr<Expression>;
+using StatementPtr = std::unique_ptr<Statement>;
+using TypePtr = std::unique_ptr<Type>;
+using Block = std::vector<StatementPtr>;
+
+enum class Visibility : char {
+    Public = 0,
+    ReadOnly = 1,
+    Private = 2,
+};
+
+class ASTNode {
+   protected:
+    size_t line = 0, column = 0;
+
+   public:
+    virtual ~ASTNode() noexcept = default;
+
+    virtual std::string toString() const = 0;
+
+#if DEBUG
+    /**
+     * @brief Dump the AST node to an output stream
+     * @param os The output stream to dump to
+     * @param indent The indentation level for pretty-printing
+     */
+    virtual void dump(std::ostream& os, int indent = 0) const = 0;
+#endif  // DEBUG
+
+    size_t getLine() const { return line; }
+    size_t getColumn() const { return column; }
+
+    friend parser::Parser;
+};
+
+class Type : public ASTNode {
+   public:
+    virtual ~Type() noexcept = default;
+};
+
+class Expression : public ASTNode {
+   public:
+    virtual ~Expression() noexcept = default;
+    virtual TypePtr getType() const = 0;
+};
+
+class Statement : public ASTNode {
+   public:
+    virtual ~Statement() noexcept = default;
+};
+
+}  // namespace ast
+
+// TODO: Add line and column setting methods to the derived classes
+}  // namespace Manganese
+
+#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
