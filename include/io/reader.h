@@ -3,8 +3,8 @@
  * @brief This file contains the definition of the virtual Reader class
  */
 
-#ifndef READER_H
-#define READER_H
+#ifndef MANGANESE_INCLUDE_IO_READER_H
+#define MANGANESE_INCLUDE_IO_READER_H
 
 #include <global_macros.h>
 
@@ -72,4 +72,4 @@ class Reader {
 }  // namespace io
 }  // namespace Manganese
 
-#endif  // READER_H
+#endif  // MANGANESE_INCLUDE_IO_READER_H

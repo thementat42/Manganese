@@ -1,5 +1,5 @@
-#ifndef VISITOR_H
-#define VISITOR_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_VISITOR_H
+#define MANGANESE_INCLUDE_FRONTEND_VISITOR_H
 
 #include <global_macros.h>
 
@@ -12,4 +12,4 @@ class Visitor {
 }  // namespace visitor
 }  // namespace Manganese
 
-#endif  // VISITOR_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_VISITOR_H

@@ -3,8 +3,8 @@
  * @brief This file contains the definition of the FileReader class
  */
 
-#ifndef FILEREADER_H
-#define FILEREADER_H
+#ifndef MANGANESE_INCLUDE_IO_FILEREADER_H
+#define MANGANESE_INCLUDE_IO_FILEREADER_H
 
 #include <global_macros.h>
 
@@ -56,4 +56,4 @@ class FileReader : public Reader {
 };
 }  // namespace io
 }  // namespace Manganese
-#endif  // FILEREADER_H
+#endif  // MANGANESE_INCLUDE_IO_FILEREADER_H

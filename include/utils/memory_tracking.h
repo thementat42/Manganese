@@ -1,5 +1,5 @@
-#ifndef MANGANESE_MEMORY_TRACKING_H
-#define MANGANESE_MEMORY_TRACKING_H
+#ifndef MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
+#define MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
 
 #include <global_macros.h>
 #include <io/logging.h>
@@ -111,4 +111,4 @@ inline void logTotalAllocatedMemory() {
 #endif  // MEMORY_TRACKING && DEBUG
 }
 
-#endif  // MANGANESE_MEMORY_TRACKING_H
+#endif  // MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H

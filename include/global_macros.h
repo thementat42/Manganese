@@ -3,8 +3,8 @@
  * @brief Global macros and utility definitions for the project.
  */
 
-#ifndef GLOBAL_MACROS_H
-#define GLOBAL_MACROS_H
+#ifndef MANGANESE_INCLUDE_GLOBAL_MACROS_H
+#define MANGANESE_INCLUDE_GLOBAL_MACROS_H
 
 #include <stdint.h>
 #include <utils/compiler_config.h>
@@ -58,4 +58,4 @@
 #define __DISCARD(x) (void)(x);
 #define DISCARD(value) __DISCARD(value)  // Explicitly discard a value
 
-#endif  // GLOBAL_MACROS_H
+#endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_H

@@ -5,8 +5,8 @@
  * This file is included in the global_macros.h file for convenience.
  */
 
-#ifndef COMPILER_CONFIG_H
-#define COMPILER_CONFIG_H
+#ifndef MANGANESE_INCLUDE_UTILS_COMPILER_CONFIG_H
+#define MANGANESE_INCLUDE_UTILS_COMPILER_CONFIG_H
 
 //~ Conversion Warning
 
@@ -121,4 +121,4 @@
 #define ENABLE_FORMAT_WARNING
 #endif  // DEBUG
 
-#endif  // COMPILER_CONFIG_H
+#endif  // MANGANESE_INCLUDE_UTILS_COMPILER_CONFIG_H

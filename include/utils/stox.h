@@ -8,8 +8,8 @@
  * valid on one platform but incomplete on another.
  */
 
-#ifndef UTILS_STOX_H
-#define UTILS_STOX_H
+#ifndef MANGANESE_INCLUDE_UTILS_STOX_H
+#define MANGANESE_INCLUDE_UTILS_STOX_H
 
 #include <cstdint>
 #include <optional>
@@ -58,4 +58,4 @@ std::optional<number_t> stringToNumber(std::string_view str, int base = 10, bool
 
 }  // namespace Manganese
 
-#endif  // UTILS_STOX_H
+#endif  // MANGANESE_INCLUDE_UTILS_STOX_H
