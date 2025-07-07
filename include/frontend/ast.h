@@ -1,6 +1,6 @@
 /**
  * @file ast.h
- * @brief This file contains the definition of the different AST nodes for the Manganese compiler.
+ * @brief Central header for the AST components
  */
 
 /*

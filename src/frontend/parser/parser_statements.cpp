@@ -5,7 +5,7 @@
 
 #include <frontend/ast.h>
 #include <frontend/parser.h>
-#include <frontend/token.h>
+#include <frontend/lexer.h>
 #include <global_macros.h>
 
 #include <format>

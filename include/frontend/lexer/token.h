@@ -3,8 +3,8 @@
  * @brief This file contains the definition of token functionality for the Manganese compiler.
  */
 
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_H
+#define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_H
 
 #include <global_macros.h>
 
@@ -250,4 +250,4 @@ enum class TokenType : uint8_t {
 
 }  // namespace lexer
 }  // namespace Manganese
-#endif  // TOKEN_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_H

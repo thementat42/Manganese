@@ -1,6 +1,8 @@
-#include <global_macros.h>
+#ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
+#define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
 
-#include "token.h"
+#include <frontend/lexer/token.h>
+#include <global_macros.h>
 
 namespace Manganese {
 namespace parser {
@@ -62,3 +64,5 @@ struct Operator {
 };
 }  // namespace parser
 }  // namespace Manganese
+
+#endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
