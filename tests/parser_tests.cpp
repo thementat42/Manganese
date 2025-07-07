@@ -461,12 +461,17 @@ bool testGenerics() {
         "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\n"
         "    return 3 + valueT + valueU * valueV;\n"
         "}\n"
-        "let result = genericFunction@[int32, float64, char](5, 2.5, (65 as char));";
+        "let result = genericFunction@[int32, float64, char](5, 2.5, (65 as char));"
+        "bundle Foo[T, U] {\n"
+        "    x: T;\n"
+        "    y: U;\n"
+        "}\n";
     // "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n";
-    std::array<std::string, 2>
+    std::array<std::string, 3>
         expected = {
             "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
-            "(let result: readonly auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));"};
+            "(let result: readonly auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));",
+            "bundle Foo[T, U] {\n\tx: T;\n\ty: U;\n}"};
     parser::Parser parser(expression, lexer::Mode::String);
     return validateStatements(parser.parse(), expected, "Generic Function Declaration");
 }

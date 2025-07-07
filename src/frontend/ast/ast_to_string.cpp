@@ -269,7 +269,18 @@ std::string RepeatLoopStatement::toString() const {
 
 std::string BundleDeclarationStatement::toString() const {
     std::ostringstream oss;
-    oss << "bundle " << name << " {\n";
+    oss << "bundle " << name;
+    if (!genericTypes.empty()) {
+        oss << "[";
+        for (size_t i = 0; i < genericTypes.size(); ++i) {
+            oss << genericTypes[i];
+            if (i < genericTypes.size() - 1) {
+                oss << ", ";
+            }
+        }
+        oss << "]";
+    }
+    oss << " {\n";
     for (const auto& field : fields) {
         oss << "\t" << field.name << ": " << (field.isStatic ? "static " : "") << field.type->toString() << ";\n";
     }

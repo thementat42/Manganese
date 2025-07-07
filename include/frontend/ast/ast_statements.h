@@ -118,11 +118,12 @@ struct BundleField {
 class BundleDeclarationStatement : public Statement {
    protected:
     std::string name;
+    std::vector<std::string> genericTypes;
     std::vector<BundleField> fields;
 
    public:
-    BundleDeclarationStatement(std::string name_, std::vector<BundleField> fields_)
-        : name(std::move(name_)), fields(std::move(fields_)) {}
+    BundleDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_ ,std::vector<BundleField> fields_)
+        : name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
     NODE_OVERRIDES;
 };
 

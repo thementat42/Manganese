@@ -79,10 +79,22 @@ StatementPtr Parser::parseVariableDeclarationStatement() {
 }
 
 StatementPtr Parser::parseBundleDeclarationStatement() {
-    expectToken(TokenType::Bundle, "Expected 'bundle' keyword to start bundle declaration");
-    std::string name = expectToken(TokenType::Identifier, "Expected bundle name after 'bundle'").getLexeme();
-    expectToken(TokenType::LeftBrace, "Expected a '{'");
+    DISCARD(advance());
+    std::vector<std::string> genericTypes;
     std::vector<ast::BundleField> fields;
+    std::string name = expectToken(TokenType::Identifier, "Expected bundle name after 'bundle'").getLexeme();
+
+    if (currentToken().getType() == TokenType::LeftSquare) {
+        DISCARD(advance()); 
+        while (!done() && currentToken().getType() != TokenType::RightSquare) {
+            genericTypes.push_back(expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
+            if (currentToken().getType() != TokenType::RightSquare) {
+                expectToken(TokenType::Comma, "Expected a ',' to separate generic types, or a ']' to close the generic type list");
+            }
+        }
+        expectToken(TokenType::RightSquare, "Expected ']' to close generic type list");
+    }
+    expectToken(TokenType::LeftBrace, "Expected a '{'");
 
     while (!done()) {
         if (currentToken().getType() == TokenType::RightBrace) {
@@ -115,7 +127,7 @@ StatementPtr Parser::parseBundleDeclarationStatement() {
     expectToken(TokenType::RightBrace);
 
     // Move since BundleField contains a unique_ptr which is not copyable
-    return std::make_unique<ast::BundleDeclarationStatement>(name, std::move(fields));
+    return std::make_unique<ast::BundleDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
 }
 
 StatementPtr Parser::parseFunctionDeclarationStatement() {
