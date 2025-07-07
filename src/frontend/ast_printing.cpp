@@ -628,7 +628,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, int indent) const {
     } else {
         os << getIndent(indent + 1) << "generic types: []\n";
     }
-    
+
     os << getIndent(indent + 1) << "parameters: [\n";
     for (const auto& param : parameters) {
         os << getIndent(indent + 2) << "{\n";

@@ -21,7 +21,7 @@ Token::Token(const TokenType type_, const std::string lexeme_, const size_t line
     // Set a specific enum value for operators and keywords based on the lexeme
     if (type_ == TokenType::Operator) {
         auto op = operatorFromString(lexeme_);
-        if (op.has_value())  [[likely]] {
+        if (op.has_value()) [[likely]] {
             type = op.value();
         } else {
             ASSERT_UNREACHABLE(

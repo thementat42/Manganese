@@ -272,7 +272,7 @@ ExpressionPtr Parser::parseFunctionCallExpression(ExpressionPtr left, Precedence
 }
 
 ExpressionPtr Parser::parseGenericExpression(ExpressionPtr left, Precedence precedence) {
-    DISCARD(advance());  // Consume the '@' token
+    DISCARD(advance());   // Consume the '@' token
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
     std::vector<TypePtr> typeParameters;

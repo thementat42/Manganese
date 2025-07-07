@@ -466,8 +466,7 @@ bool testGenerics() {
     std::array<std::string, 2>
         expected = {
             "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
-            "(let result: readonly auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));"
-        };
+            "(let result: readonly auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));"};
     parser::Parser parser(expression, lexer::Mode::String);
     return validateStatements(parser.parse(), expected, "Generic Function Declaration");
 }

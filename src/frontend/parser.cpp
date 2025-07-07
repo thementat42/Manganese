@@ -10,9 +10,9 @@ namespace Manganese {
 namespace parser {
 
 Parser::Parser(const std::string& source, lexer::Mode mode) : lexer(make_unique<lexer::Lexer>(source, mode)),
-                                                      tokenCachePosition(0),
-                                                      defaultVisibility(ast::Visibility::ReadOnly),
-                                                      hasError(false) {
+                                                              tokenCachePosition(0),
+                                                              defaultVisibility(ast::Visibility::ReadOnly),
+                                                              hasError(false) {
     initializeLookups();
     initializeTypeLookups();
 }

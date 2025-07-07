@@ -111,7 +111,7 @@
 
 #define DISABLE_FORMAT_WARNING __DISABLE_FORMAT_WARNING  // Suppress warnings about format string mismatches
 #define ENABLE_FORMAT_WARNING __ENABLE_FORMAT_WARNING    // Re-enable the format warning
-#else  // ^^ DEBUG vv !DEBUG
+#else                                                    // ^^ DEBUG vv !DEBUG
 // Release builds don't use -Werror, so there's no need to disable warnings
 #define DISABLE_CONVERSION_WARNING
 #define ENABLE_CONVERSION_WARNING

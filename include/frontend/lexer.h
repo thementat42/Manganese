@@ -6,10 +6,10 @@
 #include <io/reader.h>
 #include <io/stringreader.h>
 
+#include <deque>
 #include <functional>
 #include <memory>
 #include <optional>
-#include <deque>
 #include <string>
 
 #include "token.h"

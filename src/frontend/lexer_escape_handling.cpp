@@ -22,7 +22,6 @@ constexpr uint8_t UTF8_3B_PRE = 0xE0;
 constexpr uint8_t UTF8_4B_PRE = 0xF0;
 constexpr uint8_t UTF8_CONT_PRE = 0x80;
 
-// constexpr uint8_t UTF8_1B_MASK = 0x7F;
 constexpr uint8_t UTF8_2B_MASK = 0x1F;
 constexpr uint8_t UTF8_3B_MASK = 0x0F;
 constexpr uint8_t UTF8_4B_MASK = 0x07;
@@ -37,7 +36,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
     processed.reserve(escapeString.length() - 1);
     size_t i = 0;
     while (i < escapeString.length()) {
-        if (escapeString[i] != '\\') [[likely]] {    // Most characters are not escaped
+        if (escapeString[i] != '\\') [[likely]] {  // Most characters are not escaped
             processed += escapeString[i++];
             continue;
         }
@@ -56,7 +55,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
             std::string escDigits = escapeString.substr(i + 1, 8);  // 8 for UXXXXXXXX
             escapeChar = resolveUnicodeCharacters(escDigits, true);
             skipLength = 9;
-        } else if (escapeString[i] == 'x') [[unlikely]] {  // Hex escape sequences aren't usually used
+        } else if (escapeString[i] == 'x') [[unlikely]] {           // Hex escape sequences aren't usually used
             std::string escDigits = escapeString.substr(i + 1, 2);  // 2 for xXX
             escapeChar = resolveHexCharacters(escDigits);
             skipLength = 3;

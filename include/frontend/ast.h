@@ -407,16 +407,16 @@ class FunctionCallExpression : public Expression {
 };
 
 class GenericExpression : public Expression {
-    protected:
-    ExpressionPtr identifier;  // The thing to which the generic types are passed
+   protected:
+    ExpressionPtr identifier;    // The thing to which the generic types are passed
     std::vector<TypePtr> types;  // The types passed to the generic expression
-    public:
-     GenericExpression(ExpressionPtr identifier_, std::vector<TypePtr> types_)
-         : identifier(std::move(identifier_)), types(std::move(types_)) {}
-     TypePtr getType() const override {
-         // The type of a generic expression is the type of the identifier expression
-         return identifier->getType();
-     }
+   public:
+    GenericExpression(ExpressionPtr identifier_, std::vector<TypePtr> types_)
+        : identifier(std::move(identifier_)), types(std::move(types_)) {}
+    TypePtr getType() const override {
+        // The type of a generic expression is the type of the identifier expression
+        return identifier->getType();
+    }
     NODE_OVERRIDES;
 };
 

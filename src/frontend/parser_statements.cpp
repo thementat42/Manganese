@@ -37,8 +37,8 @@ StatementPtr Parser::parseVariableDeclarationStatement() {
 
     bool isConst = advance().getType() == TokenType::Const;
     std::string name = expectToken(TokenType::Identifier,
-                           std::format("Expected variable name after '{}'", isConst ? "const" : "let"))
-                   .getLexeme();
+                                   std::format("Expected variable name after '{}'", isConst ? "const" : "let"))
+                           .getLexeme();
     if (currentToken().getType() == TokenType::Colon) {
         DISCARD(advance());  // Consume the colon
         if (currentToken().getType() == TokenType::Public) {
@@ -156,7 +156,6 @@ StatementPtr Parser::parseFunctionDeclarationStatement() {
         expectToken(TokenType::RightSquare, "Expected ']' to close generic type list");
     }
     expectToken(TokenType::LeftParen);
-
 
     while (!done()) {
         if (currentToken().getType() == TokenType::RightParen) {
@@ -384,7 +383,7 @@ StatementPtr Parser::parseSwitchStatement() {
         }
     }
     if (cases.empty() && defaultBody.empty()) {
-        logging::logWarning("Switch statement has no cases or default body", 
+        logging::logWarning("Switch statement has no cases or default body",
                             startLine, startColumn);
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");

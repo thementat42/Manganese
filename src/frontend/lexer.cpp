@@ -141,9 +141,9 @@ void Lexer::lex(size_t numTokens) {
                 logging::logError("Unclosed multiline comment", getLine(), getCol());
                 return;
             }
-            advance(2);  // Skip the */
-        } else if (std::isspace(currentChar)) [[likely]] {  // lots of whitespace
-            advance();  // Skip whitespace
+            advance(2);                                                      // Skip the */
+        } else if (std::isspace(currentChar)) [[likely]] {                   // lots of whitespace
+            advance();                                                       // Skip whitespace
         } else if (isalpha(currentChar) || currentChar == '_') [[likely]] {  // Mostly identifiers and keywords
             tokenizeKeywordOrIdentifier();
             numTokensMade++;
