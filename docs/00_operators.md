@@ -67,7 +67,7 @@ Bitwise operators work similarly to logical operators, but (as their name sugges
 |   `&`    | Bitwise AND         | `x & y`     |
 |   `\|`   | Bitwise OR          | `x \| y`    |
 |   `^`    | Bitwise XOR         | `x ^ y`     |
-|   `~`    | Bitwise NOT         | `x ~ y`     |
+|   `~`    | Bitwise NOT         | `~x`     |
 |  `<<`    | Bitwise Left Shift  | `x << y`    |
 |  `>>`    | Bitwise Right Shift | `x >> y`    |
 
