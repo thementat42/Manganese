@@ -86,13 +86,16 @@ bool testExponentiationAssociativity() {
 }
 
 bool testVariableDeclaration() {
-    std::string expression = "let foo = 45.5;\nlet bar = foo * 10;\nconst baz : public uint32 = foo + 10 ^^ 2 * bar + foo % 7 + foo^^2; let boolean = true;";
+    std::string expression = "let foo = 45.5;"
+    "let bar = foo * 10;"
+    "const baz : public uint32 = foo + 10 ^^ 2 * bar + foo % 7 + foo^^2;"
+    "let boolean = true;";
 
     std::array<std::string, 4> expected = {
-        "(let foo: readonly float64 = 45.5);",
-        "(let bar: readonly auto = (foo * 10));",
+        "(let foo: private float64 = 45.5);",
+        "(let bar: private auto = (foo * 10));",
         "(const baz: public uint32 = (((foo + ((10 ^^ 2) * bar)) + (foo % 7)) + (foo ^^ 2)));",
-        "(let boolean: readonly bool = true);"};
+        "(let boolean: private bool = true);"};
 
     parser::Parser parser(expression, lexer::Mode::String);
 
@@ -213,14 +216,14 @@ bool testTypedVariableDeclaration() {
         "const y: public float64 = 3.14159;\n"
         "let z: char = 'A';\n"
         "let numbers: int32[3^^2];\n"
-        "const matrix: private float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
+        "const matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
     std::array<std::string, 5> expected = {
-        "(let x: readonly int32 = 42);",
+        "(let x: private int32 = 42);",
         "(const y: public float64 = 3.14159);",
-        "(let z: readonly char = 'A');",
-        "(let numbers: readonly int32[(3 ^^ 2)]);",
-        "(const matrix: private float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
+        "(let z: private char = 'A');",
+        "(let numbers: private int32[(3 ^^ 2)]);",
+        "(const matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     parser::Parser parser(expression, lexer::Mode::String);
     return validateStatements(parser.parse(), expected, "Typed Variable Declarations");
@@ -231,15 +234,15 @@ bool testPostfixOperators() {
         "x++;\n"
         "y--;\n"
         "(a + b)++;\n"
-        // "arr[i]--;\n"
+        "arr[i]--;\n"
         "++x--;\n"
         "x++ + y--;\n";
 
-    std::array<std::string, 5> expected = {
+    std::array<std::string, 6> expected = {
         "(x++);",
         "(y--);",
         "((a + b)++);",
-        // "(arr[i]--);",
+        "(arr[i]--);",
         "(++(x--));",  // Postfix should be applied first, then prefix
         "((x++) + (y--));"};
 
@@ -300,9 +303,9 @@ bool testBundleDeclarationAndInstantiation() {
     std::array<std::string, 5> expected = {
         "bundle Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: static float64;\n}",
         "bundle Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
-        "(let p1: readonly Point = Point {x = 10, y = 20});",
-        "(let p2: readonly Point = Point {x = 30, y = 40});",
-        "(const rect: readonly Rectangle = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
+        "(let p1: private Point = Point {x = 10, y = 20});",
+        "(let p2: private Point = Point {x = 30, y = 40});",
+        "(const rect: private Rectangle = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
 
     parser::Parser parser(expression, lexer::Mode::String);
     return validateStatements(parser.parse(), expected, "Bundle Declaration and Instantiation");
@@ -327,10 +330,10 @@ bool testFunctionDeclarationAndCall() {
     std::array<std::string, 6> expected = {
         "func add(a: int32, b: int32) -> int32 {\nreturn (a + b);\n}",
         "func greet(name: string) {\nprint((\"Hello, \" + name));\n}",
-        "func calculate(x: float64, y: const float64) -> float64 {\n(let result: readonly auto = (x * y));\nreturn result;\n}",
-        "(let sum: readonly auto = add(5, 3));",
+        "func calculate(x: float64, y: const float64) -> float64 {\n(let result: private auto = (x * y));\nreturn result;\n}",
+        "(let sum: private auto = add(5, 3));",
         "greet(\"World\");",
-        "(let product: readonly auto = calculate(2.5, 3.01));"};
+        "(let product: private auto = calculate(2.5, 3.01));"};
 
     parser::Parser parser(expression, lexer::Mode::String);
     return validateStatements(parser.parse(), expected, "Function Declaration and Call");
@@ -349,9 +352,9 @@ bool testLoops() {
         "repeat ((5 + 30 - 2 ^^ 3) << 2) {print(\"Hello\");}";
 
     std::array<std::string, 5> expected = {
-        "(let i: readonly int32 = 0);",
+        "(let i: private int32 = 0);",
         "do {\n\t(++i);\n\tprint(i);\n} while ((i < 5));",
-        "(let j: readonly int32 = 10);",
+        "(let j: private int32 = 10);",
         "while (true) {\n\tif ((j == 5)) {\n\tcontinue;\n}\n\tprint((j--));\n\tif ((j <= 0)) {\n\tbreak;\n}\n}",
         "repeat ((((5 + 30) - (2 ^^ 3)) << 2)) {\n\tprint(\"Hello\");\n}"};
 
@@ -373,10 +376,10 @@ bool testIfElseStatements() {
 
     std::string expected =
         "if ((a < b)) {\n"
-        "\t(let result: readonly auto = (a + b));\n"
+        "\t(let result: private auto = (a + b));\n"
         "\tprint(result);\n"
         "} elif ((a > b)) {\n"
-        "\t(let result: readonly auto = (a - b));\n"
+        "\t(let result: private auto = (a - b));\n"
         "\tprint(result);\n"
         "} else {\n"
         "\tprint(\"Equal\");\n"
@@ -446,13 +449,13 @@ bool testAccessExpressions() {
 
     std::array<std::string, 7>
         expected = {
-            "(let point: readonly Point = Point {x = 10, y = 20});",
-            "(let xCoord: readonly auto = point.x);",
-            "(let yCoord: readonly auto = point.y);",
-            "(let color: readonly auto = rect.color);",
-            "(const array: readonly auto = [1, 2, 3]);",
-            "(let firstElement: readonly auto = array[0]);",
-            "(let foo: readonly auto = lib::module_::function(a, b, c));"};
+            "(let point: private Point = Point {x = 10, y = 20});",
+            "(let xCoord: private auto = point.x);",
+            "(let yCoord: private auto = point.y);",
+            "(let color: private auto = rect.color);",
+            "(const array: private auto = [1, 2, 3]);",
+            "(let firstElement: private auto = array[0]);",
+            "(let foo: private auto = lib::module_::function(a, b, c));"};
 
     parser::Parser parser(expression, lexer::Mode::String);
     return validateStatements(parser.parse(), expected, "Member Access Expression");
@@ -469,14 +472,14 @@ bool testGenerics() {
         "    y: U;\n"
         "}\n"
         "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n"
-        "let foo_array: private Foo@[int32, float64][];";
+        "let foo_array: readonly Foo@[int32, float64][];";
     std::array<std::string, 5>
         expected = {
             "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
-            "(let result: readonly auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));",
+            "(let result: private auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));",
             "bundle Foo[T, U] {\n\tx: T;\n\ty: U;\n}",
-            "(let foo: readonly Foo@[int32, float64] = Foo@[int32, float64] {x = 3, y = 4.5});",
-            "(let foo_array: private Foo@[int32, float64][]);"};
+            "(let foo: private Foo@[int32, float64] = Foo@[int32, float64] {x = 3, y = 4.5});",
+            "(let foo_array: readonly Foo@[int32, float64][]);"};
     parser::Parser parser(expression, lexer::Mode::String);
     return validateStatements(parser.parse(), expected, "Generic Function Declaration");
 }

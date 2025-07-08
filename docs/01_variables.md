@@ -16,7 +16,7 @@ Where:
 - a [`type qualifier`](#-type-qualifiers-) provides extra information to the compiler on how the variable should be interpreted and/or stored. A type qualifier is optional.
 - `<type>` is one of the [primitive types](#-primitive-types-), a built-in [data structure](/docs/02_data_structures.md) or a [user-defined type](/docs/06_data_encapsulation.md)
 - `variable name` is an identifier to refer to the variable. Variable names can contain letters, underscores and numbers (but cannot start with numbers).
-- `value` is an optional initial value for the variable. If no value is provided, the variable will be [default-initialized](#-default-initialization-)
+- `value` is an optional initial value for the variable.
 
 Type declarations are required on variables without an initial value.
 Variables with an initial value generally do not require a type declaration, as the compiler will infer which type the variable is.
@@ -78,32 +78,6 @@ The following table summarizes the ranges of values for the different integer ty
 | `uint64`   | 0                          | 18 446 744 073 709 551 615 |
 | `float32`  | 1.401298464324817e-45      | 3.4028234663852886e+38     |
 | `float64`  | 5e-324                     | 1.7976931348623157e308     |
-
-## === Default initialization ===
-
-When a variable is declared, but not assigned a value, the compiler will give it a default value based on its type:
-
-|   Type  |  Default Value |
-| ------- | -------------- |
-| `int`   | `0`            |
-| `uint`  | `0`            |
-| `float` | `0.0`          |
-| `char`  | `'\0'`         |
-| `bool`  | `false`        |
-| `ptr`   | a null pointer |
-
-> TODO: Rework this
-
-For example:
-
-```manganese
-let a: int32;  # a is initialized to 0
-let b: float64;  # b is initialized to 0.0
-let c: char;  # c is initialized to '\0'
-let d: bool;  # d is initialized to false
-let f : ptr int;  # f is a null pointer
-let h : ptr int = &a;  # no default initialization, h points to a
-```
 
 ## === Type Casting ===
 

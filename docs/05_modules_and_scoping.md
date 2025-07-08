@@ -40,7 +40,7 @@ the syntax for importing the `foo` module is `import my_module::foo`.
 
 Functions only support `public` and `private` access, not `readonly`
 
-By default, all variables are `readonly` and all functions are `public`.
+By default, all variables and functions are `private`.
 
 `public`, `readonly` and `private` can also be used to create blocks by placing a colon (`:`) after the keyword. Every variable and function declared after it, until the next block, will be assigned that access level. This is syntactic sugar for putting the access modifier in every variable declaration. For example:
 

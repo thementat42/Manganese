@@ -15,8 +15,7 @@ bundle <bundle name> {
 }
 ```
 
-The default initialization rule for a bundle is to initialize each of its members using its default value. This is recursive, so if a bundle contains another bundle, the inner bundle will have all its fields initialized (this will repeat as needed). By default, the elements of a bundle are [`public`](/docs/05_modules_and_scoping.md#privacy) -- they can be accessed and modified outside the bundle. This can be changed using the `private` and `readonly` keywords. The `private` keyword makes the member inaccessible outside the bundle, while the `readonly` keyword makes variables accessible but not modifiable outside the bundle.
-
+By default, the elements of a bundle are [`public`](/docs/05_modules_and_scoping.md#privacy).
 To access the members of a bundle, use the dot operator (`.`) as follows:
 
 ```manganese
