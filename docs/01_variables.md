@@ -5,8 +5,8 @@ Manganese is a statically typed language, so all variables must be declared with
 The general syntax for declaring a variable in Manganese is:
 
 ```manganese
-let <variable name> (: <type qualifier> <type>) (= <value>);
-const <variable name> : <type qualifier> <type> (= <value>);
+let <variable name> [: <type qualifier> <type>] [= <value>];
+const <variable name> : <type qualifier> <type> = <value>;
 ```
 
 `let` declares a mutable variable, while `const` declares an immutable variable.
@@ -67,17 +67,17 @@ Manganese supports different integer and floating-point widths, which can hold d
 The following table summarizes the ranges of values for the different integer types in Manganese:
 
 |    Type    |       Minimum Value       |       Maximum Value        |
-| ---------- | ------------------------- | -------------------------- |
-| `int8`     | -128                      | 127                        |
-| `int16`    | -32 768                   | 32 767                     |
-| `int32`    | -2 147 483 648            | 2 147 483 647              |
-| `int64`    | 9 223 372 036 854 775 808 | 9 223 372 036 854 775 807  |
-| `uint8`    | 0                         | 255                        |
-| `uint16`   | 0                         | 65 536                     |
-| `uint32`   | 0                         | 4 294 967 295              |
-| `uint64`   | 0                         | 18 446 744 073 709 551 615 |
-| `float32`  | 1.401298464324817e-45     | 3.4028234663852886e+38     |
-| `float64`  | 5e-324                    | 1.7976931348623157e308     |
+| ---------- | -------------------------- | -------------------------- |
+| `int8`     | -128                       | 127                        |
+| `int16`    | -32 768                    | 32 767                     |
+| `int32`    | -2 147 483 648             | 2 147 483 647              |
+| `int64`    | -9 223 372 036 854 775 808 | 9 223 372 036 854 775 807  |
+| `uint8`    | 0                          | 255                        |
+| `uint16`   | 0                          | 65 535                     |
+| `uint32`   | 0                          | 4 294 967 295              |
+| `uint64`   | 0                          | 18 446 744 073 709 551 615 |
+| `float32`  | 1.401298464324817e-45      | 3.4028234663852886e+38     |
+| `float64`  | 5e-324                     | 1.7976931348623157e308     |
 
 ## === Default initialization ===
 
