@@ -466,7 +466,7 @@ bool testGenerics() {
         "    x: T;\n"
         "    y: U;\n"
         "}\n"
-        "let foo: Foo@[int32, float64] = Foo@[int32, float64]{x = 3, y = 4.5};\n"
+        "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n"
         "let foo_array: private Foo@[int32, float64][];";
     std::array<std::string, 5>
         expected = {

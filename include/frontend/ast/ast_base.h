@@ -2,7 +2,6 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
 
 #include <frontend/lexer.h>
-
 #include <global_macros.h>
 #include <utils/stox.h>
 
@@ -21,9 +20,10 @@
 
 #define __NODE_OVERRIDES \
     __STRING_OVERRIDE    \
-    __DUMP_OVERRIDE
+    __DUMP_OVERRIDE      \
+    friend parser::Parser;
 
-#define NODE_OVERRIDES __NODE_OVERRIDES  // Makes overriding toString() and dump() less cumbersome to type
+#define NODE_OVERRIDES __NODE_OVERRIDES  // Makes overriding toString() and dump() and declaring the friend parser::Parser less cumbersome to type
 
 namespace Manganese {
 

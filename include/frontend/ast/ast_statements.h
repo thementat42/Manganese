@@ -12,6 +12,47 @@ namespace Manganese {
 
 namespace ast {
 
+struct BundleField {
+    std::string name;
+    TypePtr type;
+    bool isStatic;
+
+    BundleField(std::string name_, TypePtr type_, bool isStatic_)
+        : name(std::move(name_)), type(std::move(type_)), isStatic(isStatic_) {}
+};
+
+class BundleDeclarationStatement : public Statement {
+   protected:
+    std::string name;
+    std::vector<std::string> genericTypes;
+    std::vector<BundleField> fields;
+
+   public:
+    BundleDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_ ,std::vector<BundleField> fields_)
+        : name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
+    NODE_OVERRIDES;
+};
+
+struct EnumValue {
+    std::string name;
+    ExpressionPtr value;
+    explicit EnumValue(std::string name_, ExpressionPtr value_ = nullptr)
+        : name(std::move(name_)), value(std::move(value_)) {}
+};
+
+class EnumDeclarationStatement : public Statement {
+   protected:
+    std::string name;
+    TypePtr baseType;
+    std::vector<EnumValue> values;
+
+   public:
+    EnumDeclarationStatement(std::string name_, TypePtr baseType_, std::vector<EnumValue> values_)
+        : name(name_), baseType(std::move(baseType_)), values(std::move(values_)) {}
+
+    NODE_OVERRIDES;
+};
+
 /**
  * @brief Wrapper class to convert an expression into a statement
  */
@@ -21,33 +62,6 @@ class ExpressionStatement : public Statement {
 
    public:
     explicit ExpressionStatement(ExpressionPtr expression_) : expression(std::move(expression_)) {};
-
-    const Expression& getExpression() const { return *expression; }
-    NODE_OVERRIDES;
-};
-
-class VariableDeclarationStatement : public Statement {
-   protected:
-    bool isConst;
-    std::string name;
-    Visibility visibility;
-    ExpressionPtr value;
-    TypePtr type;
-
-   public:
-    /**
-     * @param isConst_ Whether the variable is constant
-     * @param name_ The name of the variable
-     * @param visibility_ The visibility of the variable (public, read-only, private)
-     * @param value_ The initial value of the variable
-     */
-    VariableDeclarationStatement(bool isConst_, std::string name_, Visibility visibility_,
-                                 ExpressionPtr value_, TypePtr type_ = nullptr);
-
-    bool isConstant() const { return isConst; }
-    const std::string& getName() const { return name; }
-    Visibility getVisibility() const { return visibility; }
-    const Expression& getValue() const { return *value; }
 
     NODE_OVERRIDES;
 };
@@ -75,17 +89,6 @@ class FunctionDeclarationStatement : public Statement {
     NODE_OVERRIDES;
 };
 
-class ReturnStatement : public Statement {
-   protected:
-    ExpressionPtr value;
-
-   public:
-    explicit ReturnStatement(ExpressionPtr value_ = nullptr) : value(std::move(value_)) {}
-
-    const Expression* getValue() const { return value.get(); }
-    NODE_OVERRIDES;
-};
-
 struct ElifClause {
     ExpressionPtr condition;
     Block body;
@@ -106,40 +109,6 @@ class IfStatement : public Statement {
     NODE_OVERRIDES;
 };
 
-struct BundleField {
-    std::string name;
-    TypePtr type;
-    bool isStatic;
-
-    BundleField(std::string name_, TypePtr type_, bool isStatic_)
-        : name(std::move(name_)), type(std::move(type_)), isStatic(isStatic_) {}
-};
-
-class BundleDeclarationStatement : public Statement {
-   protected:
-    std::string name;
-    std::vector<std::string> genericTypes;
-    std::vector<BundleField> fields;
-
-   public:
-    BundleDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_ ,std::vector<BundleField> fields_)
-        : name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
-    NODE_OVERRIDES;
-};
-
-class WhileLoopStatement : public Statement {
-   protected:
-    Block body;
-    ExpressionPtr condition;
-    bool isDoWhile;
-
-   public:
-    WhileLoopStatement(Block body_, ExpressionPtr condition_, bool isDoWhile_ = false)
-        : body(std::move(body_)), condition(std::move(condition_)), isDoWhile(isDoWhile_) {}
-
-    NODE_OVERRIDES;
-};
-
 class RepeatLoopStatement : public Statement {
    protected:
     ExpressionPtr numIterations;
@@ -152,22 +121,12 @@ class RepeatLoopStatement : public Statement {
     NODE_OVERRIDES;
 };
 
-struct EnumValue {
-    std::string name;
-    ExpressionPtr value;
-    explicit EnumValue(std::string name_, ExpressionPtr value_ = nullptr)
-        : name(std::move(name_)), value(std::move(value_)) {}
-};
-
-class EnumDeclarationStatement : public Statement {
+class ReturnStatement : public Statement {
    protected:
-    std::string name;
-    TypePtr baseType;
-    std::vector<EnumValue> values;
+    ExpressionPtr value;
 
    public:
-    EnumDeclarationStatement(std::string name_, TypePtr baseType_, std::vector<EnumValue> values_)
-        : name(name_), baseType(std::move(baseType_)), values(std::move(values_)) {}
+    explicit ReturnStatement(ExpressionPtr value_ = nullptr) : value(std::move(value_)) {}
 
     NODE_OVERRIDES;
 };
@@ -188,6 +147,36 @@ class SwitchStatement : public Statement {
    public:
     SwitchStatement(ExpressionPtr variable_, std::vector<CaseClause> cases_, Block defaultBody_ = {})
         : variable(std::move(variable_)), cases(std::move(cases_)), defaultBody(std::move(defaultBody_)) {}
+
+    NODE_OVERRIDES;
+};
+
+class VariableDeclarationStatement : public Statement {
+   protected:
+    bool isConst;
+    std::string name;
+    Visibility visibility;
+    ExpressionPtr value;
+    TypePtr type;
+
+   public:
+    VariableDeclarationStatement(bool isConst_, std::string name_, Visibility visibility_,
+                                 ExpressionPtr value_, TypePtr type_ = nullptr);
+
+    bool isConstant() const { return isConst; }
+
+    NODE_OVERRIDES;
+};
+
+class WhileLoopStatement : public Statement {
+   protected:
+    Block body;
+    ExpressionPtr condition;
+    bool isDoWhile;
+
+   public:
+    WhileLoopStatement(Block body_, ExpressionPtr condition_, bool isDoWhile_ = false)
+        : body(std::move(body_)), condition(std::move(condition_)), isDoWhile(isDoWhile_) {}
 
     NODE_OVERRIDES;
 };

@@ -35,10 +35,7 @@ class ArrayType : public Type {  // e.g. int[]
      */
     explicit ArrayType(std::unique_ptr<Type> elementType_, ExpressionPtr lengthExpr_ = nullptr)
         : elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
-    const Expression* getLengthExpression() const { return lengthExpression.get(); }
-    bool hasFixedLength() const {
-        return lengthExpression != nullptr;
-    }
+
     NODE_OVERRIDES;
 };
 
@@ -53,6 +50,7 @@ class GenericType : public Type {  // e.g. [T, U]
      */
     GenericType(std::unique_ptr<Type> baseType_, std::vector<TypePtr> typeParameters_)
         : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
+
     NODE_OVERRIDES;
 };
 

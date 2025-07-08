@@ -170,17 +170,17 @@ ExpressionPtr Parser::parseBundleInstantiationExpression(ExpressionPtr left, Pre
     std::vector<ast::BundleInstantiationField> fields;
 
     if (auto genericExpr = dynamic_cast<ast::GenericExpression*>(left.get())) {
-        const auto identifierExpr = dynamic_cast<ast::IdentifierExpression*>(genericExpr->getIdentifier());
+        const auto identifierExpr = dynamic_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
         if (!identifierExpr) {
             logError(
                 "Generic bundle instantiation must start with a bundle name",
                 left->getLine(), left->getColumn());
         } else {
-            bundleName = identifierExpr->getValue();
-            genericTypes = genericExpr->getTypeParameters();
+            bundleName = identifierExpr->value;
+            genericTypes = genericExpr->moveTypeParameters();
         }
     } else if (auto underlying = dynamic_cast<ast::IdentifierExpression*>(left.get())) {
-        bundleName = underlying->getValue();
+        bundleName = underlying->value;
     } else {
         logError(
             std::format("Bundle instantiation expression must start with a bundle name, not {}", left->toString()),
