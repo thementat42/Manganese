@@ -12,6 +12,13 @@ namespace Manganese {
 
 namespace ast {
 
+class BreakStatement : public Statement {
+    public:
+    BreakStatement() = default;
+
+    NODE_OVERRIDES;
+};
+
 struct BundleField {
     std::string name;
     TypePtr type;
@@ -30,6 +37,13 @@ class BundleDeclarationStatement : public Statement {
    public:
     BundleDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_ ,std::vector<BundleField> fields_)
         : name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
+    NODE_OVERRIDES;
+};
+
+class ContinueStatement : public Statement {
+   public:
+    ContinueStatement() = default;
+
     NODE_OVERRIDES;
 };
 

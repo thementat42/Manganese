@@ -48,6 +48,14 @@ static std::string getNumberTypeName(const number_t& value) {
                       value);
 }
 
+void BreakStatement::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "BreakStatement [" << getLine() << ":" << getColumn() << "]\n";
+}
+
+void ContinueStatement::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "ContinueStatement [" << getLine() << ":" << getColumn() << "]\n";
+}
+
 void NumberLiteralExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "NumberLiteralExpression [" << getLine()
        << ":" << getColumn() << "] {\n";

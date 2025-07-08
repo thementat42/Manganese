@@ -166,6 +166,14 @@ std::string GenericType::toString() const {
     return oss.str();
 }
 
+std::string BreakStatement::toString() const {
+    return "break;";
+}
+
+std::string ContinueStatement::toString() const {
+    return "continue;";
+}
+
 std::string VariableDeclarationStatement::toString() const {
     // Convert visibility to string
     std::string visStr;

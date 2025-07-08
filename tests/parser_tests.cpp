@@ -341,8 +341,10 @@ bool testLoops() {
         "let i = 0;"
         "do {++i; print(i); } while (i < 5);"
         "let j = 10;"
-        "while (j > 0) {"
+        "while (true) {"
+        "    if (j == 5) {continue;}"
         "    print(j--);"
+        "    if (j <= 0) { break; }"
         "}"
         "repeat ((5 + 30 - 2 ^^ 3) << 2) {print(\"Hello\");}";
 
@@ -350,7 +352,7 @@ bool testLoops() {
         "(let i: readonly int32 = 0);",
         "do {\n\t(++i);\n\tprint(i);\n} while ((i < 5));",
         "(let j: readonly int32 = 10);",
-        "while ((j > 0)) {\n\tprint((j--));\n}",
+        "while (true) {\n\tif ((j == 5)) {\n\tcontinue;\n}\n\tprint((j--));\n\tif ((j <= 0)) {\n\tbreak;\n}\n}",
         "repeat ((((5 + 30) - (2 ^^ 3)) << 2)) {\n\tprint(\"Hello\");\n}"};
 
     parser::Parser parser(expression, lexer::Mode::String);
