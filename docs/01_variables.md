@@ -99,7 +99,7 @@ For example:
 ```manganese
 let a: int32;  # a is initialized to 0
 let b: float64;  # b is initialized to 0.0
-let c: char;  # c is initialized to '\0`
+let c: char;  # c is initialized to '\0'
 let d: bool;  # d is initialized to false
 let f : ptr int;  # f is a null pointer
 let h : ptr int = &a;  # no default initialization, h points to a
@@ -115,7 +115,7 @@ let <variable name> : <new type> = <value> as <new type>;
 
 Casts can also be done in-place (e.g., when passing a variable to a function).
 
-Manganese's casts are not re-interpretations of the bits that make up a value -- a new value is created based on the original value. Type casts do not modify the original value.
+These casts are not re-interpretations of the bits that make up a value -- a new value is created based on the original value. Type casts do not modify the original value.
 
 The following table summarizes the casting rules for converting between different primitive types in Manganese:
 

@@ -1,6 +1,6 @@
 # === Control Flow ===
 
-Control flow is used to modify the execution of a program from a linear progression through the file. Manganese supports has `if`, `switch` and `return` statements, `break` and `continue` instructions and `for`, `repeat`, `while` and `do/while` loops.
+Control flow is used to modify the execution of a program from a linear progression through the file. Manganese has `if`, `switch` and `return` statements, `break` and `continue` instructions and `for`, `repeat`, `while` and `do/while` loops.
 
 ## === Conditionals ===
 
@@ -10,7 +10,7 @@ Conditionals allow for branched execution of statements. The general syntax for 
 if (boolean expression) {
     statement(s);
 } elif (boolean expression) {
-    statement(s)
+    statement(s);
 } else {
     statement(s);
 }
@@ -64,7 +64,7 @@ for (initialization; stop condition; step) {
 `repeat` loops are for when a block of code needs to be executed multiple times, but the current iteration number is not important. The structure of a repeat loop is:
 
 ```manganese
-repeat (integer value){
+repeat (integer value) {
     statement(s);
 }
 ```
@@ -85,7 +85,7 @@ A `do`/`while` loop is almost identical to a `while` loop, but guarantees that t
 
 ```manganese
 do {
-    statement(s)
+    statement(s);
 } while (boolean expression);
 ```
 
@@ -94,7 +94,8 @@ do {
 `return` ends the execution of a function and returns to its caller. The syntax for a return statement is
 
 ``` manganese
-return (value);
+return;  # exits without returning anything
+return value;  # returns a value
 ```
 
 If no value is given, the function simply halts execution.
