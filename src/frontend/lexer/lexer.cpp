@@ -113,6 +113,10 @@ Lexer::Lexer(const std::string& source, const Mode mode) : tokenStartLine(1), to
             reader = std::make_unique<io::FileReader>(source);
             break;
     }
+    if (reader->hasCriticalError()) {
+        this->hasCriticalError_ = true;
+        return;
+    }
 }
 
 void Lexer::lex(size_t numTokens) {

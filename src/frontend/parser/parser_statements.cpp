@@ -310,11 +310,11 @@ StatementPtr Parser::parseVariableDeclarationStatement() {
         if (currentToken().getType() == TokenType::Public) {
             visibility = ast::Visibility::Public;
             DISCARD(advance());  // Consume the public keyword
-        } else if (currentToken().getType() == TokenType::ReadOnly) [[unlikely]] {
-            // readonly is the default so it'd mainly be used for emphasis
+        } else if (currentToken().getType() == TokenType::ReadOnly) {
             visibility = ast::Visibility::ReadOnly;
             DISCARD(advance());  // Consume the read-only keyword
-        } else if (currentToken().getType() == TokenType::Private) {
+        } else if (currentToken().getType() == TokenType::Private) [[unlikely]] {
+            // private is the default so it'd mainly be used for emphasis
             visibility = ast::Visibility::Private;
             DISCARD(advance());  // Consume the private keyword
         }
@@ -366,7 +366,7 @@ ast::Block Parser::parseBlock(std::string blockName) {
     expectToken(TokenType::RightBrace, "Expected '}' to end " + (blockName.empty() ? "block" : blockName));
     if (block.empty()) {
         logging::logWarning(
-            std::format("Block'{}'is empty", blockName.empty() ? "" : " " + blockName + " "),
+            std::format("{} is empty", blockName.empty() ? "block" : blockName),
             currentToken().getLine(), currentToken().getColumn());
     }
     return block;

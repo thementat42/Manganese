@@ -22,17 +22,19 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_)
     : position(0), line(1), column(1), bufferCapacity(bufferCapacity_) {
     fileStream.open(filename, std::ios::in);
     if (!fileStream.is_open()) {
-        logging::log(std::format("Error: Could not open file {}", filename), logging::LogLevel::Critical);
-        throw std::runtime_error("Could not open file: " + filename);
+        logging::logCritical(std::format("Could not open file {}", filename));
+        this->hasCriticalError_ = true;
+        return;
     }
     buffer = std::make_unique<char[]>(bufferCapacity_ + 1);                               // +1 for null terminator
     fileStream.read(buffer.get(), static_cast<std::streamsize>(bufferCapacity_));
     bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));
 
     if (bufferSize == 0) {
-        logging::log(
-            std::format("Error: File {} is empty or could not be read", filename), logging::LogLevel::Critical);
-        throw std::runtime_error(filename + " is empty or could not be read");
+        logging::logError(
+            std::format("File {} is empty or could not be read", filename));
+        this->hasCriticalError_ = true;
+        return;
     }
     buffer[bufferSize] = '\0';  // Null-terminate the buffer since peekChar will rely on this to determine EOF
 }

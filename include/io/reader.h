@@ -21,11 +21,16 @@ class Reader {
    protected:
     size_t position, line, column;
     std::string source;
+    bool hasCriticalError_ = false;
 
    public:
     static constexpr char EOF_CHAR = '\0';
     Reader() = default;
     virtual ~Reader() noexcept = default;
+
+    bool hasCriticalError() const noexcept {
+        return hasCriticalError_;
+    }
 
     /**
      * @brief Look at the next character without consuming it

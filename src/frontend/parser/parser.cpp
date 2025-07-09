@@ -11,8 +11,12 @@ namespace parser {
 
 Parser::Parser(const std::string& source, lexer::Mode mode) : lexer(make_unique<lexer::Lexer>(source, mode)),
                                                               tokenCachePosition(0),
-                                                              defaultVisibility(ast::Visibility::ReadOnly),
+                                                              defaultVisibility(ast::Visibility::Private),
                                                               hasError(false) {
+    if (lexer->hasCriticalError()) {
+        this->hasCriticalError_ = true;
+        return;
+    }
     initializeLookups();
     initializeTypeLookups();
 }
@@ -149,7 +153,7 @@ void Parser::initializeLookups() {
     // Function Calls
     // Return Statements
     Function type declarations
-    ? Lambdas
+        ? Lambdas
     // Conditional Statements
     Loop Statements
         For Loops
@@ -167,7 +171,7 @@ void Parser::initializeLookups() {
     // Type Casting
     // Member Access
     // Enums
-    Generics
+    // Generics
         * Eventually: Constraints
     Error Handling
         Functions returning an error
@@ -178,7 +182,6 @@ void Parser::initializeLookups() {
         ? Static Methods
         ? Inheritance
         ? Operator Overloading
-
 
     Error Tolerance
     */

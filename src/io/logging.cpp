@@ -41,9 +41,6 @@ void log(const std::string& message, LogLevel level, size_t line, size_t col) {
             break;
     }
     std::cerr << "(line " << line << ", column " << col << ")\n";
-    if (level == LogLevel::Critical) {
-        throw std::runtime_error(message);
-    }
 }
 
 void log(std::initializer_list<std::string> messages, LogLevel level, size_t line, size_t col) {

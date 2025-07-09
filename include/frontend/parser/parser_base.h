@@ -19,6 +19,16 @@ namespace parser {
 using ast::StatementPtr, ast::ExpressionPtr, ast::TypePtr;
 using lexer::TokenType, lexer::Token;
 
+struct Import {
+    std::string imported, alias;
+};
+
+struct ParsedFile {
+    std::string moduleName;
+    std::vector<Import> imports;
+    ast::Block program;
+};
+
 //~ Helper functions that don't depend on the parser class's methods/variables
 int determineNumberBase(const std::string &lexeme);
 void extractSuffix(std::string &numericPart, std::string &suffix);
@@ -29,8 +39,8 @@ class Parser {
     size_t tokenCachePosition;
     ast::Visibility defaultVisibility;
     bool hasError;
+    bool hasCriticalError_ = false;
     bool isParsingBlockPrecursor = false;  // Used to determine if we are parsing a block precursor (if/for/while, etc.)
-
     std::vector<Token> tokenCache;  // Old tokens (for lookbehind)
 
    public:  // public methods
@@ -39,6 +49,7 @@ class Parser {
     ~Parser() noexcept = default;
 
     ast::Block parse();
+    bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
    private:  // private methods
     using statementHandler_t = std::function<StatementPtr(Parser *)>;

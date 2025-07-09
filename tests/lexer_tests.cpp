@@ -35,6 +35,9 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = fals
 
 std::vector<Token> tokensFromString(const std::string& source) {
     lexer::Lexer lexer(source, lexer::Mode::String);
+    if (lexer.hasCriticalError()) {
+        throw std::runtime_error("Critical Error\n");
+    }
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
@@ -52,6 +55,9 @@ std::vector<Token> tokensFromString(const std::string& source) {
 std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
     std::filesystem::path fullPath = std::filesystem::current_path() / filename;
     lexer::Lexer lexer(fullPath.string(), lexer::Mode::File);
+    if (lexer.hasCriticalError()) {
+        throw std::runtime_error("Critical Error\n");
+    }
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
@@ -367,6 +373,15 @@ bool testInvalidEscapeSequence() {
     return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid();
 }
 
+bool testBadFileAccess() {
+    try {
+        tokensFromFile("__nonexistentfile.mn");
+    } catch (const std::runtime_error& e) {
+        return true;
+    }
+    return false;
+}
+
 void runLexerTests(TestRunner& runner) {
     // Register all tests
     runner.runTest("Empty String", testEmptyString);
@@ -385,6 +400,7 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Invalid Character", testInvalidChar);
     runner.runTest("Invalid Escape Sequence", testInvalidEscapeSequence);
     runner.runTest("Complete Program", testCompleteProgram);
+    runner.runTest("Invalid File", testBadFileAccess);
 }
 }  // namespace tests
 }  // namespace Manganese
