@@ -16,10 +16,10 @@
 #define DEBUG 0  // Whether to enable debugging features
 #endif           // DEBUG
 
-#define __PRINT_LOCATION \
+#define PRINT_LOCATION_HELPER \
     std::cerr << "\033[33m In file: " << __FILE__ << ", at line " << __LINE__ << ": when running " << __func__ << "\033[0m\n";
 
-#define PRINT_LOCATION __PRINT_LOCATION  // Print the location of the log message (in the compiler source, not the user code)
+#define PRINT_LOCATION PRINT_LOCATION_HELPER  // Print the location of the log message (in the compiler source, not the user code)
 
 #if __cplusplus >= 202302L
 #include <utility>
@@ -53,9 +53,12 @@
  *
  * NOTE: This should only be used on functions that throw on catastrophic failures (e.g. use the ASSERT_UNREACHABLE macro from the logging library). It should not be used on functions that just never throw (those should be marked noexcept)
  */
-#define noexcept_except_catastrophic
+#if DEBUG
+#define noexcept_debug  // In debug mode, these functions are more likely to throw -- don't use noexcept
+#else // ^^ DEBUG vv !DEBUG
+#define noexcept_debug noexcept  // In release builds, optimize these functions more
+#endif
 
-#define __DISCARD(x) (void)(x);
-#define DISCARD(value) __DISCARD(value)  // Explicitly discard a value
+#define DISCARD(value) (void)(value)  // Explicitly discard a value (useful for [[noexcept]] functions)
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_H
