@@ -1,3 +1,11 @@
+
+
+/**
+ * @file manganese.cpp
+ * @brief Entry point for the compiler.
+ *
+ * This file is responsible for calling the various components to compile source code
+ */
 #include <global_macros.h>
 
 #include <iostream>

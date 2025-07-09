@@ -1,3 +1,14 @@
+/** 
+ * @file lexer_tests.cpp
+ * @brief Unit tests for the lexer.
+ *
+ * Each test uses helper functions to tokenize input from strings or files, and checks
+ * the resulting tokens for correct type and lexeme. The tests are registered and run
+ * via a TestRunner instance.
+ * 
+ * @see include/frontend/lexer.h
+ * @see testrunner.h
+ */
 #include <frontend/lexer.h>
 #include <global_macros.h>
 #include <io/logging.h>
@@ -36,7 +47,7 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = fals
 std::vector<Token> tokensFromString(const std::string& source) {
     lexer::Lexer lexer(source, lexer::Mode::String);
     if (lexer.hasCriticalError()) {
-        throw std::runtime_error("Critical Error\n");
+        throw std::runtime_error("Compilation Aborted\n");
     }
     std::vector<Token> tokens;
 
@@ -56,7 +67,7 @@ std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
     std::filesystem::path fullPath = std::filesystem::current_path() / filename;
     lexer::Lexer lexer(fullPath.string(), lexer::Mode::File);
     if (lexer.hasCriticalError()) {
-        throw std::runtime_error("Critical Error\n");
+        throw std::runtime_error("Compilation Aborted\n");
     }
     std::vector<Token> tokens;
 

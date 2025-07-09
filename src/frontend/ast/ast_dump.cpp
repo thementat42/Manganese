@@ -1,3 +1,14 @@
+/**
+ * @file ast_dump.cpp
+ * @brief Implements AST node dump methods for debugging purposes in the Manganese frontend.
+ *
+ * This file contains the implementation of the `dump` methods for various AST node classes
+ *
+ * The dump methods are only included in debug builds (guarded by `#if DEBUG`).
+ * They are useful for visualizing the AST structure.
+ * @note This file does nothing in release builds.
+ */
+
 #if DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.h>
 #include <global_macros.h>

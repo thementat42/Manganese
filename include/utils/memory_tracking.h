@@ -1,3 +1,13 @@
+
+
+/**
+ * @file memory_tracking.h
+ * @brief Provides memory allocation tracking utilities for debugging and profiling.
+ *
+ * This header overrides global new and delete operators to track memory allocations and deallocations.
+ * When MEMORY_TRACKING and DEBUG are enabled (via CMake), the code tracks the total bytes allocated during the program's lifetime
+ * If CONTINUOUS_MEMORY_TRACKING is defined as well, each allocation is logged to a file
+ */
 #ifndef MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
 #define MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
 

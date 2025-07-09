@@ -58,7 +58,7 @@ constexpr uint8_t OCTAL = 8;
 constexpr uint8_t DECIMAL = 10;
 constexpr uint8_t HEXADECIMAL = 16;
 
-ExpressionPtr Parser::parseExpression(Precedence precedence) noexcept_except_catastrophic {
+ExpressionPtr Parser::parseExpression(Precedence precedence) noexcept_debug {
     Token token = currentToken();
 
     // Handle operators which have a unary and a binary version
@@ -69,8 +69,8 @@ ExpressionPtr Parser::parseExpression(Precedence precedence) noexcept_except_cat
     }
     TokenType type = token.getType();
 
-    auto nudIterator = nullDenotationLookup.find(type);
-    if (nudIterator == nullDenotationLookup.end()) {
+    auto nudIterator = nudLookup.find(type);
+    if (nudIterator == nudLookup.end()) {
         // TODO: This should be an error handled gracefully, not a throw
         ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
@@ -97,8 +97,8 @@ ExpressionPtr Parser::parseExpression(Precedence precedence) noexcept_except_cat
             break;
         }
 
-        auto ledIterator = leftDenotationLookup.find(type);
-        if (ledIterator == leftDenotationLookup.end()) {
+        auto ledIterator = ledLookup.find(type);
+        if (ledIterator == ledLookup.end()) {
             // TODO: This should be an error handled gracefully, not a throw
             ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
@@ -162,7 +162,7 @@ ExpressionPtr Parser::parseBinaryExpression(ExpressionPtr left, Precedence prece
 }
 
 ExpressionPtr Parser::parseBundleInstantiationExpression(ExpressionPtr left, Precedence precedence) {
-    DISCARD(precedence)
+    DISCARD(precedence);  // Avoid unused variable warning
     std::string bundleName;
     std::vector<TypePtr> genericTypes;
     // Parse out a bundle instantiation even if there's an error
@@ -289,7 +289,7 @@ ExpressionPtr Parser::parsePrefixExpression() {
     return std::make_unique<ast::PrefixExpression>(op, std::move(right));
 }
 
-ExpressionPtr Parser::parsePrimaryExpression() noexcept_except_catastrophic {
+ExpressionPtr Parser::parsePrimaryExpression() noexcept_debug {
     auto token = advance();
     std::string lexeme = token.getLexeme();
 

@@ -113,7 +113,7 @@ bool Token::hasUnaryCounterpart() const noexcept {
            type == TokenType::Mul;       // * can be multiplication or dereference operator
 }
 
-TokenType Token::getUnaryCounterpart() const noexcept_except_catastrophic {
+TokenType Token::getUnaryCounterpart() const noexcept_debug {
     switch (type) {
         case TokenType::Plus:
             return TokenType::UnaryPlus;
@@ -174,7 +174,7 @@ void Token::log(const Token& token) noexcept {
 // TODO: have helper functions that go through the map initialize the keyword and operator maps
 // (by flipping the mappings in the master map)
 
-std::string tokenTypeToString(TokenType type) noexcept_except_catastrophic {
+std::string tokenTypeToString(TokenType type) noexcept_debug {
     switch (type) {
         // Basic
         case TokenType::Identifier:

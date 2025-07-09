@@ -1,3 +1,19 @@
+/**
+ * @file ast_base.h
+ * @brief Defines the base classes and utilities for the Abstract Syntax Tree (AST) in the Manganese frontend.
+ *
+ * This header provides the foundational ASTNode class and its main derivatives: Type, Expression, and Statement.
+ * It also defines common type aliases for AST node pointers and blocks, as well as macros to facilitate
+ * overriding methods and declaring parser friendships.
+ *
+ * @see ast_expressions.h
+ * @see ast_statements.h
+ * @see ast_types.h
+ */
+/**
+ * 
+ */
+
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
 
@@ -11,16 +27,16 @@
 #include <vector>
 
 #if DEBUG
-#define __DUMP_OVERRIDE void dump(std::ostream& os, int indent = 0) const override;  // Makes overriding dump() less cumbersome to type
+#define OVERRIDE_DUMP_METHOD void dump(std::ostream& os, int indent = 0) const override;  // Makes overriding dump() less cumbersome to type
 #else
-#define __DUMP_OVERRIDE  // Don't dump in non-debug builds
+#define OVERRIDE_DUMP_METHOD  // Don't dump in non-debug builds
 #endif
 
-#define __STRING_OVERRIDE std::string toString() const override;  // Makes overriding toString() less cumbersome to type
+#define OVERRIDE_TO_STRING std::string toString() const override;  // Makes overriding toString() less cumbersome to type
 
 #define __NODE_OVERRIDES \
-    __STRING_OVERRIDE    \
-    __DUMP_OVERRIDE      \
+    OVERRIDE_TO_STRING    \
+    OVERRIDE_DUMP_METHOD      \
     friend parser::Parser;
 
 #define NODE_OVERRIDES __NODE_OVERRIDES  // Makes overriding toString() and dump() and declaring the friend parser::Parser less cumbersome to type

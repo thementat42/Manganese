@@ -1,6 +1,9 @@
 /**
  * @file manganese_tests.cpp
- * @brief Main file for running all tests.
+ * @brief Entry point for the test suit
+ * 
+ * This file is responsible for calling all the test functions
+ *  
  * @note Run CMake with -DBUILD_TESTS=ON
  */
 
@@ -18,6 +21,10 @@
 #include "tests/testrunner.h"
 #include "tests/tests.h"
 
+/**
+ * @brief Checks if two C strings (a and b) are equal
+ * @brief up to max_count characters and are the same length
+ */
 bool strneq(const char* a, const char* b, size_t max_count) {
     return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
 }

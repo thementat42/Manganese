@@ -1,3 +1,15 @@
+/**
+ * @file ast_expressions.h
+ * @brief Defines AST node classes for various expressions
+ *
+ * This header declares the core expression node types used in the AST.
+ * Each expression type (literals, binary, assignment, function call, etc.) is represented as a class inheriting from Expression.
+ * 
+ * ! The nodes are listed in alphabetical order
+ *
+ * Each expression node provides a getType() method for type inference or annotation
+ */
+
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_H
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_H
 

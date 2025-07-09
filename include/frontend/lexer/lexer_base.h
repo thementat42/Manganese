@@ -1,3 +1,14 @@
+
+
+/**
+ * @file lexer_base.h
+ * @brief Defines the base Lexer class and related utilities for tokenizing source code in the Manganese frontend.
+ *
+ * The lexer is responsible for converting source code (from a string or file)
+ * into a stream of tokens that can be consumed by the parser. It includes helper functions for handling escape
+ * sequences, Unicode encoding, and number literal parsing.
+ * The lexer contains an io::Reader object to read the source code
+ */
 #ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_H
 #define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_H
 

@@ -1,3 +1,13 @@
+
+
+/**
+ * @file ast.cpp
+ * @brief Implementation of some AST node methods.
+ *
+ * @note Most of the AST functions are declared inline in the ast header files
+ * @see include/frontend/ast/
+ * @note This file only implements the functions that are too big/complex to be in a header file
+ */
 #include <frontend/ast.h>
 #include <global_macros.h>
 

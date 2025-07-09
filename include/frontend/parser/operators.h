@@ -1,3 +1,13 @@
+/**
+ * @file operators.h
+ * @brief Defines operator precedence levels and operator binding powers for the Manganese parser.
+ *
+ * This header provides Operator struct, which encapsulates the left and right binding powers for operators. 
+ * There are utility static methods to construct prefix, postfix, binary, and right-associative operators.
+ *
+ * @note Higher values in @ref Precedence indicate higher precedence.
+ */
+
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
 

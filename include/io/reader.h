@@ -1,6 +1,9 @@
 /**
  * @file reader.h
  * @brief This file contains the definition of the virtual Reader class
+ * 
+ * Readers are responsible for taking in raw source code and passing individual characters onto the lexer.
+ * The reader abstracts away how this is done so the lexer can just call peekChar and getChar
  */
 
 #ifndef MANGANESE_INCLUDE_IO_READER_H

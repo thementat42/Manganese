@@ -1,3 +1,13 @@
+
+
+/**
+ * @file logging.h
+ * @brief Provides logging utilities for the Manganese project, including internal and user-facing logging functions with support for log levels and colored terminal output.
+ *
+ * This header defines logging functions and log levels for both internal compiler messages and user-facing errors or warnings.
+ * It also includes ANSI color codes for enhanced terminal output readability.
+ *
+*/
 #ifndef MANGANESE_INCLUDE_IO_LOGGING_H
 #define MANGANESE_INCLUDE_IO_LOGGING_H
 

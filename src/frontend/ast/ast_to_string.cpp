@@ -2,7 +2,10 @@
 
 /**
  * @file ast_to_string.cpp
- * @brief Implements the toString() methods for AST (Abstract Syntax Tree) nodes in the Manganese frontend.
+ * @brief Implements the toString() methods for AST nodes
+ * 
+ * The toString() methods are mainly used for error reporting
+ * In the test suite, they are used to ensure the program is parsed correctly
  */
 #include <frontend/ast.h>
 #include <global_macros.h>

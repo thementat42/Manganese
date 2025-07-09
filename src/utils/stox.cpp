@@ -1,3 +1,15 @@
+/**
+ * @file stox.cpp
+ * @brief Utility functions for converting strings to numeric types with optional suffix and base handling.
+ *
+ * This file provides a set of functions to convert string representations of numbers
+ * into the standard intx_t types (int8_t, uint32_t, etc.), for better cross-platform compatibility
+ *
+ *
+ * Internal:
+ * - __stox: Template function for integer conversion using std::from_chars.
+ */
+
 #include <global_macros.h>
 #include <io/logging.h>
 #include <utils/stox.h>
@@ -16,7 +28,7 @@ namespace Manganese {
 
 namespace utils {
 std::optional<number_t> stringToNumber(std::string_view str, int base,
-                                       bool isFloat, const std::string& suffix) noexcept_except_catastrophic {
+                                       bool isFloat, const std::string& suffix) noexcept_debug {
     if (isFloat) {
         if (suffix == "f" || suffix == "F") {
             return stof32(str);

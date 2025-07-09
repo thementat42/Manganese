@@ -1,3 +1,13 @@
+/**
+ * @file logging.cpp
+ * @brief Implements logging utilities for the Manganese project.
+ *
+ * This file provides functions for logging messages at various severity levels
+ * (Info, Warning, Error, Critical) to the standard output and error streams.
+ * It supports logging single messages as well as multiple messages, and includes
+ * contextual information such as line and column numbers.
+ */
+
 #include <io/logging.h>
 
 #include <iostream>
@@ -63,10 +73,6 @@ void log(std::initializer_list<std::string> messages, LogLevel level, size_t lin
     std::cerr << "\033[0m\n";
     if (line != 0 && col != 0) {
         std::cerr << "(line " << line << ", column " << col << ")\n";
-    }
-    if (level == LogLevel::Critical) {
-        std::cerr << "Compilation aborted.\n";
-        throw std::runtime_error("Critical Error encountered");
     }
 }
 }  // namespace logging

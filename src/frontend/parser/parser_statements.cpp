@@ -350,7 +350,7 @@ StatementPtr Parser::parseWhileLoopStatement() {
 
 // ===== Helper Functions =====
 ast::Block Parser::parseBlock(std::string blockName) {
-    expectToken(TokenType::LeftBrace, "Expected a '{' to start " + (blockName.empty() ? "block" : blockName));
+    expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
     ast::Block block;
     while (!done()) {
         if (currentToken().getType() == TokenType::RightBrace) {
@@ -358,10 +358,10 @@ ast::Block Parser::parseBlock(std::string blockName) {
         }
         block.push_back(parseStatement());
     }
-    expectToken(TokenType::RightBrace, "Expected '}' to end " + (blockName.empty() ? "block" : blockName));
+    expectToken(TokenType::RightBrace, "Expected '}' to end " + blockName);
     if (block.empty()) {
         logging::logWarning(
-            std::format("{} is empty", blockName.empty() ? "block" : blockName),
+            std::format("{} is empty", blockName),
             currentToken().getLine(), currentToken().getColumn());
     }
     return block;

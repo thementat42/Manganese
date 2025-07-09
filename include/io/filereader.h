@@ -1,6 +1,16 @@
 /**
  * @file filereader.h
- * @brief This file contains the definition of the FileReader class
+ * @brief Defines the FileReader class for buffered file I/O operations.
+ *
+ * This file contains the FileReader class which implements the Reader interface
+ * for buffered file reading operations. A FileReader maintains an internal
+ * buffer to minimize disk access, tracks cursor position including line and column
+ * information, and provides methods for peeking ahead in the file without advancing
+ * the read position.
+ *
+ * @note This class is not copyable to prevent unintended duplication of file handles and buffer state.
+ *
+ * @see reader.h - The base interface class that FileReader implements
  */
 
 #ifndef MANGANESE_INCLUDE_IO_FILEREADER_H

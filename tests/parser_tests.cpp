@@ -1,3 +1,15 @@
+/** 
+ * @file parser_tests.cpp
+ * @brief Unit tests for the parser.
+ *
+ * Each test uses helper functions to parse some source code into an AST
+ * the resulting string representation for correctness. The tests are registered and run
+ * via a TestRunner instance.
+ * 
+ * @see include/frontend/parser.h
+ * @see testrunner.h
+ */
+
 #include <frontend/parser.h>
 #include <global_macros.h>
 
@@ -21,7 +33,7 @@ namespace tests {
 ast::Block getParserResults(const std::string& source, lexer::Mode mode) {
     parser::Parser parser(source, mode);
     if (parser.hasCriticalError()) {
-        throw std::runtime_error("Critical error\n");
+        throw std::runtime_error("Compilation Aborted\n");
     }
     return parser.parse();
 }

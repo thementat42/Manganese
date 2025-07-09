@@ -1,8 +1,15 @@
+/**
+ * @file ast_statements.h
+ * @brief Contains AST node definitions for various types annotations in the Manganese frontend.
+ *
+ * This header declares the core type node types used in the AST.
+ * Each type (Symbols, Arrays, etc.) is represented as a class inheriting from Statement.
+ * 
+ * ! The nodes are listed in alphabetical order.
+ */
+
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_H
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_H
-
-
-
 
 #include <frontend/ast/ast_base.h>
 
@@ -10,7 +17,10 @@ namespace Manganese {
 
 namespace ast {
 
-class SymbolType : public Type {  // e.g. T, int, etc.
+/**
+ * e.g. T, int, etc.
+ */
+class SymbolType : public Type {
    protected:
     std::string name;
 
@@ -24,7 +34,10 @@ class SymbolType : public Type {  // e.g. T, int, etc.
     NODE_OVERRIDES;
 };
 
-class ArrayType : public Type {  // e.g. int[]
+/**
+ * e.g. int[], float[][], etc.
+ */
+class ArrayType : public Type {
    protected:
     std::unique_ptr<Type> elementType;
     ExpressionPtr lengthExpression;  // Optional length specification (otherwise, should be inferred based on the number of elements)
@@ -39,7 +52,10 @@ class ArrayType : public Type {  // e.g. int[]
     NODE_OVERRIDES;
 };
 
-class GenericType : public Type {  // e.g. [T, U]
+/**
+ * e.g. [T, U]
+ */
+class GenericType : public Type {
     protected:
     std::unique_ptr<Type> baseType;  // The base type to which the generics are applied
     std::vector<TypePtr> typeParameters;  // The generic type parameters
