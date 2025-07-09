@@ -10,6 +10,7 @@
 
 #include <format>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
@@ -225,6 +226,74 @@ StatementPtr Parser::parseIfStatement() {
         elseBody = parseBlock("else body");
     }
     return std::make_unique<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs), std::move(elseBody));
+}
+
+StatementPtr Parser::parseImportStatement() {
+    size_t startLine = currentToken().getLine();
+    size_t startColumn = currentToken().getColumn();
+
+    if (this->hasParsedFileHeader) {
+        logging::logWarning("Imports should go at the top of the file");
+    }
+    DISCARD(advance());
+    std::vector<std::string> path;
+    path.push_back(expectToken(TokenType::Identifier, "Expected a module name or path").getLexeme());
+    while (currentToken().getType() == TokenType::ScopeResolution) {
+        DISCARD(advance());  // Consume '::'
+        path.push_back(expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme());
+    }
+    std::string alias;
+    if (currentToken().getType() == TokenType::As) {
+        DISCARD(advance());
+        alias = expectToken(TokenType::Identifier, "Expected an identifier as an import alias").getLexeme();
+    }
+    expectToken(TokenType::Semicolon, "Expected a ';' to end an import statement");
+
+    bool duplicate = false;
+    for (const auto& [existingPath, existingAlias] : imports) {
+        if (path == existingPath) {
+            std::string imported = std::accumulate(
+                existingPath.begin() + 1,
+                existingPath.end(),
+                existingPath[0],  // existingPath should never be empty
+                [](const std::string& a, const std::string& b) {
+                    return a + "::" + b;
+                });
+
+            logging::logWarning(
+                std::format("Duplicate import of {}", imported),
+                startLine, startColumn);
+            duplicate = true;
+            break;
+
+        } else if (alias == existingAlias && !alias.empty()) {
+            logging::logWarning(
+                std::format("Alias {} was already used", existingAlias),
+                startLine, startColumn);
+            duplicate = true;
+            break;
+        }
+    }
+    if (!duplicate) {
+        imports.emplace_back(path, alias);
+    }
+    // Dummy node
+    return std::make_unique<ast::ImportStatement>();
+}
+
+StatementPtr Parser::parseModuleDeclarationStatement() {
+    DISCARD(advance());
+    if (this->hasParsedFileHeader) {
+        logging::logWarning("Module declarations should go at the top of the file");
+    }
+    std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
+    expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
+    if (!this->moduleName.empty()) {
+        logError("A module name has previously been declared in this file.");
+        return std::make_unique<ast::ModuleDeclarationStatement>();
+    }
+    this->moduleName = name;
+    return std::make_unique<ast::ModuleDeclarationStatement>();
 }
 
 StatementPtr Parser::parseRepeatLoopStatement() {

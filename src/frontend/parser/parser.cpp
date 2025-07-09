@@ -27,7 +27,17 @@ Parser::Parser(const std::string& source, lexer::Mode mode) : lexer(make_unique<
     initializeTypeLookups();
 }
 
-ast::Block Parser::parse() {
+ParsedFile Parser::parse() {
+    // Parse the header (module declaration and imports)
+    if (currentToken().getType() == TokenType::Module) {
+        DISCARD(parseModuleDeclarationStatement());
+    }
+    while (currentToken().getType() == TokenType::Import) {
+        DISCARD(parseImportStatement());
+    }
+
+    this->hasParsedFileHeader = true;  // Now, setting a module or import name should be a warning
+
     ast::Block program;
     while (!done()) {
         // No need to move thanks to copy elision
@@ -39,7 +49,10 @@ ast::Block Parser::parse() {
         tokenCachePosition = 0;
     }
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
-    return program;
+    return ParsedFile{
+        .moduleName = moduleName,
+        .imports = std::move(imports),
+        .program = std::move(program)};
 }
 
 // ===== Helper functions =====
@@ -89,5 +102,20 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
 
     return advance();
 }
+
+std::string importToString(const Import& import) {
+    std::string res = "import ";
+    for (size_t i = 0; i < import.path.size() ; ++i) {
+        res += import.path[i];
+        if (i < import.path.size() - 1) [[likely]] {
+            res += "::";
+        }
+    }
+    if (!import.alias.empty()) {
+        res += "as " + import.alias;
+    }
+    return res + ";";
+}
+
 }  // namespace parser
 }  // namespace Manganese

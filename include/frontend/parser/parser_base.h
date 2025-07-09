@@ -30,7 +30,8 @@ using ast::StatementPtr, ast::ExpressionPtr, ast::TypePtr;
 using lexer::TokenType, lexer::Token;
 
 struct Import {
-    std::string imported, alias;
+    std::vector<std::string> path;
+    std::string alias;
 };
 
 struct ParsedFile {
@@ -42,6 +43,7 @@ struct ParsedFile {
 //~ Helper functions that don't depend on the parser class's methods/variables
 int determineNumberBase(const std::string &lexeme);
 void extractSuffix(std::string &numericPart, std::string &suffix);
+std::string importToString(const Import &import);
 
 class Parser {
    private:  // private variables
@@ -50,7 +52,11 @@ class Parser {
     size_t tokenCachePosition = 0;
     std::vector<Token> tokenCache;  // Old tokens (for lookbehind)
 
+    std::string moduleName;
+    std::vector<Import> imports;
+
     // Some flags
+    bool hasParsedFileHeader = false;  // Processing module and import
     bool hasError = false;
     bool hasCriticalError_ = false;
     bool isParsingBlockPrecursor = false;  // Used to determine if we are parsing a block precursor (if/for/while, etc.)
@@ -60,7 +66,7 @@ class Parser {
     Parser(const std::string &source, lexer::Mode mode);
     ~Parser() noexcept = default;
 
-    ast::Block parse();
+    ParsedFile parse();
     bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
    private:  // private methods
@@ -83,21 +89,21 @@ class Parser {
     //~ Parsing functions
 
     // ===== Expression Parsing =====
-    ExpressionPtr parseExpression(Precedence bindingPower) noexcept_debug;
+    ExpressionPtr parseExpression(Precedence precedence) noexcept_debug;
     ExpressionPtr parseArrayInstantiationExpression();
-    ExpressionPtr parseAssignmentExpression(ExpressionPtr left, Precedence bindingPower);
-    ExpressionPtr parseBinaryExpression(ExpressionPtr left, Precedence bindingPower);
-    ExpressionPtr parseBundleInstantiationExpression(ExpressionPtr left, Precedence bindingPower);
-    ExpressionPtr parseFunctionCallExpression(ExpressionPtr left, Precedence bindingPower);
-    ExpressionPtr parseGenericExpression(ExpressionPtr left, Precedence bindingPower);
-    ExpressionPtr parseIndexingExpression(ExpressionPtr left, Precedence bindingPower);
-    ExpressionPtr parseMemberAccessExpression(ExpressionPtr left, Precedence bindingPower);
+    ExpressionPtr parseAssignmentExpression(ExpressionPtr left, Precedence precedence);
+    ExpressionPtr parseBinaryExpression(ExpressionPtr left, Precedence precedence);
+    ExpressionPtr parseBundleInstantiationExpression(ExpressionPtr left, Precedence precedence);
+    ExpressionPtr parseFunctionCallExpression(ExpressionPtr left, Precedence precedence);
+    ExpressionPtr parseGenericExpression(ExpressionPtr left, Precedence precedence);
+    ExpressionPtr parseIndexingExpression(ExpressionPtr left, Precedence precedence);
+    ExpressionPtr parseMemberAccessExpression(ExpressionPtr left, Precedence precedence);
     ExpressionPtr parseParenthesizedExpression();
-    ExpressionPtr parsePostfixExpression(ExpressionPtr left, Precedence bindingPower);
+    ExpressionPtr parsePostfixExpression(ExpressionPtr left, Precedence precedence);
     ExpressionPtr parsePrefixExpression();
     ExpressionPtr parsePrimaryExpression() noexcept_debug;
-    ExpressionPtr parseScopeResolutionExpression(ExpressionPtr left, Precedence bindingPower);
-    ExpressionPtr parseTypeCastExpression(ExpressionPtr left, Precedence bindingPower);
+    ExpressionPtr parseScopeResolutionExpression(ExpressionPtr left, Precedence precedence);
+    ExpressionPtr parseTypeCastExpression(ExpressionPtr left, Precedence precedence);
 
     // ===== Statement Parsing =====
 
@@ -107,6 +113,8 @@ class Parser {
     StatementPtr parseEnumDeclarationStatement();
     StatementPtr parseFunctionDeclarationStatement();
     StatementPtr parseIfStatement();
+    StatementPtr parseImportStatement();
+    StatementPtr parseModuleDeclarationStatement();
     StatementPtr parseRepeatLoopStatement();
     StatementPtr parseReturnStatement();
     StatementPtr parseSwitchStatement();
@@ -115,10 +123,10 @@ class Parser {
 
     //* Type Parsing
 
-    TypePtr parseType(Precedence bindingPower) noexcept_debug;
-    TypePtr parseArrayType(TypePtr left, Precedence rightBindingPower);
+    TypePtr parseType(Precedence precedence) noexcept_debug;
+    TypePtr parseArrayType(TypePtr left, Precedence precedence);
+    TypePtr parseGenericType(TypePtr left, Precedence precedence);
     TypePtr parseSymbolType();
-    TypePtr parseGenericType(TypePtr left, Precedence rightBindingPower);
 
     // ~ Helpers
     ast::Block parseBlock(std::string blockName);
@@ -159,43 +167,43 @@ class Parser {
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a binary operator)
-     * @param bindingPower How strongly that operator binds to its neighbour(s)
+     * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    void registerLedHandler_binary(TokenType type, Precedence bindingPower, ledHandler_t handler);
+    void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler);
 
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a right-associative operator)
-     * @param bindingPower How strongly that operator binds to its neighbour(s)
+     * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    void registerLedHandler_rightAssoc(TokenType type, Precedence bindingPower,
+    void registerLedHandler_rightAssoc(TokenType type, Precedence precedence,
                                   ledHandler_t handler);
 
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a postfix operator)
-     * @param bindingPower How strongly that operator binds to its neighbour(s)
+     * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    void registerLedHandler_postfix(TokenType type, Precedence bindingPower,
+    void registerLedHandler_postfix(TokenType type, Precedence precedence,
                                ledHandler_t handler);
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a prefix operator)
-     * @param bindingPower How strongly that operator binds to its neighbour(s)
+     * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    void registerLedHandler_prefix(TokenType type, Precedence bindingPower,
+    void registerLedHandler_prefix(TokenType type, Precedence precedence,
                               ledHandler_t handler);
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a token indicating a type)
-     * @param bindingPower How strongly that operator binds to its neighbour(s)
+     * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    void registerLedHandler_type(TokenType type, Precedence bindingPower, ledHandler_types_t handler);
+    void registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler);
 
     /**
      * @brief Register a null denotation handler for `type`

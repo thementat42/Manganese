@@ -481,6 +481,14 @@ void SwitchStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
+void ModuleDeclarationStatement::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "ModuleDeclarationStatement [" << getLine() << ":" << getColumn() << "]\n";
+}
+
+void ImportStatement::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "ImportStatement [" << getLine() << ":" << getColumn() << "]\n";
+}
+
 ENABLE_CONVERSION_WARNING
 }  // namespace ast
 }  // namespace Manganese

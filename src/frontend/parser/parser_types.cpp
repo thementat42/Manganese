@@ -37,9 +37,9 @@ TypePtr Parser::parseType(Precedence precedence) noexcept_debug {
 
 // ===== Specific type parsing methods =====
 
-TypePtr Parser::parseArrayType(TypePtr left, Precedence rightBindingPower) {
+TypePtr Parser::parseArrayType(TypePtr left, Precedence precedence) {
     ExpressionPtr lengthExpression = nullptr;
-    DISCARD(rightBindingPower);  // Avoid unused variable warning
+    DISCARD(precedence);  // Avoid unused variable warning
     DISCARD(advance());          // Consume the left square bracket '['
     if (currentToken().getType() != TokenType::RightSquare) {
         // If the next token is not a right square bracket, it's a length expression
@@ -49,22 +49,22 @@ TypePtr Parser::parseArrayType(TypePtr left, Precedence rightBindingPower) {
     return std::make_unique<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
-TypePtr Parser::parseGenericType(TypePtr left, Precedence rightBindingPower) {
+TypePtr Parser::parseGenericType(TypePtr left, Precedence precedence) {
     DISCARD(advance());
+    DISCARD(precedence);  // Avoid unused variable warning
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
     std::vector<TypePtr> typeParameters;
     while (!done()) {
         if (currentToken().getType() == TokenType::RightSquare) {
             break;  // Done with type parameters
         }
-        auto nextBindingPower = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
-        typeParameters.push_back(parseType(static_cast<Precedence>(nextBindingPower)));
+        auto nextPrecedence = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+        typeParameters.push_back(parseType(static_cast<Precedence>(nextPrecedence)));
         if (currentToken().getType() != TokenType::RightSquare) {
             expectToken(TokenType::Comma, "Expected ',' to separate generic types");
         }
     }
     expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    DISCARD(rightBindingPower);  // Avoid unused variable warning
     return std::make_unique<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 

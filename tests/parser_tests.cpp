@@ -1,11 +1,11 @@
-/** 
+/**
  * @file parser_tests.cpp
  * @brief Unit tests for the parser.
  *
  * Each test uses helper functions to parse some source code into an AST
  * the resulting string representation for correctness. The tests are registered and run
  * via a TestRunner instance.
- * 
+ *
  * @see include/frontend/parser.h
  * @see testrunner.h
  */
@@ -14,6 +14,7 @@
 #include <global_macros.h>
 
 #include <array>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -35,7 +36,7 @@ ast::Block getParserResults(const std::string& source, lexer::Mode mode) {
     if (parser.hasCriticalError()) {
         throw std::runtime_error("Compilation Aborted\n");
     }
-    return parser.parse();
+    return parser.parse().program;
 }
 
 template <size_t N>
@@ -119,7 +120,6 @@ bool testVariableDeclaration() {
         "(let bar: private auto = (foo * 10));",
         "(const baz: public uint32 = (((foo + ((10 ^^ 2) * bar)) + (foo % 7)) + (foo ^^ 2)));",
         "(let boolean: private bool = true);"};
-
 
     return validateStatements(
         getParserResults(expression, lexer::Mode::String),
@@ -523,6 +523,23 @@ bool testGenerics() {
         expected, "Generic Function Declaration");
 }
 
+bool foo() {
+    std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
+    parser::Parser p(fullPath.string(), lexer::Mode::File);
+    auto x = p.parse();
+    if (!x.moduleName.empty()) {
+        std::cout << "module " << x.moduleName << ";\n";
+    }
+    for(const auto& element : x.imports){
+        std::cout << parser::importToString(element) << "\n";
+    }
+
+    for (const auto& element : x.program) {
+        std::cout << element->toString() << "\n";
+    }
+    return true;
+}
+
 int runParserTests(TestRunner& runner) {
     runner.runTest("Arithmetic Expression and Casting", testArithmeticOperatorsAndCasting);
     runner.runTest("Exponentiation Right Associativity", testExponentiationAssociativity);
@@ -542,6 +559,7 @@ int runParserTests(TestRunner& runner) {
     runner.runTest("Switch Statement", testSwitchStatement);
     runner.runTest("Access Expressions", testAccessExpressions);
     runner.runTest("Generics", testGenerics);
+    runner.runTest("Foo", foo);
 
     return runner.allTestsPassed() ? 0 : 1;
 }

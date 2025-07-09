@@ -116,7 +116,8 @@ ExpressionPtr Parser::parseExpression(Precedence precedence) noexcept_debug {
                 return left;
             }
             logError(
-                "Left brace after an expression must be preceded by an identifier (bundle instantiation) or a block precursor (if/for/while, etc.)",
+                "Left brace after an expression must be preceded by an identifier (bundle instantiation)"
+                " or a block precursor (if/for/while, etc.)",
                 token.getLine(), token.getColumn());
         }
         left = ledIterator->second(this, std::move(left), precedenceIterator->second.rightBindingPower);

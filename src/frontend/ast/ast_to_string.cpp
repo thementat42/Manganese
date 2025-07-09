@@ -386,5 +386,13 @@ std::string SwitchStatement::toString() const {
     return oss.str();
 }
 
+std::string ImportStatement::toString() const {
+    return "";
+}
+
+std::string ModuleDeclarationStatement::toString() const {
+    return "";
+}
+
 }  // namespace ast
 }  // namespace Manganese

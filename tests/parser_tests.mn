@@ -1,0 +1,28 @@
+import std::io;
+import mymodule as mm;
+
+enum Foo: char {
+    A,
+    B,
+    C,
+    D,
+    E
+}
+
+bundle B[T] {
+    x: Foo;
+    y: float32;
+    z: T[][];
+}
+
+func main() -> int {
+    let b = B@[bool] {
+        x = A,
+        y = 1.23f32,
+        z = [[true, false], [true, false]]
+    };
+    io::print(b.x);
+    io::print(b.y);
+    io::print(b.z);
+    io::print(mm::asdf);
+}

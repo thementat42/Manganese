@@ -14,18 +14,15 @@ void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower, 
     operatorPrecedenceMap[type] = Operator::binary(bindingPower);
     ledLookup[type] = handler;
 }
-void Parser::registerLedHandler_rightAssoc(TokenType type, Precedence bindingPower,
-                                           ledHandler_t handler) {
+void Parser::registerLedHandler_rightAssoc(TokenType type, Precedence bindingPower, ledHandler_t handler) {
     operatorPrecedenceMap[type] = Operator::rightAssociative(bindingPower);
     ledLookup[type] = handler;
 }
-void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower,
-                                        ledHandler_t handler) {
+void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower, ledHandler_t handler) {
     operatorPrecedenceMap[type] = Operator::postfix(bindingPower);
     ledLookup[type] = handler;
 }
-void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower,
-                                       ledHandler_t handler) {
+void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower, ledHandler_t handler) {
     operatorPrecedenceMap[type] = Operator::prefix(bindingPower);
     ledLookup[type] = handler;
 }
@@ -147,7 +144,9 @@ void Parser::initializeLookups() {
     registerStmtHandler(TokenType::Enum, &Parser::parseEnumDeclarationStatement);
     registerStmtHandler(TokenType::Func, &Parser::parseFunctionDeclarationStatement);
     registerStmtHandler(TokenType::If, &Parser::parseIfStatement);
+    registerStmtHandler(TokenType::Import, &Parser::parseImportStatement);
     registerStmtHandler(TokenType::Let, &Parser::parseVariableDeclarationStatement);
+    registerStmtHandler(TokenType::Module, &Parser::parseModuleDeclarationStatement);
     registerStmtHandler(TokenType::Repeat, &Parser::parseRepeatLoopStatement);
     registerStmtHandler(TokenType::Return, &Parser::parseReturnStatement);
     registerStmtHandler(TokenType::Switch, &Parser::parseSwitchStatement);

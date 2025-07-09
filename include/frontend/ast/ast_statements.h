@@ -133,6 +133,24 @@ class IfStatement : public Statement {
     NODE_OVERRIDES;
 };
 
+/**
+ * @note Imports are stored separately in the parser, so this holds no data -- it's just here for compatibility with the other statements
+ */
+class ImportStatement : public Statement {
+    public:
+     ImportStatement() = default;
+     NODE_OVERRIDES;
+};
+
+/**
+ * @note The module name is stored separately in the parser, so this holds no data -- it's just here for compatibility with the other statements
+ */
+class ModuleDeclarationStatement : public Statement {
+    public:
+     ModuleDeclarationStatement() = default;
+     NODE_OVERRIDES;
+};
+
 class RepeatLoopStatement : public Statement {
    protected:
     ExpressionPtr numIterations;
