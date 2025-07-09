@@ -100,7 +100,7 @@ StatementPtr Parser::parseEnumDeclarationStatement() {
         if (!currentToken().isPrimitiveType()) {
             logError(std::format("Enums can only have primitive types as their underlying type, not {}", currentToken().getLexeme()));
         }
-        baseType = parseType(Precedence::Default);
+        baseType = std::make_unique<ast::SymbolType>(advance().getLexeme());
     } else {
         baseType = std::make_unique<ast::SymbolType>("int32");  // Default to int32 if no base type is specified
     }
@@ -112,11 +112,6 @@ StatementPtr Parser::parseEnumDeclarationStatement() {
             DISCARD(advance());
             valueExpression = parseExpression(Precedence::Default);
         }
-        expectToken(TokenType::Comma, "Expected ',' to separate enum values");
-        // if (valueExpression == nullptr) {
-        //     // If no value is provided, use the next available integer
-        //     valueExpression = std::make_unique<ast::NumberLiteralExpression>(values.size());
-        // }
         // Check for duplicate enum value names
         auto duplicate = std::find_if(
             values.begin(), values.end(),
@@ -126,6 +121,9 @@ StatementPtr Parser::parseEnumDeclarationStatement() {
             logError(std::format("Enum value '{}' (in enum '{}') was previously declared", valueName, name));
         } else {
             values.emplace_back(valueName, std::move(valueExpression));
+        }
+        if (currentToken().getType() != TokenType::RightBrace) {
+            expectToken(TokenType::Comma, "Expected ',' to separate enum values");
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the enum body");
