@@ -64,17 +64,16 @@ int main(int argc, char const* argv[]) {
         }
     }
 
-    using namespace Manganese::tests;
-    TestRunner runner;
+    Manganese::tests::TestRunner runner;
 
     if (lexer) {
         printf("%s=== Lexer Tests ===%s\n", PINK, RESET);
-        runLexerTests(runner);
+        Manganese::tests::runLexerTests(runner);
         printf("\n");
     }
     if (parser) {
         printf("%s=== Parser Tests ===%s\n", PINK, RESET);
-        runParserTests(runner);
+        Manganese::tests::runParserTests(runner);
         printf("\n");
     }
     if (semantic) {
