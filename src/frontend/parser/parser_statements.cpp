@@ -54,17 +54,12 @@ StatementPtr Parser::parseBundleDeclarationStatement() {
         if (currentToken().getType() == TokenType::RightBrace) {
             break;  // Done declaration
         }
-        bool isStatic = false;
         if (currentToken().getType() != TokenType::Identifier) {
             logError(std::format("Unexpected token '{}' in bundle declaration. Expected field name.", currentToken().getLexeme()));
             DISCARD(advance());  // Skip the unexpected token to avoid infinite loop
         }
         std::string fieldName = advance().getLexeme();
         expectToken(TokenType::Colon, "Expected a ':' to declare a bundle field type.");
-        if (currentToken().getType() == TokenType::Static) {
-            isStatic = true;
-            DISCARD(advance());  // Consume 'static'
-        }
         TypePtr type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
@@ -74,7 +69,7 @@ StatementPtr Parser::parseBundleDeclarationStatement() {
         if (duplicate != fields.end()) {
             logError(std::format("Duplicate field '{}' in bundle '{}'", fieldName, name));
         } else {
-            fields.emplace_back(fieldName, std::move(type), isStatic);
+            fields.emplace_back(fieldName, std::move(type));
         }
     }
 

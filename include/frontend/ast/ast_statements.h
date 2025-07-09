@@ -22,10 +22,9 @@ class BreakStatement : public Statement {
 struct BundleField {
     std::string name;
     TypePtr type;
-    bool isStatic;
 
-    BundleField(std::string name_, TypePtr type_, bool isStatic_)
-        : name(std::move(name_)), type(std::move(type_)), isStatic(isStatic_) {}
+    BundleField(std::string name_, TypePtr type_)
+        : name(std::move(name_)), type(std::move(type_)) {}
 };
 
 class BundleDeclarationStatement : public Statement {

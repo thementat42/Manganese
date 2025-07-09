@@ -168,7 +168,6 @@ enum class TokenType : uint8_t {
     Bundle,     // like C's struct
     Enum,       // list of named constants
     Blueprint,  // like a class
-    Static,     // static variables or functions (not tied to an instance)
 
     //* Misc Operators
     Alias,         // type aliasing (alias `a` as `b`)

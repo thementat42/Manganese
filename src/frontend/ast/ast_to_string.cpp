@@ -304,7 +304,7 @@ std::string BundleDeclarationStatement::toString() const {
     }
     oss << " {\n";
     for (const auto& field : fields) {
-        oss << "\t" << field.name << ": " << (field.isStatic ? "static " : "") << field.type->toString() << ";\n";
+        oss << "\t" << field.name << ": " << field.type->toString() << ";\n";
     }
     oss << "}";
     return oss.str();

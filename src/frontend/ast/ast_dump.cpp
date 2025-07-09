@@ -228,7 +228,6 @@ void BundleDeclarationStatement::dump(std::ostream& os, int indent) const {
     for (const auto& field : fields) {
         os << getIndent(indent + 2) << "{\n";
         os << getIndent(indent + 3) << "name: " << field.name << "\n";
-        os << getIndent(indent + 3) << "isStatic: " << (field.isStatic ? "true" : "false") << "\n";
         os << getIndent(indent + 3) << "type: \n";
         field.type->dump(os, indent + 4);
         os << getIndent(indent + 2) << "}\n";

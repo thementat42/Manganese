@@ -288,8 +288,6 @@ std::string tokenTypeToString(TokenType type) noexcept_except_catastrophic {
             return "return";
         case TokenType::Switch:
             return "switch";
-        case TokenType::Static:
-            return "static";
         case TokenType::True:
             return "true";
         case TokenType::TypeOf:
@@ -508,7 +506,6 @@ std::unordered_map<std::string, const TokenType> keywordMap = {
     {"readonly", TokenType::ReadOnly},
     {"repeat", TokenType::Repeat},
     {"return", TokenType::Return},
-    {"static", TokenType::Static},
     {"switch", TokenType::Switch},
     {"true", TokenType::True},
     {"typeof", TokenType::TypeOf},
