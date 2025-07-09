@@ -115,7 +115,7 @@ class Parser {
 
     //* Type Parsing
 
-    TypePtr parseType(Precedence bindingPower);
+    TypePtr parseType(Precedence bindingPower) noexcept_debug;
     TypePtr parseArrayType(TypePtr left, Precedence rightBindingPower);
     TypePtr parseSymbolType();
     TypePtr parseGenericType(TypePtr left, Precedence rightBindingPower);
@@ -222,7 +222,7 @@ class Parser {
     void registerNudHandler_type(TokenType type, nudHandler_types_t handler);
 
     /**
-     * @brief Registes a handler function for a specific statement token type.
+     * @brief Register a handler function for a specific statement token type.
      * @param type The token type for which the handler is to be registered.
      * @param handler The function to handle statements of the specified token type.
      */
