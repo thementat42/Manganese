@@ -489,6 +489,14 @@ void ImportStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "ImportStatement [" << getLine() << ":" << getColumn() << "]\n";
 }
 
+void AliasStatement::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "AliasStatement [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "alias: " << alias << "\n";
+    os << getIndent(indent + 1) << "base type: ";
+    baseType->dump(os, indent + 2);
+    os << getIndent(indent) << "}\n";
+}
+
 ENABLE_CONVERSION_WARNING
 }  // namespace ast
 }  // namespace Manganese

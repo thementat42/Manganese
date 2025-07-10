@@ -151,6 +151,7 @@ void Parser::initializeLookups() {
     registerStmtHandler(TokenType::Return, &Parser::parseReturnStatement);
     registerStmtHandler(TokenType::Switch, &Parser::parseSwitchStatement);
     registerStmtHandler(TokenType::While, &Parser::parseWhileLoopStatement);
+    registerStmtHandler(TokenType::Alias, &Parser::parseAliasStatement);
 
     //~ Misc
     registerLedHandler_binary(TokenType::As, Precedence::TypeCast, &Parser::parseTypeCastExpression);

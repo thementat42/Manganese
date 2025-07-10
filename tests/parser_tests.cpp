@@ -36,7 +36,17 @@ ast::Block getParserResults(const std::string& source, lexer::Mode mode) {
     if (parser.hasCriticalError()) {
         throw std::runtime_error("Compilation Aborted\n");
     }
-    return parser.parse().program;
+    parser::ParsedFile file = parser.parse();
+
+    if (!file.moduleName.empty()) {
+        std::cout << "module " << file.moduleName << "\n";
+    }
+    if (!file.imports.empty()) {
+        for(const auto& element : file.imports){
+            std::cout << parser::importToString(element) << "\n";
+        }
+    }
+    return std::move(file.program);
 }
 
 template <size_t N>
@@ -523,21 +533,49 @@ bool testGenerics() {
         expected, "Generic Function Declaration");
 }
 
-bool foo() {
+bool testImportsAndAliases() {
+    std::string expression =
+        "import math::vector;\n"
+        "import graphics::rendering as render;\n"
+        "import std::collections::map;\n"
+        "module dataprocessing;\n"
+        "alias int32 as Integer;\n"
+        "alias float64 as f64;\n"
+        "alias std::HashMap@[string, Integer] as StringIntMap;\n"
+        "let value: Integer = 42;\n"
+        "let floatPtr: f64 = 3.14159;\n"
+        "let lookup: StringIntMap;";
+
+    std::array<std::string, 7> expected = {
+        "",
+        "alias int32 as Integer;",
+        "alias float64 as f64;",
+        "alias std::HashMap@[string, Integer] as StringIntMap;",
+        "(let value: private Integer = 42);",
+        "(let floatPtr: private f64 = 3.14159);",
+        "(let lookup: private StringIntMap);"};
+
+    return validateStatements(
+        getParserResults(expression, lexer::Mode::String),
+        expected, "Import Statements and Type Aliases");
+}
+
+bool testParseFromFile() {
     std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
     parser::Parser p(fullPath.string(), lexer::Mode::File);
     auto x = p.parse();
     if (!x.moduleName.empty()) {
         std::cout << "module " << x.moduleName << ";\n";
     }
-    for(const auto& element : x.imports){
+    for (const auto& element : x.imports) {
         std::cout << parser::importToString(element) << "\n";
     }
 
     for (const auto& element : x.program) {
         std::cout << element->toString() << "\n";
     }
-    return true;
+    // For now, this is a more manual check -- see if the output makes sense
+    return true; 
 }
 
 int runParserTests(TestRunner& runner) {
@@ -559,7 +597,8 @@ int runParserTests(TestRunner& runner) {
     runner.runTest("Switch Statement", testSwitchStatement);
     runner.runTest("Access Expressions", testAccessExpressions);
     runner.runTest("Generics", testGenerics);
-    runner.runTest("Foo", foo);
+    runner.runTest("Imports and Type Aliases", testImportsAndAliases);
+    runner.runTest("Parsing from file", testParseFromFile);
 
     return runner.allTestsPassed() ? 0 : 1;
 }

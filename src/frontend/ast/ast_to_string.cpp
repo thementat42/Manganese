@@ -394,5 +394,9 @@ std::string ModuleDeclarationStatement::toString() const {
     return "";
 }
 
+std::string AliasStatement::toString() const {
+    return "alias " + baseType->toString() + " as " + alias + ";";
+}
+
 }  // namespace ast
 }  // namespace Manganese

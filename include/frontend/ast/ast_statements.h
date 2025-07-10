@@ -23,6 +23,17 @@ namespace Manganese {
 
 namespace ast {
 
+class AliasStatement : public Statement {
+    protected:
+    TypePtr baseType;
+    std::string alias;
+    public:
+    AliasStatement(TypePtr baseType_, std::string alias_) 
+    : baseType(std::move(baseType_)), alias(std::move(alias_)) {}
+
+    NODE_OVERRIDES
+};
+
 class BreakStatement : public Statement {
     public:
     BreakStatement() = default;

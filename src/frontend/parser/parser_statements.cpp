@@ -21,9 +21,12 @@ namespace parser {
 StatementPtr Parser::parseStatement() {
     auto it = statementLookup.find(currentToken().getType());
     if (it != statementLookup.end()) {
+        // If possible, parse a statement from the current token
         // Call the handler for the current token type
         return it->second(this);
     }
+
+    // Parse out an expression then convert it to a statement
     ExpressionPtr expr = parseExpression(Precedence::Default);
     if (!isParsingBlockPrecursor) {
         expectToken(TokenType::Semicolon, "Expected semicolon after expression");
@@ -32,6 +35,41 @@ StatementPtr Parser::parseStatement() {
 }
 
 // ===== Specific statement parsing methods =====
+
+StatementPtr Parser::parseAliasStatement() {
+    DISCARD(advance());
+    TypePtr baseType;
+    if (currentToken().isPrimitiveType()) {
+        // Primitive types are easy to alias -- just parse a regular type
+        baseType = parseType(Precedence::Default);
+    } else {
+        // If it's not a primtive type, we expect an identifier.
+        // This might be a path (e.g. alias foo::bar as baz, so we need to handle that)
+        std::string path = expectToken(TokenType::Identifier, "Expected an identifier after 'alias', or a primitive type.").getLexeme();
+        while (currentToken().getType() == TokenType::ScopeResolution) {
+            path += advance().getLexeme();
+            path += expectToken(
+                        TokenType::Identifier,
+                        std::format("Expected an identifier after {}", lexer::tokenTypeToString(TokenType::ScopeResolution)))
+                        .getLexeme();
+        }
+
+        if (currentToken().getType() == TokenType::At) {
+            // Generic Type
+            baseType = parseGenericType(std::make_unique<ast::SymbolType>(path), Precedence::Default);
+        } else if (currentToken().getType() == TokenType::LeftSquare) {
+            // Array type
+            baseType = parseArrayType(std::make_unique<ast::SymbolType>(path), Precedence::Default);
+        } else {
+            // Regular (identifier) type
+            baseType = std::make_unique<ast::SymbolType>(path);
+        }
+    }
+    expectToken(TokenType::As, "Expected 'as' to introduce the type alias");
+    std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
+    expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
+    return std::make_unique<ast::AliasStatement>(std::move(baseType), std::move(alias));
+}
 
 StatementPtr Parser::parseBundleDeclarationStatement() {
     DISCARD(advance());

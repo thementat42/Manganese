@@ -108,6 +108,7 @@ class Parser {
     // ===== Statement Parsing =====
 
     StatementPtr parseStatement();
+    StatementPtr parseAliasStatement();
     StatementPtr parseBundleDeclarationStatement();
     StatementPtr parseDoWhileLoopStatement();
     StatementPtr parseEnumDeclarationStatement();
