@@ -30,7 +30,8 @@ literal = int_literal |
           float_literal |
           char_literal |
           string_literal |
-          bool_literal;
+          bool_literal |
+          array_literal;
 
 int_literal = ("-" | "+")? (decimal_int | hex_int | octal_int | binary_int) int_suffix?;
 float_literal = ("-" | "+")? (decimal_float | hex_float) float_suffix?;
@@ -44,6 +45,8 @@ unescaped_char = [^"\];
 escape_seq = "\\" ("n" | "t" | "\\" | "\"" | "u" hex_digit{4} | "a" | "b" | "x");
 
 bool_literal = "true" | "false";
+
+array_literal = "["expression ("," expression)*"]"
 
 decimal_int = digit+;
 
@@ -96,23 +99,28 @@ expression = unary_expression |
              (expression | literal) binary_op (expression | literal) |
              "(" expression ")" |
              identifier binary_op_eq (identifier | literal) |
-             function_call;
+             function_call | scope_resolution_expression | type_cast_expression;
 
 expression_statement = expression ";";
 
 unary_expression = prefix_unary_op expression | expression postfix_unary_op;
 
+scope_resolution_expression = identifier"::"(identifier | scope_resolution_expression);
+
+type_cast_expression = type "as" identifier;
+indexing_expression = identifier"["expression"]"
+
 #* Statements
 block = statement*;
 
-statement = variable_decl | expression_statement | conditional_statement | switch_statement | return_statement | loop_statement;
+statement = variable_decl | expression_statement | conditional_statement | switch_statement | return_statement | loop_statement | break_statement | continue_statement | alias_statement;
 
 conditional_statement = "if" "(" expression ")" "{" block "}"
                         ("else if" "(" expression ")" "{" block "}")*
                         ("else" "{" block "}")?;
 
 switch_statement = "switch" "(" expression ")"
-                   "{" ("case" literal ":" block "break;"?)* "}"
+                   "{" ("case" expression ":" block "break;"?)* "}"
                    ("default" ":" block)? ;
 
 return_statement = "return" expression ";";
@@ -125,6 +133,16 @@ while_loop = "while" "(" expression ")" "{" block "}";
 
 do_while_loop = "do" "{" block "}" "while" "(" expression ")" ";";
 
+repeat_loop = "repeat" "(" expression ")" "{" statement* "}";
+
+import_statement = "import" identifier("::"identifier)* ("as" identifier)? ";";
+module_statement = "module" identifier ";";
+
+break_statement = "break" ";";
+continue_statement = "continue" ";";
+
+alias_statement = "alias" type "as" identifier ";""; 
+
 #* Functions
 function_decl = "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
 generic_parameters = "[" identifier ("," identifier)* "]";
@@ -135,10 +153,12 @@ lambda_statement = "lambda" "(" type identifier ("," type identifier)* ")" "->" 
 function_call = expression ("@" "["type ("," type)* "]")? "(" ( expression ("," expression)*)? ")";
 
 #* Data Encapsulation
-bundle_decl = "bundle" "{" bundle_member_decl+ "}"
+bundle_decl = "bundle" identifier generic_parameters? "{" bundle_member_decl+ "}";
 
-bundle_member_decl = "static"? variable_name ":" type_qualifiers? type ";"
+bundle_member_decl = variable_name ":" type_qualifiers? type ";";
 
-enum_decl = "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}"
+enum_decl = "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}";
+
+bundle_instantiation = identifier("@" "["type ("," type)*"]") "{" (identifier "=" expression) "," (identifier "=" expression)* "}";
 
 #? Add blueprint decl
