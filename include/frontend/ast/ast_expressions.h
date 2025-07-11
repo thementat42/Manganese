@@ -4,7 +4,7 @@
  *
  * This header declares the core expression node types used in the AST.
  * Each expression type (literals, binary, assignment, function call, etc.) is represented as a class inheriting from Expression.
- * 
+ *
  * ! The nodes are listed in alphabetical order
  *
  * Each expression node provides a getType() method for type inference or annotation
@@ -20,6 +20,26 @@ namespace Manganese {
 
 namespace ast {
 
+enum class ExpressionKind {
+    ArrayLiteralExpression,
+    AssignmentExpression,
+    BinaryExpression,
+    BoolLiteralExpression,
+    BundleInstantiationExpression,
+    CharLiteralExpression,
+    FunctionCallExpression,
+    GenericExpression,
+    IdentifierExpression,
+    IndexExpression,
+    MemberAccessExpression,
+    NumberLiteralExpression,
+    PostfixExpression,
+    PrefixExpression,
+    ScopeResolutionExpression,
+    StringLiteralExpression,
+    TypeCastExpression
+};
+
 class ArrayLiteralExpression : public Expression {
    protected:
     std::vector<ExpressionPtr> elements;
@@ -33,6 +53,7 @@ class ArrayLiteralExpression : public Expression {
     TypePtr getType() const override {
         return elementType ? TypePtr(elementType.get()) : TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::ArrayLiteralExpression; }
 };
 
 class AssignmentExpression : public Expression {
@@ -48,6 +69,7 @@ class AssignmentExpression : public Expression {
     TypePtr getType() const override {
         return assignee->getType();  // Assume the assignee's type is the result type
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::AssignmentExpression; }
 };
 
 class BinaryExpression : public Expression {
@@ -64,6 +86,7 @@ class BinaryExpression : public Expression {
         // Resolution is in the semantic analysis phase
         return TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::BinaryExpression; }
 };
 
 class BoolLiteralExpression : public Expression {
@@ -77,6 +100,7 @@ class BoolLiteralExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("bool"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::BoolLiteralExpression; }
 };
 
 struct BundleInstantiationField {
@@ -99,6 +123,7 @@ class BundleInstantiationExpression : public Expression {
 
     NODE_OVERRIDES;
     TypePtr getType() const override;
+    ExpressionKind kind() const noexcept override { return ExpressionKind::BundleInstantiationExpression; }
 };
 
 class CharLiteralExpression : public Expression {
@@ -116,6 +141,7 @@ class CharLiteralExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("char"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::CharLiteralExpression; }
 };
 
 class FunctionCallExpression : public Expression {
@@ -131,6 +157,7 @@ class FunctionCallExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::FunctionCallExpression; }
 };
 
 class GenericExpression : public Expression {
@@ -144,7 +171,7 @@ class GenericExpression : public Expression {
 
     /**
      * @brief Transfer ownership of the type parameters to the caller.
-     * @details Used when a GenericExpression is part of a larger expression (e.g. a bundle instantiation) 
+     * @details Used when a GenericExpression is part of a larger expression (e.g. a bundle instantiation)
      */
     std::vector<TypePtr> moveTypeParameters() { return std::move(types); }
 
@@ -153,6 +180,7 @@ class GenericExpression : public Expression {
         // The type of a generic expression is the type of the identifier expression
         return identifier->getType();
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::GenericExpression; }
 };
 
 class IdentifierExpression : public Expression {
@@ -166,6 +194,7 @@ class IdentifierExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::IdentifierExpression; }
 };
 
 class IndexExpression : public Expression {
@@ -181,6 +210,7 @@ class IndexExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::IndexExpression; }
 };
 
 class MemberAccessExpression : public Expression {
@@ -196,6 +226,7 @@ class MemberAccessExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::MemberAccessExpression; }
 };
 
 class NumberLiteralExpression : public Expression {
@@ -207,6 +238,7 @@ class NumberLiteralExpression : public Expression {
 
     NODE_OVERRIDES;
     TypePtr getType() const override;
+    ExpressionKind kind() const noexcept override { return ExpressionKind::NumberLiteralExpression; }
 };
 
 class PostfixExpression : public Expression {
@@ -222,6 +254,7 @@ class PostfixExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::PostfixExpression; }
 };
 
 class PrefixExpression : public Expression {
@@ -238,6 +271,7 @@ class PrefixExpression : public Expression {
         // Don't infer the type, leave that to the semantic analysis phase
         return TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::PrefixExpression; }
 };
 
 class ScopeResolutionExpression : public Expression {
@@ -253,6 +287,7 @@ class ScopeResolutionExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("auto"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::ScopeResolutionExpression; }
 };
 
 class StringLiteralExpression : public Expression {
@@ -267,6 +302,7 @@ class StringLiteralExpression : public Expression {
     TypePtr getType() const override {
         return TypePtr(new SymbolType("string"));
     }
+    ExpressionKind kind() const noexcept override { return ExpressionKind::StringLiteralExpression; }
 };
 
 class TypeCastExpression : public Expression {
@@ -280,6 +316,7 @@ class TypeCastExpression : public Expression {
 
     NODE_OVERRIDES;
     TypePtr getType() const override;
+    ExpressionKind kind() const noexcept override { return ExpressionKind::TypeCastExpression; }
 };
 
 }  // namespace ast

@@ -4,7 +4,7 @@
  *
  * This header declares the core type node types used in the AST.
  * Each type (Symbols, Arrays, etc.) is represented as a class inheriting from Statement.
- * 
+ *
  * ! The nodes are listed in alphabetical order.
  */
 
@@ -16,6 +16,14 @@
 namespace Manganese {
 
 namespace ast {
+
+enum class TypeKind {
+    ArrayType,
+    FunctionType,
+    GenericType,
+    PointerType,
+    SymbolType
+};
 
 /**
  * e.g. int[], float[][], etc.
@@ -33,6 +41,7 @@ class ArrayType : public Type {
         : elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     NODE_OVERRIDES;
+    TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
 };
 
 struct FunctionParameterType {
@@ -46,24 +55,26 @@ struct FunctionParameterType {
  * e.g. func(int, int) -> bool
  */
 class FunctionType : public Type {
-    protected:
-     std::vector<FunctionParameterType> parameterTypes;
-     TypePtr returnType;
-     public:
-     FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypePtr returnType_)
-     : parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
+   protected:
+    std::vector<FunctionParameterType> parameterTypes;
+    TypePtr returnType;
 
-     NODE_OVERRIDES;
+   public:
+    FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypePtr returnType_)
+        : parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
+
+    NODE_OVERRIDES;
+    TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
 };
 
 /**
  * e.g. [T, U]
  */
 class GenericType : public Type {
-    protected:
-    std::unique_ptr<Type> baseType;  // The base type to which the generics are applied
+   protected:
+    std::unique_ptr<Type> baseType;       // The base type to which the generics are applied
     std::vector<TypePtr> typeParameters;  // The generic type parameters
-    public:
+   public:
     /**
      * @param baseType_ The base type to which the generics are applied
      * @param typeParameters_ The generic type parameters
@@ -72,18 +83,21 @@ class GenericType : public Type {
         : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
     NODE_OVERRIDES;
+    TypeKind kind() const noexcept override { return TypeKind::GenericType; };
 };
 
 /**
  * ptr + any type
  */
-class PointerType: public Type {
-    protected:
+class PointerType : public Type {
+   protected:
     TypePtr baseType;
-    public:
-    explicit PointerType(TypePtr baseType_): baseType(std::move(baseType_)) {}
+
+   public:
+    explicit PointerType(TypePtr baseType_) : baseType(std::move(baseType_)) {}
 
     NODE_OVERRIDES;
+    TypeKind kind() const noexcept override { return TypeKind::PointerType; };
 };
 
 /**
@@ -98,14 +112,13 @@ class SymbolType : public Type {
      * @param name_ The name of the type
      */
     explicit SymbolType(std::string name_) : name(std::move(name_)) {}
-
-    const std::string& getName() const { return name; }
     NODE_OVERRIDES;
+    std::string getName() const noexcept { return name; }
+    TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
 };
 
-} // namespace ast
+}  // namespace ast
 
-} // namespace Manganese
+}  // namespace Manganese
 
-
-#endif // MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_H

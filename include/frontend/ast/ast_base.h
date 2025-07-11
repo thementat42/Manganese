@@ -11,7 +11,7 @@
  * @see ast_types.h
  */
 /**
- * 
+ *
  */
 
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
@@ -35,8 +35,8 @@
 #define OVERRIDE_TO_STRING std::string toString() const override;  // Makes overriding toString() less cumbersome to type
 
 #define __NODE_OVERRIDES \
-    OVERRIDE_TO_STRING    \
-    OVERRIDE_DUMP_METHOD      \
+    OVERRIDE_TO_STRING   \
+    OVERRIDE_DUMP_METHOD \
     friend parser::Parser;
 
 #define NODE_OVERRIDES __NODE_OVERRIDES  // Makes overriding toString() and dump() and declaring the friend parser::Parser less cumbersome to type
@@ -55,6 +55,10 @@ using ExpressionPtr = std::unique_ptr<Expression>;
 using StatementPtr = std::unique_ptr<Statement>;
 using TypePtr = std::unique_ptr<Type>;
 using Block = std::vector<StatementPtr>;
+
+enum class ExpressionKind;
+enum class StatementKind;
+enum class TypeKind;
 
 enum class Visibility : char {
     Public = 0,
@@ -86,20 +90,23 @@ class ASTNode {
     friend parser::Parser;
 };
 
-class Type : public ASTNode {
-   public:
-    virtual ~Type() noexcept = default;
-};
-
 class Expression : public ASTNode {
    public:
     virtual ~Expression() noexcept = default;
     virtual TypePtr getType() const = 0;
+    virtual ExpressionKind kind() const noexcept = 0;
 };
 
 class Statement : public ASTNode {
    public:
     virtual ~Statement() noexcept = default;
+    virtual StatementKind kind() const noexcept = 0;
+};
+
+class Type : public ASTNode {
+   public:
+    virtual ~Type() noexcept = default;
+    virtual TypeKind kind() const noexcept = 0;
 };
 
 }  // namespace ast
