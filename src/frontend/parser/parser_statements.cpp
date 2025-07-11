@@ -39,7 +39,9 @@ StatementPtr Parser::parseStatement() {
 StatementPtr Parser::parseAliasStatement() {
     DISCARD(advance());
     TypePtr baseType;
-    if (currentToken().isPrimitiveType()) {
+    if (currentToken().isPrimitiveType() ||
+        currentToken().getType() == TokenType::Func ||
+        currentToken().getType() == TokenType::Ptr) {
         // Primitive types are easy to alias -- just parse a regular type
         baseType = parseType(Precedence::Default);
     } else {

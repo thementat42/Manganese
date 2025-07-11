@@ -35,6 +35,27 @@ class ArrayType : public Type {
     NODE_OVERRIDES;
 };
 
+struct FunctionParameterType {
+    bool isConst;
+    TypePtr type;
+
+    FunctionParameterType(bool isConst_, TypePtr type_) : isConst(isConst_), type(std::move(type_)) {}
+};
+
+/**
+ * e.g. func(int, int) -> bool
+ */
+class FunctionType : public Type {
+    protected:
+     std::vector<FunctionParameterType> parameterTypes;
+     TypePtr returnType;
+     public:
+     FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypePtr returnType_)
+     : parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
+
+     NODE_OVERRIDES;
+};
+
 /**
  * e.g. [T, U]
  */
@@ -57,7 +78,7 @@ class GenericType : public Type {
  * ptr + any type
  */
 class PointerType: public Type {
-    private:
+    protected:
     TypePtr baseType;
     public:
     explicit PointerType(TypePtr baseType_): baseType(std::move(baseType_)) {}

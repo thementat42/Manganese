@@ -540,20 +540,18 @@ bool testImportsAndAliases() {
         "import std::collections::map;\n"
         "module dataprocessing;\n"
         "alias int32 as Integer;\n"
-        "alias float64 as f64;\n"
+        "alias ptr float64 as pf64;\n"
+        "alias func(const Integer, pf64, func(int64) -> int64) -> bool as blah;"
         "alias std::HashMap@[string, Integer] as StringIntMap;\n"
-        "let value: Integer = 42;\n"
-        "let floatPtr: ptr f64 = 3.14159;\n"
-        "let lookup: StringIntMap;";
+        "let value: Integer = 42;\n";
 
-    std::array<std::string, 7> expected = {
+    std::array<std::string, 6> expected = {
         "",
-        "alias int32 as Integer;",
-        "alias float64 as f64;",
-        "alias std::HashMap@[string, Integer] as StringIntMap;",
-        "(let value: private Integer = 42);",
-        "(let floatPtr: private ptr f64 = 3.14159);",
-        "(let lookup: private StringIntMap);"};
+        "alias (int32) as Integer;",
+        "alias (ptr float64) as pf64;",
+        "alias (func(const Integer, pf64, func(int64) -> int64) -> bool) as blah;",
+        "alias (std::HashMap@[string, Integer]) as StringIntMap;",
+        "(let value: private Integer = 42);"};
 
     return validateStatements(
         getParserResults(expression, lexer::Mode::String),

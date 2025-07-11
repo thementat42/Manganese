@@ -126,6 +126,7 @@ class Parser {
 
     TypePtr parseType(Precedence precedence) noexcept_debug;
     TypePtr parseArrayType(TypePtr left, Precedence precedence);
+    TypePtr parseFunctionType();
     TypePtr parseGenericType(TypePtr left, Precedence precedence);
     TypePtr parsePointerType();
     TypePtr parseSymbolType();

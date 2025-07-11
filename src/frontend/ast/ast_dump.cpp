@@ -482,6 +482,29 @@ void ArrayType::dump(std::ostream& os, int indent) const {
     }
 }
 
+void FunctionType::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "FunctionType [" << getLine() << ":" << getColumn() << "] {\n";
+    
+    // Parameter types
+    os << getIndent(indent + 1) << "parameter types: [\n";
+    for (const auto& paramType : parameterTypes) {
+        os << getIndent(indent + 2) << (paramType.isConst ? "const " : "") << "\n";
+        paramType.type->dump(os, indent + 2);
+    }
+    os << getIndent(indent + 1) << "]\n";
+    
+    // Return type
+    os << getIndent(indent + 1) << "return type: ";
+    if (returnType) {
+        os << "\n";
+        returnType->dump(os, indent + 2);
+    } else {
+        os << "void\n";
+    }
+    
+    os << getIndent(indent) << "}\n";
+}
+
 void GenericType::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "GenericType [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "base: ";

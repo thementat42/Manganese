@@ -3,7 +3,7 @@
 /**
  * @file ast_to_string.cpp
  * @brief Implements the toString() methods for AST nodes
- * 
+ *
  * The toString() methods are mainly used for error reporting
  * In the test suite, they are used to ensure the program is parsed correctly
  */
@@ -177,7 +177,6 @@ std::string StringLiteralExpression::toString() const {
     return "\"" + value + "\"";
 }
 
-
 std::string TypeCastExpression::toString() const {
     return "(" + expression->toString() + " as " + type->toString() + ")";
 }
@@ -185,7 +184,7 @@ std::string TypeCastExpression::toString() const {
 // ===== Statements =====
 
 std::string AliasStatement::toString() const {
-    return "alias " + baseType->toString() + " as " + alias + ";";
+    return "alias (" + baseType->toString() + ") as " + alias + ";";
 }
 
 std::string BreakStatement::toString() const {
@@ -386,6 +385,24 @@ std::string ArrayType::toString() const {
         oss << lengthExpression->toString();
     }
     oss << "]";
+    return oss.str();
+}
+
+std::string FunctionType::toString() const {
+    std::ostringstream oss;
+    oss << "func(";
+    for (size_t i = 0; i < parameterTypes.size(); ++i) {
+        if (parameterTypes[i].isConst) {
+            oss << "const ";
+        }
+        oss << parameterTypes[i].type->toString();
+        if (i < parameterTypes.size() - 1) [[likely]] {
+            oss << ", ";
+        }
+    }
+    oss << ")";
+    oss << " -> " << (returnType? returnType->toString() : "no return");
+
     return oss.str();
 }
 

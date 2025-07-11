@@ -40,13 +40,44 @@ TypePtr Parser::parseType(Precedence precedence) noexcept_debug {
 TypePtr Parser::parseArrayType(TypePtr left, Precedence precedence) {
     ExpressionPtr lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
-    DISCARD(advance());          // Consume the left square bracket '['
+    DISCARD(advance());   // Consume the left square bracket '['
     if (currentToken().getType() != TokenType::RightSquare) {
         // If the next token is not a right square bracket, it's a length expression
         lengthExpression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
     return std::make_unique<ast::ArrayType>(std::move(left), std::move(lengthExpression));
+}
+
+TypePtr Parser::parseFunctionType() {
+    DISCARD(advance());  // consume the 'func' token
+
+    expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
+    std::vector<ast::FunctionParameterType> parameterTypes;
+    while (!done()) {
+        if (currentToken().getType() == TokenType::RightParen) {
+            break;  // Done with parameter types
+        }
+        bool isConst = false;
+        if (currentToken().getType() == TokenType::Const) {
+            isConst = true;
+            DISCARD(advance());
+        }
+        parameterTypes.emplace_back(isConst, parseType(Precedence::Default));
+
+        if (currentToken().getType() != TokenType::RightParen) {
+            expectToken(TokenType::Comma, "Expected ',' to separate parameter types or ')' to end parameter list");
+        }
+    }
+    expectToken(TokenType::RightParen, "Expected ')' to end parameter type list");
+
+    TypePtr returnType = nullptr;
+    if (currentToken().getType() == TokenType::Arrow) {
+        DISCARD(advance());  // Consume the '->' token
+        returnType = parseType(Precedence::Default);
+    }
+
+    return std::make_unique<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
 }
 
 TypePtr Parser::parseGenericType(TypePtr left, Precedence precedence) {
@@ -88,7 +119,7 @@ TypePtr Parser::parseSymbolType() {
 // ===== Lookup Initialization =====
 
 void Parser::registerLedHandler_type(TokenType type, Precedence precedence,
-                      ledHandler_types_t handler) {
+                                     ledHandler_types_t handler) {
     operatorPrecedenceMap_type[type] = Operator::binary(precedence);
     ledLookup_types[type] = handler;
 }
@@ -120,6 +151,7 @@ void Parser::initializeTypeLookups() {
     //~ Complex types
     registerLedHandler_type(TokenType::LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
     registerLedHandler_type(TokenType::At, Precedence::Generic, &Parser::parseGenericType);
+    registerNudHandler_type(TokenType::Func, &Parser::parseFunctionType);
 }
 
 }  // namespace parser
