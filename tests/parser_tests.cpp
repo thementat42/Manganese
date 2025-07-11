@@ -543,7 +543,7 @@ bool testImportsAndAliases() {
         "alias float64 as f64;\n"
         "alias std::HashMap@[string, Integer] as StringIntMap;\n"
         "let value: Integer = 42;\n"
-        "let floatPtr: f64 = 3.14159;\n"
+        "let floatPtr: ptr f64 = 3.14159;\n"
         "let lookup: StringIntMap;";
 
     std::array<std::string, 7> expected = {
@@ -552,7 +552,7 @@ bool testImportsAndAliases() {
         "alias float64 as f64;",
         "alias std::HashMap@[string, Integer] as StringIntMap;",
         "(let value: private Integer = 42);",
-        "(let floatPtr: private f64 = 3.14159);",
+        "(let floatPtr: private ptr f64 = 3.14159);",
         "(let lookup: private StringIntMap);"};
 
     return validateStatements(

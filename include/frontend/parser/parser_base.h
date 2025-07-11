@@ -122,11 +122,12 @@ class Parser {
     StatementPtr parseVariableDeclarationStatement();
     StatementPtr parseWhileLoopStatement();
 
-    //* Type Parsing
+    // ===== Type Parsing =====
 
     TypePtr parseType(Precedence precedence) noexcept_debug;
     TypePtr parseArrayType(TypePtr left, Precedence precedence);
     TypePtr parseGenericType(TypePtr left, Precedence precedence);
+    TypePtr parsePointerType();
     TypePtr parseSymbolType();
 
     // ~ Helpers

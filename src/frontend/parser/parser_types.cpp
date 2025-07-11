@@ -68,6 +68,11 @@ TypePtr Parser::parseGenericType(TypePtr left, Precedence precedence) {
     return std::make_unique<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 
+TypePtr Parser::parsePointerType() {
+    DISCARD(advance());  // Consume `ptr`
+    return std::make_unique<ast::PointerType>(parseType(Precedence::Default));
+}
+
 TypePtr Parser::parseSymbolType() {
     Token token = currentToken();
     if (token.isPrimitiveType()) {
@@ -110,6 +115,7 @@ void Parser::initializeTypeLookups() {
     registerNudHandler_type(TokenType::Float64, &Parser::parseSymbolType);
     registerNudHandler_type(TokenType::Char, &Parser::parseSymbolType);
     registerNudHandler_type(TokenType::Bool, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Ptr, &Parser::parsePointerType);
 
     //~ Complex types
     registerLedHandler_type(TokenType::LeftSquare, Precedence::Postfix, &Parser::parseArrayType);

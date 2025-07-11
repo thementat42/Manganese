@@ -18,23 +18,6 @@ namespace Manganese {
 namespace ast {
 
 /**
- * e.g. T, int, etc.
- */
-class SymbolType : public Type {
-   protected:
-    std::string name;
-
-   public:
-    /**
-     * @param name_ The name of the type
-     */
-    explicit SymbolType(std::string name_) : name(std::move(name_)) {}
-
-    const std::string& getName() const { return name; }
-    NODE_OVERRIDES;
-};
-
-/**
  * e.g. int[], float[][], etc.
  */
 class ArrayType : public Type {
@@ -67,6 +50,35 @@ class GenericType : public Type {
     GenericType(std::unique_ptr<Type> baseType_, std::vector<TypePtr> typeParameters_)
         : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
+    NODE_OVERRIDES;
+};
+
+/**
+ * ptr + any type
+ */
+class PointerType: public Type {
+    private:
+    TypePtr baseType;
+    public:
+    explicit PointerType(TypePtr baseType_): baseType(std::move(baseType_)) {}
+
+    NODE_OVERRIDES;
+};
+
+/**
+ * e.g. T, int, etc.
+ */
+class SymbolType : public Type {
+   protected:
+    std::string name;
+
+   public:
+    /**
+     * @param name_ The name of the type
+     */
+    explicit SymbolType(std::string name_) : name(std::move(name_)) {}
+
+    const std::string& getName() const { return name; }
     NODE_OVERRIDES;
 };
 

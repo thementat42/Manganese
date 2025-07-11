@@ -497,6 +497,13 @@ void GenericType::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
+void PointerType::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "PointerType [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "base type: \n";
+    baseType->dump(os, indent + 2);
+    os << getIndent(indent) << "}\n";
+}
+
 void SymbolType::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "SymbolType [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";

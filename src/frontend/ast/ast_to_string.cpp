@@ -402,6 +402,10 @@ std::string GenericType::toString() const {
     return oss.str();
 }
 
+std::string PointerType::toString() const {
+    return "ptr " + baseType->toString();
+}
+
 std::string SymbolType::toString() const {
     return name;
 }
