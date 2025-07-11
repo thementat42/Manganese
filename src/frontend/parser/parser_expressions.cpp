@@ -104,9 +104,8 @@ ExpressionPtr Parser::parseExpression(Precedence precedence) noexcept_debug {
         }
 
         if (type == TokenType::LeftBrace &&
-            !dynamic_cast<ast::IdentifierExpression*>(left.get()) &&
-            !dynamic_cast<ast::GenericExpression*>(left.get())
-        ) [[unlikely]] {
+            left->kind() != ast::ExpressionKind::IdentifierExpression &&
+            left->kind() != ast::ExpressionKind::GenericExpression) [[unlikely]] {
             // TODO: Add support for generics in bundles
             if (isParsingBlockPrecursor) {
                 // Left braces after an expression can either start a block or a bundle instantiation
@@ -170,17 +169,19 @@ ExpressionPtr Parser::parseBundleInstantiationExpression(ExpressionPtr left, Pre
     expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start bundle instantiation");
     std::vector<ast::BundleInstantiationField> fields;
 
-    if (auto genericExpr = dynamic_cast<ast::GenericExpression*>(left.get())) {
-        const auto identifierExpr = dynamic_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
-        if (!identifierExpr) {
+    if (left->kind() == ast::ExpressionKind::GenericExpression) {
+        auto* genericExpr = static_cast<ast::GenericExpression*>(left.get());
+        if (genericExpr->identifier->kind() != ast::ExpressionKind::IdentifierExpression) {
             logError(
                 "Generic bundle instantiation must start with a bundle name",
                 left->getLine(), left->getColumn());
         } else {
+            auto* identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
             bundleName = identifierExpr->value;
             genericTypes = genericExpr->moveTypeParameters();
         }
-    } else if (auto underlying = dynamic_cast<ast::IdentifierExpression*>(left.get())) {
+    } else if (left->kind() == ast::ExpressionKind::IdentifierExpression) {
+        auto* underlying = static_cast<ast::IdentifierExpression*>(left.get());
         bundleName = underlying->value;
     } else {
         logError(

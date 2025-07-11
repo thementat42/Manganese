@@ -1,5 +1,3 @@
-
-
 /**
  * @file ast.cpp
  * @brief Implementation of some AST node methods.
@@ -49,18 +47,22 @@ TypePtr NumberLiteralExpression::getType() const {
 
 TypePtr TypeCastExpression::getType() const {
     // Return a copy of the target type
-    if (type) {
-        if (auto symbolType = dynamic_cast<const SymbolType*>(type.get())) {
-            return std::make_unique<SymbolType>(symbolType->getName());
-        } else if (auto arrayType = dynamic_cast<const ArrayType*>(type.get())) {
+    if (!type) {
+        // If no type is specified, return auto
+        return std::make_unique<SymbolType>("auto");
+    }
+    switch (type->kind()) {
+        case TypeKind::SymbolType:
+            return std::make_unique<SymbolType>(static_cast<const SymbolType*>(type.get())->getName());
+        case TypeKind::ArrayType: {
+            auto* arrayType = static_cast<const ArrayType*>(type.get());
             // For array types, we need to copy the element type too
             return std::make_unique<ArrayType>(std::make_unique<SymbolType>(arrayType->toString()));
         }
-        // Default fallback for other type classes
-        return std::make_unique<SymbolType>(type->toString());
+        default:
+            // Default fallback for other type classes
+            return std::make_unique<SymbolType>(type->toString());
     }
-    // If no type is specified, return auto
-    return std::make_unique<SymbolType>("auto");
 }
 
 VariableDeclarationStatement::VariableDeclarationStatement(
