@@ -17,6 +17,112 @@
 #include <variant>
 namespace Manganese {
 namespace ast {
+
+// ===== Expressions =====
+std::string ArrayLiteralExpression::toString() const {
+    std::ostringstream oss;
+    oss << "[";
+    for (size_t i = 0; i < elements.size(); ++i) {
+        oss << elements[i]->toString();
+        if (i < elements.size() - 1) [[likely]] {
+            oss << ", ";
+        }
+    }
+    oss << "]";
+    return oss.str();
+}
+
+std::string AssignmentExpression::toString() const {
+    std::string opStr = lexer::tokenTypeToString(op);
+    return "(" + assignee->toString() + " " + opStr + " " + value->toString() + ")";
+}
+
+std::string BinaryExpression::toString() const {
+    std::ostringstream oss;
+    oss << "(" << left->toString() << " ";
+    oss << lexer::tokenTypeToString(op) << " ";
+    oss << right->toString() << ")";
+    return oss.str();
+}
+
+std::string BoolLiteralExpression::toString() const {
+    return value ? "true" : "false";
+}
+
+std::string BundleInstantiationExpression::toString() const {
+    std::ostringstream oss;
+    oss << name;
+    if (!genericTypes.empty()) {
+        oss << "@[";
+        for (size_t i = 0; i < genericTypes.size(); ++i) {
+            oss << genericTypes[i]->toString();
+            if (i < genericTypes.size() - 1) [[likely]] {
+                oss << ", ";
+            }
+        }
+        oss << "]";
+    }
+    oss << " {";
+
+    bool first = true;
+    for (const auto& field : fields) {
+        if (!first) {
+            oss << ", ";
+        }
+        first = false;
+        oss << field.name << " = " << field.value->toString();
+    }
+
+    oss << "}";
+    return oss.str();
+}
+
+std::string CharLiteralExpression::toString() const {
+    std::ostringstream oss;
+    oss << "'" << static_cast<char>(value) << "'";
+    return oss.str();
+}
+
+std::string FunctionCallExpression::toString() const {
+    std::ostringstream oss;
+    oss << callee->toString() << "(";
+
+    for (size_t i = 0; i < arguments.size(); ++i) {
+        oss << arguments[i]->toString();
+        if (i < arguments.size() - 1) [[likely]] {
+            oss << ", ";
+        }
+    }
+
+    oss << ")";
+    return oss.str();
+}
+
+std::string GenericExpression::toString() const {
+    std::ostringstream oss;
+    oss << identifier->toString() << "@[";
+    for (size_t i = 0; i < types.size(); ++i) {
+        oss << types[i]->toString();
+        if (i < types.size() - 1) [[likely]] {
+            oss << ", ";
+        }
+    }
+    oss << "]";
+    return oss.str();
+}
+
+std::string IdentifierExpression::toString() const {
+    return value;
+}
+
+std::string IndexExpression::toString() const {
+    return variable->toString() + "[" + index->toString() + "]";
+}
+
+std::string MemberAccessExpression::toString() const {
+    return object->toString() + "." + property;
+}
+
 std::string NumberLiteralExpression::toString() const {
     std::ostringstream oss;
 
@@ -53,43 +159,9 @@ std::string NumberLiteralExpression::toString() const {
     return oss.str();
 }
 
-std::string CharLiteralExpression::toString() const {
-    std::ostringstream oss;
-    oss << "'" << static_cast<char>(value) << "'";
-    return oss.str();
-}
-
-std::string StringLiteralExpression::toString() const {
-    return "\"" + value + "\"";
-}
-
-std::string IdentifierExpression::toString() const {
-    return value;
-}
-
-std::string BoolLiteralExpression::toString() const {
-    return value ? "true" : "false";
-}
-
-std::string ArrayLiteralExpression::toString() const {
-    std::ostringstream oss;
-    oss << "[";
-    for (size_t i = 0; i < elements.size(); ++i) {
-        oss << elements[i]->toString();
-        if (i < elements.size() - 1) [[likely]] {
-            oss << ", ";
-        }
-    }
-    oss << "]";
-    return oss.str();
-}
-
-std::string BinaryExpression::toString() const {
-    std::ostringstream oss;
-    oss << "(" << left->toString() << " ";
-    oss << lexer::tokenTypeToString(op) << " ";
-    oss << right->toString() << ")";
-    return oss.str();
+std::string PostfixExpression::toString() const {
+    std::string opStr = lexer::tokenTypeToString(op);
+    return "(" + left->toString() + opStr + ")";
 }
 
 std::string PrefixExpression::toString() const {
@@ -97,107 +169,70 @@ std::string PrefixExpression::toString() const {
     return "(" + opStr + right->toString() + ")";
 }
 
-std::string PostfixExpression::toString() const {
-    std::string opStr = lexer::tokenTypeToString(op);
-    return "(" + left->toString() + opStr + ")";
+std::string ScopeResolutionExpression::toString() const {
+    return scope->toString() + "::" + element;
 }
+
+std::string StringLiteralExpression::toString() const {
+    return "\"" + value + "\"";
+}
+
 
 std::string TypeCastExpression::toString() const {
     return "(" + expression->toString() + " as " + type->toString() + ")";
 }
 
-std::string AssignmentExpression::toString() const {
-    std::string opStr = lexer::tokenTypeToString(op);
-    return "(" + assignee->toString() + " " + opStr + " " + value->toString() + ")";
-}
+// ===== Statements =====
 
-std::string FunctionCallExpression::toString() const {
-    std::ostringstream oss;
-    oss << callee->toString() << "(";
-
-    for (size_t i = 0; i < arguments.size(); ++i) {
-        oss << arguments[i]->toString();
-        if (i < arguments.size() - 1) [[likely]] {
-            oss << ", ";
-        }
-    }
-
-    oss << ")";
-    return oss.str();
-}
-
-std::string GenericExpression::toString() const {
-    std::ostringstream oss;
-    oss << identifier->toString() << "@[";
-    for (size_t i = 0; i < types.size(); ++i) {
-        oss << types[i]->toString();
-        if (i < types.size() - 1) [[likely]] {
-            oss << ", ";
-        }
-    }
-    oss << "]";
-    return oss.str();
-}
-
-std::string ExpressionStatement::toString() const {
-    return expression->toString() + ";";
-}
-
-std::string SymbolType::toString() const {
-    return name;
-}
-std::string ArrayType::toString() const {
-    std::ostringstream oss;
-    oss << elementType->toString() << "[";
-    if (lengthExpression) {
-        oss << lengthExpression->toString();
-    }
-    oss << "]";
-    return oss.str();
-}
-
-std::string GenericType::toString() const {
-    std::ostringstream oss;
-    oss << baseType->toString() << "@[";
-    for (size_t i = 0; i < typeParameters.size(); ++i) {
-        oss << typeParameters[i]->toString();
-        if (i < typeParameters.size() - 1) [[likely]] {
-            oss << ", ";
-        }
-    }
-    oss << "]";
-    return oss.str();
+std::string AliasStatement::toString() const {
+    return "alias " + baseType->toString() + " as " + alias + ";";
 }
 
 std::string BreakStatement::toString() const {
     return "break;";
 }
 
+std::string BundleDeclarationStatement::toString() const {
+    std::ostringstream oss;
+    oss << "bundle " << name;
+    if (!genericTypes.empty()) {
+        oss << "[";
+        for (size_t i = 0; i < genericTypes.size(); ++i) {
+            oss << genericTypes[i];
+            if (i < genericTypes.size() - 1) {
+                oss << ", ";
+            }
+        }
+        oss << "]";
+    }
+    oss << " {\n";
+    for (const auto& field : fields) {
+        oss << "\t" << field.name << ": " << field.type->toString() << ";\n";
+    }
+    oss << "}";
+    return oss.str();
+}
+
 std::string ContinueStatement::toString() const {
     return "continue;";
 }
 
-std::string VariableDeclarationStatement::toString() const {
-    // Convert visibility to string
-    std::string visStr;
-    switch (visibility) {
-        case Visibility::Public:
-            visStr = "public ";
-            break;
-        case Visibility::ReadOnly:
-            visStr = "readonly ";
-            break;
-        case Visibility::Private:
-            visStr = "private ";
-            break;
-        default:
-            ASSERT_UNREACHABLE("Variable did not have a valid visibility");
+std::string EnumDeclarationStatement::toString() const {
+    std::ostringstream oss;
+    oss << "enum " << name << ": " << baseType->toString() << " {\n";
+    for (const auto& value : values) {
+        oss << "\t" << value.name;
+        if (value.value) {
+            oss << " = " << value.value->toString();
+        }
+        oss << ",\n";
     }
+    oss << "}";
+    return oss.str();
+}
 
-    std::string prefix = isConst ? "const " : "let ";
-    std::string typeStr = type ? ": " + visStr + type->toString() : "";
-    std::string valueStr = value ? " = " + value->toString() : "";
-    return "(" + prefix + name + typeStr + valueStr + ");";
+std::string ExpressionStatement::toString() const {
+    return expression->toString() + ";";
 }
 
 std::string FunctionDeclarationStatement::toString() const {
@@ -235,10 +270,6 @@ std::string FunctionDeclarationStatement::toString() const {
     return oss.str();
 }
 
-std::string ReturnStatement::toString() const {
-    return "return" + (value ? " " + value->toString() : "") + ";";
-}
-
 std::string IfStatement::toString() const {
     std::ostringstream oss;
     oss << "if (" << condition->toString() << ") {\n";
@@ -265,21 +296,12 @@ std::string IfStatement::toString() const {
     return oss.str();
 }
 
-std::string WhileLoopStatement::toString() const {
-    std::ostringstream oss;
-    if (isDoWhile) {
-        oss << "do {\n";
-    } else {
-        oss << "while (" << condition->toString() << ") {\n";
-    }
-    for (const auto& stmt : body) {
-        oss << "\t" << stmt->toString() << "\n";
-    }
-    oss << "}";
-    if (isDoWhile) {
-        oss << " while (" << condition->toString() << ");";
-    }
-    return oss.str();
+std::string ImportStatement::toString() const {
+    return "";
+}
+
+std::string ModuleDeclarationStatement::toString() const {
+    return "";
 }
 
 std::string RepeatLoopStatement::toString() const {
@@ -287,81 +309,6 @@ std::string RepeatLoopStatement::toString() const {
     oss << "repeat (" << numIterations->toString() << ") {\n";
     for (const auto& stmt : body) {
         oss << "\t" << stmt->toString() << "\n";
-    }
-    oss << "}";
-    return oss.str();
-}
-
-std::string BundleDeclarationStatement::toString() const {
-    std::ostringstream oss;
-    oss << "bundle " << name;
-    if (!genericTypes.empty()) {
-        oss << "[";
-        for (size_t i = 0; i < genericTypes.size(); ++i) {
-            oss << genericTypes[i];
-            if (i < genericTypes.size() - 1) {
-                oss << ", ";
-            }
-        }
-        oss << "]";
-    }
-    oss << " {\n";
-    for (const auto& field : fields) {
-        oss << "\t" << field.name << ": " << field.type->toString() << ";\n";
-    }
-    oss << "}";
-    return oss.str();
-}
-
-std::string BundleInstantiationExpression::toString() const {
-    std::ostringstream oss;
-    oss << name;
-    if (!genericTypes.empty()) {
-        oss << "@[";
-        for (size_t i = 0; i < genericTypes.size(); ++i) {
-            oss << genericTypes[i]->toString();
-            if (i < genericTypes.size() - 1) [[likely]] {
-                oss << ", ";
-            }
-        }
-        oss << "]";
-    }
-    oss << " {";
-
-    bool first = true;
-    for (const auto& field : fields) {
-        if (!first) {
-            oss << ", ";
-        }
-        first = false;
-        oss << field.name << " = " << field.value->toString();
-    }
-
-    oss << "}";
-    return oss.str();
-}
-
-std::string MemberAccessExpression::toString() const {
-    return object->toString() + "." + property;
-}
-
-std::string IndexExpression::toString() const {
-    return variable->toString() + "[" + index->toString() + "]";
-}
-
-std::string ScopeResolutionExpression::toString() const {
-    return scope->toString() + "::" + element;
-}
-
-std::string EnumDeclarationStatement::toString() const {
-    std::ostringstream oss;
-    oss << "enum " << name << ": " << baseType->toString() << " {\n";
-    for (const auto& value : values) {
-        oss << "\t" << value.name;
-        if (value.value) {
-            oss << " = " << value.value->toString();
-        }
-        oss << ",\n";
     }
     oss << "}";
     return oss.str();
@@ -386,16 +333,77 @@ std::string SwitchStatement::toString() const {
     return oss.str();
 }
 
-std::string ImportStatement::toString() const {
-    return "";
+std::string VariableDeclarationStatement::toString() const {
+    // Convert visibility to string
+    std::string visStr;
+    switch (visibility) {
+        case Visibility::Public:
+            visStr = "public ";
+            break;
+        case Visibility::ReadOnly:
+            visStr = "readonly ";
+            break;
+        case Visibility::Private:
+            visStr = "private ";
+            break;
+        default:
+            ASSERT_UNREACHABLE("Variable did not have a valid visibility");
+    }
+
+    std::string prefix = isConst ? "const " : "let ";
+    std::string typeStr = type ? ": " + visStr + type->toString() : "";
+    std::string valueStr = value ? " = " + value->toString() : "";
+    return "(" + prefix + name + typeStr + valueStr + ");";
 }
 
-std::string ModuleDeclarationStatement::toString() const {
-    return "";
+std::string ReturnStatement::toString() const {
+    return "return" + (value ? " " + value->toString() : "") + ";";
 }
 
-std::string AliasStatement::toString() const {
-    return "alias " + baseType->toString() + " as " + alias + ";";
+std::string WhileLoopStatement::toString() const {
+    std::ostringstream oss;
+    if (isDoWhile) {
+        oss << "do {\n";
+    } else {
+        oss << "while (" << condition->toString() << ") {\n";
+    }
+    for (const auto& stmt : body) {
+        oss << "\t" << stmt->toString() << "\n";
+    }
+    oss << "}";
+    if (isDoWhile) {
+        oss << " while (" << condition->toString() << ");";
+    }
+    return oss.str();
+}
+
+// ===== Types =====
+
+std::string ArrayType::toString() const {
+    std::ostringstream oss;
+    oss << elementType->toString() << "[";
+    if (lengthExpression) {
+        oss << lengthExpression->toString();
+    }
+    oss << "]";
+    return oss.str();
+}
+
+std::string GenericType::toString() const {
+    std::ostringstream oss;
+    oss << baseType->toString() << "@[";
+    for (size_t i = 0; i < typeParameters.size(); ++i) {
+        oss << typeParameters[i]->toString();
+        if (i < typeParameters.size() - 1) [[likely]] {
+            oss << ", ";
+        }
+    }
+    oss << "]";
+    return oss.str();
+}
+
+std::string SymbolType::toString() const {
+    return name;
 }
 
 }  // namespace ast
