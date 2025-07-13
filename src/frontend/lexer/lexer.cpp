@@ -149,19 +149,19 @@ void Lexer::lex(size_t numTokens) {
             advance();                                                       // Skip whitespace
         } else if (isalpha(currentChar) || currentChar == '_') [[likely]] {  // Mostly identifiers and keywords
             tokenizeKeywordOrIdentifier();
-            numTokensMade++;
+            ++numTokensMade;
         } else if (currentChar == '\'') {
             tokenizeCharLiteral();
-            numTokensMade++;
+            ++numTokensMade;
         } else if (currentChar == '"') {
             tokenizeStringLiteral();
-            numTokensMade++;
+            ++numTokensMade;
         } else if (std::isdigit(currentChar)) {
             tokenizeNumber();
-            numTokensMade++;
+            ++numTokensMade;
         } else {
             tokenizeSymbol();
-            numTokensMade++;
+            ++numTokensMade;
         }
         currentChar = peekChar();
         tokenStartLine = getLine();

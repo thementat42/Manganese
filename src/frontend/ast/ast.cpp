@@ -72,7 +72,7 @@ VariableDeclarationStatement::VariableDeclarationStatement(
       visibility(visibility_),
       value(std::move(_value)),
       type(std::move(_type)) {
-    if (type == nullptr && value) {
+    if (!type && value) {
         type = value->getType();
     }
 }
