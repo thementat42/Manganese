@@ -16,9 +16,9 @@
 namespace Manganese {
 namespace ast {
 
-TypePtr BundleInstantiationExpression::getType() const {
+TypePtr_t BundleInstantiationExpression::getType() const {
     if (genericTypes.empty()) {
-        return TypePtr(new SymbolType(name));
+        return TypePtr_t(new SymbolType(name));
     }
     std::string typeName = name + "@[";
     for (size_t i = 0; i < genericTypes.size(); ++i) {
@@ -28,10 +28,10 @@ TypePtr BundleInstantiationExpression::getType() const {
         }
     }
     typeName += "]";
-    return TypePtr(new SymbolType(typeName));
+    return TypePtr_t(new SymbolType(typeName));
 }
 
-TypePtr NumberLiteralExpression::getType() const {
+TypePtr_t NumberLiteralExpression::getType() const {
     if (std::holds_alternative<int8_t>(value)) return std::make_unique<SymbolType>("int8");
     if (std::holds_alternative<uint8_t>(value)) return std::make_unique<SymbolType>("uint8");
     if (std::holds_alternative<int16_t>(value)) return std::make_unique<SymbolType>("int16");
@@ -45,7 +45,7 @@ TypePtr NumberLiteralExpression::getType() const {
     ASSERT_UNREACHABLE("Unknown number type in NumberLiteralExpression");
 }
 
-TypePtr TypeCastExpression::getType() const {
+TypePtr_t TypeCastExpression::getType() const {
     // Return a copy of the target type
     if (!type) {
         // If no type is specified, return auto
@@ -66,7 +66,7 @@ TypePtr TypeCastExpression::getType() const {
 }
 
 VariableDeclarationStatement::VariableDeclarationStatement(
-    bool isConst_, std::string name_, Visibility visibility_, ExpressionPtr _value, TypePtr _type)
+    bool isConst_, std::string name_, Visibility visibility_, ExpressionPtr_t _value, TypePtr_t _type)
     : isConst(isConst_),
       name(std::move(name_)),
       visibility(visibility_),

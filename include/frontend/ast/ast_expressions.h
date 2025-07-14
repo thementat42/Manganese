@@ -42,31 +42,31 @@ enum class ExpressionKind {
 
 class ArrayLiteralExpression : public Expression {
    protected:
-    std::vector<ExpressionPtr> elements;
-    TypePtr elementType;  // Optional, can be inferred from the elements
+    std::vector<ExpressionPtr_t> elements;
+    TypePtr_t elementType;  // Optional, can be inferred from the elements
 
    public:
-    ArrayLiteralExpression(std::vector<ExpressionPtr> elements_, TypePtr elementType_ = nullptr)
+    ArrayLiteralExpression(std::vector<ExpressionPtr_t> elements_, TypePtr_t elementType_ = nullptr)
         : elements(std::move(elements_)), elementType(std::move(elementType_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return elementType ? TypePtr(elementType.get()) : TypePtr(new SymbolType("auto"));
+    TypePtr_t getType() const override {
+        return elementType ? TypePtr_t(elementType.get()) : TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::ArrayLiteralExpression; }
 };
 
 class AssignmentExpression : public Expression {
    protected:
-    ExpressionPtr assignee, value;
+    ExpressionPtr_t assignee, value;
     lexer::TokenType op;
 
    public:
-    AssignmentExpression(ExpressionPtr assignee_, lexer::TokenType op_, ExpressionPtr value_)
+    AssignmentExpression(ExpressionPtr_t assignee_, lexer::TokenType op_, ExpressionPtr_t value_)
         : assignee(std::move(assignee_)), value(std::move(value_)), op(op_) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
+    TypePtr_t getType() const override {
         return assignee->getType();  // Assume the assignee's type is the result type
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::AssignmentExpression; }
@@ -74,17 +74,17 @@ class AssignmentExpression : public Expression {
 
 class BinaryExpression : public Expression {
    protected:
-    ExpressionPtr left, right;
+    ExpressionPtr_t left, right;
     lexer::TokenType op;
 
    public:
-    BinaryExpression(ExpressionPtr left_, lexer::TokenType op_, ExpressionPtr right_)
+    BinaryExpression(ExpressionPtr_t left_, lexer::TokenType op_, ExpressionPtr_t right_)
         : left(std::move(left_)), right(std::move(right_)), op(op_) {};
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
+    TypePtr_t getType() const override {
         // Resolution is in the semantic analysis phase
-        return TypePtr(new SymbolType("auto"));
+        return TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::BinaryExpression; }
 };
@@ -97,32 +97,32 @@ class BoolLiteralExpression : public Expression {
     explicit BoolLiteralExpression(const bool value_) : value(value_) {};
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("bool"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("bool"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::BoolLiteralExpression; }
 };
 
 struct BundleInstantiationField {
     std::string name;
-    ExpressionPtr value;
+    ExpressionPtr_t value;
 
-    BundleInstantiationField(std::string name_, ExpressionPtr value_)
+    BundleInstantiationField(std::string name_, ExpressionPtr_t value_)
         : name(std::move(name_)), value(std::move(value_)) {}
 };
 
 class BundleInstantiationExpression : public Expression {
    protected:
     std::string name;
-    std::vector<TypePtr> genericTypes;
+    std::vector<TypePtr_t> genericTypes;
     std::vector<BundleInstantiationField> fields;
 
    public:
-    BundleInstantiationExpression(std::string name_, std::vector<TypePtr> genericTypes_, std::vector<BundleInstantiationField> fields_)
+    BundleInstantiationExpression(std::string name_, std::vector<TypePtr_t> genericTypes_, std::vector<BundleInstantiationField> fields_)
         : name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override;
+    TypePtr_t getType() const override;
     ExpressionKind kind() const noexcept override { return ExpressionKind::BundleInstantiationExpression; }
 };
 
@@ -138,45 +138,45 @@ class CharLiteralExpression : public Expression {
     explicit CharLiteralExpression(char value_) : value(static_cast<char32_t>(value_)) {};
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("char"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("char"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::CharLiteralExpression; }
 };
 
 class FunctionCallExpression : public Expression {
    protected:
-    ExpressionPtr callee;
-    std::vector<ExpressionPtr> arguments;
+    ExpressionPtr_t callee;
+    std::vector<ExpressionPtr_t> arguments;
 
    public:
-    FunctionCallExpression(ExpressionPtr callee_, std::vector<ExpressionPtr> arguments_)
+    FunctionCallExpression(ExpressionPtr_t callee_, std::vector<ExpressionPtr_t> arguments_)
         : callee(std::move(callee_)), arguments(std::move(arguments_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("auto"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::FunctionCallExpression; }
 };
 
 class GenericExpression : public Expression {
    protected:
-    ExpressionPtr identifier;
-    std::vector<TypePtr> types;
+    ExpressionPtr_t identifier;
+    std::vector<TypePtr_t> types;
 
    public:
-    GenericExpression(ExpressionPtr identifier_, std::vector<TypePtr> types_)
+    GenericExpression(ExpressionPtr_t identifier_, std::vector<TypePtr_t> types_)
         : identifier(std::move(identifier_)), types(std::move(types_)) {}
 
     /**
      * @brief Transfer ownership of the type parameters to the caller.
      * @details Used when a GenericExpression is part of a larger expression (e.g. a bundle instantiation)
      */
-    std::vector<TypePtr> moveTypeParameters() { return std::move(types); }
+    std::vector<TypePtr_t> moveTypeParameters() { return std::move(types); }
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
+    TypePtr_t getType() const override {
         // The type of a generic expression is the type of the identifier expression
         return identifier->getType();
     }
@@ -191,40 +191,40 @@ class IdentifierExpression : public Expression {
     explicit IdentifierExpression(const std::string& value_) : value(std::move(value_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("auto"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::IdentifierExpression; }
 };
 
 class IndexExpression : public Expression {
    protected:
-    ExpressionPtr variable;
-    ExpressionPtr index;
+    ExpressionPtr_t variable;
+    ExpressionPtr_t index;
 
    public:
-    IndexExpression(ExpressionPtr variable_, ExpressionPtr index_)
+    IndexExpression(ExpressionPtr_t variable_, ExpressionPtr_t index_)
         : variable(std::move(variable_)), index(std::move(index_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("auto"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::IndexExpression; }
 };
 
 class MemberAccessExpression : public Expression {
    protected:
-    ExpressionPtr object;
+    ExpressionPtr_t object;
     std::string property;
 
    public:
-    MemberAccessExpression(ExpressionPtr object_, std::string property_)
+    MemberAccessExpression(ExpressionPtr_t object_, std::string property_)
         : object(std::move(object_)), property(std::move(property_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("auto"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::MemberAccessExpression; }
 };
@@ -237,22 +237,22 @@ class NumberLiteralExpression : public Expression {
     explicit NumberLiteralExpression(number_t value_) : value(value_) {};
 
     NODE_OVERRIDES;
-    TypePtr getType() const override;
+    TypePtr_t getType() const override;
     ExpressionKind kind() const noexcept override { return ExpressionKind::NumberLiteralExpression; }
 };
 
 class PostfixExpression : public Expression {
    protected:
-    ExpressionPtr left;
+    ExpressionPtr_t left;
     lexer::TokenType op;
 
    public:
-    PostfixExpression(ExpressionPtr left_, lexer::TokenType op_)
+    PostfixExpression(ExpressionPtr_t left_, lexer::TokenType op_)
         : left(std::move(left_)), op(op_) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("auto"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::PostfixExpression; }
 };
@@ -260,32 +260,32 @@ class PostfixExpression : public Expression {
 class PrefixExpression : public Expression {
    protected:
     lexer::TokenType op;
-    ExpressionPtr right;
+    ExpressionPtr_t right;
 
    public:
-    PrefixExpression(lexer::TokenType op_, ExpressionPtr right_)
+    PrefixExpression(lexer::TokenType op_, ExpressionPtr_t right_)
         : op(op_), right(std::move(right_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
+    TypePtr_t getType() const override {
         // Don't infer the type, leave that to the semantic analysis phase
-        return TypePtr(new SymbolType("auto"));
+        return TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::PrefixExpression; }
 };
 
 class ScopeResolutionExpression : public Expression {
    protected:
-    ExpressionPtr scope;
+    ExpressionPtr_t scope;
     std::string element;
 
    public:
-    ScopeResolutionExpression(ExpressionPtr scope_, std::string element_)
+    ScopeResolutionExpression(ExpressionPtr_t scope_, std::string element_)
         : scope(std::move(scope_)), element(std::move(element_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("auto"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("auto"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::ScopeResolutionExpression; }
 };
@@ -299,23 +299,23 @@ class StringLiteralExpression : public Expression {
     explicit StringLiteralExpression(const char* value_) : value(value_) {};
 
     NODE_OVERRIDES;
-    TypePtr getType() const override {
-        return TypePtr(new SymbolType("string"));
+    TypePtr_t getType() const override {
+        return TypePtr_t(new SymbolType("string"));
     }
     ExpressionKind kind() const noexcept override { return ExpressionKind::StringLiteralExpression; }
 };
 
 class TypeCastExpression : public Expression {
    protected:
-    ExpressionPtr expression;
-    TypePtr type;
+    ExpressionPtr_t expression;
+    TypePtr_t type;
 
    public:
-    TypeCastExpression(ExpressionPtr expression_, TypePtr type_)
+    TypeCastExpression(ExpressionPtr_t expression_, TypePtr_t type_)
         : expression(std::move(expression_)), type(std::move(type_)) {}
 
     NODE_OVERRIDES;
-    TypePtr getType() const override;
+    TypePtr_t getType() const override;
     ExpressionKind kind() const noexcept override { return ExpressionKind::TypeCastExpression; }
 };
 

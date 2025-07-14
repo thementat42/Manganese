@@ -51,10 +51,10 @@ namespace ast {
 class Expression;
 class Statement;
 class Type;
-using ExpressionPtr = std::unique_ptr<Expression>;
-using StatementPtr = std::unique_ptr<Statement>;
-using TypePtr = std::unique_ptr<Type>;
-using Block = std::vector<StatementPtr>;
+using ExpressionPtr_t = std::unique_ptr<Expression>;
+using StatementPtr_t = std::unique_ptr<Statement>;
+using TypePtr_t = std::unique_ptr<Type>;
+using Block = std::vector<StatementPtr_t>;
 
 enum class ExpressionKind;
 enum class StatementKind;
@@ -93,7 +93,7 @@ class ASTNode {
 class Expression : public ASTNode {
    public:
     virtual ~Expression() noexcept = default;
-    virtual TypePtr getType() const = 0;
+    virtual TypePtr_t getType() const = 0;
     virtual ExpressionKind kind() const noexcept = 0;
 };
 

@@ -128,14 +128,14 @@ void Parser::initializeLookups() {
                               &Parser::parseScopeResolutionExpression);
 
     //~ Statements
-    registerStmtHandler(TokenType::Break, [](Parser* p) -> ast::StatementPtr {
+    registerStmtHandler(TokenType::Break, [](Parser* p) -> ast::StatementPtr_t {
         DISCARD(p->advance());
         p->expectToken(TokenType::Semicolon);
         return std::make_unique<ast::BreakStatement>();
     });
     registerStmtHandler(TokenType::Bundle, &Parser::parseBundleDeclarationStatement);
     registerStmtHandler(TokenType::Const, &Parser::parseVariableDeclarationStatement);
-    registerStmtHandler(TokenType::Continue, [](Parser* p) -> ast::StatementPtr {
+    registerStmtHandler(TokenType::Continue, [](Parser* p) -> ast::StatementPtr_t {
         DISCARD(p->advance());
         p->expectToken(TokenType::Semicolon);
         return std::make_unique<ast::ContinueStatement>();

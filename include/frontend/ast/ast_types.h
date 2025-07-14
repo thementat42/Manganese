@@ -31,13 +31,13 @@ enum class TypeKind {
 class ArrayType : public Type {
    protected:
     std::unique_ptr<Type> elementType;
-    ExpressionPtr lengthExpression;  // Optional length specification (otherwise, should be inferred based on the number of elements)
+    ExpressionPtr_t lengthExpression;  // Optional length specification (otherwise, should be inferred based on the number of elements)
 
    public:
     /**
      * @param elementType_ The type of the elements in the array
      */
-    explicit ArrayType(std::unique_ptr<Type> elementType_, ExpressionPtr lengthExpr_ = nullptr)
+    explicit ArrayType(std::unique_ptr<Type> elementType_, ExpressionPtr_t lengthExpr_ = nullptr)
         : elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     NODE_OVERRIDES;
@@ -46,9 +46,9 @@ class ArrayType : public Type {
 
 struct FunctionParameterType {
     bool isConst;
-    TypePtr type;
+    TypePtr_t type;
 
-    FunctionParameterType(bool isConst_, TypePtr type_) : isConst(isConst_), type(std::move(type_)) {}
+    FunctionParameterType(bool isConst_, TypePtr_t type_) : isConst(isConst_), type(std::move(type_)) {}
 };
 
 /**
@@ -57,10 +57,10 @@ struct FunctionParameterType {
 class FunctionType : public Type {
    protected:
     std::vector<FunctionParameterType> parameterTypes;
-    TypePtr returnType;
+    TypePtr_t returnType;
 
    public:
-    FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypePtr returnType_)
+    FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypePtr_t returnType_)
         : parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
 
     NODE_OVERRIDES;
@@ -73,13 +73,13 @@ class FunctionType : public Type {
 class GenericType : public Type {
    protected:
     std::unique_ptr<Type> baseType;       // The base type to which the generics are applied
-    std::vector<TypePtr> typeParameters;  // The generic type parameters
+    std::vector<TypePtr_t> typeParameters;  // The generic type parameters
    public:
     /**
      * @param baseType_ The base type to which the generics are applied
      * @param typeParameters_ The generic type parameters
      */
-    GenericType(std::unique_ptr<Type> baseType_, std::vector<TypePtr> typeParameters_)
+    GenericType(std::unique_ptr<Type> baseType_, std::vector<TypePtr_t> typeParameters_)
         : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
     NODE_OVERRIDES;
@@ -91,10 +91,10 @@ class GenericType : public Type {
  */
 class PointerType : public Type {
    protected:
-    TypePtr baseType;
+    TypePtr_t baseType;
 
    public:
-    explicit PointerType(TypePtr baseType_) : baseType(std::move(baseType_)) {}
+    explicit PointerType(TypePtr_t baseType_) : baseType(std::move(baseType_)) {}
 
     NODE_OVERRIDES;
     TypeKind kind() const noexcept override { return TypeKind::PointerType; };
