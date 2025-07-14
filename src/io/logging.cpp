@@ -16,6 +16,7 @@
 namespace Manganese {
 namespace logging {
 void logInternal(const std::string& message, LogLevel level) {
+#if DEBUG
     switch (level) {
         case LogLevel::Info:
             std::cout << BLUE << "[INFO] " << message << RESET << "\n";
@@ -34,6 +35,9 @@ void logInternal(const std::string& message, LogLevel level) {
     if (level == LogLevel::Critical) {
         ASSERT_UNREACHABLE("Critical error encountered");
     }
+#else   // ^^ DEBUG vv !DEBUG
+    return;  // No internal logging in non-debug builds
+#endif  // DEBUG
 }
 
 void log(const std::string& message, LogLevel level, size_t line, size_t col) {
