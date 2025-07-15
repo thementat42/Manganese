@@ -103,7 +103,7 @@ bool Token::isPrimitiveType() const noexcept {
            type == TokenType::UInt8 || type == TokenType::UInt16 ||
            type == TokenType::UInt32 || type == TokenType::UInt64 ||
            type == TokenType::Float32 || type == TokenType::Float64 ||
-           type == TokenType::Char || type == TokenType::Bool;
+           type == TokenType::Char || type == TokenType::Bool || type == TokenType::String;
 }
 
 bool Token::hasUnaryCounterpart() const noexcept {
@@ -282,6 +282,8 @@ std::string tokenTypeToString(TokenType type) noexcept_debug {
             return "repeat";
         case TokenType::Return:
             return "return";
+        case TokenType::String:
+            return "string";
         case TokenType::Switch:
             return "switch";
         case TokenType::True:
@@ -502,6 +504,7 @@ std::unordered_map<std::string, const TokenType> keywordMap = {
     {"readonly", TokenType::ReadOnly},
     {"repeat", TokenType::Repeat},
     {"return", TokenType::Return},
+    {"string", TokenType::String},
     {"switch", TokenType::Switch},
     {"true", TokenType::True},
     {"typeof", TokenType::TypeOf},

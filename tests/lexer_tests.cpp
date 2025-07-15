@@ -138,10 +138,10 @@ bool testIdentifiers() {
 }
 
 bool testKeywords() {
-    auto tokens = tokensFromString("alias as blueprint bool break bundle case char const foo while");
+    auto tokens = tokensFromString("alias as blueprint bool break bundle case char const foo while string");
     printAllTokens(tokens);
-    if (tokens.size() != 11) {
-        std::cout << "Expected 11 tokens, got " << tokens.size() << '\n';
+    if (tokens.size() != 12) {
+        std::cout << "Expected 12 tokens, got " << tokens.size() << '\n';
         return false;
     }
 
@@ -155,7 +155,9 @@ bool testKeywords() {
            checkToken(tokens[7], TokenType::Char, "char") &&
            checkToken(tokens[8], TokenType::Const, "const") &&
            checkToken(tokens[9], TokenType::Identifier, "foo") &&
-           checkToken(tokens[10], TokenType::While, "while");
+           checkToken(tokens[10], TokenType::While, "while") &&
+           checkToken(tokens[11], TokenType::String, "string");
+
 }
 
 bool testIntegerLiterals() {

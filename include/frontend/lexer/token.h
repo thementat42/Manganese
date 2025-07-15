@@ -3,7 +3,7 @@
  * @brief This file contains the definition of token functionality for the Manganese compiler.
  *
  * Defines the TokenType enumeration, Token class, and related helper functions for the Manganese language lexer.
- * 
+ *
  * - TokenType: Enumerates all possible token types recognized by the lexer, including keywords, operators, literals, brackets, punctuation, and special markers.
  * - Token: Represents a single token, storing its type, lexeme, position (line and column), and validity.
  * - Helper functions and maps: Provide utilities for mapping strings to token types, converting token types to strings, and identifying keywords/operators.
@@ -143,6 +143,7 @@ enum class TokenType : uint8_t {
     Bool,     // true or false
     True,     // boolean true
     False,    // boolean false
+    String,   // sequence of characters
 
     //* Conditionals
     If,    // check a condition

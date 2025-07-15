@@ -146,6 +146,7 @@ void Parser::initializeTypeLookups() {
     registerNudHandler_type(TokenType::Float64, &Parser::parseSymbolType);
     registerNudHandler_type(TokenType::Char, &Parser::parseSymbolType);
     registerNudHandler_type(TokenType::Bool, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::String, &Parser::parseSymbolType);
     registerNudHandler_type(TokenType::Ptr, &Parser::parsePointerType);
 
     //~ Complex types
