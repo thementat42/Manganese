@@ -67,7 +67,7 @@ Bitwise operators work similarly to logical operators, but (as their name sugges
 |   `&`    | Bitwise AND         | `x & y`     |
 |   `\|`   | Bitwise OR          | `x \| y`    |
 |   `^`    | Bitwise XOR         | `x ^ y`     |
-|   `~`    | Bitwise NOT         | `~x`     |
+|   `~`    | Bitwise NOT         | `~x`        |
 |  `<<`    | Bitwise Left Shift  | `x << y`    |
 |  `>>`    | Bitwise Right Shift | `x >> y`    |
 
@@ -77,13 +77,14 @@ Bitwise operators support the immediate re-assignment syntax (`op=`)
 
 |  Bracket |            Purpose        |           Example           |
 | -------- | ------------------------- | --------------------------- |
-| `()`     |  Function calls, grouping |           `foo()`           |
+| `()`     |  Function calls, grouping |    `foo()`, `2 * (1 + 3)`   |
 | `[]`     |  Element access,generics  |  `foo[3]`, `foo@[int](3)`   |
 | `{}`     |  Scope/Block definitions  |       `{some code}`         |
 
 ## === Miscellaneous Operators ===  
 
-These operators don't fit in any other category:
+These operators don't fit in any other category. Some are not operators per se, but
+are used in specific contexts.
 
 | Operator |       Name       |       Example       |
 | -------- | ---------------- | ------------------- |
@@ -97,9 +98,6 @@ These operators don't fit in any other category:
 |   `as`   | Type cast        | `x as int`          |
 |   `@`    | Generic List     | `func foo@[int]()`  |
 
-Manganese uses copy-based assignment. An expression like `x = y` copies the value of `y` into `x`.
-<!-- Todo? Move? (rust-like) -->
-
 ## === Non-operator symbols ===
 
 The following aren't really operators, but are symbols interpreted in a specific way:
@@ -108,7 +106,7 @@ The following aren't really operators, but are symbols interpreted in a specific
 | ------- | -------------------- | --------------------------- |
 | `#`     | Inline comments      | `x++;  # Ignore this value` |
 | `/* */` | Multiline comments   | `/* A docstring */`         |
-| `...`   | Variadic Arguments   | `func foo (int... args)`   |
+| `...`   | Variadic Arguments   | `func foo (int... args)`    |
 | `;`     | Statement terminator | `statement;`                |
 
 ## === Operator Precedence ===
