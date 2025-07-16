@@ -9,6 +9,7 @@
 #include "ast.h"
 #include "lexer.h"
 #include "parser.h"
+#include "semantic.h"
 #include "visitor.h"
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_FRONTEND_H
