@@ -14,7 +14,7 @@ Options:
     -d, --debug                                            Build the compiler in debug mode instead of release mode.
     -f, --fresh                                            Run a fresh build by clearing the build directory before running CMake
     -g, --generator                                        Set a generator for CMake's build files.
-    -h, --help                                             Print this help message
+    -h, --help                                             Print this help message and exit
     -j, --jobs                                             Number of parallel build jobs.
     -m, --memory-tracking                                  Track the total amount of heap-allocated memory the program uses (ignores deallocations)
     -mc, --memory-tracking-continuous                      Continuously track the amount of heap-allocated memory (accounts for deallocations, accuracy may vary with different compilers)
