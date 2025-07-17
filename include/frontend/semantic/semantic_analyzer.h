@@ -18,7 +18,7 @@ class SemanticAnalyzer {
    private:
     SymbolTable symbolTable;
     std::string currentModule;
-    bool hasError = false;
+    bool hasError_ = false;
 
    public:
     explicit SemanticAnalyzer() noexcept = default;
@@ -29,7 +29,7 @@ class SemanticAnalyzer {
     void analyze(const parser::ParsedFile& parsedFile);
 
     [[nodiscard]] bool hasError() const noexcept {
-        return hasError;
+        return hasError_;
     }
 
    private:
@@ -38,15 +38,15 @@ class SemanticAnalyzer {
     void enterScope();
     void exitScope();
     inline void logError(const std::string& message) {
-        hasError = true;
+        hasError_ = true;
         logging::logError(message);
     }
 
     // ===== Basic AST Traversal =====
     void checkImports(const std::vector<parser::Import>& imports);
     void checkBlock(const ast::Block& block);
-    void checkStatement(const ast::Statement& statement);
-    void checkExpression(const ast::Expression& expression);
+    void checkStatement(const ast::Statement* statement);
+    void checkExpression(const ast::Expression* expression);
 
     // ===== Type Helpers =====
     bool areTypesCompatible(const TypeInfo& type1, const TypeInfo& type2) const;
@@ -78,6 +78,7 @@ class SemanticAnalyzer {
     void checkBundleDeclarationStatement(const ast::BundleDeclarationStatement* statement);
     void checkContinueStatement(const ast::ContinueStatement* statement);
     void checkEnumDeclarationStatement(const ast::EnumDeclarationStatement* statement);
+    void checkExpressionStatement(const ast::ExpressionStatement* statement);
     void checkFunctionDeclarationStatement(const ast::FunctionDeclarationStatement* statement);
     void checkIfStatement(const ast::IfStatement* statement);
     void checkReturnStatement(const ast::ReturnStatement* statement);
