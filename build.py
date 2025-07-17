@@ -10,6 +10,7 @@ Options:
     -b, --build-dir                                        Specify a custom build directory (default: 'build').
     -c, --clean                                            Clean the build directory after the build (removes everything except the output executable).
     -cc, --ccompiler CCOMPILER                             Specify a custom C compiler to use for the build instead of the default for the system
+    --compile-commands                                     Generate compile_commands.json in the build directory.
     -cxx, -cpp, --cxxcompiler, --cppcompiler CXXCOMPILER   Specify a custom C++ compiler to use for the build instead of the default for the system
     -d, --debug                                            Build the compiler in debug mode instead of release mode.
     -f, --fresh                                            Run a fresh build by clearing the build directory before running CMake
@@ -81,6 +82,13 @@ arg_parser.add_argument(
     "-cc", "--ccompiler",
     type=str,
     help="Specify a custom C compiler to use for the build instead of the default for the system"
+)
+
+arg_parser.add_argument(
+    "--compile-commands",
+    action="store_true",
+    help="Generate compile_commands.json in the build directory",
+    default=False
 )
 
 arg_parser.add_argument(
@@ -241,6 +249,8 @@ if args.generator is not None:
     cmake_args.extend(["-G", args.generator])
 if args.ccompiler:
     cmake_args.append(f"-DCMAKE_C_COMPILER={args.ccompiler}")
+if args.compile_commands:
+    cmake_args.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
 if args.cxxcompiler:
     cmake_args.append(f"-DCMAKE_CXX_COMPILER={args.cxxcompiler}")
 
