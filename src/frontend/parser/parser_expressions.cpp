@@ -332,7 +332,7 @@ ExpressionPtr_t Parser::parsePrimaryExpression() noexcept_debug {
             return std::make_unique<ast::NumberLiteralExpression>(*value);
         }
         default:
-            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " + 
+            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " +
                 lexer::tokenTypeToString(token.getType()));
     }
 }

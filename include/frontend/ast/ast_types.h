@@ -40,7 +40,7 @@ class ArrayType : public Type {
     explicit ArrayType(std::unique_ptr<Type> elementType_, ExpressionPtr_t lengthExpr_ = nullptr)
         : elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
-    NODE_OVERRIDES;
+    AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
 };
 
@@ -63,7 +63,7 @@ class FunctionType : public Type {
     FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypePtr_t returnType_)
         : parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
 
-    NODE_OVERRIDES;
+    AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
 };
 
@@ -82,7 +82,7 @@ class GenericType : public Type {
     GenericType(std::unique_ptr<Type> baseType_, std::vector<TypePtr_t> typeParameters_)
         : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
-    NODE_OVERRIDES;
+    AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::GenericType; };
 };
 
@@ -96,7 +96,7 @@ class PointerType : public Type {
    public:
     explicit PointerType(TypePtr_t baseType_) : baseType(std::move(baseType_)) {}
 
-    NODE_OVERRIDES;
+    AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::PointerType; };
 };
 
@@ -112,7 +112,7 @@ class SymbolType : public Type {
      * @param name_ The name of the type
      */
     explicit SymbolType(std::string name_) : name(std::move(name_)) {}
-    NODE_OVERRIDES;
+    AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }
     TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
 };
