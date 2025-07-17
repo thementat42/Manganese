@@ -15,20 +15,20 @@
 
 namespace Manganese {
 namespace logging {
-void logInternal(const std::string& message, LogLevel level) {
+void logInternal(const std::string& message, LogLevel level, std::ostream& out) {
 #if DEBUG
     switch (level) {
         case LogLevel::Info:
-            std::cout << BLUE << "[INFO] " << message << RESET << "\n";
+            out << BLUE << "[INFO] " << message << RESET << "\n";
             break;
         case LogLevel::Warning:
-            std::cout << YELLOW << "[WARNING] " << message << RESET << "\n";
+            out << YELLOW << "[WARNING] " << message << RESET << "\n";
             break;
         case LogLevel::Error:
-            std::cerr << RED << "[ERROR] " << message << RESET << "\n";
+            out << RED << "[ERROR] " << message << RESET << "\n";
             break;
         case LogLevel::Critical:
-            std::cerr << RED << "[CRITICAL] " << message << RESET << "\n";
+            out << RED << "[CRITICAL] " << message << RESET << "\n";
 
             break;
     }
@@ -40,43 +40,43 @@ void logInternal(const std::string& message, LogLevel level) {
 #endif  // DEBUG
 }
 
-void log(const std::string& message, LogLevel level, size_t line, size_t col) {
+void log(const std::string& message, LogLevel level, size_t line, size_t col, std::ostream& out) {
     switch (level) {
         case LogLevel::Info:
             return;  // No user info
         case LogLevel::Warning:
-            std::cout << "\033[33m Warning: " << message << "\033[0m";
+            out << "\033[33m Warning: " << message << "\033[0m";
             break;
         case LogLevel::Error:
-            std::cerr << "\033[31mError: " << message << "\033[0m";
+            out << "\033[31mError: " << message << "\033[0m";
             break;
         case LogLevel::Critical:
-            std::cerr << "\033[91;1mCritical error: " << message << " Compilation aborted." << "\033[0m";
+            out << "\033[91;1mCritical error: " << message << " Compilation aborted." << "\033[0m";
             break;
     }
-    std::cerr << " (line " << line << ", column " << col << ")\n";
+    out << " (line " << line << ", column " << col << ")\n";
 }
 
-void log(std::initializer_list<std::string> messages, LogLevel level, size_t line, size_t col) {
+void log(std::initializer_list<std::string> messages, LogLevel level, size_t line, size_t col, std::ostream& out) {
     switch (level) {
         case LogLevel::Info:
             break;  // No user info
         case LogLevel::Warning:
-            std::cout << "\033[33mWarning: ";
+            out << "\033[33mWarning: ";
             break;
         case LogLevel::Error:
-            std::cerr << "\033[31mError: ";
+            out << "\033[31mError: ";
             break;
         case LogLevel::Critical:
-            std::cerr << "\033[91;1mCritical error: ";
+            out << "\033[91;1mCritical error: ";
             break;
     }
     for (const auto& message : messages) {
-        std::cerr << message << " ";
+        out << message << "\n";
     }
-    std::cerr << "\033[0m\n";
+    out << "\033[0m\n";
     if (line != 0 && col != 0) {
-        std::cerr << "(line " << line << ", column " << col << ")\n";
+        out << "(line " << line << ", column " << col << ")\n";
     }
 }
 }  // namespace logging

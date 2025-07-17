@@ -42,7 +42,7 @@ enum class LogLevel {
  * @param level The log level (default is Info)
  *
  */
-void logInternal(const std::string& message, LogLevel level = LogLevel::Info);
+void logInternal(const std::string& message, LogLevel level = LogLevel::Info, std::ostream& out = std::cerr);
 
 /**
  * @brief Logging function for the user (e.g., syntax errors)
@@ -50,20 +50,21 @@ void logInternal(const std::string& message, LogLevel level = LogLevel::Info);
  * @param line The line number in the user code where the error occurred
  * @param col The column number in the user code where the error occurred
  * @param level The log level (default is Warning)
+ * @param out The output stream to log to (default is std::cerr)
  */
-void log(const std::string& message, LogLevel level = LogLevel::Warning, size_t line = 0, size_t col = 0);
+void log(const std::string& message, LogLevel level = LogLevel::Warning, size_t line = 0, size_t col = 0, std::ostream& out = std::cerr);
 
 void log(std::initializer_list<std::string> messages, LogLevel level = LogLevel::Warning, size_t line = 0, size_t col = 0);
 
-inline void logWarning(const std::string& message, size_t line = 0, size_t col = 0) {
-    log(message, LogLevel::Warning, line, col);
+inline void logWarning(const std::string& message, size_t line = 0, size_t col = 0, std::ostream& out = std::cerr) {
+    log(message, LogLevel::Warning, line, col, out);
 }
-inline void logError(const std::string& message, size_t line = 0, size_t col = 0) {
-    log(message, LogLevel::Error, line, col);
+inline void logError(const std::string& message, size_t line = 0, size_t col = 0, std::ostream& out = std::cerr) {
+    log(message, LogLevel::Error, line, col, out);
 }
 
-inline void logCritical(const std::string& message, size_t line = 0, size_t col = 0) {
-    log(message, LogLevel::Critical, line, col);
+inline void logCritical(const std::string& message, size_t line = 0, size_t col = 0, std::ostream& out = std::cerr) {
+    log(message, LogLevel::Critical, line, col, out);
 }
 
 
