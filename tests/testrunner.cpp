@@ -27,9 +27,10 @@ constexpr inline float percentage(const int part, const int total) {
 namespace Manganese {
 namespace tests {
 void TestRunner::runTest(const std::string& testName, std::function<bool()> testFunction) {
-    std::cout << "Running test: " << testName << "... ";
+    std::cout << "Running test: " << testName << "...\n";
 
     bool result = testFunction();
+    std::cout << "\nTest " << testName << ": ";
 
     if (result) {
         std::cout << GREEN << "PASSED" << RESET << '\n';

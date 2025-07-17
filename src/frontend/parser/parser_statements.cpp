@@ -273,7 +273,7 @@ StatementPtr_t Parser::parseImportStatement() {
     size_t startColumn = currentToken().getColumn();
 
     if (this->hasParsedFileHeader) {
-        logging::logWarning("Imports should go at the top of the file");
+        logging::logWarning("Imports should go at the top of the file", startLine, startColumn);
     }
     DISCARD(advance());
     std::vector<std::string> path;
@@ -322,14 +322,16 @@ StatementPtr_t Parser::parseImportStatement() {
 }
 
 StatementPtr_t Parser::parseModuleDeclarationStatement() {
-    DISCARD(advance());
+    auto temp = advance();
+    size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
-        logging::logWarning("Module declarations should go at the top of the file");
+        logging::logWarning("Module declarations should go at the top of the file", startLine, startColumn);
     }
     std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
     expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
     if (!this->moduleName.empty()) {
-        logError("A module name has previously been declared in this file.");
+        logError("A module name has previously been declared in this file. Files can only have one module declaration.",
+                 startLine, startColumn);
         return std::make_unique<ast::ModuleDeclarationStatement>();
     }
     this->moduleName = name;

@@ -45,16 +45,16 @@ void log(const std::string& message, LogLevel level, size_t line, size_t col) {
         case LogLevel::Info:
             return;  // No user info
         case LogLevel::Warning:
-            std::cout << "\033[33m Warning: " << message << "\033[0m\n";
+            std::cout << "\033[33m Warning: " << message << "\033[0m";
             break;
         case LogLevel::Error:
-            std::cerr << "\033[31mError: " << message << "\033[0m\n";
+            std::cerr << "\033[31mError: " << message << "\033[0m";
             break;
         case LogLevel::Critical:
-            std::cerr << "\033[91;1mCritical error: " << message << "\n Compilation aborted." << "\033[0m\n";
+            std::cerr << "\033[91;1mCritical error: " << message << " Compilation aborted." << "\033[0m";
             break;
     }
-    std::cerr << "(line " << line << ", column " << col << ")\n";
+    std::cerr << " (line " << line << ", column " << col << ")\n";
 }
 
 void log(std::initializer_list<std::string> messages, LogLevel level, size_t line, size_t col) {
