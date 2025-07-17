@@ -20,6 +20,7 @@ Where:
 
 Type declarations are required on variables without an initial value.
 Variables with an initial value generally do not require a type declaration, as the compiler will infer which type the variable is.
+Variables which are declared without a value are uninitialized. Using an uninitialized variable will cause a warning.
 
 ## === Type Qualifiers ===
 
