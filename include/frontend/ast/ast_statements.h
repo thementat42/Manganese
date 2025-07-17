@@ -74,6 +74,7 @@ class BundleDeclarationStatement : public Statement {
     std::string name;
     std::vector<std::string> genericTypes;
     std::vector<BundleField> fields;
+    Visibility visibility = Visibility::Private;
 
    public:
     BundleDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_, std::vector<BundleField> fields_)
@@ -102,6 +103,7 @@ class EnumDeclarationStatement : public Statement {
     std::string name;
     TypePtr_t baseType;
     std::vector<EnumValue> values;
+    Visibility visibility = Visibility::Private;
 
    public:
     EnumDeclarationStatement(std::string name_, TypePtr_t baseType_, std::vector<EnumValue> values_)
@@ -140,6 +142,7 @@ class FunctionDeclarationStatement : public Statement {
     std::vector<FunctionParameter> parameters;
     TypePtr_t returnType;
     Block body;
+    Visibility visibility = Visibility::Private;
 
    public:
     FunctionDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_, std::vector<FunctionParameter> parameters_, TypePtr_t returnType_, Block body_)

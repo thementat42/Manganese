@@ -111,7 +111,6 @@ TypePtr_t Parser::parseSymbolType() {
         DISCARD(advance());
         return std::make_unique<ast::SymbolType>(token.getLexeme());
     }
-    // TODO: Allow `func` for lambda types (e.g., `func(int, int) -> int`)
     // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
     return std::make_unique<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
 }

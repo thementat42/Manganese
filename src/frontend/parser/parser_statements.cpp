@@ -398,6 +398,61 @@ StatementPtr_t Parser::parseSwitchStatement() {
         std::move(variable), std::move(cases), std::move(defaultBody));
 }
 
+StatementPtr_t Parser::parseVisibilityAffectedStatement() {
+    ast::Visibility visibility;
+    switch (advance().getType()) {
+        case TokenType::Private:
+            visibility = ast::Visibility::Private;
+            break;
+        case TokenType::Public:
+            visibility = ast::Visibility::Public;
+            break;
+        case TokenType::ReadOnly:
+            visibility = ast::Visibility::ReadOnly;
+            break;
+        default:
+            ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: " +
+                               lexer::tokenTypeToString(currentToken().getType()));
+    }
+    size_t startLine = currentToken().getLine(), startColumn = currentToken().getColumn();
+    switch (currentToken().getType()) {
+        case TokenType::Func: {
+            auto tempFunction = static_cast<ast::FunctionDeclarationStatement*>(
+                parseFunctionDeclarationStatement().release());
+            tempFunction->visibility = visibility;
+            return std::unique_ptr<ast::FunctionDeclarationStatement>(tempFunction);
+        }
+        case TokenType::Bundle: {
+            auto tempBundle = static_cast<ast::BundleDeclarationStatement*>(
+                parseBundleDeclarationStatement().release());
+            if (visibility == ast::Visibility::ReadOnly) {
+                logging::logWarning("Bundles can only be public or private, not readonly",
+                                    startLine, startColumn);
+                visibility = ast::Visibility::Private;  // Default to private
+            }
+            tempBundle->visibility = visibility;
+            return std::unique_ptr<ast::BundleDeclarationStatement>(tempBundle);
+        }
+        case TokenType::Enum: {
+            auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(
+                parseEnumDeclarationStatement().release());
+            if (visibility == ast::Visibility::ReadOnly) {
+                logging::logWarning("Enums can only be public or private, not readonly",
+                                    startLine, startColumn);
+                visibility = ast::Visibility::Private;  // Default to private
+            }
+            tempEnum->visibility = visibility;
+            return std::unique_ptr<ast::EnumDeclarationStatement>(tempEnum);
+        }
+        default:
+            logError(std::format("{} cannot follow a visibility modifier",
+                                 lexer::tokenTypeToString(currentToken().getType())),
+                     startLine, startColumn);
+            // Parse the statement as if it had no visibility modifier
+            return parseStatement();
+    }
+}
+
 StatementPtr_t Parser::parseVariableDeclarationStatement() {
     TypePtr_t explicitType;
     ExpressionPtr_t value;

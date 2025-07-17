@@ -120,6 +120,11 @@ class Parser {
     StatementPtr_t parseReturnStatement();
     StatementPtr_t parseSwitchStatement();
     StatementPtr_t parseVariableDeclarationStatement();
+    /**
+     * Parses statements that are preceded by a visibility modifier
+     * (public/readonly/private) (function/bundle/enum declaration)
+     */
+    StatementPtr_t parseVisibilityAffectedStatement();
     StatementPtr_t parseWhileLoopStatement();
 
     // ===== Type Parsing =====

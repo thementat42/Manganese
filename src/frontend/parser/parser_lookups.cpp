@@ -50,7 +50,6 @@ void Parser::registerStmtHandler(TokenType type,
 //! Really long stuff
 
 void Parser::initializeLookups() {
-
     //~ Assignments (updating variables, not initializing them)
     registerLedHandler_binary(TokenType::Assignment, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(TokenType::BitAndAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
@@ -128,6 +127,7 @@ void Parser::initializeLookups() {
                               &Parser::parseScopeResolutionExpression);
 
     //~ Statements
+    registerStmtHandler(TokenType::Alias, &Parser::parseAliasStatement);
     registerStmtHandler(TokenType::Break, [](Parser* p) -> ast::StatementPtr_t {
         DISCARD(p->advance());
         p->expectToken(TokenType::Semicolon);
@@ -147,11 +147,13 @@ void Parser::initializeLookups() {
     registerStmtHandler(TokenType::Import, &Parser::parseImportStatement);
     registerStmtHandler(TokenType::Let, &Parser::parseVariableDeclarationStatement);
     registerStmtHandler(TokenType::Module, &Parser::parseModuleDeclarationStatement);
+    registerStmtHandler(TokenType::Private, &Parser::parseVisibilityAffectedStatement);
+    registerStmtHandler(TokenType::Public, &Parser::parseVisibilityAffectedStatement);
+    registerStmtHandler(TokenType::ReadOnly, &Parser::parseVisibilityAffectedStatement);
     registerStmtHandler(TokenType::Repeat, &Parser::parseRepeatLoopStatement);
     registerStmtHandler(TokenType::Return, &Parser::parseReturnStatement);
     registerStmtHandler(TokenType::Switch, &Parser::parseSwitchStatement);
     registerStmtHandler(TokenType::While, &Parser::parseWhileLoopStatement);
-    registerStmtHandler(TokenType::Alias, &Parser::parseAliasStatement);
 
     //~ Misc
     registerLedHandler_binary(TokenType::As, Precedence::TypeCast, &Parser::parseTypeCastExpression);

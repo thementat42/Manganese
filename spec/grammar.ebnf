@@ -144,20 +144,20 @@ continue_statement = "continue" ";";
 alias_statement = "alias" type "as" identifier ";""; 
 
 #* Functions
-function_decl = "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
+function_decl = access_modifer? "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
 generic_parameters = "[" identifier ("," identifier)* "]";
 parameter_list = (variable_name "const"? ":" (type_qualifiers? type)? ("=" literal)? ",")+;
 
-lambda_statement = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";
+lambda_statement = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";  #! TODO: Rework
 
 function_call = expression ("@" "["type ("," type)* "]")? "(" ( expression ("," expression)*)? ")";
 
 #* Data Encapsulation
-bundle_decl = "bundle" identifier generic_parameters? "{" bundle_member_decl+ "}";
+bundle_decl = ("public"|"private")? "bundle" identifier generic_parameters? "{" bundle_member_decl+ "}";
 
 bundle_member_decl = variable_name ":" type_qualifiers? type ";";
 
-enum_decl = "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}";
+enum_decl = ("public"|"private")? "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}";
 
 bundle_instantiation = identifier("@" "["type ("," type)*"]") "{" (identifier "=" expression) "," (identifier "=" expression)* "}";
 
