@@ -18,6 +18,23 @@
 namespace Manganese {
 namespace ast {
 
+// ===== Helpers =====
+std::string visibilityToString(const Visibility& visibility) {
+    switch (visibility) {
+        case Visibility::Public:
+            return "public ";
+            break;
+        case Visibility::ReadOnly:
+            return "readonly ";
+            break;
+        case Visibility::Private:
+            return "private ";
+            break;
+        default:
+            ASSERT_UNREACHABLE("Invalid visibility");
+    }
+}
+
 // ===== Expressions =====
 std::string ArrayLiteralExpression::toString() const {
     std::ostringstream oss;
@@ -193,7 +210,7 @@ std::string BreakStatement::toString() const {
 
 std::string BundleDeclarationStatement::toString() const {
     std::ostringstream oss;
-    oss << "bundle " << name;
+    oss << visibilityToString(visibility) << "bundle " << name;
     if (!genericTypes.empty()) {
         oss << "[";
         for (size_t i = 0; i < genericTypes.size(); ++i) {
@@ -218,7 +235,7 @@ std::string ContinueStatement::toString() const {
 
 std::string EnumDeclarationStatement::toString() const {
     std::ostringstream oss;
-    oss << "enum " << name << ": " << baseType->toString() << " {\n";
+    oss << visibilityToString(visibility) << "enum " << name << ": " << baseType->toString() << " {\n";
     for (const auto& value : values) {
         oss << "\t" << value.name;
         if (value.value) {
@@ -236,7 +253,7 @@ std::string ExpressionStatement::toString() const {
 
 std::string FunctionDeclarationStatement::toString() const {
     std::ostringstream oss;
-    oss << "func " << name;
+    oss << visibilityToString(visibility) << "func " << name;
     if (!genericTypes.empty()) {
         oss << "[";
         for (size_t i = 0; i < genericTypes.size(); ++i) {
@@ -334,23 +351,8 @@ std::string SwitchStatement::toString() const {
 
 std::string VariableDeclarationStatement::toString() const {
     // Convert visibility to string
-    std::string visStr;
-    switch (visibility) {
-        case Visibility::Public:
-            visStr = "public ";
-            break;
-        case Visibility::ReadOnly:
-            visStr = "readonly ";
-            break;
-        case Visibility::Private:
-            visStr = "private ";
-            break;
-        default:
-            ASSERT_UNREACHABLE("Variable did not have a valid visibility");
-    }
-
     std::string prefix = isConst ? "const " : "let ";
-    std::string typeStr = type ? ": " + visStr + type->toString() : "";
+    std::string typeStr = type ? ": " + visibilityToString(visibility) + type->toString() : "";
     std::string valueStr = value ? " = " + value->toString() : "";
     return "(" + prefix + name + typeStr + valueStr + ");";
 }
@@ -401,7 +403,7 @@ std::string FunctionType::toString() const {
         }
     }
     oss << ")";
-    oss << " -> " << (returnType? returnType->toString() : "no return");
+    oss << " -> " << (returnType ? returnType->toString() : "no return");
 
     return oss.str();
 }

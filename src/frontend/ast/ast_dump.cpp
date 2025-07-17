@@ -59,6 +59,9 @@ static std::string getNumberTypeName(const number_t& value) {
                       value);
 }
 
+// This is defined in ast_to_string.cpp
+extern std::string visibilityToString(const Visibility& visibility);
+
 // ===== Expressions =====
 
 void ArrayLiteralExpression::dump(std::ostream& os, int indent) const {
@@ -242,6 +245,7 @@ void BreakStatement::dump(std::ostream& os, int indent) const {
 void BundleDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "BundleDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
+    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
     os << getIndent(indent + 1) << "fields: [\n";
 
     for (const auto& field : fields) {
@@ -263,6 +267,7 @@ void ContinueStatement::dump(std::ostream& os, int indent) const {
 void EnumDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "EnumDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
+    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
     os << getIndent(indent + 1) << "values: [\n";
 
     for (const auto& value : values) {
@@ -285,6 +290,7 @@ void ExpressionStatement::dump(std::ostream& os, int indent) const {
 void FunctionDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "FunctionDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
+    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
 
     if (!genericTypes.empty()) {
         os << getIndent(indent + 1) << "generic types: [";

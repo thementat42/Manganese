@@ -416,12 +416,6 @@ StatementPtr_t Parser::parseVisibilityAffectedStatement() {
     }
     size_t startLine = currentToken().getLine(), startColumn = currentToken().getColumn();
     switch (currentToken().getType()) {
-        case TokenType::Func: {
-            auto tempFunction = static_cast<ast::FunctionDeclarationStatement*>(
-                parseFunctionDeclarationStatement().release());
-            tempFunction->visibility = visibility;
-            return std::unique_ptr<ast::FunctionDeclarationStatement>(tempFunction);
-        }
         case TokenType::Bundle: {
             auto tempBundle = static_cast<ast::BundleDeclarationStatement*>(
                 parseBundleDeclarationStatement().release());
@@ -443,6 +437,12 @@ StatementPtr_t Parser::parseVisibilityAffectedStatement() {
             }
             tempEnum->visibility = visibility;
             return std::unique_ptr<ast::EnumDeclarationStatement>(tempEnum);
+        }
+        case TokenType::Func: {
+            auto tempFunction = static_cast<ast::FunctionDeclarationStatement*>(
+                parseFunctionDeclarationStatement().release());
+            tempFunction->visibility = visibility;
+            return std::unique_ptr<ast::FunctionDeclarationStatement>(tempFunction);
         }
         default:
             logError(std::format("{} cannot follow a visibility modifier",

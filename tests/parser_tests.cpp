@@ -322,7 +322,7 @@ bool testBitwiseOperators() {
 
 bool testBundleDeclarationAndInstantiation() {
     std::string expression =
-        "bundle Point {\n"
+        "public bundle Point {\n"
         "    x: int32;\n"
         "    y: int32;\n"
         "    some_field: float64;\n"
@@ -342,8 +342,8 @@ bool testBundleDeclarationAndInstantiation() {
 
     // Note: In the final declaration, the numeric value for the colour is the decimal equivalent of 0xFF0000
     std::array<std::string, 5> expected = {
-        "bundle Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: float64;\n}",
-        "bundle Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
+        "public bundle Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: float64;\n}",
+        "private bundle Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
         "(let p1: private Point = Point {x = 10, y = 20});",
         "(let p2: private Point = Point {x = 30, y = 40});",
         "(const rect: private Rectangle = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
@@ -355,7 +355,7 @@ bool testBundleDeclarationAndInstantiation() {
 
 bool testFunctionDeclarationAndCall() {
     std::string expression =
-        "func add(a: int32, b: int32) -> int32 {\n"
+        "readonly func add(a: int32, b: int32) -> int32 {\n"
         "    return a + b;\n"
         "}\n"
         "func greet(name: string) {\n"
@@ -370,9 +370,9 @@ bool testFunctionDeclarationAndCall() {
         "let product = calculate(2.5f64, 3.01);\n";
 
     std::array<std::string, 6> expected = {
-        "func add(a: int32, b: int32) -> int32 {\nreturn (a + b);\n}",
-        "func greet(name: string) {\nprint((\"Hello, \" + name));\n}",
-        "func calculate(x: float64, y: const float64) -> float64 {\n(let result: private auto = (x * y));\nreturn result;\n}",
+        "readonly func add(a: int32, b: int32) -> int32 {\nreturn (a + b);\n}",
+        "private func greet(name: string) {\nprint((\"Hello, \" + name));\n}",
+        "private func calculate(x: float64, y: const float64) -> float64 {\n(let result: private auto = (x * y));\nreturn result;\n}",
         "(let sum: private auto = add(5, 3));",
         "greet(\"World\");",
         "(let product: private auto = calculate(2.5, 3.01));"};
@@ -436,20 +436,20 @@ bool testIfElseStatements() {
 
 bool testEnumDeclarationStatement() {
     std::string expression =
-        "enum Color {\n"
+        "public enum Color {\n"
         "    Red,\n"
         "    Green,\n"
         "    Blue,\n"
         "}\n"
-        "enum Status: float64 {\n"
+        "readonly enum Status: float64 {\n"
         "    Success = 0,\n"
         "    Error = 1,\n"
         "    Unknown = -1,\n"
         "}";
 
     std::array<std::string, 2> expected = {
-        "enum Color: int32 {\n\tRed,\n\tGreen,\n\tBlue,\n}",
-        "enum Status: float64 {\n\tSuccess = 0,\n\tError = 1,\n\tUnknown = (-1),\n}"};
+        "public enum Color: int32 {\n\tRed,\n\tGreen,\n\tBlue,\n}",
+        "private enum Status: float64 {\n\tSuccess = 0,\n\tError = 1,\n\tUnknown = (-1),\n}"};
 
     return validateStatements(
         getParserResults(expression, lexer::Mode::String),
@@ -523,9 +523,9 @@ bool testGenerics() {
         "let foo_array: readonly Foo@[int32, float64][];";
     std::array<std::string, 5>
         expected = {
-            "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
+            "private func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
             "(let result: private auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));",
-            "bundle Foo[T, U] {\n\tx: T;\n\ty: U;\n}",
+            "private bundle Foo[T, U] {\n\tx: T;\n\ty: U;\n}",
             "(let foo: private Foo@[int32, float64] = Foo@[int32, float64] {x = 3, y = 4.5});",
             "(let foo_array: readonly Foo@[int32, float64][]);"};
     return validateStatements(
