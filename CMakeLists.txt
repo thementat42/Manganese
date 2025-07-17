@@ -61,7 +61,6 @@ set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 option(BUILD_TESTS "Build the test suite" OFF)
 option(MEMORY_TRACKING "Enable total memory allocation tracking (does not account for deallocations)" OFF)
 option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory usage tracking (detailed logging to file)" OFF)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ==============================================================================
 # Memory tracking configuration
