@@ -222,7 +222,7 @@ cmake_args = [
     "cmake",
     "..",
     f"-DBUILD_TESTS={"ON" if args.tests else "OFF"}",
-    f"-DDEBUG={"ON" if args.debug or args.tests else "OFF"}",
+    f"-DCMAKE_BUILD_TYPE={("Debug" if args.debug or args.tests else "Release")}",
     f"-DMEMORY_TRACKING={"ON" if args.memory_tracking else "OFF"}",
     f"-DCONTINUOUS_MEMORY_TRACKING={"ON" if args.memory_tracking_continuous else "OFF"}",
 ]

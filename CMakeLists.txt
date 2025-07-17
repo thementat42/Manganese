@@ -11,7 +11,6 @@
 #  - Prevents in-source builds to keep source tree clean.
 #  - Options:
 #      * BUILD_TESTS: Enable building the test suite (default: OFF).
-#      * DEBUG: Enable debug symbols and disable optimizations (default: OFF).
 #      * MEMORY_TRACKING: Enable memory allocation tracking (default: OFF).
 #      * CONTINUOUS_MEMORY_TRACKING: Enable detailed memory tracking (default: OFF). Requires MEMORY_TRACKING.
 #  - Automatically defines preprocessor macros for memory/debug options.
@@ -22,7 +21,7 @@
 # Usage:
 #   mkdir build
 #   cd build
-#   cmake .. [-DBUILD_TESTS=ON] [-DDEBUG=ON] [-DMEMORY_TRACKING=ON] [-DCONTINUOUS_MEMORY_TRACKING=ON]
+#   cmake .. [-DBUILD_TESTS=ON] [-DCMAKE_BUILD_TYPE="Debug"|"Release"] [-DMEMORY_TRACKING=ON] [-DCONTINUOUS_MEMORY_TRACKING=ON]
 #   cmake --build .
 #
 # Notes:
@@ -50,12 +49,16 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed. Please make a new build directory and run CMake from there.")
 endif()
 
+# Default to a release build
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build (Debug/Release)" FORCE)
+endif()
+
 # Define include directories
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Build options
 option(BUILD_TESTS "Build the test suite" OFF)
-option(DEBUG "Build with debug symbols and no optimization" OFF)
 option(MEMORY_TRACKING "Enable total memory allocation tracking (does not account for deallocations)" OFF)
 option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory usage tracking (detailed logging to file)" OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -113,11 +116,12 @@ if(BUILD_TESTS)
 
     add_executable(${PROJECT_NAME}_tests ${TEST_SRC} ${TESTS_MAIN})
 
-    if (NOT DEBUG)
+    if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         message(WARNING
             "The test suite relies on the DEBUG macro being enabled.\n"
             "DEBUG will be forcibly set to ON for test builds."
         )
+        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type" FORCE)
     endif()
 
     # Force DEBUG macro for the test target regardless of global option
@@ -193,7 +197,7 @@ if(BUILD_TESTS)
     message(STATUS "Configured to build test suite")
 else()
     add_executable(${PROJECT_NAME} ${SRC} ${MAIN})
-    if(DEBUG)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=1)        
         if(MSVC)
             target_compile_options(${PROJECT_NAME} PRIVATE
