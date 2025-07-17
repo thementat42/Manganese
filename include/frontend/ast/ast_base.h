@@ -36,16 +36,28 @@
 
 #define __NODE_OVERRIDES \
     OVERRIDE_TO_STRING   \
-    OVERRIDE_DUMP_METHOD \
-    friend parser::Parser;
+    OVERRIDE_DUMP_METHOD
 
-#define NODE_OVERRIDES __NODE_OVERRIDES  // Makes overriding toString() and dump() and declaring the friend parser::Parser less cumbersome to type
+#define __FRIEND_DECLS     \
+    friend parser::Parser; \
+    friend semantic::SemanticAnalyzer;
+
+/**
+ * AST_STANDARD_INTERFACE - Common interface for all nodes
+ * Combines required methods overrides (toString/dump)
+ * and friend declarations (the parser and semantic analyzer) for access to protected members
+ */
+#define AST_STANDARD_INTERFACE __NODE_OVERRIDES __FRIEND_DECLS
 
 namespace Manganese {
 
 namespace parser {
 class Parser;
 }  // namespace parser
+
+namespace semantic {
+class SemanticAnalyzer;
+}  // namespace semantic
 
 namespace ast {
 class Expression;
