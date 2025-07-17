@@ -31,13 +31,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install LLVM (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        choco install llvm -y
-        echo "LLVM_DIR=C:/Program Files/LLVM/lib/cmake/llvm" >> $env:GITHUB_ENV
-        echo "C:/Program Files/LLVM/bin" >> $env:GITHUB_PATH
-        
     - name: Set compiler
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -45,13 +38,7 @@ jobs:
         echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV
 
     - name: Configure CMake
-      run: |
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DLLVM_DIR="${{env.LLVM_DIR}}"
-        else
-          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        fi
-      shell: bash
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build and run test suite
       # Build using the python script
