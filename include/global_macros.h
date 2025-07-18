@@ -16,10 +16,10 @@
 #define DEBUG 0  // Whether to enable debugging features
 #endif           // DEBUG
 
-#define PRINT_LOCATION_HELPER \
+#define __PRINT_LOCATION \
     std::cerr << "\033[33m In file: " << __FILE__ << ", at line " << __LINE__ << ": when running " << __func__ << "\033[0m\n";
 
-#define PRINT_LOCATION PRINT_LOCATION_HELPER  // Print the location of the log message (in the compiler source, not the user code)
+#define PRINT_LOCATION __PRINT_LOCATION  // Print the location of the log message (in the compiler source, not the user code)
 
 #if __cplusplus >= 202302L
 #include <utility>
@@ -41,13 +41,16 @@
  */
 #define COMPILER_UNREACHABLE __COMPILER_UNREACHABLE
 
+#if DEBUG
 #define __UNREACHABLE(message)                                                       \
     do {                                                                             \
         std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m"; \
         PRINT_LOCATION;                                                              \
-        COMPILER_UNREACHABLE;                                                        \
         throw std::runtime_error(message);                                           \
     } while (0);
+#else // ^^ DEBUG vv !DEBUG
+#define __UNREACHABLE(message) COMPILER_UNREACHABLE
+#endif  // DEBUG
 
 #define ASSERT_UNREACHABLE(message) __UNREACHABLE(message)  // Condition that should never be reached
 
