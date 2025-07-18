@@ -103,9 +103,17 @@ class ASTNode {
 };
 
 class Expression : public ASTNode {
+   protected:
+    TypePtr_t computedType;
+
    public:
     virtual ~Expression() noexcept = default;
-    virtual TypePtr_t getType() const = 0;
+    virtual Type* getType() const noexcept {
+        return computedType.get();
+    };
+    virtual void setType(TypePtr_t type) noexcept {
+        computedType = std::move(type);
+    }
     virtual ExpressionKind kind() const noexcept = 0;
     friend parser::Parser;
     friend semantic::SemanticAnalyzer;
