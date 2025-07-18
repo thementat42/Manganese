@@ -56,7 +56,7 @@ class Token {
     bool isBracket() const noexcept;
     bool isPrimitiveType() const noexcept;
     bool hasUnaryCounterpart() const noexcept;
-    TokenType getUnaryCounterpart() const noexcept_debug;
+    TokenType getUnaryCounterpart() const noexcept_if_release;
 
     TokenType getType() const noexcept;
     std::string getLexeme() const noexcept;
@@ -76,7 +76,7 @@ class Token {
 };
 
 //~ Helpers, not tied to the Token class
-std::string tokenTypeToString(TokenType type) noexcept_debug;
+std::string tokenTypeToString(TokenType type) noexcept_if_release;
 extern std::unordered_map<std::string, const TokenType> keywordMap;
 extern std::unordered_map<std::string, const TokenType> operatorMap;
 std::optional<TokenType> keywordFromString(const std::string& keyword);

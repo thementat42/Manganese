@@ -8,7 +8,7 @@
 namespace Manganese {
 namespace parser {
 
-TypePtr_t Parser::parseType(Precedence precedence) noexcept_debug {
+TypePtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
     TokenType type = currentToken().getType();
 
     auto nudIterator = nudLookup_types.find(type);

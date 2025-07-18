@@ -28,7 +28,7 @@ namespace Manganese {
 
 namespace utils {
 std::optional<number_t> stringToNumber(std::string_view str, int base,
-                                       bool isFloat, const std::string& suffix) noexcept_debug {
+                                       bool isFloat, const std::string& suffix) noexcept_if_release {
     if (isFloat) {
         if (suffix == "f" || suffix == "F") {
             return stof32(str);

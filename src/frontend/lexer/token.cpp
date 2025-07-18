@@ -113,7 +113,7 @@ bool Token::hasUnaryCounterpart() const noexcept {
            type == TokenType::Mul;       // * can be multiplication or dereference operator
 }
 
-TokenType Token::getUnaryCounterpart() const noexcept_debug {
+TokenType Token::getUnaryCounterpart() const noexcept_if_release {
     switch (type) {
         case TokenType::Plus:
             return TokenType::UnaryPlus;
@@ -170,7 +170,7 @@ void Token::log(const Token& token) noexcept {
 
 // ! === Really Long Stuff ===
 
-std::string tokenTypeToString(TokenType type) noexcept_debug {
+std::string tokenTypeToString(TokenType type) noexcept_if_release {
     switch (type) {
         // Basic
         case TokenType::Identifier:

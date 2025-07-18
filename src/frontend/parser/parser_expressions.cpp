@@ -58,7 +58,7 @@ constexpr uint8_t OCTAL = 8;
 constexpr uint8_t DECIMAL = 10;
 constexpr uint8_t HEXADECIMAL = 16;
 
-ExpressionPtr_t Parser::parseExpression(Precedence precedence) noexcept_debug {
+ExpressionPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_release {
     Token token = currentToken();
 
     // Handle operators which have a unary and a binary version
@@ -291,7 +291,7 @@ ExpressionPtr_t Parser::parsePrefixExpression() {
     return std::make_unique<ast::PrefixExpression>(op, std::move(right));
 }
 
-ExpressionPtr_t Parser::parsePrimaryExpression() noexcept_debug {
+ExpressionPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
     auto token = advance();
     std::string lexeme = token.getLexeme();
 

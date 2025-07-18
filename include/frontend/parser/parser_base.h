@@ -89,7 +89,7 @@ class Parser {
     //~ Parsing functions
 
     // ===== Expression Parsing =====
-    ExpressionPtr_t parseExpression(Precedence precedence) noexcept_debug;
+    ExpressionPtr_t parseExpression(Precedence precedence) noexcept_if_release;
     ExpressionPtr_t parseArrayInstantiationExpression();
     ExpressionPtr_t parseAssignmentExpression(ExpressionPtr_t left, Precedence precedence);
     ExpressionPtr_t parseBinaryExpression(ExpressionPtr_t left, Precedence precedence);
@@ -101,7 +101,7 @@ class Parser {
     ExpressionPtr_t parseParenthesizedExpression();
     ExpressionPtr_t parsePostfixExpression(ExpressionPtr_t left, Precedence precedence);
     ExpressionPtr_t parsePrefixExpression();
-    ExpressionPtr_t parsePrimaryExpression() noexcept_debug;
+    ExpressionPtr_t parsePrimaryExpression() noexcept_if_release;
     ExpressionPtr_t parseScopeResolutionExpression(ExpressionPtr_t left, Precedence precedence);
     ExpressionPtr_t parseTypeCastExpression(ExpressionPtr_t left, Precedence precedence);
 
@@ -129,7 +129,7 @@ class Parser {
 
     // ===== Type Parsing =====
 
-    TypePtr_t parseType(Precedence precedence) noexcept_debug;
+    TypePtr_t parseType(Precedence precedence) noexcept_if_release;
     TypePtr_t parseArrayType(TypePtr_t left, Precedence precedence);
     TypePtr_t parseFunctionType();
     TypePtr_t parseGenericType(TypePtr_t left, Precedence precedence);

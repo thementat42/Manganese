@@ -23,15 +23,23 @@
 
 #if __cplusplus >= 202302L
 #include <utility>
-#define COMPILER_UNREACHABLE std::unreachable();  // compiler agnostic, but still allows for optimisation
+#define __COMPILER_UNREACHABLE std::unreachable();  // compiler agnostic, but still allows for optimisation
 // If < C++23, use a compiler-specific implementation
 #elif defined(__GNUC__) || defined(__clang__)
-#define COMPILER_UNREACHABLE __builtin_unreachable();
+#define __COMPILER_UNREACHABLE __builtin_unreachable();
 #elif defined(_MSC_VER)
-#define COMPILER_UNREACHABLE __assume(false);
+#define __COMPILER_UNREACHABLE __assume(false);
 #else  // If no compiler-specific implementation is available, do nothing
-#define COMPILER_UNREACHABLE
+#define __COMPILER_UNREACHABLE
 #endif  // __cplusplus >= 202302L
+
+
+/**
+ * In pre-C++23 builds, uses a compile-specific unreachable code marker, if available.
+ * MSVC, Clang and GCC are supported.
+ * In C++23+, uses `std::unreachable()`
+ */
+#define COMPILER_UNREACHABLE __COMPILER_UNREACHABLE
 
 #define __UNREACHABLE(message)                                                       \
     do {                                                                             \
@@ -43,21 +51,19 @@
 
 #define ASSERT_UNREACHABLE(message) __UNREACHABLE(message)  // Condition that should never be reached
 
-/**
- * Indicates that a function is intended to be noexcept,
- * except for a default case that should logically never happen
- * If that case happens, something has gone horribly wrong, and the function will throw an exception
- *
- * This serves as a two way check -- functions marked with this should have a fallback case that throws -- if it doesn't add one
- * If a function has a fallback throw case but not this macro, add it
- *
- * NOTE: This should only be used on functions that throw on catastrophic failures (e.g. use the ASSERT_UNREACHABLE macro from the logging library). It should not be used on functions that just never throw (those should be marked noexcept)
- */
+
 #if DEBUG
-#define noexcept_debug  // In debug mode, these functions are more likely to throw -- don't use noexcept
+#define __noexcept_if_release  // In debug mode, these functions are more likely to throw -- don't use noexcept
 #else // ^^ DEBUG vv !DEBUG
-#define noexcept_debug noexcept  // In release builds, optimize these functions more
+#define __noexcept_if_release noexcept  // In release builds, optimize these functions more
 #endif
+
+/**
+ * Indicates that a function will not throw in release builds, to enable more optimizations.
+ * This is a no-op in debug builds, where more exceptions are expected.
+ * Note: This macro should not be used on functions that will actually never throw (in those cases, use `noexcept` directly).
+ */
+#define noexcept_if_release __noexcept_if_release
 
 #define DISCARD(value) (void)(value)  // Explicitly discard a value (useful for [[noexcept]] functions)
 
