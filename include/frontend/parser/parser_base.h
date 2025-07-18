@@ -15,6 +15,7 @@
 #include <frontend/lexer.h>
 #include <global_macros.h>
 #include <io/logging.h>
+#include <utils/number_utils.h>
 
 #include <functional>
 #include <memory>
@@ -41,7 +42,7 @@ struct ParsedFile {
 };
 
 //~ Helper functions that don't depend on the parser class's methods/variables
-int determineNumberBase(const std::string &lexeme);
+Base determineNumberBase(const std::string &lexeme);
 void extractSuffix(std::string &numericPart, std::string &suffix);
 std::string importToString(const Import &import);
 

@@ -19,7 +19,7 @@
 
 #include <frontend/lexer.h>
 #include <global_macros.h>
-#include <utils/stox.h>
+#include <utils/number_utils.h>
 
 #include <memory>
 #include <string>

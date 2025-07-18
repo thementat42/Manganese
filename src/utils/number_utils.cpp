@@ -1,5 +1,5 @@
 /**
- * @file stox.cpp
+ * @file number_utils.cpp
  * @brief Utility functions for converting strings to numeric types with optional suffix and base handling.
  *
  * This file provides a set of functions to convert string representations of numbers
@@ -12,7 +12,7 @@
 
 #include <global_macros.h>
 #include <io/logging.h>
-#include <utils/stox.h>
+#include <utils/number_utils.h>
 
 #include <charconv>
 #include <cstdint>
@@ -27,7 +27,7 @@
 namespace Manganese {
 
 namespace utils {
-std::optional<number_t> stringToNumber(std::string_view str, int base,
+std::optional<number_t> stringToNumber(std::string_view str, Base base,
                                        bool isFloat, const std::string& suffix) noexcept_if_release {
     if (isFloat) {
         if (suffix == "f" || suffix == "F") {
@@ -62,19 +62,19 @@ std::optional<number_t> stringToNumber(std::string_view str, int base,
     };
     auto it = suffixMap.find(suffix);
     if (it != suffixMap.end()) {
-        return it->second(str, base);
+        return it->second(str, static_cast<int>(base));
     } else if (suffix == "") {
-        auto i32 = stoi32(str, base);
+        auto i32 = stoi32(str, static_cast<int>(base));
         if (i32) {
             return *i32;
         }
         // If i32 fails, try i64
-        auto i64 = stoi64(str, base);
+        auto i64 = stoi64(str, static_cast<int>(base));
         if (i64) {
             return *i64;
         }
         // If i64 fails, try ui64
-        return stoui64(str, base);
+        return stoui64(str, static_cast<int>(base));
     } else {
         ASSERT_UNREACHABLE("Invalid Number Suffix: " + suffix);
     }

@@ -1,5 +1,5 @@
 /**
- * @file stox.h
+ * @file number_utils.h
  * @brief Utility functions for converting strings to numbers
  * These functions differ from the standard library's `std::stox` functions in that they convert to the
  * types defined in cstdint.h (int8_t, int16_t, etc.), which are guaranteed to have the same width across different platforms.
@@ -8,14 +8,16 @@
  * valid on one platform but incomplete on another.
  */
 
-#ifndef MANGANESE_INCLUDE_UTILS_STOX_H
-#define MANGANESE_INCLUDE_UTILS_STOX_H
+#ifndef MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
+#define MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
 
 #include <cstdint>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
 #include <variant>
+
+#include <global_macros.h>
 
 namespace Manganese {
 
@@ -30,6 +32,13 @@ using number_t = std::variant<
     uint64_t,
     float,
     double>;
+
+enum class Base {
+    Binary = 2,       // 0b prefix
+    Octal = 8,        // 0o prefix
+    Decimal = 10,     // Default base, no prefix
+    Hexadecimal = 16  // 0x prefix
+};
 
 namespace utils {
 
@@ -52,10 +61,10 @@ std::optional<double> stof64(std::string_view str);
  * @param suffix Whether a type suffix was specified (see the lexer for the acceptable type suffixes)
  * @return The string as a number, or nullopt_t if it failed
  */
-std::optional<number_t> stringToNumber(std::string_view str, int base = 10, bool isFloat = false, const std::string& suffix = "") noexcept_if_release;
+std::optional<number_t> stringToNumber(std::string_view str, Base base = Base::Decimal, bool isFloat = false, const std::string& suffix = "") noexcept_if_release;
 
 }  // namespace utils
 
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_UTILS_STOX_H
+#endif  // MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H

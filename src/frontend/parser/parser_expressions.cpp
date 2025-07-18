@@ -7,7 +7,7 @@
 #include <frontend/parser.h>
 #include <frontend/lexer.h>
 #include <global_macros.h>
-#include <utils/stox.h>
+#include <utils/number_utils.h>
 
 #include <format>
 #include <memory>
@@ -53,10 +53,6 @@
 namespace Manganese {
 
 namespace parser {
-constexpr uint8_t BINARY = 2;
-constexpr uint8_t OCTAL = 8;
-constexpr uint8_t DECIMAL = 10;
-constexpr uint8_t HEXADECIMAL = 16;
 
 ExpressionPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_release {
     Token token = currentToken();
@@ -312,8 +308,8 @@ ExpressionPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
                 lexeme.ends_with("f32") ? stof(lexeme) : stod(lexeme));
         case TokenType::IntegerLiteral: {
             // Extract integer suffix
-            int base = determineNumberBase(lexeme);
-            if (base != 10) {
+            Base base = determineNumberBase(lexeme);
+            if (base != Base::Decimal) {
                 // Strip the base prefix (the first two characters: 0x, 0b, 0o) from the lexeme
                 lexeme.erase(0, 2);
             }
@@ -374,26 +370,26 @@ void extractSuffix(std::string& lexeme, std::string& suffix) {
     }
 }
 
-int determineNumberBase(const std::string& lexeme) {
+Base determineNumberBase(const std::string& lexeme) {
     if (lexeme.length() <= 2) {
-        return DECIMAL;  // Prefixed literals are at least 3 characters long (0x/0b/0o + at least one digit)
+        return Base::Decimal;  // Prefixed literals are at least 3 characters long (0x/0b/0o + at least one digit)
     }
     if (lexeme[0] != '0') {
         // No base prefix, assume decimal
-        return DECIMAL;
+        return Base::Decimal;
     }
     switch (lexeme[1]) {
         case 'x':
         case 'X':
-            return HEXADECIMAL;
+            return Base::Hexadecimal;
         case 'b':
         case 'B':
-            return BINARY;
+            return Base::Binary;
         case 'o':
         case 'O':
-            return OCTAL;
+            return Base::Octal;
         default:  // Not a base prefix (just leading zero), assume decimal
-            return DECIMAL;
+            return Base::Decimal;
     }
 }
 

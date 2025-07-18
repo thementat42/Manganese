@@ -1,6 +1,6 @@
 #include <frontend/lexer.h>
 #include <io/logging.h>
-#include <utils/stox.h>
+#include <utils/number_utils.h>
 
 #include <algorithm>
 #include <format>

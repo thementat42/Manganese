@@ -121,12 +121,14 @@ Lexer::Lexer(const std::string& source, const Mode mode) : tokenStartLine(1), to
 
 void Lexer::lex(size_t numTokens) {
     if (done()) {
-        // Nothing else to do
         return;
     }
     size_t numTokensMade = 0;
     char currentChar = peekChar();
     while (!done() && numTokensMade < numTokens) {
+        // ? TODO: Output comments as tokens (or to a separate stream?)
+        // ? Multiline probably, single line probably not
+        // ? TODO: Update parser to skip past comment tokens
         if (currentChar == '#') {
             // Single line comment
             do {
@@ -154,6 +156,8 @@ void Lexer::lex(size_t numTokens) {
             tokenizeCharLiteral();
             ++numTokensMade;
         } else if (currentChar == '"') {
+            // TODO: Add raw string literals (r"stuff" -- maybe r""text"")
+            //? TODO: f-strings? (f"stuff {expression} more stuff")
             tokenizeStringLiteral();
             ++numTokensMade;
         } else if (std::isdigit(currentChar)) {

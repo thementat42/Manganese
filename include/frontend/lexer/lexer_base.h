@@ -16,6 +16,7 @@
 #include <io/filereader.h>
 #include <io/reader.h>
 #include <io/stringreader.h>
+#include <utils/number_utils.h>
 
 #include <functional>
 #include <memory>
@@ -32,13 +33,6 @@ constexpr auto NONE = std::nullopt;
 enum class Mode {
     String = 's',  // Source code passed in as a string
     File = 'f'     // Filename passed in
-};
-
-enum class Base {
-    Binary = 2,       // 0b prefix
-    Octal = 8,        // 0o prefix
-    Decimal = 10,     // Default base, no prefix
-    Hexadecimal = 16  // 0x prefix
 };
 
 struct NumberPrefixResult {
