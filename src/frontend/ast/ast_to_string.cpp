@@ -352,7 +352,7 @@ std::string SwitchStatement::toString() const {
 std::string VariableDeclarationStatement::toString() const {
     // Convert visibility to string
     std::string prefix = isConst ? "const " : "let ";
-    std::string typeStr = type ? ": " + visibilityToString(visibility) + type->toString() : "";
+    std::string typeStr = ": " + visibilityToString(visibility) + (type ? type->toString() : "auto");
     std::string valueStr = value ? " = " + value->toString() : "";
     return "(" + prefix + name + typeStr + valueStr + ");";
 }

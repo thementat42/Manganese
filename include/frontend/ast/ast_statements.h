@@ -247,8 +247,13 @@ class VariableDeclarationStatement : public Statement {
     TypePtr_t type;
 
    public:
-    VariableDeclarationStatement(bool isConst_, std::string name_, Visibility visibility_,
-                                 ExpressionPtr_t value_, TypePtr_t type_ = nullptr);
+    VariableDeclarationStatement(
+        bool isConst_, std::string name_, Visibility visibility_, ExpressionPtr_t _value, TypePtr_t _type)
+        : isConst(isConst_),
+          name(std::move(name_)),
+          visibility(visibility_),
+          value(std::move(_value)),
+          type(std::move(_type)) {}
 
     bool isConstant() const { return isConst; }
 

@@ -24,9 +24,6 @@
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
 // So testing for a correct type resolution is outside the scope of these tests
-// The only cases where the parser does type resolution are when a variable is declared with:
-// a literal value since the parser can just get the type from the literal value node
-// a struct instantiation, since the type has to be that struct (though the parser does not verify the instantiation is correct)
 
 namespace Manganese {
 namespace tests {
@@ -126,10 +123,10 @@ bool testVariableDeclaration() {
         "let boolean = true;";
 
     std::array<std::string, 4> expected = {
-        "(let foo: private float64 = 45.5);",
+        "(let foo: private auto = 45.5);",
         "(let bar: private auto = (foo * 10));",
         "(const baz: public uint32 = (((foo + ((10 ^^ 2) * bar)) + (foo % 7)) + (foo ^^ 2)));",
-        "(let boolean: private bool = true);"};
+        "(let boolean: private auto = true);"};
 
     return validateStatements(
         getParserResults(expression, lexer::Mode::String),
@@ -344,9 +341,9 @@ bool testBundleDeclarationAndInstantiation() {
     std::array<std::string, 5> expected = {
         "public bundle Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: float64;\n}",
         "private bundle Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
-        "(let p1: private Point = Point {x = 10, y = 20});",
+        "(let p1: private auto = Point {x = 10, y = 20});",
         "(let p2: private Point = Point {x = 30, y = 40});",
-        "(const rect: private Rectangle = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
+        "(const rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
 
     return validateStatements(
         getParserResults(expression, lexer::Mode::String),
@@ -386,7 +383,7 @@ bool testLoops() {
     std::string expression =
         "let i = 0;"
         "do {++i; print(i); } while (i < 5);"
-        "let j = 10;"
+        "let j: int32 = 10;"
         "while (true) {"
         "    if (j == 5) {continue;}"
         "    print(j--);"
@@ -395,7 +392,7 @@ bool testLoops() {
         "repeat ((5 + 30 - 2 ^^ 3) << 2) {print(\"Hello\");}";
 
     std::array<std::string, 5> expected = {
-        "(let i: private int32 = 0);",
+        "(let i: private auto = 0);",
         "do {\n\t(++i);\n\tprint(i);\n} while ((i < 5));",
         "(let j: private int32 = 10);",
         "while (true) {\n\tif ((j == 5)) {\n\tcontinue;\n}\n\tprint((j--));\n\tif ((j <= 0)) {\n\tbreak;\n}\n}",
@@ -496,7 +493,7 @@ bool testAccessExpressions() {
 
     std::array<std::string, 7>
         expected = {
-            "(let point: private Point = Point {x = 10, y = 20});",
+            "(let point: private auto = Point {x = 10, y = 20});",
             "(let xCoord: private auto = point.x);",
             "(let yCoord: private auto = point.y);",
             "(let color: private auto = rect.color);",
@@ -526,7 +523,7 @@ bool testGenerics() {
             "private func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
             "(let result: private auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));",
             "private bundle Foo[T, U] {\n\tx: T;\n\ty: U;\n}",
-            "(let foo: private Foo@[int32, float64] = Foo@[int32, float64] {x = 3, y = 4.5});",
+            "(let foo: private auto = Foo@[int32, float64] {x = 3, y = 4.5});",
             "(let foo_array: readonly Foo@[int32, float64][]);"};
     return validateStatements(
         getParserResults(expression, lexer::Mode::String),
