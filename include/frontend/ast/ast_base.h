@@ -107,18 +107,24 @@ class Expression : public ASTNode {
     virtual ~Expression() noexcept = default;
     virtual TypePtr_t getType() const = 0;
     virtual ExpressionKind kind() const noexcept = 0;
+    friend parser::Parser;
+    friend semantic::SemanticAnalyzer;
 };
 
 class Statement : public ASTNode {
    public:
     virtual ~Statement() noexcept = default;
     virtual StatementKind kind() const noexcept = 0;
+    friend parser::Parser;
+    friend semantic::SemanticAnalyzer;
 };
 
 class Type : public ASTNode {
    public:
     virtual ~Type() noexcept = default;
     virtual TypeKind kind() const noexcept = 0;
+    friend parser::Parser;
+    friend semantic::SemanticAnalyzer;
 };
 
 }  // namespace ast
