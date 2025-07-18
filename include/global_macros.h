@@ -12,9 +12,13 @@
 #include <iostream>
 #include <stdexcept>
 
-#ifndef DEBUG    // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, default to 0
-#define DEBUG 0  // Whether to enable debugging features
-#endif           // DEBUG
+#ifndef DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a fallback
+#ifndef NDEBUG
+#define DEBUG 1
+#else  //^^ ifndef NDEBUG vv ifdef NDEBUG
+#define DEBUG 0
+#endif  // NDEBUG
+#endif  // DEBUG
 
 #define __PRINT_LOCATION \
     std::cerr << "\033[33m In file: " << __FILE__ << ", at line " << __LINE__ << ": when running " << __func__ << "\033[0m\n";
@@ -33,7 +37,6 @@
 #define __COMPILER_UNREACHABLE
 #endif  // __cplusplus >= 202302L
 
-
 /**
  * In pre-C++23 builds, uses a compile-specific unreachable code marker, if available.
  * MSVC, Clang and GCC are supported.
@@ -48,16 +51,15 @@
         PRINT_LOCATION;                                                              \
         throw std::runtime_error(message);                                           \
     } while (0);
-#else // ^^ DEBUG vv !DEBUG
+#else  // ^^ DEBUG vv !DEBUG
 #define __UNREACHABLE(message) COMPILER_UNREACHABLE
 #endif  // DEBUG
 
 #define ASSERT_UNREACHABLE(message) __UNREACHABLE(message)  // Condition that should never be reached
 
-
 #if DEBUG
-#define __noexcept_if_release  // In debug mode, these functions are more likely to throw -- don't use noexcept
-#else // ^^ DEBUG vv !DEBUG
+#define __noexcept_if_release           // In debug mode, these functions are more likely to throw -- don't use noexcept
+#else                                   // ^^ DEBUG vv !DEBUG
 #define __noexcept_if_release noexcept  // In release builds, optimize these functions more
 #endif
 
