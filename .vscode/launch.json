@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        // Note: These debug tasks use the python build.py script to build the project, so you'll need to have python installed
+        // The python script handles moving the executable to the root directory (so the paths work)
+        {
+            "name": "Debug Manganese",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/manganese.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb", //! Ensure that gdb is installed and available in your PATH (or change this to your gdb path).
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build Debug",
+        },
+        {
+            "name": "Debug Tests",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/manganese_tests.exe",
+            //! Note: VSCode seems to have an issue actually passing the arguments to the test executable (they aren't passed at all).
+            //! To debug, you might have to modify the main tests file to run all the tests when no arguments are passed.
+            "args": [
+                "--all"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build Tests"
+        }
+    ]
+}
