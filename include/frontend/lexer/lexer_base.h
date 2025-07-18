@@ -41,6 +41,12 @@ enum class Base {
     Hexadecimal = 16  // 0x prefix
 };
 
+struct NumberPrefixResult {
+    Base base;
+    std::function<bool(char)> isValidBaseChar;
+    std::string prefix;
+};
+
 //~ Static helper functions
 
 /**
@@ -125,12 +131,10 @@ class Lexer {
     /**
      * @brief Processes the prefix of a number literal to determine its base.
      * @details The valid prefixes are 0b for binary, 0o for octal and 0x for hexadecimal
-     * @param isValidBaseChar Output parameter: A reference to a function or lambda that takes a character and returns true
-     *                        if the character is valid for the intended base, false otherwise.
-     * @param numberLiteral Output parameter: The lexeme for the number literal (the base prefix will be appended if there is one)
-     * @return Base The base of the number literal (decimal/hexadecimal/octal/binary).
+     * @return The base of the number literal (decimal/hexadecimal/octal/binary),
+     * a function that checks if a character is valid for the base and a string that contains the prefix
      */
-    Base processNumberPrefix(std::function<bool(char)>& isValidBaseChar, std::string& numberLiteral);
+    NumberPrefixResult processNumberPrefix();
 
     /**
      * @brief Process the suffix of a number literal (e.g., 'f' for float)

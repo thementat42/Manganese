@@ -309,8 +309,8 @@ void Lexer::tokenizeKeywordOrIdentifier() {
 void Lexer::tokenizeNumber() {
     std::string numberLiteral;
     bool isFloat = false;
-    std::function<bool(char)> isValidBaseChar;
-    Base base = processNumberPrefix(isValidBaseChar, numberLiteral);
+    auto [base, isValidBaseChar, prefix] = processNumberPrefix();
+    numberLiteral += prefix;
     char currentChar = peekChar();  // If there was a number prefix, update the current char
 
     while (!done() && (isValidBaseChar(currentChar) || currentChar == '.' || currentChar == '_')) {
@@ -494,38 +494,50 @@ void Lexer::tokenizeSymbol() {
 
 //~ Helper Functions
 
-Base Lexer::processNumberPrefix(std::function<bool(char)>& isValidBaseChar, std::string& numberLiteral) {
+NumberPrefixResult Lexer::processNumberPrefix() {
     char currentChar = peekChar();
     if (currentChar != '0') {
         // Decimal number
-        isValidBaseChar = [](char c) { return isdigit(c); };
-        return Base::Decimal;
+        return NumberPrefixResult{
+            .base = Base::Decimal,
+            .isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); },
+            .prefix = ""};
     }
     // Could be a base indicator (0x, 0b, 0o) -- check next char
     switch (peekChar(1)) {
         case 'x':
         case 'X':
             // Hexadecimal number
-            isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); };
             advance(2);
-            numberLiteral += "0x";
-            return Base::Hexadecimal;
+            return NumberPrefixResult{
+                .base = Base::Hexadecimal,
+                .isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); },
+                .prefix = "0x"
+            };
         case 'b':
         case 'B':
-            isValidBaseChar = [](char c) { return c == '0' || c == '1'; };
+            // Binary number
             advance(2);
-            numberLiteral += "0b";
-            return Base::Binary;
+            return NumberPrefixResult{
+                .base = Base::Binary,
+                .isValidBaseChar = [](char c) { return c == '0' || c == '1'; },
+                .prefix = "0b"
+            };
         case 'o':
         case 'O':
-            isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; };
+            // Octal number
             advance(2);
-            numberLiteral += "0o";
-            return Base::Octal;
+            return NumberPrefixResult{
+                .base = Base::Octal,
+                .isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; },
+                .prefix = "0o"};
         default:
             // Not a valid base indicator -- just treat it as a decimal number
-            isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); };
-            return Base::Decimal;
+            return NumberPrefixResult{
+                .base = Base::Decimal,
+                .isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); },
+                .prefix = ""
+            };
     }
 }
 
