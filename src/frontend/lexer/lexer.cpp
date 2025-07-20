@@ -177,7 +177,7 @@ void Lexer::lex(size_t numTokens) {
     }
 }
 
-Token Lexer::peekToken(size_t offset) noexcept {
+[[deprecated("Lookahead behaviour isn't used")]] Token Lexer::peekToken(size_t offset) noexcept {
     if (done() && offset >= tokenStream.size()) {
         // Only return EOF if we are done tokenizing and trying to read past the end
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
