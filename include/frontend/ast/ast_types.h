@@ -72,7 +72,7 @@ class FunctionType : public Type {
  */
 class GenericType : public Type {
    protected:
-    std::unique_ptr<Type> baseType;       // The base type to which the generics are applied
+    TypePtr_t baseType;       // The base type to which the generics are applied
     std::vector<TypePtr_t> typeParameters;  // The generic type parameters
    public:
     /**

@@ -17,24 +17,12 @@
 namespace Manganese {
 namespace lexer {
 Token::Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_, bool invalid_)
-    : type(type_), lexeme(lexeme_), line(line_), column(column_), invalid(invalid_) {
+    : type(type_), lexeme(lexeme_), line(line_), column(column_), invalid(invalid_) noexcept_if_release {
     // Set a specific enum value for operators and keywords based on the lexeme
     if (type_ == TokenType::Operator) {
-        auto op = operatorFromString(lexeme_);
-        if (op.has_value()) [[likely]] {
-            type = op.value();
-        } else {
-            ASSERT_UNREACHABLE(
-                std::format("Unknown operator '{}' at line {}, column {}", lexeme_, line_, column_));
-        }
+        type = operatorFromString(lexeme_, line_, column_);
     } else if (type_ == TokenType::Keyword) {
-        auto kw = keywordFromString(lexeme_);
-        if (kw.has_value()) [[likely]] {
-            type = kw.value();
-        } else {
-            ASSERT_UNREACHABLE(
-                std::format("Unknown keyword '{}' at line {}, column {}", lexeme_, line_, column_));
-        }
+        type = keywordFromString(lexeme_, line_, column_);
     }
     // Special lexeme override cases
     if (type == TokenType::Int32) {
@@ -44,21 +32,23 @@ Token::Token(const TokenType type_, const std::string lexeme_, const size_t line
     }
 }
 
-std::optional<TokenType> operatorFromString(const std::string& op) {
+TokenType operatorFromString(const std::string& op, const size_t line, const size_t column) {
     std::string op_str(op);
     auto it = operatorMap.find(op_str);
     if (it != operatorMap.end()) {
         return it->second;
     }
-    return std::nullopt;
+        ASSERT_UNREACHABLE(
+                std::format("Unknown operator '{}' at line {}, column {}", op, line, column));
 }
 
-std::optional<TokenType> keywordFromString(const std::string& keyword) {
+TokenType keywordFromString(const std::string& keyword, const size_t line, const size_t column) {
     auto it = keywordMap.find(keyword);
     if (it != keywordMap.end()) {
         return it->second;
     }
-    return std::nullopt;
+            ASSERT_UNREACHABLE(
+                std::format("Unknown operator '{}' at line {}, column {}", keyword, line, column));
 }
 
 bool Token::isInvalid() const noexcept {

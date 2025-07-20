@@ -400,7 +400,7 @@ StatementPtr_t Parser::parseSwitchStatement() {
         std::move(variable), std::move(cases), std::move(defaultBody));
 }
 
-StatementPtr_t Parser::parseVisibilityAffectedStatement() {
+StatementPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
     ast::Visibility visibility;
     switch (advance().getType()) {
         case TokenType::Private:

@@ -126,7 +126,7 @@ class Parser {
      * Parses statements that are preceded by a visibility modifier
      * (public/readonly/private) (function/bundle/enum declaration)
      */
-    StatementPtr_t parseVisibilityAffectedStatement();
+    StatementPtr_t parseVisibilityAffectedStatement() noexcept_if_release;
     StatementPtr_t parseWhileLoopStatement();
 
     // ===== Type Parsing =====

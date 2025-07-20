@@ -33,7 +33,8 @@ void logInternal(const std::string& message, LogLevel level, std::ostream& out) 
             break;
     }
     if (level == LogLevel::Critical) {
-        ASSERT_UNREACHABLE("Critical error encountered");
+        out << ("Critical error encountered");
+        throw std::runtime_error("Critical error");
     }
 #else   // ^^ DEBUG vv !DEBUG
     return;  // No internal logging in non-debug builds

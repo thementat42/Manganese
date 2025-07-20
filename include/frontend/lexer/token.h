@@ -44,9 +44,9 @@ class Token {
     bool invalid;
 
    public:
-    Token() = default;
-    Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column, bool invalid = false);
-    ~Token() = default;
+    Token() noexcept = default;
+    Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column, bool invalid = false) noexcept_if_release;
+    ~Token() noexcept = default;
 
     bool isInvalid() const noexcept;
     bool isKeyword() const noexcept;
@@ -79,8 +79,8 @@ class Token {
 std::string tokenTypeToString(TokenType type) noexcept_if_release;
 extern std::unordered_map<std::string, const TokenType> keywordMap;
 extern std::unordered_map<std::string, const TokenType> operatorMap;
-std::optional<TokenType> keywordFromString(const std::string& keyword);
-std::optional<TokenType> operatorFromString(const std::string& op);
+TokenType keywordFromString(const std::string& keyword, const size_t line, const size_t column);
+TokenType operatorFromString(const std::string& op, const size_t line, const size_t column);
 
 // Implementation of TokenType
 enum class TokenType : uint8_t {

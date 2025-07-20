@@ -19,7 +19,7 @@ namespace Manganese {
 namespace ast {
 
 // ===== Helpers =====
-std::string visibilityToString(const Visibility& visibility) {
+std::string visibilityToString(const Visibility& visibility) noexcept_if_release {
     switch (visibility) {
         case Visibility::Public:
             return "public ";
