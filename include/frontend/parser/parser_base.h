@@ -39,6 +39,7 @@ struct ParsedFile {
     std::string moduleName;
     std::vector<Import> imports;
     ast::Block program;
+    std::vector<std::string> blockComments;  // These come from the lexer
 };
 
 //~ Helper functions that don't depend on the parser class's methods/variables

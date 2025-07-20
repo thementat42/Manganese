@@ -49,10 +49,13 @@ ParsedFile Parser::parse() {
         tokenCachePosition = 0;
     }
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
+    lexer->blockComments.shrink_to_fit();
     return ParsedFile{
         .moduleName = moduleName,
         .imports = std::move(imports),
-        .program = std::move(program)};
+        .program = std::move(program),
+        .blockComments = std::move(lexer->blockComments)
+    };
 }
 
 // ===== Helper functions =====
@@ -82,8 +85,7 @@ bool Parser::isUnaryContext() const {
 }
 
 Token Parser::expectToken(TokenType expectedType) {
-    return expectToken(
-        expectedType, "Unexpected token: ");
+    return expectToken(expectedType, "Unexpected token: ");
 }
 
 Token Parser::expectToken(TokenType expectedType, const std::string& errorMessage) {
@@ -112,7 +114,7 @@ std::string importToString(const Import& import) {
         }
     }
     if (!import.alias.empty()) {
-        res += "as " + import.alias;
+        res += " as " + import.alias;
     }
     return res + ";";
 }

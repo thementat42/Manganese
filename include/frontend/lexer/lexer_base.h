@@ -81,9 +81,10 @@ class Lexer {
     size_t tokenStartLine, tokenStartCol;                      // Keep track of where the token started for error reporting
     constexpr static const size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
     bool hasCriticalError_ = false;
+    std::deque<Token> tokenStream;
 
    public:  // public variables
-    std::deque<Token> tokenStream;
+   std::vector<std::string> blockComments;  // Store block comments (e.g. for documentation)
 
    private:  // private methods
     //~ Main tokenization functions
@@ -119,6 +120,11 @@ class Lexer {
      * @brief Process any character that is neither alphanumeric, a number, an underscore, quotes or whitespace (e.g. +)
      */
     void tokenizeSymbol();
+
+    /**
+     * @brief Process a block comment and store it in the blockComments vector
+     */
+    void tokenizeBlockComment();
 
     //~ Helper functions
 

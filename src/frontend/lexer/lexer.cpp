@@ -137,16 +137,7 @@ void Lexer::lex(size_t numTokens) {
             } while (!done() && currentChar != '\n');
             advance();  // Skip the newline
         } else if (currentChar == '/' && peekChar(1) == '*') {
-            // Multiline comment
-            advance(2);  // Skip the /*
-            while (!done() && !(peekChar() == '*' && peekChar(1) == '/')) {
-                advance();  // Skip the comment
-            }
-            if (done()) [[unlikely]] {
-                logging::logError("Unclosed multiline comment", getLine(), getCol());
-                return;
-            }
-            advance(2);                                                      // Skip the */
+            tokenizeBlockComment();
         } else if (std::isspace(currentChar)) [[likely]] {                   // lots of whitespace
             advance();                                                       // Skip whitespace
         } else if (isalpha(currentChar) || currentChar == '_') [[likely]] {  // Mostly identifiers and keywords
@@ -496,6 +487,35 @@ void Lexer::tokenizeSymbol() {
     tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
 }
 
+void Lexer::tokenizeBlockComment() {
+    advance(2);  // Skip the /*
+    std::string comment;
+    int64_t commentDepth = 1;  // Allow nested comments
+    size_t startLine = getLine(), startCol = getCol();
+    while (!done() && commentDepth > 0) {
+        if (peekChar() == '/' && peekChar(1) == '*') {
+            ++commentDepth;
+            comment += consumeChar();
+            comment += consumeChar();
+        } else if (peekChar() == '*' && peekChar(1) == '/') {
+            --commentDepth;
+            if (commentDepth == 0) {
+                advance(2);
+                break;  // End of the outermost comment
+            }
+            comment += consumeChar();
+            comment += consumeChar();
+        } else {
+            comment += consumeChar();
+        }
+    }
+    if (commentDepth > 0) {
+        logging::logError(
+            std::format("Unclosed block comment at end of file (comment started at line {}, column {})", startLine, startCol), getLine(), getCol());
+    }
+    blockComments.push_back(std::move(comment));
+}
+
 //~ Helper Functions
 
 NumberPrefixResult Lexer::processNumberPrefix() {
@@ -516,8 +536,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
             return NumberPrefixResult{
                 .base = Base::Hexadecimal,
                 .isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); },
-                .prefix = "0x"
-            };
+                .prefix = "0x"};
         case 'b':
         case 'B':
             // Binary number
@@ -525,8 +544,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
             return NumberPrefixResult{
                 .base = Base::Binary,
                 .isValidBaseChar = [](char c) { return c == '0' || c == '1'; },
-                .prefix = "0b"
-            };
+                .prefix = "0b"};
         case 'o':
         case 'O':
             // Octal number
@@ -540,8 +558,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
             return NumberPrefixResult{
                 .base = Base::Decimal,
                 .isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); },
-                .prefix = ""
-            };
+                .prefix = ""};
     }
 }
 

@@ -1,6 +1,11 @@
 import std::io;
 import mymodule as mm;
 
+
+/*
+This is a block comment (say, a docstring)
+@brief holds some chars
+*/
 enum Foo: char {
     A,
     B,
@@ -9,20 +14,37 @@ enum Foo: char {
     E
 }
 
+/*
+Here's another block comment
+* This explains what this bundle does
+*/
 bundle B[T] {
     x: Foo;
     y: float32;
     z: T[][];
 }
 
+
+/*
+Here's a block comment
+    /*
+    This block comment is nested
+    */
+*/
+
 func main() -> int {
     let b = B@[bool] {
         x = A,
         y = 1.23f32,
         z = [[true, false], [true, false]]
-    };
+    };  # This is an inline comment -- it doesn't get lexed
     io::print(b.x);
     io::print(b.y);
     io::print(b.z);
     io::print(mm::asdf);
 }
+
+/*
+/*
+This nested block comment is unclosed
+*/
