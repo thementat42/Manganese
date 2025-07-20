@@ -80,7 +80,8 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
         logging::logError("Invalid character literal", getLine(), getCol());
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), true);
+        tokenStream[tokenStreamPosition++] = Token(TokenType::CharLiteral, charLiteral, getLine(), getCol(), true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
         return;
     }
     std::string processed = *resolved;
@@ -96,10 +97,14 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     }
     if (!isValidSingleCodePoint) {
         logging::logError("Invalid character literal", getLine(), getCol());
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
+        tokenStream[tokenStreamPosition++] = Token(TokenType::CharLiteral, charLiteral, getLine(), getCol());
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
         return;
     }
-    tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
+    tokenStream[tokenStreamPosition++] = Token(TokenType::CharLiteral, processed, getLine(), getCol());
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
 }
 
 std::optional<char> getEscapeCharacter(const char escapeChar) {

@@ -1,9 +1,9 @@
 /**
  * @file manganese_tests.cpp
  * @brief Entry point for the test suit
- * 
+ *
  * This file is responsible for calling all the test functions
- *  
+ *
  * @note Run CMake with -DBUILD_TESTS=ON
  */
 
@@ -30,37 +30,39 @@ bool strneq(const char* a, const char* b, size_t max_count) {
 }
 
 int main(int argc, char const* argv[]) {
-    if (argc == 1) {
-        fprintf(stderr, "Usage: %s [--lexer] [--parser] [--semantic] [--codegen] [--all]\n", argv[0]);
-        return 1;
-    }
-
-    auto start = std::chrono::high_resolution_clock::now();
-
     bool lexer = false;
     bool parser = false;
     bool semantic = false;
     bool codegen = false;
+    auto start = std::chrono::high_resolution_clock::now();
+    if (argc == 1) {
+        // fprintf(stderr, "Usage: %s [--lexer] [--parser] [--semantic] [--codegen] [--all]\n", argv[0]);
+        // return 1;
+        lexer = true;
+        parser = true;
+        semantic = true;
+        codegen = true;
+    } else {
+        // TODO: Replace this with proper argument parser later (when working on argparser for main executable)
 
-    // TODO: Replace this with proper argument parser later (when working on argparser for main executable)
-
-    for (int i = 1; i < argc; ++i) {
-        if (strneq(argv[i], "--lexer", 7)) {
-            lexer = true;
-        } else if (strneq(argv[i], "--parser", 8)) {
-            parser = true;
-        } else if (strneq(argv[i], "--semantic", 10)) {
-            semantic = true;
-        } else if (strneq(argv[i], "--codegen", 9)) {
-            codegen = true;
-        } else if (strneq(argv[i], "--all", 5)) {
-            lexer = true;
-            parser = true;
-            semantic = true;
-            codegen = true;
-            break;
-        } else {
-            fprintf(stderr, "Skipping unknown argument: %s\n", argv[i]);
+        for (int i = 1; i < argc; ++i) {
+            if (strneq(argv[i], "--lexer", 7)) {
+                lexer = true;
+            } else if (strneq(argv[i], "--parser", 8)) {
+                parser = true;
+            } else if (strneq(argv[i], "--semantic", 10)) {
+                semantic = true;
+            } else if (strneq(argv[i], "--codegen", 9)) {
+                codegen = true;
+            } else if (strneq(argv[i], "--all", 5)) {
+                lexer = true;
+                parser = true;
+                semantic = true;
+                codegen = true;
+                break;
+            } else {
+                fprintf(stderr, "Skipping unknown argument: %s\n", argv[i]);
+            }
         }
     }
 

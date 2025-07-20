@@ -22,6 +22,7 @@
 #include <memory>
 #include <optional>
 #include <deque>
+#include <array>
 #include <string>
 
 #include "token.h"
@@ -83,7 +84,9 @@ class Lexer {
     bool hasCriticalError_ = false;
 
    public:  // public variables
-    std::deque<Token> tokenStream;
+    std::array<Token, QUEUE_LOOKAHEAD_AMOUNT> tokenStream;
+    size_t tokenStreamPosition;
+    size_t tokenCount;
 
    private:  // private methods
     //~ Main tokenization functions
@@ -91,8 +94,9 @@ class Lexer {
     /**
      * @brief Generates a certain number of tokens. Holds the main tokenization loop
      * @param numTokens The number of tokens to generate (default is 1)
+     * @return The number of tokens actually produced
      */
-    void lex(size_t numTokens = 1);
+    size_t lex(size_t numTokens = 1);
 
     /**
      * @brief Process a character literal and generate a token. Triggered when a single quote (') is encountered

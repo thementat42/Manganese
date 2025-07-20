@@ -104,7 +104,7 @@ namespace lexer {
 
 //~ Core Lexer Functions
 
-Lexer::Lexer(const std::string& source, const Mode mode) : tokenStartLine(1), tokenStartCol(1) {
+Lexer::Lexer(const std::string& source, const Mode mode) : tokenStartLine(1), tokenStartCol(1), tokenStreamPosition(0), tokenCount(0) {
     switch (mode) {
         case Mode::String:
             reader = std::make_unique<io::StringReader>(source);
@@ -119,9 +119,9 @@ Lexer::Lexer(const std::string& source, const Mode mode) : tokenStartLine(1), to
     }
 }
 
-void Lexer::lex(size_t numTokens) {
+size_t Lexer::lex(size_t numTokens) {
     if (done()) {
-        return;
+        return 0;
     }
     size_t numTokensMade = 0;
     char currentChar = peekChar();
@@ -144,7 +144,7 @@ void Lexer::lex(size_t numTokens) {
             }
             if (done()) [[unlikely]] {
                 logging::logError("Unclosed multiline comment", getLine(), getCol());
-                return;
+                return numTokensMade;
             }
             advance(2);                                                      // Skip the */
         } else if (std::isspace(currentChar)) [[likely]] {                   // lots of whitespace
@@ -173,11 +173,13 @@ void Lexer::lex(size_t numTokens) {
     }
     if (done()) {
         // Just finished tokenizing
-        tokenStream.emplace_back(TokenType::EndOfFile, "EOF", getLine(), getCol());
+        tokenStream[tokenStreamPosition++] = Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
     }
+    return numTokensMade;
 }
 
-Token Lexer::peekToken(size_t offset) noexcept {
+[[deprecated("Lookahead behaviour isn't used")]] Token Lexer::peekToken(size_t offset) noexcept {
     if (done() && offset >= tokenStream.size()) {
         // Only return EOF if we are done tokenizing and trying to read past the end
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
@@ -196,15 +198,16 @@ Token Lexer::peekToken(size_t offset) noexcept {
 }
 
 Token Lexer::consumeToken() noexcept {
-    if (tokenStream.empty()) {
-        lex(QUEUE_LOOKAHEAD_AMOUNT);  // If queue empty, generate 1 token to read
+    if (tokenCount == 0) {
+        tokenCount += lex(QUEUE_LOOKAHEAD_AMOUNT);  // If queue empty, generate tokens (prefilling the queue)
     }
-    if (tokenStream.empty()) {
+    if (tokenCount == 0) {
         // still empty -- we are done tokenizing
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
-    Token token = tokenStream.front();
-    tokenStream.pop_front();  // get rid of the token
+    Token token = tokenStream[tokenStreamPosition++];
+    tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+    --tokenCount;
     return token;
 }
 
@@ -218,7 +221,9 @@ void Lexer::tokenizeCharLiteral() {
     while (true) {
         if (done()) {
             logging::logError("Unclosed character literal", getLine(), getCol());
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream[tokenStreamPosition++] = Token(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
             return;
         }
         if (peekChar() == '\'') {
@@ -227,7 +232,9 @@ void Lexer::tokenizeCharLiteral() {
         if (peekChar() == '\n') {
             logging::logError("Unclosed character literal", getLine(), getCol());
 
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream[tokenStreamPosition++] = Token(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
             return;
         }
         if (peekChar() == '\\') {
@@ -242,10 +249,14 @@ void Lexer::tokenizeCharLiteral() {
         return;
     } else if (charLiteral.length() > 1) {
         logging::logError("Character literal exceeds 1 character limit", getLine(), getCol());
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStream[tokenStreamPosition++] = Token(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
         return;
     }
-    tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
+    tokenStream[tokenStreamPosition++] = Token(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
 }
 
 void Lexer::tokenizeStringLiteral() {
@@ -257,7 +268,9 @@ void Lexer::tokenizeStringLiteral() {
     while (true) {
         if (done()) {
             logging::logError("Unclosed string literal", getLine(), getCol());
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream[tokenStreamPosition++] = Token(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
             return;
         }
         if (peekChar() == '"') {
@@ -279,7 +292,9 @@ void Lexer::tokenizeStringLiteral() {
                     "add a backslash ('\\') at the end of the line",
                 getLine(), getCol());
 
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream[tokenStreamPosition++] = Token(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
             return;
         }
         stringLiteral += consumeChar();  // Add the character to the string
@@ -289,12 +304,16 @@ void Lexer::tokenizeStringLiteral() {
     if (containsEscapeSequence) {
         auto result = resolveEscapeCharacters(stringLiteral);
         if (!result) {
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream[tokenStreamPosition++] = Token(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
             return;
         }
         stringLiteral = std::move(result.value());
     }
-    tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+    tokenStream[tokenStreamPosition++] = Token(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
 }
 
 void Lexer::tokenizeKeywordOrIdentifier() {
@@ -304,10 +323,12 @@ void Lexer::tokenizeKeywordOrIdentifier() {
     }
     auto it = keywordMap.find(lexeme);
 
-    tokenStream.emplace_back(
+    tokenStream[tokenStreamPosition++] = Token(
         it != keywordMap.end() ? TokenType::Keyword : TokenType::Identifier,
         lexeme,
         tokenStartLine, tokenStartCol);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
 }
 
 void Lexer::tokenizeNumber() {
@@ -328,7 +349,9 @@ void Lexer::tokenizeNumber() {
                 // Invalid number -- two decimal points
                 logging::logError("Invalid number literal: multiple decimal points",
                                   getLine(), getCol());
-                tokenStream.emplace_back(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
+                tokenStream[tokenStreamPosition++] = Token(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
                 return;
             }
             // Reject floating point for octal and binary numbers
@@ -337,7 +360,9 @@ void Lexer::tokenizeNumber() {
                     std::format("Invalid number literal: floating point not allowed for {} numbers",
                                 (base == Base::Octal ? "octal" : "binary")),
                     getLine(), getCol());
-                tokenStream.emplace_back(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
+                tokenStream[tokenStreamPosition++] = Token(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
                 return;
             }
             isFloat = true;
@@ -348,10 +373,12 @@ void Lexer::tokenizeNumber() {
 
     // Handle scientific notation (e.g., 1.23e4), size suffixes (e.g., 1.23f), etc.
     processNumberSuffix(base, numberLiteral, isFloat);
-    tokenStream.emplace_back(
+    tokenStream[tokenStreamPosition++] = Token(
         isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral,
         numberLiteral,
         tokenStartLine, tokenStartCol);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
 }
 
 void Lexer::tokenizeSymbol() {
@@ -489,11 +516,15 @@ void Lexer::tokenizeSymbol() {
             logging::logError(
                 std::format("Invalid character: '{}'", current),
                 getLine(), getCol());
-            tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol, true);
+            tokenStream[tokenStreamPosition++] = Token(type, lexeme, tokenStartLine, tokenStartCol, true);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
             break;
     }
     advance(lexeme.length());
-    tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
+    tokenStream[tokenStreamPosition++] = Token(type, lexeme, tokenStartLine, tokenStartCol);
+        tokenStreamPosition %= QUEUE_LOOKAHEAD_AMOUNT;
+
 }
 
 //~ Helper Functions
