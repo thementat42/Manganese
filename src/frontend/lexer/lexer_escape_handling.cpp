@@ -79,7 +79,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
 void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
-        logging::logError("Invalid character literal", getLine(), getCol());
+        logging::logError("Invalid character literal " + charLiteral, getLine(), getCol());
         tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), true);
         return;
     }
@@ -95,7 +95,7 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
                                  (byteCount == 4 && (firstByte & 0xF8) == 0xF0);    // 4-byte UTF-8 character
     }
     if (!isValidSingleCodePoint) {
-        logging::logError("Invalid character literal", getLine(), getCol());
+        logging::logError("Invalid character literal " + charLiteral, getLine(), getCol());
         tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
         return;
     }
