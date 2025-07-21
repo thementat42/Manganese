@@ -78,7 +78,7 @@ enum class Visibility : char {
     Private = 2,
 };
 
-extern std::string visibilityToString(const Visibility visibility);  // Defined in the toString 
+std::string visibilityToString(const Visibility& visibility) noexcept_if_release;
 
 class ASTNode {
    protected:
