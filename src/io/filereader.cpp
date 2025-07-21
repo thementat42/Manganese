@@ -52,18 +52,17 @@ void FileReader::refillBuffer() {
     fileStream.read(buffer.get() + unreadBytes, static_cast<std::streamsize>(remainingCapacity));
     const size_t bytesRead = static_cast<size_t>(fileStream.gcount());
 
-    bufferSize = unreadBytes + bytesRead;  // Update buffer size to include new data
+    bufferSize = unreadBytes + bytesRead;
     position = 0;                          // We moved any remaining data to the front, so reset position to 0
     // Always null-terminate since peeking/consuming determines EOF based on null terminator
     buffer[bufferSize] = '\0';
 }
 
 char FileReader::peekChar(size_t offset) {
-    // Check if we need more data
     if (position + offset >= bufferSize) {
         refillBuffer();
 
-        // If still out of bounds after refill, return EOF
+        // If still out of bounds after refill, we're done reading the file
         if (position + offset >= bufferSize) {
             return EOF_CHAR;
         }

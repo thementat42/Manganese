@@ -1,3 +1,8 @@
+/**
+ * @file symbol_table.cpp
+ * @brief Implementation of symbol table functions
+ */
+
 #include <frontend/semantic/symbol_table.h>
 #include <global_macros.h>
 

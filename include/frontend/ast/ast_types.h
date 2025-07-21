@@ -31,7 +31,7 @@ enum class TypeKind {
 class ArrayType : public Type {
    protected:
     std::unique_ptr<Type> elementType;
-    ExpressionPtr_t lengthExpression;  // Optional length specification (otherwise, should be inferred based on the number of elements)
+    ExpressionPtr_t lengthExpression;  // If not given, the length is inferred from the number of elements
 
    public:
     /**
@@ -74,13 +74,9 @@ class FunctionType : public Type {
  */
 class GenericType : public Type {
    protected:
-    TypePtr_t baseType;       // The base type to which the generics are applied
-    std::vector<TypePtr_t> typeParameters;  // The generic type parameters
+    TypePtr_t baseType; // some_function in `some_function@[T,U]`
+    std::vector<TypePtr_t> typeParameters;  // T and U in `some_function@[T,U]`
    public:
-    /**
-     * @param baseType_ The base type to which the generics are applied
-     * @param typeParameters_ The generic type parameters
-     */
     GenericType(std::unique_ptr<Type> baseType_, std::vector<TypePtr_t> typeParameters_)
         : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
@@ -110,9 +106,6 @@ class SymbolType : public Type {
     std::string name;
 
    public:
-    /**
-     * @param name_ The name of the type
-     */
     explicit SymbolType(std::string name_) : name(std::move(name_)) {}
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }

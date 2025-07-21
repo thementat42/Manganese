@@ -1,5 +1,3 @@
-
-
 /**
  * @file manganese.cpp
  * @brief Entry point for the compiler.

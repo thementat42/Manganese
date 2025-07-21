@@ -1,3 +1,8 @@
+/**
+ * @file semantic_analyzer_expressions.cpp
+ * @brief Responsible for performing semantic analysis on all the AST expression nodes
+ */
+
 #include <frontend/semantic/semantic_analyzer.h>
 #include <global_macros.h>
 

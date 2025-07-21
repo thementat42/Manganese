@@ -27,23 +27,23 @@
 #include <vector>
 
 #if DEBUG
-#define OVERRIDE_DUMP_METHOD void dump(std::ostream& os, int indent = 0) const override;  // Makes overriding dump() less cumbersome to type
+#define __OVERRIDE_DUMP_METHOD void dump(std::ostream& os, int indent = 0) const override;  // Makes overriding dump() less cumbersome to type
 #else
-#define OVERRIDE_DUMP_METHOD  // Don't dump in non-debug builds
+#define __OVERRIDE_DUMP_METHOD  // Don't dump in non-debug builds
 #endif
 
-#define OVERRIDE_TO_STRING std::string toString() const override;  // Makes overriding toString() less cumbersome to type
+#define __OVERRIDE_TO_STRING std::string toString() const override;  // Makes overriding toString() less cumbersome to type
 
 #define __NODE_OVERRIDES \
-    OVERRIDE_TO_STRING   \
-    OVERRIDE_DUMP_METHOD
+    __OVERRIDE_TO_STRING   \
+    __OVERRIDE_DUMP_METHOD
 
 #define __FRIEND_DECLS     \
     friend parser::Parser; \
     friend semantic::SemanticAnalyzer;
 
 /**
- * AST_STANDARD_INTERFACE - Common interface for all nodes
+ * Common interface functions for all nodes
  * Combines required methods overrides (toString/dump)
  * and friend declarations (the parser and semantic analyzer) for access to protected members
  */

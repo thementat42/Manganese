@@ -22,7 +22,7 @@
 namespace Manganese {
 namespace ast {
 
-DISABLE_CONVERSION_WARNING
+DISABLE_CONVERSION_WARNING  // There are lots of implicit conversions between integer types -- for convenience, ignore those warnings
 
 // Helper function to create indentation
 inline static std::string getIndent(int indent) {

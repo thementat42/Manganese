@@ -22,8 +22,6 @@
 
 #include "testrunner.h"
 
-// TODO: Replace this with purely file-based tests
-
 namespace Manganese {
 namespace tests {
 using lexer::Token, lexer::TokenType;

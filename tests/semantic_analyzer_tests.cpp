@@ -1,3 +1,11 @@
+/**
+ * @file semantic_analyzer_tests.cpp
+ * @brief Unit tests for the semantic_analyzer.
+ *
+ * @see include/frontend/semantic_analyzer.h
+ * @see testrunner.h
+ */
+
 #include <frontend/ast.h>
 #include <frontend/parser.h>
 #include <frontend/semantic.h>
@@ -7,9 +15,9 @@
 
 #include "testrunner.h"
 
-//NOTE: For now, these tests will "always pass" (i.e., there's no automatic checking of the semantic analyzer's ouput)
-// The tests just call dump() on the resulting ast nodes
-// TODO: Implement more automated checking of the output
+//  NOTE: For now, these tests will "always pass" (i.e., there's no automatic checking of the semantic analyzer's ouput)
+//  The tests just call dump() on the resulting ast nodes
+//  TODO: Implement more automated checking of the output
 
 namespace Manganese {
 

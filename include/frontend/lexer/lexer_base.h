@@ -18,10 +18,10 @@
 #include <io/stringreader.h>
 #include <utils/number_utils.h>
 
+#include <deque>
 #include <functional>
 #include <memory>
 #include <optional>
-#include <deque>
 #include <string>
 
 #include "token.h"
@@ -76,6 +76,9 @@ std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, b
  * @brief The lexer is responsible for turning the source code into a non-textual representation that the parser can understand.
  */
 class Lexer {
+   public:                                   // public variables
+    std::vector<std::string> blockComments;  // Store block comments (e.g. for documentation)
+
    private:  // private variables
     std::unique_ptr<io::Reader> reader;
     size_t tokenStartLine, tokenStartCol;                      // Keep track of where the token started for error reporting
@@ -83,8 +86,32 @@ class Lexer {
     bool hasCriticalError_ = false;
     std::deque<Token> tokenStream;
 
-   public:  // public variables
-   std::vector<std::string> blockComments;  // Store block comments (e.g. for documentation)
+   public:  // public methods
+    explicit Lexer(const std::string& source, const Mode mode = Mode::File);
+    ~Lexer() noexcept = default;
+
+    /**
+     * @brief See the next token in the input stream without consuming it
+     * @param offset How many tokens to look ahead (default is 0 -- the current token)
+     * @return The peeked token
+     * @details This function will not advance the reader position
+     */
+    Token peekToken(size_t offset = 0) noexcept;
+
+    /**
+     * @brief Consume the next token in the input stream
+     * @return The consumed token
+     * @details This function will advance the reader position by 1
+     */
+    Token consumeToken() noexcept;
+
+    /**
+     * @brief Check if the end of the input stream has been reached
+     * @return True if the end of the stream has been reached, false otherwise
+     */
+    bool done() const noexcept { return reader->done(); }
+
+    bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
    private:  // private methods
     //~ Main tokenization functions
@@ -193,33 +220,6 @@ class Lexer {
     inline void advance(size_t n = 1) noexcept {
         reader->setPosition(reader->getPosition() + n);
     }
-
-   public:  // public methods
-    explicit Lexer(const std::string& source, const Mode mode = Mode::File);
-    ~Lexer() noexcept = default;
-
-    /**
-     * @brief See the next token in the input stream without consuming it
-     * @param offset How many tokens to look ahead (default is 0 -- the current token)
-     * @return The peeked token
-     * @details This function will not advance the reader position
-     */
-    Token peekToken(size_t offset = 0) noexcept;
-
-    /**
-     * @brief Consume the next token in the input stream
-     * @return The consumed token
-     * @details This function will advance the reader position by 1
-     */
-    Token consumeToken() noexcept;
-
-    /**
-     * @brief Check if the end of the input stream has been reached
-     * @return True if the end of the stream has been reached, false otherwise
-     */
-    bool done() const noexcept { return reader->done(); }
-
-    bool hasCriticalError() const noexcept { return hasCriticalError_; }
 };
 }  // namespace lexer
 }  // namespace Manganese
