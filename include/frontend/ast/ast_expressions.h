@@ -42,6 +42,7 @@ class ArrayLiteralExpression : public Expression {
    protected:
     std::vector<ExpressionPtr_t> elements;
     TypePtr_t elementType;  // Optional, can be inferred from the elements
+    ExpressionPtr_t lengthExpression = nullptr;
 
    public:
     ArrayLiteralExpression(std::vector<ExpressionPtr_t> elements_, TypePtr_t elementType_ = nullptr)

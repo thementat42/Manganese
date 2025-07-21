@@ -28,7 +28,7 @@
 namespace Manganese {
 namespace tests {
 
-ast::Block getParserResults(const std::string& source, lexer::Mode mode) {
+ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode);
     if (parser.hasCriticalError()) {
         throw std::runtime_error("Compilation Aborted\n");
@@ -108,7 +108,7 @@ bool testArithmeticOperatorsAndCasting() {
     std::string expected = "(((8 - 4) + ((((6 * 2) // 5) % (3 ^^ (2 ^^ 2))) / 7)) as float32);";
 
     return validateStatement(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Arithmetic Operators and Casting");
 }
 
@@ -119,7 +119,7 @@ bool testExponentiationAssociativity() {
     std::string expected = "(2 ^^ (3 ^^ 2));";
 
     return validateStatement(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Exponentiation Associativity");
 }
 
@@ -137,7 +137,7 @@ bool testVariableDeclaration() {
         "(let boolean: private auto = true);"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Variable Declaration");
 }
 
@@ -183,7 +183,7 @@ bool testAssignmentExpressions() {
         "(x ^= (~y));"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Assignment Expressions");
 }
 
@@ -207,7 +207,7 @@ bool testPrefixOperators() {
         "((++c) * 2);"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Prefix Operators");
 }
 
@@ -228,7 +228,7 @@ bool testParenthesizedExpressions() {
         "(((2 + 3) * 4) - (6 / (1 + 1)));"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Parenthesized Expressions");
 }
 
@@ -249,7 +249,7 @@ bool testPointerOperators() {
         "((*p) + 5);"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Pointer Operators");
 }
 
@@ -269,7 +269,7 @@ bool testTypedVariableDeclaration() {
         "(const matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Typed Variable Declarations");
 }
 
@@ -291,7 +291,7 @@ bool testPostfixOperators() {
         "((x++) + (y--));"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Postfix Operators");
 }
 
@@ -321,7 +321,7 @@ bool testBitwiseOperators() {
         "(((a & b) & c) | (d ^ e));"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Bitwise Operators");
 }
 
@@ -354,7 +354,7 @@ bool testBundleDeclarationAndInstantiation() {
         "(const rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Bundle Declaration and Instantiation");
 }
 
@@ -383,7 +383,7 @@ bool testFunctionDeclarationAndCall() {
         "(let product: private auto = calculate(2.5, 3.01));"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Function Declaration and Call");
 }
 
@@ -407,7 +407,7 @@ bool testLoops() {
         "repeat ((((5 + 30) - (2 ^^ 3)) << 2)) {\n\tprint(\"Hello\");\n}"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Loops");
 }
 
@@ -435,7 +435,7 @@ bool testIfElseStatements() {
         "}";
 
     return validateStatement(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "If/Else If/Else Statements");
 }
 
@@ -457,7 +457,7 @@ bool testEnumDeclarationStatement() {
         "private enum Status: float64 {\n\tSuccess = 0,\n\tError = 1,\n\tUnknown = (-1),\n}"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Enum Declaration Statement");
 }
 
@@ -485,7 +485,7 @@ bool testSwitchStatement() {
         "\t\tprint(\"Default case\");\n"
         "}";
     return validateStatement(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Switch Statement");
 }
 
@@ -510,7 +510,7 @@ bool testAccessExpressions() {
             "(let foo: private auto = lib::module_::function(a, b, c));"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Member Access Expression");
 }
 
@@ -534,7 +534,7 @@ bool testGenerics() {
             "(let foo: private auto = Foo@[int32, float64] {x = 3, y = 4.5});",
             "(let foo_array: readonly Foo@[int32, float64][]);"};
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Generic Function Declaration");
 }
 
@@ -559,7 +559,7 @@ bool testImportsAndAliases() {
         "(let value: private Integer = 42);"};
 
     return validateStatements(
-        getParserResults(expression, lexer::Mode::String),
+        getParserResults(expression),
         expected, "Import Statements and Type Aliases");
 }
 

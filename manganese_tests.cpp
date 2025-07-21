@@ -78,8 +78,7 @@ int main(int argc, char const* argv[]) {
     }
     if (semantic) {
         printf("%s=== Semantic Analyzer Tests ===%s\n", PINK, RESET);
-        // TODO: Add once semantic analyzer done
-        printf("To be implemented.\n");
+        Manganese::tests::runSemanticAnalysisTests(runner);
         printf("\n");
     }
     if (codegen) {
