@@ -193,7 +193,7 @@ void NumberLiteralExpression::dump(std::ostream& os, int indent) const {
        << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << (computedType ? computedType->toString() : "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
-    os << getIndent(indent + 1) << "actual number type: " << getNumberTypeName(value) << "\n";
+    os << getIndent(indent + 1) << "Type from parser: " << getNumberTypeName(value) << "\n";
     os << getIndent(indent) << "}\n";
 }
 
