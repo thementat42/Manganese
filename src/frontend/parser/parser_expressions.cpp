@@ -102,7 +102,6 @@ ExpressionPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_relea
         if (type == TokenType::LeftBrace &&
             left->kind() != ast::ExpressionKind::IdentifierExpression &&
             left->kind() != ast::ExpressionKind::GenericExpression) [[unlikely]] {
-            // TODO: Add support for generics in bundles
             if (isParsingBlockPrecursor) {
                 // Left braces after an expression can either start a block or a bundle instantiation
                 // If we're parsing a block precursor (if/for/while, etc.) AND the previous expression is not an identifier,
