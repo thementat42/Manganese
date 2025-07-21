@@ -59,9 +59,6 @@ static std::string getNumberTypeName(const number_t& value) {
                       value);
 }
 
-// This is defined in ast_to_string.cpp
-extern std::string visibilityToString(const Visibility& visibility);
-
 // ===== Expressions =====
 
 void ArrayLiteralExpression::dump(std::ostream& os, int indent) const {

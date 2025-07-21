@@ -78,9 +78,12 @@ enum class Visibility : char {
     Private = 2,
 };
 
+extern std::string visibilityToString(const Visibility visibility);  // Defined in the toString 
+
 class ASTNode {
    protected:
     size_t line = 0, column = 0;
+    bool isSemanticallyValid = false;
 
    public:
     virtual ~ASTNode() noexcept = default;
@@ -100,6 +103,7 @@ class ASTNode {
     size_t getColumn() const { return column; }
 
     friend parser::Parser;
+    friend semantic::SemanticAnalyzer;
 };
 
 class Expression : public ASTNode {

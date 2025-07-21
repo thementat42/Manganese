@@ -68,7 +68,9 @@ class FunctionType : public Type {
 };
 
 /**
- * e.g. [T, U]
+ * @brief Represents the application of generic arguments to a base type.
+ * e.g. some_function@[T, U](); some_bundle@[T, U]
+ * It does not represent the generic type itself
  */
 class GenericType : public Type {
    protected:
