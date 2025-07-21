@@ -105,11 +105,11 @@ This project is divided into several directories:
 
 - [`.spec`](/.spec/): Contains the formal specification of the manganese language, including its EBNF grammar
 
-- [`Docs`](/docs): Language documentation. The documentation represents a hypothetical version of Manganese -- right now, not everything in the docs is implemented, but will be at some point in the future.
+- [`docs`](/docs): Language documentation. The documentation represents a hypothetical version of Manganese -- right now, not everything in the docs is implemented, but will be at some point in the future.
   - [`Syntax`](/docs/syntax/): Documentation for the core language syntax.
   - [`Library`](/docs/library/): Documentation for the standard library
 
-- [`Examples`](/examples): Sample Manganese programs
+- [`examples`](/examples): Sample Manganese programs
 
 - [`include`](/include): Contains the header files for the compiler, defining the public interface of the compiler, split by phase
   - [`frontend`](/include/frontend): Header files for the frontend phase (lexer, parser, semantic analyzer)
@@ -117,16 +117,15 @@ This project is divided into several directories:
   - [`backend`](/include/backend): Header files for the backend phase (LLVM backend to generate machine code)
   - [`io`](/include/io): Header files for the I/O library, which handles things like logging and file I/O
 
-- [`Src`](/src): The implementation of the compiler, split by phase. This mirrors the structure of the [`include`](/include/) directory.
-  - [`Frontend`](/src/frontend): Lexer, parser, semantic analyzer
-  - [`Middleend`](/src/middleend): Generates LLVM IR, runs LLVM's optimization passes
-  - [`Backend`](/src/backend): LLVM backend to generate machine code
-  - [`IO`](/src/io): I/O library implementation, which handles things like logging and file I/O
+- [`src`](/src): The implementation of the compiler, split by phase. This mirrors the structure of the [`include`](/include/) directory.
+  - [`frontend`](/src/frontend): Lexer, parser, semantic analyzer
+  - [`middleend`](/src/middleend): Generates LLVM IR, runs LLVM's optimization passes
+  - [`backend`](/src/backend): LLVM backend to generate machine code
+  - [`io`](/src/io): I/O library implementation, which handles things like logging and file I/O
 
 - [`scripts`](/scripts/): Contains some Python scripts to help generate snippets of C++ code
   - [`gen_header.py`]: Python script to generate a header file from a .cpp file
-  - [`bool_expr.py`]: Convert a series of options into a single `or` (`||`) or `and` (`&&`) expression
-- [`Tests`](/tests): Compiler Tests
+- [`tests`](/tests): Compiler Tests
 - [`manganese.cpp`](/manganese.cpp): Entry point for the compiler
 - [`manganese-tests.cpp`](/manganese-tests.cpp): Entry point for running tests
 
