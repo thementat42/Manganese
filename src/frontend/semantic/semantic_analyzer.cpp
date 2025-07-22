@@ -12,7 +12,7 @@
 namespace Manganese {
 namespace semantic {
 
-void SemanticAnalyzer::analyze(const parser::ParsedFile& parsedFile) {
+void SemanticAnalyzer::analyze(parser::ParsedFile& parsedFile) {
     // checkImports(parsedFile.imports);
     currentModule = parsedFile.moduleName;
     for (const auto& statement : parsedFile.program) {

@@ -7,6 +7,8 @@
 
 #include "symbol_table.h"
 
+//! The semantic analyzer should never "fix" errors -- only report them
+
 namespace Manganese {
 
 namespace semantic {
@@ -19,7 +21,7 @@ class SemanticAnalyzer {
    public:
     explicit SemanticAnalyzer() noexcept = default;
 
-    void analyze(const parser::ParsedFile& parsedFile);
+    void analyze(parser::ParsedFile& parsedFile);
 
     bool hasError() const noexcept {
         return hasError_;
