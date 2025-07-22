@@ -97,6 +97,8 @@ The following table summarizes the ranges of values for the different integer ty
 | `float32`  | 1.401298464324817e-45      | 3.4028234663852886e+38     |
 | `float64`  | 5e-324                     | 1.7976931348623157e308     |
 
+> Note: In future, 128-bit ints and floats will be added
+
 ## === Type Casting ===
 
 Manganese allows casting between all the primitive types using the `as` keyword The general syntax for a type cast is:
