@@ -5,15 +5,16 @@ Manganese is a statically typed language, so all variables must be declared with
 The general syntax for declaring a variable in Manganese is:
 
 ```manganese
-let <variable name> [: <type qualifier> <type>] [= <value>];
-const <variable name> : <type qualifier> <type> = <value>;
+let <variable name> [: [<visibility>] <type qualifier> <type>] [= <value>];
+const <variable name> [: [<visibility>] <type qualifier> <type>] = <value>;
 ```
 
 `let` declares a mutable variable, while `const` declares an immutable variable.
 
 Where:
 
-- a [`type qualifier`](#-type-qualifiers-) provides extra information to the compiler on how the variable should be interpreted and/or stored. A type qualifier is optional.
+- [`visiblity`](#-type-qualifiers--visibility-) dictates how the variable can be accessed outside the module in which it is declared
+- a [`type qualifier`](#-type-qualifiers--visibility-) provides extra information to the compiler on how the variable should be interpreted and/or stored. A type qualifier is optional.
 - `<type>` is one of the [primitive types](#-primitive-types-), a built-in [data structure](/docs/02_data_structures.md) or a [user-defined type](/docs/06_data_encapsulation.md)
 - `variable name` is an identifier to refer to the variable. Variable names can contain letters, underscores and numbers (but cannot start with numbers).
 - `value` is an optional initial value for the variable.
@@ -22,16 +23,19 @@ Type declarations are required on variables without an initial value.
 Variables with an initial value generally do not require a type declaration, as the compiler will infer which type the variable is.
 Variables which are declared without a value are uninitialized. Using an uninitialized variable will cause a warning.
 
-## === Type Qualifiers ===
+## === Type Qualifiers & Visibility ===
+
+Visibility modifiers dictate how an object is accessible between modules:
+
+1. `public`: Declares that a variable can be accessed and modified outside its parent [module](/docs/05_modules_and_scoping.md)
+2. `readonly`: Declares that a variable can be accessed but not modified outside its parent [module](/docs/05_modules_and_scoping.md)
+3. `private`: Declares that a variable can only be accessed within its parent [module](/docs/05_modules_and_scoping.md)
 
 Type qualifiers provide extra information to the compiler about how variables should be stored and read. The type qualifiers in Manganese are:
 
 1. `const`: Declares a variable as constant (i.e.) immutable. <br>
     Once assigned, a `const` variable cannot have its value changed. Variables marked as `const` must have a value assigned when they are declared
 2. `ptr`: Declares a pointer to a variable of the specified type (a `ptr` variable holds the memory address of the variable it points to).
-3. `public`: Declares that a variable can be accessed and modified outside its parent [module](/docs/05_modules_and_scoping.md)
-4. `readonly`: Declares that a variable can be accessed but not modified outside its parent [module](/docs/05_modules_and_scoping.md)
-5. `private`: Declares that a variable can only be accessed within its parent [module](/docs/05_modules_and_scoping.md)
 
 `const` always applies to the type to its right.
 By default, all variables are private -- they cannot be accessed or modified outside their parent module.
