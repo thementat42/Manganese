@@ -15,13 +15,13 @@ namespace semantic {
 
 void SymbolTable::enterScope() {
     scopes.emplace_back();
-    scopeDepth++;
+    ++scopeDepth;
 }
 
-void SymbolTable::exitScope() {
+void SymbolTable::exitScope() noexcept {
     if (!scopes.empty()) {
         scopes.pop_back();
-        scopeDepth--;
+        --scopeDepth;
     } else {
         logging::logInternal("Attempted to exit scope when no scopes are available.", logging::LogLevel::Warning);
     }

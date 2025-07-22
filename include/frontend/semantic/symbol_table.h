@@ -66,7 +66,7 @@ class SymbolTable {
 
     void enterScope();
 
-    void exitScope();
+    void exitScope() noexcept;
 
     bool declare(Symbol symbol);
 
