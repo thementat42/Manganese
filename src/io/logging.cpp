@@ -15,7 +15,7 @@
 
 namespace Manganese {
 namespace logging {
-void logInternal(const std::string& message, LogLevel level, std::ostream& out) noexcept {
+void logInternal(const std::string& message, LogLevel level, std::ostream& out) noexcept_if_release {
 #if DEBUG
     switch (level) {
         case LogLevel::Info:

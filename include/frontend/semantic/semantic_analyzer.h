@@ -32,9 +32,22 @@ class SemanticAnalyzer {
    private:
     // ===== Basic AST Traversal =====
     void checkImports(std::vector<parser::Import>& imports);
-    void checkBlock(ast::Block& block);
     void checkStatement(ast::Statement* statement) noexcept_if_release;
     void checkExpression(ast::Expression* expression) noexcept_if_release;
+
+    // ===== Misc Helpers =====
+    inline void enterScope() {symbolTable.enterScope(); }
+    inline void exitScope() {symbolTable.exitScope(); }
+    inline void logError(const std::string& message, size_t line = 0, size_t col = 0) noexcept {
+        logging::logError(message, line, col);
+        hasError_ = true;
+    }
+
+    inline void checkBlock(ast::Block& block) noexcept(noexcept(checkStatement)) {
+        for (auto& statement : block) {
+            checkStatement(statement.get());
+        }
+    }
 
     // ===== Specific Expression Checks =====
     void checkArrayLiteralExpression(ast::ArrayLiteralExpression* expression);
@@ -71,14 +84,6 @@ class SemanticAnalyzer {
     void checkSwitchStatement(ast::SwitchStatement* statement);
     void checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement);
     void checkWhileLoopStatement(ast::WhileLoopStatement* statement);
-
-    // ===== Misc Helpers =====
-    void enterScope();
-    void exitScope();
-    inline void logError(const std::string& message, size_t line = 0, size_t col = 0) noexcept {
-        logging::logError(message, line, col);
-        hasError_ = true;
-    }
 };
 }  // namespace semantic
 

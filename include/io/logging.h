@@ -42,7 +42,7 @@ enum class LogLevel {
  * @param level The log level (default is Info)
  *
  */
-void logInternal(const std::string& message, LogLevel level = LogLevel::Info, std::ostream& out = std::cerr) noexcept;
+void logInternal(const std::string& message, LogLevel level = LogLevel::Info, std::ostream& out = std::cerr) noexcept_if_release;
 
 /**
  * @brief Logging function for the user (e.g., syntax errors)
