@@ -38,6 +38,10 @@ enum class ExpressionKind {
     TypeCastExpression
 };
 
+
+/**
+ * @brief e.g. [1, 2, 3]
+ */
 class ArrayLiteralExpression : public Expression {
    protected:
     std::vector<ExpressionPtr_t> elements;
@@ -52,6 +56,10 @@ class ArrayLiteralExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::ArrayLiteralExpression; }
 };
 
+
+/**
+ * e.g. `foo = bar`, `baz *= 1`
+ */
 class AssignmentExpression : public Expression {
    protected:
     ExpressionPtr_t assignee, value;
@@ -65,6 +73,10 @@ class AssignmentExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::AssignmentExpression; }
 };
 
+
+/**
+ * @brief e.g. `a + b`, `x * y`
+ */
 class BinaryExpression : public Expression {
    protected:
     ExpressionPtr_t left, right;
@@ -78,6 +90,9 @@ class BinaryExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::BinaryExpression; }
 };
 
+/**
+ * @brief e.g. `true`, `false`
+ */
 class BoolLiteralExpression : public Expression {
    protected:
     bool value;
@@ -97,6 +112,9 @@ struct BundleInstantiationField {
         : name(std::move(name_)), value(std::move(value_)) {}
 };
 
+/**
+ * @brief e.g. `Point3D{ x = 1, y = 2, z = 3 }`
+ */
 class BundleInstantiationExpression : public Expression {
    protected:
     std::string name;
@@ -111,6 +129,9 @@ class BundleInstantiationExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::BundleInstantiationExpression; }
 };
 
+/**
+ * @brief e.g. 'a', '\u1234', '\n'
+ */
 class CharLiteralExpression : public Expression {
    protected:
     char32_t value;
@@ -126,6 +147,9 @@ class CharLiteralExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::CharLiteralExpression; }
 };
 
+/**
+ * @brief e.g. `foo()`, `bar(1, 2, 3)`
+ */
 class FunctionCallExpression : public Expression {
    protected:
     ExpressionPtr_t callee;
@@ -139,6 +163,9 @@ class FunctionCallExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::FunctionCallExpression; }
 };
 
+/**
+ * e.g. `foo@[int, string]`
+ */
 class GenericExpression : public Expression {
    protected:
     ExpressionPtr_t identifier;
@@ -158,6 +185,9 @@ class GenericExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::GenericExpression; }
 };
 
+/**
+ * @brief e.g. `foo`, `bar`
+ */
 class IdentifierExpression : public Expression {
    protected:
     std::string value;
@@ -169,6 +199,9 @@ class IdentifierExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::IdentifierExpression; }
 };
 
+/**
+ * @brief e.g. `foo[0]`, `bar[1 + 2]`
+ */
 class IndexExpression : public Expression {
    protected:
     ExpressionPtr_t variable;
@@ -182,6 +215,9 @@ class IndexExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::IndexExpression; }
 };
 
+/**
+ * @brief e.g. `foo.bar`
+ */
 class MemberAccessExpression : public Expression {
    protected:
     ExpressionPtr_t object;
@@ -195,6 +231,9 @@ class MemberAccessExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::MemberAccessExpression; }
 };
 
+/**
+ * @brief e.g. `42`, `3.14`, `-1`
+ */
 class NumberLiteralExpression : public Expression {
    protected:
     number_t value;
@@ -206,6 +245,9 @@ class NumberLiteralExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::NumberLiteralExpression; }
 };
 
+/**
+ * @brief e.g. `foo++`, `bar--`
+ */
 class PostfixExpression : public Expression {
    protected:
     ExpressionPtr_t left;
@@ -219,6 +261,9 @@ class PostfixExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::PostfixExpression; }
 };
 
+/**
+ * @brief e.g. `++foo`, `--bar`
+ */
 class PrefixExpression : public Expression {
    protected:
     lexer::TokenType op;
@@ -232,6 +277,9 @@ class PrefixExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::PrefixExpression; }
 };
 
+/**
+ * @brief e.g. `Module::Element`
+ */
 class ScopeResolutionExpression : public Expression {
    protected:
     ExpressionPtr_t scope;
@@ -245,6 +293,9 @@ class ScopeResolutionExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::ScopeResolutionExpression; }
 };
 
+/**
+ * @brief e.g. `"Hello, World!"`, `"Line 1\nLine 2"`
+ */
 class StringLiteralExpression : public Expression {
    protected:
     std::string value;
@@ -257,6 +308,9 @@ class StringLiteralExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::StringLiteralExpression; }
 };
 
+/**
+ * @brief e.g. `foo as Bar`
+ */
 class TypeCastExpression : public Expression {
    protected:
     ExpressionPtr_t expression;
