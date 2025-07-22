@@ -15,7 +15,7 @@
 
 namespace Manganese {
 namespace logging {
-void logInternal(const std::string& message, LogLevel level, std::ostream& out) {
+void logInternal(const std::string& message, LogLevel level, std::ostream& out) noexcept {
 #if DEBUG
     switch (level) {
         case LogLevel::Info:
@@ -41,7 +41,7 @@ void logInternal(const std::string& message, LogLevel level, std::ostream& out) 
 #endif  // DEBUG
 }
 
-void log(const std::string& message, LogLevel level, size_t line, size_t col, std::ostream& out) {
+void log(const std::string& message, LogLevel level, size_t line, size_t col, std::ostream& out) noexcept {
     switch (level) {
         case LogLevel::Info:
             return;  // No user info
@@ -58,7 +58,7 @@ void log(const std::string& message, LogLevel level, size_t line, size_t col, st
     out << " (line " << line << ", column " << col << ")\n";
 }
 
-void log(std::initializer_list<std::string> messages, LogLevel level, size_t line, size_t col, std::ostream& out) {
+void log(std::initializer_list<std::string> messages, LogLevel level, size_t line, size_t col, std::ostream& out) noexcept {
     switch (level) {
         case LogLevel::Info:
             break;  // No user info
