@@ -35,7 +35,7 @@
 #define __OVERRIDE_TO_STRING std::string toString() const override;  // Makes overriding toString() less cumbersome to type
 
 #define __NODE_OVERRIDES \
-    __OVERRIDE_TO_STRING   \
+    __OVERRIDE_TO_STRING \
     __OVERRIDE_DUMP_METHOD
 
 #define __FRIEND_DECLS     \
