@@ -155,12 +155,12 @@ if(BUILD_TESTS)
             -fno-inline
             -fcheck-new
             -DGLIBCXX_DEBUG
-            --coverage
-            -fprofile-arcs
-            -ftest-coverage
-            -lgcov
+            # --coverage
+            # -fprofile-arcs
+            # -ftest-coverage
+            # -lgcov
         )
-        target_link_libraries(${PROJECT_NAME}_tests PRIVATE gcov)
+        # target_link_libraries(${PROJECT_NAME}_tests PRIVATE gcov)
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         target_compile_options(${PROJECT_NAME}_tests PRIVATE
             -O0 -g3
