@@ -263,9 +263,12 @@ bin_dir = Path(BUILD_DIR) / "bin"
 output_file = bin_dir / OUT_NAME
 if not args.no_move:
     if bin_dir.exists() and output_file.exists():
+        dest_file = Path(OUT_NAME)
+        if dest_file.exists():
+            print(f"\033[33mWarning: {OUT_NAME} already exists in the root directory and will be overwritten\033[0m")
         print(f"\033[34mMoving {OUT_NAME} from {bin_dir} to the root directory")
         # Move the output file to the root directory
-        shutil.move(output_file, Path(OUT_NAME))
+        shutil.move(output_file, dest_file)
         print(f"\033[32mSuccessfully moved {OUT_NAME} to the root directory\033[0m")
     else:
         print(f"\033[33mCould not find {OUT_NAME} in {bin_dir.resolve()}\033[0m")
