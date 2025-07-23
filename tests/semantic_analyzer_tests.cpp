@@ -22,8 +22,10 @@
 namespace Manganese {
 
 namespace tests {
+static const char* logFileName = "semantic_analyzer_tests.log";
 
-inline constexpr bool dumpASTToStdout = true; // The nodes are always dumped to a log file -- this controls whether they are also dumped to stdout
+
+inline constexpr bool dumpASTToStdout = false; // The nodes are always dumped to a log file -- this controls whether they are also dumped to stdout
 
 parser::ParsedFile parse(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode);
@@ -31,19 +33,20 @@ parser::ParsedFile parse(const std::string& source, lexer::Mode mode = lexer::Mo
 }
 
 void outputAnalyzedAST(const ast::Block& program) {
-    std::ofstream logFile("semantic_analyzer_tests.log", std::ios::app);
+    std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
         std::cerr << "ERROR: Could not open log file for writing.\n";
     }
     std::cout << "Analyzed AST:\n";
     for (const auto& statement : program) {
-        std::cout << statement->toString() << "\n";
+        std::cout << "String representation: " << statement->toString() << "\n";
         if (dumpASTToStdout) {
+            std::cout << "Dumped statement:\n";
             statement->dump(std::cout);
         }
         if (logFile) {
             logFile << "String representation: " << statement->toString() << "\n";
-            logFile << "Dumping statement:\n";
+            logFile << "Dumped statement:\n";
             statement->dump(logFile);
             logFile << "---------------------\n";
         }
@@ -82,6 +85,10 @@ bool analyzeSimpleVariableDeclaration() {
 }
 
 void runSemanticAnalysisTests(TestRunner& runner) {
+    // Clear the log file before running tests
+    std::ofstream logFile(logFileName, std::ios::trunc);
+    logFile.close();  // Here, we don't really care if the clearing failed
+
     runner.runTest("Analyze Literals", analyzeLiterals);
     runner.runTest("Analyze Simple Variable Declaration", analyzeSimpleVariableDeclaration);
 }

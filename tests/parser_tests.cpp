@@ -28,6 +28,8 @@
 namespace Manganese {
 namespace tests {
 
+static const char* logFileName = "parser_tests.log";
+
 ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode);
     if (parser.hasCriticalError()) {
@@ -56,7 +58,7 @@ ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer:
 
 template <size_t N>
 bool validateStatements(const ast::Block& block, const std::array<std::string, N>& expected, const char* testName) {
-    std::ofstream logFile("parser_tests.log", std::ios::app);
+    std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
         std::cerr << "ERROR: Could not open log file for writing.\n";
     } else {
@@ -598,6 +600,11 @@ bool testParseFromFile() {
 }
 
 int runParserTests(TestRunner& runner) {
+    // Clear the log file before running tests
+    std::ofstream logFile(logFileName, std::ios::trunc);
+    logFile.close();  // Here, we don't really care if the clearing failed
+
+
     runner.runTest("Arithmetic Expression and Casting", testArithmeticOperatorsAndCasting);
     runner.runTest("Exponentiation Right Associativity", testExponentiationAssociativity);
     runner.runTest("Variable Declaration", testVariableDeclaration);

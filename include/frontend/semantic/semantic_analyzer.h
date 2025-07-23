@@ -12,15 +12,42 @@
 namespace Manganese {
 
 namespace semantic {
+
+/**
+ * @brief Some statements are only valid in certain contexts (e.g. return in function bodies, break/continue in loops).
+ * This struct keeps track of current context flags to determine if a statement is valid in the current scope.
+ */
+struct ContextCounters {
+    int64_t functionBody = 0;
+    int64_t ifStatement = 0;
+    int64_t whileLoop = 0;
+    int64_t repeatLoop = 0;
+    int64_t forLoop = 0;
+    int64_t switchStatement = 0;
+
+    bool isFunctionContext() const noexcept { return functionBody > 0; }
+    bool isIfContext() const noexcept { return ifStatement > 0; }
+    bool isWhileLoopContext() const noexcept { return whileLoop > 0; }
+    bool isRepeatLoopContext() const noexcept { return repeatLoop > 0; }
+    bool isForLoopContext() const noexcept { return forLoop > 0; }
+    bool isSwitchContext() const noexcept { return switchStatement > 0; }
+    bool isLoopContext() const noexcept {
+        return isWhileLoopContext() || isRepeatLoopContext() || isForLoopContext();
+    }
+};
+
 class SemanticAnalyzer {
    private:
     SymbolTable symbolTable;
     std::string currentModule;
-    bool hasError_ = false;
-    bool hasWarning_ = false;
+    bool hasError_;
+    bool hasWarning_;
+    ContextCounters context;
 
    public:
-    explicit SemanticAnalyzer() noexcept = default;
+    explicit SemanticAnalyzer() noexcept : hasError_(false), hasWarning_(false) {
+        symbolTable.enterScope();
+    }
 
     void analyze(parser::ParsedFile& parsedFile);
 

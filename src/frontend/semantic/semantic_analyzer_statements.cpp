@@ -76,9 +76,9 @@ void SemanticAnalyzer::checkAliasStatement(ast::AliasStatement* statement) {
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkBreakStatement(ast::BreakStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    if (!context.isLoopContext() && !context.isSwitchContext()) {
+        logError("break statements can only be used inside loops or switch statements", statement);
+    }
 }
 void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationStatement* statement) {
     DISCARD(statement);
@@ -86,9 +86,9 @@ void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationSta
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkContinueStatement(ast::ContinueStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    if (!context.isLoopContext()) {
+        logError("continue statements can only be used inside loops", statement);
+    }
 }
 void SemanticAnalyzer::checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement) {
     DISCARD(statement);
@@ -124,9 +124,10 @@ void SemanticAnalyzer::checkRepeatLoopStatement(ast::RepeatLoopStatement* statem
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    if (!context.isFunctionContext()) {
+        logError("return statements can only be used inside functions", statement);
+    }
+    checkExpression(statement->value.get());
 }
 void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
     DISCARD(statement);
