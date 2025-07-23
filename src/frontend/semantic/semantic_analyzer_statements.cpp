@@ -158,7 +158,7 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
         Symbol{
             .name = statement->name,
             .kind = statement->isConstant() ? SymbolKind::Constant : SymbolKind::Variable,
-            .type = statement->type.get(),
+            .type = statement->type,
             .isConstant = statement->isConstant(),
             .scopeDepth = symbolTable.currentScopeDepth(),
             .visibility = statement->visibility,

@@ -30,7 +30,7 @@ struct Symbol {
     SymbolKind kind;
     // Note: This is just a reference to the the type node.
     // ! Symbols are not responsible for this memory and should never allocate or free memory
-    ast::Type* type;  // Holds any type-specific info (e.g. function return type, array size)
+    ast::TypeSPtr_t type;  // Holds any type-specific info (e.g. function return type, array size)
     bool isConstant;
     int64_t scopeDepth = 0;
     ast::Visibility visibility = ast::Visibility::Private;  // How the symbol can/can't be accessed outside the module

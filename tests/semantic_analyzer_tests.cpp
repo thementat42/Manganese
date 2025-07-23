@@ -46,14 +46,19 @@ bool analyzeLiterals() {
 
 bool analyzeSimpleVariableDeclaration() {
     semantic::SemanticAnalyzer analyzer;
-    parser::ParsedFile file = parse("let x: int64 = 10; let x: int64 = 20;let y: string = \"hello\";");
+    parser::ParsedFile file = parse(
+        "let x: int64 = 10; let x: int64 = 20;"
+        "let y: string = \"hello\";"
+        "const z = x; z = 3;"
+        "let a = [[1, 2], [3, 4]]; let b = a[0]; let c = b[1];");
     analyzer.analyze(file);
     const auto& program = file.program;
-    if (program.size() != 3) {
-        std::cerr << "Expected 3 statements, got " << program.size() << "\n";
+    if (program.size() != 8) {
+        std::cerr << "Expected 8 statements, got " << program.size() << "\n";
         return false;
     }
-    for (size_t i = 0; i < 3; ++i) {
+    for (size_t i = 0; i < 8; ++i) {
+        // std::cout << program[i]->toString() << "\n";
         program[i]->dump(std::cerr);
     }
     return true;

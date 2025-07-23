@@ -81,32 +81,57 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
     // Assume that the first element's type is the array's type
     if (expression->elements.empty()) {
         logging::logInternal("Array literal is empty, assuming type 'int'", logging::LogLevel::Warning);
-        expression->setType(std::make_unique<ast::ArrayType>(std::make_unique<ast::SymbolType>("int32"), std::make_unique<ast::NumberLiteralExpression>(0)));
+        expression->setType(std::make_shared<ast::ArrayType>(std::make_shared<ast::SymbolType>("int32"), std::make_unique<ast::NumberLiteralExpression>(0)));
         return;
     }
-    // Assign the type for each element (expression)
-    auto firstElement = expression->elements[0].get();
-    checkExpression(firstElement);
-    if (!firstElement->getType()) {
-        logError("Could not deduce type of {}, assuming 'int32'", expression, expression->elements[0]->toString());
-        firstElement->setType(std::make_unique<ast::SymbolType>("int32"));
-    }
-    for (const auto& element : expression->elements) {
-        checkExpression(element.get());
+
+    ast::TypeSPtr_t elementType;
+
+    for (size_t i = 0; i < expression->elements.size(); ++i) {
+        ast::Expression* element = expression->elements[i].get();
+        checkExpression(element);
         if (!element->getType()) {
-            logError("Could not deduce type of {}, assuming 'int32'", element.get(), element->toString());
+            logError("Could not deduce type of {}, assuming 'int32'", element, element->toString());
             element->setType(std::make_unique<ast::SymbolType>("int32"));
-        } else if (!areTypesCompatible(element->getType(), firstElement->getType())) {
-            logError("Element {} has type {}, expected {}", element.get(), element->toString(), element->getType()->toString(), firstElement->getType()->toString());
+        }
+        if (i == 0) {
+            elementType = element->getTypePtr();
+        } else if (!areTypesCompatible(element->getType(), elementType.get())) {
+            logError("Element {} has type {}, expected {}", element, element->toString(),
+                     element->getType()->toString(), elementType->toString());
         }
     }
-    expression->elementType = firstElement->getTypePtr();
+
+    expression->elementType = elementType;
     expression->lengthExpression = std::make_unique<ast::NumberLiteralExpression>(expression->elements.size());
+    expression->setType(
+        std::make_shared<ast::ArrayType>(
+            elementType,
+            std::make_unique<ast::NumberLiteralExpression>(expression->elements.size())));
 }
 void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expression) {
-    DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    checkExpression(expression->assignee.get());
+    checkExpression(expression->value.get());
+    if (expression->assignee->kind() != ast::ExpressionKind::IdentifierExpression &&
+        expression->assignee->kind() != ast::ExpressionKind::IndexExpression) {
+        logError("Cannot assign to non-variable expression: {}", expression, expression->assignee->toString());
+        return;
+    }
+    if (expression->assignee->kind() == ast::ExpressionKind::IdentifierExpression) {
+        // Checking if the identifier is declared in the current scope was already done in checkIdentifierExpression
+        auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->assignee.get());
+        if (symbolTable.lookupInCurrentScope(identifierExpression->value)->isConstant) {
+            logError("{} was declared constant, so it cannot be reassigned. To make {} mutable, declare it using 'let'", expression, identifierExpression->value, identifierExpression->value);
+            return;
+        }
+    }
+    if (!areTypesCompatible(expression->assignee->getType(), expression->value->getType())) {
+        logError("{} cannot be assigned to {}. {} has type {}, but {} has type {}", expression,
+                 expression->value->toString(), expression->assignee->toString(),
+                 expression->value->toString(), expression->value->getType()->toString(),
+                 expression->assignee->toString(), expression->assignee->getType()->toString());
+        return;
+    }
 }
 void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) {
     DISCARD(expression);
@@ -135,14 +160,45 @@ void SemanticAnalyzer::checkGenericExpression(ast::GenericExpression* expression
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkIdentifierExpression(ast::IdentifierExpression* expression) {
-    DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    Symbol* location = symbolTable.lookupInCurrentScope(expression->value);
+    if (location) {
+        expression->setType(location->type);
+        return;
+    }
+    if (symbolTable.lookup(expression->value)) {
+        // If the symbol can't be found in this scope, try parent scopes
+        //? Warning or error
+        logError("{} was not declared in this scope (but was declared in a parent scope). Access external variables either using an explicit access (a_module::{}) or passing it as an argument to a function", expression, expression->value, expression->value);
+    } else {
+        logError("{} was not declared in any scope.", expression, expression->value);
+    }
 }
 void SemanticAnalyzer::checkIndexExpression(ast::IndexExpression* expression) {
-    DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    checkExpression(expression->variable.get());
+    checkExpression(expression->index.get());
+    ast::Type* currentType = expression->variable->getType();
+    if (!currentType) {
+        logError("Cannot index into variable {} -- it has no computed type", expression, expression->variable->toString());
+        return;
+    }
+    if (currentType->kind() != ast::TypeKind::ArrayType) {
+        logError("{} cannot be indexed since it is of type {}, not an array type", expression, expression->variable->toString(), currentType->toString());
+        return;
+    }
+
+    auto* arrayType = static_cast<ast::ArrayType*>(currentType);
+    expression->setType(arrayType->elementType);
+
+    // ===== Bounds Checking =====
+    ast::Expression* lengthExpression = arrayType->lengthExpression.get();
+    if (!lengthExpression) {
+        logWarning("Indexing into an array of unknown length: {}. This may lead to out-of-bounds access", expression, expression->variable->toString());
+    }
+    ast::Expression* indexValue = expression->index.get();
+    if (indexValue->kind() != ast::ExpressionKind::NumberLiteralExpression) {
+        logError("Indexing into an array requires a numeric index; {} cannot be used as an index", expression, indexValue->toString());
+        return;
+    }
 }
 void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* expression) {
     DISCARD(expression);

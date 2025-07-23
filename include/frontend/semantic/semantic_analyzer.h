@@ -17,15 +17,15 @@ class SemanticAnalyzer {
     SymbolTable symbolTable;
     std::string currentModule;
     bool hasError_ = false;
+    bool hasWarning_ = false;
 
    public:
     explicit SemanticAnalyzer() noexcept = default;
 
     void analyze(parser::ParsedFile& parsedFile);
 
-    bool hasError() const noexcept {
-        return hasError_;
-    }
+    bool hasError() const noexcept { return hasError_; }
+    bool hasWarning() const noexcept { return hasWarning_; }
 
     bool areTypesCompatible(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release;
 
@@ -38,6 +38,12 @@ class SemanticAnalyzer {
     // ===== Misc Helpers =====
     inline void enterScope() {symbolTable.enterScope(); }
     inline void exitScope() {symbolTable.exitScope(); }
+
+    template <typename ... Args>
+    inline void logWarning(const std::format_string<Args...>& fmt, ast::ASTNode* node, Args&&... args) noexcept {
+        logging::logWarning(std::format(fmt, std::forward<Args>(args)...), node->getLine(), node->getColumn());
+        hasWarning_ = true;
+    }
 
     template <typename... Args>
     inline void logError(const std::format_string<Args...>& fmt, ast::ASTNode* node, Args&&... args) noexcept {
