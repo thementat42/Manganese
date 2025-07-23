@@ -54,7 +54,7 @@ namespace Manganese {
 
 namespace parser {
 
-ExpressionPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_release {
+ExpressionUPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_release {
     Token token = currentToken();
 
     // Handle operators which have a unary and a binary version
@@ -70,7 +70,7 @@ ExpressionPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_relea
         // TODO: This should be an error handled gracefully, not a throw
         ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
-    ExpressionPtr_t left = nudIterator->second(this);
+    ExpressionUPtr_t left = nudIterator->second(this);
 
     // ! For some reason this works
     // ! Do not delete this
@@ -121,9 +121,9 @@ ExpressionPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_relea
 
 // === Specific expression parsing methods ===
 
-ExpressionPtr_t Parser::parseArrayInstantiationExpression() {
+ExpressionUPtr_t Parser::parseArrayInstantiationExpression() {
     DISCARD(advance());  // Consume the left square bracket
-    std::vector<ExpressionPtr_t> elements;
+    std::vector<ExpressionUPtr_t> elements;
     while (!done()) {
         if (currentToken().getType() == lexer::TokenType::RightSquare) {
             break;  // Done instantiation
@@ -141,14 +141,14 @@ ExpressionPtr_t Parser::parseArrayInstantiationExpression() {
         std::move(elements));
 }
 
-ExpressionPtr_t Parser::parseAssignmentExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence) {
     TokenType op = advance().getType();
-    ExpressionPtr_t right = parseExpression(precedence);
+    ExpressionUPtr_t right = parseExpression(precedence);
 
     return std::make_unique<ast::AssignmentExpression>(std::move(left), op, std::move(right));
 }
 
-ExpressionPtr_t Parser::parseBinaryExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence) {
     auto op = advance().getType();
     auto right = parseExpression(precedence);
 
@@ -156,10 +156,10 @@ ExpressionPtr_t Parser::parseBinaryExpression(ExpressionPtr_t left, Precedence p
         std::move(left), op, std::move(right));
 }
 
-ExpressionPtr_t Parser::parseBundleInstantiationExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t left, Precedence precedence) {
     DISCARD(precedence);  // Avoid unused variable warning
     std::string bundleName;
-    std::vector<TypePtr_t> genericTypes;
+    std::vector<TypeSPtr_t> genericTypes;
     // Parse out a bundle instantiation even if there's an error
     expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start bundle instantiation");
     std::vector<ast::BundleInstantiationField> fields;
@@ -213,10 +213,10 @@ ExpressionPtr_t Parser::parseBundleInstantiationExpression(ExpressionPtr_t left,
         bundleName, std::move(genericTypes), std::move(fields));
 }
 
-ExpressionPtr_t Parser::parseFunctionCallExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence) {
     DISCARD(advance());
     DISCARD(precedence);  // Avoid unused variable warning
-    std::vector<ExpressionPtr_t> arguments;
+    std::vector<ExpressionUPtr_t> arguments;
 
     while (!done()) {
         if (currentToken().getType() == lexer::TokenType::RightParen) {
@@ -231,11 +231,11 @@ ExpressionPtr_t Parser::parseFunctionCallExpression(ExpressionPtr_t left, Preced
     return std::make_unique<ast::FunctionCallExpression>(std::move(left), std::move(arguments));
 }
 
-ExpressionPtr_t Parser::parseGenericExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseGenericExpression(ExpressionUPtr_t left, Precedence precedence) {
     DISCARD(advance());   // Consume the '@' token
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
-    std::vector<TypePtr_t> typeParameters;
+    std::vector<TypeSPtr_t> typeParameters;
     while (!done()) {
         if (currentToken().getType() == lexer::TokenType::RightSquare) {
             break;  // Done with type parameters
@@ -250,43 +250,43 @@ ExpressionPtr_t Parser::parseGenericExpression(ExpressionPtr_t left, Precedence 
         std::move(left), std::move(typeParameters));
 }
 
-ExpressionPtr_t Parser::parseIndexingExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence) {
     DISCARD(advance());   // Consume the left square bracket
     DISCARD(precedence);  // Avoid unused variable warning
     constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
-    ExpressionPtr_t index = parseExpression(static_cast<Precedence>(precedence_));
+    ExpressionUPtr_t index = parseExpression(static_cast<Precedence>(precedence_));
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
     return std::make_unique<ast::IndexExpression>(std::move(left), std::move(index));
 }
 
-ExpressionPtr_t Parser::parseMemberAccessExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseMemberAccessExpression(ExpressionUPtr_t left, Precedence precedence) {
     DISCARD(advance());   // Consume the member access operator (.)
     DISCARD(precedence);  // Avoid unused variable warning
     return std::make_unique<ast::MemberAccessExpression>(
         std::move(left), expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
 }
 
-ExpressionPtr_t Parser::parseParenthesizedExpression() {
+ExpressionUPtr_t Parser::parseParenthesizedExpression() {
     DISCARD(advance());  // Consume the left parenthesis
-    ExpressionPtr_t expr = parseExpression(Precedence::Default);
+    ExpressionUPtr_t expr = parseExpression(Precedence::Default);
     expectToken(lexer::TokenType::RightParen, "Expected a right parenthesis to close the expression");
     return expr;
 }
 
-ExpressionPtr_t Parser::parsePostfixExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parsePostfixExpression(ExpressionUPtr_t left, Precedence precedence) {
     TokenType op = advance().getType();
     DISCARD(precedence);  // Avoid unused variable warning
     return std::make_unique<ast::PostfixExpression>(std::move(left), op);
 }
 
-ExpressionPtr_t Parser::parsePrefixExpression() {
+ExpressionUPtr_t Parser::parsePrefixExpression() {
     TokenType op = advance().getType();
     auto right = parseExpression(Precedence::Unary);
 
     return std::make_unique<ast::PrefixExpression>(op, std::move(right));
 }
 
-ExpressionPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
+ExpressionUPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
     auto token = advance();
     std::string lexeme = token.getLexeme();
 
@@ -332,16 +332,16 @@ ExpressionPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
     }
 }
 
-ExpressionPtr_t Parser::parseScopeResolutionExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseScopeResolutionExpression(ExpressionUPtr_t left, Precedence precedence) {
     DISCARD(advance());   // Consume the scope resolution operator (::)
     DISCARD(precedence);  // Avoid unused variable warning
     auto element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
     return std::make_unique<ast::ScopeResolutionExpression>(std::move(left), element);
 }
 
-ExpressionPtr_t Parser::parseTypeCastExpression(ExpressionPtr_t left, Precedence precedence) {
+ExpressionUPtr_t Parser::parseTypeCastExpression(ExpressionUPtr_t left, Precedence precedence) {
     DISCARD(advance());  // Consume the 'as' token
-    TypePtr_t type = parseType(precedence);
+    TypeSPtr_t type = parseType(precedence);
     return std::make_unique<ast::TypeCastExpression>(std::move(left), std::move(type));
 }
 

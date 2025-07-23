@@ -18,7 +18,7 @@
 namespace Manganese {
 namespace parser {
 
-StatementPtr_t Parser::parseStatement() {
+StatementUPtr_t Parser::parseStatement() {
     auto it = statementLookup.find(currentToken().getType());
     if (it != statementLookup.end()) {
         // If possible, parse a statement from the current token
@@ -27,7 +27,7 @@ StatementPtr_t Parser::parseStatement() {
     }
 
     // Parse out an expression then convert it to a statement
-    ExpressionPtr_t expr = parseExpression(Precedence::Default);
+    ExpressionUPtr_t expr = parseExpression(Precedence::Default);
     if (!isParsingBlockPrecursor) {
         expectToken(TokenType::Semicolon, "Expected semicolon after expression");
     }
@@ -36,9 +36,9 @@ StatementPtr_t Parser::parseStatement() {
 
 // ===== Specific statement parsing methods =====
 
-StatementPtr_t Parser::parseAliasStatement() {
+StatementUPtr_t Parser::parseAliasStatement() {
     DISCARD(advance());
-    TypePtr_t baseType;
+    TypeSPtr_t baseType;
     if (currentToken().isPrimitiveType() ||
         currentToken().getType() == TokenType::Func ||
         currentToken().getType() == TokenType::Ptr) {
@@ -73,7 +73,7 @@ StatementPtr_t Parser::parseAliasStatement() {
     return std::make_unique<ast::AliasStatement>(std::move(baseType), std::move(alias));
 }
 
-StatementPtr_t Parser::parseBundleDeclarationStatement() {
+StatementUPtr_t Parser::parseBundleDeclarationStatement() {
     DISCARD(advance());
     std::vector<std::string> genericTypes;
     std::vector<ast::BundleField> fields;
@@ -101,7 +101,7 @@ StatementPtr_t Parser::parseBundleDeclarationStatement() {
         }
         std::string fieldName = advance().getLexeme();
         expectToken(TokenType::Colon, "Expected a ':' to declare a bundle field type.");
-        TypePtr_t type = parseType(Precedence::Default);
+        TypeSPtr_t type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
         auto duplicate = std::find_if(
@@ -120,7 +120,7 @@ StatementPtr_t Parser::parseBundleDeclarationStatement() {
     return std::make_unique<ast::BundleDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
 }
 
-StatementPtr_t Parser::parseDoWhileLoopStatement() {
+StatementUPtr_t Parser::parseDoWhileLoopStatement() {
     DISCARD(advance());
     ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
@@ -131,10 +131,10 @@ StatementPtr_t Parser::parseDoWhileLoopStatement() {
     return std::make_unique<ast::WhileLoopStatement>(std::move(body), std::move(condition), true);
 }
 
-StatementPtr_t Parser::parseEnumDeclarationStatement() {
+StatementUPtr_t Parser::parseEnumDeclarationStatement() {
     DISCARD(advance());
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
-    TypePtr_t baseType;
+    TypeSPtr_t baseType;
     std::vector<ast::EnumValue> values;
     if (currentToken().getType() == TokenType::Colon) {
         DISCARD(advance());
@@ -148,7 +148,7 @@ StatementPtr_t Parser::parseEnumDeclarationStatement() {
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
     while (!done() && currentToken().getType() != TokenType::RightBrace) {
         std::string valueName = expectToken(TokenType::Identifier, "Expected enum value name").getLexeme();
-        ExpressionPtr_t valueExpression = nullptr;
+        ExpressionUPtr_t valueExpression = nullptr;
         if (currentToken().getType() == TokenType::Assignment) {
             DISCARD(advance());
             valueExpression = parseExpression(Precedence::Default);
@@ -174,7 +174,7 @@ StatementPtr_t Parser::parseEnumDeclarationStatement() {
     return std::make_unique<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
 }
 
-StatementPtr_t Parser::parseFunctionDeclarationStatement() {
+StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
     // TODO: Handle function visibility
     // TODO: Handle function attributes
     // TODO: Handle function default parameters
@@ -184,7 +184,7 @@ StatementPtr_t Parser::parseFunctionDeclarationStatement() {
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
     std::vector<ast::FunctionParameter> params;
     std::vector<std::string> genericTypes;
-    TypePtr_t returnType = nullptr;
+    TypeSPtr_t returnType = nullptr;
     ast::Block body;
 
     if (currentToken().getType() == TokenType::LeftSquare) {
@@ -223,7 +223,7 @@ StatementPtr_t Parser::parseFunctionDeclarationStatement() {
             DISCARD(advance());
             isConst = true;
         }
-        TypePtr_t param_type = parseType(Precedence::Default);
+        TypeSPtr_t param_type = parseType(Precedence::Default);
         params.emplace_back(param_name, std::move(param_type), isConst);
         if (currentToken().getType() != TokenType::RightParen && currentToken().getType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma, "Expected a ',' to separate function parameters, or a ) to close the parameter list");
@@ -238,7 +238,7 @@ StatementPtr_t Parser::parseFunctionDeclarationStatement() {
     return std::make_unique<ast::FunctionDeclarationStatement>(name, std::move(genericTypes), std::move(params), std::move(returnType), parseBlock("function body"));
 }
 
-StatementPtr_t Parser::parseIfStatement() {
+StatementUPtr_t Parser::parseIfStatement() {
     this->isParsingBlockPrecursor = true;
     DISCARD(advance());
 
@@ -268,7 +268,7 @@ StatementPtr_t Parser::parseIfStatement() {
     return std::make_unique<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs), std::move(elseBody));
 }
 
-StatementPtr_t Parser::parseImportStatement() {
+StatementUPtr_t Parser::parseImportStatement() {
     size_t startLine = currentToken().getLine();
     size_t startColumn = currentToken().getColumn();
 
@@ -321,7 +321,7 @@ StatementPtr_t Parser::parseImportStatement() {
     return std::make_unique<ast::ImportStatement>();
 }
 
-StatementPtr_t Parser::parseModuleDeclarationStatement() {
+StatementUPtr_t Parser::parseModuleDeclarationStatement() {
     auto temp = advance();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
@@ -338,7 +338,7 @@ StatementPtr_t Parser::parseModuleDeclarationStatement() {
     return std::make_unique<ast::ModuleDeclarationStatement>();
 }
 
-StatementPtr_t Parser::parseRepeatLoopStatement() {
+StatementUPtr_t Parser::parseRepeatLoopStatement() {
     DISCARD(advance());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce a number of iterations");
     auto numIterations = parseExpression(Precedence::Default);
@@ -347,9 +347,9 @@ StatementPtr_t Parser::parseRepeatLoopStatement() {
     return std::make_unique<ast::RepeatLoopStatement>(std::move(numIterations), parseBlock("repeat loop body"));
 }
 
-StatementPtr_t Parser::parseReturnStatement() {
+StatementUPtr_t Parser::parseReturnStatement() {
     DISCARD(advance());
-    ExpressionPtr_t expression = nullptr;
+    ExpressionUPtr_t expression = nullptr;
     if (currentToken().getType() != TokenType::Semicolon) {
         // If the next token is not a semicolon, parse an expression
         expression = parseExpression(Precedence::Default);
@@ -358,12 +358,12 @@ StatementPtr_t Parser::parseReturnStatement() {
     return make_unique<ast::ReturnStatement>(std::move(expression));
 }
 
-StatementPtr_t Parser::parseSwitchStatement() {
+StatementUPtr_t Parser::parseSwitchStatement() {
     Token temp = advance();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
     this->isParsingBlockPrecursor = true;
-    ExpressionPtr_t variable = parseExpression(Precedence::Default);
+    ExpressionUPtr_t variable = parseExpression(Precedence::Default);
     this->isParsingBlockPrecursor = false;
     expectToken(TokenType::RightParen, "Expected ')' to end switch variable");
     expectToken(TokenType::LeftBrace, "Expected '{' to start the switch body");
@@ -400,7 +400,7 @@ StatementPtr_t Parser::parseSwitchStatement() {
         std::move(variable), std::move(cases), std::move(defaultBody));
 }
 
-StatementPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
     ast::Visibility visibility;
     switch (advance().getType()) {
         case TokenType::Private:
@@ -455,9 +455,9 @@ StatementPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
     }
 }
 
-StatementPtr_t Parser::parseVariableDeclarationStatement() {
-    TypePtr_t explicitType;
-    ExpressionPtr_t value;
+StatementUPtr_t Parser::parseVariableDeclarationStatement() {
+    TypeSPtr_t explicitType;
+    ExpressionUPtr_t value;
     ast::Visibility visibility = defaultVisibility;
 
     bool isConst = advance().getType() == TokenType::Const;
@@ -498,7 +498,7 @@ StatementPtr_t Parser::parseVariableDeclarationStatement() {
         std::move(explicitType));
 }
 
-StatementPtr_t Parser::parseWhileLoopStatement() {
+StatementUPtr_t Parser::parseWhileLoopStatement() {
     DISCARD(advance());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     auto condition = parseExpression(Precedence::Default);

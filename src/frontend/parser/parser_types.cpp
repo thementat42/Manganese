@@ -13,14 +13,14 @@
 namespace Manganese {
 namespace parser {
 
-TypePtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
+TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
     TokenType type = currentToken().getType();
 
     auto nudIterator = nudLookup_types.find(type);
     if (nudIterator == nudLookup_types.end()) {
         ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
-    TypePtr_t left = nudIterator->second(this);
+    TypeSPtr_t left = nudIterator->second(this);
 
     while (!done()) {
         type = currentToken().getType();
@@ -42,8 +42,8 @@ TypePtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
 
 // ===== Specific type parsing methods =====
 
-TypePtr_t Parser::parseArrayType(TypePtr_t left, Precedence precedence) {
-    ExpressionPtr_t lengthExpression = nullptr;
+TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) {
+    ExpressionUPtr_t lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
     DISCARD(advance());   // Consume the left square bracket '['
     if (currentToken().getType() != TokenType::RightSquare) {
@@ -54,7 +54,7 @@ TypePtr_t Parser::parseArrayType(TypePtr_t left, Precedence precedence) {
     return std::make_shared<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
-TypePtr_t Parser::parseFunctionType() {
+TypeSPtr_t Parser::parseFunctionType() {
     DISCARD(advance());  // consume the 'func' token
 
     expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
@@ -76,7 +76,7 @@ TypePtr_t Parser::parseFunctionType() {
     }
     expectToken(TokenType::RightParen, "Expected ')' to end parameter type list");
 
-    TypePtr_t returnType = nullptr;
+    TypeSPtr_t returnType = nullptr;
     if (currentToken().getType() == TokenType::Arrow) {
         DISCARD(advance());  // Consume the '->' token
         returnType = parseType(Precedence::Default);
@@ -85,11 +85,11 @@ TypePtr_t Parser::parseFunctionType() {
     return std::make_shared<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
 }
 
-TypePtr_t Parser::parseGenericType(TypePtr_t left, Precedence precedence) {
+TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) {
     DISCARD(advance());
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
-    std::vector<TypePtr_t> typeParameters;
+    std::vector<TypeSPtr_t> typeParameters;
     while (!done()) {
         if (currentToken().getType() == TokenType::RightSquare) {
             break;  // Done with type parameters
@@ -104,12 +104,12 @@ TypePtr_t Parser::parseGenericType(TypePtr_t left, Precedence precedence) {
     return std::make_shared<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 
-TypePtr_t Parser::parsePointerType() {
+TypeSPtr_t Parser::parsePointerType() {
     DISCARD(advance());  // Consume `ptr`
     return std::make_shared<ast::PointerType>(parseType(Precedence::Default));
 }
 
-TypePtr_t Parser::parseSymbolType() {
+TypeSPtr_t Parser::parseSymbolType() {
     Token token = currentToken();
     if (token.isPrimitiveType()) {
         // If the token is a primitive type, we can directly create a SymbolType

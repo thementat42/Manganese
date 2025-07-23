@@ -30,14 +30,14 @@ enum class TypeKind {
  */
 class ArrayType : public Type {
    protected:
-    TypePtr_t elementType;
-    ExpressionPtr_t lengthExpression;  // If not given, the length is inferred from the number of elements
+    TypeSPtr_t elementType;
+    ExpressionUPtr_t lengthExpression;  // If not given, the length is inferred from the number of elements
 
    public:
     /**
      * @param elementType_ The type of the elements in the array
      */
-    explicit ArrayType(TypePtr_t elementType_, ExpressionPtr_t lengthExpr_ = nullptr)
+    explicit ArrayType(TypeSPtr_t elementType_, ExpressionUPtr_t lengthExpr_ = nullptr)
         : elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -46,9 +46,9 @@ class ArrayType : public Type {
 
 struct FunctionParameterType {
     bool isConst;
-    TypePtr_t type;
+    TypeSPtr_t type;
 
-    FunctionParameterType(bool isConst_, TypePtr_t type_) : isConst(isConst_), type(std::move(type_)) {}
+    FunctionParameterType(bool isConst_, TypeSPtr_t type_) : isConst(isConst_), type(std::move(type_)) {}
 };
 
 /**
@@ -57,10 +57,10 @@ struct FunctionParameterType {
 class FunctionType : public Type {
    protected:
     std::vector<FunctionParameterType> parameterTypes;
-    TypePtr_t returnType;
+    TypeSPtr_t returnType;
 
    public:
-    FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypePtr_t returnType_)
+    FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypeSPtr_t returnType_)
         : parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -74,10 +74,10 @@ class FunctionType : public Type {
  */
 class GenericType : public Type {
    protected:
-    TypePtr_t baseType; // some_function in `some_function@[T,U]`
-    std::vector<TypePtr_t> typeParameters;  // T and U in `some_function@[T,U]`
+    TypeSPtr_t baseType; // some_function in `some_function@[T,U]`
+    std::vector<TypeSPtr_t> typeParameters;  // T and U in `some_function@[T,U]`
    public:
-    GenericType(TypePtr_t baseType_, std::vector<TypePtr_t> typeParameters_)
+    GenericType(TypeSPtr_t baseType_, std::vector<TypeSPtr_t> typeParameters_)
         : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -89,10 +89,10 @@ class GenericType : public Type {
  */
 class PointerType : public Type {
    protected:
-    TypePtr_t baseType;
+    TypeSPtr_t baseType;
 
    public:
-    explicit PointerType(TypePtr_t baseType_) : baseType(std::move(baseType_)) {}
+    explicit PointerType(TypeSPtr_t baseType_) : baseType(std::move(baseType_)) {}
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::PointerType; };

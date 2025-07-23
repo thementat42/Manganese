@@ -27,7 +27,7 @@
 
 namespace Manganese {
 namespace parser {
-using ast::StatementPtr_t, ast::ExpressionPtr_t, ast::TypePtr_t;
+using ast::StatementUPtr_t, ast::ExpressionUPtr_t, ast::TypeSPtr_t;
 using lexer::TokenType, lexer::Token;
 
 struct Import {
@@ -72,11 +72,11 @@ class Parser {
     bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
    private:  // private methods
-    using statementHandler_t = std::function<StatementPtr_t(Parser *)>;
-    using nudHandler_t = std::function<ExpressionPtr_t(Parser *)>;
-    using nudHandler_types_t = std::function<TypePtr_t(Parser *)>;
-    using ledHandler_t = std::function<ExpressionPtr_t(Parser *, ExpressionPtr_t, Precedence)>;
-    using ledHandler_types_t = std::function<TypePtr_t(Parser *, TypePtr_t, Precedence)>;
+    using statementHandler_t = std::function<StatementUPtr_t(Parser *)>;
+    using nudHandler_t = std::function<ExpressionUPtr_t(Parser *)>;
+    using nudHandler_types_t = std::function<TypeSPtr_t(Parser *)>;
+    using ledHandler_t = std::function<ExpressionUPtr_t(Parser *, ExpressionUPtr_t, Precedence)>;
+    using ledHandler_types_t = std::function<TypeSPtr_t(Parser *, TypeSPtr_t, Precedence)>;
 
     //~ Lookups
     std::unordered_map<TokenType, statementHandler_t> statementLookup;
@@ -91,52 +91,52 @@ class Parser {
     //~ Parsing functions
 
     // ===== Expression Parsing =====
-    ExpressionPtr_t parseExpression(Precedence precedence) noexcept_if_release;
-    ExpressionPtr_t parseArrayInstantiationExpression();
-    ExpressionPtr_t parseAssignmentExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parseBinaryExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parseBundleInstantiationExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parseFunctionCallExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parseGenericExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parseIndexingExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parseMemberAccessExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parseParenthesizedExpression();
-    ExpressionPtr_t parsePostfixExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parsePrefixExpression();
-    ExpressionPtr_t parsePrimaryExpression() noexcept_if_release;
-    ExpressionPtr_t parseScopeResolutionExpression(ExpressionPtr_t left, Precedence precedence);
-    ExpressionPtr_t parseTypeCastExpression(ExpressionPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseExpression(Precedence precedence) noexcept_if_release;
+    ExpressionUPtr_t parseArrayInstantiationExpression();
+    ExpressionUPtr_t parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseBundleInstantiationExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseGenericExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseMemberAccessExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseParenthesizedExpression();
+    ExpressionUPtr_t parsePostfixExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parsePrefixExpression();
+    ExpressionUPtr_t parsePrimaryExpression() noexcept_if_release;
+    ExpressionUPtr_t parseScopeResolutionExpression(ExpressionUPtr_t left, Precedence precedence);
+    ExpressionUPtr_t parseTypeCastExpression(ExpressionUPtr_t left, Precedence precedence);
 
     // ===== Statement Parsing =====
 
-    StatementPtr_t parseStatement();
-    StatementPtr_t parseAliasStatement();
-    StatementPtr_t parseBundleDeclarationStatement();
-    StatementPtr_t parseDoWhileLoopStatement();
-    StatementPtr_t parseEnumDeclarationStatement();
-    StatementPtr_t parseFunctionDeclarationStatement();
-    StatementPtr_t parseIfStatement();
-    StatementPtr_t parseImportStatement();
-    StatementPtr_t parseModuleDeclarationStatement();
-    StatementPtr_t parseRepeatLoopStatement();
-    StatementPtr_t parseReturnStatement();
-    StatementPtr_t parseSwitchStatement();
-    StatementPtr_t parseVariableDeclarationStatement();
+    StatementUPtr_t parseStatement();
+    StatementUPtr_t parseAliasStatement();
+    StatementUPtr_t parseBundleDeclarationStatement();
+    StatementUPtr_t parseDoWhileLoopStatement();
+    StatementUPtr_t parseEnumDeclarationStatement();
+    StatementUPtr_t parseFunctionDeclarationStatement();
+    StatementUPtr_t parseIfStatement();
+    StatementUPtr_t parseImportStatement();
+    StatementUPtr_t parseModuleDeclarationStatement();
+    StatementUPtr_t parseRepeatLoopStatement();
+    StatementUPtr_t parseReturnStatement();
+    StatementUPtr_t parseSwitchStatement();
+    StatementUPtr_t parseVariableDeclarationStatement();
     /**
      * Parses statements that are preceded by a visibility modifier
      * (public/readonly/private) (function/bundle/enum declaration)
      */
-    StatementPtr_t parseVisibilityAffectedStatement() noexcept_if_release;
-    StatementPtr_t parseWhileLoopStatement();
+    StatementUPtr_t parseVisibilityAffectedStatement() noexcept_if_release;
+    StatementUPtr_t parseWhileLoopStatement();
 
     // ===== Type Parsing =====
 
-    TypePtr_t parseType(Precedence precedence) noexcept_if_release;
-    TypePtr_t parseArrayType(TypePtr_t left, Precedence precedence);
-    TypePtr_t parseFunctionType();
-    TypePtr_t parseGenericType(TypePtr_t left, Precedence precedence);
-    TypePtr_t parsePointerType();
-    TypePtr_t parseSymbolType();
+    TypeSPtr_t parseType(Precedence precedence) noexcept_if_release;
+    TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence);
+    TypeSPtr_t parseFunctionType();
+    TypeSPtr_t parseGenericType(TypeSPtr_t left, Precedence precedence);
+    TypeSPtr_t parsePointerType();
+    TypeSPtr_t parseSymbolType();
 
     // ~ Helpers
     ast::Block parseBlock(std::string blockName);

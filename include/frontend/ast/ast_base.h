@@ -63,13 +63,13 @@ namespace ast {
 class Expression;
 class Statement;
 class Type;
-using ExpressionPtr_t = std::unique_ptr<Expression>;
-using StatementPtr_t = std::unique_ptr<Statement>;
-using TypePtr_t = std::shared_ptr<Type>;
-using Block = std::vector<StatementPtr_t>;
+using ExpressionUPtr_t = std::unique_ptr<Expression>;
+using StatementUPtr_t = std::unique_ptr<Statement>;
+using TypeSPtr_t = std::shared_ptr<Type>;
+using Block = std::vector<StatementUPtr_t>;
 
 /*
-TypePtr_t is a shared pointer since, in the semantic analysis phase, multiple AST nodes may refer to the same type.
+TypeSPtr_t is a shared pointer since, in the semantic analysis phase, multiple AST nodes may refer to the same type.
 e.g. in a variable declaration (let x = 1 + 2), both the variable and the assignment expression will have the same type
 rather than constantly cloning types, it's easier to just have a shared pointer so that multiple nodes can refer to the same type object.
     this reduces memory usage since the actual type is only allocated and stored once instead of multiple redundant deep copies 
@@ -116,17 +116,17 @@ class ASTNode {
 
 class Expression : public ASTNode {
    protected:
-    TypePtr_t computedType;
+    TypeSPtr_t computedType;
 
    public:
     virtual ~Expression() noexcept = default;
     virtual Type* getType() const noexcept {
         return computedType.get();
     };
-    virtual TypePtr_t getTypePtr() const noexcept {
+    virtual TypeSPtr_t getTypePtr() const noexcept {
         return computedType;
     }
-    virtual void setType(TypePtr_t type) noexcept {
+    virtual void setType(TypeSPtr_t type) noexcept {
         computedType = type;
     }
     virtual ExpressionKind kind() const noexcept = 0;
