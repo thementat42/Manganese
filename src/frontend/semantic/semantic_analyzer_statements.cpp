@@ -159,11 +159,12 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
             .name = statement->name,
             .kind = statement->isConstant() ? SymbolKind::Constant : SymbolKind::Variable,
             .type = statement->type,
+            .line = statement->getLine(),
+            .column = statement->getColumn(),
+            .declarationNode = statement,
             .isConstant = statement->isConstant(),
             .scopeDepth = symbolTable.currentScopeDepth(),
             .visibility = statement->visibility,
-            .line = statement->getLine(),
-            .column = statement->getColumn(),
         });
 }
 void SemanticAnalyzer::checkWhileLoopStatement(ast::WhileLoopStatement* statement) {

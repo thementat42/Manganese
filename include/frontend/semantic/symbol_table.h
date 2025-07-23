@@ -26,15 +26,23 @@ enum class SymbolKind {
 };
 
 struct Symbol {
+    // === Identity Info ===
     std::string name;  // e.g. "myInt", "myBundle"
     SymbolKind kind;
     // Note: This is just a reference to the the type node.
     // ! Symbols are not responsible for this memory and should never allocate or free memory
     ast::TypeSPtr_t type;  // Holds any type-specific info (e.g. function return type, array size)
+
+    // === Source Info ===
+    size_t line = 0, column = 0;
+    ast::ASTNode* declarationNode = nullptr;
+    
+    // === Semantic Info ===
     bool isConstant;
     int64_t scopeDepth = 0;
     ast::Visibility visibility = ast::Visibility::Private;  // How the symbol can/can't be accessed outside the module
-    size_t line = 0, column = 0;
+    
+    // === Methods ===
     std::string toString() const noexcept;
 };
 
@@ -81,8 +89,6 @@ class SymbolTable {
 
     ~SymbolTable() = default;
 };
-
-
 
 }  // namespace semantic
 
