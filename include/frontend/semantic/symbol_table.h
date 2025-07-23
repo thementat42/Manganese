@@ -34,7 +34,7 @@ struct Symbol {
     bool isConstant;
     int64_t scopeDepth = 0;
     ast::Visibility visibility = ast::Visibility::Private;  // How the symbol can/can't be accessed outside the module
-    int64_t line = -1, column = -1;
+    size_t line = 0, column = 0;
     std::string toString() const noexcept;
 };
 

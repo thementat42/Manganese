@@ -44,8 +44,24 @@ bool analyzeLiterals() {
     return true;
 }
 
+bool analyzeSimpleVariableDeclaration() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse("let x: int64 = 10; let x: int64 = 20;let y: string = \"hello\";");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    if (program.size() != 3) {
+        std::cerr << "Expected 3 statements, got " << program.size() << "\n";
+        return false;
+    }
+    for (size_t i = 0; i < 3; ++i) {
+        program[i]->dump(std::cerr);
+    }
+    return true;
+}
+
 void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Analyze Literals", analyzeLiterals);
+    runner.runTest("Analyze Simple Variable Declaration", analyzeSimpleVariableDeclaration);
 }
 
 }  // namespace tests

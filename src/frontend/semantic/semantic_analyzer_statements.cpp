@@ -134,9 +134,37 @@ void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    if (statement->isConstant() && !statement->value) {
+        logError(std::format("Constant variable '{}' must be initialized", statement->name), statement->getLine(), statement->getColumn());
+        return;
+    }
+    if (!statement->type && !statement->value) {
+        logError(std::format("Variable '{}' must have a type or an initializer", statement->name), statement->getLine(), statement->getColumn());
+        return;
+    }
+    if (statement->type && statement->value) {
+        checkExpression(statement->value.get());
+        if (!areTypesCompatible(statement->value->getType(), statement->type.get())) {
+            logError(std::format("Type mismatch for variable '{}': expected {}, got {}", statement->name, statement->type->toString(), statement->value->getType()->toString()),
+                     statement->getLine(), statement->getColumn());
+        }
+    } else if (statement->value) {
+        checkExpression(statement->value.get());
+        statement->type = statement->value->getTypePtr();
+    }
+    // If the variable only has a type and no initializer, there's no need to check the type
+
+    symbolTable.declare(
+        Symbol{
+            .name = statement->name,
+            .kind = statement->isConstant() ? SymbolKind::Constant : SymbolKind::Variable,
+            .type = statement->type.get(),
+            .isConstant = statement->isConstant(),
+            .scopeDepth = symbolTable.currentScopeDepth(),
+            .visibility = statement->visibility,
+            .line = statement->getLine(),
+            .column = statement->getColumn(),
+        });
 }
 void SemanticAnalyzer::checkWhileLoopStatement(ast::WhileLoopStatement* statement) {
     DISCARD(statement);

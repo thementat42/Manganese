@@ -115,6 +115,9 @@ class Expression : public ASTNode {
     virtual Type* getType() const noexcept {
         return computedType.get();
     };
+    virtual TypePtr_t getTypePtr() const noexcept {
+        return computedType;
+    }
     virtual void setType(TypePtr_t type) noexcept {
         computedType = type;
     }
