@@ -56,9 +56,25 @@ ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer:
 
 template <size_t N>
 bool validateStatements(const ast::Block& block, const std::array<std::string, N>& expected, const char* testName) {
+    std::ofstream logFile("parser_tests.log", std::ios::app);
+    if (!logFile) {
+        std::cerr << "ERROR: Could not open log file for writing.\n";
+    } else {
+        logFile << "Test: " << testName << '\n';
+    }
     std::cout << "Parsed " << testName << " AST:" << '\n';
     for (const auto& stmt : block) {
         std::cout << stmt->toString() << '\n';
+        if (logFile) {
+            logFile << "String representation: " << stmt->toString() << '\n';
+            logFile << "Dumping statement:\n";
+            stmt->dump(logFile);
+            logFile << "---------------------\n";
+        }
+        
+    }
+    if (logFile) {
+        logFile.close();
     }
 
     if (block.size() != N) {

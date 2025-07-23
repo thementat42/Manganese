@@ -23,23 +23,43 @@ namespace Manganese {
 
 namespace tests {
 
+inline constexpr bool dumpASTToStdout = true; // The nodes are always dumped to a log file -- this controls whether they are also dumped to stdout
+
 parser::ParsedFile parse(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode);
     return parser.parse();
+}
+
+void outputAnalyzedAST(const ast::Block& program) {
+    std::ofstream logFile("semantic_analyzer_tests.log", std::ios::app);
+    if (!logFile) {
+        std::cerr << "ERROR: Could not open log file for writing.\n";
+    }
+    std::cout << "Analyzed AST:\n";
+    for (const auto& statement : program) {
+        std::cout << statement->toString() << "\n";
+        if (dumpASTToStdout) {
+            statement->dump(std::cout);
+        }
+        if (logFile) {
+            logFile << "String representation: " << statement->toString() << "\n";
+            logFile << "Dumping statement:\n";
+            statement->dump(logFile);
+            logFile << "---------------------\n";
+        }
+    }
 }
 
 bool analyzeLiterals() {
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse("true; \"asdf\"; [1i64, 2, 3, 4, true]; 100; 'a';");
     analyzer.analyze(file);
-    const auto& program = file.program;
+    const ast::Block& program = file.program;
     if (program.size() != 5) {
         std::cerr << "Expected 5 statements, got " << program.size() << "\n";
         return false;
     }
-    for (size_t i = 0; i < 5; ++i) {
-        program[i]->dump(std::cerr);
-    }
+    outputAnalyzedAST(program);
 
     return true;
 }
@@ -57,10 +77,7 @@ bool analyzeSimpleVariableDeclaration() {
         std::cerr << "Expected 8 statements, got " << program.size() << "\n";
         return false;
     }
-    for (size_t i = 0; i < 8; ++i) {
-        // std::cout << program[i]->toString() << "\n";
-        program[i]->dump(std::cerr);
-    }
+    outputAnalyzedAST(program);
     return true;
 }
 
