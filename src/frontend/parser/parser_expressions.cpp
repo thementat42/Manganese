@@ -137,8 +137,7 @@ ExpressionUPtr_t Parser::parseArrayInstantiationExpression() {
     }
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end array instantiation");
 
-    return make_unique<ast::ArrayLiteralExpression>(
-        std::move(elements));
+    return make_unique<ast::ArrayLiteralExpression>(std::move(elements));
 }
 
 ExpressionUPtr_t Parser::parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence) {
@@ -152,8 +151,7 @@ ExpressionUPtr_t Parser::parseBinaryExpression(ExpressionUPtr_t left, Precedence
     auto op = advance().getType();
     auto right = parseExpression(precedence);
 
-    return std::make_unique<ast::BinaryExpression>(
-        std::move(left), op, std::move(right));
+    return std::make_unique<ast::BinaryExpression>(std::move(left), op, std::move(right));
 }
 
 ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t left, Precedence precedence) {
@@ -210,7 +208,7 @@ ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t lef
     }
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end bundle instantiation");
     return std::make_unique<ast::BundleInstantiationExpression>(
-        bundleName, std::move(genericTypes), std::move(fields));
+        bundleName, genericTypes, std::move(fields));
 }
 
 ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence) {
@@ -246,8 +244,7 @@ ExpressionUPtr_t Parser::parseGenericExpression(ExpressionUPtr_t left, Precedenc
         }
     }
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return std::make_unique<ast::GenericExpression>(
-        std::move(left), std::move(typeParameters));
+    return std::make_unique<ast::GenericExpression>(std::move(left), typeParameters);
 }
 
 ExpressionUPtr_t Parser::parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence) {

@@ -24,14 +24,11 @@ namespace ast {
 
 DISABLE_CONVERSION_WARNING  // There are lots of implicit conversions between integer types -- for convenience, ignore those warnings
 
-// Helper function to create indentation
-inline static std::string getIndent(int indent) {
-    return std::string(indent * 2, ' ');
-}
+inline std::string getIndent(int indent) {return std::string(indent * 2, ' ');}
 
 // Helper function to get the type of a number variant
-static std::string getNumberTypeName(const number_t& value) {
-    return std::visit([](auto&& arg) -> std::string {
+std::string getNumberTypeName(const number_t& value) {
+    auto visitor = [](auto&& arg) -> std::string {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, int8_t>)
             return "int8";
@@ -55,8 +52,8 @@ static std::string getNumberTypeName(const number_t& value) {
             return "double";
         else
             return "unknown";
-    },
-                      value);
+    };
+    return std::visit(visitor, value);
 }
 
 // ===== Expressions =====
@@ -506,7 +503,7 @@ void ArrayType::dump(std::ostream& os, int indent) const {
 
 void FunctionType::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "FunctionType [" << getLine() << ":" << getColumn() << "] {\n";
-    
+
     // Parameter types
     os << getIndent(indent + 1) << "parameter types: [\n";
     for (const auto& paramType : parameterTypes) {
@@ -514,7 +511,7 @@ void FunctionType::dump(std::ostream& os, int indent) const {
         paramType.type->dump(os, indent + 2);
     }
     os << getIndent(indent + 1) << "]\n";
-    
+
     // Return type
     os << getIndent(indent + 1) << "return type: ";
     if (returnType) {
@@ -523,7 +520,7 @@ void FunctionType::dump(std::ostream& os, int indent) const {
     } else {
         os << "void\n";
     }
-    
+
     os << getIndent(indent) << "}\n";
 }
 

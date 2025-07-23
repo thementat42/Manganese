@@ -100,10 +100,8 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
             logError(std::format("Element {} has type {}, expected {}", element->toString(), element->getType()->toString(), firstElement->getType()->toString()));
         }
     }
-    expression->elementType = std::make_unique<ast::SymbolType>(firstElement->getType()->toString());
-    expression->setType(std::make_unique<ast::ArrayType>(
-        std::make_unique<ast::SymbolType>(firstElement->getType()->toString()),
-        std::make_unique<ast::NumberLiteralExpression>(expression->elements.size())));
+    expression->elementType = firstElement->getTypePtr();
+    expression->lengthExpression = std::make_unique<ast::NumberLiteralExpression>(expression->elements.size());
 }
 void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expression) {
     DISCARD(expression);
@@ -116,7 +114,7 @@ void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) 
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkBoolLiteralExpression(ast::BoolLiteralExpression* expression) {
-    expression->setType(std::make_unique<ast::SymbolType>("bool"));
+    expression->setType(std::make_shared<ast::SymbolType>("bool"));
 }
 void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiationExpression* expression) {
     DISCARD(expression);
@@ -124,7 +122,7 @@ void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiati
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkCharLiteralExpression(ast::CharLiteralExpression* expression) {
-    expression->setType(std::make_unique<ast::SymbolType>("char"));
+    expression->setType(std::make_shared<ast::SymbolType>("char"));
 }
 void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* expression) {
     DISCARD(expression);
@@ -152,28 +150,28 @@ void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* 
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkNumberLiteralExpression(ast::NumberLiteralExpression* expression) {
-    auto visitor = [](auto&& arg) {
+    auto visitor = [](auto&& arg) -> ast::TypeSPtr_t {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, int8_t>) {
-            return std::make_unique<ast::SymbolType>("int8");
+            return std::make_shared<ast::SymbolType>("int8");
         } else if constexpr (std::is_same_v<T, int16_t>) {
-            return std::make_unique<ast::SymbolType>("int16");
+            return std::make_shared<ast::SymbolType>("int16");
         } else if constexpr (std::is_same_v<T, int32_t>) {
-            return std::make_unique<ast::SymbolType>("int32");
+            return std::make_shared<ast::SymbolType>("int32");
         } else if constexpr (std::is_same_v<T, int64_t>) {
-            return std::make_unique<ast::SymbolType>("int64");
+            return std::make_shared<ast::SymbolType>("int64");
         } else if constexpr (std::is_same_v<T, uint8_t>) {
-            return std::make_unique<ast::SymbolType>("uint8");
+            return std::make_shared<ast::SymbolType>("uint8");
         } else if constexpr (std::is_same_v<T, uint16_t>) {
-            return std::make_unique<ast::SymbolType>("uint16");
+            return std::make_shared<ast::SymbolType>("uint16");
         } else if constexpr (std::is_same_v<T, uint32_t>) {
-            return std::make_unique<ast::SymbolType>("uint32");
+            return std::make_shared<ast::SymbolType>("uint32");
         } else if constexpr (std::is_same_v<T, uint64_t>) {
-            return std::make_unique<ast::SymbolType>("uint64");
+            return std::make_shared<ast::SymbolType>("uint64");
         } else if constexpr (std::is_same_v<T, float>) {
-            return std::make_unique<ast::SymbolType>("float32");
+            return std::make_shared<ast::SymbolType>("float32");
         } else if constexpr (std::is_same_v<T, double>) {
-            return std::make_unique<ast::SymbolType>("float64");
+            return std::make_shared<ast::SymbolType>("float64");
         } else {
             ASSERT_UNREACHABLE(
                 std::format("Unsupported number literal type: {}", typeid(T).name()));
@@ -181,11 +179,11 @@ void SemanticAnalyzer::checkNumberLiteralExpression(ast::NumberLiteralExpression
         }
     };
     auto type = std::visit(visitor, expression->value);
-    if (!type) {
+    if (!type) [[unlikely]] {
         logError(std::format("Failed to determine type for number literal expression: {}", expression->toString()));
-        type = std::make_unique<ast::SymbolType>("unknown");
+        type = std::make_shared<ast::SymbolType>("unknown");
     }
-    expression->setType(std::move(type));
+    expression->setType(type);
 }
 void SemanticAnalyzer::checkPostfixExpression(ast::PostfixExpression* expression) {
     DISCARD(expression);
@@ -203,7 +201,7 @@ void SemanticAnalyzer::checkScopeResolutionExpression(ast::ScopeResolutionExpres
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkStringLiteralExpression(ast::StringLiteralExpression* expression) {
-    expression->setType(std::make_unique<ast::SymbolType>("string"));
+    expression->setType(std::make_shared<ast::SymbolType>("string"));
 }
 void SemanticAnalyzer::checkTypeCastExpression(ast::TypeCastExpression* expression) {
     DISCARD(expression);

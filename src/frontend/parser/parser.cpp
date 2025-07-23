@@ -89,6 +89,15 @@ Token Parser::expectToken(TokenType expectedType) {
 }
 
 Token Parser::expectToken(TokenType expectedType, const std::string& errorMessage) {
+    // TODO: Better error handling
+    // Rather than blindly advancing, we want to continue in such a way that errors don't cascade
+    // e.g., right now, in an if statement, if we expect a closing parenthesis (if (condition)), but
+    // find an open brace (because the programmer forgot the closing parenthesis), everything breaks
+    // -- the expression parsing fails, parsing the actual block fails, then the first statement in the block fails
+    // since the first token in that statement got skipped, etc.
+    // It might be worth designing different expectToken functions for different statements/contexts
+    // e.g., in any block precursor, when a ) is missed, just keep going until we find a {, then parse a block from there
+    //, skipping any other logic in the conditional
     TokenType type = currentToken().getType();
     if (type == expectedType) {
         return advance();
