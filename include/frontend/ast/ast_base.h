@@ -68,6 +68,14 @@ using StatementPtr_t = std::unique_ptr<Statement>;
 using TypePtr_t = std::shared_ptr<Type>;
 using Block = std::vector<StatementPtr_t>;
 
+/*
+TypePtr_t is a shared pointer since, in the semantic analysis phase, multiple AST nodes may refer to the same type.
+e.g. in a variable declaration (let x = 1 + 2), both the variable and the assignment expression will have the same type
+rather than constantly cloning types, it's easier to just have a shared pointer so that multiple nodes can refer to the same type object.
+    this reduces memory usage since the actual type is only allocated and stored once instead of multiple redundant deep copies 
+    cloning types would also require cloning expressions (e.g. array types), which is even more expensive, so shared_pointer is much more efficient
+*/
+
 enum class ExpressionKind;
 enum class StatementKind;
 enum class TypeKind;
