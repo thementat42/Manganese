@@ -135,18 +135,18 @@ void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
 }
 void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement) {
     if (statement->isConstant() && !statement->value) {
-        logError(std::format("Constant variable '{}' must be initialized", statement->name), statement->getLine(), statement->getColumn());
+        logError("Constant variable '{}' must be initialized", statement, statement->name);
         return;
     }
     if (!statement->type && !statement->value) {
-        logError(std::format("Variable '{}' must have a type or an initializer", statement->name), statement->getLine(), statement->getColumn());
+        logError("Variable '{}' must have a type or an initializer", statement, statement->name);
         return;
     }
     if (statement->type && statement->value) {
         checkExpression(statement->value.get());
         if (!areTypesCompatible(statement->value->getType(), statement->type.get())) {
-            logError(std::format("Type mismatch for variable '{}': expected {}, got {}", statement->name, statement->type->toString(), statement->value->getType()->toString()),
-                     statement->getLine(), statement->getColumn());
+            logError("Type mismatch for variable '{}': expected {}, got {}", statement, 
+                statement->name, statement->type->toString(), statement->value->getType()->toString());
         }
     } else if (statement->value) {
         checkExpression(statement->value.get());

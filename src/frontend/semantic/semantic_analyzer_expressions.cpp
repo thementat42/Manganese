@@ -88,16 +88,16 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
     auto firstElement = expression->elements[0].get();
     checkExpression(firstElement);
     if (!firstElement->getType()) {
-        logError(std::format("Could not deduce type of {}, assuming 'int32'", expression->elements[0]->toString()));
+        logError("Could not deduce type of {}, assuming 'int32'", expression, expression->elements[0]->toString());
         firstElement->setType(std::make_unique<ast::SymbolType>("int32"));
     }
     for (const auto& element : expression->elements) {
         checkExpression(element.get());
         if (!element->getType()) {
-            logError(std::format("Could not deduce type of {}, assuming 'int32'", element->toString()));
+            logError("Could not deduce type of {}, assuming 'int32'", element.get(), element->toString());
             element->setType(std::make_unique<ast::SymbolType>("int32"));
         } else if (!areTypesCompatible(element->getType(), firstElement->getType())) {
-            logError(std::format("Element {} has type {}, expected {}", element->toString(), element->getType()->toString(), firstElement->getType()->toString()));
+            logError("Element {} has type {}, expected {}", element.get(), element->toString(), element->getType()->toString(), firstElement->getType()->toString());
         }
     }
     expression->elementType = firstElement->getTypePtr();
@@ -180,7 +180,7 @@ void SemanticAnalyzer::checkNumberLiteralExpression(ast::NumberLiteralExpression
     };
     auto type = std::visit(visitor, expression->value);
     if (!type) [[unlikely]] {
-        logError(std::format("Failed to determine type for number literal expression: {}", expression->toString()));
+        logError("Failed to determine type for number literal expression: {}", expression, expression->toString());
         type = std::make_shared<ast::SymbolType>("unknown");
     }
     expression->setType(type);

@@ -38,8 +38,10 @@ class SemanticAnalyzer {
     // ===== Misc Helpers =====
     inline void enterScope() {symbolTable.enterScope(); }
     inline void exitScope() {symbolTable.exitScope(); }
-    inline void logError(const std::string& message, size_t line = 0, size_t col = 0) noexcept {
-        logging::logError(message, line, col);
+
+    template <typename... Args>
+    inline void logError(const std::format_string<Args...>& fmt, ast::ASTNode* node, Args&&... args) noexcept {
+        logging::logError(std::format(fmt, std::forward<Args>(args)...), node->getLine(), node->getColumn());
         hasError_ = true;
     }
 
