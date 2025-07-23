@@ -65,7 +65,7 @@ class Statement;
 class Type;
 using ExpressionPtr_t = std::unique_ptr<Expression>;
 using StatementPtr_t = std::unique_ptr<Statement>;
-using TypePtr_t = std::unique_ptr<Type>;
+using TypePtr_t = std::shared_ptr<Type>;
 using Block = std::vector<StatementPtr_t>;
 
 enum class ExpressionKind;
@@ -116,7 +116,7 @@ class Expression : public ASTNode {
         return computedType.get();
     };
     virtual void setType(TypePtr_t type) noexcept {
-        computedType = std::move(type);
+        computedType = type;
     }
     virtual ExpressionKind kind() const noexcept = 0;
     friend parser::Parser;

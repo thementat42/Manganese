@@ -51,7 +51,7 @@ TypePtr_t Parser::parseArrayType(TypePtr_t left, Precedence precedence) {
         lengthExpression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
-    return std::make_unique<ast::ArrayType>(std::move(left), std::move(lengthExpression));
+    return std::make_shared<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
 TypePtr_t Parser::parseFunctionType() {
@@ -82,7 +82,7 @@ TypePtr_t Parser::parseFunctionType() {
         returnType = parseType(Precedence::Default);
     }
 
-    return std::make_unique<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
+    return std::make_shared<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
 }
 
 TypePtr_t Parser::parseGenericType(TypePtr_t left, Precedence precedence) {
@@ -101,12 +101,12 @@ TypePtr_t Parser::parseGenericType(TypePtr_t left, Precedence precedence) {
         }
     }
     expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return std::make_unique<ast::GenericType>(std::move(left), std::move(typeParameters));
+    return std::make_shared<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 
 TypePtr_t Parser::parsePointerType() {
     DISCARD(advance());  // Consume `ptr`
-    return std::make_unique<ast::PointerType>(parseType(Precedence::Default));
+    return std::make_shared<ast::PointerType>(parseType(Precedence::Default));
 }
 
 TypePtr_t Parser::parseSymbolType() {
@@ -114,10 +114,10 @@ TypePtr_t Parser::parseSymbolType() {
     if (token.isPrimitiveType()) {
         // If the token is a primitive type, we can directly create a SymbolType
         DISCARD(advance());
-        return std::make_unique<ast::SymbolType>(token.getLexeme());
+        return std::make_shared<ast::SymbolType>(token.getLexeme());
     }
     // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
-    return std::make_unique<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
+    return std::make_shared<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
 }
 
 // ===== Lookup Initialization =====

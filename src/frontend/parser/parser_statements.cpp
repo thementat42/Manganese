@@ -490,11 +490,6 @@ StatementPtr_t Parser::parseVariableDeclarationStatement() {
 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
-    if (isConst && value == nullptr) {
-        logError(
-            std::format("Variable '{}' is declared as constant but has no initial value", name));
-    }
-
     return std::make_unique<ast::VariableDeclarationStatement>(
         isConst,
         std::move(name),

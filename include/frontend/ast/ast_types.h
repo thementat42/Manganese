@@ -30,14 +30,14 @@ enum class TypeKind {
  */
 class ArrayType : public Type {
    protected:
-    std::unique_ptr<Type> elementType;
+    TypePtr_t elementType;
     ExpressionPtr_t lengthExpression;  // If not given, the length is inferred from the number of elements
 
    public:
     /**
      * @param elementType_ The type of the elements in the array
      */
-    explicit ArrayType(std::unique_ptr<Type> elementType_, ExpressionPtr_t lengthExpr_ = nullptr)
+    explicit ArrayType(TypePtr_t elementType_, ExpressionPtr_t lengthExpr_ = nullptr)
         : elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -77,7 +77,7 @@ class GenericType : public Type {
     TypePtr_t baseType; // some_function in `some_function@[T,U]`
     std::vector<TypePtr_t> typeParameters;  // T and U in `some_function@[T,U]`
    public:
-    GenericType(std::unique_ptr<Type> baseType_, std::vector<TypePtr_t> typeParameters_)
+    GenericType(TypePtr_t baseType_, std::vector<TypePtr_t> typeParameters_)
         : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
     AST_STANDARD_INTERFACE;
