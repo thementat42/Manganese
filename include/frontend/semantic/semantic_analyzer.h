@@ -76,7 +76,7 @@ class SemanticAnalyzer {
         hasError_ = true;
     }
 
-    inline void checkBlock(ast::Block& block) noexcept(noexcept(checkStatement)) {
+    inline void checkBlock(ast::Block& block) noexcept(noexcept(checkStatement(std::declval<ast::Statement*>()))) {
         for (auto& statement : block) {
             checkStatement(statement.get());
         }
