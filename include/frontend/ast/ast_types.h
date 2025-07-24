@@ -12,8 +12,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_H
 
 #include <frontend/ast/ast_base.h>
-
-#include <unordered_set>
+#include <utils/number_utils.h>
 
 namespace Manganese {
 
@@ -129,24 +128,9 @@ class SymbolType : public Type {
     TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
 };
 
-inline const std::array<lexer::TokenType, 13> primitiveTokenTypes = {
-    lexer::TokenType::Int8, lexer::TokenType::Int16, lexer::TokenType::Int32, lexer::TokenType::Int64,
-    lexer::TokenType::UInt8, lexer::TokenType::UInt16, lexer::TokenType::UInt32, lexer::TokenType::UInt64,
-    lexer::TokenType::Float32, lexer::TokenType::Float64, lexer::TokenType::Bool, lexer::TokenType::String,
-    lexer::TokenType::Char};
+bool isPrimitiveType(const TypeSPtr_t& type);
 
-const std::unordered_set<std::string> primitiveTypeNames = {
-    "int8", "int16", "int32", "int64",
-    "uint8", "uint16", "uint32", "uint64",
-    "float32", "float64", "bool", "string", "char"};
-
-inline bool isPrimitiveType(const TypeSPtr_t& type) {
-    if (!type) return false;
-    if (type->kind() != TypeKind::SymbolType) return false;
-    const auto& symbolType = static_cast<const SymbolType*>(type.get());
-    return primitiveTypeNames.contains(symbolType->getName());
-}
-
+bool isPrimitiveType(const Type* type);
 }  // namespace ast
 
 }  // namespace Manganese

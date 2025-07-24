@@ -40,6 +40,20 @@ enum class Base {
     Hexadecimal = 16  // 0x prefix
 };
 
+constexpr std::string int8_str = "int8";
+constexpr std::string int16_str = "int16";
+constexpr std::string int32_str = "int32";
+constexpr std::string int64_str = "int64";
+constexpr std::string uint8_str = "uint8";
+constexpr std::string uint16_str = "uint16";
+constexpr std::string uint32_str = "uint32";
+constexpr std::string uint64_str = "uint64";
+constexpr std::string float32_str = "float32";
+constexpr std::string float64_str = "float64";
+constexpr std::string bool_str = "bool";
+constexpr std::string string_str = "string";
+constexpr std::string char_str = "char";
+
 namespace utils {
 
 std::optional<int8_t> stoi8(std::string_view str, int base = 10);

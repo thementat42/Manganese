@@ -6,6 +6,7 @@
 #include <frontend/lexer/token.h>
 #include <global_macros.h>
 #include <io/logging.h>
+#include <utils/number_utils.h>
 
 #include <format>
 #include <iostream>
@@ -247,13 +248,13 @@ std::string tokenTypeToString(TokenType type) noexcept_if_release {
         case TokenType::Import:
             return "import";
         case TokenType::Int8:
-            return "int8";
+            return int8_str;
         case TokenType::Int16:
-            return "int16";
+            return int16_str;
         case TokenType::Int32:
-            return "int32";
+            return int32_str;
         case TokenType::Int64:
-            return "int64";
+            return int64_str;
         case TokenType::Lambda:
             return "lambda";
         case TokenType::Let:
@@ -281,13 +282,13 @@ std::string tokenTypeToString(TokenType type) noexcept_if_release {
         case TokenType::TypeOf:
             return "typeof";
         case TokenType::UInt8:
-            return "uint8";
+            return uint8_str;
         case TokenType::UInt16:
-            return "uint16";
+            return uint16_str;
         case TokenType::UInt32:
-            return "uint32";
+            return uint32_str;
         case TokenType::UInt64:
-            return "uint64";
+            return uint64_str;
         case TokenType::While:
             return "while";
 

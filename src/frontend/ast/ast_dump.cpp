@@ -12,6 +12,7 @@
 #if DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.h>
 #include <global_macros.h>
+#include <utils/number_utils.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -31,25 +32,25 @@ std::string getNumberTypeName(const number_t& value) {
     auto visitor = [](auto&& arg) -> std::string {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, int8_t>)
-            return "int8";
+            return int8_str;
         else if constexpr (std::is_same_v<T, uint8_t>)
-            return "uint8";
+            return uint8_str;
         else if constexpr (std::is_same_v<T, int16_t>)
-            return "int16";
+            return int16_str;
         else if constexpr (std::is_same_v<T, uint16_t>)
-            return "uint16";
+            return uint16_str;
         else if constexpr (std::is_same_v<T, int32_t>)
-            return "int32";
+            return int32_str;
         else if constexpr (std::is_same_v<T, uint32_t>)
-            return "uint32";
+            return uint32_str;
         else if constexpr (std::is_same_v<T, int64_t>)
-            return "int64";
+            return int64_str;
         else if constexpr (std::is_same_v<T, uint64_t>)
-            return "uint64";
+            return uint64_str;
         else if constexpr (std::is_same_v<T, float>)
-            return "float";
+            return float32_str;
         else if constexpr (std::is_same_v<T, double>)
-            return "double";
+            return float64_str;
         else
             return "unknown";
     };
