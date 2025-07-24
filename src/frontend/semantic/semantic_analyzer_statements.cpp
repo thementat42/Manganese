@@ -71,9 +71,29 @@ void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_rel
 
 // ===== Specific Statement Checks =====
 void SemanticAnalyzer::checkAliasStatement(ast::AliasStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    bool isInvalidAlias = false;
+    if (!typeExists(statement->baseType)) {
+        logError("Base type '{}' for alias '{}' does not exist", statement, statement->baseType->toString(), statement->alias);
+        isInvalidAlias = true;
+    }
+    if (symbolTable.lookupInCurrentScope(statement->alias)) {
+        logError("Alias '{}' already exists in the current scope", statement, statement->alias);
+        isInvalidAlias = true;
+    }
+    if (isInvalidAlias) {
+        return;
+    };
+    symbolTable.declare(
+        Symbol{
+            .name = statement->alias,
+            .kind = SymbolKind::TypeAlias,
+            .type = statement->baseType,
+            .line = statement->getLine(),
+            .column = statement->getColumn(),
+            .declarationNode = statement,
+            .isConstant = false,  // Type aliases are not constants
+            .scopeDepth = symbolTable.currentScopeDepth(),
+            .visibility = statement->visibility});
 }
 void SemanticAnalyzer::checkBreakStatement(ast::BreakStatement* statement) {
     if (!context.isLoopContext() && !context.isSwitchContext()) {
@@ -81,9 +101,45 @@ void SemanticAnalyzer::checkBreakStatement(ast::BreakStatement* statement) {
     }
 }
 void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    if (symbolTable.lookup(statement->name)) {
+        logError("Bundle '{}' was previously declared", statement, statement->name);
+        return;
+    }
+
+    // Checking for duplicate fields already happened in the parser
+    for (const auto& field : statement->fields) {
+        if (ast::isPrimitiveType(field.type)) {
+            continue;
+        }
+        if (!statement->genericTypes.empty() &&
+            std::find(statement->genericTypes.begin(), statement->genericTypes.end(), field.type->toString()) != statement->genericTypes.end()) {
+            continue;  // This is a generic type, so it's valid
+        }
+        if (!typeExists(field.type)) {
+            logError("Field '{}' in bundle '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
+                     statement, field.name, statement->name, field.type->toString());
+            return;
+        }
+    }
+
+    std::vector<ast::TypeSPtr_t> fieldTypes;
+    fieldTypes.resize(statement->fields.size());
+    for (size_t i = 0; i < statement->fields.size(); ++i) {
+        fieldTypes[i] = statement->fields[i].type;
+    }
+    symbolTable.declare(
+        Symbol{
+            .name = statement->name,
+            .kind = SymbolKind::Bundle,
+            .type = std::make_shared<ast::BundleType>(fieldTypes),
+            .line = statement->getLine(),
+            .column = statement->getColumn(),
+            .declarationNode = statement,
+            .isConstant = false,  // Bundles are not constants
+            .scopeDepth = symbolTable.currentScopeDepth(),
+            .visibility = statement->visibility,
+
+        });
 }
 void SemanticAnalyzer::checkContinueStatement(ast::ContinueStatement* statement) {
     if (!context.isLoopContext()) {
@@ -135,19 +191,24 @@ void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
     throw std::runtime_error("Not implemented");
 }
 void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement) {
+    bool isInvalidDeclaration = false;
     if (statement->isConstant() && !statement->value) {
         logError("Constant variable '{}' must be initialized", statement, statement->name);
-        return;
+        isInvalidDeclaration = true;
     }
     if (!statement->type && !statement->value) {
         logError("Variable '{}' must have a type or an initializer", statement, statement->name);
+        isInvalidDeclaration = true;
+    }
+    if (isInvalidDeclaration) {
         return;
     }
+
     if (statement->type && statement->value) {
         checkExpression(statement->value.get());
         if (!areTypesCompatible(statement->value->getType(), statement->type.get())) {
-            logError("Type mismatch for variable '{}': expected {}, got {}", statement, 
-                statement->name, statement->type->toString(), statement->value->getType()->toString());
+            logError("Type mismatch for variable '{}': expected {}, got {}", statement,
+                     statement->name, statement->type->toString(), statement->value->getType()->toString());
         }
     } else if (statement->value) {
         checkExpression(statement->value.get());

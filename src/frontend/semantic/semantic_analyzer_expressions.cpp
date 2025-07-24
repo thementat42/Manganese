@@ -142,9 +142,45 @@ void SemanticAnalyzer::checkBoolLiteralExpression(ast::BoolLiteralExpression* ex
     expression->setType(std::make_shared<ast::SymbolType>("bool"));
 }
 void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiationExpression* expression) {
-    DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    Symbol* bundleSymbol = symbolTable.lookup(expression->name);
+    if (!bundleSymbol) {
+        logError("Bundle type {} was not declared in any scope", expression, expression->name);
+        return;
+    }
+    if (bundleSymbol->kind != SymbolKind::Bundle) {
+        logError("{} is not a bundle type so cannot be instantiated as one", expression, expression->name);
+        return;
+    }
+    ast::BundleDeclarationStatement* bundleDeclaration = static_cast<ast::BundleDeclarationStatement*>(bundleSymbol->declarationNode);
+    if (bundleDeclaration->genericTypes.size() != expression->genericTypes.size()) {
+        logError("Bundle type {} expects {} generic types, but {} were provided", expression, expression->name,
+                 bundleDeclaration->genericTypes.size(), expression->genericTypes.size());
+        return;
+    }
+    if (bundleDeclaration->fields.size() != expression->fields.size()) {
+        logError("Bundle type {} expects {} fields, but {} were provided", expression, expression->name,
+                 bundleDeclaration->fields.size(), expression->fields.size());
+        return;
+    }
+    bool validInstantiation = true;
+    for (size_t i = 0; i < expression->fields.size(); ++i) {
+        const auto& field = expression->fields[i];
+        const auto& expectedField = bundleDeclaration->fields[i];
+        if (field.name != expectedField.name) {
+            logError("Field {} in bundle instantiation does not match field name {} in bundle type {} (Note: bundle fields should be instantiated in order)", expression, field.name, expectedField.name, expression->name);
+            validInstantiation = false;
+            continue;
+        }
+        checkExpression(field.value.get());
+        if (!areTypesCompatible(field.value->getType(), expectedField.type.get())) {
+            logError("Field {} in bundle instantiation has type {}, but was declared with type {}", expression, field.value->toString(), field.value->getType()->toString(), expectedField.type->toString());
+            validInstantiation = false;
+        }
+    }
+    if (!validInstantiation) {
+        return;
+    }
+    expression->setType(std::make_shared<ast::SymbolType>(expression->name));
 }
 void SemanticAnalyzer::checkCharLiteralExpression(ast::CharLiteralExpression* expression) {
     expression->setType(std::make_shared<ast::SymbolType>("char"));

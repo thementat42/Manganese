@@ -54,8 +54,6 @@ class SemanticAnalyzer {
     bool hasError() const noexcept { return hasError_; }
     bool hasWarning() const noexcept { return hasWarning_; }
 
-    bool areTypesCompatible(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release;
-
    private:
     // ===== Basic AST Traversal =====
     void checkImports(std::vector<parser::Import>& imports);
@@ -119,6 +117,11 @@ class SemanticAnalyzer {
     void checkSwitchStatement(ast::SwitchStatement* statement);
     void checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement);
     void checkWhileLoopStatement(ast::WhileLoopStatement* statement);
+
+    // ===== Helpers for Specific Checks =====
+    bool typeExists(const ast::TypeSPtr_t& type);
+    bool areTypesCompatible(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release;
+    
 };
 }  // namespace semantic
 

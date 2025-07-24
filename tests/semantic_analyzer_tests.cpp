@@ -24,8 +24,7 @@ namespace Manganese {
 namespace tests {
 static const char* logFileName = "semantic_analyzer_tests.log";
 
-
-inline constexpr bool dumpASTToStdout = false; // The nodes are always dumped to a log file -- this controls whether they are also dumped to stdout
+inline constexpr bool dumpASTToStdout = false;  // The nodes are always dumped to a log file -- this controls whether they are also dumped to stdout
 
 parser::ParsedFile parse(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode);
@@ -84,6 +83,43 @@ bool analyzeSimpleVariableDeclaration() {
     return true;
 }
 
+bool analyzeAliases() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse(
+        "alias int64 as i64;"
+        "alias float64 as f64;"
+        "alias string as foo;"
+        "alias bar as foo;");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    if (program.size() != 4) {
+        std::cerr << "Expected 4 statements, got " << program.size() << "\n";
+        return false;
+    }
+    outputAnalyzedAST(program);
+    return true;
+}
+
+bool analyzeBundleInstantiation() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse(
+        "bundle Point3D {"
+        "  x: int64;"
+        "  y: int64;"
+        "  z: int64;"
+        "}"
+        "let p = Point3D{ x = 1, y = 2, z = 3 };"
+        "let q = Point3D{ x = \"Hi!\", z = 5, y = 6 };");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    if (program.size() != 3) {
+        std::cerr << "Expected 3 statements, got " << program.size() << "\n";
+        return false;
+    }
+    outputAnalyzedAST(program);
+    return true;
+}
+
 void runSemanticAnalysisTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -91,6 +127,8 @@ void runSemanticAnalysisTests(TestRunner& runner) {
 
     runner.runTest("Analyze Literals", analyzeLiterals);
     runner.runTest("Analyze Simple Variable Declaration", analyzeSimpleVariableDeclaration);
+    runner.runTest("Analyze Aliases", analyzeAliases);
+    runner.runTest("Analyze Bundle Instantiation", analyzeBundleInstantiation);
 }
 
 }  // namespace tests
