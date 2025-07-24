@@ -501,6 +501,19 @@ void ArrayType::dump(std::ostream& os, int indent) const {
     }
 }
 
+void BundleType::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "BundleType [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "fields: [\n";
+
+    for (const auto& field : fieldTypes) {
+        os << getIndent(indent + 2) << "{\n";
+        field->dump(os, indent + 3);
+        os << getIndent(indent + 2) << "}\n";
+    }
+    os << getIndent(indent + 1) << "]\n";
+    os << getIndent(indent) << "}\n";
+}
+
 void FunctionType::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "FunctionType [" << getLine() << ":" << getColumn() << "] {\n";
 

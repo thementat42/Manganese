@@ -599,6 +599,16 @@ bool testParseFromFile() {
     return true; 
 }
 
+bool miscTests() {
+    std::string expression =
+        "func foo() -> bundle {string, float, char} {}";
+    
+    std::string expected = "private func foo() -> bundle {string, float32, char} {\n}";
+    return validateStatement(
+        getParserResults(expression),
+        expected, "Miscellaneous Tests");
+}
+
 int runParserTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -625,6 +635,7 @@ int runParserTests(TestRunner& runner) {
     runner.runTest("Generics", testGenerics);
     runner.runTest("Imports and Type Aliases", testImportsAndAliases);
     runner.runTest("Parsing from file", testParseFromFile);
+    runner.runTest("Miscellaneous Tests", miscTests);
 
     return runner.allTestsPassed() ? 0 : 1;
 }

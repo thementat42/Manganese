@@ -54,6 +54,32 @@ TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) {
     return std::make_shared<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
+TypeSPtr_t Parser::parseBundleType() {
+    DISCARD(advance()); // Consume the 'bundle' token
+    if (currentToken().getType() == TokenType::Identifier) {
+        logging::logWarning("Bundle names are ignored in bundle type declarations", currentToken().getLine(), currentToken().getColumn());
+        DISCARD(advance());  // Skip the identifier token
+    }
+
+    expectToken(TokenType::LeftBrace, "Expected a '{' to start bundle type declaration");
+    std::vector<ast::TypeSPtr_t> fieldTypes;
+
+    while (currentToken().getType() != TokenType::RightBrace) {
+        if (currentToken().getType() == TokenType::Identifier) {
+            logging::logWarning("Variable names are ignored in bundle type declarations", currentToken().getLine(), currentToken().getColumn());
+            DISCARD(advance());  // Skip the token
+            expectToken(TokenType::Colon, "Expected ':' after field name in bundle type declaration");
+            continue;
+        }
+        fieldTypes.push_back(parseType(Precedence::Default));  // Parse the type of the field
+        if (currentToken().getType() != TokenType::RightBrace) {
+            expectToken(TokenType::Comma, "Expected ',' to separate fields in bundle type declaration or '}' to end the declaration");
+        }
+    }
+    expectToken(TokenType::RightBrace, "Expected '}' to end bundle type declaration");
+    return std::make_shared<ast::BundleType>(std::move(fieldTypes));
+}
+
 TypeSPtr_t Parser::parseFunctionType() {
     DISCARD(advance());  // consume the 'func' token
 
@@ -157,6 +183,7 @@ void Parser::initializeTypeLookups() {
     registerLedHandler_type(TokenType::LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
     registerLedHandler_type(TokenType::At, Precedence::Generic, &Parser::parseGenericType);
     registerNudHandler_type(TokenType::Func, &Parser::parseFunctionType);
+    registerNudHandler_type(TokenType::Bundle, &Parser::parseBundleType);
 }
 
 }  // namespace parser

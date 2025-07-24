@@ -13,12 +13,15 @@
 
 #include <frontend/ast/ast_base.h>
 
+#include <unordered_set>
+
 namespace Manganese {
 
 namespace ast {
 
 enum class TypeKind {
     ArrayType,
+    BundleType,
     FunctionType,
     GenericType,
     PointerType,
@@ -42,6 +45,20 @@ class ArrayType : public Type {
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
+};
+
+/**
+ * e.g. bundle {int, float}
+ */
+class BundleType : public Type {
+   protected:
+    std::vector<TypeSPtr_t> fieldTypes;
+
+   public:
+    explicit BundleType(std::vector<TypeSPtr_t> fieldTypes_)
+        : fieldTypes(std::move(fieldTypes_)) {}
+    AST_STANDARD_INTERFACE;
+    TypeKind kind() const noexcept override { return TypeKind::BundleType; }
 };
 
 struct FunctionParameterType {
@@ -74,7 +91,7 @@ class FunctionType : public Type {
  */
 class GenericType : public Type {
    protected:
-    TypeSPtr_t baseType; // some_function in `some_function@[T,U]`
+    TypeSPtr_t baseType;                     // some_function in `some_function@[T,U]`
     std::vector<TypeSPtr_t> typeParameters;  // T and U in `some_function@[T,U]`
    public:
     GenericType(TypeSPtr_t baseType_, std::vector<TypeSPtr_t> typeParameters_)
@@ -111,6 +128,24 @@ class SymbolType : public Type {
     std::string getName() const noexcept { return name; }
     TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
 };
+
+inline const std::array<lexer::TokenType, 13> primitiveTokenTypes = {
+    lexer::TokenType::Int8, lexer::TokenType::Int16, lexer::TokenType::Int32, lexer::TokenType::Int64,
+    lexer::TokenType::UInt8, lexer::TokenType::UInt16, lexer::TokenType::UInt32, lexer::TokenType::UInt64,
+    lexer::TokenType::Float32, lexer::TokenType::Float64, lexer::TokenType::Bool, lexer::TokenType::String,
+    lexer::TokenType::Char};
+
+const std::unordered_set<std::string> primitiveTypeNames = {
+    "int8", "int16", "int32", "int64",
+    "uint8", "uint16", "uint32", "uint64",
+    "float32", "float64", "bool", "string", "char"};
+
+inline bool isPrimitiveType(const TypeSPtr_t& type) {
+    if (!type) return false;
+    if (type->kind() != TypeKind::SymbolType) return false;
+    const auto& symbolType = static_cast<const SymbolType*>(type.get());
+    return primitiveTypeNames.contains(symbolType->getName());
+}
 
 }  // namespace ast
 

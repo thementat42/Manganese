@@ -82,7 +82,12 @@ StatementUPtr_t Parser::parseBundleDeclarationStatement() {
     if (currentToken().getType() == TokenType::LeftSquare) {
         DISCARD(advance());
         while (!done() && currentToken().getType() != TokenType::RightSquare) {
-            genericTypes.push_back(expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
+            std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
+            if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
+                logError(std::format("Generic type '{}' in bundle '{}' was already declared", genericName, name));
+            } else {
+                genericTypes.push_back(genericName);
+            }
             if (currentToken().getType() != TokenType::RightSquare) {
                 expectToken(TokenType::Comma, "Expected a ',' to separate generic types, or a ']' to close the generic type list");
             }
@@ -418,6 +423,17 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
     }
     size_t startLine = currentToken().getLine(), startColumn = currentToken().getColumn();
     switch (currentToken().getType()) {
+        case TokenType::Alias: {
+            auto tempAlias = static_cast<ast::AliasStatement*>(
+                parseAliasStatement().release());
+            if (visibility == ast::Visibility::ReadOnly) {
+                logging::logWarning("Aliases can only be public or private, not readonly",
+                                    startLine, startColumn);
+                visibility = ast::Visibility::Private;  // Default to private
+            }
+            tempAlias->visibility = visibility;
+            return std::unique_ptr<ast::AliasStatement>(tempAlias);
+        }
         case TokenType::Bundle: {
             auto tempBundle = static_cast<ast::BundleDeclarationStatement*>(
                 parseBundleDeclarationStatement().release());

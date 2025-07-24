@@ -133,6 +133,7 @@ class Parser {
 
     TypeSPtr_t parseType(Precedence precedence) noexcept_if_release;
     TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence);
+    TypeSPtr_t parseBundleType();
     TypeSPtr_t parseFunctionType();
     TypeSPtr_t parseGenericType(TypeSPtr_t left, Precedence precedence);
     TypeSPtr_t parsePointerType();

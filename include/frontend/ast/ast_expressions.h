@@ -117,7 +117,7 @@ struct BundleInstantiationField {
  */
 class BundleInstantiationExpression : public Expression {
    protected:
-    std::string name;
+    std::string name;  // The name of the bundle type being instantiated
     std::vector<TypeSPtr_t> genericTypes;
     std::vector<BundleInstantiationField> fields;
 

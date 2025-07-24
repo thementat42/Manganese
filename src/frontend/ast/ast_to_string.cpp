@@ -373,6 +373,19 @@ std::string ArrayType::toString() const {
     return oss.str();
 }
 
+std::string BundleType::toString() const {
+    std::ostringstream oss;
+    oss << "bundle {";
+    for (size_t i = 0; i < fieldTypes.size(); ++i) {
+        oss << fieldTypes[i]->toString();
+        if (i < fieldTypes.size() - 1) [[likely]] {
+            oss << ", ";
+        }
+    }
+    oss << "}";
+    return oss.str();
+}
+
 std::string FunctionType::toString() const {
     std::ostringstream oss;
     oss << "func(";

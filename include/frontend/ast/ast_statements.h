@@ -42,8 +42,9 @@ enum class StatementKind {
 
 class AliasStatement : public Statement {
    protected:
-    TypeSPtr_t baseType;
-    std::string alias;
+    TypeSPtr_t baseType;  // The type being aliased (x in alias x as foo)
+    std::string alias;  // The name of the alias (foo in alias x as foo)
+    Visibility visibility = Visibility::Private;
 
    public:
     AliasStatement(TypeSPtr_t baseType_, std::string alias_)
