@@ -31,7 +31,7 @@ void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_rel
             checkEnumDeclarationStatement(static_cast<ast::EnumDeclarationStatement*>(statement));
             break;
         case ast::StatementKind::ExpressionStatement:
-            checkExpressionStatement(static_cast<ast::ExpressionStatement*>(statement));
+            checkExpression(static_cast<ast::ExpressionStatement*>(statement)->expression.get());
             break;
         case ast::StatementKind::FunctionDeclarationStatement:
             checkFunctionDeclarationStatement(static_cast<ast::FunctionDeclarationStatement*>(statement));
@@ -69,11 +69,18 @@ void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_rel
     }
 }
 
-// ===== Specific Statement Checks =====
+// The specific statement checks are implemented in the statements/ subdirectory
+
+// Alias statements are checked here because this implementation doesn't really fit into any of the categories
+
 void SemanticAnalyzer::checkAliasStatement(ast::AliasStatement* statement) {
+    if (statement->baseType->kind() == ast::TypeKind::GenericType) {
+        logError("Generic Types cannot be aliased", statement, statement->baseType->toString());
+        return;
+    }
     bool isInvalidAlias = false;
     if (!typeExists(statement->baseType)) {
-        logError("Base type '{}' for alias '{}' does not exist", statement, statement->baseType->toString(), statement->alias);
+        logError("Base type '{}' for alias '{}' does not exist or was not defined", statement, statement->baseType->toString(), statement->alias);
         isInvalidAlias = true;
     }
     if (symbolTable.lookupInCurrentScope(statement->alias)) {
@@ -94,145 +101,6 @@ void SemanticAnalyzer::checkAliasStatement(ast::AliasStatement* statement) {
             .isConstant = false,  // Type aliases are not constants
             .scopeDepth = symbolTable.currentScopeDepth(),
             .visibility = statement->visibility});
-}
-void SemanticAnalyzer::checkBreakStatement(ast::BreakStatement* statement) {
-    if (!context.isLoopContext() && !context.isSwitchContext()) {
-        logError("break statements can only be used inside loops or switch statements", statement);
-    }
-}
-void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationStatement* statement) {
-    if (symbolTable.lookup(statement->name)) {
-        logError("Bundle '{}' was previously declared", statement, statement->name);
-        return;
-    }
-
-    // Checking for duplicate fields already happened in the parser
-    for (const auto& field : statement->fields) {
-        if (ast::isPrimitiveType(field.type)) {
-            continue;
-        }
-        if (!statement->genericTypes.empty() &&
-            std::find(statement->genericTypes.begin(), statement->genericTypes.end(), field.type->toString()) != statement->genericTypes.end()) {
-            continue;  // This is a generic type, so it's valid
-        }
-        if (!typeExists(field.type)) {
-            logError("Field '{}' in bundle '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
-                     statement, field.name, statement->name, field.type->toString());
-            return;
-        }
-    }
-
-    std::vector<ast::TypeSPtr_t> fieldTypes;
-    fieldTypes.resize(statement->fields.size());
-    for (size_t i = 0; i < statement->fields.size(); ++i) {
-        fieldTypes[i] = statement->fields[i].type;
-    }
-    symbolTable.declare(
-        Symbol{
-            .name = statement->name,
-            .kind = SymbolKind::Bundle,
-            .type = std::make_shared<ast::BundleType>(fieldTypes),
-            .line = statement->getLine(),
-            .column = statement->getColumn(),
-            .declarationNode = statement,
-            .isConstant = false,  // Bundles are not constants
-            .scopeDepth = symbolTable.currentScopeDepth(),
-            .visibility = statement->visibility,
-
-        });
-}
-void SemanticAnalyzer::checkContinueStatement(ast::ContinueStatement* statement) {
-    if (!context.isLoopContext()) {
-        logError("continue statements can only be used inside loops", statement);
-    }
-}
-void SemanticAnalyzer::checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
-}
-void SemanticAnalyzer::checkExpressionStatement(ast::ExpressionStatement* statement) {
-    checkExpression(statement->expression.get());
-}
-void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
-}
-void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
-}
-void SemanticAnalyzer::checkImportStatement(ast::ImportStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
-}
-void SemanticAnalyzer::checkModuleDeclarationStatement(ast::ModuleDeclarationStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
-}
-void SemanticAnalyzer::checkRepeatLoopStatement(ast::RepeatLoopStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
-}
-void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
-    if (!context.isFunctionContext()) {
-        logError("return statements can only be used inside functions", statement);
-    }
-    checkExpression(statement->value.get());
-}
-void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
-}
-void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement) {
-    bool isInvalidDeclaration = false;
-    if (statement->isConstant() && !statement->value) {
-        logError("Constant variable '{}' must be initialized", statement, statement->name);
-        isInvalidDeclaration = true;
-    }
-    if (!statement->type && !statement->value) {
-        logError("Variable '{}' must have a type or an initializer", statement, statement->name);
-        isInvalidDeclaration = true;
-    }
-    if (isInvalidDeclaration) {
-        return;
-    }
-
-    if (statement->type && statement->value) {
-        checkExpression(statement->value.get());
-        if (!areTypesCompatible(statement->value->getType(), statement->type.get())) {
-            logError("Type mismatch for variable '{}': expected {}, got {}", statement,
-                     statement->name, statement->type->toString(), statement->value->getType()->toString());
-        }
-    } else if (statement->value) {
-        checkExpression(statement->value.get());
-        statement->type = statement->value->getTypePtr();
-    }
-    // If the variable only has a type and no initializer, there's no need to check the type
-
-    symbolTable.declare(
-        Symbol{
-            .name = statement->name,
-            .kind = statement->isConstant() ? SymbolKind::Constant : SymbolKind::Variable,
-            .type = statement->type,
-            .line = statement->getLine(),
-            .column = statement->getColumn(),
-            .declarationNode = statement,
-            .isConstant = statement->isConstant(),
-            .scopeDepth = symbolTable.currentScopeDepth(),
-            .visibility = statement->visibility,
-        });
-}
-void SemanticAnalyzer::checkWhileLoopStatement(ast::WhileLoopStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
 }
 
 }  // namespace semantic

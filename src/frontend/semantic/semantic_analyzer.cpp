@@ -12,13 +12,5 @@
 namespace Manganese {
 namespace semantic {
 
-void SemanticAnalyzer::analyze(parser::ParsedFile& parsedFile) {
-    // checkImports(parsedFile.imports);
-    currentModule = parsedFile.moduleName;
-    for (const auto& statement : parsedFile.program) {
-        checkStatement(statement.get());
-    }
-}
-
 }  // namespace semantic
 }  // namespace Manganese

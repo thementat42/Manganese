@@ -357,6 +357,7 @@ StatementUPtr_t Parser::parseReturnStatement() {
     ExpressionUPtr_t expression = nullptr;
     if (currentToken().getType() != TokenType::Semicolon) {
         // If the next token is not a semicolon, parse an expression
+        // If it is, this is a null return statement
         expression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::Semicolon, "Expected semicolon after return statement");

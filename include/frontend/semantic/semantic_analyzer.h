@@ -43,13 +43,20 @@ class SemanticAnalyzer {
     bool hasError_;
     bool hasWarning_;
     ContextCounters context;
+    ast::TypeSPtr_t currentFunctionReturnType = nullptr;
 
    public:
     explicit SemanticAnalyzer() noexcept : hasError_(false), hasWarning_(false) {
         symbolTable.enterScope();
     }
 
-    void analyze(parser::ParsedFile& parsedFile);
+    inline void analyze(parser::ParsedFile& parsedFile) {
+        // checkImports(parsedFile.imports);
+        currentModule = parsedFile.moduleName;
+        for (const auto& statement : parsedFile.program) {
+            checkStatement(statement.get());
+        }
+    }
 
     bool hasError() const noexcept { return hasError_; }
     bool hasWarning() const noexcept { return hasWarning_; }
@@ -61,10 +68,10 @@ class SemanticAnalyzer {
     void checkExpression(ast::Expression* expression) noexcept_if_release;
 
     // ===== Misc Helpers =====
-    inline void enterScope() {symbolTable.enterScope(); }
-    inline void exitScope() {symbolTable.exitScope(); }
+    inline void enterScope() { symbolTable.enterScope(); }
+    inline void exitScope() { symbolTable.exitScope(); }
 
-    template <typename ... Args>
+    template <typename... Args>
     inline void logWarning(const std::format_string<Args...>& fmt, ast::ASTNode* node, Args&&... args) noexcept {
         logging::logWarning(std::format(fmt, std::forward<Args>(args)...), node->getLine(), node->getColumn());
         hasWarning_ = true;
@@ -107,7 +114,6 @@ class SemanticAnalyzer {
     void checkBundleDeclarationStatement(ast::BundleDeclarationStatement* statement);
     void checkContinueStatement(ast::ContinueStatement* statement);
     void checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement);
-    void checkExpressionStatement(ast::ExpressionStatement* statement);
     void checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement);
     void checkIfStatement(ast::IfStatement* statement);
     void checkImportStatement(ast::ImportStatement* statement);
@@ -130,7 +136,6 @@ class SemanticAnalyzer {
     inline bool areTypesCompatible(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release {
         return areTypesEqual(type1, type2) || areTypesPromotableOrDemotable(type1, type2);
     }
-    
 };
 }  // namespace semantic
 

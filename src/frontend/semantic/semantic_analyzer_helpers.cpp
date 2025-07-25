@@ -49,7 +49,8 @@ bool SemanticAnalyzer::typeExists(const ast::TypeSPtr_t& type) {
         }
 
         case TypeKind::GenericType:
-            logError("Generic types cannot be aliased", type.get());
+            ASSERT_UNREACHABLE(
+                "Existence of generic types cannot be checked in typeExists. Perform a different check")
             return false;
 
         default:
@@ -61,8 +62,11 @@ bool SemanticAnalyzer::typeExists(const ast::TypeSPtr_t& type) {
 }
 
 bool SemanticAnalyzer::areTypesEqual(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release {
+    if (!type1 && !type2) {
+        return true;  // Both types are null, consider them equal
+    }
     if (!type1 || !type2) {
-        return false;  // If either type is null, they are not compatible
+        return false;  // Only one is null, not compatible
     }
     if (type1 == type2) {
         return true;  // Same type instance is always compatible

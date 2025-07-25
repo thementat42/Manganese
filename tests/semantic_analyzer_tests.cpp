@@ -69,7 +69,7 @@ bool analyzeLiterals() {
 bool analyzeSimpleVariableDeclaration() {
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(
-        "let x: int64 = 10; let x: int64 = 20;"
+        "let x: int64 = 10; let x: int8 = 20i32;"
         "let y: string = \"hello\";"
         "const z = x; z = 3;"
         "let a = [[1, 2], [3, 4]]; let b = a[0]; let c = b[1];");
@@ -120,6 +120,23 @@ bool analyzeBundleInstantiation() {
     return true;
 }
 
+bool analyzeFunctionDeclarationAndCall() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse(
+        "func foo(a: int64, b: int64) -> int64 { return a; }"
+        "let result = foo(5, 10);"
+        "func greet(name: string) { print(\"Hello, \" + name); }"
+        "greet(\"World\");");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    if (program.size() != 4) {
+        std::cerr << "Expected 4 statements, got " << program.size() << "\n";
+        return false;
+    }
+    outputAnalyzedAST(program);
+    return true;
+}
+
 void runSemanticAnalysisTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -129,6 +146,7 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Analyze Simple Variable Declaration", analyzeSimpleVariableDeclaration);
     runner.runTest("Analyze Aliases", analyzeAliases);
     runner.runTest("Analyze Bundle Instantiation", analyzeBundleInstantiation);
+    runner.runTest("Analyze Function Declaration and Call", analyzeFunctionDeclarationAndCall);
 }
 
 }  // namespace tests
