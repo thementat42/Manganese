@@ -159,6 +159,7 @@ if(BUILD_TESTS)
             # -fprofile-arcs
             # -ftest-coverage
             # -lgcov
+            --save-temps
         )
         # target_link_libraries(${PROJECT_NAME}_tests PRIVATE gcov)
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
