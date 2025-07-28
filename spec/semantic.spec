@@ -78,13 +78,14 @@ Notes:
     int++ -> int
     ++float -> float
     float++ -> float
+--
     --int -> int
     int-- -> int
     --float -> float
     float-- -> float
 
 === Comparison Operators ===
-Here, __op__ stands for any of {<, <=, >, >=}
+Here, __op__ stands for any of {<, <=, >, >=, ==, !=}
     int __op__ int -> bool
     int __op__ float -> bool
     float __op__ int -> bool
@@ -93,17 +94,6 @@ Here, __op__ stands for any of {<, <=, >, >=}
     char __op__ char -> bool (compares ASCII values)
     string __op__ string -> bool (compare character by character -- on ties, shorter = smaller)
     array __op__ array -> bool (compare element by element -- on ties, shorter = smaller)
-
-
-Here __op__ stands for any of {==, !=}
-    int __op__ int -> bool
-    int __op__ float -> bool
-    float __op__ int -> bool
-    float __op__ float -> bool
-    char __op__ char -> bool
-    bool __op__ bool -> bool
-    string __op__ string -> bool
-    array __op__ array -> bool
 
 
 === Boolean Operators ===
@@ -115,7 +105,7 @@ Here __op__ stands for any of {==, !=}
 
 == Bitwise Operators ==
 Here, __op__ stands for any of {&, |, ^, <<, >>}
-    int __op__ int -> int (only on ints of the same bit width and signedness)
+    int __op__ int -> int
 
 ~
     ~int -> int

@@ -33,12 +33,14 @@ void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
     // Function is not null, return is not null -- ok
     // Function is not null, return is null -- error
 
-    if (currentFunctionReturnType) {
+    auto returnType = context.currentFunctionReturnType;
+
+    if (returnType) {
         auto returnedType = statement->value->getType();
-        if (!areTypesCompatible(returnedType, currentFunctionReturnType.get())) {
+        if (!areTypesCompatible(returnedType, returnType.get())) {
 
             logError("Return type mismatch in function: expected {}, got {}",
-                     statement, currentFunctionReturnType->toString(),
+                     statement, returnType->toString(),
                      (returnedType ? returnedType->toString() : "no return type"));
         }
     } else {

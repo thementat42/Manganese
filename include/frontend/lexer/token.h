@@ -82,6 +82,11 @@ extern std::unordered_map<std::string, const TokenType> operatorMap;
 TokenType keywordFromString(const std::string& keyword, const size_t line, const size_t column);
 TokenType operatorFromString(const std::string& op, const size_t line, const size_t column);
 
+//~ Helpers for checking token type classifications
+constexpr bool isBinaryOperator(const TokenType type) noexcept;
+constexpr bool isUnaryOperator(const TokenType type) noexcept;
+
+
 // Implementation of TokenType
 enum class TokenType : uint8_t {
     //~ Basic

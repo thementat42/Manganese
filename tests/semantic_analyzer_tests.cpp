@@ -137,6 +137,39 @@ bool analyzeFunctionDeclarationAndCall() {
     return true;
 }
 
+bool testBinaryExpressions() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse(
+        "let a = 8 + 3i64 * 12 - 4 ^^ 8;"
+        "let b = 8 - 3i64;"
+        "let c = \"Hello!\"*10u32;"
+        "let d = 4/2;"
+        "let e = 4//2;"
+        "let f = 3%5;"
+        "let g = 5 < 4;"
+        "let h = 6 > (0 - 2);"
+        "let i = 3 <= 1;"
+        "let j = 8 >= 4;"
+        "let k = 1 == 1 * 1;"
+        "let l = 7 != (5*3);"
+        "let m = true || (false && false);"
+        "let n = 1 & 3;"
+        "let o = 1 | 3;"
+        "let p = 1 ^ 3;"
+        "let q = 1 << 3;"
+        "let r = 1 >> 3;"
+    );
+
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    if (program.size() != 18) {
+        std::cerr << "Expected 18 statements, got " << program.size() << "\n";
+        return false;
+    }
+    outputAnalyzedAST(program);
+    return true;
+}
+
 void runSemanticAnalysisTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -147,6 +180,7 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Analyze Aliases", analyzeAliases);
     runner.runTest("Analyze Bundle Instantiation", analyzeBundleInstantiation);
     runner.runTest("Analyze Function Declaration and Call", analyzeFunctionDeclarationAndCall);
+    runner.runTest("Binary Expressions", testBinaryExpressions);
 }
 
 }  // namespace tests

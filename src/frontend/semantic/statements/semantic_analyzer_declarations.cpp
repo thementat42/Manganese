@@ -75,8 +75,7 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
     }
     // If return type is specified, check that it exists
 
-    ast::TypeSPtr_t returnType = statement->returnType;
-    this->currentFunctionReturnType = returnType;
+    context.currentFunctionReturnType = statement->returnType;
     context.functionBody++;
     enterScope();
 
@@ -98,7 +97,7 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
     checkBlock(statement->body);
     context.functionBody--;
     exitScope();
-    this->currentFunctionReturnType = nullptr;
+    context.currentFunctionReturnType = nullptr;
 
     std::vector<ast::FunctionParameterType> parameterTypes;
     parameterTypes.reserve(statement->parameters.size());
@@ -110,7 +109,7 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
         Symbol{
             .name = statement->name,
             .kind = SymbolKind::Function,
-            .type = std::make_shared<ast::FunctionType>(parameterTypes, returnType),
+            .type = std::make_shared<ast::FunctionType>(parameterTypes, statement->returnType),
             .line = statement->getLine(),
             .column = statement->getColumn(),
             .declarationNode = statement,

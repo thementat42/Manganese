@@ -159,6 +159,42 @@ void Token::log(const Token& token) noexcept {
     token.log();
 }
 
+constexpr bool isBinaryOperator(const TokenType type) noexcept {
+    using enum TokenType;
+    return type == Plus ||
+           type == Minus ||
+           type == Mul ||
+           type == Div ||
+           type == FloorDiv ||
+           type == Mod ||
+           type == Exp ||
+           type == GreaterThan ||
+           type == GreaterThanOrEqual ||
+           type == LessThan ||
+           type == LessThanOrEqual ||
+           type == Equal ||
+           type == NotEqual ||
+           type == And ||
+           type == Or ||
+           type == BitAnd ||
+           type == BitOr ||
+           type == BitXor ||
+           type == BitLShift ||
+           type == BitRShift;
+}
+
+constexpr bool isUnaryOperator(const TokenType type) noexcept {
+    using enum TokenType;
+    return type == UnaryPlus ||
+           type == UnaryMinus ||
+           type == Inc ||
+           type == Dec ||
+           type == BitNot ||
+           type == Not ||
+           type == AddressOf ||
+           type == Dereference;
+}
+
 // ! === Really Long Stuff ===
 
 std::string tokenTypeToString(TokenType type) noexcept_if_release {

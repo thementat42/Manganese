@@ -17,13 +17,14 @@ namespace semantic {
  * @brief Some statements are only valid in certain contexts (e.g. return in function bodies, break/continue in loops).
  * This struct keeps track of current context flags to determine if a statement is valid in the current scope.
  */
-struct ContextCounters {
+struct Context {
     int64_t functionBody = 0;
     int64_t ifStatement = 0;
     int64_t whileLoop = 0;
     int64_t repeatLoop = 0;
     int64_t forLoop = 0;
     int64_t switchStatement = 0;
+    ast::TypeSPtr_t currentFunctionReturnType = nullptr;
 
     bool isFunctionContext() const noexcept { return functionBody > 0; }
     bool isIfContext() const noexcept { return ifStatement > 0; }
@@ -36,14 +37,18 @@ struct ContextCounters {
     }
 };
 
+constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release;
+
 class SemanticAnalyzer {
    private:
     SymbolTable symbolTable;
     std::string currentModule;
-    bool hasError_;
-    bool hasWarning_;
-    ContextCounters context;
-    ast::TypeSPtr_t currentFunctionReturnType = nullptr;
+
+    // Note: These are mutable so that things like logError can be called in const functions
+    // while still setting these flags
+    mutable bool hasError_;
+    mutable bool hasWarning_;
+    Context context;
 
    public:
     explicit SemanticAnalyzer() noexcept : hasError_(false), hasWarning_(false) {
@@ -78,7 +83,7 @@ class SemanticAnalyzer {
     }
 
     template <typename... Args>
-    inline void logError(const std::format_string<Args...>& fmt, ast::ASTNode* node, Args&&... args) noexcept {
+    inline void logError(const std::format_string<Args...>& fmt, const ast::ASTNode* node, Args&&... args) const noexcept {
         logging::logError(std::format(fmt, std::forward<Args>(args)...), node->getLine(), node->getColumn());
         hasError_ = true;
     }
@@ -125,8 +130,8 @@ class SemanticAnalyzer {
     void checkWhileLoopStatement(ast::WhileLoopStatement* statement);
 
     // ===== Helpers for Specific Checks =====
+    bool handleInPlaceAssignment(Manganese::ast::AssignmentExpression* expression);
     bool typeExists(const ast::TypeSPtr_t& type);
-    bool areTypesEqual(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release;
     /**
      * @brief Checks if one type can be promoted or demoted to another type. (e.g. int32 <-> int64)
      * @note Issues a warning on demotion
@@ -134,8 +139,16 @@ class SemanticAnalyzer {
      */
     bool areTypesPromotableOrDemotable(const ast::Type* from, const ast::Type* to) const noexcept_if_release;
     inline bool areTypesCompatible(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release {
-        return areTypesEqual(type1, type2) || areTypesPromotableOrDemotable(type1, type2);
+        return *type1 == *type2 || areTypesPromotableOrDemotable(type1, type2);
     }
+    inline bool isBool(const ast::Type* t) const noexcept_if_release {
+        return areTypesCompatible(t, std::make_shared<ast::SymbolType>("bool").get());
+    }
+
+    ast::TypeSPtr_t resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
+    ast::TypeSPtr_t widestNumericType(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release;
+    ast::TypeSPtr_t resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
+    ast::TypeSPtr_t resolveArithmeticBinaryExpressionType(ast::BinaryExpression* binaryExpression, lexer::TokenType op) const noexcept_if_release;
 };
 }  // namespace semantic
 

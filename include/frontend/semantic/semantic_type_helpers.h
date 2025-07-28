@@ -2,8 +2,24 @@
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_TYPE_HELPERS_H
 
 #include <frontend/ast.h>
-#include <unordered_map>
+#include <frontend/lexer/token.h>
 #include <utils/number_utils.h>
+
+#include <unordered_map>
+#include <utility>
+#include <functional>
+
+namespace std {
+    template <>
+    struct hash<std::pair<std::string, std::string>> {
+        std::size_t operator()(const std::pair<std::string, std::string>& p) const noexcept {
+            std::size_t h1 = std::hash<std::string>{}(p.first);
+            std::size_t h2 = std::hash<std::string>{}(p.second);
+            // Combine the two hashes
+            return h1 ^ (h2 << 1);
+        }
+    };
+}
 
 namespace Manganese {
 
@@ -41,11 +57,10 @@ const std::unordered_map<std::string, std::string> validImplicitConversions = {
     // These are only to larger bit widths
     {uint8_str, int16_str},
     {uint8_str, int32_str},
-    {uint8_str, int64_str},    
+    {uint8_str, int64_str},
     {uint16_str, int32_str},
     {uint16_str, int64_str},
     {uint32_str, int64_str},
-
 
 };
 
@@ -93,7 +108,6 @@ const std::unordered_map<std::string, std::string> validImplicitConversionsWithW
     {uint64_str, int16_str},
     {uint64_str, int32_str},
 
-
     // signed to unsigned of lower bit width
     // Loss of negative values + outside of range values
     {int64_str, uint8_str},
@@ -115,6 +129,95 @@ const std::unordered_map<std::string, std::string> validImplicitConversionsWithW
     {int32_str, uint64_str},
     {int64_str, uint64_str},
 };
+
+const std::unordered_map<std::pair<std::string, std::string>, std::string> numericTypePromotionTable = {
+    {{int8_str, int8_str}, float64_str},
+    {{int16_str, uint32_str}, float64_str},
+    {{int32_str, uint16_str}, float64_str},
+    {{uint16_str, uint32_str}, uint32_str},
+    {{int16_str, int64_str}, int64_str},
+    {{int8_str, uint32_str}, float64_str},
+    {{uint16_str, uint16_str}, uint16_str},
+    {{uint8_str, uint16_str}, float64_str},
+    {{int8_str, int32_str}, float64_str},
+    {{uint32_str, uint32_str}, float64_str},
+    {{int16_str, float32_str}, float32_str},
+    {{int16_str, float64_str}, float64_str},
+    {{int64_str, uint16_str}, int64_str},
+    {{uint32_str, float32_str}, float64_str},
+    {{uint64_str, uint64_str}, float64_str},
+    {{uint32_str, float64_str}, float64_str},
+    {{int64_str, uint8_str}, int64_str},
+    {{int32_str, uint32_str}, float64_str},
+    {{int32_str, int64_str}, int64_str},
+    {{int16_str, int16_str}, int16_str},
+    {{int8_str, uint16_str}, int32_str},
+    {{uint8_str, uint32_str}, uint32_str},
+    {{int64_str, float64_str}, float64_str},
+    {{uint8_str, float32_str}, float32_str},
+    {{int64_str, int64_str}, int64_str},
+    {{int16_str, uint8_str}, int16_str},
+    {{int32_str, int32_str}, int32_str},
+    {{int16_str, uint64_str}, float64_str},
+    {{int8_str, int64_str}, float64_str},
+    {{int8_str, int64_str}, int64_str},
+    {{int16_str, int64_str}, float64_str},
+    {{int16_str, int32_str}, int32_str},
+    {{uint16_str, uint64_str}, float64_str},
+    {{int8_str, uint64_str}, float64_str},
+    {{int8_str, float32_str}, float32_str},
+    {{int8_str, uint16_str}, float64_str},
+    {{uint16_str, float32_str}, float32_str},
+    {{int32_str, int64_str}, float64_str},
+    {{int32_str, uint16_str}, int32_str},
+    {{int8_str, int16_str}, int16_str},
+    {{uint8_str, float64_str}, float64_str},
+    {{int32_str, uint32_str}, int64_str},
+    {{int32_str, int32_str}, float64_str},
+    {{float64_str, float64_str}, float64_str},
+    {{int64_str, uint32_str}, int64_str},
+    {{int8_str, int8_str}, int8_str},
+    {{int16_str, uint16_str}, float64_str},
+    {{int16_str, int16_str}, float64_str},
+    {{int16_str, uint16_str}, int32_str},
+    {{int64_str, uint16_str}, float64_str},
+    {{int16_str, uint32_str}, int64_str},
+    {{int32_str, uint8_str}, float64_str},
+    {{int16_str, int32_str}, float64_str},
+    {{uint8_str, uint32_str}, float64_str},
+    {{int8_str, uint8_str}, float64_str},
+    {{uint32_str, uint32_str}, uint32_str},
+    {{uint8_str, uint64_str}, uint64_str},
+    {{int64_str, uint32_str}, float64_str},
+    {{uint64_str, float64_str}, float64_str},
+    {{int8_str, int32_str}, int32_str},
+    {{float32_str, float64_str}, float64_str},
+    {{int32_str, float64_str}, float64_str},
+    {{int8_str, uint32_str}, int64_str},
+    {{int8_str, float64_str}, float64_str},
+    {{uint64_str, float32_str}, float64_str},
+    {{uint64_str, uint64_str}, uint64_str},
+    {{int64_str, float32_str}, float64_str},
+    {{int64_str, uint64_str}, float64_str},
+    {{uint8_str, uint8_str}, uint8_str},
+    {{uint32_str, uint64_str}, float64_str},
+    {{int64_str, uint8_str}, float64_str},
+    {{int8_str, int16_str}, float64_str},
+    {{uint16_str, uint16_str}, float64_str},
+    {{uint32_str, uint64_str}, uint64_str},
+    {{int16_str, uint8_str}, float64_str},
+    {{int32_str, uint64_str}, float64_str},
+    {{int64_str, int64_str}, float64_str},
+    {{uint8_str, uint64_str}, float64_str},
+    {{int8_str, uint8_str}, int16_str},
+    {{int32_str, uint8_str}, int32_str},
+    {{uint8_str, uint16_str}, uint16_str},
+    {{uint16_str, uint64_str}, uint64_str},
+    {{float32_str, float32_str}, float32_str},
+    {{int32_str, float32_str}, float64_str},
+    {{uint16_str, float64_str}, float64_str},
+    {{uint16_str, uint32_str}, float64_str},
+    {{uint8_str, uint8_str}, float64_str}};
 
 }  // namespace semantic
 
