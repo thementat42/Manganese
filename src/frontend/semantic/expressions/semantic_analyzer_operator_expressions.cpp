@@ -316,8 +316,57 @@ ast::TypeSPtr_t SemanticAnalyzer::widestNumericType(const ast::Type* type1, cons
 }
 
 ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const {
-    DISCARD(binaryExpression);
-    throw std::runtime_error("Not implemented");
+    using ast::TypeKind;
+    using lexer::TokenType;
+
+    const auto* left = binaryExpression->left.get();
+    auto leftArrayType = static_cast<const ast::ArrayType*>(left->getType());
+    const auto* right = binaryExpression->right.get();
+    auto op = binaryExpression->op;
+
+    switch (op) {
+        case TokenType::Plus: {
+            // Array + Array => Array of the same type
+            if (right->getType()->kind() == TypeKind::ArrayType) {
+                auto rightArrayType = static_cast<ast::ArrayType*>(right->getType());
+                if (areTypesCompatible(leftArrayType->elementType.get(), rightArrayType->elementType.get())) {
+                    return std::make_shared<ast::ArrayType>(leftArrayType->elementType);
+                }
+                logError("Cannot add arrays of different element types: {} and {}", binaryExpression, left->getType()->toString(), right->getType()->toString());
+                return nullptr;
+            }
+            logError("Operator '+' not supported for array and {}", binaryExpression, right->getType()->toString());
+            return nullptr;
+        }
+        case TokenType::Mul: {
+            // Array * Int => Array of the same type repeated n times
+            if (isUInt(right->getType())) {
+                return std::make_shared<ast::ArrayType>(leftArrayType->elementType);
+            }
+            logError("Operator '*' not supported for array and {}", binaryExpression, right->getType()->toString());
+            return nullptr;
+        }
+        case TokenType::Equal:
+        case TokenType::NotEqual:
+        case TokenType::GreaterThan:
+        case TokenType::GreaterThanOrEqual:
+        case TokenType::LessThan:
+        case TokenType::LessThanOrEqual: {
+            if (right->getType()->kind() != TypeKind::ArrayType) {
+                logError("Cannot compare array with non-array type: {} and {}", binaryExpression, left->getType()->toString(), right->getType()->toString());
+                return nullptr;
+            }
+            auto rightArrayType = static_cast<ast::ArrayType*>(right->getType());
+            if (areTypesCompatible(leftArrayType->elementType.get(), rightArrayType->elementType.get())) {
+                return std::make_shared<ast::SymbolType>("bool");
+            }
+            logError("Cannot compare arrays of different element types: {} and {}", binaryExpression, left->getType()->toString(), right->getType()->toString());
+            return nullptr;
+        }
+        default:
+            logError("Operator '{}' not supported for arrays", binaryExpression, lexer::tokenTypeToString(op));
+            return nullptr;
+    }   
 }
 
 }  // namespace semantic

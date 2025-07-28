@@ -121,7 +121,6 @@ bool analyzeBundleInstantiation() {
 }
 
 bool analyzeFunctionDeclarationAndCall() {
-    //TODO: There's a bug in setting variables equal to functions (with or without type declarations)
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(
         "alias int64 as i64;"
@@ -161,13 +160,16 @@ bool testBinaryExpressions() {
         "let p = 1 ^ 3;"
         "let q = 1 << 3;"
         "let r = 1 >> 3;"
+        "let s = [a, b] + [c, d];"
+        "let t = [e, f] * 10u8;"
+        "let u = [g, h] > [i, j];"
     );
 
     analyzer.analyze(file);
     const auto& program = file.program;
     outputAnalyzedAST(program);
-    if (program.size() != 18) {
-        std::cerr << "Expected 18 statements, got " << program.size() << "\n";
+    if (program.size() != 21) {
+        std::cerr << "Expected 21 statements, got " << program.size() << "\n";
         return false;
     }
     return true;
