@@ -84,9 +84,9 @@ static inline const auto isFloat = [](const ast::Type* t) -> bool {
 static inline const auto isChar = [](const ast::Type* t) -> bool {
     return ast::isPrimitiveType(t) && t->toString() == "char";
 };
-static inline const auto isBool = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString() == "bool";
-};
+// static inline const auto isBool = [](const ast::Type* t) -> bool {
+//     return ast::isPrimitiveType(t) && t->toString() == "bool";
+// };
 static inline const auto isString = [](const ast::Type* t) -> bool {
     return ast::isPrimitiveType(t) && t->toString() == "string";
 };
