@@ -19,16 +19,16 @@ void logInternal(const std::string& message, LogLevel level, std::ostream& out) 
 #if DEBUG
     switch (level) {
         case LogLevel::Info:
-            out << BLUE << "[INFO] " << message << RESET << "\n";
+            out << BLUE << "[Internal Info] " << message << RESET << "\n";
             break;
         case LogLevel::Warning:
-            out << YELLOW << "[WARNING] " << message << RESET << "\n";
+            out << YELLOW << "[Internal Warning] " << message << RESET << "\n";
             break;
         case LogLevel::Error:
-            out << RED << "[ERROR] " << message << RESET << "\n";
+            out << RED << "[Internal Error] " << message << RESET << "\n";
             break;
         case LogLevel::Critical:
-            out << RED << "[CRITICAL] " << message << RESET << "\n";
+            out << RED << "[Internal Critical Error] " << message << RESET << "\n";
 
             break;
     }
