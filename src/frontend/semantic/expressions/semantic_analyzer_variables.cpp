@@ -21,7 +21,7 @@ void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expr
     if (expression->assignee->kind() == ast::ExpressionKind::IdentifierExpression) {
         // Checking if the identifier is declared in the current scope was already done in checkIdentifierExpression
         auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->assignee.get());
-        Symbol* symbol = symbolTable.lookupInCurrentScope(identifierExpression->value);
+        const Symbol* symbol = symbolTable.lookupInCurrentScope(identifierExpression->value);
         if (!symbol) {
             logError("{} was not declared in this scope. Declare it using 'let'", expression, identifierExpression->value);
             return;
@@ -41,7 +41,7 @@ void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expr
 }
 
 void SemanticAnalyzer::checkIdentifierExpression(ast::IdentifierExpression* expression) {
-    Symbol* location = symbolTable.lookupInCurrentScope(expression->value);
+    const Symbol* location = symbolTable.lookupInCurrentScope(expression->value);
     if (location) {
         expression->setType(location->type);
         return;

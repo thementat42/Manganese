@@ -36,9 +36,9 @@ bool SymbolTable::declare(Symbol symbol) {
     return scopes.back().insert(std::move(symbol));
 }
 
-Symbol* SymbolTable::lookup(const std::string& name) {
+const Symbol* SymbolTable::lookup(const std::string& name) const noexcept {
     for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
-        Symbol* symbol = it->lookup(name);
+        const Symbol* symbol = it->lookup(name);
         if (symbol) {
             return symbol;
         }
@@ -47,12 +47,12 @@ Symbol* SymbolTable::lookup(const std::string& name) {
     return nullptr;
 }
 
-Symbol* SymbolTable::lookupInCurrentScope(const std::string& name) {
+const Symbol* SymbolTable::lookupInCurrentScope(const std::string& name) const noexcept {
     if (scopes.empty()) {
         logging::logInternal("No active scope to lookup symbol.", logging::LogLevel::Error);
         return nullptr;
     }
-    Symbol* symbol = scopes.back().lookup(name);
+    const Symbol* symbol = scopes.back().lookup(name);
     if (!symbol) {
         logging::logInternal("Symbol '" + name + "' not found in current scope.", logging::LogLevel::Warning);
     }

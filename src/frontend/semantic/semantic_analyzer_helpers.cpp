@@ -38,6 +38,20 @@ bool SemanticAnalyzer::areTypesPromotableOrDemotable(const ast::Type* from, cons
     return false;  // No valid promotion or demotion found
 }
 
+const ast::Type* SemanticAnalyzer::resolveAlias(const ast::Type* type) const noexcept_if_release {
+    if (!type) return nullptr;
+    // Only SymbolType can be aliased
+    if (type->kind() == ast::TypeKind::SymbolType) {
+        const auto* symbolType = static_cast<const ast::SymbolType*>(type);
+        const Symbol* symbol = symbolTable.lookup(symbolType->getName());
+        if (symbol && symbol->kind == SymbolKind::TypeAlias && symbol->type.get() != type) {
+            // Recursively resolve in case of chained aliases
+            return resolveAlias(symbol->type.get());
+        }
+    }
+    return type;
+}
+
 bool SemanticAnalyzer::typeExists(const ast::TypeSPtr_t& type) {
     using ast::TypeKind;
     if (!type) {
@@ -49,7 +63,7 @@ bool SemanticAnalyzer::typeExists(const ast::TypeSPtr_t& type) {
                 return true;
             }
             ast::SymbolType* symbolType = static_cast<ast::SymbolType*>(type.get());
-            Symbol* symbol = symbolTable.lookupInCurrentScope(symbolType->getName());
+            const Symbol* symbol = symbolTable.lookupInCurrentScope(symbolType->getName());
             return symbol != nullptr;
         }
         case TypeKind::ArrayType: {

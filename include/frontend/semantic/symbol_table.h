@@ -48,16 +48,16 @@ struct Symbol {
 
 struct Scope {
     std::unordered_map<std::string, Symbol> symbols;
-    inline bool insert(const Symbol symbol) {
+    inline bool insert(const Symbol symbol) noexcept {
         return symbols.emplace(symbol.name, symbol).second;
     }
 
-    Symbol* lookup(const std::string& name) {
+    const Symbol* lookup(const std::string& name) const noexcept {
         auto it = symbols.find(name);
         return (it != symbols.end()) ? &it->second : nullptr;
     }
 
-    inline Symbol* lookup(const char* name) {
+    inline const Symbol* lookup(const char* name) const noexcept {
         return lookup(std::string(name));
     }
 };
@@ -78,10 +78,10 @@ class SymbolTable {
 
     bool declare(Symbol symbol);
 
-    Symbol* lookup(const std::string& name);
-    inline Symbol* lookup(const char* name) { return lookup(std::string(name)); }
-    Symbol* lookupInCurrentScope(const std::string& name);
-    inline Symbol* lookupInCurrentScope(const char* name) { return lookupInCurrentScope(std::string(name)); };
+    const Symbol* lookup(const std::string& name) const noexcept;
+    inline const Symbol* lookup(const char* name) const noexcept { return lookup(std::string(name)); }
+    const Symbol* lookupInCurrentScope(const std::string& name) const noexcept;
+    inline const Symbol* lookupInCurrentScope(const char* name) const noexcept { return lookupInCurrentScope(std::string(name)); };
 
     int64_t currentScopeDepth() const noexcept {
         return scopeDepth;

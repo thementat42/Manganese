@@ -78,7 +78,7 @@ void SemanticAnalyzer::checkExpression(ast::Expression* expression) noexcept_if_
 // ===== Specific Expression Checks =====
 
 void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiationExpression* expression) {
-    Symbol* bundleSymbol = symbolTable.lookup(expression->name);
+    const Symbol* bundleSymbol = symbolTable.lookup(expression->name);
     if (!bundleSymbol) {
         logError("Bundle type {} was not declared in any scope", expression, expression->name);
         return;
@@ -127,7 +127,7 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
         return;
     }
     auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->callee.get());
-    Symbol* functionSymbol = symbolTable.lookup(identifierExpression->value);
+    const Symbol* functionSymbol = symbolTable.lookup(identifierExpression->value);
     if (!functionSymbol) {
         logError("Function '{}' was not declared in any scope", expression, identifierExpression->value);
         return;

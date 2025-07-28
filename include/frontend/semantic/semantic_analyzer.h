@@ -132,14 +132,18 @@ class SemanticAnalyzer {
     // ===== Helpers for Specific Checks =====
     bool handleInPlaceAssignment(Manganese::ast::AssignmentExpression* expression);
     bool typeExists(const ast::TypeSPtr_t& type);
+    const ast::Type* resolveAlias(const ast::Type* type) const noexcept_if_release;
     /**
      * @brief Checks if one type can be promoted or demoted to another type. (e.g. int32 <-> int64)
      * @note Issues a warning on demotion
      * @note This should not allow implicit conversions (e.g. char-> int),only the same "basic" type with different widths
      */
     bool areTypesPromotableOrDemotable(const ast::Type* from, const ast::Type* to) const noexcept_if_release;
+
     inline bool areTypesCompatible(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release {
-        return *type1 == *type2 || areTypesPromotableOrDemotable(type1, type2);
+        const ast::Type* type1Resolved = resolveAlias(type1);
+        const ast::Type* type2Resolved = resolveAlias(type2);
+        return *type1Resolved == *type2Resolved || areTypesPromotableOrDemotable(type1Resolved, type2Resolved);
     }
     inline bool isBool(const ast::Type* t) const noexcept_if_release {
         return areTypesCompatible(t, std::make_shared<ast::SymbolType>("bool").get());
