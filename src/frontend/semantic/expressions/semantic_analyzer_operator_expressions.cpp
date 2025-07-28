@@ -300,12 +300,7 @@ ast::TypeSPtr_t SemanticAnalyzer::widestNumericType(const ast::Type* type1, cons
         return std::make_shared<ast::SymbolType>(t1);
     }
 
-    // Fallback: prefer float64 > float32 > int64 > int32 > int16 > int8 > uint64 > uint32 > uint16 > uint8
-    static const std::vector<std::string> typeOrder = {
-        float64_str, float32_str,
-        int64_str, int32_str, int16_str, int8_str,
-        uint64_str, uint32_str, uint16_str, uint8_str};
-    for (const auto& candidate : typeOrder) {
+    for (const auto& candidate : fallbackTypeOrder) {
         if (t1 == candidate || t2 == candidate) {
             return std::make_shared<ast::SymbolType>(candidate);
         }

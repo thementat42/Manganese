@@ -161,7 +161,7 @@ bool testBinaryExpressions() {
         "let q = 1 << 3;"
         "let r = 1 >> 3;"
         "let s = [a, b] + [c, d];"
-        "let t = [e, f] * 10u8;"
+        "let t = [e, f] * 10i8;"
         "let u = [g, h] > [i, j];"
     );
 

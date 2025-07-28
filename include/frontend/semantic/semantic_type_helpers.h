@@ -5,25 +5,31 @@
 #include <frontend/lexer/token.h>
 #include <utils/number_utils.h>
 
+#include <functional>
 #include <unordered_map>
 #include <utility>
-#include <functional>
 
 namespace std {
-    template <>
-    struct hash<std::pair<std::string, std::string>> {
-        std::size_t operator()(const std::pair<std::string, std::string>& p) const noexcept {
-            std::size_t h1 = std::hash<std::string>{}(p.first);
-            std::size_t h2 = std::hash<std::string>{}(p.second);
-            // Combine the two hashes
-            return h1 ^ (h2 << 1);
-        }
-    };
-}
+template <>
+struct hash<std::pair<std::string, std::string>> {
+    std::size_t operator()(const std::pair<std::string, std::string>& p) const noexcept {
+        std::size_t h1 = std::hash<std::string>{}(p.first);
+        std::size_t h2 = std::hash<std::string>{}(p.second);
+        // Combine the two hashes
+        return h1 ^ (h2 << 1);
+    }
+};
+}  // namespace std
 
 namespace Manganese {
 
 namespace semantic {
+
+// Fallback: prefer float64 > float32 > int64 > int32 > int16 > int8 > uint64 > uint32 > uint16 > uint8
+const std::array<std::string, 10> fallbackTypeOrder = {
+    float64_str, float32_str,
+    int64_str, int32_str, int16_str, int8_str,
+    uint64_str, uint32_str, uint16_str, uint8_str};
 
 const std::unordered_map<std::string, std::string> validImplicitConversions = {
     // int8 promotions
