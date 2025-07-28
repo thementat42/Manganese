@@ -57,11 +57,11 @@ bool analyzeLiterals() {
     parser::ParsedFile file = parse("true; \"asdf\"; [1i64, 2, 3, 4, true]; 100; 'a';");
     analyzer.analyze(file);
     const ast::Block& program = file.program;
+    outputAnalyzedAST(program);
     if (program.size() != 5) {
         std::cerr << "Expected 5 statements, got " << program.size() << "\n";
         return false;
     }
-    outputAnalyzedAST(program);
 
     return true;
 }
@@ -75,11 +75,11 @@ bool analyzeSimpleVariableDeclaration() {
         "let a = [[1, 2], [3, 4]]; let b = a[0]; let c = b[1];");
     analyzer.analyze(file);
     const auto& program = file.program;
+    outputAnalyzedAST(program);
     if (program.size() != 8) {
         std::cerr << "Expected 8 statements, got " << program.size() << "\n";
         return false;
     }
-    outputAnalyzedAST(program);
     return true;
 }
 
@@ -92,11 +92,11 @@ bool analyzeAliases() {
         "alias bar as foo;");
     analyzer.analyze(file);
     const auto& program = file.program;
+    outputAnalyzedAST(program);
     if (program.size() != 4) {
         std::cerr << "Expected 4 statements, got " << program.size() << "\n";
         return false;
     }
-    outputAnalyzedAST(program);
     return true;
 }
 
@@ -112,28 +112,31 @@ bool analyzeBundleInstantiation() {
         "let q = Point3D{ x = \"Hi!\", z = 5, y = 6 };");
     analyzer.analyze(file);
     const auto& program = file.program;
+    outputAnalyzedAST(program);
     if (program.size() != 3) {
         std::cerr << "Expected 3 statements, got " << program.size() << "\n";
         return false;
     }
-    outputAnalyzedAST(program);
     return true;
 }
 
 bool analyzeFunctionDeclarationAndCall() {
+    //TODO: There's a bug in setting variables equal to functions (with or without type declarations)
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(
-        "func foo(a: int64, b: int64) -> int64 { return a; }"
-        "let result = foo(5, 10);"
+        "alias int64 as i64;"
+        "func foo(a: i64, b: i64) -> i64 { return a; }"
+        "let x = foo;"
+        "let result = x(5, 10);"
         "func greet(name: string) { print(\"Hello, \" + name); }"
         "greet(\"World\");");
     analyzer.analyze(file);
     const auto& program = file.program;
-    if (program.size() != 4) {
-        std::cerr << "Expected 4 statements, got " << program.size() << "\n";
+    outputAnalyzedAST(program);
+    if (program.size() != 6) {
+        std::cerr << "Expected 6 statements, got " << program.size() << "\n";
         return false;
     }
-    outputAnalyzedAST(program);
     return true;
 }
 
@@ -162,11 +165,11 @@ bool testBinaryExpressions() {
 
     analyzer.analyze(file);
     const auto& program = file.program;
+    outputAnalyzedAST(program);
     if (program.size() != 18) {
         std::cerr << "Expected 18 statements, got " << program.size() << "\n";
         return false;
     }
-    outputAnalyzedAST(program);
     return true;
 }
 

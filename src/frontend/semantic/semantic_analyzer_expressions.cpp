@@ -132,31 +132,37 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
         logError("Function '{}' was not declared in any scope", expression, identifierExpression->value);
         return;
     }
-    if (functionSymbol->kind != SymbolKind::Function) {
-        logError("{} is not a function, so cannot be called", expression, identifierExpression->value);
+
+    if (!functionSymbol->type || functionSymbol->type->kind() != ast::TypeKind::FunctionType) {
+        logError("{} is not callable (i.e., it is not a function type)", expression, identifierExpression->value);
         return;
     }
-    ast::FunctionDeclarationStatement* functionDeclaration = static_cast<ast::FunctionDeclarationStatement*>(functionSymbol->declarationNode);
-    if (functionDeclaration->parameters.size() != expression->arguments.size()) {
+
+    auto* functionType = static_cast<const ast::FunctionType*>(functionSymbol->type.get());
+    if (functionType->parameterTypes.size() != expression->arguments.size()) {
         logError("Function {} expects {} arguments, but {} were provided", expression, identifierExpression->value,
-                 functionDeclaration->parameters.size(), expression->arguments.size());
+                 functionType->parameterTypes.size(), expression->arguments.size());
         return;
     }
     for (size_t i = 0; i < expression->arguments.size(); ++i) {
         ast::Expression* argument = expression->arguments[i].get();
-        ast::Type* expectedType = functionDeclaration->parameters[i].type.get();
+        ast::Type* expectedType = functionType->parameterTypes[i].type.get();
         checkExpression(argument);
         if (!argument->getType()) {
             logError("Could not deduce the type of argument {} in function call, assuming 'int32'", expression, i + 1);
             argument->setType(std::make_shared<ast::SymbolType>("int32"));
         }
         if (!areTypesCompatible(argument->getType(), expectedType)) {
-            logError("Argument {} in function call to {} has type {}, but expected type is {}", expression, i + 1, argument->toString(),
+            logError("Argument {} in call to {} has type {}, but expected type is {}", expression, i + 1,
+                     identifierExpression->value,
                      argument->getType()->toString(), expectedType->toString());
             return;
         }
     }
+    // Set the type of the call expression to the function's return type
+    expression->setType(functionType->returnType);
 }
+
 void SemanticAnalyzer::checkGenericExpression(ast::GenericExpression* expression) {
     DISCARD(expression);
     PRINT_LOCATION;
