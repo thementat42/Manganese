@@ -44,6 +44,8 @@ class ArrayType : public Type {
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
+
+    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -58,6 +60,8 @@ class BundleType : public Type {
         : fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::BundleType; }
+
+    bool operator==(const Type& other) const noexcept override;
 };
 
 struct FunctionParameterType {
@@ -65,6 +69,10 @@ struct FunctionParameterType {
     TypeSPtr_t type;
 
     FunctionParameterType(bool isConst_, TypeSPtr_t type_) : isConst(isConst_), type(std::move(type_)) {}
+
+    bool operator==(const FunctionParameterType& other) const noexcept {
+        return isConst == other.isConst && type.get() == other.type.get();
+    }
 };
 
 /**
@@ -81,6 +89,8 @@ class FunctionType : public Type {
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
+
+    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -98,6 +108,8 @@ class GenericType : public Type {
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::GenericType; };
+
+    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -112,6 +124,8 @@ class PointerType : public Type {
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::PointerType; };
+
+    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -126,6 +140,8 @@ class SymbolType : public Type {
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }
     TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
+
+    bool operator==(const Type& other) const noexcept override;
 };
 
 bool isPrimitiveType(const TypeSPtr_t& type);

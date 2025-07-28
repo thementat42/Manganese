@@ -148,6 +148,7 @@ class Type : public ASTNode {
     virtual TypeKind kind() const noexcept = 0;
     friend parser::Parser;
     friend semantic::SemanticAnalyzer;
+    virtual bool operator==(const Type& other) const noexcept = 0;
 };
 
 }  // namespace ast
