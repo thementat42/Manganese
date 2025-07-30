@@ -91,7 +91,6 @@ std::string visibilityToString(const Visibility& visibility) noexcept_if_release
 class ASTNode {
    protected:
     size_t line = 0, column = 0;
-    bool isSemanticallyValid = false;
 
    public:
     virtual ~ASTNode() noexcept = default;
