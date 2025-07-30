@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 #ifndef DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a fallback
 #ifndef NDEBUG
@@ -26,14 +27,13 @@
 #define PRINT_LOCATION __PRINT_LOCATION  // Print the location of the log message (in the compiler source, not the user code)
 
 #if __cplusplus >= 202302L
-#include <utility>
 #define __COMPILER_UNREACHABLE std::unreachable();  // compiler agnostic, but still allows for optimisation
 // If < C++23, use a compiler-specific implementation
 #elif defined(__GNUC__) || defined(__clang__)
 #define __COMPILER_UNREACHABLE __builtin_unreachable();
 #elif defined(_MSC_VER)
 #define __COMPILER_UNREACHABLE __assume(false);
-#else  // If no compiler-specific implementation is available, do nothing
+#else  // If no (known) compiler-specific implementation is available, do nothing
 #define __COMPILER_UNREACHABLE
 #endif  // __cplusplus >= 202302L
 
@@ -55,7 +55,14 @@
 #define __UNREACHABLE(message) COMPILER_UNREACHABLE
 #endif  // DEBUG
 
-#define ASSERT_UNREACHABLE(message) __UNREACHABLE(message)  // Condition that should never be reached
+
+/**
+ * Indicates a place that should never be reached
+ * In debug mode, throws an std::runtime_error
+ * In release mode, marks the block as unreachable, for optimizations
+ * @note see
+ */
+#define ASSERT_UNREACHABLE(message) __UNREACHABLE(message)
 
 #if DEBUG
 #define __noexcept_if_release           // In debug mode, these functions are more likely to throw -- don't use noexcept
@@ -70,6 +77,20 @@
  */
 #define noexcept_if_release __noexcept_if_release
 
-#define DISCARD(value) (void)(value)  // Explicitly discard a value (useful for [[noexcept]] functions)
+#define DISCARD(value) (void)(value)  // Explicitly discard a value
+
+#if DEBUG
+#define __NOT_IMPLEMENTED \
+do {
+    std::cerr << "\033[31m" << __func__ << "is not implemented yet!";
+    std::cerr << " (if this occurred in a test run, make sure to implement the function, then re-run the tests)\n\033[0m";
+    PRINT_LOCATION;
+    throw std::runtime_error("Not implemented yet");
+} while (0)
+#else  // ^^ DEBUG vv !DEBUG
+#define __NOT_IMPLEMENTED
+#endif  // DEBUG
+
+#define NOT_IMPLEMENTED __NOT_IMPLEMENTED  // Indicates that a function is not implemented
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_H
