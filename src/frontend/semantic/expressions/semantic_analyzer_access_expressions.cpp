@@ -34,14 +34,12 @@ void SemanticAnalyzer::checkIndexExpression(ast::IndexExpression* expression) {
 
 void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* expression) {
     DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
 
 void SemanticAnalyzer::checkScopeResolutionExpression(ast::ScopeResolutionExpression* expression) {
     DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
 
 }  // namespace semantic

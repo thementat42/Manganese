@@ -50,46 +50,17 @@ void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) 
 
 void SemanticAnalyzer::checkPostfixExpression(ast::PostfixExpression* expression) {
     DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
 void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) {
     DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
 
 void SemanticAnalyzer::checkTypeCastExpression(ast::TypeCastExpression* expression) {
     DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
-
-// ===== Helpers =====
-
-static inline const auto isSignedInt = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString().starts_with("int");
-};
-static inline const auto isUInt = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString().starts_with("uint");
-};
-
-static inline const auto isAnyInt = [](const ast::Type* t) -> bool {
-    return isSignedInt(t) || isUInt(t);
-};
-
-static inline const auto isFloat = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString().starts_with("float");
-};
-static inline const auto isChar = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString() == "char";
-};
-// static inline const auto isBool = [](const ast::Type* t) -> bool {
-//     return ast::isPrimitiveType(t) && t->toString() == "bool";
-// };
-static inline const auto isString = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString() == "string";
-};
 
 ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release {
     using ast::TypeKind;
@@ -310,7 +281,7 @@ ast::TypeSPtr_t SemanticAnalyzer::widestNumericType(const ast::Type* type1, cons
     return nullptr;
 }
 
-ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const {
+ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release {
     using ast::TypeKind;
     using lexer::TokenType;
 
@@ -361,7 +332,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryEx
         default:
             logError("Operator '{}' not supported for arrays", binaryExpression, lexer::tokenTypeToString(op));
             return nullptr;
-    }   
+    }
 }
 
 }  // namespace semantic

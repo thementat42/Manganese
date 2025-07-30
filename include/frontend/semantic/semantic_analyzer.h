@@ -37,8 +37,6 @@ struct Context {
     }
 };
 
-constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release;
-
 class SemanticAnalyzer {
    private:
     SymbolTable symbolTable;
@@ -153,6 +151,33 @@ class SemanticAnalyzer {
     ast::TypeSPtr_t widestNumericType(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release;
     ast::TypeSPtr_t resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
     ast::TypeSPtr_t resolveArithmeticBinaryExpressionType(ast::BinaryExpression* binaryExpression, lexer::TokenType op) const noexcept_if_release;
+};
+
+// ===== Helper Functions that don't depend on the SemanticAnalyzer instance =====
+
+constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release;
+inline const auto isSignedInt = [](const ast::Type* t) -> bool {
+    return ast::isPrimitiveType(t) && t->toString().starts_with("int");
+};
+inline const auto isUInt = [](const ast::Type* t) -> bool {
+    return ast::isPrimitiveType(t) && t->toString().starts_with("uint");
+};
+
+inline const auto isAnyInt = [](const ast::Type* t) -> bool {
+    return isSignedInt(t) || isUInt(t);
+};
+
+inline const auto isFloat = [](const ast::Type* t) -> bool {
+    return ast::isPrimitiveType(t) && t->toString().starts_with("float");
+};
+inline const auto isChar = [](const ast::Type* t) -> bool {
+    return ast::isPrimitiveType(t) && t->toString() == "char";
+};
+// inline const auto isBool = [](const ast::Type* t) -> bool {
+//     return ast::isPrimitiveType(t) && t->toString() == "bool";
+// };
+inline const auto isString = [](const ast::Type* t) -> bool {
+    return ast::isPrimitiveType(t) && t->toString() == "string";
 };
 }  // namespace semantic
 

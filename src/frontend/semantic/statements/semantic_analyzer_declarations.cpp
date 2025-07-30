@@ -48,8 +48,7 @@ void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationSta
 
 void SemanticAnalyzer::checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement) {
     DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
 
 void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement) {
@@ -121,13 +120,11 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
 
 void SemanticAnalyzer::checkImportStatement(ast::ImportStatement* statement) {
     DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
 void SemanticAnalyzer::checkModuleDeclarationStatement(ast::ModuleDeclarationStatement* statement) {
     DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
 
 void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement) {

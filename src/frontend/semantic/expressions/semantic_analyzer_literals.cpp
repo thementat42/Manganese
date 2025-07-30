@@ -19,7 +19,7 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
         checkExpression(element);
         if (!element->getType()) {
             logError("Could not deduce type of {}, assuming 'int32'", element, element->toString());
-            element->setType(std::make_unique<ast::SymbolType>("int32"));
+            element->setType(std::make_shared<ast::SymbolType>("int32"));
         }
         if (i == 0) {
             elementType = element->getTypePtr();

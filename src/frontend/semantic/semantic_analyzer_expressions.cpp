@@ -165,8 +165,7 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
 
 void SemanticAnalyzer::checkGenericExpression(ast::GenericExpression* expression) {
     DISCARD(expression);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    NOT_IMPLEMENTED;
 }
 
 }  // namespace semantic

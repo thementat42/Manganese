@@ -45,7 +45,7 @@ StatementUPtr_t Parser::parseAliasStatement() {
         // Primitive types are easy to alias -- just parse a regular type
         baseType = parseType(Precedence::Default);
     } else {
-        // If it's not a primtive type, we expect an identifier.
+        // If it's not a primitive type, we expect an identifier.
         // This might be a path (e.g. alias foo::bar as baz, so we need to handle that)
         std::string path = expectToken(TokenType::Identifier, "Expected an identifier after 'alias', or a primitive type.").getLexeme();
         while (currentToken().getType() == TokenType::ScopeResolution) {
@@ -58,13 +58,13 @@ StatementUPtr_t Parser::parseAliasStatement() {
 
         if (currentToken().getType() == TokenType::At) {
             // Generic Type
-            baseType = parseGenericType(std::make_unique<ast::SymbolType>(path), Precedence::Default);
+            baseType = parseGenericType(std::make_shared<ast::SymbolType>(path), Precedence::Default);
         } else if (currentToken().getType() == TokenType::LeftSquare) {
             // Array type
-            baseType = parseArrayType(std::make_unique<ast::SymbolType>(path), Precedence::Default);
+            baseType = parseArrayType(std::make_shared<ast::SymbolType>(path), Precedence::Default);
         } else {
             // Regular (identifier) type
-            baseType = std::make_unique<ast::SymbolType>(path);
+            baseType = std::make_shared<ast::SymbolType>(path);
         }
     }
     expectToken(TokenType::As, "Expected 'as' to introduce the type alias");
@@ -146,9 +146,9 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() {
         if (!currentToken().isPrimitiveType()) {
             logError(std::format("Enums can only have primitive types as their underlying type, not {}", currentToken().getLexeme()));
         }
-        baseType = std::make_unique<ast::SymbolType>(advance().getLexeme());
+        baseType = std::make_shared<ast::SymbolType>(advance().getLexeme());
     } else {
-        baseType = std::make_unique<ast::SymbolType>("int32");  // Default to int32 if no base type is specified
+        baseType = std::make_shared<ast::SymbolType>("int32");  // Default to int32 if no base type is specified
     }
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
     while (!done() && currentToken().getType() != TokenType::RightBrace) {
