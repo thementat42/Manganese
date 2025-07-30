@@ -17,9 +17,35 @@ void SemanticAnalyzer::checkContinueStatement(ast::ContinueStatement* statement)
 }
 
 void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
-    DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+    checkExpression(statement->condition.get());
+    if (!ast::isPrimitiveType(statement->condition->getType())) {
+        logError("Could not convert {} to a boolean", statement, statement->condition->toString());
+    }
+    enterScope();
+    ++context.ifStatement;
+    checkBlock(statement->body);
+    --context.ifStatement;
+    exitScope();
+    if (!statement->elifs.empty()) {
+        for (auto& elif: statement->elifs) {
+            checkExpression(elif.condition.get());
+            if (!ast::isPrimitiveType(elif.condition->getType())) {
+                logError("Could not convert {} to a boolean", statement, elif.condition->toString());
+            }
+            enterScope();
+            ++context.ifStatement;
+            checkBlock(elif.body);
+            --context.ifStatement;
+            exitScope();
+        }
+    }
+    if (!statement->elseBody.empty()) {
+        enterScope();
+        ++context.ifStatement;
+        checkBlock(statement->elseBody);
+        --context.ifStatement;
+        exitScope();
+    }
 }
 
 void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
@@ -53,8 +79,7 @@ void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
 }
 void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
     DISCARD(statement);
-    PRINT_LOCATION;
-    throw std::runtime_error("Not implemented");
+        NOT_IMPLEMENTED;
 }
 
 }  // namespace semantic
