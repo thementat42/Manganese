@@ -22,7 +22,7 @@
 namespace Manganese {
 
 namespace tests {
-static const char* logFileName = "semantic_analyzer_tests.log";
+static const char* logFileName = "logs/semantic_analyzer_tests.log";
 
 inline constexpr bool dumpASTToStdout = false;  // The nodes are always dumped to a log file -- this controls whether they are also dumped to stdout
 

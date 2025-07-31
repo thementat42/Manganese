@@ -23,7 +23,7 @@
 size_t lifetimeBytesAllocated = 0;  // How much memory has been allocated in total (ignores deallocations)
 #ifdef CONTINUOUS_MEMORY_TRACKING
 size_t bytesCurrentlyAllocated = 0;  // How much memory is currently allocated (accounts for deallocations)
-std::ofstream memoryLogFile("memory_tracking.log", std::ios::out | std::ios::trunc);
+std::ofstream memoryLogFile("logs/memory_tracking.log", std::ios::out | std::ios::trunc);
 #endif  // CONTINUOUS_MEMORY_TRACKING
 
 void* operator new(size_t size) {

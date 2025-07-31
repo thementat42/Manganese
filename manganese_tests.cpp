@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <filesystem>
 
 #include "tests/testrunner.h"
 #include "tests/tests.h"
@@ -63,6 +64,7 @@ int main(int argc, char const* argv[]) {
             fprintf(stderr, "Skipping unknown argument: %s\n", argv[i]);
         }
     }
+    std::filesystem::create_directories("logs");
 
     Manganese::tests::TestRunner runner;
 

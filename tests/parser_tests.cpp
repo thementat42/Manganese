@@ -28,7 +28,7 @@
 namespace Manganese {
 namespace tests {
 
-static const char* logFileName = "parser_tests.log";
+static const char* logFileName = "logs/parser_tests.log";
 
 ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode);
