@@ -12,12 +12,12 @@
 #include <io/filereader.h>
 #include <io/logging.h>
 #include <io/stringreader.h>
+#include <stdio.h>
 #include <string.h>
 #include <utils/memory_tracking.h>
 
 #include <chrono>
 #include <filesystem>
-#include <iostream>
 
 #include "tests/testrunner.h"
 #include "tests/tests.h"

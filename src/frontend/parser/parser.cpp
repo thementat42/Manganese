@@ -11,7 +11,6 @@
 #include <frontend/parser.h>
 #include <global_macros.h>
 
-#include <format>
 #include <memory>
 #include <string>
 

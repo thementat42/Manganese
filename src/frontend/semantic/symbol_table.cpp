@@ -7,8 +7,8 @@
 #include <global_macros.h>
 
 #include <format>
-#include <iomanip>
 #include <string>
+#include <sstream>
 
 namespace Manganese {
 namespace semantic {

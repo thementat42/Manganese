@@ -14,7 +14,7 @@
 
 #include <global_macros.h>
 
-#include <format>  // Added for std::format
+#include <format>  // Include format here so any files that use logging have it included
 #include <iostream>
 #include <stdexcept>
 

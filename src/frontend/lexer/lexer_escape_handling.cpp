@@ -7,7 +7,6 @@
 #include <io/logging.h>
 #include <utils/number_utils.h>
 
-#include <algorithm>
 #include <format>
 #include <optional>
 #include <string>

@@ -8,7 +8,6 @@
 #include <global_macros.h>
 
 #include <format>
-#include <stdexcept>
 
 namespace Manganese {
 namespace semantic {

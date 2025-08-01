@@ -7,10 +7,8 @@
 #include <frontend/ast.h>
 #include <global_macros.h>
 
-#include <memory>
 #include <string>
 #include <unordered_set>
-#include <utility>
 
 namespace Manganese {
 namespace ast {

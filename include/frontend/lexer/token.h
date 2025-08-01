@@ -18,10 +18,8 @@
 
 #include <global_macros.h>
 
-#include <optional>
 #include <string>
 #include <unordered_map>
-#include <variant>
 
 namespace Manganese {
 namespace lexer {
