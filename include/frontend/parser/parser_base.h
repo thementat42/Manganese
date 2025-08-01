@@ -4,8 +4,9 @@
  *
  * This header defines the core Parser class and related structures for parsing
  * source code into an AST, using Pratt parsing, via lookup tables.
- * 
- * This file defines the various methods for parsing different sequences of tokens, grouped into the same categories as the AST nodes (statements, expressions and types)
+ *
+ * This file defines the various methods for parsing different sequences of tokens, grouped into the same categories as
+ * the AST nodes (statements, expressions and types)
  */
 
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_H
@@ -43,9 +44,9 @@ struct ParsedFile {
 };
 
 //~ Helper functions that don't depend on the parser class's methods/variables
-Base determineNumberBase(const std::string &lexeme);
-void extractSuffix(std::string &numericPart, std::string &suffix);
-std::string importToString(const Import &import);
+Base determineNumberBase(const std::string& lexeme);
+void extractSuffix(std::string& numericPart, std::string& suffix);
+std::string importToString(const Import& import);
 
 class Parser {
    private:  // private variables
@@ -65,18 +66,18 @@ class Parser {
 
    public:  // public methods
     Parser() = default;
-    Parser(const std::string &source, lexer::Mode mode);
+    Parser(const std::string& source, lexer::Mode mode);
     ~Parser() noexcept = default;
 
     ParsedFile parse();
     bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
    private:  // private methods
-    using statementHandler_t = std::function<StatementUPtr_t(Parser *)>;
-    using nudHandler_t = std::function<ExpressionUPtr_t(Parser *)>;
-    using nudHandler_types_t = std::function<TypeSPtr_t(Parser *)>;
-    using ledHandler_t = std::function<ExpressionUPtr_t(Parser *, ExpressionUPtr_t, Precedence)>;
-    using ledHandler_types_t = std::function<TypeSPtr_t(Parser *, TypeSPtr_t, Precedence)>;
+    using statementHandler_t = std::function<StatementUPtr_t(Parser*)>;
+    using nudHandler_t = std::function<ExpressionUPtr_t(Parser*)>;
+    using nudHandler_types_t = std::function<TypeSPtr_t(Parser*)>;
+    using ledHandler_t = std::function<ExpressionUPtr_t(Parser*, ExpressionUPtr_t, Precedence)>;
+    using ledHandler_types_t = std::function<TypeSPtr_t(Parser*, TypeSPtr_t, Precedence)>;
 
     //~ Lookups
     std::unordered_map<TokenType, statementHandler_t> statementLookup;
@@ -161,12 +162,12 @@ class Parser {
     [[nodiscard]] Token advance();
 
     Token expectToken(TokenType expectedType);
-    Token expectToken(TokenType expectedType, const std::string &errorMessage);
+    Token expectToken(TokenType expectedType, const std::string& errorMessage);
 
     /**
      * @brief A wrapper around logging::logError that sets the parser's hasError flag to true.
      */
-    inline void logError(const std::string &message, size_t line = 0, size_t col = 0) {
+    inline void logError(const std::string& message, size_t line = 0, size_t col = 0) {
         logging::logError(message, line, col);
         hasError = true;
     }
@@ -189,8 +190,7 @@ class Parser {
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    void registerLedHandler_rightAssoc(TokenType type, Precedence precedence,
-                                  ledHandler_t handler);
+    void registerLedHandler_rightAssoc(TokenType type, Precedence precedence, ledHandler_t handler);
 
     /**
      * @brief Register a left denotation handler for `type`
@@ -198,16 +198,14 @@ class Parser {
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    void registerLedHandler_postfix(TokenType type, Precedence precedence,
-                               ledHandler_t handler);
+    void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler);
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a prefix operator)
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    void registerLedHandler_prefix(TokenType type, Precedence precedence,
-                              ledHandler_t handler);
+    void registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler);
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a token indicating a type)

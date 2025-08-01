@@ -36,9 +36,7 @@ void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_rel
         case ast::StatementKind::FunctionDeclarationStatement:
             checkFunctionDeclarationStatement(static_cast<ast::FunctionDeclarationStatement*>(statement));
             break;
-        case ast::StatementKind::IfStatement:
-            checkIfStatement(static_cast<ast::IfStatement*>(statement));
-            break;
+        case ast::StatementKind::IfStatement: checkIfStatement(static_cast<ast::IfStatement*>(statement)); break;
         case ast::StatementKind::ImportStatement:
             checkImportStatement(static_cast<ast::ImportStatement*>(statement));
             break;
@@ -63,8 +61,7 @@ void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_rel
         default:
             using std::format;
             ASSERT_UNREACHABLE(
-                format("No semantic analysis method for statement type {}",
-                       static_cast<int>(statement->kind())));
+                format("No semantic analysis method for statement type {}", static_cast<int>(statement->kind())));
             break;
     }
 }
@@ -80,27 +77,24 @@ void SemanticAnalyzer::checkAliasStatement(ast::AliasStatement* statement) {
     }
     bool isInvalidAlias = false;
     if (!typeExists(statement->baseType)) {
-        logError("Base type '{}' for alias '{}' does not exist or was not defined", statement, statement->baseType->toString(), statement->alias);
+        logError("Base type '{}' for alias '{}' does not exist or was not defined", statement,
+                 statement->baseType->toString(), statement->alias);
         isInvalidAlias = true;
     }
     if (symbolTable.lookupInCurrentScope(statement->alias)) {
         logError("Alias '{}' already exists in the current scope", statement, statement->alias);
         isInvalidAlias = true;
     }
-    if (isInvalidAlias) {
-        return;
-    };
-    symbolTable.declare(
-        Symbol{
-            .name = statement->alias,
-            .kind = SymbolKind::TypeAlias,
-            .type = statement->baseType,
-            .line = statement->getLine(),
-            .column = statement->getColumn(),
-            .declarationNode = statement,
-            .isConstant = false,  // Type aliases are not constants
-            .scopeDepth = symbolTable.currentScopeDepth(),
-            .visibility = statement->visibility});
+    if (isInvalidAlias) { return; };
+    symbolTable.declare(Symbol{.name = statement->alias,
+                               .kind = SymbolKind::TypeAlias,
+                               .type = statement->baseType,
+                               .line = statement->getLine(),
+                               .column = statement->getColumn(),
+                               .declarationNode = statement,
+                               .isConstant = false,  // Type aliases are not constants
+                               .scopeDepth = symbolTable.currentScopeDepth(),
+                               .visibility = statement->visibility});
 }
 
 }  // namespace semantic

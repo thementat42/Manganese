@@ -2,14 +2,16 @@
  * @file number_utils.h
  * @brief Utility functions for converting strings to numbers
  * These functions differ from the standard library's `std::stox` functions in that they convert to the
- * types defined in cstdint.h (int8_t, int16_t, etc.), which are guaranteed to have the same width across different platforms.
- * This makes cross-platform code more reliable since (a) there are no assumptions about the size of types like `int` or `long`.
- * and (b) there are no issues in the number_t type (the std::variant of the different numeric types) where the set of types is
- * valid on one platform but incomplete on another.
+ * types defined in cstdint.h (int8_t, int16_t, etc.), which are guaranteed to have the same width across different
+ * platforms. This makes cross-platform code more reliable since (a) there are no assumptions about the size of types
+ * like `int` or `long`. and (b) there are no issues in the number_t type (the std::variant of the different numeric
+ * types) where the set of types is valid on one platform but incomplete on another.
  */
 
 #ifndef MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
 #define MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
+
+#include <global_macros.h>
 
 #include <cstdint>
 #include <optional>
@@ -17,26 +19,14 @@
 #include <string_view>
 #include <variant>
 
-#include <global_macros.h>
-
 namespace Manganese {
 
-using number_t = std::variant<
-    int8_t,
-    uint8_t,
-    int16_t,
-    uint16_t,
-    int32_t,
-    uint32_t,
-    int64_t,
-    uint64_t,
-    float,
-    double>;
+using number_t = std::variant<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, float, double>;
 
 enum class Base {
-    Binary = 2,       // 0b prefix
-    Octal = 8,        // 0o prefix
-    Decimal = 10,     // Default base, no prefix
+    Binary = 2,  // 0b prefix
+    Octal = 8,  // 0o prefix
+    Decimal = 10,  // Default base, no prefix
     Hexadecimal = 16  // 0x prefix
 };
 
@@ -75,7 +65,8 @@ std::optional<double> stof64(std::string_view str);
  * @param suffix Whether a type suffix was specified (see the lexer for the acceptable type suffixes)
  * @return The string as a number, or nullopt_t if it failed
  */
-std::optional<number_t> stringToNumber(std::string_view str, Base base = Base::Decimal, bool isFloat = false, const std::string& suffix = "") noexcept_if_release;
+std::optional<number_t> stringToNumber(std::string_view str, Base base = Base::Decimal, bool isFloat = false,
+                                       const std::string& suffix = "") noexcept_if_release;
 
 }  // namespace utils
 

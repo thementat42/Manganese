@@ -17,8 +17,13 @@
 
 namespace Manganese {
 namespace lexer {
-Token::Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_, bool invalid_) noexcept_if_release
-    : type(type_), lexeme(lexeme_), line(line_), column(column_), invalid(invalid_) {
+Token::Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_,
+             bool invalid_) noexcept_if_release :
+    type(type_),
+    lexeme(lexeme_),
+    line(line_),
+    column(column_),
+    invalid(invalid_) {
     // Set a specific enum value for operators and keywords based on the lexeme
     if (type_ == TokenType::Operator) {
         type = operatorFromString(lexeme_, line_, column_);
@@ -36,163 +41,102 @@ Token::Token(const TokenType type_, const std::string lexeme_, const size_t line
 TokenType operatorFromString(const std::string& op, const size_t line, const size_t column) {
     std::string op_str(op);
     auto it = operatorMap.find(op_str);
-    if (it != operatorMap.end()) {
-        return it->second;
-    }
-        ASSERT_UNREACHABLE(
-                std::format("Unknown operator '{}' at line {}, column {}", op, line, column));
+    if (it != operatorMap.end()) { return it->second; }
+    ASSERT_UNREACHABLE(std::format("Unknown operator '{}' at line {}, column {}", op, line, column));
 }
 
 TokenType keywordFromString(const std::string& keyword, const size_t line, const size_t column) {
     auto it = keywordMap.find(keyword);
-    if (it != keywordMap.end()) {
-        return it->second;
-    }
-            ASSERT_UNREACHABLE(
-                std::format("Unknown operator '{}' at line {}, column {}", keyword, line, column));
+    if (it != keywordMap.end()) { return it->second; }
+    ASSERT_UNREACHABLE(std::format("Unknown operator '{}' at line {}, column {}", keyword, line, column));
 }
 
-bool Token::isInvalid() const noexcept {
-    return invalid;
-}
+bool Token::isInvalid() const noexcept { return invalid; }
 
-bool Token::isKeyword() const noexcept {
-    return type >= TokenType::__KeywordStart && type <= TokenType::__KeywordEnd;
-}
+bool Token::isKeyword() const noexcept { return type >= TokenType::__KeywordStart && type <= TokenType::__KeywordEnd; }
 
 bool Token::isOperator() const noexcept {
     return type >= TokenType::__OperatorStart && type <= TokenType::__OperatorEnd;
 }
 
 bool Token::isPrefixOperator() const noexcept {
-    return type == TokenType::Inc ||
-           type == TokenType::Dec ||
-           type == TokenType::BitAnd ||
-           type == TokenType::Mul ||
-           type == TokenType::AddressOf ||
-           type == TokenType::Dereference;
+    return type == TokenType::Inc || type == TokenType::Dec || type == TokenType::BitAnd || type == TokenType::Mul
+        || type == TokenType::AddressOf || type == TokenType::Dereference;
 }
 
 bool Token::isLiteral() const noexcept {
-    return type == TokenType::IntegerLiteral ||
-           type == TokenType::FloatLiteral ||
-           type == TokenType::StrLiteral ||
-           type == TokenType::CharLiteral ||
-           type == TokenType::True ||
-           type == TokenType::False;
+    return type == TokenType::IntegerLiteral || type == TokenType::FloatLiteral || type == TokenType::StrLiteral
+        || type == TokenType::CharLiteral || type == TokenType::True || type == TokenType::False;
 }
 
 bool Token::isBracket() const noexcept {
-    return type == TokenType::LeftParen || type == TokenType::RightParen ||
-           type == TokenType::LeftBrace || type == TokenType::RightBrace ||
-           type == TokenType::LeftSquare || type == TokenType::RightSquare;
+    return type == TokenType::LeftParen || type == TokenType::RightParen || type == TokenType::LeftBrace
+        || type == TokenType::RightBrace || type == TokenType::LeftSquare || type == TokenType::RightSquare;
 }
 
 bool Token::isPrimitiveType() const noexcept {
-    return type == TokenType::Int8 || type == TokenType::Int16 ||
-           type == TokenType::Int32 || type == TokenType::Int64 ||
-           type == TokenType::UInt8 || type == TokenType::UInt16 ||
-           type == TokenType::UInt32 || type == TokenType::UInt64 ||
-           type == TokenType::Float32 || type == TokenType::Float64 ||
-           type == TokenType::Char || type == TokenType::Bool || type == TokenType::String;
+    return type == TokenType::Int8 || type == TokenType::Int16 || type == TokenType::Int32 || type == TokenType::Int64
+        || type == TokenType::UInt8 || type == TokenType::UInt16 || type == TokenType::UInt32
+        || type == TokenType::UInt64 || type == TokenType::Float32 || type == TokenType::Float64
+        || type == TokenType::Char || type == TokenType::Bool || type == TokenType::String;
 }
 
 bool Token::hasUnaryCounterpart() const noexcept {
-    return type == TokenType::Plus ||    // + can be addition or unary plus
-           type == TokenType::Minus ||   // - can be subtraction or unary minus
-           type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
-           type == TokenType::Mul;       // * can be multiplication or dereference operator
+    return type == TokenType::Plus ||  // + can be addition or unary plus
+        type == TokenType::Minus ||  // - can be subtraction or unary minus
+        type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
+        type == TokenType::Mul;  // * can be multiplication or dereference operator
 }
 
 TokenType Token::getUnaryCounterpart() const noexcept_if_release {
     switch (type) {
-        case TokenType::Plus:
-            return TokenType::UnaryPlus;
-        case TokenType::Minus:
-            return TokenType::UnaryMinus;
-        case TokenType::BitAnd:
-            return TokenType::AddressOf;
-        case TokenType::Mul:
-            return TokenType::Dereference;
-        default:
-            ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(type));
+        case TokenType::Plus: return TokenType::UnaryPlus;
+        case TokenType::Minus: return TokenType::UnaryMinus;
+        case TokenType::BitAnd: return TokenType::AddressOf;
+        case TokenType::Mul: return TokenType::Dereference;
+        default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(type));
     }
 }
 
-TokenType Token::getType() const noexcept {
-    return type;
-}
+TokenType Token::getType() const noexcept { return type; }
 
-std::string Token::getLexeme() const noexcept {
-    return lexeme;
-}
+std::string Token::getLexeme() const noexcept { return lexeme; }
 
-size_t Token::getLine() const noexcept {
-    return line;
-}
+size_t Token::getLine() const noexcept { return line; }
 
-size_t Token::getColumn() const noexcept {
-    return column;
-}
+size_t Token::getColumn() const noexcept { return column; }
 
 void Token::overrideType(TokenType type_, std::string lexeme_) {
 #if DEBUG
-    logging::logInternal(
-        std::format("Overriding token type from {} to {} with lexeme '{}'", 
-            tokenTypeToString(type), tokenTypeToString(type_), lexeme_));
+    logging::logInternal(std::format("Overriding token type from {} to {} with lexeme '{}'", tokenTypeToString(type),
+                                     tokenTypeToString(type_), lexeme_));
 #endif  // DEBUG
     type = type_;
-    if (lexeme != "") {
-        lexeme = std::move(lexeme_);
-    }
+    if (lexeme != "") { lexeme = std::move(lexeme_); }
 }
 
 void Token::log() const noexcept {
 #if DEBUG
-    std::cout << "Token: " << tokenTypeToString(type) << " ('"
-              << getLexeme() << "') at line " << line << ", column " << column;
+    std::cout << "Token: " << tokenTypeToString(type) << " ('" << getLexeme() << "') at line " << line << ", column "
+              << column;
     std::cout << '\n';
 #endif  // DEBUG
 }
 
-void Token::log(const Token& token) noexcept {
-    token.log();
-}
+void Token::log(const Token& token) noexcept { token.log(); }
 
 constexpr bool isBinaryOperator(const TokenType type) noexcept {
     using enum TokenType;
-    return type == Plus ||
-           type == Minus ||
-           type == Mul ||
-           type == Div ||
-           type == FloorDiv ||
-           type == Mod ||
-           type == Exp ||
-           type == GreaterThan ||
-           type == GreaterThanOrEqual ||
-           type == LessThan ||
-           type == LessThanOrEqual ||
-           type == Equal ||
-           type == NotEqual ||
-           type == And ||
-           type == Or ||
-           type == BitAnd ||
-           type == BitOr ||
-           type == BitXor ||
-           type == BitLShift ||
-           type == BitRShift;
+    return type == Plus || type == Minus || type == Mul || type == Div || type == FloorDiv || type == Mod || type == Exp
+        || type == GreaterThan || type == GreaterThanOrEqual || type == LessThan || type == LessThanOrEqual
+        || type == Equal || type == NotEqual || type == And || type == Or || type == BitAnd || type == BitOr
+        || type == BitXor || type == BitLShift || type == BitRShift;
 }
 
 constexpr bool isUnaryOperator(const TokenType type) noexcept {
     using enum TokenType;
-    return type == UnaryPlus ||
-           type == UnaryMinus ||
-           type == Inc ||
-           type == Dec ||
-           type == BitNot ||
-           type == Not ||
-           type == AddressOf ||
-           type == Dereference;
+    return type == UnaryPlus || type == UnaryMinus || type == Inc || type == Dec || type == BitNot || type == Not
+        || type == AddressOf || type == Dereference;
 }
 
 // ! === Really Long Stuff ===
@@ -200,233 +144,126 @@ constexpr bool isUnaryOperator(const TokenType type) noexcept {
 std::string tokenTypeToString(TokenType type) noexcept_if_release {
     switch (type) {
         // Basic
-        case TokenType::Identifier:
-            return "Identifier";
-        case TokenType::StrLiteral:
-            return "String Literal";
-        case TokenType::CharLiteral:
-            return "Char Literal";
+        case TokenType::Identifier: return "Identifier";
+        case TokenType::StrLiteral: return "String Literal";
+        case TokenType::CharLiteral: return "Char Literal";
 
         // Numbers
-        case TokenType::IntegerLiteral:
-            return "Integer";
-        case TokenType::FloatLiteral:
-            return "Float";
+        case TokenType::IntegerLiteral: return "Integer";
+        case TokenType::FloatLiteral: return "Float";
 
         // Brackets
-        case TokenType::LeftParen:
-            return "Left Parenthesis";
-        case TokenType::RightParen:
-            return "Right Parenthesis";
-        case TokenType::LeftBrace:
-            return "Left Brace";
-        case TokenType::RightBrace:
-            return "Right Brace";
-        case TokenType::LeftSquare:
-            return "Left Square";
-        case TokenType::RightSquare:
-            return "Right Square";
+        case TokenType::LeftParen: return "Left Parenthesis";
+        case TokenType::RightParen: return "Right Parenthesis";
+        case TokenType::LeftBrace: return "Left Brace";
+        case TokenType::RightBrace: return "Right Brace";
+        case TokenType::LeftSquare: return "Left Square";
+        case TokenType::RightSquare: return "Right Square";
         // Punctuation
-        case TokenType::Semicolon:
-            return "Semicolon";
-        case TokenType::Comma:
-            return "Comma";
-        case TokenType::Colon:
-            return "Colon";
+        case TokenType::Semicolon: return "Semicolon";
+        case TokenType::Comma: return "Comma";
+        case TokenType::Colon: return "Colon";
 
         // Misc
-        case TokenType::EndOfFile:
-            return "End Of File";
+        case TokenType::EndOfFile: return "End Of File";
 
         // Keywords
-        case TokenType::Alias:
-            return "alias";
-        case TokenType::As:
-            return "as";
-        case TokenType::Blueprint:
-            return "blueprint";
-        case TokenType::Bool:
-            return "bool";
-        case TokenType::Break:
-            return "break";
-        case TokenType::Bundle:
-            return "bundle";
-        case TokenType::Case:
-            return "case";
-        case TokenType::Char:
-            return "char";
-        case TokenType::Const:
-            return "const";
-        case TokenType::Continue:
-            return "continue";
-        case TokenType::Default:
-            return "default";
-        case TokenType::Do:
-            return "do";
-        case TokenType::Elif:
-            return "elif";
-        case TokenType::Else:
-            return "else";
-        case TokenType::Enum:
-            return "enum";
-        case TokenType::False:
-            return "false";
-        case TokenType::Float32:
-            return "float32";
-        case TokenType::Float64:
-            return "float64";
-        case TokenType::For:
-            return "for";
-        case TokenType::Func:
-            return "func";
-        case TokenType::If:
-            return "if";
-        case TokenType::Import:
-            return "import";
-        case TokenType::Int8:
-            return int8_str;
-        case TokenType::Int16:
-            return int16_str;
-        case TokenType::Int32:
-            return int32_str;
-        case TokenType::Int64:
-            return int64_str;
-        case TokenType::Lambda:
-            return "lambda";
-        case TokenType::Let:
-            return "let";
-        case TokenType::Module:
-            return "module";
-        case TokenType::Ptr:
-            return "ptr";
-        case TokenType::Private:
-            return "Private";
-        case TokenType::Public:
-            return "public";
-        case TokenType::ReadOnly:
-            return "readonly";
-        case TokenType::Repeat:
-            return "repeat";
-        case TokenType::Return:
-            return "return";
-        case TokenType::String:
-            return "string";
-        case TokenType::Switch:
-            return "switch";
-        case TokenType::True:
-            return "true";
-        case TokenType::TypeOf:
-            return "typeof";
-        case TokenType::UInt8:
-            return uint8_str;
-        case TokenType::UInt16:
-            return uint16_str;
-        case TokenType::UInt32:
-            return uint32_str;
-        case TokenType::UInt64:
-            return uint64_str;
-        case TokenType::While:
-            return "while";
+        case TokenType::Alias: return "alias";
+        case TokenType::As: return "as";
+        case TokenType::Blueprint: return "blueprint";
+        case TokenType::Bool: return "bool";
+        case TokenType::Break: return "break";
+        case TokenType::Bundle: return "bundle";
+        case TokenType::Case: return "case";
+        case TokenType::Char: return "char";
+        case TokenType::Const: return "const";
+        case TokenType::Continue: return "continue";
+        case TokenType::Default: return "default";
+        case TokenType::Do: return "do";
+        case TokenType::Elif: return "elif";
+        case TokenType::Else: return "else";
+        case TokenType::Enum: return "enum";
+        case TokenType::False: return "false";
+        case TokenType::Float32: return "float32";
+        case TokenType::Float64: return "float64";
+        case TokenType::For: return "for";
+        case TokenType::Func: return "func";
+        case TokenType::If: return "if";
+        case TokenType::Import: return "import";
+        case TokenType::Int8: return int8_str;
+        case TokenType::Int16: return int16_str;
+        case TokenType::Int32: return int32_str;
+        case TokenType::Int64: return int64_str;
+        case TokenType::Lambda: return "lambda";
+        case TokenType::Let: return "let";
+        case TokenType::Module: return "module";
+        case TokenType::Ptr: return "ptr";
+        case TokenType::Private: return "Private";
+        case TokenType::Public: return "public";
+        case TokenType::ReadOnly: return "readonly";
+        case TokenType::Repeat: return "repeat";
+        case TokenType::Return: return "return";
+        case TokenType::String: return "string";
+        case TokenType::Switch: return "switch";
+        case TokenType::True: return "true";
+        case TokenType::TypeOf: return "typeof";
+        case TokenType::UInt8: return uint8_str;
+        case TokenType::UInt16: return uint16_str;
+        case TokenType::UInt32: return uint32_str;
+        case TokenType::UInt64: return uint64_str;
+        case TokenType::While: return "while";
 
-        case TokenType::Plus:
-            return "+";
-        case TokenType::Minus:
-            return "-";
-        case TokenType::Mul:
-            return "*";
-        case TokenType::Div:
-            return "/";
-        case TokenType::FloorDiv:
-            return "//";
-        case TokenType::Mod:
-            return "%";
-        case TokenType::Exp:
-            return "^^";
-        case TokenType::Inc:
-            return "++";
-        case TokenType::Dec:
-            return "--";
-        case TokenType::UnaryPlus:
-            return "+ (unary)";
-        case TokenType::UnaryMinus:
-            return "- (unary)";
-        case TokenType::PlusAssign:
-            return "+=";
-        case TokenType::MinusAssign:
-            return "-=";
-        case TokenType::MulAssign:
-            return "*=";
-        case TokenType::DivAssign:
-            return "/=";
-        case TokenType::FloorDivAssign:
-            return "//=";
-        case TokenType::ModAssign:
-            return "%=";
-        case TokenType::ExpAssign:
-            return "^^=";
-        case TokenType::GreaterThan:
-            return ">";
-        case TokenType::GreaterThanOrEqual:
-            return ">=";
-        case TokenType::LessThan:
-            return "<";
-        case TokenType::LessThanOrEqual:
-            return "<=";
-        case TokenType::Equal:
-            return "==";
-        case TokenType::NotEqual:
-            return "!=";
-        case TokenType::And:
-            return "&&";
-        case TokenType::Or:
-            return "||";
-        case TokenType::Not:
-            return "!";
-        case TokenType::BitAnd:
-            return "&";
-        case TokenType::BitOr:
-            return "|";
-        case TokenType::BitNot:
-            return "~";
-        case TokenType::BitXor:
-            return "^";
-        case TokenType::BitLShift:
-            return "<<";
-        case TokenType::BitRShift:
-            return ">>";
-        case TokenType::BitAndAssign:
-            return "&=";
-        case TokenType::BitOrAssign:
-            return "|=";
-        case TokenType::BitNotAssign:
-            return "~=";
-        case TokenType::BitXorAssign:
-            return "^=";
-        case TokenType::BitLShiftAssign:
-            return "<<=";
-        case TokenType::BitRShiftAssign:
-            return ">>=";
-        case TokenType::AddressOf:
-            return "&";
-        case TokenType::Dereference:
-            return "*";
-        case TokenType::MemberAccess:
-            return ".";
-        case TokenType::Ellipsis:
-            return "...";
-        case TokenType::ScopeResolution:
-            return "::";
-        case TokenType::Assignment:
-            return "=";
-        case TokenType::Arrow:
-            return "->";
-        case TokenType::At:
-            return "@";
-        case TokenType::Unknown:
-            return "Unknown Token";
+        case TokenType::Plus: return "+";
+        case TokenType::Minus: return "-";
+        case TokenType::Mul: return "*";
+        case TokenType::Div: return "/";
+        case TokenType::FloorDiv: return "//";
+        case TokenType::Mod: return "%";
+        case TokenType::Exp: return "^^";
+        case TokenType::Inc: return "++";
+        case TokenType::Dec: return "--";
+        case TokenType::UnaryPlus: return "+ (unary)";
+        case TokenType::UnaryMinus: return "- (unary)";
+        case TokenType::PlusAssign: return "+=";
+        case TokenType::MinusAssign: return "-=";
+        case TokenType::MulAssign: return "*=";
+        case TokenType::DivAssign: return "/=";
+        case TokenType::FloorDivAssign: return "//=";
+        case TokenType::ModAssign: return "%=";
+        case TokenType::ExpAssign: return "^^=";
+        case TokenType::GreaterThan: return ">";
+        case TokenType::GreaterThanOrEqual: return ">=";
+        case TokenType::LessThan: return "<";
+        case TokenType::LessThanOrEqual: return "<=";
+        case TokenType::Equal: return "==";
+        case TokenType::NotEqual: return "!=";
+        case TokenType::And: return "&&";
+        case TokenType::Or: return "||";
+        case TokenType::Not: return "!";
+        case TokenType::BitAnd: return "&";
+        case TokenType::BitOr: return "|";
+        case TokenType::BitNot: return "~";
+        case TokenType::BitXor: return "^";
+        case TokenType::BitLShift: return "<<";
+        case TokenType::BitRShift: return ">>";
+        case TokenType::BitAndAssign: return "&=";
+        case TokenType::BitOrAssign: return "|=";
+        case TokenType::BitNotAssign: return "~=";
+        case TokenType::BitXorAssign: return "^=";
+        case TokenType::BitLShiftAssign: return "<<=";
+        case TokenType::BitRShiftAssign: return ">>=";
+        case TokenType::AddressOf: return "&";
+        case TokenType::Dereference: return "*";
+        case TokenType::MemberAccess: return ".";
+        case TokenType::Ellipsis: return "...";
+        case TokenType::ScopeResolution: return "::";
+        case TokenType::Assignment: return "=";
+        case TokenType::Arrow: return "->";
+        case TokenType::At: return "@";
+        case TokenType::Unknown: return "Unknown Token";
         default:
-            ASSERT_UNREACHABLE("No string representation for TokenType: " +
-                               std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
+            ASSERT_UNREACHABLE("No string representation for TokenType: "
+                               + std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
     }
 }
 
@@ -493,54 +330,54 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     {"->", TokenType::Arrow},
     {"@", TokenType::At}};
 
-std::unordered_map<std::string, const TokenType> keywordMap = {
-    {"alias", TokenType::Alias},
-    {"as", TokenType::As},
-    {"blueprint", TokenType::Blueprint},
-    {"bool", TokenType::Bool},
-    {"break", TokenType::Break},
-    {"bundle", TokenType::Bundle},
-    {"case", TokenType::Case},
-    {"char", TokenType::Char},
-    {"const", TokenType::Const},
-    {"continue", TokenType::Continue},
-    {"default", TokenType::Default},
-    {"do", TokenType::Do},
-    {"elif", TokenType::Elif},
-    {"else", TokenType::Else},
-    {"enum", TokenType::Enum},
-    {"false", TokenType::False},
-    {"float", TokenType::Float32},  // default to float32 when floating point width isn't specified
-    {"float32", TokenType::Float32},
-    {"float64", TokenType::Float64},
-    {"for", TokenType::For},
-    {"func", TokenType::Func},
-    {"if", TokenType::If},
-    {"import", TokenType::Import},
-    {"int", TokenType::Int32},  // default to int32 when integer width isn't specified
-    {"int16", TokenType::Int16},
-    {"int32", TokenType::Int32},
-    {"int64", TokenType::Int64},
-    {"int8", TokenType::Int8},
-    {"lambda", TokenType::Lambda},
-    {"let", TokenType::Let},
-    {"module", TokenType::Module},
-    {"private", TokenType::Private},
-    {"ptr", TokenType::Ptr},
-    {"public", TokenType::Public},
-    {"readonly", TokenType::ReadOnly},
-    {"repeat", TokenType::Repeat},
-    {"return", TokenType::Return},
-    {"string", TokenType::String},
-    {"switch", TokenType::Switch},
-    {"true", TokenType::True},
-    {"typeof", TokenType::TypeOf},
-    {"uint", TokenType::UInt32},  // default to uint32 when integer width isn't specified
-    {"uint8", TokenType::UInt8},
-    {"uint16", TokenType::UInt16},
-    {"uint32", TokenType::UInt32},
-    {"uint64", TokenType::UInt64},
-    {"while", TokenType::While}};
+std::unordered_map<std::string, const TokenType> keywordMap
+    = {{"alias", TokenType::Alias},
+       {"as", TokenType::As},
+       {"blueprint", TokenType::Blueprint},
+       {"bool", TokenType::Bool},
+       {"break", TokenType::Break},
+       {"bundle", TokenType::Bundle},
+       {"case", TokenType::Case},
+       {"char", TokenType::Char},
+       {"const", TokenType::Const},
+       {"continue", TokenType::Continue},
+       {"default", TokenType::Default},
+       {"do", TokenType::Do},
+       {"elif", TokenType::Elif},
+       {"else", TokenType::Else},
+       {"enum", TokenType::Enum},
+       {"false", TokenType::False},
+       {"float", TokenType::Float32},  // default to float32 when floating point width isn't specified
+       {"float32", TokenType::Float32},
+       {"float64", TokenType::Float64},
+       {"for", TokenType::For},
+       {"func", TokenType::Func},
+       {"if", TokenType::If},
+       {"import", TokenType::Import},
+       {"int", TokenType::Int32},  // default to int32 when integer width isn't specified
+       {"int16", TokenType::Int16},
+       {"int32", TokenType::Int32},
+       {"int64", TokenType::Int64},
+       {"int8", TokenType::Int8},
+       {"lambda", TokenType::Lambda},
+       {"let", TokenType::Let},
+       {"module", TokenType::Module},
+       {"private", TokenType::Private},
+       {"ptr", TokenType::Ptr},
+       {"public", TokenType::Public},
+       {"readonly", TokenType::ReadOnly},
+       {"repeat", TokenType::Repeat},
+       {"return", TokenType::Return},
+       {"string", TokenType::String},
+       {"switch", TokenType::Switch},
+       {"true", TokenType::True},
+       {"typeof", TokenType::TypeOf},
+       {"uint", TokenType::UInt32},  // default to uint32 when integer width isn't specified
+       {"uint8", TokenType::UInt8},
+       {"uint16", TokenType::UInt16},
+       {"uint32", TokenType::UInt32},
+       {"uint64", TokenType::UInt64},
+       {"while", TokenType::While}};
 
 }  // namespace lexer
 }  // namespace Manganese

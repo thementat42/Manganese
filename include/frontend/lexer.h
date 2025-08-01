@@ -13,9 +13,7 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_H
 #define MANGANESE_INCLUDE_FRONTEND_LEXER_H
 
-
 #include <frontend/lexer/lexer_base.h>
 #include <frontend/lexer/token.h>
 
-
-#endif // MANGANESE_INCLUDE_FRONTEND_LEXER_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_LEXER_H

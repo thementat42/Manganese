@@ -11,9 +11,7 @@ void SemanticAnalyzer::checkBreakStatement(ast::BreakStatement* statement) {
 }
 
 void SemanticAnalyzer::checkContinueStatement(ast::ContinueStatement* statement) {
-    if (!context.isLoopContext()) {
-        logError("continue statements can only be used inside loops", statement);
-    }
+    if (!context.isLoopContext()) { logError("continue statements can only be used inside loops", statement); }
 }
 
 void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
@@ -27,7 +25,7 @@ void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
     --context.ifStatement;
     exitScope();
     if (!statement->elifs.empty()) {
-        for (auto& elif: statement->elifs) {
+        for (auto& elif : statement->elifs) {
             checkExpression(elif.condition.get());
             if (!ast::isPrimitiveType(elif.condition->getType())) {
                 logError("Could not convert {} to a boolean", statement, elif.condition->toString());
@@ -49,9 +47,7 @@ void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
 }
 
 void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
-    if (!context.isFunctionContext()) {
-        logError("return statements can only be used inside functions", statement);
-    }
+    if (!context.isFunctionContext()) { logError("return statements can only be used inside functions", statement); }
     checkExpression(statement->value.get());
 
     // Function is null, return is null -- ok
@@ -64,22 +60,20 @@ void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
     if (returnType) {
         auto returnedType = statement->value->getType();
         if (!areTypesCompatible(returnedType, returnType.get())) {
-
-            logError("Return type mismatch in function: expected {}, got {}",
-                     statement, returnType->toString(),
+            logError("Return type mismatch in function: expected {}, got {}", statement, returnType->toString(),
                      (returnedType ? returnedType->toString() : "no return type"));
         }
     } else {
         if (statement->value) {
-            logError("Function does not have a return type, but this returns a {}",
-                     statement, statement->value->getType()->toString());
+            logError("Function does not have a return type, but this returns a {}", statement,
+                     statement->value->getType()->toString());
         }
         return;  // Both the function and the return value are null, so the types are compatible
     }
 }
 void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
     DISCARD(statement);
-        NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED;
 }
 
 }  // namespace semantic

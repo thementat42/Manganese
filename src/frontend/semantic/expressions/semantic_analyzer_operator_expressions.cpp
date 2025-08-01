@@ -15,21 +15,13 @@ void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) 
     bool isInvalidBinaryExpression = false;
 
     if (!leftType) {
-        logError("Could not deduce the type of {} in {} {} {}",
-                 expression,
-                 expression->left->toString(),
-                 expression->left->toString(),
-                 lexer::tokenTypeToString(expression->op),
-                 expression->right->toString());
+        logError("Could not deduce the type of {} in {} {} {}", expression, expression->left->toString(),
+                 expression->left->toString(), lexer::tokenTypeToString(expression->op), expression->right->toString());
         isInvalidBinaryExpression = true;
     }
     if (!rightType) {
-        logError("Could not deduce the type of {} in {} {} {}",
-                 expression,
-                 expression->right->toString(),
-                 expression->left->toString(),
-                 lexer::tokenTypeToString(expression->op),
-                 expression->right->toString());
+        logError("Could not deduce the type of {} in {} {} {}", expression, expression->right->toString(),
+                 expression->left->toString(), lexer::tokenTypeToString(expression->op), expression->right->toString());
         isInvalidBinaryExpression = true;
     }
     if (isInvalidBinaryExpression) {
@@ -38,11 +30,8 @@ void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) 
     }
     ast::TypeSPtr_t resultType = resolveBinaryExpressionType(expression);
     if (!resultType) {
-        logError("Invalid binary expression: {} (operator {} is not supported for types {} and {})",
-                 expression,
-                 expression->toString(),
-                 lexer::tokenTypeToString(expression->op),
-                 leftType->toString(),
+        logError("Invalid binary expression: {} (operator {} is not supported for types {} and {})", expression,
+                 expression->toString(), lexer::tokenTypeToString(expression->op), leftType->toString(),
                  rightType->toString());
     }
     expression->setType(resultType);
@@ -62,7 +51,8 @@ void SemanticAnalyzer::checkTypeCastExpression(ast::TypeCastExpression* expressi
     NOT_IMPLEMENTED;
 }
 
-ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release {
+ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const
+    noexcept_if_release {
     using ast::TypeKind;
     using enum lexer::TokenType;
 
@@ -80,15 +70,15 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpress
     }
 
     if (leftType->kind() != rightType->kind()) {
-        logError(
-            "Cannot perform binary operation {} on types {} and {}", binaryExpression,
-            lexer::tokenTypeToString(op), leftType->toString(), rightType->toString());
+        logError("Cannot perform binary operation {} on types {} and {}", binaryExpression,
+                 lexer::tokenTypeToString(op), leftType->toString(), rightType->toString());
         return nullptr;  // Types must match for binary operations
     }
 
     if (leftType->kind() != TypeKind::SymbolType) {
-        logError("Cannot perform binary operation {} '{}'. Only the primitive symbol types can be used in binary operations",
-                 binaryExpression, lexer::tokenTypeToString(op), leftType->toString());
+        logError(
+            "Cannot perform binary operation {} '{}'. Only the primitive symbol types can be used in binary operations",
+            binaryExpression, lexer::tokenTypeToString(op), leftType->toString());
     }
 
     switch (op) {
@@ -98,8 +88,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpress
         case Exp:
         case Div:
         case FloorDiv:
-        case Mod:
-            return SemanticAnalyzer::resolveArithmeticBinaryExpressionType(binaryExpression, op);
+        case Mod: return SemanticAnalyzer::resolveArithmeticBinaryExpressionType(binaryExpression, op);
         case GreaterThan:
         case GreaterThanOrEqual:
         case LessThan:
@@ -107,9 +96,8 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpress
         case Equal:
         case NotEqual: {
             if (!areTypesCompatible(leftType.get(), rightType.get())) {
-                logError(
-                    "Cannot compare types {} and {} for ordering",
-                    binaryExpression, leftType->toString(), rightType->toString());
+                logError("Cannot compare types {} and {} for ordering", binaryExpression, leftType->toString(),
+                         rightType->toString());
                 return nullptr;
             }
             return std::make_shared<ast::SymbolType>("bool");
@@ -120,13 +108,10 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpress
         case BitXor:
         case BitLShift:
         case BitRShift: {
-            if (!isAnyInt(leftType.get()) ||
-                !isAnyInt(rightType.get())) {
-                logError(
-                    "Bitwise operations can only be performed on integer types "
-                    "not {} and {}",
-                    binaryExpression,
-                    leftType->toString(), rightType->toString());
+            if (!isAnyInt(leftType.get()) || !isAnyInt(rightType.get())) {
+                logError("Bitwise operations can only be performed on integer types "
+                         "not {} and {}",
+                         binaryExpression, leftType->toString(), rightType->toString());
                 return nullptr;
             }
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
@@ -134,26 +119,22 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpress
         case And:
         case Or: {
             if (!isBool(leftType.get()) || !isBool(rightType.get())) {
-                logError(
-                    "Logical operations can only be performed on boolean types "
-                    "not {} and {}",
-                    binaryExpression,
-                    leftType->toString(), rightType->toString());
+                logError("Logical operations can only be performed on boolean types "
+                         "not {} and {}",
+                         binaryExpression, leftType->toString(), rightType->toString());
                 return nullptr;
             }
             return std::make_shared<ast::SymbolType>("bool");
         }
 
         default:
-            ASSERT_UNREACHABLE(
-                std::format(
-                    "No binary expression handler for {}", lexer::tokenTypeToString(op)))
+            ASSERT_UNREACHABLE(std::format("No binary expression handler for {}", lexer::tokenTypeToString(op)))
             return nullptr;
     }
 }
 
-ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(
-    ast::BinaryExpression* binaryExpression, lexer::TokenType op) const noexcept_if_release {
+ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::BinaryExpression* binaryExpression,
+                                                                        lexer::TokenType op) const noexcept_if_release {
     using ast::TypeKind;
     using lexer::TokenType;
     auto leftType = binaryExpression->left->getTypePtr();
@@ -161,52 +142,54 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(
 
     if (op == TokenType::Plus) {
         // string + string or string + char or char + string => string
-        if ((isString(leftType.get()) && isString(rightType.get())) ||
-            (isString(leftType.get()) && isChar(rightType.get())) ||
-            (isChar(leftType.get()) && isString(rightType.get()))) {
+        if ((isString(leftType.get()) && isString(rightType.get()))
+            || (isString(leftType.get()) && isChar(rightType.get()))
+            || (isChar(leftType.get()) && isString(rightType.get()))) {
             return std::make_shared<ast::SymbolType>("string");
         }
         // numeric + numeric => widest numeric type
-        if ((isAnyInt(leftType.get()) || isFloat(leftType.get())) &&
-            (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
+        if ((isAnyInt(leftType.get()) || isFloat(leftType.get()))
+            && (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
-        logError("Operator '+' not supported for types {} and {}", binaryExpression, leftType->toString(), rightType->toString());
+        logError("Operator '+' not supported for types {} and {}", binaryExpression, leftType->toString(),
+                 rightType->toString());
         return nullptr;
     }
 
     if (op == TokenType::Minus || op == TokenType::Exp) {
-        if ((isAnyInt(leftType.get()) || isFloat(leftType.get())) &&
-            (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
+        if ((isAnyInt(leftType.get()) || isFloat(leftType.get()))
+            && (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
-        logError("Operator '{}' not supported for types {} and {}", binaryExpression, lexer::tokenTypeToString(op), leftType->toString(), rightType->toString());
+        logError("Operator '{}' not supported for types {} and {}", binaryExpression, lexer::tokenTypeToString(op),
+                 leftType->toString(), rightType->toString());
         return nullptr;
     }
 
     if (op == TokenType::Mul) {
         // string * uint or uint * string => string (string repetition)
-        if ((isString(leftType.get()) && isUInt(rightType.get())) ||
-            (isUInt(leftType.get()) && isString(rightType.get()))) {
+        if ((isString(leftType.get()) && isUInt(rightType.get()))
+            || (isUInt(leftType.get()) && isString(rightType.get()))) {
             return std::make_shared<ast::SymbolType>("string");
         }
         // numeric * numeric => widest numeric type
-        if ((isAnyInt(leftType.get()) || isFloat(leftType.get())) &&
-            (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
+        if ((isAnyInt(leftType.get()) || isFloat(leftType.get()))
+            && (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
-        logError("Operator '*' not supported for types {} and {}", binaryExpression, leftType->toString(), rightType->toString());
+        logError("Operator '*' not supported for types {} and {}", binaryExpression, leftType->toString(),
+                 rightType->toString());
         return nullptr;
     }
 
     if (op == TokenType::Div) {
         // Division always returns a float (float64 if either operand is float, else float32)
-        bool isNumeric = (isAnyInt(leftType.get()) || isFloat(leftType.get())) &&
-                         (isAnyInt(rightType.get()) || isFloat(rightType.get()));
+        bool isNumeric = (isAnyInt(leftType.get()) || isFloat(leftType.get()))
+            && (isAnyInt(rightType.get()) || isFloat(rightType.get()));
         if (!isNumeric) {
-            logError(
-                "Division can only be performed on numeric types, not {} and {}",
-                binaryExpression, leftType->toString(), rightType->toString());
+            logError("Division can only be performed on numeric types, not {} and {}", binaryExpression,
+                     leftType->toString(), rightType->toString());
             return nullptr;
         }
         // Use the wider float type if available, else default to float32
@@ -218,9 +201,8 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(
     if (op == TokenType::FloorDiv) {
         // Floor division always returns an int (int64 if either operand is int64, else int32)
         if (!(isAnyInt(leftType.get()) && isAnyInt(rightType.get()))) {
-            logError(
-                "Floor division can only be performed on integer types, not {} and {}",
-                binaryExpression, leftType->toString(), rightType->toString());
+            logError("Floor division can only be performed on integer types, not {} and {}", binaryExpression,
+                     leftType->toString(), rightType->toString());
             return nullptr;
         }
         // Use the wider int type if available, else default to int32
@@ -240,15 +222,15 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(
         if (isAnyInt(leftType.get()) && isAnyInt(rightType.get())) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
-        logError(
-            "Modulus operation can only be performed on integer types not {} and {}",
-            binaryExpression, leftType->toString(), rightType->toString());
+        logError("Modulus operation can only be performed on integer types not {} and {}", binaryExpression,
+                 leftType->toString(), rightType->toString());
         return nullptr;
     }
     return nullptr;
 }
 
-ast::TypeSPtr_t SemanticAnalyzer::widestNumericType(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release {
+ast::TypeSPtr_t SemanticAnalyzer::widestNumericType(const ast::Type* type1,
+                                                    const ast::Type* type2) const noexcept_if_release {
     using namespace semantic;
     if (!type1 || !type2) return nullptr;
 
@@ -257,31 +239,24 @@ ast::TypeSPtr_t SemanticAnalyzer::widestNumericType(const ast::Type* type1, cons
 
     // Try direct lookup in foo
     auto it = numericTypePromotionTable.find({t1, t2});
-    if (it != numericTypePromotionTable.end()) {
-        return std::make_shared<ast::SymbolType>(it->second);
-    }
+    if (it != numericTypePromotionTable.end()) { return std::make_shared<ast::SymbolType>(it->second); }
     // Try reverse order
     it = numericTypePromotionTable.find({t2, t1});
-    if (it != numericTypePromotionTable.end()) {
-        return std::make_shared<ast::SymbolType>(it->second);
-    }
+    if (it != numericTypePromotionTable.end()) { return std::make_shared<ast::SymbolType>(it->second); }
 
     // Fallback: if both are the same, return that type
-    if (t1 == t2) {
-        return std::make_shared<ast::SymbolType>(t1);
-    }
+    if (t1 == t2) { return std::make_shared<ast::SymbolType>(t1); }
 
     for (const auto& candidate : fallbackTypeOrder) {
-        if (t1 == candidate || t2 == candidate) {
-            return std::make_shared<ast::SymbolType>(candidate);
-        }
+        if (t1 == candidate || t2 == candidate) { return std::make_shared<ast::SymbolType>(candidate); }
     }
 
     // Unknown combination
     return nullptr;
 }
 
-ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release {
+ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const
+    noexcept_if_release {
     using ast::TypeKind;
     using lexer::TokenType;
 
@@ -298,7 +273,8 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryEx
                 if (areTypesCompatible(leftArrayType->elementType.get(), rightArrayType->elementType.get())) {
                     return std::make_shared<ast::ArrayType>(leftArrayType->elementType);
                 }
-                logError("Cannot add arrays of different element types: {} and {}", binaryExpression, left->getType()->toString(), right->getType()->toString());
+                logError("Cannot add arrays of different element types: {} and {}", binaryExpression,
+                         left->getType()->toString(), right->getType()->toString());
                 return nullptr;
             }
             logError("Operator '+' not supported for array and {}", binaryExpression, right->getType()->toString());
@@ -306,9 +282,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryEx
         }
         case TokenType::Mul: {
             // Array * Int => Array of the same type repeated n times
-            if (isUInt(right->getType())) {
-                return std::make_shared<ast::ArrayType>(leftArrayType->elementType);
-            }
+            if (isUInt(right->getType())) { return std::make_shared<ast::ArrayType>(leftArrayType->elementType); }
             logError("Operator '*' not supported for array and {}", binaryExpression, right->getType()->toString());
             return nullptr;
         }
@@ -319,14 +293,16 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryEx
         case TokenType::LessThan:
         case TokenType::LessThanOrEqual: {
             if (right->getType()->kind() != TypeKind::ArrayType) {
-                logError("Cannot compare array with non-array type: {} and {}", binaryExpression, left->getType()->toString(), right->getType()->toString());
+                logError("Cannot compare array with non-array type: {} and {}", binaryExpression,
+                         left->getType()->toString(), right->getType()->toString());
                 return nullptr;
             }
             auto rightArrayType = static_cast<ast::ArrayType*>(right->getType());
             if (areTypesCompatible(leftArrayType->elementType.get(), rightArrayType->elementType.get())) {
                 return std::make_shared<ast::SymbolType>("bool");
             }
-            logError("Cannot compare arrays of different element types: {} and {}", binaryExpression, left->getType()->toString(), right->getType()->toString());
+            logError("Cannot compare arrays of different element types: {} and {}", binaryExpression,
+                     left->getType()->toString(), right->getType()->toString());
             return nullptr;
         }
         default:

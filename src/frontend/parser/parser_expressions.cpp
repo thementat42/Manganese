@@ -1,11 +1,12 @@
 /**
  * @file parser_expressions.cpp
- * @brief This file contains the implementation of expression parsing in the parser. It is split into its own file for readability and maintainability.
+ * @brief This file contains the implementation of expression parsing in the parser. It is split into its own file for
+ * readability and maintainability.
  */
 
 #include <frontend/ast.h>
-#include <frontend/parser.h>
 #include <frontend/lexer.h>
+#include <frontend/parser.h>
 #include <global_macros.h>
 #include <utils/number_utils.h>
 
@@ -74,9 +75,7 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_rele
 
     // ! For some reason this works
     // ! Do not delete this
-    if (type == TokenType::AddressOf || type == TokenType::Dereference) {
-        precedence = Precedence::Default;
-    }
+    if (type == TokenType::AddressOf || type == TokenType::Dereference) { precedence = Precedence::Default; }
 
     while (!done()) {
         token = currentToken();
@@ -88,8 +87,8 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_rele
         type = token.getType();
 
         auto precedenceIterator = operatorPrecedenceMap.find(type);
-        if (precedenceIterator == operatorPrecedenceMap.end() ||
-            precedenceIterator->second.leftBindingPower <= precedence) {
+        if (precedenceIterator == operatorPrecedenceMap.end()
+            || precedenceIterator->second.leftBindingPower <= precedence) {
             break;
         }
 
@@ -99,20 +98,18 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_rele
             ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
 
-        if (type == TokenType::LeftBrace &&
-            left->kind() != ast::ExpressionKind::IdentifierExpression &&
-            left->kind() != ast::ExpressionKind::GenericExpression) [[unlikely]] {
+        if (type == TokenType::LeftBrace && left->kind() != ast::ExpressionKind::IdentifierExpression
+            && left->kind() != ast::ExpressionKind::GenericExpression) [[unlikely]] {
             if (isParsingBlockPrecursor) {
                 // Left braces after an expression can either start a block or a bundle instantiation
-                // If we're parsing a block precursor (if/for/while, etc.) AND the previous expression is not an identifier,
-                // we assume it's the start of a block and break
-                // If the previous expression IS an identifier, it might be an inline bundle instantiation
+                // If we're parsing a block precursor (if/for/while, etc.) AND the previous expression is not an
+                // identifier, we assume it's the start of a block and break If the previous expression IS an
+                // identifier, it might be an inline bundle instantiation
                 return left;
             }
-            logError(
-                "Left brace after an expression must be preceded by an identifier (bundle instantiation)"
-                " or a block precursor (if/for/while, etc.)",
-                token.getLine(), token.getColumn());
+            logError("Left brace after an expression must be preceded by an identifier (bundle instantiation)"
+                     " or a block precursor (if/for/while, etc.)",
+                     token.getLine(), token.getColumn());
         }
         left = ledIterator->second(this, std::move(left), precedenceIterator->second.rightBindingPower);
     }
@@ -165,9 +162,7 @@ ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t lef
     if (left->kind() == ast::ExpressionKind::GenericExpression) {
         auto* genericExpr = static_cast<ast::GenericExpression*>(left.get());
         if (genericExpr->identifier->kind() != ast::ExpressionKind::IdentifierExpression) {
-            logError(
-                "Generic bundle instantiation must start with a bundle name",
-                left->getLine(), left->getColumn());
+            logError("Generic bundle instantiation must start with a bundle name", left->getLine(), left->getColumn());
         } else {
             auto* identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
             bundleName = identifierExpr->value;
@@ -177,16 +172,16 @@ ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t lef
         auto* underlying = static_cast<ast::IdentifierExpression*>(left.get());
         bundleName = underlying->value;
     } else {
-        logError(
-            std::format("Bundle instantiation expression must start with a bundle name, not {}", left->toString()),
-            left->getLine(), left->getColumn());
+        logError(std::format("Bundle instantiation expression must start with a bundle name, not {}", left->toString()),
+                 left->getLine(), left->getColumn());
     }
 
     while (!done()) {
         if (currentToken().getType() == lexer::TokenType::RightBrace) {
             break;  // Done instantiation
         }
-        auto propertyName = expectToken(lexer::TokenType::Identifier, "Expected field name in bundle instantiation").getLexeme();
+        auto propertyName
+            = expectToken(lexer::TokenType::Identifier, "Expected field name in bundle instantiation").getLexeme();
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to bundle field");
         // want precedence to be 1 higher than assignment (e.g. field = x = 10 is invalid)
         constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
@@ -196,9 +191,8 @@ ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t lef
             fields.begin(), fields.end(),
             [propertyName](const ast::BundleInstantiationField& field) { return field.name == propertyName; });
         if (duplicate != fields.end()) {
-            logError(
-                std::format("Duplicate field '{}' in bundle instantiation of '{}'", propertyName, bundleName),
-                value->getLine(), value->getColumn());
+            logError(std::format("Duplicate field '{}' in bundle instantiation of '{}'", propertyName, bundleName),
+                     value->getLine(), value->getColumn());
         } else {
             fields.emplace_back(propertyName, std::move(value));
         }
@@ -207,8 +201,7 @@ ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t lef
         }
     }
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end bundle instantiation");
-    return std::make_unique<ast::BundleInstantiationExpression>(
-        bundleName, genericTypes, std::move(fields));
+    return std::make_unique<ast::BundleInstantiationExpression>(bundleName, genericTypes, std::move(fields));
 }
 
 ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence) {
@@ -221,7 +214,8 @@ ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Prec
             break;  // Done with arguments
         }
         arguments.push_back(parseExpression(Precedence::Assignment));
-        if (currentToken().getType() != lexer::TokenType::RightParen && currentToken().getType() != lexer::TokenType::EndOfFile) {
+        if (currentToken().getType() != lexer::TokenType::RightParen
+            && currentToken().getType() != lexer::TokenType::EndOfFile) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate function arguments");
         }
     }
@@ -230,7 +224,7 @@ ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Prec
 }
 
 ExpressionUPtr_t Parser::parseGenericExpression(ExpressionUPtr_t left, Precedence precedence) {
-    DISCARD(advance());   // Consume the '@' token
+    DISCARD(advance());  // Consume the '@' token
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
     std::vector<TypeSPtr_t> typeParameters;
@@ -248,7 +242,7 @@ ExpressionUPtr_t Parser::parseGenericExpression(ExpressionUPtr_t left, Precedenc
 }
 
 ExpressionUPtr_t Parser::parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence) {
-    DISCARD(advance());   // Consume the left square bracket
+    DISCARD(advance());  // Consume the left square bracket
     DISCARD(precedence);  // Avoid unused variable warning
     constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
     ExpressionUPtr_t index = parseExpression(static_cast<Precedence>(precedence_));
@@ -257,7 +251,7 @@ ExpressionUPtr_t Parser::parseIndexingExpression(ExpressionUPtr_t left, Preceden
 }
 
 ExpressionUPtr_t Parser::parseMemberAccessExpression(ExpressionUPtr_t left, Precedence precedence) {
-    DISCARD(advance());   // Consume the member access operator (.)
+    DISCARD(advance());  // Consume the member access operator (.)
     DISCARD(precedence);  // Avoid unused variable warning
     return std::make_unique<ast::MemberAccessExpression>(
         std::move(left), expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
@@ -290,18 +284,14 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
     switch (token.getType()) {
         case TokenType::CharLiteral:
             return std::make_unique<ast::CharLiteralExpression>(lexeme[0]);  // Single character
-        case TokenType::StrLiteral:
-            return std::make_unique<ast::StringLiteralExpression>(lexeme);
-        case TokenType::Identifier:
-            return std::make_unique<ast::IdentifierExpression>(lexeme);
-        case TokenType::True:
-            return std::make_unique<ast::BoolLiteralExpression>(true);
-        case TokenType::False:
-            return std::make_unique<ast::BoolLiteralExpression>(false);
+        case TokenType::StrLiteral: return std::make_unique<ast::StringLiteralExpression>(lexeme);
+        case TokenType::Identifier: return std::make_unique<ast::IdentifierExpression>(lexeme);
+        case TokenType::True: return std::make_unique<ast::BoolLiteralExpression>(true);
+        case TokenType::False: return std::make_unique<ast::BoolLiteralExpression>(false);
         case TokenType::FloatLiteral:
             // Check for floating-point suffixes
-            return std::make_unique<ast::NumberLiteralExpression>(
-                lexeme.ends_with("f32") ? stof(lexeme) : stod(lexeme));
+            return std::make_unique<ast::NumberLiteralExpression>(lexeme.ends_with("f32") ? stof(lexeme)
+                                                                                          : stod(lexeme));
         case TokenType::IntegerLiteral: {
             // Extract integer suffix
             Base base = determineNumberBase(lexeme);
@@ -315,22 +305,20 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
 
             std::optional<number_t> value = utils::stringToNumber(numericPart, base, false, suffix);
             if (!value) {
-                logError(
-                    std::format("Invalid integer literal '{}'", lexeme),
-                    token.getLine(), token.getColumn());
+                logError(std::format("Invalid integer literal '{}'", lexeme), token.getLine(), token.getColumn());
                 return std::make_unique<ast::NumberLiteralExpression>(0);
                 // Error tolerance: return a default value of 0
             }
             return std::make_unique<ast::NumberLiteralExpression>(*value);
         }
         default:
-            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: " +
-                lexer::tokenTypeToString(token.getType()));
+            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
+                               + lexer::tokenTypeToString(token.getType()));
     }
 }
 
 ExpressionUPtr_t Parser::parseScopeResolutionExpression(ExpressionUPtr_t left, Precedence precedence) {
-    DISCARD(advance());   // Consume the scope resolution operator (::)
+    DISCARD(advance());  // Consume the scope resolution operator (::)
     DISCARD(precedence);  // Avoid unused variable warning
     auto element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
     return std::make_unique<ast::ScopeResolutionExpression>(std::move(left), element);
@@ -348,13 +336,16 @@ void extractSuffix(std::string& lexeme, std::string& suffix) {
     if (lexeme.ends_with("i8") || lexeme.ends_with("I8") || lexeme.ends_with("u8") || lexeme.ends_with("U8")) {
         suffix = lexeme.substr(lexeme.length() - 2);
         lexeme.erase(lexeme.length() - 2);
-    } else if (lexeme.ends_with("i16") || lexeme.ends_with("I16") || lexeme.ends_with("u16") || lexeme.ends_with("U16")) {
+    } else if (lexeme.ends_with("i16") || lexeme.ends_with("I16") || lexeme.ends_with("u16")
+               || lexeme.ends_with("U16")) {
         suffix = lexeme.substr(lexeme.length() - 3);
         lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("i32") || lexeme.ends_with("I32") || lexeme.ends_with("u32") || lexeme.ends_with("U32")) {
+    } else if (lexeme.ends_with("i32") || lexeme.ends_with("I32") || lexeme.ends_with("u32")
+               || lexeme.ends_with("U32")) {
         suffix = lexeme.substr(lexeme.length() - 3);
         lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("i64") || lexeme.ends_with("I64") || lexeme.ends_with("u64") || lexeme.ends_with("U64")) {
+    } else if (lexeme.ends_with("i64") || lexeme.ends_with("I64") || lexeme.ends_with("u64")
+               || lexeme.ends_with("U64")) {
         suffix = lexeme.substr(lexeme.length() - 3);
         lexeme.erase(lexeme.length() - 3);
     } else if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
@@ -376,14 +367,11 @@ Base determineNumberBase(const std::string& lexeme) {
     }
     switch (lexeme[1]) {
         case 'x':
-        case 'X':
-            return Base::Hexadecimal;
+        case 'X': return Base::Hexadecimal;
         case 'b':
-        case 'B':
-            return Base::Binary;
+        case 'B': return Base::Binary;
         case 'o':
-        case 'O':
-            return Base::Octal;
+        case 'O': return Base::Octal;
         default:  // Not a base prefix (just leading zero), assume decimal
             return Base::Decimal;
     }

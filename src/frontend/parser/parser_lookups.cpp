@@ -37,11 +37,9 @@ void Parser::registerNudHandler_prefix(TokenType type, nudHandler_t handler) {
     nudLookup[type] = handler;
 }
 
-void Parser::registerStmtHandler(TokenType type,
-                                 statementHandler_t handler) {
-    operatorPrecedenceMap[type] = Operator{
-        .leftBindingPower = Precedence::Default,
-        .rightBindingPower = Precedence::Default};
+void Parser::registerStmtHandler(TokenType type, statementHandler_t handler) {
+    operatorPrecedenceMap[type]
+        = Operator{.leftBindingPower = Precedence::Default, .rightBindingPower = Precedence::Default};
     statementLookup[type] = handler;
 }
 

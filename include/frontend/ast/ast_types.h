@@ -39,8 +39,8 @@ class ArrayType : public Type {
     /**
      * @param elementType_ The type of the elements in the array
      */
-    explicit ArrayType(TypeSPtr_t elementType_, ExpressionUPtr_t lengthExpr_ = nullptr)
-        : elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
+    explicit ArrayType(TypeSPtr_t elementType_, ExpressionUPtr_t lengthExpr_ = nullptr) :
+        elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
@@ -56,8 +56,7 @@ class BundleType : public Type {
     std::vector<TypeSPtr_t> fieldTypes;
 
    public:
-    explicit BundleType(std::vector<TypeSPtr_t> fieldTypes_)
-        : fieldTypes(std::move(fieldTypes_)) {}
+    explicit BundleType(std::vector<TypeSPtr_t> fieldTypes_) : fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::BundleType; }
 
@@ -84,8 +83,8 @@ class FunctionType : public Type {
     TypeSPtr_t returnType;
 
    public:
-    FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypeSPtr_t returnType_)
-        : parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
+    FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypeSPtr_t returnType_) :
+        parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
@@ -100,11 +99,11 @@ class FunctionType : public Type {
  */
 class GenericType : public Type {
    protected:
-    TypeSPtr_t baseType;                     // some_function in `some_function@[T,U]`
+    TypeSPtr_t baseType;  // some_function in `some_function@[T,U]`
     std::vector<TypeSPtr_t> typeParameters;  // T and U in `some_function@[T,U]`
    public:
-    GenericType(TypeSPtr_t baseType_, std::vector<TypeSPtr_t> typeParameters_)
-        : baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
+    GenericType(TypeSPtr_t baseType_, std::vector<TypeSPtr_t> typeParameters_) :
+        baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::GenericType; };

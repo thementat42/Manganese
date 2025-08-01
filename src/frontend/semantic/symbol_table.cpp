@@ -39,9 +39,7 @@ bool SymbolTable::declare(Symbol symbol) {
 const Symbol* SymbolTable::lookup(const std::string& name) const noexcept {
     for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
         const Symbol* symbol = it->lookup(name);
-        if (symbol) {
-            return symbol;
-        }
+        if (symbol) { return symbol; }
     }
     logging::logInternal("Symbol '" + name + "' not found in any scope.", logging::LogLevel::Warning);
     return nullptr;
@@ -61,28 +59,17 @@ const Symbol* SymbolTable::lookupInCurrentScope(const std::string& name) const n
 
 std::string SymbolKindToString(const SymbolKind kind) noexcept_if_release {
     switch (kind) {
-        case SymbolKind::Variable:
-            return "Variable";
-        case SymbolKind::Constant:
-            return "Constant";
-        case SymbolKind::Function:
-            return "Function";
-        case SymbolKind::Bundle:
-            return "Bundle";
-        case SymbolKind::Enum:
-            return "Enum";
-        case SymbolKind::Module:
-            return "Module";
-        case SymbolKind::Import:
-            return "Import";
-        case SymbolKind::TypeAlias:
-            return "TypeAlias";
-        case SymbolKind::GenericType:
-            return "GenericType";
-        case SymbolKind::Invalid:
-            return "Invalid";
-        default:
-            ASSERT_UNREACHABLE(std::format("No string translation for symbol kind {}", static_cast<int>(kind)));
+        case SymbolKind::Variable: return "Variable";
+        case SymbolKind::Constant: return "Constant";
+        case SymbolKind::Function: return "Function";
+        case SymbolKind::Bundle: return "Bundle";
+        case SymbolKind::Enum: return "Enum";
+        case SymbolKind::Module: return "Module";
+        case SymbolKind::Import: return "Import";
+        case SymbolKind::TypeAlias: return "TypeAlias";
+        case SymbolKind::GenericType: return "GenericType";
+        case SymbolKind::Invalid: return "Invalid";
+        default: ASSERT_UNREACHABLE(std::format("No string translation for symbol kind {}", static_cast<int>(kind)));
     }
 }
 

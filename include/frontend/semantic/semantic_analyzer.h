@@ -32,9 +32,7 @@ struct Context {
     bool isRepeatLoopContext() const noexcept { return repeatLoop > 0; }
     bool isForLoopContext() const noexcept { return forLoop > 0; }
     bool isSwitchContext() const noexcept { return switchStatement > 0; }
-    bool isLoopContext() const noexcept {
-        return isWhileLoopContext() || isRepeatLoopContext() || isForLoopContext();
-    }
+    bool isLoopContext() const noexcept { return isWhileLoopContext() || isRepeatLoopContext() || isForLoopContext(); }
 };
 
 class SemanticAnalyzer {
@@ -49,16 +47,12 @@ class SemanticAnalyzer {
     Context context;
 
    public:
-    explicit SemanticAnalyzer() noexcept : hasError_(false), hasWarning_(false) {
-        symbolTable.enterScope();
-    }
+    explicit SemanticAnalyzer() noexcept : hasError_(false), hasWarning_(false) { symbolTable.enterScope(); }
 
     inline void analyze(parser::ParsedFile& parsedFile) {
         // checkImports(parsedFile.imports);
         currentModule = parsedFile.moduleName;
-        for (const auto& statement : parsedFile.program) {
-            checkStatement(statement.get());
-        }
+        for (const auto& statement : parsedFile.program) { checkStatement(statement.get()); }
     }
 
     bool hasError() const noexcept { return hasError_; }
@@ -81,15 +75,14 @@ class SemanticAnalyzer {
     }
 
     template <typename... Args>
-    inline void logError(const std::format_string<Args...>& fmt, const ast::ASTNode* node, Args&&... args) const noexcept {
+    inline void logError(const std::format_string<Args...>& fmt, const ast::ASTNode* node,
+                         Args&&... args) const noexcept {
         logging::logError(std::format(fmt, std::forward<Args>(args)...), node->getLine(), node->getColumn());
         hasError_ = true;
     }
 
     inline void checkBlock(ast::Block& block) noexcept(noexcept(checkStatement(std::declval<ast::Statement*>()))) {
-        for (auto& statement : block) {
-            checkStatement(statement.get());
-        }
+        for (auto& statement : block) { checkStatement(statement.get()); }
     }
 
     // ===== Specific Expression Checks =====
@@ -134,7 +127,8 @@ class SemanticAnalyzer {
     /**
      * @brief Checks if one type can be promoted or demoted to another type. (e.g. int32 <-> int64)
      * @note Issues a warning on demotion
-     * @note This should not allow implicit conversions (e.g. char-> int),only the same "basic" type with different widths
+     * @note This should not allow implicit conversions (e.g. char-> int),only the same "basic" type with different
+     * widths
      */
     bool areTypesPromotableOrDemotable(const ast::Type* from, const ast::Type* to) const noexcept_if_release;
 
@@ -150,35 +144,29 @@ class SemanticAnalyzer {
     ast::TypeSPtr_t resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
     ast::TypeSPtr_t widestNumericType(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release;
     ast::TypeSPtr_t resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
-    ast::TypeSPtr_t resolveArithmeticBinaryExpressionType(ast::BinaryExpression* binaryExpression, lexer::TokenType op) const noexcept_if_release;
+    ast::TypeSPtr_t resolveArithmeticBinaryExpressionType(ast::BinaryExpression* binaryExpression,
+                                                          lexer::TokenType op) const noexcept_if_release;
 };
 
 // ===== Helper Functions that don't depend on the SemanticAnalyzer instance =====
 
 constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release;
-inline const auto isSignedInt = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString().starts_with("int");
-};
-inline const auto isUInt = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString().starts_with("uint");
-};
+inline const auto isSignedInt
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString().starts_with("int"); };
+inline const auto isUInt
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString().starts_with("uint"); };
 
-inline const auto isAnyInt = [](const ast::Type* t) -> bool {
-    return isSignedInt(t) || isUInt(t);
-};
+inline const auto isAnyInt = [](const ast::Type* t) -> bool { return isSignedInt(t) || isUInt(t); };
 
-inline const auto isFloat = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString().starts_with("float");
-};
-inline const auto isChar = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString() == "char";
-};
+inline const auto isFloat
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString().starts_with("float"); };
+inline const auto isChar
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString() == "char"; };
 // inline const auto isBool = [](const ast::Type* t) -> bool {
 //     return ast::isPrimitiveType(t) && t->toString() == "bool";
 // };
-inline const auto isString = [](const ast::Type* t) -> bool {
-    return ast::isPrimitiveType(t) && t->toString() == "string";
-};
+inline const auto isString
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString() == "string"; };
 }  // namespace semantic
 
 }  // namespace Manganese

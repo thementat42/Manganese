@@ -32,7 +32,7 @@ constexpr auto NONE = std::nullopt;
 
 enum class Mode {
     String = 's',  // Source code passed in as a string
-    File = 'f'     // Filename passed in
+    File = 'f'  // Filename passed in
 };
 
 struct NumberPrefixResult {
@@ -46,7 +46,8 @@ struct NumberPrefixResult {
 /**
  * @brief Map a character to its corresponding escape sequence (e.g. 'n' -> '\n')
  * @param escapeChar The character to map
- * @return An optional character representing the escape sequence, or NONE if the character is not a valid escape sequence
+ * @return An optional character representing the escape sequence, or NONE if the character is not a valid escape
+ * sequence
  */
 std::optional<char> getEscapeCharacter(const char escapeChar);
 
@@ -73,15 +74,16 @@ std::optional<char32_t> resolveHexCharacters(const std::string& escDigits);
 std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, bool isLongUnicode = false);
 
 /**
- * @brief The lexer is responsible for turning the source code into a non-textual representation that the parser can understand.
+ * @brief The lexer is responsible for turning the source code into a non-textual representation that the parser can
+ * understand.
  */
 class Lexer {
-   public:                                   // public variables
+   public:  // public variables
     std::vector<std::string> blockComments;  // Store block comments (e.g. for documentation)
 
    private:  // private variables
     std::unique_ptr<io::Reader> reader;
-    size_t tokenStartLine, tokenStartCol;                      // Keep track of where the token started for error reporting
+    size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
     constexpr static const size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
     bool hasCriticalError_ = false;
     std::deque<Token> tokenStream;
@@ -173,7 +175,8 @@ class Lexer {
     bool processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat);
 
     /**
-     * @brief Replaces raw escape sequences in a string with their corresponding characters (e.g. "\n" (literally) becomes a newline)
+     * @brief Replaces raw escape sequences in a string with their corresponding characters (e.g. "\n" (literally)
+     * becomes a newline)
      * @param escapeString The string containing escape sequences
      * @return An optional string with the escape sequences resolved, or NONE if the string is invalid
      */
@@ -217,9 +220,7 @@ class Lexer {
      * @brief Move forward in the input stream by a certain number of characters
      * @param n The number of characters to move forward (default is 1)
      */
-    inline void advance(size_t n = 1) noexcept {
-        reader->setPosition(reader->getPosition() + n);
-    }
+    inline void advance(size_t n = 1) noexcept { reader->setPosition(reader->getPosition() + n); }
 };
 }  // namespace lexer
 }  // namespace Manganese

@@ -60,7 +60,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
             std::string escDigits = escapeString.substr(i + 1, 8);  // 8 for UXXXXXXXX
             escapeChar = resolveUnicodeCharacters(escDigits, true);
             skipLength = 9;
-        } else if (escapeString[i] == 'x') [[unlikely]] {           // Hex escape sequences aren't usually used
+        } else if (escapeString[i] == 'x') [[unlikely]] {  // Hex escape sequences aren't usually used
             std::string escDigits = escapeString.substr(i + 1, 2);  // 2 for xXX
             escapeChar = resolveHexCharacters(escDigits);
             skipLength = 3;
@@ -96,8 +96,8 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     if (byteCount > 1) {
         unsigned char firstByte = static_cast<unsigned char>(processed[0]);
         isValidSingleCodePoint = (byteCount == 2 && (firstByte & 0xE0) == 0xC0) ||  // 2-byte UTF-8 character
-                                 (byteCount == 3 && (firstByte & 0xF0) == 0xE0) ||  // 3-byte UTF-8 character
-                                 (byteCount == 4 && (firstByte & 0xF8) == 0xF0);    // 4-byte UTF-8 character
+            (byteCount == 3 && (firstByte & 0xF0) == 0xE0) ||  // 3-byte UTF-8 character
+            (byteCount == 4 && (firstByte & 0xF8) == 0xF0);  // 4-byte UTF-8 character
     }
     if (!isValidSingleCodePoint) {
         logging::logError("Invalid character literal " + charLiteral, getLine(), getCol());
@@ -109,35 +109,21 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
 
 std::optional<char> getEscapeCharacter(const char escapeChar) {
     switch (escapeChar) {
-        case '\\':
-            return '\\';
-        case '\'':
-            return '\'';
-        case '\"':
-            return '\"';
-        case 'a':
-            return '\a';
-        case 'b':
-            return '\b';
-        case 'f':
-            return '\f';
-        case 'n':
-            return '\n';
-        case 'r':
-            return '\r';
-        case 't':
-            return '\t';
-        case 'v':
-            return '\v';
-        case '0':
-            return '\0';
+        case '\\': return '\\';
+        case '\'': return '\'';
+        case '\"': return '\"';
+        case 'a': return '\a';
+        case 'b': return '\b';
+        case 'f': return '\f';
+        case 'n': return '\n';
+        case 'r': return '\r';
+        case 't': return '\t';
+        case 'v': return '\v';
+        case '0': return '\0';
         default:
-            logging::logError(
-                std::format(
-                    "\\{} is not a valid escape sequence.",
-                    escapeChar) +
-                    "If you meant to type a backslash ('\\'), use two backslashes ",
-                0, 0);
+            logging::logError(std::format("\\{} is not a valid escape sequence.", escapeChar)
+                                  + "If you meant to type a backslash ('\\'), use two backslashes ",
+                              0, 0);
             return NONE;
     }
 }
@@ -151,13 +137,9 @@ inline int hexDigitToInt(char c) {
 
 std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
     // Check that the string is exactly 2 characters long
-    if (esc.length() != 2) {
-        return NONE;
-    }
+    if (esc.length() != 2) { return NONE; }
     // Check that both characters are hex digits
-    if (!std::isxdigit(esc[0]) || !std::isxdigit(esc[1])) {
-        return NONE;
-    }
+    if (!std::isxdigit(esc[0]) || !std::isxdigit(esc[1])) { return NONE; }
     char32_t hexChar = static_cast<char32_t>(hexDigitToInt(esc[0]));
     hexChar <<= 4;  // Make room for the second hex digit
     hexChar |= static_cast<char32_t>(hexDigitToInt(esc[1]));
@@ -166,14 +148,10 @@ std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
 
 std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, bool isLongUnicode) {
     size_t expectedLength = isLongUnicode ? 8 : 4;  // 8 for \UXXXXXXXX, 4 for \uXXXX
-    if (esc.length() != expectedLength) {
-        return NONE;
-    }
+    if (esc.length() != expectedLength) { return NONE; }
     char32_t unicodeChar = 0;
     for (char c : esc) {
-        if (!std::isxdigit(c)) {
-            return NONE;
-        }
+        if (!std::isxdigit(c)) { return NONE; }
         unicodeChar <<= 4;
         unicodeChar |= static_cast<char32_t>(hexDigitToInt(c));
     }

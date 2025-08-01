@@ -10,7 +10,5 @@
 #include <format>
 
 namespace Manganese {
-namespace semantic {
-
-}  // namespace semantic
+namespace semantic {}  // namespace semantic
 }  // namespace Manganese

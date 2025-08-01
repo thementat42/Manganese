@@ -14,8 +14,7 @@
 #include <iostream>
 #include <string>
 
-#define TO_2_DP(value) \
-    std::fixed << std::setprecision(2) << value
+#define TO_2_DP(value) std::fixed << std::setprecision(2) << value
 
 #include <global_macros.h>
 #include <io/logging.h>
@@ -46,8 +45,10 @@ void TestRunner::printSummary() {
     auto total = passed + failed;
     total = total == 0 ? 1 : total;  // avoid any division by 0 problems
     std::cout << PINK << "\n=== Test Summary ===" << RESET << '\n';
-    std::cout << GREEN << "Passed: " << passed << "/" << total << " (" << TO_2_DP(percentage(passed, total)) << "%)" << RESET << '\n';
-    std::cout << RED << "Failed: " << failed << "/" << total << " (" << TO_2_DP(percentage(failed, total)) << "%)" << RESET << '\n';
+    std::cout << GREEN << "Passed: " << passed << "/" << total << " (" << TO_2_DP(percentage(passed, total)) << "%)"
+              << RESET << '\n';
+    std::cout << RED << "Failed: " << failed << "/" << total << " (" << TO_2_DP(percentage(failed, total)) << "%)"
+              << RESET << '\n';
     std::cout << PINK << "Total: " << total << RESET << '\n';
     if (failed > 0) {
         std::cout << PINK << "=== Failed Tests ===" << RESET << '\n';
@@ -57,8 +58,6 @@ void TestRunner::printSummary() {
     }
 }
 
-bool TestRunner::allTestsPassed() {
-    return failed == 0;
-}
+bool TestRunner::allTestsPassed() { return failed == 0; }
 }  // namespace tests
 }  // namespace Manganese

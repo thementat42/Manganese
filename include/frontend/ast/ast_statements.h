@@ -47,8 +47,8 @@ class AliasStatement : public Statement {
     Visibility visibility = Visibility::Private;
 
    public:
-    AliasStatement(TypeSPtr_t baseType_, std::string alias_)
-        : baseType(std::move(baseType_)), alias(std::move(alias_)) {}
+    AliasStatement(TypeSPtr_t baseType_, std::string alias_) :
+        baseType(std::move(baseType_)), alias(std::move(alias_)) {}
 
     AST_STANDARD_INTERFACE
     StatementKind kind() const noexcept override { return StatementKind::AliasStatement; };
@@ -66,8 +66,7 @@ struct BundleField {
     std::string name;
     TypeSPtr_t type;
 
-    BundleField(std::string name_, TypeSPtr_t type_)
-        : name(std::move(name_)), type(std::move(type_)) {}
+    BundleField(std::string name_, TypeSPtr_t type_) : name(std::move(name_)), type(std::move(type_)) {}
 };
 
 class BundleDeclarationStatement : public Statement {
@@ -78,8 +77,9 @@ class BundleDeclarationStatement : public Statement {
     Visibility visibility = Visibility::Private;
 
    public:
-    BundleDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_, std::vector<BundleField> fields_)
-        : name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
+    BundleDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
+                               std::vector<BundleField> fields_) :
+        name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::BundleDeclarationStatement; };
 };
@@ -95,8 +95,8 @@ class ContinueStatement : public Statement {
 struct EnumValue {
     std::string name;
     ExpressionUPtr_t value;
-    explicit EnumValue(std::string name_, ExpressionUPtr_t value_ = nullptr)
-        : name(std::move(name_)), value(std::move(value_)) {}
+    explicit EnumValue(std::string name_, ExpressionUPtr_t value_ = nullptr) :
+        name(std::move(name_)), value(std::move(value_)) {}
 };
 
 class EnumDeclarationStatement : public Statement {
@@ -107,8 +107,8 @@ class EnumDeclarationStatement : public Statement {
     Visibility visibility = Visibility::Private;
 
    public:
-    EnumDeclarationStatement(std::string name_, TypeSPtr_t baseType_, std::vector<EnumValue> values_)
-        : name(name_), baseType(std::move(baseType_)), values(std::move(values_)) {}
+    EnumDeclarationStatement(std::string name_, TypeSPtr_t baseType_, std::vector<EnumValue> values_) :
+        name(name_), baseType(std::move(baseType_)), values(std::move(values_)) {}
 
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::EnumDeclarationStatement; };
@@ -133,7 +133,8 @@ struct FunctionParameter {
     TypeSPtr_t type;
     bool isConst;
 
-    FunctionParameter(std::string name_, TypeSPtr_t type_, bool isConst_) : name(std::move(name_)), type(std::move(type_)), isConst(isConst_) {}
+    FunctionParameter(std::string name_, TypeSPtr_t type_, bool isConst_) :
+        name(std::move(name_)), type(std::move(type_)), isConst(isConst_) {}
 };
 
 class FunctionDeclarationStatement : public Statement {
@@ -146,8 +147,13 @@ class FunctionDeclarationStatement : public Statement {
     Visibility visibility = Visibility::Private;
 
    public:
-    FunctionDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_, std::vector<FunctionParameter> parameters_, TypeSPtr_t returnType_, Block body_)
-        : name(std::move(name_)), genericTypes(std::move(genericTypes_)), parameters(std::move(parameters_)), returnType(std::move(returnType_)), body(std::move(body_)) {}
+    FunctionDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
+                                 std::vector<FunctionParameter> parameters_, TypeSPtr_t returnType_, Block body_) :
+        name(std::move(name_)),
+        genericTypes(std::move(genericTypes_)),
+        parameters(std::move(parameters_)),
+        returnType(std::move(returnType_)),
+        body(std::move(body_)) {}
 
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::FunctionDeclarationStatement; };
@@ -167,15 +173,19 @@ class IfStatement : public Statement {
     std::vector<ElifClause> elifs;
 
    public:
-    IfStatement(ExpressionUPtr_t condition_, Block body_, std::vector<ElifClause> elifs_, Block elseBody_ = {})
-        : condition(std::move(condition_)), body(std::move(body_)), elseBody(std::move(elseBody_)), elifs(std::move(elifs_)) {}
+    IfStatement(ExpressionUPtr_t condition_, Block body_, std::vector<ElifClause> elifs_, Block elseBody_ = {}) :
+        condition(std::move(condition_)),
+        body(std::move(body_)),
+        elseBody(std::move(elseBody_)),
+        elifs(std::move(elifs_)) {}
 
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::IfStatement; };
 };
 
 /**
- * @note Imports are stored separately in the parser, so this holds no data -- it's just here for compatibility with the other statements
+ * @note Imports are stored separately in the parser, so this holds no data -- it's just here for compatibility with the
+ * other statements
  */
 class ImportStatement : public Statement {
    public:
@@ -185,7 +195,8 @@ class ImportStatement : public Statement {
 };
 
 /**
- * @note The module name is stored separately in the parser, so this holds no data -- it's just here for compatibility with the other statements
+ * @note The module name is stored separately in the parser, so this holds no data -- it's just here for compatibility
+ * with the other statements
  */
 class ModuleDeclarationStatement : public Statement {
    public:
@@ -200,8 +211,8 @@ class RepeatLoopStatement : public Statement {
     Block body;
 
    public:
-    RepeatLoopStatement(ExpressionUPtr_t numIterations_, Block body_)
-        : numIterations(std::move(numIterations_)), body(std::move(body_)) {}
+    RepeatLoopStatement(ExpressionUPtr_t numIterations_, Block body_) :
+        numIterations(std::move(numIterations_)), body(std::move(body_)) {}
 
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::RepeatLoopStatement; };
@@ -222,7 +233,8 @@ struct CaseClause {
     ExpressionUPtr_t literalValue;
     Block body;
 
-    CaseClause(ExpressionUPtr_t literalValue_, Block body_) : literalValue(std::move(literalValue_)), body(std::move(body_)) {}
+    CaseClause(ExpressionUPtr_t literalValue_, Block body_) :
+        literalValue(std::move(literalValue_)), body(std::move(body_)) {}
 };
 
 class SwitchStatement : public Statement {
@@ -232,8 +244,8 @@ class SwitchStatement : public Statement {
     Block defaultBody;
 
    public:
-    SwitchStatement(ExpressionUPtr_t variable_, std::vector<CaseClause> cases_, Block defaultBody_ = {})
-        : variable(std::move(variable_)), cases(std::move(cases_)), defaultBody(std::move(defaultBody_)) {}
+    SwitchStatement(ExpressionUPtr_t variable_, std::vector<CaseClause> cases_, Block defaultBody_ = {}) :
+        variable(std::move(variable_)), cases(std::move(cases_)), defaultBody(std::move(defaultBody_)) {}
 
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::SwitchStatement; };
@@ -248,13 +260,13 @@ class VariableDeclarationStatement : public Statement {
     TypeSPtr_t type;
 
    public:
-    VariableDeclarationStatement(
-        bool isConst_, std::string name_, Visibility visibility_, ExpressionUPtr_t _value, TypeSPtr_t _type)
-        : isConst(isConst_),
-          name(std::move(name_)),
-          visibility(visibility_),
-          value(std::move(_value)),
-          type(std::move(_type)) {}
+    VariableDeclarationStatement(bool isConst_, std::string name_, Visibility visibility_, ExpressionUPtr_t _value,
+                                 TypeSPtr_t _type) :
+        isConst(isConst_),
+        name(std::move(name_)),
+        visibility(visibility_),
+        value(std::move(_value)),
+        type(std::move(_type)) {}
 
     bool isConstant() const { return isConst; }
 
@@ -269,8 +281,8 @@ class WhileLoopStatement : public Statement {
     bool isDoWhile;
 
    public:
-    WhileLoopStatement(Block body_, ExpressionUPtr_t condition_, bool isDoWhile_ = false)
-        : body(std::move(body_)), condition(std::move(condition_)), isDoWhile(isDoWhile_) {}
+    WhileLoopStatement(Block body_, ExpressionUPtr_t condition_, bool isDoWhile_ = false) :
+        body(std::move(body_)), condition(std::move(condition_)), isDoWhile(isDoWhile_) {}
 
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::WhileLoopStatement; };

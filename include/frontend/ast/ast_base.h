@@ -23,16 +23,17 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #if DEBUG
-#define __OVERRIDE_DUMP_METHOD void dump(std::ostream& os, int indent = 0) const override;  // Makes overriding dump() less cumbersome to type
+#define __OVERRIDE_DUMP_METHOD \
+    void dump(std::ostream& os, int indent = 0) const override;  // Makes overriding dump() less cumbersome to type
 #else
 #define __OVERRIDE_DUMP_METHOD  // Don't dump in non-debug builds
 #endif
 
-#define __OVERRIDE_TO_STRING std::string toString() const override;  // Makes overriding toString() less cumbersome to type
+#define __OVERRIDE_TO_STRING \
+    std::string toString() const override;  // Makes overriding toString() less cumbersome to type
 
 #define __NODE_OVERRIDES \
     __OVERRIDE_TO_STRING \
@@ -71,9 +72,10 @@ using Block = std::vector<StatementUPtr_t>;
 /*
 TypeSPtr_t is a shared pointer since, in the semantic analysis phase, multiple AST nodes may refer to the same type.
 e.g. in a variable declaration (let x = 1 + 2), both the variable and the assignment expression will have the same type
-rather than constantly cloning types, it's easier to just have a shared pointer so that multiple nodes can refer to the same type object.
-    this reduces memory usage since the actual type is only allocated and stored once instead of multiple redundant deep copies 
-    cloning types would also require cloning expressions (e.g. array types), which is even more expensive, so shared_pointer is much more efficient
+rather than constantly cloning types, it's easier to just have a shared pointer so that multiple nodes can refer to the
+same type object. this reduces memory usage since the actual type is only allocated and stored once instead of multiple
+redundant deep copies cloning types would also require cloning expressions (e.g. array types), which is even more
+expensive, so shared_pointer is much more efficient
 */
 
 enum class ExpressionKind;
@@ -119,15 +121,9 @@ class Expression : public ASTNode {
 
    public:
     virtual ~Expression() noexcept = default;
-    virtual Type* getType() const noexcept {
-        return computedType.get();
-    };
-    virtual TypeSPtr_t getTypePtr() const noexcept {
-        return computedType;
-    }
-    virtual void setType(TypeSPtr_t type) noexcept {
-        computedType = type;
-    }
+    virtual Type* getType() const noexcept { return computedType.get(); };
+    virtual TypeSPtr_t getTypePtr() const noexcept { return computedType; }
+    virtual void setType(TypeSPtr_t type) noexcept { computedType = type; }
     virtual ExpressionKind kind() const noexcept = 0;
     friend parser::Parser;
     friend semantic::SemanticAnalyzer;

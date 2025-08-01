@@ -6,10 +6,10 @@
 #ifndef MANGANESE_TESTS_TEST_RUNNER_H
 #define MANGANESE_TESTS_TEST_RUNNER_H
 
+#include <global_macros.h>
+
 #include <functional>
 #include <string>
-
-#include <global_macros.h>
 
 namespace Manganese {
 namespace tests {

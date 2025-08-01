@@ -1,6 +1,7 @@
 /**
  * @file parser_types.cpp
- * @brief This file contains the implementation of type parsing in the parser. It is split into its own file for readability and maintainability.
+ * @brief This file contains the implementation of type parsing in the parser. It is split into its own file for
+ * readability and maintainability.
  */
 
 #include <frontend/ast.h>
@@ -26,8 +27,8 @@ TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
         type = currentToken().getType();
 
         auto operatorPrecedenceIterator = operatorPrecedenceMap_type.find(type);
-        if (operatorPrecedenceIterator == operatorPrecedenceMap_type.end() ||
-            operatorPrecedenceIterator->second.leftBindingPower <= precedence) {
+        if (operatorPrecedenceIterator == operatorPrecedenceMap_type.end()
+            || operatorPrecedenceIterator->second.leftBindingPower <= precedence) {
             break;
         }
 
@@ -45,7 +46,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
 TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) {
     ExpressionUPtr_t lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
-    DISCARD(advance());   // Consume the left square bracket '['
+    DISCARD(advance());  // Consume the left square bracket '['
     if (currentToken().getType() != TokenType::RightSquare) {
         // If the next token is not a right square bracket, it's a length expression
         lengthExpression = parseExpression(Precedence::Default);
@@ -55,9 +56,10 @@ TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) {
 }
 
 TypeSPtr_t Parser::parseBundleType() {
-    DISCARD(advance()); // Consume the 'bundle' token
+    DISCARD(advance());  // Consume the 'bundle' token
     if (currentToken().getType() == TokenType::Identifier) {
-        logging::logWarning("Bundle names are ignored in bundle type declarations", currentToken().getLine(), currentToken().getColumn());
+        logging::logWarning("Bundle names are ignored in bundle type declarations", currentToken().getLine(),
+                            currentToken().getColumn());
         DISCARD(advance());  // Skip the identifier token
     }
 
@@ -66,14 +68,16 @@ TypeSPtr_t Parser::parseBundleType() {
 
     while (currentToken().getType() != TokenType::RightBrace) {
         if (currentToken().getType() == TokenType::Identifier) {
-            logging::logWarning("Variable names are ignored in bundle type declarations", currentToken().getLine(), currentToken().getColumn());
+            logging::logWarning("Variable names are ignored in bundle type declarations", currentToken().getLine(),
+                                currentToken().getColumn());
             DISCARD(advance());  // Skip the token
             expectToken(TokenType::Colon, "Expected ':' after field name in bundle type declaration");
             continue;
         }
         fieldTypes.push_back(parseType(Precedence::Default));  // Parse the type of the field
         if (currentToken().getType() != TokenType::RightBrace) {
-            expectToken(TokenType::Comma, "Expected ',' to separate fields in bundle type declaration or '}' to end the declaration");
+            expectToken(TokenType::Comma,
+                        "Expected ',' to separate fields in bundle type declaration or '}' to end the declaration");
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end bundle type declaration");
@@ -148,16 +152,14 @@ TypeSPtr_t Parser::parseSymbolType() {
 
 // ===== Lookup Initialization =====
 
-void Parser::registerLedHandler_type(TokenType type, Precedence precedence,
-                                     ledHandler_types_t handler) {
+void Parser::registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) {
     operatorPrecedenceMap_type[type] = Operator::binary(precedence);
     ledLookup_types[type] = handler;
 }
 
 void Parser::registerNudHandler_type(TokenType type, nudHandler_types_t handler) {
-    operatorPrecedenceMap_type[type] = Operator{
-        .leftBindingPower = Precedence::Primary,
-        .rightBindingPower = Precedence::Default};
+    operatorPrecedenceMap_type[type]
+        = Operator{.leftBindingPower = Precedence::Primary, .rightBindingPower = Precedence::Default};
     nudLookup_types[type] = handler;
 }
 

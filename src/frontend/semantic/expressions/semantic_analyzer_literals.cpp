@@ -8,7 +8,8 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
     // Assume that the first element's type is the array's type
     if (expression->elements.empty()) {
         logging::logInternal("Array literal is empty, assuming type 'int'", logging::LogLevel::Warning);
-        expression->setType(std::make_shared<ast::ArrayType>(std::make_shared<ast::SymbolType>("int32"), std::make_unique<ast::NumberLiteralExpression>(0)));
+        expression->setType(std::make_shared<ast::ArrayType>(std::make_shared<ast::SymbolType>("int32"),
+                                                             std::make_unique<ast::NumberLiteralExpression>(0)));
         return;
     }
 
@@ -31,10 +32,8 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
 
     expression->elementType = elementType;
     expression->lengthExpression = std::make_unique<ast::NumberLiteralExpression>(expression->elements.size());
-    expression->setType(
-        std::make_shared<ast::ArrayType>(
-            elementType,
-            std::make_unique<ast::NumberLiteralExpression>(expression->elements.size())));
+    expression->setType(std::make_shared<ast::ArrayType>(
+        elementType, std::make_unique<ast::NumberLiteralExpression>(expression->elements.size())));
 }
 
 void SemanticAnalyzer::checkBoolLiteralExpression(ast::BoolLiteralExpression* expression) {
@@ -69,8 +68,7 @@ void SemanticAnalyzer::checkNumberLiteralExpression(ast::NumberLiteralExpression
         } else if constexpr (std::is_same_v<T, double>) {
             return std::make_shared<ast::SymbolType>(float64_str);
         } else {
-            ASSERT_UNREACHABLE(
-                std::format("Unsupported number literal type: {}", typeid(T).name()));
+            ASSERT_UNREACHABLE(std::format("Unsupported number literal type: {}", typeid(T).name()));
             return nullptr;
         }
     };

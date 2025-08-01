@@ -3,7 +3,8 @@
  * @brief Defines AST node classes for various expressions
  *
  * This header declares the core expression node types used in the AST.
- * Each expression type (literals, binary, assignment, function call, etc.) is represented as a class inheriting from Expression.
+ * Each expression type (literals, binary, assignment, function call, etc.) is represented as a class inheriting from
+ * Expression.
  *
  * ! The nodes are listed in alphabetical order
  */
@@ -38,7 +39,6 @@ enum class ExpressionKind {
     TypeCastExpression
 };
 
-
 /**
  * @brief e.g. [1, 2, 3]
  */
@@ -49,13 +49,12 @@ class ArrayLiteralExpression : public Expression {
     ExpressionUPtr_t lengthExpression = nullptr;
 
    public:
-    ArrayLiteralExpression(std::vector<ExpressionUPtr_t> elements_, TypeSPtr_t elementType_ = nullptr)
-        : elements(std::move(elements_)), elementType(std::move(elementType_)) {}
+    ArrayLiteralExpression(std::vector<ExpressionUPtr_t> elements_, TypeSPtr_t elementType_ = nullptr) :
+        elements(std::move(elements_)), elementType(std::move(elementType_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::ArrayLiteralExpression; }
 };
-
 
 /**
  * e.g. `foo = bar`, `baz *= 1`
@@ -66,13 +65,12 @@ class AssignmentExpression : public Expression {
     lexer::TokenType op;
 
    public:
-    AssignmentExpression(ExpressionUPtr_t assignee_, lexer::TokenType op_, ExpressionUPtr_t value_)
-        : assignee(std::move(assignee_)), value(std::move(value_)), op(op_) {}
+    AssignmentExpression(ExpressionUPtr_t assignee_, lexer::TokenType op_, ExpressionUPtr_t value_) :
+        assignee(std::move(assignee_)), value(std::move(value_)), op(op_) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::AssignmentExpression; }
 };
-
 
 /**
  * @brief e.g. `a + b`, `x * y`
@@ -83,8 +81,8 @@ class BinaryExpression : public Expression {
     lexer::TokenType op;
 
    public:
-    BinaryExpression(ExpressionUPtr_t left_, lexer::TokenType op_, ExpressionUPtr_t right_)
-        : left(std::move(left_)), right(std::move(right_)), op(op_) {};
+    BinaryExpression(ExpressionUPtr_t left_, lexer::TokenType op_, ExpressionUPtr_t right_) :
+        left(std::move(left_)), right(std::move(right_)), op(op_) {};
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::BinaryExpression; }
@@ -108,8 +106,8 @@ struct BundleInstantiationField {
     std::string name;
     ExpressionUPtr_t value;
 
-    BundleInstantiationField(std::string name_, ExpressionUPtr_t value_)
-        : name(std::move(name_)), value(std::move(value_)) {}
+    BundleInstantiationField(std::string name_, ExpressionUPtr_t value_) :
+        name(std::move(name_)), value(std::move(value_)) {}
 };
 
 /**
@@ -122,8 +120,9 @@ class BundleInstantiationExpression : public Expression {
     std::vector<BundleInstantiationField> fields;
 
    public:
-    BundleInstantiationExpression(std::string name_, std::vector<TypeSPtr_t> genericTypes_, std::vector<BundleInstantiationField> fields_)
-        : name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
+    BundleInstantiationExpression(std::string name_, std::vector<TypeSPtr_t> genericTypes_,
+                                  std::vector<BundleInstantiationField> fields_) :
+        name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::BundleInstantiationExpression; }
@@ -156,8 +155,8 @@ class FunctionCallExpression : public Expression {
     std::vector<ExpressionUPtr_t> arguments;
 
    public:
-    FunctionCallExpression(ExpressionUPtr_t callee_, std::vector<ExpressionUPtr_t> arguments_)
-        : callee(std::move(callee_)), arguments(std::move(arguments_)) {}
+    FunctionCallExpression(ExpressionUPtr_t callee_, std::vector<ExpressionUPtr_t> arguments_) :
+        callee(std::move(callee_)), arguments(std::move(arguments_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::FunctionCallExpression; }
@@ -172,8 +171,8 @@ class GenericExpression : public Expression {
     std::vector<TypeSPtr_t> types;
 
    public:
-    GenericExpression(ExpressionUPtr_t identifier_, std::vector<TypeSPtr_t> types_)
-        : identifier(std::move(identifier_)), types(std::move(types_)) {}
+    GenericExpression(ExpressionUPtr_t identifier_, std::vector<TypeSPtr_t> types_) :
+        identifier(std::move(identifier_)), types(std::move(types_)) {}
 
     /**
      * @brief Transfer ownership of the type parameters to the caller.
@@ -208,8 +207,8 @@ class IndexExpression : public Expression {
     ExpressionUPtr_t index;
 
    public:
-    IndexExpression(ExpressionUPtr_t variable_, ExpressionUPtr_t index_)
-        : variable(std::move(variable_)), index(std::move(index_)) {}
+    IndexExpression(ExpressionUPtr_t variable_, ExpressionUPtr_t index_) :
+        variable(std::move(variable_)), index(std::move(index_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::IndexExpression; }
@@ -224,8 +223,8 @@ class MemberAccessExpression : public Expression {
     std::string property;
 
    public:
-    MemberAccessExpression(ExpressionUPtr_t object_, std::string property_)
-        : object(std::move(object_)), property(std::move(property_)) {}
+    MemberAccessExpression(ExpressionUPtr_t object_, std::string property_) :
+        object(std::move(object_)), property(std::move(property_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::MemberAccessExpression; }
@@ -254,8 +253,7 @@ class PostfixExpression : public Expression {
     lexer::TokenType op;
 
    public:
-    PostfixExpression(ExpressionUPtr_t left_, lexer::TokenType op_)
-        : left(std::move(left_)), op(op_) {}
+    PostfixExpression(ExpressionUPtr_t left_, lexer::TokenType op_) : left(std::move(left_)), op(op_) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::PostfixExpression; }
@@ -270,8 +268,7 @@ class PrefixExpression : public Expression {
     ExpressionUPtr_t right;
 
    public:
-    PrefixExpression(lexer::TokenType op_, ExpressionUPtr_t right_)
-        : op(op_), right(std::move(right_)) {}
+    PrefixExpression(lexer::TokenType op_, ExpressionUPtr_t right_) : op(op_), right(std::move(right_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::PrefixExpression; }
@@ -286,8 +283,8 @@ class ScopeResolutionExpression : public Expression {
     std::string element;
 
    public:
-    ScopeResolutionExpression(ExpressionUPtr_t scope_, std::string element_)
-        : scope(std::move(scope_)), element(std::move(element_)) {}
+    ScopeResolutionExpression(ExpressionUPtr_t scope_, std::string element_) :
+        scope(std::move(scope_)), element(std::move(element_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::ScopeResolutionExpression; }
@@ -317,8 +314,8 @@ class TypeCastExpression : public Expression {
     TypeSPtr_t type;
 
    public:
-    TypeCastExpression(ExpressionUPtr_t expression_, TypeSPtr_t type_)
-        : expression(std::move(expression_)), type(std::move(type_)) {}
+    TypeCastExpression(ExpressionUPtr_t expression_, TypeSPtr_t type_) :
+        expression(std::move(expression_)), type(std::move(type_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::TypeCastExpression; }

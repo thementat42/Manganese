@@ -1,7 +1,7 @@
 /**
  * @file reader.h
  * @brief This file contains the definition of the virtual Reader class
- * 
+ *
  * Readers are responsible for taking in raw source code and passing individual characters onto the lexer.
  * The reader abstracts away how this is done so the lexer can just call peekChar and getChar
  */
@@ -31,9 +31,7 @@ class Reader {
     Reader() = default;
     virtual ~Reader() noexcept = default;
 
-    bool hasCriticalError() const noexcept {
-        return hasCriticalError_;
-    }
+    bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
     /**
      * @brief Look at the next character without consuming it

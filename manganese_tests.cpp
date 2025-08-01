@@ -1,9 +1,9 @@
 /**
  * @file manganese_tests.cpp
  * @brief Entry point for the test suit
- * 
+ *
  * This file is responsible for calling all the test functions
- *  
+ *
  * @note Run CMake with -DBUILD_TESTS=ON
  */
 
@@ -16,8 +16,8 @@
 #include <utils/memory_tracking.h>
 
 #include <chrono>
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 
 #include "tests/testrunner.h"
 #include "tests/tests.h"

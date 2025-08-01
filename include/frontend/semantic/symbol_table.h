@@ -36,30 +36,26 @@ struct Symbol {
     // === Source Info ===
     size_t line = 0, column = 0;
     ast::ASTNode* declarationNode = nullptr;
-    
+
     // === Semantic Info ===
     bool isConstant;
     int64_t scopeDepth = 0;
     ast::Visibility visibility = ast::Visibility::Private;  // How the symbol can/can't be accessed outside the module
-    
+
     // === Methods ===
     std::string toString() const noexcept;
 };
 
 struct Scope {
     std::unordered_map<std::string, Symbol> symbols;
-    inline bool insert(const Symbol symbol) noexcept {
-        return symbols.emplace(symbol.name, symbol).second;
-    }
+    inline bool insert(const Symbol symbol) noexcept { return symbols.emplace(symbol.name, symbol).second; }
 
     const Symbol* lookup(const std::string& name) const noexcept {
         auto it = symbols.find(name);
         return (it != symbols.end()) ? &it->second : nullptr;
     }
 
-    inline const Symbol* lookup(const char* name) const noexcept {
-        return lookup(std::string(name));
-    }
+    inline const Symbol* lookup(const char* name) const noexcept { return lookup(std::string(name)); }
 };
 
 class SymbolTable {
@@ -68,9 +64,7 @@ class SymbolTable {
     int64_t scopeDepth = 0;
 
    public:
-    SymbolTable() noexcept {
-        enterScope();
-    }
+    SymbolTable() noexcept { enterScope(); }
 
     void enterScope();
 
@@ -81,11 +75,11 @@ class SymbolTable {
     const Symbol* lookup(const std::string& name) const noexcept;
     inline const Symbol* lookup(const char* name) const noexcept { return lookup(std::string(name)); }
     const Symbol* lookupInCurrentScope(const std::string& name) const noexcept;
-    inline const Symbol* lookupInCurrentScope(const char* name) const noexcept { return lookupInCurrentScope(std::string(name)); };
+    inline const Symbol* lookupInCurrentScope(const char* name) const noexcept {
+        return lookupInCurrentScope(std::string(name));
+    };
 
-    int64_t currentScopeDepth() const noexcept {
-        return scopeDepth;
-    }
+    int64_t currentScopeDepth() const noexcept { return scopeDepth; }
 
     ~SymbolTable() = default;
 };

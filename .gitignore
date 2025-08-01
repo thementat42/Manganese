@@ -12,6 +12,7 @@ release/
 *.s
 *.ll
 __pycache__/
+.cache/*
 
 # logs
 *.log

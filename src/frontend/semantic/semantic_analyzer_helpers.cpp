@@ -11,7 +11,8 @@
 namespace Manganese {
 namespace semantic {
 
-bool SemanticAnalyzer::areTypesPromotableOrDemotable(const ast::Type* from, const ast::Type* to) const noexcept_if_release {
+bool SemanticAnalyzer::areTypesPromotableOrDemotable(const ast::Type* from,
+                                                     const ast::Type* to) const noexcept_if_release {
     if (!from || !to) {
         return false;  // If either type is null, they are not compatible
     }
@@ -25,14 +26,14 @@ bool SemanticAnalyzer::areTypesPromotableOrDemotable(const ast::Type* from, cons
     if (fromName == toName) {
         return true;  // Same type is always compatible
     }
-    if (validImplicitConversions.find(fromName) != validImplicitConversions.end() &&
-        validImplicitConversions.at(fromName) == toName) {
+    if (validImplicitConversions.find(fromName) != validImplicitConversions.end()
+        && validImplicitConversions.at(fromName) == toName) {
         // Check if the from type can be promoted to the to type
         return true;
     }
-    if (validImplicitConversionsWithWarnings.find(fromName) != validImplicitConversionsWithWarnings.end() && validImplicitConversionsWithWarnings.at(fromName) == toName) {
-        logging::logWarning(
-            std::format("Implicit conversion from {} to {} may result in data loss", fromName, toName));
+    if (validImplicitConversionsWithWarnings.find(fromName) != validImplicitConversionsWithWarnings.end()
+        && validImplicitConversionsWithWarnings.at(fromName) == toName) {
+        logging::logWarning(std::format("Implicit conversion from {} to {} may result in data loss", fromName, toName));
         return true;
     }
     return false;  // No valid promotion or demotion found
@@ -54,14 +55,10 @@ const ast::Type* SemanticAnalyzer::resolveAlias(const ast::Type* type) const noe
 
 bool SemanticAnalyzer::typeExists(const ast::TypeSPtr_t& type) {
     using ast::TypeKind;
-    if (!type) {
-        return false;
-    }
+    if (!type) { return false; }
     switch (type->kind()) {
         case TypeKind::SymbolType: {
-            if (ast::isPrimitiveType(type)) {
-                return true;
-            }
+            if (ast::isPrimitiveType(type)) { return true; }
             ast::SymbolType* symbolType = static_cast<ast::SymbolType*>(type.get());
             const Symbol* symbol = symbolTable.lookupInCurrentScope(symbolType->getName());
             return symbol != nullptr;
@@ -90,15 +87,10 @@ bool SemanticAnalyzer::typeExists(const ast::TypeSPtr_t& type) {
         }
 
         case TypeKind::GenericType:
-            ASSERT_UNREACHABLE(
-                "Existence of generic types cannot be checked in typeExists. Perform a different check")
+            ASSERT_UNREACHABLE("Existence of generic types cannot be checked in typeExists. Perform a different check")
             return false;
 
-        default:
-            ASSERT_UNREACHABLE(
-                std::format("Unknown type kind {}",
-                            static_cast<int>(type->kind())));
-            return false;
+        default: ASSERT_UNREACHABLE(std::format("Unknown type kind {}", static_cast<int>(type->kind()))); return false;
     }
 }
 

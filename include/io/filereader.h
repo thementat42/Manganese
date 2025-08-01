@@ -34,10 +34,10 @@ class FileReader : public Reader {
     size_t position, line, column;
     std::string source;
     std::ifstream fileStream;
-    size_t bufferSize;                                      // How much data is currently in the buffer
-    size_t bufferCapacity;                                  // How much data the buffer can hold
+    size_t bufferSize;  // How much data is currently in the buffer
+    size_t bufferCapacity;  // How much data the buffer can hold
     static constexpr int DEFAULT_BUFFER_CAPCITY = 2 << 20;  // ~2MB buffer size
-    std::unique_ptr<char[]> buffer;                         // Buffer for file reading
+    std::unique_ptr<char[]> buffer;  // Buffer for file reading
 
     /**
      * @brief Reads more data from the file (on disc) into the buffer (in memory)

@@ -70,8 +70,7 @@ void SemanticAnalyzer::checkExpression(ast::Expression* expression) noexcept_if_
         default:
             using std::format;
             ASSERT_UNREACHABLE(
-                format("No semantic analysis method for expression type {}",
-                       static_cast<int>(expression->kind())));
+                format("No semantic analysis method for expression type {}", static_cast<int>(expression->kind())));
     }
 }
 
@@ -87,7 +86,8 @@ void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiati
         logError("{} is not a bundle type so cannot be instantiated as one", expression, expression->name);
         return;
     }
-    ast::BundleDeclarationStatement* bundleDeclaration = static_cast<ast::BundleDeclarationStatement*>(bundleSymbol->declarationNode);
+    ast::BundleDeclarationStatement* bundleDeclaration
+        = static_cast<ast::BundleDeclarationStatement*>(bundleSymbol->declarationNode);
     if (bundleDeclaration->genericTypes.size() != expression->genericTypes.size()) {
         logError("Bundle type {} expects {} generic types, but {} were provided", expression, expression->name,
                  bundleDeclaration->genericTypes.size(), expression->genericTypes.size());
@@ -103,26 +103,28 @@ void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiati
         const auto& field = expression->fields[i];
         const auto& expectedField = bundleDeclaration->fields[i];
         if (field.name != expectedField.name) {
-            logError("Field {} in bundle instantiation does not match field name {} in bundle type {} (Note: bundle fields should be instantiated in order)", expression, field.name, expectedField.name, expression->name);
+            logError(
+                "Field {} in bundle instantiation does not match field name {} in bundle type {} (Note: bundle fields should be instantiated in order)",
+                expression, field.name, expectedField.name, expression->name);
             validInstantiation = false;
             continue;
         }
         checkExpression(field.value.get());
         if (!areTypesCompatible(field.value->getType(), expectedField.type.get())) {
-            logError("Field {} in bundle instantiation has type {}, but was declared with type {}", expression, field.value->toString(), field.value->getType()->toString(), expectedField.type->toString());
+            logError("Field {} in bundle instantiation has type {}, but was declared with type {}", expression,
+                     field.value->toString(), field.value->getType()->toString(), expectedField.type->toString());
             validInstantiation = false;
         }
     }
-    if (!validInstantiation) {
-        return;
-    }
+    if (!validInstantiation) { return; }
     expression->setType(std::make_shared<ast::SymbolType>(expression->name));
 }
 
 void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* expression) {
     if (expression->callee->kind() != ast::ExpressionKind::IdentifierExpression) {
         // TODO: Support function calls indexing into arrays or module members
-        // TODO: Allow calling generic expressions (provided the underlying type is an identifier that was declared as a function)
+        // TODO: Allow calling generic expressions (provided the underlying type is an identifier that was declared as a
+        // function)
         logError("Function call must be made to an identifier, not {}", expression, expression->callee->toString());
         return;
     }
@@ -154,8 +156,7 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
         }
         if (!areTypesCompatible(argument->getType(), expectedType)) {
             logError("Argument {} in call to {} has type {}, but expected type is {}", expression, i + 1,
-                     identifierExpression->value,
-                     argument->getType()->toString(), expectedType->toString());
+                     identifierExpression->value, argument->getType()->toString(), expectedType->toString());
             return;
         }
     }

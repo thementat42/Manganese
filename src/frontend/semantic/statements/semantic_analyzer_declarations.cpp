@@ -12,38 +12,35 @@ void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationSta
 
     // Checking for duplicate fields already happened in the parser
     for (const auto& field : statement->fields) {
-        if (ast::isPrimitiveType(field.type)) {
-            continue;
-        }
-        if (!statement->genericTypes.empty() &&
-            std::find(statement->genericTypes.begin(), statement->genericTypes.end(), field.type->toString()) != statement->genericTypes.end()) {
+        if (ast::isPrimitiveType(field.type)) { continue; }
+        if (!statement->genericTypes.empty()
+            && std::find(statement->genericTypes.begin(), statement->genericTypes.end(), field.type->toString())
+                != statement->genericTypes.end()) {
             continue;  // This is a generic type, so it's valid
         }
         if (!typeExists(field.type)) {
-            logError("Field '{}' in bundle '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
-                     statement, field.name, statement->name, field.type->toString());
+            logError(
+                "Field '{}' in bundle '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
+                statement, field.name, statement->name, field.type->toString());
             return;
         }
     }
 
     std::vector<ast::TypeSPtr_t> fieldTypes;
     fieldTypes.resize(statement->fields.size());
-    for (size_t i = 0; i < statement->fields.size(); ++i) {
-        fieldTypes[i] = statement->fields[i].type;
-    }
-    symbolTable.declare(
-        Symbol{
-            .name = statement->name,
-            .kind = SymbolKind::Bundle,
-            .type = std::make_shared<ast::BundleType>(fieldTypes),
-            .line = statement->getLine(),
-            .column = statement->getColumn(),
-            .declarationNode = statement,
-            .isConstant = false,  // Bundles are not constants
-            .scopeDepth = symbolTable.currentScopeDepth(),
-            .visibility = statement->visibility,
+    for (size_t i = 0; i < statement->fields.size(); ++i) { fieldTypes[i] = statement->fields[i].type; }
+    symbolTable.declare(Symbol{
+        .name = statement->name,
+        .kind = SymbolKind::Bundle,
+        .type = std::make_shared<ast::BundleType>(fieldTypes),
+        .line = statement->getLine(),
+        .column = statement->getColumn(),
+        .declarationNode = statement,
+        .isConstant = false,  // Bundles are not constants
+        .scopeDepth = symbolTable.currentScopeDepth(),
+        .visibility = statement->visibility,
 
-        });
+    });
 }
 
 void SemanticAnalyzer::checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement) {
@@ -58,7 +55,8 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
     }
 
     if (symbolTable.lookupInCurrentScope(statement->name)) {
-        logError("Function '{}' was already declared in this scope. Function overloading is not currently supported", statement, statement->name);
+        logError("Function '{}' was already declared in this scope. Function overloading is not currently supported",
+                 statement, statement->name);
         return;
     }
     for (const auto& param : statement->parameters) {
@@ -67,8 +65,9 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
             return;
         }
         if (!typeExists(param.type)) {
-            logError("Parameter '{}' in function '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
-                     statement, param.name, statement->name, param.type->toString());
+            logError(
+                "Parameter '{}' in function '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
+                statement, param.name, statement->name, param.type->toString());
             return;
         }
     }
@@ -79,18 +78,17 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
     enterScope();
 
     for (const auto& param : statement->parameters) {
-        symbolTable.declare(
-            Symbol{
-                .name = param.name,
-                .kind = param.isConst ? SymbolKind::Constant : SymbolKind::Variable,
-                .type = param.type,
-                .line = statement->getLine(),
-                .column = statement->getColumn(),
-                .declarationNode = statement,
-                .isConstant = param.isConst,
-                .scopeDepth = symbolTable.currentScopeDepth(),
-                .visibility = ast::Visibility::Private,  // Parameters are always private
-            });
+        symbolTable.declare(Symbol{
+            .name = param.name,
+            .kind = param.isConst ? SymbolKind::Constant : SymbolKind::Variable,
+            .type = param.type,
+            .line = statement->getLine(),
+            .column = statement->getColumn(),
+            .declarationNode = statement,
+            .isConstant = param.isConst,
+            .scopeDepth = symbolTable.currentScopeDepth(),
+            .visibility = ast::Visibility::Private,  // Parameters are always private
+        });
     }
 
     checkBlock(statement->body);
@@ -100,22 +98,19 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
 
     std::vector<ast::FunctionParameterType> parameterTypes;
     parameterTypes.reserve(statement->parameters.size());
-    for (const auto& param : statement->parameters) {
-        parameterTypes.emplace_back(param.isConst, param.type);
-    }
+    for (const auto& param : statement->parameters) { parameterTypes.emplace_back(param.isConst, param.type); }
 
-    symbolTable.declare(
-        Symbol{
-            .name = statement->name,
-            .kind = SymbolKind::Function,
-            .type = std::make_shared<ast::FunctionType>(parameterTypes, statement->returnType),
-            .line = statement->getLine(),
-            .column = statement->getColumn(),
-            .declarationNode = statement,
-            .isConstant = false,  // Functions are not constants
-            .scopeDepth = symbolTable.currentScopeDepth(),
-            .visibility = statement->visibility,
-        });
+    symbolTable.declare(Symbol{
+        .name = statement->name,
+        .kind = SymbolKind::Function,
+        .type = std::make_shared<ast::FunctionType>(parameterTypes, statement->returnType),
+        .line = statement->getLine(),
+        .column = statement->getColumn(),
+        .declarationNode = statement,
+        .isConstant = false,  // Functions are not constants
+        .scopeDepth = symbolTable.currentScopeDepth(),
+        .visibility = statement->visibility,
+    });
 }
 
 void SemanticAnalyzer::checkImportStatement(ast::ImportStatement* statement) {
@@ -134,25 +129,23 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
         isInvalidDeclaration = true;
     }
     if (symbolTable.lookupInCurrentScope(statement->name)) {
-        logError("Variable {} was already defined in this scope. If you meant to change its value, use {} = {} (without {})",
-                 statement, statement->name, statement->name,
-                 statement->isConstant() ? "const" : "let",
-                 statement->value->toString());
+        logError(
+            "Variable {} was already defined in this scope. If you meant to change its value, use {} = {} (without {})",
+            statement, statement->name, statement->name, statement->isConstant() ? "const" : "let",
+            statement->value->toString());
         isInvalidDeclaration = true;
     }
     if (!statement->type && !statement->value) {
         logError("Variable '{}' must have a type or an initializer", statement, statement->name);
         isInvalidDeclaration = true;
     }
-    if (isInvalidDeclaration) {
-        return;
-    }
+    if (isInvalidDeclaration) { return; }
 
     if (statement->type && statement->value) {
         checkExpression(statement->value.get());
         if (!areTypesCompatible(statement->value->getType(), statement->type.get())) {
-            logError("Type mismatch for variable '{}': expected {}, got {}", statement,
-                     statement->name, statement->type->toString(), statement->value->getType()->toString());
+            logError("Type mismatch for variable '{}': expected {}, got {}", statement, statement->name,
+                     statement->type->toString(), statement->value->getType()->toString());
         }
     } else if (statement->value) {
         checkExpression(statement->value.get());
@@ -160,18 +153,17 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
     }
     // If the variable only has a type and no initializer, there's no need to check the type
 
-    symbolTable.declare(
-        Symbol{
-            .name = statement->name,
-            .kind = statement->isConstant() ? SymbolKind::Constant : SymbolKind::Variable,
-            .type = statement->type,
-            .line = statement->getLine(),
-            .column = statement->getColumn(),
-            .declarationNode = statement,
-            .isConstant = statement->isConstant(),
-            .scopeDepth = symbolTable.currentScopeDepth(),
-            .visibility = statement->visibility,
-        });
+    symbolTable.declare(Symbol{
+        .name = statement->name,
+        .kind = statement->isConstant() ? SymbolKind::Constant : SymbolKind::Variable,
+        .type = statement->type,
+        .line = statement->getLine(),
+        .column = statement->getColumn(),
+        .declarationNode = statement,
+        .isConstant = statement->isConstant(),
+        .scopeDepth = symbolTable.currentScopeDepth(),
+        .visibility = statement->visibility,
+    });
 }
 
 }  // namespace semantic

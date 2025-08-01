@@ -1,6 +1,7 @@
 /**
  * @file parser_statements.cpp
- * @brief This file contains the implementation of statement parsing in the parser. It is split into its own file for readability and maintainability.
+ * @brief This file contains the implementation of statement parsing in the parser. It is split into its own file for
+ * readability and maintainability.
  */
 
 #include <frontend/ast.h>
@@ -28,9 +29,7 @@ StatementUPtr_t Parser::parseStatement() {
 
     // Parse out an expression then convert it to a statement
     ExpressionUPtr_t expr = parseExpression(Precedence::Default);
-    if (!isParsingBlockPrecursor) {
-        expectToken(TokenType::Semicolon, "Expected semicolon after expression");
-    }
+    if (!isParsingBlockPrecursor) { expectToken(TokenType::Semicolon, "Expected semicolon after expression"); }
     return std::make_unique<ast::ExpressionStatement>(std::move(expr));
 }
 
@@ -39,20 +38,21 @@ StatementUPtr_t Parser::parseStatement() {
 StatementUPtr_t Parser::parseAliasStatement() {
     DISCARD(advance());
     TypeSPtr_t baseType;
-    if (currentToken().isPrimitiveType() ||
-        currentToken().getType() == TokenType::Func ||
-        currentToken().getType() == TokenType::Ptr) {
+    if (currentToken().isPrimitiveType() || currentToken().getType() == TokenType::Func
+        || currentToken().getType() == TokenType::Ptr) {
         // Primitive types are easy to alias -- just parse a regular type
         baseType = parseType(Precedence::Default);
     } else {
         // If it's not a primitive type, we expect an identifier.
         // This might be a path (e.g. alias foo::bar as baz, so we need to handle that)
-        std::string path = expectToken(TokenType::Identifier, "Expected an identifier after 'alias', or a primitive type.").getLexeme();
+        std::string path
+            = expectToken(TokenType::Identifier, "Expected an identifier after 'alias', or a primitive type.")
+                  .getLexeme();
         while (currentToken().getType() == TokenType::ScopeResolution) {
             path += advance().getLexeme();
-            path += expectToken(
-                        TokenType::Identifier,
-                        std::format("Expected an identifier after {}", lexer::tokenTypeToString(TokenType::ScopeResolution)))
+            path += expectToken(TokenType::Identifier,
+                                std::format("Expected an identifier after {}",
+                                            lexer::tokenTypeToString(TokenType::ScopeResolution)))
                         .getLexeme();
         }
 
@@ -89,7 +89,8 @@ StatementUPtr_t Parser::parseBundleDeclarationStatement() {
                 genericTypes.push_back(genericName);
             }
             if (currentToken().getType() != TokenType::RightSquare) {
-                expectToken(TokenType::Comma, "Expected a ',' to separate generic types, or a ']' to close the generic type list");
+                expectToken(TokenType::Comma,
+                            "Expected a ',' to separate generic types, or a ']' to close the generic type list");
             }
         }
         expectToken(TokenType::RightSquare, "Expected ']' to close generic type list");
@@ -101,7 +102,8 @@ StatementUPtr_t Parser::parseBundleDeclarationStatement() {
             break;  // Done declaration
         }
         if (currentToken().getType() != TokenType::Identifier) {
-            logError(std::format("Unexpected token '{}' in bundle declaration. Expected field name.", currentToken().getLexeme()));
+            logError(std::format("Unexpected token '{}' in bundle declaration. Expected field name.",
+                                 currentToken().getLexeme()));
             DISCARD(advance());  // Skip the unexpected token to avoid infinite loop
         }
         std::string fieldName = advance().getLexeme();
@@ -109,9 +111,8 @@ StatementUPtr_t Parser::parseBundleDeclarationStatement() {
         TypeSPtr_t type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
-        auto duplicate = std::find_if(
-            fields.begin(), fields.end(),
-            [fieldName](const ast::BundleField& field) { return field.name == fieldName; });
+        auto duplicate = std::find_if(fields.begin(), fields.end(),
+                                      [fieldName](const ast::BundleField& field) { return field.name == fieldName; });
         if (duplicate != fields.end()) {
             logError(std::format("Duplicate field '{}' in bundle '{}'", fieldName, name));
         } else {
@@ -144,7 +145,8 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() {
     if (currentToken().getType() == TokenType::Colon) {
         DISCARD(advance());
         if (!currentToken().isPrimitiveType()) {
-            logError(std::format("Enums can only have primitive types as their underlying type, not {}", currentToken().getLexeme()));
+            logError(std::format("Enums can only have primitive types as their underlying type, not {}",
+                                 currentToken().getLexeme()));
         }
         baseType = std::make_shared<ast::SymbolType>(advance().getLexeme());
     } else {
@@ -159,9 +161,8 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() {
             valueExpression = parseExpression(Precedence::Default);
         }
         // Check for duplicate enum value names
-        auto duplicate = std::find_if(
-            values.begin(), values.end(),
-            [valueName](const ast::EnumValue& value) { return value.name == valueName; });
+        auto duplicate = std::find_if(values.begin(), values.end(),
+                                      [valueName](const ast::EnumValue& value) { return value.name == valueName; });
 
         if (duplicate != values.end()) {
             logError(std::format("Enum value '{}' (in enum '{}') was previously declared", valueName, name));
@@ -173,9 +174,7 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() {
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the enum body");
-    if (values.empty()) {
-        logError(std::format("Enum '{}' has no values", name));
-    }
+    if (values.empty()) { logError(std::format("Enum '{}' has no values", name)); }
     return std::make_unique<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
 }
 
@@ -210,7 +209,8 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
                 genericTypes.push_back(std::move(genericName));
             }
             if (currentToken().getType() != TokenType::RightSquare) {
-                expectToken(TokenType::Comma, "Expected a ',' to separate generic types, or a ']' to close the generic type list");
+                expectToken(TokenType::Comma,
+                            "Expected a ',' to separate generic types, or a ']' to close the generic type list");
             }
         }
         expectToken(TokenType::RightSquare, "Expected ']' to close generic type list");
@@ -218,9 +218,7 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
     expectToken(TokenType::LeftParen);
 
     while (!done()) {
-        if (currentToken().getType() == TokenType::RightParen) {
-            break;
-        }
+        if (currentToken().getType() == TokenType::RightParen) { break; }
         bool isConst = false;
         std::string param_name = expectToken(TokenType::Identifier, "Expected a variable name").getLexeme();
         expectToken(TokenType::Colon);
@@ -231,7 +229,8 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
         TypeSPtr_t param_type = parseType(Precedence::Default);
         params.emplace_back(param_name, std::move(param_type), isConst);
         if (currentToken().getType() != TokenType::RightParen && currentToken().getType() != TokenType::EndOfFile) {
-            expectToken(TokenType::Comma, "Expected a ',' to separate function parameters, or a ) to close the parameter list");
+            expectToken(TokenType::Comma,
+                        "Expected a ',' to separate function parameters, or a ) to close the parameter list");
         }
     }
     expectToken(TokenType::RightParen);
@@ -240,7 +239,8 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
         returnType = parseType(Precedence::Default);
     }
     // Don't need to std::move body because of return value optimization
-    return std::make_unique<ast::FunctionDeclarationStatement>(name, std::move(genericTypes), std::move(params), std::move(returnType), parseBlock("function body"));
+    return std::make_unique<ast::FunctionDeclarationStatement>(name, std::move(genericTypes), std::move(params),
+                                                               std::move(returnType), parseBlock("function body"));
 }
 
 StatementUPtr_t Parser::parseIfStatement() {
@@ -270,7 +270,8 @@ StatementUPtr_t Parser::parseIfStatement() {
         DISCARD(advance());
         elseBody = parseBlock("else body");
     }
-    return std::make_unique<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs), std::move(elseBody));
+    return std::make_unique<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs),
+                                              std::move(elseBody));
 }
 
 StatementUPtr_t Parser::parseImportStatement() {
@@ -297,31 +298,22 @@ StatementUPtr_t Parser::parseImportStatement() {
     bool duplicate = false;
     for (const auto& [existingPath, existingAlias] : imports) {
         if (path == existingPath) {
-            std::string imported = std::accumulate(
-                existingPath.begin() + 1,
-                existingPath.end(),
-                existingPath[0],  // existingPath should never be empty
-                [](const std::string& a, const std::string& b) {
-                    return a + "::" + b;
-                });
+            std::string imported
+                = std::accumulate(existingPath.begin() + 1, existingPath.end(),
+                                  existingPath[0],  // existingPath should never be empty
+                                  [](const std::string& a, const std::string& b) { return a + "::" + b; });
 
-            logging::logWarning(
-                std::format("Duplicate import of {}", imported),
-                startLine, startColumn);
+            logging::logWarning(std::format("Duplicate import of {}", imported), startLine, startColumn);
             duplicate = true;
             break;
 
         } else if (alias == existingAlias && !alias.empty()) {
-            logging::logWarning(
-                std::format("Alias {} was already used", existingAlias),
-                startLine, startColumn);
+            logging::logWarning(std::format("Alias {} was already used", existingAlias), startLine, startColumn);
             duplicate = true;
             break;
         }
     }
-    if (!duplicate) {
-        imports.emplace_back(path, alias);
-    }
+    if (!duplicate) { imports.emplace_back(path, alias); }
     // Dummy node
     return std::make_unique<ast::ImportStatement>();
 }
@@ -382,9 +374,8 @@ StatementUPtr_t Parser::parseSwitchStatement() {
         auto caseValue = parseExpression(Precedence::Default);
         ast::Block caseBody;
         expectToken(TokenType::Colon, "Expected ':' after case value");
-        while (currentToken().getType() != TokenType::Case &&
-               currentToken().getType() != TokenType::Default &&
-               currentToken().getType() != TokenType::RightBrace) {
+        while (currentToken().getType() != TokenType::Case && currentToken().getType() != TokenType::Default
+               && currentToken().getType() != TokenType::RightBrace) {
             caseBody.push_back(parseStatement());
         }
         cases.emplace_back(std::move(caseValue), std::move(caseBody));
@@ -392,74 +383,59 @@ StatementUPtr_t Parser::parseSwitchStatement() {
     if (currentToken().getType() == TokenType::Default) {
         DISCARD(advance());
         expectToken(TokenType::Colon, "Expected ':' after default case");
-        while (currentToken().getType() != TokenType::RightBrace) {
-            defaultBody.push_back(parseStatement());
-        }
+        while (currentToken().getType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
     }
     if (cases.empty() && defaultBody.empty()) {
-        logging::logWarning("Switch statement has no cases or default body",
-                            startLine, startColumn);
+        logging::logWarning("Switch statement has no cases or default body", startLine, startColumn);
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
-    return std::make_unique<ast::SwitchStatement>(
-        std::move(variable), std::move(cases), std::move(defaultBody));
+    return std::make_unique<ast::SwitchStatement>(std::move(variable), std::move(cases), std::move(defaultBody));
 }
 
 StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
     ast::Visibility visibility;
     switch (advance().getType()) {
-        case TokenType::Private:
-            visibility = ast::Visibility::Private;
-            break;
-        case TokenType::Public:
-            visibility = ast::Visibility::Public;
-            break;
-        case TokenType::ReadOnly:
-            visibility = ast::Visibility::ReadOnly;
-            break;
+        case TokenType::Private: visibility = ast::Visibility::Private; break;
+        case TokenType::Public: visibility = ast::Visibility::Public; break;
+        case TokenType::ReadOnly: visibility = ast::Visibility::ReadOnly; break;
         default:
-            ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: " +
-                               lexer::tokenTypeToString(currentToken().getType()));
+            ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
+                               + lexer::tokenTypeToString(currentToken().getType()));
     }
     size_t startLine = currentToken().getLine(), startColumn = currentToken().getColumn();
     switch (currentToken().getType()) {
         case TokenType::Alias: {
-            auto tempAlias = static_cast<ast::AliasStatement*>(
-                parseAliasStatement().release());
+            auto tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement().release());
             if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Aliases can only be public or private, not readonly",
-                                    startLine, startColumn);
+                logging::logWarning("Aliases can only be public or private, not readonly", startLine, startColumn);
                 visibility = ast::Visibility::Private;  // Default to private
             }
             tempAlias->visibility = visibility;
             return std::unique_ptr<ast::AliasStatement>(tempAlias);
         }
         case TokenType::Bundle: {
-            auto tempBundle = static_cast<ast::BundleDeclarationStatement*>(
-                parseBundleDeclarationStatement().release());
+            auto tempBundle
+                = static_cast<ast::BundleDeclarationStatement*>(parseBundleDeclarationStatement().release());
             if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Bundles can only be public or private, not readonly",
-                                    startLine, startColumn);
+                logging::logWarning("Bundles can only be public or private, not readonly", startLine, startColumn);
                 visibility = ast::Visibility::Private;  // Default to private
             }
             tempBundle->visibility = visibility;
             return std::unique_ptr<ast::BundleDeclarationStatement>(tempBundle);
         }
         case TokenType::Enum: {
-            auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(
-                parseEnumDeclarationStatement().release());
+            auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement().release());
             if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Enums can only be public or private, not readonly",
-                                    startLine, startColumn);
+                logging::logWarning("Enums can only be public or private, not readonly", startLine, startColumn);
                 visibility = ast::Visibility::Private;  // Default to private
             }
             tempEnum->visibility = visibility;
             return std::unique_ptr<ast::EnumDeclarationStatement>(tempEnum);
         }
         case TokenType::Func: {
-            auto tempFunction = static_cast<ast::FunctionDeclarationStatement*>(
-                parseFunctionDeclarationStatement().release());
+            auto tempFunction
+                = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement().release());
             tempFunction->visibility = visibility;
             return std::unique_ptr<ast::FunctionDeclarationStatement>(tempFunction);
         }
@@ -507,12 +483,8 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() {
 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
-    return std::make_unique<ast::VariableDeclarationStatement>(
-        isConst,
-        std::move(name),
-        visibility,
-        std::move(value),
-        std::move(explicitType));
+    return std::make_unique<ast::VariableDeclarationStatement>(isConst, std::move(name), visibility, std::move(value),
+                                                               std::move(explicitType));
 }
 
 StatementUPtr_t Parser::parseWhileLoopStatement() {
@@ -536,9 +508,8 @@ ast::Block Parser::parseBlock(std::string blockName) {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end " + blockName);
     if (block.empty()) {
-        logging::logWarning(
-            std::format("{} is empty", blockName),
-            currentToken().getLine(), currentToken().getColumn());
+        logging::logWarning(std::format("{} is empty", blockName), currentToken().getLine(),
+                            currentToken().getColumn());
     }
     return block;
 }

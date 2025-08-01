@@ -22,17 +22,16 @@
 
 namespace Manganese {
 namespace ast {
+// There are lots of implicit conversions between integer types -- for convenience, ignore those warnings
+DISABLE_CONVERSION_WARNING
 
-DISABLE_CONVERSION_WARNING  // There are lots of implicit conversions between integer types -- for convenience, ignore those warnings
-
-inline std::string getIndent(int indent) {return std::string(indent * 2, ' ');}
+inline std::string getIndent(int indent) { return std::string(indent * 2, ' '); }
 
 // Helper function to get the type of a number variant
 std::string getNumberTypeName(const number_t& value) {
     auto visitor = [](auto&& arg) -> std::string {
         using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, int8_t>)
-            return int8_str;
+        if constexpr (std::is_same_v<T, int8_t>) return int8_str;
         else if constexpr (std::is_same_v<T, uint8_t>)
             return uint8_str;
         else if constexpr (std::is_same_v<T, int16_t>)
@@ -152,9 +151,7 @@ void GenericExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent + 1) << "identifier: " << identifier->toString() << "\n";
     os << getIndent(indent + 1) << "generic types: [\n";
 
-    for (const auto& type : types) {
-        os << getIndent(indent + 2) << type->toString() << "\n";
-    }
+    for (const auto& type : types) { os << getIndent(indent + 2) << type->toString() << "\n"; }
 
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent) << "}\n";
@@ -187,8 +184,7 @@ void MemberAccessExpression::dump(std::ostream& os, int indent) const {
 }
 
 void NumberLiteralExpression::dump(std::ostream& os, int indent) const {
-    os << getIndent(indent) << "NumberLiteralExpression [" << getLine()
-       << ":" << getColumn() << "] {\n";
+    os << getIndent(indent) << "NumberLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << (computedType ? computedType->toString() : "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
     os << getIndent(indent + 1) << "Type from parser: " << getNumberTypeName(value) << "\n";
@@ -308,9 +304,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, int indent) const {
         os << getIndent(indent + 1) << "generic types: [";
         for (size_t i = 0; i < genericTypes.size(); ++i) {
             os << genericTypes[i];
-            if (i < genericTypes.size() - 1) [[likely]] {
-                os << ", ";
-            }
+            if (i < genericTypes.size() - 1) [[likely]] { os << ", "; }
         }
         os << "]\n";
     } else {
@@ -339,9 +333,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, int indent) const {
 
     // Body
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) {
-        stmt->dump(os, indent + 2);
-    }
+    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
 
     os << getIndent(indent) << "}\n";
@@ -352,9 +344,7 @@ void IfStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent + 1) << "condition: \n";
     condition->dump(os, indent + 2);
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) {
-        stmt->dump(os, indent + 2);
-    }
+    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
     if (!elifs.empty()) {
         os << getIndent(indent + 1) << "elif clauses: [\n";
@@ -363,9 +353,7 @@ void IfStatement::dump(std::ostream& os, int indent) const {
             os << getIndent(indent + 3) << "condition: \n";
             elif.condition->dump(os, indent + 4);
             os << getIndent(indent + 3) << "body: [\n";
-            for (const auto& stmt : elif.body) {
-                stmt->dump(os, indent + 4);
-            }
+            for (const auto& stmt : elif.body) { stmt->dump(os, indent + 4); }
             os << getIndent(indent + 3) << "]\n";
             os << getIndent(indent + 2) << "}\n";
         }
@@ -373,9 +361,7 @@ void IfStatement::dump(std::ostream& os, int indent) const {
     }
     if (!elseBody.empty()) {
         os << getIndent(indent + 1) << "else body: [\n";
-        for (const auto& stmt : elseBody) {
-            stmt->dump(os, indent + 2);
-        }
+        for (const auto& stmt : elseBody) { stmt->dump(os, indent + 2); }
         os << getIndent(indent + 1) << "]\n";
     }
     os << getIndent(indent) << "}\n";
@@ -394,9 +380,7 @@ void RepeatLoopStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent + 1) << "numIterations: \n";
     numIterations->dump(os, indent + 2);
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) {
-        stmt->dump(os, indent + 2);
-    }
+    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent) << "}\n";
 }
@@ -423,18 +407,14 @@ void SwitchStatement::dump(std::ostream& os, int indent) const {
         os << getIndent(indent + 3) << "literalValue: \n";
         case_.literalValue->dump(os, indent + 4);
         os << getIndent(indent + 3) << "body: [\n";
-        for (const auto& stmt : case_.body) {
-            stmt->dump(os, indent + 4);
-        }
+        for (const auto& stmt : case_.body) { stmt->dump(os, indent + 4); }
         os << getIndent(indent + 3) << "]\n";
         os << getIndent(indent + 2) << "}\n";
     }
 
     if (!defaultBody.empty()) {
         os << getIndent(indent + 1) << "default body: [\n";
-        for (const auto& stmt : defaultBody) {
-            stmt->dump(os, indent + 2);
-        }
+        for (const auto& stmt : defaultBody) { stmt->dump(os, indent + 2); }
         os << getIndent(indent + 1) << "]\n";
     }
 
@@ -448,15 +428,9 @@ void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
 
     std::string visString;
     switch (visibility) {
-        case Visibility::Public:
-            visString = "Public";
-            break;
-        case Visibility::ReadOnly:
-            visString = "ReadOnly";
-            break;
-        case Visibility::Private:
-            visString = "Private";
-            break;
+        case Visibility::Public: visString = "Public"; break;
+        case Visibility::ReadOnly: visString = "ReadOnly"; break;
+        case Visibility::Private: visString = "Private"; break;
     }
     os << getIndent(indent + 1) << "visibility: " << visString << "\n";
 
@@ -480,9 +454,7 @@ void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
 void WhileLoopStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "WhileLoopStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) {
-        stmt->dump(os, indent + 2);
-    }
+    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent + 1) << "condition: \n";
     condition->dump(os, indent + 2);
@@ -545,9 +517,7 @@ void GenericType::dump(std::ostream& os, int indent) const {
     os << "\n";
     os << getIndent(indent + 1) << "generic types: [\n";
 
-    for (const auto& type : typeParameters) {
-        type->dump(os, indent + 2);
-    }
+    for (const auto& type : typeParameters) { type->dump(os, indent + 2); }
 
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent) << "}\n";
