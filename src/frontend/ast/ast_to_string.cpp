@@ -23,7 +23,7 @@ std::string ArrayLiteralExpression::toString() const {
     std::ostringstream oss;
     oss << "[";
     for (size_t i = 0; i < elements.size(); ++i) {
-        oss << elements[i]->toString();
+        oss << toStringOr(elements[i]);
         if (i < elements.size() - 1) [[likely]] { oss << ", "; }
     }
     oss << "]";
@@ -51,7 +51,7 @@ std::string BundleInstantiationExpression::toString() const {
     if (!genericTypes.empty()) {
         oss << "@[";
         for (size_t i = 0; i < genericTypes.size(); ++i) {
-            oss << genericTypes[i]->toString();
+            oss << toStringOr(genericTypes[i]);
             if (i < genericTypes.size() - 1) [[likely]] { oss << ", "; }
         }
         oss << "]";
@@ -80,7 +80,7 @@ std::string FunctionCallExpression::toString() const {
     oss << callee->toString() << "(";
 
     for (size_t i = 0; i < arguments.size(); ++i) {
-        oss << arguments[i]->toString();
+        oss << toStringOr(arguments[i]);
         if (i < arguments.size() - 1) [[likely]] { oss << ", "; }
     }
 
@@ -92,7 +92,7 @@ std::string GenericExpression::toString() const {
     std::ostringstream oss;
     oss << identifier->toString() << "@[";
     for (size_t i = 0; i < types.size(); ++i) {
-        oss << types[i]->toString();
+        oss << toStringOr(types[i]);
         if (i < types.size() - 1) [[likely]] { oss << ", "; }
     }
     oss << "]";
@@ -221,7 +221,7 @@ std::string FunctionDeclarationStatement::toString() const {
     if (returnType) { oss << " -> " << returnType->toString(); }
     oss << " {\n";
     if (!body.empty()) {
-        for (size_t i = 0; i < body.size(); ++i) { oss << body[i]->toString() << "\n"; }
+        for (size_t i = 0; i < body.size(); ++i) { oss << toStringOr(body[i]) << "\n";}
     }
     oss << "}";
     return oss.str();
@@ -311,7 +311,7 @@ std::string BundleType::toString() const {
     std::ostringstream oss;
     oss << "bundle {";
     for (size_t i = 0; i < fieldTypes.size(); ++i) {
-        oss << fieldTypes[i]->toString();
+        oss << toStringOr(fieldTypes[i]);
         if (i < fieldTypes.size() - 1) [[likely]] { oss << ", "; }
     }
     oss << "}";
@@ -336,7 +336,7 @@ std::string GenericType::toString() const {
     std::ostringstream oss;
     oss << baseType->toString() << "@[";
     for (size_t i = 0; i < typeParameters.size(); ++i) {
-        oss << typeParameters[i]->toString();
+        oss << toStringOr(typeParameters[i]);
         if (i < typeParameters.size() - 1) [[likely]] { oss << ", "; }
     }
     oss << "]";

@@ -146,6 +146,41 @@ class Type : public ASTNode {
     virtual bool operator==(const Type& other) const noexcept = 0;
 };
 
+/**
+ * @brief A wrapper around Expression::toString which handles nullptrs with a fallback
+ * @param fallback The fallback string representation if the expression is a nullptr 
+ */
+inline std::string toStringOr(const Expression* expression, const char* fallback = "unknown expression") {
+    return expression ? expression->toString() : fallback;
+}
+
+inline std::string toStringOr(const ExpressionUPtr_t& expression, const char* fallback = "unknown expression") {
+    return expression ? expression->toString() : fallback;
+}
+
+/**
+ * @brief A wrapper around Statement::toString which handles nullptrs with a fallback
+ * @param fallback The fallback string representation if the statement is a nullptr 
+ */
+inline std::string toStringOr(const Statement* statement, const char* fallback = "unknown statement") {
+    return statement ? statement->toString() : fallback;
+}
+
+inline std::string toStringOr(const StatementUPtr_t& statement, const char* fallback = "unknown statement") {
+    return statement ? statement->toString() : fallback;
+}
+
+/**
+ * @brief A wrapper around Type::toString which handles nullptrs with a fallback
+ * @param fallback The fallback string representation if the type is a nullptr 
+ */
+inline std::string toStringOr(const Type* type, const char* fallback = "no type") {
+    return type ? type->toString() : fallback;
+}
+inline std::string toStringOr(const TypeSPtr_t& type, const char* fallback = "no type") {
+    return type ? type->toString() : fallback;
+}
+
 }  // namespace ast
 
 // TODO: Add line and column setting methods to the derived classes

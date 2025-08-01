@@ -1,7 +1,8 @@
 #include <frontend/semantic/semantic_analyzer.h>
+#include <frontend/ast.h>
 
 namespace Manganese {
-
+using ast::toStringOr;
 namespace semantic {
 
 void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationStatement* statement) {
@@ -14,14 +15,14 @@ void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationSta
     for (const auto& field : statement->fields) {
         if (ast::isPrimitiveType(field.type)) { continue; }
         if (!statement->genericTypes.empty()
-            && std::find(statement->genericTypes.begin(), statement->genericTypes.end(), field.type->toString())
+            && std::find(statement->genericTypes.begin(), statement->genericTypes.end(), toStringOr(field.type))
                 != statement->genericTypes.end()) {
             continue;  // This is a generic type, so it's valid
         }
         if (!typeExists(field.type)) {
             logError(
                 "Field '{}' in bundle '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
-                statement, field.name, statement->name, field.type->toString());
+                statement, field.name, statement->name, toStringOr(field.type));
             return;
         }
     }
@@ -67,7 +68,7 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
         if (!typeExists(param.type)) {
             logError(
                 "Parameter '{}' in function '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
-                statement, param.name, statement->name, param.type->toString());
+                statement, param.name, statement->name, toStringOr(param.type));
             return;
         }
     }
@@ -132,7 +133,7 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
         logError(
             "Variable {} was already defined in this scope. If you meant to change its value, use {} = {} (without {})",
             statement, statement->name, statement->name, statement->isConstant() ? "const" : "let",
-            statement->value->toString());
+            toStringOr(statement->value));
         isInvalidDeclaration = true;
     }
     if (!statement->type && !statement->value) {
@@ -145,7 +146,7 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
         checkExpression(statement->value.get());
         if (!areTypesCompatible(statement->value->getType(), statement->type.get())) {
             logError("Type mismatch for variable '{}': expected {}, got {}", statement, statement->name,
-                     statement->type->toString(), statement->value->getType()->toString());
+                     toStringOr(statement->type), toStringOr(statement->value->getType()));
         }
     } else if (statement->value) {
         checkExpression(statement->value.get());

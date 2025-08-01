@@ -77,7 +77,7 @@ std::string Symbol::toString() const noexcept {
     std::ostringstream oss;
     oss << "Symbol: " << name << "\n";
     oss << "Kind: " << SymbolKindToString(kind) << "\n";
-    oss << "Type: " << type->toString() << "\n";
+    oss << "Type: " << ast::toStringOr(type, "undeduced type") << "\n";
     oss << "Constant: " << (isConstant ? "yes" : "no") << "\n";
     oss << "Visibility: " << ast::visibilityToString(visibility) << "\n";
     return oss.str();

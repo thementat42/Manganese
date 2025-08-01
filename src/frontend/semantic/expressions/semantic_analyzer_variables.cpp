@@ -9,7 +9,7 @@ void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expr
     checkExpression(expression->value.get());
     if (expression->assignee->kind() != ast::ExpressionKind::IdentifierExpression
         && expression->assignee->kind() != ast::ExpressionKind::IndexExpression) {
-        logError("Cannot assign to non-variable expression: {}", expression, expression->assignee->toString());
+        logError("Cannot assign to non-variable expression: {}", expression, toStringOr(expression->assignee));
         return;
     }
     if (expression->op != lexer::TokenType::Assignment) {
@@ -33,9 +33,9 @@ void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expr
     }
     if (!areTypesCompatible(expression->assignee->getType(), expression->value->getType())) {
         logError("{} cannot be assigned to {}. {} has type {}, but {} has type {}", expression,
-                 expression->value->toString(), expression->assignee->toString(), expression->value->toString(),
-                 expression->value->getType()->toString(), expression->assignee->toString(),
-                 expression->assignee->getType()->toString());
+                 toStringOr(expression->value), toStringOr(expression->assignee), toStringOr(expression->value),
+                 toStringOr(expression->value->getType()), toStringOr(expression->assignee),
+                 toStringOr(expression->assignee->getType()));
         return;
     }
 }
@@ -105,9 +105,9 @@ bool SemanticAnalyzer::handleInPlaceAssignment(Manganese::ast::AssignmentExpress
     }
     if (!areTypesCompatible(expression->assignee->getType(), tempBinaryExpression->getType())) {
         logError("{} cannot be assigned to {}. {} has type {}, but {} has type {}", expression,
-                 expression->value->toString(), expression->assignee->toString(), expression->value->toString(),
-                 expression->value->getType()->toString(), expression->assignee->toString(),
-                 expression->assignee->getType()->toString());
+                 toStringOr(expression->value), toStringOr(expression->assignee), toStringOr(expression->value),
+                 toStringOr(expression->value->getType()), toStringOr(expression->assignee),
+                 toStringOr(expression->assignee->getType()));
         return false;
     }
     return true;

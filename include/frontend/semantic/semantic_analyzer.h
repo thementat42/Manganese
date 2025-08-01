@@ -152,21 +152,21 @@ class SemanticAnalyzer {
 
 constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release;
 inline const auto isSignedInt
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString().starts_with("int"); };
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("int"); };
 inline const auto isUInt
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString().starts_with("uint"); };
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("uint"); };
 
 inline const auto isAnyInt = [](const ast::Type* t) -> bool { return isSignedInt(t) || isUInt(t); };
 
 inline const auto isFloat
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString().starts_with("float"); };
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("float"); };
 inline const auto isChar
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString() == "char"; };
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t) == "char"; };
 // inline const auto isBool = [](const ast::Type* t) -> bool {
-//     return ast::isPrimitiveType(t) && t->toString() == "bool";
+//     return ast::isPrimitiveType(t) && ast::toStringOr(t) == "bool";
 // };
 inline const auto isString
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && t->toString() == "string"; };
+    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t) == "string"; };
 }  // namespace semantic
 
 }  // namespace Manganese

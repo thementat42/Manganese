@@ -1,7 +1,7 @@
 #include <frontend/semantic/semantic_analyzer.h>
 
 namespace Manganese {
-
+using ast::toStringOr;
 namespace semantic {
 
 void SemanticAnalyzer::checkBreakStatement(ast::BreakStatement* statement) {
@@ -17,33 +17,31 @@ void SemanticAnalyzer::checkContinueStatement(ast::ContinueStatement* statement)
 void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
     checkExpression(statement->condition.get());
     if (!ast::isPrimitiveType(statement->condition->getType())) {
-        logError("Could not convert {} to a boolean", statement, statement->condition->toString());
+        logError("Could not convert {} to a boolean", statement, toStringOr(statement->condition));
     }
     enterScope();
     ++context.ifStatement;
     checkBlock(statement->body);
     --context.ifStatement;
     exitScope();
-    if (!statement->elifs.empty()) {
-        for (auto& elif : statement->elifs) {
-            checkExpression(elif.condition.get());
-            if (!ast::isPrimitiveType(elif.condition->getType())) {
-                logError("Could not convert {} to a boolean", statement, elif.condition->toString());
-            }
-            enterScope();
-            ++context.ifStatement;
-            checkBlock(elif.body);
-            --context.ifStatement;
-            exitScope();
+
+    for (auto& elif : statement->elifs) {
+        checkExpression(elif.condition.get());
+        if (!ast::isPrimitiveType(elif.condition->getType())) {
+            logError("Could not convert {} to a boolean", statement, toStringOr(elif.condition));
         }
-    }
-    if (!statement->elseBody.empty()) {
         enterScope();
         ++context.ifStatement;
-        checkBlock(statement->elseBody);
+        checkBlock(elif.body);
         --context.ifStatement;
         exitScope();
     }
+
+    enterScope();
+    ++context.ifStatement;
+    checkBlock(statement->elseBody);
+    --context.ifStatement;
+    exitScope();
 }
 
 void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
@@ -60,13 +58,13 @@ void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
     if (returnType) {
         auto returnedType = statement->value->getType();
         if (!areTypesCompatible(returnedType, returnType.get())) {
-            logError("Return type mismatch in function: expected {}, got {}", statement, returnType->toString(),
-                     (returnedType ? returnedType->toString() : "no return type"));
+            logError("Return type mismatch in function: expected {}, got {}", statement, toStringOr(returnType),
+            toStringOr(returnedType, "no return type"));
         }
     } else {
         if (statement->value) {
             logError("Function does not have a return type, but this returns a {}", statement,
-                     statement->value->getType()->toString());
+                     toStringOr(statement->value->getType()));
         }
         return;  // Both the function and the return value are null, so the types are compatible
     }

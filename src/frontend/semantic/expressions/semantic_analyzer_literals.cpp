@@ -1,7 +1,7 @@
 #include <frontend/semantic/semantic_analyzer.h>
 
 namespace Manganese {
-
+using ast::toStringOr;
 namespace semantic {
 void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* expression) {
     // Check that each element is the same type
@@ -19,14 +19,14 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
         ast::Expression* element = expression->elements[i].get();
         checkExpression(element);
         if (!element->getType()) {
-            logError("Could not deduce type of {}, assuming 'int32'", element, element->toString());
+            logError("Could not deduce type of {}, assuming 'int32'", element, toStringOr(element));
             element->setType(std::make_shared<ast::SymbolType>("int32"));
         }
         if (i == 0) {
             elementType = element->getTypePtr();
         } else if (!areTypesCompatible(element->getType(), elementType.get())) {
-            logError("Element {} has type {}, expected {}", element, element->toString(),
-                     element->getType()->toString(), elementType->toString());
+            logError("Element {} has type {}, expected {}", element, toStringOr(element),
+                     toStringOr(elementType), toStringOr(elementType));
         }
     }
 
@@ -74,7 +74,7 @@ void SemanticAnalyzer::checkNumberLiteralExpression(ast::NumberLiteralExpression
     };
     auto type = std::visit(visitor, expression->value);
     if (!type) [[unlikely]] {
-        logError("Failed to determine type for number literal expression: {}", expression, expression->toString());
+        logError("Failed to determine type for number literal expression: {}", expression, toStringOr(expression));
         type = std::make_shared<ast::SymbolType>("unknown");
     }
     expression->setType(type);

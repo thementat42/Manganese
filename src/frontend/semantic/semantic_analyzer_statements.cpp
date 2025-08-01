@@ -71,13 +71,13 @@ void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_rel
 
 void SemanticAnalyzer::checkAliasStatement(ast::AliasStatement* statement) {
     if (statement->baseType->kind() == ast::TypeKind::GenericType) {
-        logError("Generic Types cannot be aliased", statement, statement->baseType->toString());
+        logError("Generic Types cannot be aliased", statement, toStringOr(statement->baseType));
         return;
     }
     bool isInvalidAlias = false;
     if (!typeExists(statement->baseType)) {
         logError("Base type '{}' for alias '{}' does not exist or was not defined", statement,
-                 statement->baseType->toString(), statement->alias);
+                 toStringOr(statement->baseType), statement->alias);
         isInvalidAlias = true;
     }
     if (symbolTable.lookupInCurrentScope(statement->alias)) {

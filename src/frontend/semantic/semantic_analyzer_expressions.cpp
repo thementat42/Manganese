@@ -3,14 +3,16 @@
  * @brief Responsible for performing semantic analysis on all the AST expression nodes
  */
 
+#include <frontend/ast.h>
 #include <frontend/semantic/semantic_analyzer.h>
 #include <global_macros.h>
 
 #include <format>
 
 namespace Manganese {
-namespace semantic {
+using ast::toStringOr;
 
+namespace semantic {
 void SemanticAnalyzer::checkExpression(ast::Expression* expression) noexcept_if_release {
     switch (expression->kind()) {
         case ast::ExpressionKind::ArrayLiteralExpression:
@@ -109,7 +111,7 @@ void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiati
         checkExpression(field.value.get());
         if (!areTypesCompatible(field.value->getType(), expectedField.type.get())) {
             logError("Field {} in bundle instantiation has type {}, but was declared with type {}", expression,
-                     field.value->toString(), field.value->getType()->toString(), expectedField.type->toString());
+                     toStringOr(field.value), toStringOr(field.value->getType()), toStringOr(expectedField.type));
             validInstantiation = false;
         }
     }
@@ -120,9 +122,9 @@ void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiati
 void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* expression) {
     if (expression->callee->kind() != ast::ExpressionKind::IdentifierExpression) {
         // TODO: Support function calls indexing into arrays or module members
-        // TODO: Allow calling generic expressions (provided the underlying type is an identifier that was declared as a
-        // function)
-        logError("Function call must be made to an identifier, not {}", expression, expression->callee->toString());
+        // TODO: Allow calling generic expressions (provided the underlying type is an identifier that was declared
+        // as a function)
+        logError("Function call must be made to an identifier, not {}", expression, toStringOr(expression->callee));
         return;
     }
     auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->callee.get());
@@ -153,7 +155,7 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
         }
         if (!areTypesCompatible(argument->getType(), expectedType)) {
             logError("Argument {} in call to {} has type {}, but expected type is {}", expression, i + 1,
-                     identifierExpression->value, argument->getType()->toString(), expectedType->toString());
+                     identifierExpression->value, toStringOr(argument->getType()), toStringOr(expectedType));
             return;
         }
     }

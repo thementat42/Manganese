@@ -172,7 +172,7 @@ ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t lef
         auto* underlying = static_cast<ast::IdentifierExpression*>(left.get());
         bundleName = underlying->value;
     } else {
-        logError(std::format("Bundle instantiation expression must start with a bundle name, not {}", left->toString()),
+        logError(std::format("Bundle instantiation expression must start with a bundle name, not {}", ast::toStringOr(left)),
                  left->getLine(), left->getColumn());
     }
 
