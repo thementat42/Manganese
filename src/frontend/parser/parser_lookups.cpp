@@ -43,6 +43,19 @@ void Parser::registerStmtHandler(TokenType type, statementHandler_t handler) {
     statementLookup[type] = handler;
 }
 
+// ===== Type Lookup Registration Methods =====
+
+void Parser::registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) {
+    operatorPrecedenceMap_type[type] = Operator::binary(precedence);
+    ledLookup_types[type] = handler;
+}
+
+void Parser::registerNudHandler_type(TokenType type, nudHandler_types_t handler) {
+    operatorPrecedenceMap_type[type]
+        = Operator{.leftBindingPower = Precedence::Primary, .rightBindingPower = Precedence::Default};
+    nudLookup_types[type] = handler;
+}
+
 // ===== Actually register the lookups =====
 
 //! Really long stuff
@@ -155,6 +168,31 @@ void Parser::initializeLookups() {
 
     //~ Misc
     registerLedHandler_binary(TokenType::As, Precedence::TypeCast, &Parser::parseTypeCastExpression);
+}
+
+void Parser::initializeTypeLookups() {
+    //~ Variable declarations with primitive types
+    registerNudHandler_type(TokenType::Identifier, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Int8, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::UInt8, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Int16, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::UInt16, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Int32, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::UInt32, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Int64, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::UInt64, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Float32, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Float64, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Char, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Bool, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::String, &Parser::parseSymbolType);
+    registerNudHandler_type(TokenType::Ptr, &Parser::parsePointerType);
+
+    //~ Complex types
+    registerLedHandler_type(TokenType::LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
+    registerLedHandler_type(TokenType::At, Precedence::Generic, &Parser::parseGenericType);
+    registerNudHandler_type(TokenType::Func, &Parser::parseFunctionType);
+    registerNudHandler_type(TokenType::Bundle, &Parser::parseBundleType);
 }
 
 }  // namespace parser
