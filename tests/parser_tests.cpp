@@ -87,8 +87,22 @@ bool validateStatements(const ast::Block& block, const std::array<std::string, N
 }
 
 bool validateStatement(const ast::Block& block, const std::string& expected, const std::string& testName) {
+    std::ofstream logFile(logFileName, std::ios::app);
+    if (!logFile) {
+        std::cerr << "ERROR: Could not open log file for writing.\n";
+    } else {
+        logFile << "Test: " << testName << '\n';
+    }
     std::cout << "Parsed " << testName << " AST:" << '\n';
-    for (const auto& stmt : block) { std::cout << stmt->toString() << '\n'; }
+    for (const auto& stmt : block) {
+        std::cout << stmt->toString() << '\n';
+        if (logFile) {
+            logFile << "String representation: " << stmt->toString() << '\n';
+            logFile << "Dumping statement:\n";
+            stmt->dump(logFile);
+            logFile << "---------------------\n";
+        }
+    }
 
     if (block.size() != 1) {
         std::cerr << "ERROR: Expected 1 statement, got " << block.size() << " in test: " << testName << '\n';
