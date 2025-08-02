@@ -24,18 +24,7 @@ void SemanticAnalyzer::checkIndexExpression(ast::IndexExpression* expression) {
     auto* arrayType = static_cast<ast::ArrayType*>(currentType);
     expression->setType(arrayType->elementType);
 
-    // ===== Bounds Checking =====
-    ast::Expression* lengthExpression = arrayType->lengthExpression.get();
-    if (!lengthExpression) {
-        logWarning("Indexing into an array of unknown length: {}. This may lead to out-of-bounds access", expression,
-                   toStringOr(expression->variable));
-    }
-    ast::Expression* indexValue = expression->index.get();
-    if (indexValue->kind() != ast::ExpressionKind::NumberLiteralExpression) {
-        logError("Indexing into an array requires a numeric index; {} cannot be used as an index", expression,
-                 toStringOr(indexValue));
-        return;
-    }
+    // TODO: Bounds checking
 }
 
 void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* expression) {

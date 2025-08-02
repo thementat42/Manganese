@@ -1,8 +1,9 @@
 #include <frontend/semantic/semantic_analyzer.h>
+#include <frontend/ast.h>
 
 namespace Manganese {
-using ast::toStringOr;
 namespace semantic {
+using ast::toStringOr;
 void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* expression) {
     // Check that each element is the same type
     // Assume that the first element's type is the array's type
@@ -25,8 +26,8 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
         if (i == 0) {
             elementType = element->getTypePtr();
         } else if (!areTypesCompatible(element->getType(), elementType.get())) {
-            logError("Element {} has type {}, expected {}", element, toStringOr(element),
-                     toStringOr(elementType), toStringOr(elementType));
+            logError("Element {} has type {}, expected {}", element, toStringOr(element), toStringOr(elementType),
+                     toStringOr(elementType));
         }
     }
 

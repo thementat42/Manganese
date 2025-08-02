@@ -162,9 +162,11 @@ inline const auto isFloat
     = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("float"); };
 inline const auto isChar
     = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t) == "char"; };
+
 // inline const auto isBool = [](const ast::Type* t) -> bool {
 //     return ast::isPrimitiveType(t) && ast::toStringOr(t) == "bool";
 // };
+
 inline const auto isString
     = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t) == "string"; };
 }  // namespace semantic

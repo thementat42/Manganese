@@ -168,15 +168,33 @@ bool testBinaryExpressions() {
     return true;
 }
 
-bool checkMemberAccess() {
+bool checkMemberAccessExpression() {
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse("bundle A {b: int;}"
                                     "bundle B {c : A;}"
                                     "let a = B{c = A{b = 2}};"
                                     "let x = a.c.b;"
                                     "let y = a.x;  # check non-existent member access\n"
-                                    "let z = a.c.b + 3 ^^ 4;"
-                                );
+                                    "let z = a.c.b + 3 ^^ 4;");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    outputAnalyzedAST(program);
+    if (program.size() != 6) {
+        std::cerr << "Expected 6 statements, got " << program.size() << "\n";
+        return false;
+    }
+    return true;
+}
+
+bool checkTypeCastExpression() {
+    semantic::SemanticAnalyzer analyzer;
+
+    parser::ParsedFile file = parse("let x: int64 = 10;"
+                                    "let y: float32 = 3.14;"
+                                    "let z = x as float32;"
+                                    "let w = y as int64;"
+                                    "let a = \"Hello\" as char;"  // Should be disallowed
+                                    "let b = 42 * 4 as int8 + (5 as float32);");
     analyzer.analyze(file);
     const auto& program = file.program;
     outputAnalyzedAST(program);
@@ -198,7 +216,8 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Analyze Bundle Instantiation", analyzeBundleInstantiation);
     runner.runTest("Analyze Function Declaration and Call", analyzeFunctionDeclarationAndCall);
     runner.runTest("Binary Expressions", testBinaryExpressions);
-    runner.runTest("Member Access", checkMemberAccess);
+    runner.runTest("Member Access", checkMemberAccessExpression);
+    runner.runTest("Type Cast Expression", checkTypeCastExpression);
 }
 
 }  // namespace tests

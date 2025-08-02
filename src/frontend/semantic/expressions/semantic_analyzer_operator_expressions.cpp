@@ -47,9 +47,38 @@ void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) 
 }
 
 void SemanticAnalyzer::checkTypeCastExpression(ast::TypeCastExpression* expression) {
-    DISCARD(expression);
-    NOT_IMPLEMENTED;
+    checkExpression(expression->originalValue.get());
+    if (!expression->originalValue->getType()) {
+        logError("Cannot cast expression {} to type {} since it has no computed type.", expression,
+                 toStringOr(expression->originalValue), toStringOr(expression->targetType));
+        return;
+    }
+    if (!typeExists(expression->targetType)) {
+        logError("Type {} in cast expression '{}' does not exist", expression, toStringOr(expression->targetType),
+                 toStringOr(expression->originalValue));
+        return;
+    }
+    bool isCastFromPrimitiveToPrimitive = true;
+    if (!ast::isPrimitiveType(expression->originalValue->getType())) {
+        isCastFromPrimitiveToPrimitive = false;
+        logError("Cannot cast an object of type '{}'. Only casts between primitive types are supported.", expression,
+                 toStringOr(expression->originalValue->getType()));
+    }
+    if (!ast::isPrimitiveType(expression->targetType)) {
+        isCastFromPrimitiveToPrimitive = false;
+        logError("Cannot cast an object to a '{}'. Only casts between primitive types are supported.", expression,
+                 toStringOr(expression->targetType));
+    }
+    if (!isCastFromPrimitiveToPrimitive) { return; }
+    if (isString(expression->originalValue->getType()) && isChar(expression->targetType.get())) {
+        logError("Cast from type 'string' to type 'char' is not supported", expression);
+        return;
+    }
+    // Casting to and from any other primitive type is supported
+    expression->setType(expression->targetType);
 }
+
+// ===== Helpers =====
 
 ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const
     noexcept_if_release {
