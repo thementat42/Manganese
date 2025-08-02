@@ -16,6 +16,8 @@ enum class SymbolKind {
     Variable,
     Constant,
     Function,
+    FunctionParameter,
+    ConstantFunctionParameter,
     Bundle,
     Enum,
     Module,

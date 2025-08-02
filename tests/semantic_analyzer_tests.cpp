@@ -168,6 +168,25 @@ bool testBinaryExpressions() {
     return true;
 }
 
+bool checkMemberAccess() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse("bundle A {b: int;}"
+                                    "bundle B {c : A;}"
+                                    "let a = B{c = A{b = 2}};"
+                                    "let x = a.c.b;"
+                                    "let y = a.x;  # check non-existent member access\n"
+                                    "let z = a.c.b + 3 ^^ 4;"
+                                );
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    outputAnalyzedAST(program);
+    if (program.size() != 6) {
+        std::cerr << "Expected 6 statements, got " << program.size() << "\n";
+        return false;
+    }
+    return true;
+}
+
 void runSemanticAnalysisTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -179,6 +198,7 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Analyze Bundle Instantiation", analyzeBundleInstantiation);
     runner.runTest("Analyze Function Declaration and Call", analyzeFunctionDeclarationAndCall);
     runner.runTest("Binary Expressions", testBinaryExpressions);
+    runner.runTest("Member Access", checkMemberAccess);
 }
 
 }  // namespace tests

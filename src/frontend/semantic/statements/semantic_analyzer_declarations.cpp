@@ -1,5 +1,5 @@
-#include <frontend/semantic/semantic_analyzer.h>
 #include <frontend/ast.h>
+#include <frontend/semantic/semantic_analyzer.h>
 
 namespace Manganese {
 using ast::toStringOr;
@@ -76,12 +76,12 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
 
     context.currentFunctionReturnType = statement->returnType;
     context.functionBody++;
-    enterScope();
+    enterScope();  // Parameters are only valid within this scope
 
     for (const auto& param : statement->parameters) {
         symbolTable.declare(Symbol{
             .name = param.name,
-            .kind = param.isConst ? SymbolKind::Constant : SymbolKind::Variable,
+            .kind = param.isConst ? SymbolKind::ConstantFunctionParameter : SymbolKind::FunctionParameter,
             .type = param.type,
             .line = statement->getLine(),
             .column = statement->getColumn(),
@@ -115,12 +115,24 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
 }
 
 void SemanticAnalyzer::checkImportStatement(ast::ImportStatement* statement) {
+    /*
+    Import statement nodes only exist for the purposes of the pratt parser
+    (so the `import` keyword has an associated parsing method)
+    They don't store any actual info
+    The imports are saved separately in the ParsedFile struct -- those are analyzed
+    */
     DISCARD(statement);
-    NOT_IMPLEMENTED;
+    return;
 }
 void SemanticAnalyzer::checkModuleDeclarationStatement(ast::ModuleDeclarationStatement* statement) {
+    /*
+    Module declaration nodes only exist for the purposes of the pratt parser
+    (so the `module` keyword has an associated parsing method)
+    They don't store any actual info
+    The module name is saved separately in the ParsedFile struct
+    */
     DISCARD(statement);
-    NOT_IMPLEMENTED;
+    return;
 }
 
 void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement) {
