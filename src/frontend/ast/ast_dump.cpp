@@ -227,9 +227,9 @@ void TypeCastExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "TypeCastExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(computedType, "auto") << "\n";
     os << getIndent(indent + 1) << "expression: \n";
-    expression->dump(os, indent + 2);
+    originalValue->dump(os, indent + 2);
     os << getIndent(indent + 1) << "target type: \n";
-    type->dump(os, indent + 2);
+    targetType->dump(os, indent + 2);
     os << getIndent(indent) << "}\n";
 }
 

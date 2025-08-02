@@ -158,7 +158,7 @@ std::string ScopeResolutionExpression::toString() const { return scope->toString
 std::string StringLiteralExpression::toString() const { return "\"" + value + "\""; }
 
 std::string TypeCastExpression::toString() const {
-    return "(" + expression->toString() + " as " + type->toString() + ")";
+    return "(" + originalValue->toString() + " as " + targetType->toString() + ")";
 }
 
 // ===== Statements =====

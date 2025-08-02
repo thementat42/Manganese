@@ -310,12 +310,12 @@ class StringLiteralExpression : public Expression {
  */
 class TypeCastExpression : public Expression {
    protected:
-    ExpressionUPtr_t expression;
-    TypeSPtr_t type;
+    ExpressionUPtr_t originalValue;
+    TypeSPtr_t targetType;
 
    public:
-    TypeCastExpression(ExpressionUPtr_t expression_, TypeSPtr_t type_) :
-        expression(std::move(expression_)), type(std::move(type_)) {}
+    TypeCastExpression(ExpressionUPtr_t originalValue_, TypeSPtr_t targetType_) :
+        originalValue(std::move(originalValue_)), targetType(std::move(targetType_)) {}
 
     AST_STANDARD_INTERFACE;
     ExpressionKind kind() const noexcept override { return ExpressionKind::TypeCastExpression; }
