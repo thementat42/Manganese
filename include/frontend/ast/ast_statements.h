@@ -27,12 +27,11 @@ enum class StatementKind {
     BreakStatement,
     BundleDeclarationStatement,
     ContinueStatement,
+    EmptyStatement,
     EnumDeclarationStatement,
     ExpressionStatement,
     FunctionDeclarationStatement,
     IfStatement,
-    ImportStatement,
-    ModuleDeclarationStatement,
     RepeatLoopStatement,
     ReturnStatement,
     SwitchStatement,
@@ -90,6 +89,13 @@ class ContinueStatement : public Statement {
 
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::ContinueStatement; };
+};
+
+class EmptyStatement : public Statement {
+    public:
+    EmptyStatement() = default;
+    AST_STANDARD_INTERFACE;
+    StatementKind kind() const noexcept override { return StatementKind::EmptyStatement; };
 };
 
 struct EnumValue {
@@ -181,28 +187,6 @@ class IfStatement : public Statement {
 
     AST_STANDARD_INTERFACE;
     StatementKind kind() const noexcept override { return StatementKind::IfStatement; };
-};
-
-/**
- * @note Imports are stored separately in the parser, so this holds no data -- it's just here for compatibility with the
- * other statements
- */
-class ImportStatement : public Statement {
-   public:
-    ImportStatement() = default;
-    AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::ImportStatement; };
-};
-
-/**
- * @note The module name is stored separately in the parser, so this holds no data -- it's just here for compatibility
- * with the other statements
- */
-class ModuleDeclarationStatement : public Statement {
-   public:
-    ModuleDeclarationStatement() = default;
-    AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::ModuleDeclarationStatement; };
 };
 
 class RepeatLoopStatement : public Statement {

@@ -269,6 +269,10 @@ void ContinueStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "ContinueStatement [" << getLine() << ":" << getColumn() << "]\n";
 }
 
+void EmptyStatement::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "EmptyStatement [" << getLine() << ":" << getColumn() << "]\n";
+}
+
 void EnumDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "EnumDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
@@ -362,14 +366,6 @@ void IfStatement::dump(std::ostream& os, int indent) const {
         os << getIndent(indent + 1) << "]\n";
     }
     os << getIndent(indent) << "}\n";
-}
-
-void ImportStatement::dump(std::ostream& os, int indent) const {
-    os << getIndent(indent) << "ImportStatement [" << getLine() << ":" << getColumn() << "]\n";
-}
-
-void ModuleDeclarationStatement::dump(std::ostream& os, int indent) const {
-    os << getIndent(indent) << "ModuleDeclarationStatement [" << getLine() << ":" << getColumn() << "]\n";
 }
 
 void RepeatLoopStatement::dump(std::ostream& os, int indent) const {

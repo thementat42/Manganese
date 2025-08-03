@@ -114,27 +114,6 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
     });
 }
 
-void SemanticAnalyzer::checkImportStatement(ast::ImportStatement* statement) {
-    /*
-    Import statement nodes only exist for the purposes of the pratt parser
-    (so the `import` keyword has an associated parsing method)
-    They don't store any actual info
-    The imports are saved separately in the ParsedFile struct -- those are analyzed
-    */
-    DISCARD(statement);
-    return;
-}
-void SemanticAnalyzer::checkModuleDeclarationStatement(ast::ModuleDeclarationStatement* statement) {
-    /*
-    Module declaration nodes only exist for the purposes of the pratt parser
-    (so the `module` keyword has an associated parsing method)
-    They don't store any actual info
-    The module name is saved separately in the ParsedFile struct
-    */
-    DISCARD(statement);
-    return;
-}
-
 void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement) {
     bool isInvalidDeclaration = false;
     if (statement->isConstant() && !statement->value) {

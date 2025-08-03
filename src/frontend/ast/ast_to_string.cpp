@@ -186,6 +186,8 @@ std::string BundleDeclarationStatement::toString() const {
 
 std::string ContinueStatement::toString() const { return "continue;"; }
 
+std::string EmptyStatement::toString() const { return ""; }
+
 std::string EnumDeclarationStatement::toString() const {
     std::ostringstream oss;
     oss << visibilityToString(visibility) << "enum " << name << ": " << baseType->toString() << " {\n";
@@ -246,10 +248,6 @@ std::string IfStatement::toString() const {
     }
     return oss.str();
 }
-
-std::string ImportStatement::toString() const { return ""; }
-
-std::string ModuleDeclarationStatement::toString() const { return ""; }
 
 std::string RepeatLoopStatement::toString() const {
     std::ostringstream oss;

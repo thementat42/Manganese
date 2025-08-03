@@ -112,8 +112,6 @@ class SemanticAnalyzer {
     void checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement);
     void checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement);
     void checkIfStatement(ast::IfStatement* statement);
-    void checkImportStatement(ast::ImportStatement* statement);
-    void checkModuleDeclarationStatement(ast::ModuleDeclarationStatement* statement);
     void checkRepeatLoopStatement(ast::RepeatLoopStatement* statement);
     void checkReturnStatement(ast::ReturnStatement* statement);
     void checkSwitchStatement(ast::SwitchStatement* statement);

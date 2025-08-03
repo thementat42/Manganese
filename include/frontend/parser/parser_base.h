@@ -121,6 +121,7 @@ class Parser {
     StatementUPtr_t parseIfStatement();
     StatementUPtr_t parseImportStatement();
     StatementUPtr_t parseModuleDeclarationStatement();
+    StatementUPtr_t parseRedundantSemicolon();
     StatementUPtr_t parseRepeatLoopStatement();
     StatementUPtr_t parseReturnStatement();
     StatementUPtr_t parseSwitchStatement();

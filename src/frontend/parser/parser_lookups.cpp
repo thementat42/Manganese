@@ -160,6 +160,7 @@ void Parser::initializeLookups() {
 
     //~ Misc
     registerLedHandler_binary(TokenType::As, Precedence::TypeCast, &Parser::parseTypeCastExpression);
+    registerStmtHandler(TokenType::Semicolon, &Parser::parseRedundantSemicolon);
 }
 
 void Parser::initializeTypeLookups() {

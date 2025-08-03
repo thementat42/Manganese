@@ -497,6 +497,12 @@ bool testParseFromFile() {
     return true;
 }
 
+bool testRedundantSemicolons() {
+    std::string expression = "let x = 1 + 2;;;;;";
+    std::array<std::string, 5> expected = {"(let x: private auto = (1 + 2));", "", "", "", ""};
+    return validateStatements(getParserResults(expression), expected, "Redundant Semicolons");
+}
+
 bool miscTests() {
     std::string expression = "func foo() -> bundle {string, float, char} {}";
 
@@ -529,6 +535,7 @@ int runParserTests(TestRunner& runner) {
     runner.runTest("Generics", testGenerics);
     runner.runTest("Imports and Type Aliases", testImportsAndAliases);
     runner.runTest("Parsing from file", testParseFromFile);
+    runner.runTest("Redundant Semicolons", testRedundantSemicolons);
     runner.runTest("Miscellaneous Tests", miscTests);
 
     return runner.allTestsPassed() ? 0 : 1;

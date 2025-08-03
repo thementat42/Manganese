@@ -326,8 +326,8 @@ StatementUPtr_t Parser::parseImportStatement() {
         }
     }
     if (!duplicate) { imports.emplace_back(path, alias); }
-    // Dummy node
-    return std::make_unique<ast::ImportStatement>();
+    // Dummy node since imports are stored separately
+    return std::make_unique<ast::EmptyStatement>();
 }
 
 StatementUPtr_t Parser::parseModuleDeclarationStatement() {
@@ -341,10 +341,17 @@ StatementUPtr_t Parser::parseModuleDeclarationStatement() {
     if (!this->moduleName.empty()) {
         logError("A module name has previously been declared in this file. Files can only have one module declaration.",
                  startLine, startColumn);
-        return std::make_unique<ast::ModuleDeclarationStatement>();
+    } else {
+        this->moduleName = name;
     }
-    this->moduleName = name;
-    return std::make_unique<ast::ModuleDeclarationStatement>();
+
+    // Dummy node since there's no need to semantically analyze module declarations (that happens here)
+    return std::make_unique<ast::EmptyStatement>();
+}
+
+StatementUPtr_t Parser::parseRedundantSemicolon() {
+    DISCARD(advance());
+    return std::make_unique<ast::EmptyStatement>();
 }
 
 StatementUPtr_t Parser::parseRepeatLoopStatement() {

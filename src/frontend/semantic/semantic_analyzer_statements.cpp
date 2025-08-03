@@ -26,6 +26,9 @@ void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_rel
         case ast::StatementKind::ContinueStatement:
             checkContinueStatement(static_cast<ast::ContinueStatement*>(statement));
             break;
+        case ast::StatementKind::EmptyStatement:
+            // Empty statements are valid, so there's no need to check them
+            break;
         case ast::StatementKind::EnumDeclarationStatement:
             checkEnumDeclarationStatement(static_cast<ast::EnumDeclarationStatement*>(statement));
             break;
@@ -36,12 +39,6 @@ void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_rel
             checkFunctionDeclarationStatement(static_cast<ast::FunctionDeclarationStatement*>(statement));
             break;
         case ast::StatementKind::IfStatement: checkIfStatement(static_cast<ast::IfStatement*>(statement)); break;
-        case ast::StatementKind::ImportStatement:
-            checkImportStatement(static_cast<ast::ImportStatement*>(statement));
-            break;
-        case ast::StatementKind::ModuleDeclarationStatement:
-            checkModuleDeclarationStatement(static_cast<ast::ModuleDeclarationStatement*>(statement));
-            break;
         case ast::StatementKind::RepeatLoopStatement:
             checkRepeatLoopStatement(static_cast<ast::RepeatLoopStatement*>(statement));
             break;
