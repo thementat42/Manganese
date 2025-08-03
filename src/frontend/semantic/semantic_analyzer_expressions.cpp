@@ -3,11 +3,11 @@
  * @brief Responsible for performing semantic analysis on all the AST expression nodes
  */
 
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <global_macros.hpp>
 
-#include <format>
 
 namespace Manganese {
 using ast::toStringOr;
@@ -124,7 +124,8 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
         // TODO: Support function calls indexing into arrays or module members
         // TODO: Allow calling generic expressions (provided the underlying type is an identifier that was declared
         // as a function)
-        logError("Function call must be made to an identifier, not {}", expression, toStringOr(expression->callee));
+        logError("Function call must be made to an identifier, not {} (of type {})", expression,
+                 toStringOr(expression->callee), toStringOr(expression->getType()));
         return;
     }
     auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->callee.get());
