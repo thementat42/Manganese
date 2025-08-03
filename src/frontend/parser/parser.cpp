@@ -7,9 +7,9 @@
  * @see parser_types.cpp
  */
 
-#include <frontend/ast.h>
-#include <frontend/parser.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <frontend/parser.hpp>
+#include <global_macros.hpp>
 
 #include <memory>
 #include <string>

@@ -16,7 +16,7 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_H
 #define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_H
 
-#include <global_macros.h>
+#include <global_macros.hpp>
 
 #include <string>
 #include <unordered_map>

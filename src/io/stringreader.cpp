@@ -3,8 +3,8 @@
  * @brief This file contains the implementation of the StringReader class
  */
 
-#include <global_macros.h>
-#include <io/stringreader.h>
+#include <global_macros.hpp>
+#include <io/stringreader.hpp>
 
 #include <string>
 

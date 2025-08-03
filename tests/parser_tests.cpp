@@ -10,8 +10,8 @@
  * @see testrunner.h
  */
 
-#include <frontend/parser.h>
-#include <global_macros.h>
+#include <frontend/parser.hpp>
+#include <global_macros.hpp>
 
 #include <array>
 #include <filesystem>
@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-#include "testrunner.h"
+#include "testrunner.hpp"
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type

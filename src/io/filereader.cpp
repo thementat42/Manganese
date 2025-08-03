@@ -3,9 +3,9 @@
  * @brief This file contains the implementation of the FileReader class
  */
 
-#include <global_macros.h>
-#include <io/filereader.h>
-#include <io/logging.h>
+#include <global_macros.hpp>
+#include <io/filereader.hpp>
+#include <io/logging.hpp>
 
 #include <algorithm>
 #include <cstring>  // For memmove

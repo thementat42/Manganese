@@ -7,7 +7,7 @@
  * - Keeping track of the number of passed and failed tests.
  * - Printing a summary of all test results, including percentages and a list of failed tests.
  */
-#include "testrunner.h"
+#include "testrunner.hpp"
 
 #include <functional>
 #include <iomanip>
@@ -16,8 +16,8 @@
 
 #define TO_2_DP(value) std::fixed << std::setprecision(2) << value
 
-#include <global_macros.h>
-#include <io/logging.h>
+#include <global_macros.hpp>
+#include <io/logging.hpp>
 
 constexpr inline float percentage(const int part, const int total) {
     return static_cast<float>(part) / static_cast<float>(total) * 100.0f;

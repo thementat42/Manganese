@@ -3,9 +3,9 @@
  * @brief Implementation of some core methods for the semantic analyzer
  */
 
-#include <frontend/ast.h>
-#include <frontend/semantic/semantic_analyzer.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <frontend/semantic/semantic_analyzer.hpp>
+#include <global_macros.hpp>
 
 namespace Manganese {
 namespace semantic {}  // namespace semantic

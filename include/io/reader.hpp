@@ -9,7 +9,7 @@
 #ifndef MANGANESE_INCLUDE_IO_READER_H
 #define MANGANESE_INCLUDE_IO_READER_H
 
-#include <global_macros.h>
+#include <global_macros.hpp>
 
 #include <cstddef>
 #include <string>

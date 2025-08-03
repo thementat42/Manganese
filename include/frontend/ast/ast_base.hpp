@@ -17,9 +17,9 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
 
-#include <frontend/lexer.h>
-#include <global_macros.h>
-#include <utils/number_utils.h>
+#include <frontend/lexer.hpp>
+#include <global_macros.hpp>
+#include <utils/number_utils.hpp>
 
 #include <memory>
 #include <string>

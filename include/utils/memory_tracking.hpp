@@ -11,8 +11,8 @@
 #ifndef MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
 #define MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
 
-#include <global_macros.h>
-#include <io/logging.h>
+#include <global_macros.hpp>
+#include <io/logging.hpp>
 
 // MEMORY_TRACKING is defined in CMakeLists.txt
 

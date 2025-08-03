@@ -39,9 +39,9 @@ A block is a vector of statements
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_H
 #define MANGANESE_INCLUDE_FRONTEND_AST_H
 
-#include <frontend/ast/ast_base.h>
-#include <frontend/ast/ast_expressions.h>
-#include <frontend/ast/ast_statements.h>
-#include <frontend/ast/ast_types.h>
+#include <frontend/ast/ast_base.hpp>
+#include <frontend/ast/ast_expressions.hpp>
+#include <frontend/ast/ast_statements.hpp>
+#include <frontend/ast/ast_types.hpp>
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_H

@@ -11,8 +11,8 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
 
-#include <frontend/lexer/token.h>
-#include <global_macros.h>
+#include <frontend/lexer/token.hpp>
+#include <global_macros.hpp>
 
 namespace Manganese {
 namespace parser {

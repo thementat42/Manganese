@@ -8,11 +8,11 @@
 
 #ifndef MANGANESE_INCLUDE_IO_STRING_READER_H
 #define MANGANESE_INCLUDE_IO_STRING_READER_H
-#include <global_macros.h>
+#include <global_macros.hpp>
 
 #include <string>
 
-#include "reader.h"
+#include "reader.hpp"
 
 namespace Manganese {
 namespace io {

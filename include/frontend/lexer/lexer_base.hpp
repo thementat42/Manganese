@@ -12,11 +12,11 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_H
 #define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_H
 
-#include <global_macros.h>
-#include <io/filereader.h>
-#include <io/reader.h>
-#include <io/stringreader.h>
-#include <utils/number_utils.h>
+#include <global_macros.hpp>
+#include <io/filereader.hpp>
+#include <io/reader.hpp>
+#include <io/stringreader.hpp>
+#include <utils/number_utils.hpp>
 
 #include <deque>
 #include <functional>
@@ -24,7 +24,7 @@
 #include <optional>
 #include <string>
 
-#include "token.h"
+#include "token.hpp"
 
 namespace Manganese {
 namespace lexer {

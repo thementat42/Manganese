@@ -3,10 +3,10 @@
  * @brief This file contains the implementation of the Token struct for the Manganese compiler.
  */
 
-#include <frontend/lexer/token.h>
-#include <global_macros.h>
-#include <io/logging.h>
-#include <utils/number_utils.h>
+#include <frontend/lexer/token.hpp>
+#include <global_macros.hpp>
+#include <io/logging.hpp>
+#include <utils/number_utils.hpp>
 
 #include <format>
 #include <iostream>

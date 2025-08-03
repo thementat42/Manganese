@@ -1,9 +1,9 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_TYPE_HELPERS_H
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_TYPE_HELPERS_H
 
-#include <frontend/ast.h>
-#include <frontend/lexer/token.h>
-#include <utils/number_utils.h>
+#include <frontend/ast.hpp>
+#include <frontend/lexer/token.hpp>
+#include <utils/number_utils.hpp>
 
 #include <functional>
 #include <unordered_map>

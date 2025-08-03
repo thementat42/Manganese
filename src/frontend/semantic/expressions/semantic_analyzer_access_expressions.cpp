@@ -1,4 +1,4 @@
-#include <frontend/semantic/semantic_analyzer.h>
+#include <frontend/semantic/semantic_analyzer.hpp>
 
 namespace Manganese {
 

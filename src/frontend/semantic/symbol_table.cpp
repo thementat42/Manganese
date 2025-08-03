@@ -3,8 +3,8 @@
  * @brief Implementation of symbol table functions
  */
 
-#include <frontend/semantic/symbol_table.h>
-#include <global_macros.h>
+#include <frontend/semantic/symbol_table.hpp>
+#include <global_macros.hpp>
 
 #include <format>
 #include <string>

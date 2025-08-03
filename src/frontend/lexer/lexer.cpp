@@ -84,12 +84,12 @@ if current char is an operator (after doing the above checks), look at the next 
 - otherwise, push it as a regular operator
 */
 
-#include <frontend/lexer.h>
-#include <global_macros.h>
-#include <io/filereader.h>
-#include <io/logging.h>
-#include <io/reader.h>
-#include <io/stringreader.h>
+#include <frontend/lexer.hpp>
+#include <global_macros.hpp>
+#include <io/filereader.hpp>
+#include <io/logging.hpp>
+#include <io/reader.hpp>
+#include <io/stringreader.hpp>
 
 #include <algorithm>
 #include <format>

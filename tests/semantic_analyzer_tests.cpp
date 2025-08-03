@@ -6,14 +6,14 @@
  * @see testrunner.h
  */
 
-#include <frontend/ast.h>
-#include <frontend/parser.h>
-#include <frontend/semantic.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <frontend/parser.hpp>
+#include <frontend/semantic.hpp>
+#include <global_macros.hpp>
 
 #include <iostream>
 
-#include "testrunner.h"
+#include "testrunner.hpp"
 
 //  NOTE: For now, these tests will "always pass" (i.e., there's no automatic checking of the semantic analyzer's ouput)
 //  The tests just call dump() on the resulting ast nodes

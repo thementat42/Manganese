@@ -3,9 +3,9 @@
  * @brief Responsible for performing semantic analysis on all the AST statement nodes
  */
 
-#include <frontend/ast.h>
-#include <frontend/semantic/semantic_analyzer.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <frontend/semantic/semantic_analyzer.hpp>
+#include <global_macros.hpp>
 
 #include <format>
 

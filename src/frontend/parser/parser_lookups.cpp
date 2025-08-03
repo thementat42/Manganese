@@ -3,8 +3,8 @@
  * @note This file is mostly boilerplate
  */
 
-#include <frontend/ast.h>
-#include <frontend/parser.h>
+#include <frontend/ast.hpp>
+#include <frontend/parser.hpp>
 
 namespace Manganese {
 namespace parser {

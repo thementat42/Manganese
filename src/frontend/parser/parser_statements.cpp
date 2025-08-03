@@ -4,10 +4,10 @@
  * readability and maintainability.
  */
 
-#include <frontend/ast.h>
-#include <frontend/lexer.h>
-#include <frontend/parser.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <frontend/lexer.hpp>
+#include <frontend/parser.hpp>
+#include <global_macros.hpp>
 
 #include <format>
 #include <memory>

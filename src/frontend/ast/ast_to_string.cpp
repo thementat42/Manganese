@@ -7,8 +7,8 @@
  * The toString() methods are mainly used for error reporting
  * In the test suite, they are used to ensure the program is parsed correctly
  */
-#include <frontend/ast.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <global_macros.hpp>
 
 #include <algorithm>
 #include <iomanip>

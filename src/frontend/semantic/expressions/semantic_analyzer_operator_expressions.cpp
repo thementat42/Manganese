@@ -1,5 +1,5 @@
-#include <frontend/semantic/semantic_analyzer.h>
-#include <frontend/semantic/semantic_type_helpers.h>
+#include <frontend/semantic/semantic_analyzer.hpp>
+#include <frontend/semantic/semantic_type_helpers.hpp>
 
 namespace Manganese {
 using ast::toStringOr;

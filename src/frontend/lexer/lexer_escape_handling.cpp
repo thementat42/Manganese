@@ -3,9 +3,9 @@
  * @brief Helper file for processing string/char literals with escape sequences
  */
 
-#include <frontend/lexer.h>
-#include <io/logging.h>
-#include <utils/number_utils.h>
+#include <frontend/lexer.hpp>
+#include <io/logging.hpp>
+#include <utils/number_utils.hpp>
 
 #include <format>
 #include <optional>

@@ -10,9 +10,9 @@
  * - __stox: Template function for integer conversion using std::from_chars.
  */
 
-#include <global_macros.h>
-#include <io/logging.h>
-#include <utils/number_utils.h>
+#include <global_macros.hpp>
+#include <io/logging.hpp>
+#include <utils/number_utils.hpp>
 
 #include <charconv>
 #include <cstdint>

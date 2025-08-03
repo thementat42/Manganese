@@ -8,7 +8,7 @@
  * contextual information such as line and column numbers.
  */
 
-#include <io/logging.h>
+#include <io/logging.hpp>
 
 #include <iostream>
 #include <string>

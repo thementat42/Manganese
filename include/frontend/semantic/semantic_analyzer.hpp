@@ -1,11 +1,11 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_ANALYZER_H
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_ANALYZER_H
 
-#include <frontend/ast.h>
-#include <frontend/parser.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <frontend/parser.hpp>
+#include <global_macros.hpp>
 
-#include "symbol_table.h"
+#include "symbol_table.hpp"
 
 //! The semantic analyzer should never "fix" errors -- only report them
 

@@ -1,9 +1,9 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SYMBOL_TABLE_H
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SYMBOL_TABLE_H
 
-#include <frontend/ast.h>
-#include <frontend/parser.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <frontend/parser.hpp>
+#include <global_macros.hpp>
 
 #include <string>
 #include <unordered_map>

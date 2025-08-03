@@ -3,10 +3,10 @@
  * @brief Helper functions for semantic analysis of AST nodes
  */
 
-#include <frontend/ast.h>
-#include <frontend/semantic/semantic_analyzer.h>
-#include <frontend/semantic/semantic_type_helpers.h>
-#include <global_macros.h>
+#include <frontend/ast.hpp>
+#include <frontend/semantic/semantic_analyzer.hpp>
+#include <frontend/semantic/semantic_type_helpers.hpp>
+#include <global_macros.hpp>
 
 namespace Manganese {
 namespace semantic {

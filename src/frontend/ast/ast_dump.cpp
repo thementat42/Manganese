@@ -10,9 +10,9 @@
  */
 
 #if DEBUG  // Only include dump methods in debug builds
-#include <frontend/ast.h>
-#include <global_macros.h>
-#include <utils/number_utils.h>
+#include <frontend/ast.hpp>
+#include <global_macros.hpp>
+#include <utils/number_utils.hpp>
 
 #include <string>
 #include <variant>

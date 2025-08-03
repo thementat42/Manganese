@@ -12,7 +12,7 @@
 #ifndef MANGANESE_INCLUDE_IO_LOGGING_H
 #define MANGANESE_INCLUDE_IO_LOGGING_H
 
-#include <global_macros.h>
+#include <global_macros.hpp>
 
 #include <format>  // Include format here so any files that use logging have it included
 #include <iostream>

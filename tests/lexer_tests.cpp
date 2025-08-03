@@ -9,9 +9,9 @@
  * @see include/frontend/lexer.h
  * @see testrunner.h
  */
-#include <frontend/lexer.h>
-#include <global_macros.h>
-#include <io/logging.h>
+#include <frontend/lexer.hpp>
+#include <global_macros.hpp>
+#include <io/logging.hpp>
 
 #include <cassert>
 #include <filesystem>
@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "testrunner.h"
+#include "testrunner.hpp"
 
 namespace Manganese {
 namespace tests {

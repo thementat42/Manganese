@@ -7,7 +7,7 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_H
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_H
 
-#include <frontend/parser/operators.h>
-#include <frontend/parser/parser_base.h>
+#include <frontend/parser/operators.hpp>
+#include <frontend/parser/parser_base.hpp>
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_H

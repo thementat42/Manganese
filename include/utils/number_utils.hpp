@@ -11,7 +11,7 @@
 #ifndef MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
 #define MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
 
-#include <global_macros.h>
+#include <global_macros.hpp>
 
 #include <cstdint>
 #include <optional>

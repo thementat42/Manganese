@@ -7,20 +7,20 @@
  * @note Run CMake with -DBUILD_TESTS=ON
  */
 
-#include <frontend/lexer.h>
-#include <global_macros.h>
-#include <io/filereader.h>
-#include <io/logging.h>
-#include <io/stringreader.h>
+#include <frontend/lexer.hpp>
+#include <global_macros.hpp>
+#include <io/filereader.hpp>
+#include <io/logging.hpp>
+#include <io/stringreader.hpp>
 #include <stdio.h>
 #include <string.h>
-#include <utils/memory_tracking.h>
+#include <utils/memory_tracking.hpp>
 
 #include <chrono>
 #include <filesystem>
 
-#include "tests/testrunner.h"
-#include "tests/tests.h"
+#include "tests/testrunner.hpp"
+#include "tests/tests.hpp"
 
 /**
  * @brief Checks if two C strings (a and b) are equal

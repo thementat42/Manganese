@@ -12,8 +12,8 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_H
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_H
 
-#include <frontend/ast/ast_base.h>
-#include <frontend/ast/ast_types.h>
+#include <frontend/ast/ast_base.hpp>
+#include <frontend/ast/ast_types.hpp>
 
 namespace Manganese {
 

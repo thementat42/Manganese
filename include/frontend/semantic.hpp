@@ -6,7 +6,7 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_H
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_H
 
-#include <frontend/semantic/semantic_analyzer.h>
-#include <frontend/semantic/symbol_table.h>
+#include <frontend/semantic/semantic_analyzer.hpp>
+#include <frontend/semantic/symbol_table.hpp>
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_SEMANTIC_H

@@ -7,7 +7,7 @@
 #define MANGANESE_TESTS_TESTS_H
 #include <global_macros.hpp>
 
-#include "testrunner.h"
+#include "testrunner.hpp"
 
 namespace Manganese {
 namespace tests {

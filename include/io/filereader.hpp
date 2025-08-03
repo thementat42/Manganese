@@ -16,13 +16,13 @@
 #ifndef MANGANESE_INCLUDE_IO_FILEREADER_H
 #define MANGANESE_INCLUDE_IO_FILEREADER_H
 
-#include <global_macros.h>
+#include <global_macros.hpp>
 
 #include <fstream>
 #include <memory>
 #include <string>
 
-#include "reader.h"
+#include "reader.hpp"
 
 namespace Manganese {
 namespace io {

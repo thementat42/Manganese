@@ -12,11 +12,11 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_H
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_H
 
-#include <frontend/ast.h>
-#include <frontend/lexer.h>
-#include <global_macros.h>
-#include <io/logging.h>
-#include <utils/number_utils.h>
+#include <frontend/ast.hpp>
+#include <frontend/lexer.hpp>
+#include <global_macros.hpp>
+#include <io/logging.hpp>
+#include <utils/number_utils.hpp>
 
 #include <functional>
 #include <memory>
@@ -24,7 +24,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "operators.h"
+#include "operators.hpp"
 
 namespace Manganese {
 namespace parser {
