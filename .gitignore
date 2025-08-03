@@ -3,7 +3,7 @@
 
 # Builds and compiled code
 build/
-release/
+.cache/*
 *.exe
 *.o
 *.obj
@@ -12,7 +12,6 @@ release/
 *.s
 *.ll
 __pycache__/
-.cache/*
 
 # logs
 *.log
