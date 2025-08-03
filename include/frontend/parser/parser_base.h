@@ -112,7 +112,9 @@ class Parser {
 
     StatementUPtr_t parseStatement();
     StatementUPtr_t parseAliasStatement();
+    StatementUPtr_t parseBreakStatement();
     StatementUPtr_t parseBundleDeclarationStatement();
+    StatementUPtr_t parseContinueStatement();
     StatementUPtr_t parseDoWhileLoopStatement();
     StatementUPtr_t parseEnumDeclarationStatement();
     StatementUPtr_t parseFunctionDeclarationStatement();

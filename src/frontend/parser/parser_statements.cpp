@@ -73,6 +73,12 @@ StatementUPtr_t Parser::parseAliasStatement() {
     return std::make_unique<ast::AliasStatement>(std::move(baseType), std::move(alias));
 }
 
+StatementUPtr_t Parser::parseBreakStatement() {
+    DISCARD(advance());
+    expectToken(TokenType::Semicolon);
+    return std::make_unique<ast::BreakStatement>();
+}
+
 StatementUPtr_t Parser::parseBundleDeclarationStatement() {
     DISCARD(advance());
     std::vector<std::string> genericTypes;
@@ -124,6 +130,12 @@ StatementUPtr_t Parser::parseBundleDeclarationStatement() {
 
     // Move since BundleField contains a unique_ptr which is not copyable
     return std::make_unique<ast::BundleDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
+}
+
+StatementUPtr_t Parser::parseContinueStatement() {
+    DISCARD(advance());
+    expectToken(TokenType::Semicolon);
+    return std::make_unique<ast::ContinueStatement>();
 }
 
 StatementUPtr_t Parser::parseDoWhileLoopStatement() {

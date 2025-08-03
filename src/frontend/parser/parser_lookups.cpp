@@ -139,18 +139,10 @@ void Parser::initializeLookups() {
 
     //~ Statements
     registerStmtHandler(TokenType::Alias, &Parser::parseAliasStatement);
-    registerStmtHandler(TokenType::Break, [](Parser* p) -> ast::StatementUPtr_t {
-        DISCARD(p->advance());
-        p->expectToken(TokenType::Semicolon);
-        return std::make_unique<ast::BreakStatement>();
-    });
+    registerStmtHandler(TokenType::Break, &Parser::parseBreakStatement);
     registerStmtHandler(TokenType::Bundle, &Parser::parseBundleDeclarationStatement);
     registerStmtHandler(TokenType::Const, &Parser::parseVariableDeclarationStatement);
-    registerStmtHandler(TokenType::Continue, [](Parser* p) -> ast::StatementUPtr_t {
-        DISCARD(p->advance());
-        p->expectToken(TokenType::Semicolon);
-        return std::make_unique<ast::ContinueStatement>();
-    });
+    registerStmtHandler(TokenType::Continue, &Parser::parseContinueStatement);
     registerStmtHandler(TokenType::Do, &Parser::parseDoWhileLoopStatement);
     registerStmtHandler(TokenType::Enum, &Parser::parseEnumDeclarationStatement);
     registerStmtHandler(TokenType::Func, &Parser::parseFunctionDeclarationStatement);
