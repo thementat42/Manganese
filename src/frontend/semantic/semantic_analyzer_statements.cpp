@@ -82,15 +82,17 @@ void SemanticAnalyzer::checkAliasStatement(ast::AliasStatement* statement) {
         isInvalidAlias = true;
     }
     if (isInvalidAlias) { return; };
-    symbolTable.declare(Symbol{.name = statement->alias,
-                               .kind = SymbolKind::TypeAlias,
-                               .type = statement->baseType,
-                               .line = statement->getLine(),
-                               .column = statement->getColumn(),
-                               .declarationNode = statement,
-                               .isConstant = false,  // Type aliases are not constants
-                               .scopeDepth = symbolTable.currentScopeDepth(),
-                               .visibility = statement->visibility});
+    symbolTable.declare(Symbol{
+        .name = statement->alias,
+        .kind = SymbolKind::TypeAlias,
+        .type = statement->baseType,
+        .line = statement->getLine(),
+        .column = statement->getColumn(),
+        .declarationNode = statement,
+        .isConstant = false,  // Type aliases are not constants
+        .scopeDepth = symbolTable.currentScopeDepth(),
+        .visibility = statement->visibility,
+        });
 }
 
 }  // namespace semantic
