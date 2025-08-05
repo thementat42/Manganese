@@ -158,7 +158,7 @@ class Parser {
      */
     [[nodiscard]] Token currentToken();
 
-    [[nodiscard]] constexpr inline TokenType currentTokenType() {return currentToken().getType();}
+    [[nodiscard]] inline TokenType currentTokenType() {return currentToken().getType();}
 
     /**
      * @details Consume the current token
