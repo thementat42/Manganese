@@ -121,6 +121,8 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
         logError("Constant variable '{}' must be initialized", statement, statement->name);
         isInvalidDeclaration = true;
     }
+
+    // Check for redefinitions
     if (symbolTable.lookupInCurrentScope(statement->name)) {
         logError(
             "Variable {} was already defined in this scope. If you meant to change its value, use {} = {} (without {})",
@@ -128,6 +130,20 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
             toStringOr(statement->value));
         isInvalidDeclaration = true;
     }
+
+
+    // Check for shadowing
+    const Symbol* outerSymbol = nullptr;
+    for (int64_t depth = symbolTable.currentScopeDepth() - 1; depth >= 0; --depth) {
+        outerSymbol = symbolTable.lookupAtDepth(statement->name, depth);
+        if (outerSymbol) break;
+    }
+
+    if (outerSymbol) {
+        logWarning("Variable '{}' shadows another variable with the same name from an outer scope", statement,
+                   statement->name);
+    }
+
     if (!statement->type && !statement->value) {
         logError("Variable '{}' must have a type or an initializer", statement, statement->name);
         isInvalidDeclaration = true;

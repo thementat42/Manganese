@@ -3,12 +3,13 @@
  * @brief Implementation of symbol table functions
  */
 
+#include <cstdint>
+#include <format>
 #include <frontend/semantic/symbol_table.hpp>
 #include <global_macros.hpp>
-
-#include <format>
-#include <string>
 #include <sstream>
+#include <string>
+
 
 namespace Manganese {
 namespace semantic {
@@ -55,6 +56,16 @@ const Symbol* SymbolTable::lookupInCurrentScope(const std::string& name) const n
         logging::logInternal("Symbol '" + name + "' not found in current scope.", logging::LogLevel::Warning);
     }
     return symbol;
+}
+
+const Symbol* SymbolTable::lookupAtDepth(const std::string& name, int64_t depth) const noexcept {
+    if (depth < 0 || depth >= static_cast<int64_t>(scopes.size())) {
+        logging::logInternal(std::format("Invalid scope depth {} (valid range: 0-{})", depth, scopes.size() - 1),
+                             logging::LogLevel::Warning);
+        return nullptr;
+    }
+    size_t scopeIndex = scopes.size() - (size_t)depth - 1;
+    return scopes[scopeIndex].lookup(name);
 }
 
 std::string SymbolKindToString(const SymbolKind kind) noexcept_if_release {

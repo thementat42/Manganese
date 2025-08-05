@@ -4,9 +4,9 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
-
 #include <string>
 #include <unordered_map>
+
 
 namespace Manganese {
 
@@ -31,8 +31,6 @@ struct Symbol {
     // === Identity Info ===
     std::string name;  // e.g. "myInt", "myAggregate"
     SymbolKind kind;
-    // Note: This is just a reference to the the type node.
-    // ! Symbols are not responsible for this memory and should never allocate or free memory
     ast::TypeSPtr_t type;  // Holds any type-specific info (e.g. function return type, array size)
 
     // === Source Info ===
@@ -80,6 +78,10 @@ class SymbolTable {
     inline const Symbol* lookupInCurrentScope(const char* name) const noexcept {
         return lookupInCurrentScope(std::string(name));
     };
+    const Symbol* lookupAtDepth(const std::string& name, int64_t depth) const noexcept;
+    inline const Symbol* lookupAtDepth(const char* name, int64_t depth) const noexcept {
+        return lookupAtDepth(std::string(name), depth);
+    }
 
     int64_t currentScopeDepth() const noexcept { return scopeDepth; }
 

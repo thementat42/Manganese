@@ -10,9 +10,10 @@
 #include <frontend/parser.hpp>
 #include <frontend/semantic.hpp>
 #include <global_macros.hpp>
-
 #include <iostream>
 
+#include "frontend/parser/parser_base.hpp"
+#include "frontend/semantic/semantic_analyzer.hpp"
 #include "testrunner.hpp"
 
 //  NOTE: For now, these tests will "always pass" (i.e., there's no automatic checking of the semantic analyzer's ouput)
@@ -205,6 +206,31 @@ bool checkTypeCastExpression() {
     return true;
 }
 
+bool checkLoops() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse(
+        R"(
+        func foo(x: const int, y: const int) -> int {
+            let q = 1;
+            while (q*x*y <= 100) {
+            q = q + 1;
+            x = x + 1;  # Should have an error
+        }
+        return q;
+    }
+    let some_var = foo(10, 3 + 4^^2);
+
+    )");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    outputAnalyzedAST(program);
+    if (program.size() != 2) {
+        std::cerr << "Expected 2 statements, got " << program.size() << "\n";
+        return false;
+    }
+    return true;
+}
+
 void runSemanticAnalysisTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -218,6 +244,7 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Binary Expressions", testBinaryExpressions);
     runner.runTest("Member Access", checkMemberAccessExpression);
     runner.runTest("Type Cast Expression", checkTypeCastExpression);
+    runner.runTest("Analyze Loops", checkLoops);
 }
 
 }  // namespace tests
