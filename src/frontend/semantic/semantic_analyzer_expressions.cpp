@@ -166,7 +166,7 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
 
 void SemanticAnalyzer::checkGenericExpression(ast::GenericExpression* expression) {
     DISCARD(expression);
-    NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED("Full generic support is deferred");
 }
 
 }  // namespace semantic

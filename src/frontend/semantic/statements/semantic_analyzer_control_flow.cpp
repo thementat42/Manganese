@@ -71,7 +71,7 @@ void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
 }
 void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
     DISCARD(statement);
-    NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED("Switch statements are a bit more complicated");
 }
 
 }  // namespace semantic

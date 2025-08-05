@@ -74,18 +74,19 @@
 #define DISCARD(value) (void)(value)  // Explicitly discard a value
 
 #if DEBUG
-#define __NOT_IMPLEMENTED                                                                                                \
+#define __NOT_IMPLEMENTED(reason)                                                                                        \
     do {                                                                                                                 \
         std::cerr << "\033[31m" << __func__ << "is not implemented yet!";                                                \
+        std::cerr << "Reason: " << reason << "\n";                                                                       \
         std::cerr                                                                                                        \
             << " (if this occurred in a test run, make sure to implement the function, then re-run the tests)\n\033[0m"; \
         PRINT_LOCATION;                                                                                                  \
         throw std::runtime_error("Not implemented yet");                                                                 \
     } while (0);
 #else  // ^^ DEBUG vv !DEBUG
-#define __NOT_IMPLEMENTED
+#define __NOT_IMPLEMENTED(reason)
 #endif  // DEBUG
 
-#define NOT_IMPLEMENTED __NOT_IMPLEMENTED  // Indicates that a function is not implemented
+#define NOT_IMPLEMENTED(reason) __NOT_IMPLEMENTED(reason)  // Indicates that a function is not implemented
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_H

@@ -39,11 +39,11 @@ void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) 
 
 void SemanticAnalyzer::checkPostfixExpression(ast::PostfixExpression* expression) {
     DISCARD(expression);
-    NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED("Will be implemented soon");
 }
 void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) {
     DISCARD(expression);
-    NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED("Will be implemented soon");
 }
 
 void SemanticAnalyzer::checkTypeCastExpression(ast::TypeCastExpression* expression) {

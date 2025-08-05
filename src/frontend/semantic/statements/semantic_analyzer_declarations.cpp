@@ -46,7 +46,7 @@ void SemanticAnalyzer::checkAggregateDeclarationStatement(ast::AggregateDeclarat
 
 void SemanticAnalyzer::checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement) {
     DISCARD(statement);
-    NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED("Enums are complicated");
 }
 
 void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement) {

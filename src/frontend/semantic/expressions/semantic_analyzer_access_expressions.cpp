@@ -72,7 +72,7 @@ void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* 
 
 void SemanticAnalyzer::checkScopeResolutionExpression(ast::ScopeResolutionExpression* expression) {
     DISCARD(expression);
-    NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED("Imports are delayed to a future release");
 }
 
 }  // namespace semantic
