@@ -50,6 +50,7 @@ void SemanticAnalyzer::checkEnumDeclarationStatement(ast::EnumDeclarationStateme
 }
 
 void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement) {
+    // TODO: Ensure every path returns a value (some kind of block resolution return type assignment?)
     if (context.isFunctionContext()) {
         logError("Function declarations cannot be nested inside other functions", statement);
         return;
