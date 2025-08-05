@@ -1,5 +1,7 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 
+#include "frontend/ast/ast_expressions.hpp"
+
 namespace Manganese {
 
 namespace semantic {
@@ -13,21 +15,19 @@ void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expr
         return;
     }
     if (expression->op != lexer::TokenType::Assignment) {
-        if (!handleInPlaceAssignment(expression)) { return; }
+        // e.g. x += y
+        if (!handleInPlaceAssignment(expression)) {
+            // Some error already in the in place assignment, don't keep checking
+            return;
+        }
     }
 
     if (expression->assignee->kind() == ast::ExpressionKind::IdentifierExpression) {
-        // Checking if the identifier is declared in the current scope was already done in checkIdentifierExpression
-        auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->assignee.get());
-        const Symbol* symbol = symbolTable.lookupInCurrentScope(identifierExpression->value);
-        if (!symbol) {
-            logError("{} was not declared in this scope. Declare it using 'let'", expression,
-                     identifierExpression->value);
+        if (!checkIdentifierAssignmentExpression(expression)) {
             return;
         }
-        if (symbol->isConstant) {
-            logError("{} was declared constant, so it cannot be reassigned. To make {} mutable, declare it using 'let'",
-                     expression, identifierExpression->value, identifierExpression->value);
+    } else if (expression->assignee->kind() == ast::ExpressionKind::IndexExpression) {
+        if (!checkIndexAssignmentExpression(expression)) {
             return;
         }
     }
@@ -41,23 +41,59 @@ void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expr
 }
 
 void SemanticAnalyzer::checkIdentifierExpression(ast::IdentifierExpression* expression) {
-    const Symbol* location = symbolTable.lookupInCurrentScope(expression->value);
-    if (location) {
-        expression->setType(location->type);
-        return;
-    }
-    if (symbolTable.lookup(expression->value)) {
-        // If the symbol can't be found in this scope, try parent scopes
-        //? Warning or error
-        logError(
-            "{} was not declared in this scope (but was declared in a parent scope). Access external variables either using an explicit access (a_module::{}) or passing it as an argument to a function",
-            expression, expression->value, expression->value);
-    } else {
-        logError("{} was not declared in any scope.", expression, expression->value);
-    }
+    const Symbol* symbol = symbolTable.lookup(expression->value);
+    if (!symbol) { logError("{} was not declared in any scope.", expression, expression->value); }
+    expression->setType(symbol->type);
+    return;
 }
 
 // ===== Helpers =====
+
+bool SemanticAnalyzer::checkIdentifierAssignmentExpression(ast::AssignmentExpression* expression) {
+    // Checking if the identifier is declared in the current scope was already done in checkIdentifierExpression
+    auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->assignee.get());
+    const Symbol* symbol = symbolTable.lookup(identifierExpression->value);
+    if (!symbol) {
+        logError("{} was not declared in any scope. Declare it using 'let'", expression, identifierExpression->value);
+        return false;
+    }
+    if (symbol->isConstant) {
+        if (symbol->kind == SymbolKind::Constant) {
+            logError("{} was declared constant, so it cannot be reassigned. To make {} mutable, declare it using 'let'",
+                     expression, identifierExpression->value, identifierExpression->value);
+        } else if (symbol->kind == SymbolKind::ConstantFunctionParameter) {
+            logError(
+                "Cannot modify parameter '{}' as it was declared as constant. Remove the 'const' modifier from the parameter declaration if you need to modify it within the function",
+                expression, identifierExpression->value);
+        }
+        return false;
+    }
+    return true;
+}
+
+bool SemanticAnalyzer::checkIndexAssignmentExpression(ast::AssignmentExpression* expression) {
+    auto indexExpression = static_cast<ast::IndexExpression*>(expression->assignee.get());
+
+    ast::Expression* currentObject = indexExpression->variable.get();
+
+    // Traverse to the root object through nested index expressions
+    while (currentObject->kind() == ast::ExpressionKind::IndexExpression) {
+        currentObject = static_cast<ast::IndexExpression*>(currentObject)->variable.get();
+    }
+
+    // Now currentObject is the root container (e.g., 'array' in array[i][j])
+    if (currentObject->kind() == ast::ExpressionKind::IdentifierExpression) {
+        auto containerIdentifier = static_cast<ast::IdentifierExpression*>(currentObject);
+        const Symbol* containerSymbol = symbolTable.lookup(containerIdentifier->value);
+
+        if (containerSymbol && containerSymbol->isConstant) {
+            logError("Cannot modify element of constant array '{}'. To make it mutable, declare it using 'let'",
+                     expression, containerIdentifier->value);
+            return false;
+        }
+    }
+    return true;
+}
 
 constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release {
     using enum lexer::TokenType;

@@ -119,7 +119,16 @@ class SemanticAnalyzer {
     void checkWhileLoopStatement(ast::WhileLoopStatement* statement);
 
     // ===== Helpers for Specific Checks =====
+    bool checkIdentifierAssignmentExpression(ast::AssignmentExpression* expression);
+    bool checkIndexAssignmentExpression(ast::AssignmentExpression* expression);
     bool handleInPlaceAssignment(Manganese::ast::AssignmentExpression* expression);
+
+    ast::TypeSPtr_t resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
+    ast::TypeSPtr_t resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
+    ast::TypeSPtr_t resolveArithmeticBinaryExpressionType(ast::BinaryExpression* binaryExpression,
+                                                          lexer::TokenType op) const noexcept_if_release;
+
+    // ===== Type helpers =====
     bool typeExists(const ast::TypeSPtr_t& type);
     const ast::Type* resolveAlias(const ast::Type* type) const noexcept_if_release;
     /**
@@ -139,11 +148,7 @@ class SemanticAnalyzer {
         return areTypesCompatible(t, std::make_shared<ast::SymbolType>("bool").get());
     }
 
-    ast::TypeSPtr_t resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
     ast::TypeSPtr_t widestNumericType(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release;
-    ast::TypeSPtr_t resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
-    ast::TypeSPtr_t resolveArithmeticBinaryExpressionType(ast::BinaryExpression* binaryExpression,
-                                                          lexer::TokenType op) const noexcept_if_release;
 };
 
 // ===== Helper Functions that don't depend on the SemanticAnalyzer instance =====
