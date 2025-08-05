@@ -20,7 +20,7 @@ namespace Manganese {
 namespace parser {
 
 StatementUPtr_t Parser::parseStatement() {
-    auto it = statementLookup.find(currentToken().getType());
+    auto it = statementLookup.find(currentTokenType());
     if (it != statementLookup.end()) {
         // If possible, parse a statement from the current token
         // Call the handler for the current token type
@@ -38,8 +38,8 @@ StatementUPtr_t Parser::parseStatement() {
 StatementUPtr_t Parser::parseAliasStatement() {
     DISCARD(advance());
     TypeSPtr_t baseType;
-    if (currentToken().isPrimitiveType() || currentToken().getType() == TokenType::Func
-        || currentToken().getType() == TokenType::Ptr) {
+    if (currentToken().isPrimitiveType() || currentTokenType() == TokenType::Func
+        || currentTokenType() == TokenType::Ptr) {
         // Primitive types are easy to alias -- just parse a regular type
         baseType = parseType(Precedence::Default);
     } else {
@@ -48,7 +48,7 @@ StatementUPtr_t Parser::parseAliasStatement() {
         std::string path
             = expectToken(TokenType::Identifier, "Expected an identifier after 'alias', or a primitive type.")
                   .getLexeme();
-        while (currentToken().getType() == TokenType::ScopeResolution) {
+        while (currentTokenType() == TokenType::ScopeResolution) {
             path += advance().getLexeme();
             path += expectToken(TokenType::Identifier,
                                 std::format("Expected an identifier after {}",
@@ -56,10 +56,10 @@ StatementUPtr_t Parser::parseAliasStatement() {
                         .getLexeme();
         }
 
-        if (currentToken().getType() == TokenType::At) {
+        if (currentTokenType() == TokenType::At) {
             // Generic Type
             baseType = parseGenericType(std::make_shared<ast::SymbolType>(path), Precedence::Default);
-        } else if (currentToken().getType() == TokenType::LeftSquare) {
+        } else if (currentTokenType() == TokenType::LeftSquare) {
             // Array type
             baseType = parseArrayType(std::make_shared<ast::SymbolType>(path), Precedence::Default);
         } else {
@@ -85,16 +85,16 @@ StatementUPtr_t Parser::parseBundleDeclarationStatement() {
     std::vector<ast::BundleField> fields;
     std::string name = expectToken(TokenType::Identifier, "Expected bundle name after 'bundle'").getLexeme();
 
-    if (currentToken().getType() == TokenType::LeftSquare) {
+    if (currentTokenType() == TokenType::LeftSquare) {
         DISCARD(advance());
-        while (!done() && currentToken().getType() != TokenType::RightSquare) {
+        while (!done() && currentTokenType() != TokenType::RightSquare) {
             std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
             if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
                 logError(std::format("Generic type '{}' in bundle '{}' was already declared", genericName, name));
             } else {
                 genericTypes.push_back(genericName);
             }
-            if (currentToken().getType() != TokenType::RightSquare) {
+            if (currentTokenType() != TokenType::RightSquare) {
                 expectToken(TokenType::Comma,
                             "Expected a ',' to separate generic types, or a ']' to close the generic type list");
             }
@@ -104,10 +104,10 @@ StatementUPtr_t Parser::parseBundleDeclarationStatement() {
     expectToken(TokenType::LeftBrace, "Expected a '{'");
 
     while (!done()) {
-        if (currentToken().getType() == TokenType::RightBrace) {
+        if (currentTokenType() == TokenType::RightBrace) {
             break;  // Done declaration
         }
-        if (currentToken().getType() != TokenType::Identifier) {
+        if (currentTokenType() != TokenType::Identifier) {
             logError(std::format("Unexpected token '{}' in bundle declaration. Expected field name.",
                                  currentToken().getLexeme()));
             DISCARD(advance());  // Skip the unexpected token to avoid infinite loop
@@ -154,7 +154,7 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() {
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
     TypeSPtr_t baseType;
     std::vector<ast::EnumValue> values;
-    if (currentToken().getType() == TokenType::Colon) {
+    if (currentTokenType() == TokenType::Colon) {
         DISCARD(advance());
         if (!currentToken().isPrimitiveType()) {
             logError(std::format("Enums can only have primitive types as their underlying type, not {}",
@@ -165,10 +165,10 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() {
         baseType = std::make_shared<ast::SymbolType>("int32");  // Default to int32 if no base type is specified
     }
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
-    while (!done() && currentToken().getType() != TokenType::RightBrace) {
+    while (!done() && currentTokenType() != TokenType::RightBrace) {
         std::string valueName = expectToken(TokenType::Identifier, "Expected enum value name").getLexeme();
         ExpressionUPtr_t valueExpression = nullptr;
-        if (currentToken().getType() == TokenType::Assignment) {
+        if (currentTokenType() == TokenType::Assignment) {
             DISCARD(advance());
             valueExpression = parseExpression(Precedence::Default);
         }
@@ -181,7 +181,7 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() {
         } else {
             values.emplace_back(valueName, std::move(valueExpression));
         }
-        if (currentToken().getType() != TokenType::RightBrace) {
+        if (currentTokenType() != TokenType::RightBrace) {
             expectToken(TokenType::Comma, "Expected ',' to separate enum values");
         }
     }
@@ -203,14 +203,14 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
     TypeSPtr_t returnType = nullptr;
     ast::Block body;
 
-    if (currentToken().getType() == TokenType::LeftSquare) {
+    if (currentTokenType() == TokenType::LeftSquare) {
         // Generics
         DISCARD(advance());
         while (!done()) {
-            if (currentToken().getType() == TokenType::RightSquare) {
+            if (currentTokenType() == TokenType::RightSquare) {
                 break;  // End of generics
             }
-            if (currentToken().getType() != TokenType::Identifier) {
+            if (currentTokenType() != TokenType::Identifier) {
                 logError("Expected a generic type name");
                 DISCARD(advance());  // Skip the unexpected token to avoid infinite loop
             }
@@ -220,7 +220,7 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
             } else {
                 genericTypes.push_back(std::move(genericName));
             }
-            if (currentToken().getType() != TokenType::RightSquare) {
+            if (currentTokenType() != TokenType::RightSquare) {
                 expectToken(TokenType::Comma,
                             "Expected a ',' to separate generic types, or a ']' to close the generic type list");
             }
@@ -230,23 +230,23 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
     expectToken(TokenType::LeftParen);
 
     while (!done()) {
-        if (currentToken().getType() == TokenType::RightParen) { break; }
+        if (currentTokenType() == TokenType::RightParen) { break; }
         bool isConst = false;
         std::string param_name = expectToken(TokenType::Identifier, "Expected a variable name").getLexeme();
         expectToken(TokenType::Colon);
-        if (currentToken().getType() == TokenType::Const) {
+        if (currentTokenType() == TokenType::Const) {
             DISCARD(advance());
             isConst = true;
         }
         TypeSPtr_t param_type = parseType(Precedence::Default);
         params.emplace_back(param_name, std::move(param_type), isConst);
-        if (currentToken().getType() != TokenType::RightParen && currentToken().getType() != TokenType::EndOfFile) {
+        if (currentTokenType() != TokenType::RightParen && currentTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
                         "Expected a ',' to separate function parameters, or a ) to close the parameter list");
         }
     }
     expectToken(TokenType::RightParen);
-    if (currentToken().getType() == TokenType::Arrow) {
+    if (currentTokenType() == TokenType::Arrow) {
         DISCARD(advance());
         returnType = parseType(Precedence::Default);
     }
@@ -266,7 +266,7 @@ StatementUPtr_t Parser::parseIfStatement() {
     ast::Block body = parseBlock("if body");
 
     std::vector<ast::ElifClause> elifs;
-    while (currentToken().getType() == TokenType::Elif) {
+    while (currentTokenType() == TokenType::Elif) {
         DISCARD(advance());
 
         this->isParsingBlockPrecursor = true;
@@ -278,7 +278,7 @@ StatementUPtr_t Parser::parseIfStatement() {
         elifs.emplace_back(std::move(elifCondition), parseBlock("elif body"));
     }
     ast::Block elseBody;
-    if (currentToken().getType() == TokenType::Else) {
+    if (currentTokenType() == TokenType::Else) {
         DISCARD(advance());
         elseBody = parseBlock("else body");
     }
@@ -296,12 +296,12 @@ StatementUPtr_t Parser::parseImportStatement() {
     DISCARD(advance());
     std::vector<std::string> path;
     path.push_back(expectToken(TokenType::Identifier, "Expected a module name or path").getLexeme());
-    while (currentToken().getType() == TokenType::ScopeResolution) {
+    while (currentTokenType() == TokenType::ScopeResolution) {
         DISCARD(advance());  // Consume '::'
         path.push_back(expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme());
     }
     std::string alias;
-    if (currentToken().getType() == TokenType::As) {
+    if (currentTokenType() == TokenType::As) {
         DISCARD(advance());
         alias = expectToken(TokenType::Identifier, "Expected an identifier as an import alias").getLexeme();
     }
@@ -366,7 +366,7 @@ StatementUPtr_t Parser::parseRepeatLoopStatement() {
 StatementUPtr_t Parser::parseReturnStatement() {
     DISCARD(advance());
     ExpressionUPtr_t expression = nullptr;
-    if (currentToken().getType() != TokenType::Semicolon) {
+    if (currentTokenType() != TokenType::Semicolon) {
         // If the next token is not a semicolon, parse an expression
         // If it is, this is a null return statement
         expression = parseExpression(Precedence::Default);
@@ -388,21 +388,21 @@ StatementUPtr_t Parser::parseSwitchStatement() {
     std::vector<ast::CaseClause> cases;
     ast::Block defaultBody;
 
-    while (currentToken().getType() == TokenType::Case) {
+    while (currentTokenType() == TokenType::Case) {
         DISCARD(advance());
         auto caseValue = parseExpression(Precedence::Default);
         ast::Block caseBody;
         expectToken(TokenType::Colon, "Expected ':' after case value");
-        while (currentToken().getType() != TokenType::Case && currentToken().getType() != TokenType::Default
-               && currentToken().getType() != TokenType::RightBrace) {
+        while (currentTokenType() != TokenType::Case && currentTokenType() != TokenType::Default
+               && currentTokenType() != TokenType::RightBrace) {
             caseBody.push_back(parseStatement());
         }
         cases.emplace_back(std::move(caseValue), std::move(caseBody));
     }
-    if (currentToken().getType() == TokenType::Default) {
+    if (currentTokenType() == TokenType::Default) {
         DISCARD(advance());
         expectToken(TokenType::Colon, "Expected ':' after default case");
-        while (currentToken().getType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
+        while (currentTokenType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
     }
     if (cases.empty() && defaultBody.empty()) {
         logging::logWarning("Switch statement has no cases or default body", startLine, startColumn);
@@ -420,10 +420,10 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
         case TokenType::ReadOnly: visibility = ast::Visibility::ReadOnly; break;
         default:
             ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
-                               + lexer::tokenTypeToString(currentToken().getType()));
+                               + lexer::tokenTypeToString(currentTokenType()));
     }
     size_t startLine = currentToken().getLine(), startColumn = currentToken().getColumn();
-    switch (currentToken().getType()) {
+    switch (currentTokenType()) {
         case TokenType::Alias: {
             auto tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement().release());
             if (visibility == ast::Visibility::ReadOnly) {
@@ -460,7 +460,7 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
         }
         default:
             logError(std::format("{} cannot follow a visibility modifier",
-                                 lexer::tokenTypeToString(currentToken().getType())),
+                                 lexer::tokenTypeToString(currentTokenType())),
                      startLine, startColumn);
             // Parse the statement as if it had no visibility modifier
             return parseStatement();
@@ -476,22 +476,22 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() {
     std::string name = expectToken(TokenType::Identifier,
                                    std::format("Expected variable name after '{}'", isConst ? "const" : "let"))
                            .getLexeme();
-    if (currentToken().getType() == TokenType::Colon) {
+    if (currentTokenType() == TokenType::Colon) {
         DISCARD(advance());  // Consume the colon
-        if (currentToken().getType() == TokenType::Public) {
+        if (currentTokenType() == TokenType::Public) {
             visibility = ast::Visibility::Public;
             DISCARD(advance());  // Consume the public keyword
-        } else if (currentToken().getType() == TokenType::ReadOnly) {
+        } else if (currentTokenType() == TokenType::ReadOnly) {
             visibility = ast::Visibility::ReadOnly;
             DISCARD(advance());  // Consume the read-only keyword
-        } else if (currentToken().getType() == TokenType::Private) [[unlikely]] {
+        } else if (currentTokenType() == TokenType::Private) [[unlikely]] {
             // private is the default so it'd mainly be used for emphasis
             visibility = ast::Visibility::Private;
             DISCARD(advance());  // Consume the private keyword
         }
         explicitType = parseType(Precedence::Default);
     }
-    if (currentToken().getType() != TokenType::Semicolon) {
+    if (currentTokenType() != TokenType::Semicolon) {
         expectToken(TokenType::Assignment, "Expected '=' or ';' after variable name");
         value = parseExpression(Precedence::Default);
     } else if (explicitType == nullptr) {
@@ -520,7 +520,7 @@ ast::Block Parser::parseBlock(std::string blockName) {
     expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
     ast::Block block;
     while (!done()) {
-        if (currentToken().getType() == TokenType::RightBrace) {
+        if (currentTokenType() == TokenType::RightBrace) {
             break;  // End of the block
         }
         block.push_back(parseStatement());

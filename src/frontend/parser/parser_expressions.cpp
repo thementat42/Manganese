@@ -122,13 +122,13 @@ ExpressionUPtr_t Parser::parseArrayInstantiationExpression() {
     DISCARD(advance());  // Consume the left square bracket
     std::vector<ExpressionUPtr_t> elements;
     while (!done()) {
-        if (currentToken().getType() == lexer::TokenType::RightSquare) {
+        if (currentTokenType() == lexer::TokenType::RightSquare) {
             break;  // Done instantiation
         }
         constexpr auto precedence = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
         auto element = parseExpression(static_cast<Precedence>(precedence));
         elements.push_back(std::move(element));
-        if (currentToken().getType() != lexer::TokenType::RightSquare) {
+        if (currentTokenType() != lexer::TokenType::RightSquare) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate array elements");
         }
     }
@@ -177,7 +177,7 @@ ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t lef
     }
 
     while (!done()) {
-        if (currentToken().getType() == lexer::TokenType::RightBrace) {
+        if (currentTokenType() == lexer::TokenType::RightBrace) {
             break;  // Done instantiation
         }
         auto propertyName
@@ -196,7 +196,7 @@ ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t lef
         } else {
             fields.emplace_back(propertyName, std::move(value));
         }
-        if (currentToken().getType() != lexer::TokenType::RightBrace) {
+        if (currentTokenType() != lexer::TokenType::RightBrace) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate bundle fields");
         }
     }
@@ -210,12 +210,12 @@ ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Prec
     std::vector<ExpressionUPtr_t> arguments;
 
     while (!done()) {
-        if (currentToken().getType() == lexer::TokenType::RightParen) {
+        if (currentTokenType() == lexer::TokenType::RightParen) {
             break;  // Done with arguments
         }
         arguments.push_back(parseExpression(Precedence::Assignment));
-        if (currentToken().getType() != lexer::TokenType::RightParen
-            && currentToken().getType() != lexer::TokenType::EndOfFile) {
+        if (currentTokenType() != lexer::TokenType::RightParen
+            && currentTokenType() != lexer::TokenType::EndOfFile) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate function arguments");
         }
     }
@@ -229,11 +229,11 @@ ExpressionUPtr_t Parser::parseGenericExpression(ExpressionUPtr_t left, Precedenc
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
     std::vector<TypeSPtr_t> typeParameters;
     while (!done()) {
-        if (currentToken().getType() == lexer::TokenType::RightSquare) {
+        if (currentTokenType() == lexer::TokenType::RightSquare) {
             break;  // Done with type parameters
         }
         typeParameters.push_back(parseType(Precedence::Default));
-        if (currentToken().getType() != lexer::TokenType::RightSquare) {
+        if (currentTokenType() != lexer::TokenType::RightSquare) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate generic types");
         }
     }

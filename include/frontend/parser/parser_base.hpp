@@ -158,6 +158,8 @@ class Parser {
      */
     [[nodiscard]] Token currentToken();
 
+    [[nodiscard]] constexpr inline TokenType currentTokenType() {return currentToken().getType();}
+
     /**
      * @details Consume the current token
      * @details Will refill the tokenCache if needed
@@ -175,7 +177,7 @@ class Parser {
         hasError = true;
     }
 
-    inline bool done() { return currentToken().getType() == TokenType::EndOfFile; }
+    inline bool done() { return currentTokenType() == TokenType::EndOfFile; }
 
     // ~ Helpers for lookups
 

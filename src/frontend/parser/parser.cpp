@@ -28,8 +28,8 @@ Parser::Parser(const std::string& source, lexer::Mode mode) : lexer(make_unique<
 
 ParsedFile Parser::parse() {
     // Parse the header (module declaration and imports)
-    if (currentToken().getType() == TokenType::Module) { DISCARD(parseModuleDeclarationStatement()); }
-    while (currentToken().getType() == TokenType::Import) { DISCARD(parseImportStatement()); }
+    if (currentTokenType() == TokenType::Module) { DISCARD(parseModuleDeclarationStatement()); }
+    while (currentTokenType() == TokenType::Import) { DISCARD(parseImportStatement()); }
 
     this->hasParsedFileHeader = true;  // Now, setting a module or import name should be a warning
 
@@ -85,7 +85,7 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
     // e.g., in any block precursor, when a ) is missed, just keep going until we find a {, then parse a block from
     // there
     //, skipping any other logic in the conditional
-    TokenType type = currentToken().getType();
+    TokenType type = currentTokenType();
     if (type == expectedType) { return advance(); }
     std::string message = errorMessage + " (expected " + lexer::tokenTypeToString(expectedType) + ", but found "
         + lexer::tokenTypeToString(type) + ")";
