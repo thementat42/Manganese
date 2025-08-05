@@ -129,7 +129,7 @@ void Parser::initializeLookups() {
 
     //~ Call/Member Expressions
     registerLedHandler_binary(TokenType::At, Precedence::Postfix, &Parser::parseGenericExpression);
-    registerLedHandler_binary(TokenType::LeftBrace, Precedence::Postfix, &Parser::parseBundleInstantiationExpression);
+    registerLedHandler_binary(TokenType::LeftBrace, Precedence::Postfix, &Parser::parseAggregateInstantiationExpression);
     registerLedHandler_binary(TokenType::LeftParen, Precedence::Postfix, &Parser::parseFunctionCallExpression);
     registerNudHandler_binary(TokenType::LeftSquare, &Parser::parseArrayInstantiationExpression);
     registerLedHandler_binary(TokenType::LeftSquare, Precedence::Postfix, &Parser::parseIndexingExpression);
@@ -140,7 +140,7 @@ void Parser::initializeLookups() {
     //~ Statements
     registerStmtHandler(TokenType::Alias, &Parser::parseAliasStatement);
     registerStmtHandler(TokenType::Break, &Parser::parseBreakStatement);
-    registerStmtHandler(TokenType::Bundle, &Parser::parseBundleDeclarationStatement);
+    registerStmtHandler(TokenType::Aggregate, &Parser::parseAggregateDeclarationStatement);
     registerStmtHandler(TokenType::Const, &Parser::parseVariableDeclarationStatement);
     registerStmtHandler(TokenType::Continue, &Parser::parseContinueStatement);
     registerStmtHandler(TokenType::Do, &Parser::parseDoWhileLoopStatement);
@@ -185,7 +185,7 @@ void Parser::initializeTypeLookups() {
     registerLedHandler_type(TokenType::LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
     registerLedHandler_type(TokenType::At, Precedence::Generic, &Parser::parseGenericType);
     registerNudHandler_type(TokenType::Func, &Parser::parseFunctionType);
-    registerNudHandler_type(TokenType::Bundle, &Parser::parseBundleType);
+    registerNudHandler_type(TokenType::Aggregate, &Parser::parseAggregateType);
 }
 
 }  // namespace parser

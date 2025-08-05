@@ -35,6 +35,59 @@ StatementUPtr_t Parser::parseStatement() {
 
 // ===== Specific statement parsing methods =====
 
+StatementUPtr_t Parser::parseAggregateDeclarationStatement() {
+    DISCARD(advance());
+    std::vector<std::string> genericTypes;
+    std::vector<ast::AggregateField> fields;
+    std::string name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
+
+    if (currentTokenType() == TokenType::LeftSquare) {
+        DISCARD(advance());
+        while (!done() && currentTokenType() != TokenType::RightSquare) {
+            std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
+            if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
+                logError(std::format("Generic type '{}' in aggregate '{}' was already declared", genericName, name));
+            } else {
+                genericTypes.push_back(genericName);
+            }
+            if (currentTokenType() != TokenType::RightSquare) {
+                expectToken(TokenType::Comma,
+                            "Expected a ',' to separate generic types, or a ']' to close the generic type list");
+            }
+        }
+        expectToken(TokenType::RightSquare, "Expected ']' to close generic type list");
+    }
+    expectToken(TokenType::LeftBrace, "Expected a '{'");
+
+    while (!done()) {
+        if (currentTokenType() == TokenType::RightBrace) {
+            break;  // Done declaration
+        }
+        if (currentTokenType() != TokenType::Identifier) {
+            logError(std::format("Unexpected token '{}' in aggregate declaration. Expected field name.",
+                                 currentToken().getLexeme()));
+            DISCARD(advance());  // Skip the unexpected token to avoid infinite loop
+        }
+        std::string fieldName = advance().getLexeme();
+        expectToken(TokenType::Colon, "Expected a ':' to declare an aggregate field type.");
+        TypeSPtr_t type = parseType(Precedence::Default);
+        expectToken(TokenType::Semicolon, "Expected a ';'");
+
+        auto duplicate = std::find_if(fields.begin(), fields.end(),
+                                      [fieldName](const ast::AggregateField& field) { return field.name == fieldName; });
+        if (duplicate != fields.end()) {
+            logError(std::format("Duplicate field '{}' in aggregate '{}'", fieldName, name));
+        } else {
+            fields.emplace_back(fieldName, std::move(type));
+        }
+    }
+
+    expectToken(TokenType::RightBrace);
+
+    // Move since AggregateField contains a unique_ptr which is not copyable
+    return std::make_unique<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
+}
+
 StatementUPtr_t Parser::parseAliasStatement() {
     DISCARD(advance());
     TypeSPtr_t baseType;
@@ -77,59 +130,6 @@ StatementUPtr_t Parser::parseBreakStatement() {
     DISCARD(advance());
     expectToken(TokenType::Semicolon);
     return std::make_unique<ast::BreakStatement>();
-}
-
-StatementUPtr_t Parser::parseBundleDeclarationStatement() {
-    DISCARD(advance());
-    std::vector<std::string> genericTypes;
-    std::vector<ast::BundleField> fields;
-    std::string name = expectToken(TokenType::Identifier, "Expected bundle name after 'bundle'").getLexeme();
-
-    if (currentTokenType() == TokenType::LeftSquare) {
-        DISCARD(advance());
-        while (!done() && currentTokenType() != TokenType::RightSquare) {
-            std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
-            if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
-                logError(std::format("Generic type '{}' in bundle '{}' was already declared", genericName, name));
-            } else {
-                genericTypes.push_back(genericName);
-            }
-            if (currentTokenType() != TokenType::RightSquare) {
-                expectToken(TokenType::Comma,
-                            "Expected a ',' to separate generic types, or a ']' to close the generic type list");
-            }
-        }
-        expectToken(TokenType::RightSquare, "Expected ']' to close generic type list");
-    }
-    expectToken(TokenType::LeftBrace, "Expected a '{'");
-
-    while (!done()) {
-        if (currentTokenType() == TokenType::RightBrace) {
-            break;  // Done declaration
-        }
-        if (currentTokenType() != TokenType::Identifier) {
-            logError(std::format("Unexpected token '{}' in bundle declaration. Expected field name.",
-                                 currentToken().getLexeme()));
-            DISCARD(advance());  // Skip the unexpected token to avoid infinite loop
-        }
-        std::string fieldName = advance().getLexeme();
-        expectToken(TokenType::Colon, "Expected a ':' to declare a bundle field type.");
-        TypeSPtr_t type = parseType(Precedence::Default);
-        expectToken(TokenType::Semicolon, "Expected a ';'");
-
-        auto duplicate = std::find_if(fields.begin(), fields.end(),
-                                      [fieldName](const ast::BundleField& field) { return field.name == fieldName; });
-        if (duplicate != fields.end()) {
-            logError(std::format("Duplicate field '{}' in bundle '{}'", fieldName, name));
-        } else {
-            fields.emplace_back(fieldName, std::move(type));
-        }
-    }
-
-    expectToken(TokenType::RightBrace);
-
-    // Move since BundleField contains a unique_ptr which is not copyable
-    return std::make_unique<ast::BundleDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
 }
 
 StatementUPtr_t Parser::parseContinueStatement() {
@@ -433,15 +433,15 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
             tempAlias->visibility = visibility;
             return std::unique_ptr<ast::AliasStatement>(tempAlias);
         }
-        case TokenType::Bundle: {
-            auto tempBundle
-                = static_cast<ast::BundleDeclarationStatement*>(parseBundleDeclarationStatement().release());
+        case TokenType::Aggregate: {
+            auto tempAggregate
+                = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement().release());
             if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Bundles can only be public or private, not readonly", startLine, startColumn);
+                logging::logWarning("Aggregates can only be public or private, not readonly", startLine, startColumn);
                 visibility = ast::Visibility::Private;  // Default to private
             }
-            tempBundle->visibility = visibility;
-            return std::unique_ptr<ast::BundleDeclarationStatement>(tempBundle);
+            tempAggregate->visibility = visibility;
+            return std::unique_ptr<ast::AggregateDeclarationStatement>(tempAggregate);
         }
         case TokenType::Enum: {
             auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement().release());

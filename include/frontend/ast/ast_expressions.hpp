@@ -20,11 +20,11 @@ namespace Manganese {
 namespace ast {
 
 enum class ExpressionKind {
+    AggregateInstantiationExpression,
     ArrayLiteralExpression,
     AssignmentExpression,
     BinaryExpression,
     BoolLiteralExpression,
-    BundleInstantiationExpression,
     CharLiteralExpression,
     FunctionCallExpression,
     GenericExpression,
@@ -37,6 +37,32 @@ enum class ExpressionKind {
     ScopeResolutionExpression,
     StringLiteralExpression,
     TypeCastExpression
+};
+
+struct AggregateInstantiationField {
+    std::string name;
+    ExpressionUPtr_t value;
+
+    AggregateInstantiationField(std::string name_, ExpressionUPtr_t value_) :
+        name(std::move(name_)), value(std::move(value_)) {}
+};
+
+/**
+ * @brief e.g. `Point3D{ x = 1, y = 2, z = 3 }`
+ */
+class AggregateInstantiationExpression : public Expression {
+   protected:
+    std::string name;  // The name of the aggregate type being instantiated
+    std::vector<TypeSPtr_t> genericTypes;
+    std::vector<AggregateInstantiationField> fields;
+
+   public:
+    AggregateInstantiationExpression(std::string name_, std::vector<TypeSPtr_t> genericTypes_,
+                                  std::vector<AggregateInstantiationField> fields_) :
+        name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
+
+    AST_STANDARD_INTERFACE;
+    ExpressionKind kind() const noexcept override { return ExpressionKind::AggregateInstantiationExpression; }
 };
 
 /**
@@ -102,32 +128,6 @@ class BoolLiteralExpression : public Expression {
     ExpressionKind kind() const noexcept override { return ExpressionKind::BoolLiteralExpression; }
 };
 
-struct BundleInstantiationField {
-    std::string name;
-    ExpressionUPtr_t value;
-
-    BundleInstantiationField(std::string name_, ExpressionUPtr_t value_) :
-        name(std::move(name_)), value(std::move(value_)) {}
-};
-
-/**
- * @brief e.g. `Point3D{ x = 1, y = 2, z = 3 }`
- */
-class BundleInstantiationExpression : public Expression {
-   protected:
-    std::string name;  // The name of the bundle type being instantiated
-    std::vector<TypeSPtr_t> genericTypes;
-    std::vector<BundleInstantiationField> fields;
-
-   public:
-    BundleInstantiationExpression(std::string name_, std::vector<TypeSPtr_t> genericTypes_,
-                                  std::vector<BundleInstantiationField> fields_) :
-        name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
-
-    AST_STANDARD_INTERFACE;
-    ExpressionKind kind() const noexcept override { return ExpressionKind::BundleInstantiationExpression; }
-};
-
 /**
  * @brief e.g. 'a', '\u1234', '\n'
  */
@@ -176,7 +176,7 @@ class GenericExpression : public Expression {
 
     /**
      * @brief Transfer ownership of the type parameters to the caller.
-     * @details Used when a GenericExpression is part of a larger expression (e.g. a bundle instantiation)
+     * @details Used when a GenericExpression is part of a larger expression (e.g. an aggregate instantiation)
      */
     std::vector<TypeSPtr_t> moveTypeParameters() { return std::move(types); }
 

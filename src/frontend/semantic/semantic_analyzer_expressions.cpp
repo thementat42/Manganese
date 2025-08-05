@@ -15,6 +15,9 @@ using ast::toStringOr;
 namespace semantic {
 void SemanticAnalyzer::checkExpression(ast::Expression* expression) noexcept_if_release {
     switch (expression->kind()) {
+        case ast::ExpressionKind::AggregateInstantiationExpression:
+            checkAggregateInstantiationExpression(static_cast<ast::AggregateInstantiationExpression*>(expression));
+            break;
         case ast::ExpressionKind::ArrayLiteralExpression:
             checkArrayLiteralExpression(static_cast<ast::ArrayLiteralExpression*>(expression));
             break;
@@ -26,9 +29,6 @@ void SemanticAnalyzer::checkExpression(ast::Expression* expression) noexcept_if_
             break;
         case ast::ExpressionKind::BoolLiteralExpression:
             checkBoolLiteralExpression(static_cast<ast::BoolLiteralExpression*>(expression));
-            break;
-        case ast::ExpressionKind::BundleInstantiationExpression:
-            checkBundleInstantiationExpression(static_cast<ast::BundleInstantiationExpression*>(expression));
             break;
         case ast::ExpressionKind::CharLiteralExpression:
             checkCharLiteralExpression(static_cast<ast::CharLiteralExpression*>(expression));
@@ -75,42 +75,42 @@ void SemanticAnalyzer::checkExpression(ast::Expression* expression) noexcept_if_
 
 // ===== Specific Expression Checks =====
 
-void SemanticAnalyzer::checkBundleInstantiationExpression(ast::BundleInstantiationExpression* expression) {
-    const Symbol* bundleSymbol = symbolTable.lookup(expression->name);
-    if (!bundleSymbol) {
-        logError("Bundle type {} was not declared in any scope", expression, expression->name);
+void SemanticAnalyzer::checkAggregateInstantiationExpression(ast::AggregateInstantiationExpression* expression) {
+    const Symbol* aggregateSymbol = symbolTable.lookup(expression->name);
+    if (!aggregateSymbol) {
+        logError("Aggregate type {} was not declared in any scope", expression, expression->name);
         return;
     }
-    if (bundleSymbol->kind != SymbolKind::Bundle) {
-        logError("{} is not a bundle type so cannot be instantiated as one", expression, expression->name);
+    if (aggregateSymbol->kind != SymbolKind::Aggregate) {
+        logError("{} is not an aggregate type so cannot be instantiated as one", expression, expression->name);
         return;
     }
-    ast::BundleDeclarationStatement* bundleDeclaration
-        = static_cast<ast::BundleDeclarationStatement*>(bundleSymbol->declarationNode);
-    if (bundleDeclaration->genericTypes.size() != expression->genericTypes.size()) {
-        logError("Bundle type {} expects {} generic types, but {} were provided", expression, expression->name,
-                 bundleDeclaration->genericTypes.size(), expression->genericTypes.size());
+    ast::AggregateDeclarationStatement* aggregateDeclaration
+        = static_cast<ast::AggregateDeclarationStatement*>(aggregateSymbol->declarationNode);
+    if (aggregateDeclaration->genericTypes.size() != expression->genericTypes.size()) {
+        logError("Aggregate type {} expects {} generic types, but {} were provided", expression, expression->name,
+                 aggregateDeclaration->genericTypes.size(), expression->genericTypes.size());
         return;
     }
-    if (bundleDeclaration->fields.size() != expression->fields.size()) {
-        logError("Bundle type {} expects {} fields, but {} were provided", expression, expression->name,
-                 bundleDeclaration->fields.size(), expression->fields.size());
+    if (aggregateDeclaration->fields.size() != expression->fields.size()) {
+        logError("Aggregate type {} expects {} fields, but {} were provided", expression, expression->name,
+                 aggregateDeclaration->fields.size(), expression->fields.size());
         return;
     }
     bool validInstantiation = true;
     for (size_t i = 0; i < expression->fields.size(); ++i) {
         const auto& field = expression->fields[i];
-        const auto& expectedField = bundleDeclaration->fields[i];
+        const auto& expectedField = aggregateDeclaration->fields[i];
         if (field.name != expectedField.name) {
             logError(
-                "Field {} in bundle instantiation does not match field name {} in bundle type {} (Note: bundle fields should be instantiated in order)",
+                "Field {} in aggregate instantiation does not match field name {} in aggregate type {} (Note: aggregate fields should be instantiated in order)",
                 expression, field.name, expectedField.name, expression->name);
             validInstantiation = false;
             continue;
         }
         checkExpression(field.value.get());
         if (!areTypesCompatible(field.value->getType(), expectedField.type.get())) {
-            logError("Field {} in bundle instantiation has type {}, but was declared with type {}", expression,
+            logError("Field {} in aggregate instantiation has type {}, but was declared with type {}", expression,
                      toStringOr(field.value), toStringOr(field.value->getType()), toStringOr(expectedField.type));
             validInstantiation = false;
         }

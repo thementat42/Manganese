@@ -86,11 +86,11 @@ class SemanticAnalyzer {
     }
 
     // ===== Specific Expression Checks =====
+    void checkAggregateInstantiationExpression(ast::AggregateInstantiationExpression* expression);
     void checkArrayLiteralExpression(ast::ArrayLiteralExpression* expression);
     void checkAssignmentExpression(ast::AssignmentExpression* expression);
     void checkBinaryExpression(ast::BinaryExpression* expression);
     void checkBoolLiteralExpression(ast::BoolLiteralExpression* expression);
-    void checkBundleInstantiationExpression(ast::BundleInstantiationExpression* expression);
     void checkCharLiteralExpression(ast::CharLiteralExpression* expression);
     void checkFunctionCallExpression(ast::FunctionCallExpression* expression);
     void checkGenericExpression(ast::GenericExpression* expression);
@@ -105,9 +105,9 @@ class SemanticAnalyzer {
     void checkTypeCastExpression(ast::TypeCastExpression* expression);
 
     // ===== Specific Statement Checks =====
+    void checkAggregateDeclarationStatement(ast::AggregateDeclarationStatement* statement);
     void checkAliasStatement(ast::AliasStatement* statement);
     void checkBreakStatement(ast::BreakStatement* statement);
-    void checkBundleDeclarationStatement(ast::BundleDeclarationStatement* statement);
     void checkContinueStatement(ast::ContinueStatement* statement);
     void checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement);
     void checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement);

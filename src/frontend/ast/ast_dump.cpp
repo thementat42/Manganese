@@ -55,6 +55,24 @@ std::string getNumberTypeName(const number_t& value) {
 
 // ===== Expressions =====
 
+void AggregateInstantiationExpression::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "AggregateInstantiationExpression [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "type: " << toStringOr(computedType, "auto") << "\n";
+    os << getIndent(indent + 1) << "Name: " << name << "\n";
+    os << getIndent(indent + 1) << "fields: [\n";
+
+    for (const auto& field : fields) {
+        os << getIndent(indent + 2) << "{\n";
+        os << getIndent(indent + 3) << "name: " << field.name << "\n";
+        os << getIndent(indent + 3) << "value: \n";
+        field.value->dump(os, indent + 4);
+        os << getIndent(indent + 2) << "}\n";
+    }
+
+    os << getIndent(indent + 1) << "]\n";
+    os << getIndent(indent) << "}\n";
+}
+
 void ArrayLiteralExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "ArrayLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(computedType, "auto") << "\n";
@@ -96,24 +114,6 @@ void BoolLiteralExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "BoolExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(computedType, "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
-    os << getIndent(indent) << "}\n";
-}
-
-void BundleInstantiationExpression::dump(std::ostream& os, int indent) const {
-    os << getIndent(indent) << "BundleInstantiationExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(computedType, "auto") << "\n";
-    os << getIndent(indent + 1) << "bundleName: " << name << "\n";
-    os << getIndent(indent + 1) << "fields: [\n";
-
-    for (const auto& field : fields) {
-        os << getIndent(indent + 2) << "{\n";
-        os << getIndent(indent + 3) << "name: " << field.name << "\n";
-        os << getIndent(indent + 3) << "value: \n";
-        field.value->dump(os, indent + 4);
-        os << getIndent(indent + 2) << "}\n";
-    }
-
-    os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent) << "}\n";
 }
 
@@ -247,8 +247,8 @@ void BreakStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "BreakStatement [" << getLine() << ":" << getColumn() << "]\n";
 }
 
-void BundleDeclarationStatement::dump(std::ostream& os, int indent) const {
-    os << getIndent(indent) << "BundleDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
+void AggregateDeclarationStatement::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "AggregateDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
     os << getIndent(indent + 1) << "fields: [\n";
@@ -467,8 +467,8 @@ void ArrayType::dump(std::ostream& os, int indent) const {
     }
 }
 
-void BundleType::dump(std::ostream& os, int indent) const {
-    os << getIndent(indent) << "BundleType [" << getLine() << ":" << getColumn() << "] {\n";
+void AggregateType::dump(std::ostream& os, int indent) const {
+    os << getIndent(indent) << "Type [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "fields: [\n";
 
     for (const auto& field : fieldTypes) {

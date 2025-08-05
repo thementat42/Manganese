@@ -153,12 +153,12 @@ lambda_statement = "lambda" "(" type identifier ("," type identifier)* ")" "->" 
 function_call = expression ("@" "["type ("," type)* "]")? "(" ( expression ("," expression)*)? ")";
 
 #* Data Encapsulation
-bundle_decl = ("public"|"private")? "bundle" identifier generic_parameters? "{" bundle_member_decl+ "}";
+aggregate_decl = ("public"|"private")? "aggregate" identifier generic_parameters? "{" aggregate_member_decl+ "}";
 
-bundle_member_decl = variable_name ":" type_qualifiers? type ";";
+aggregate_member_decl = variable_name ":" type_qualifiers? type ";";
 
 enum_decl = ("public"|"private")? "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}";
 
-bundle_instantiation = identifier("@" "["type ("," type)*"]") "{" (identifier "=" expression) "," (identifier "=" expression)* "}";
+aggregate_instantiation = identifier("@" "["type ("," type)*"]") "{" (identifier "=" expression) "," (identifier "=" expression)* "}";
 
 #? Add blueprint decl

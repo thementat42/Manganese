@@ -18,7 +18,7 @@ enum class SymbolKind {
     Function,
     FunctionParameter,
     ConstantFunctionParameter,
-    Bundle,
+    Aggregate,
     Enum,
     Module,
     Import,
@@ -29,7 +29,7 @@ enum class SymbolKind {
 
 struct Symbol {
     // === Identity Info ===
-    std::string name;  // e.g. "myInt", "myBundle"
+    std::string name;  // e.g. "myInt", "myAggregate"
     SymbolKind kind;
     // Note: This is just a reference to the the type node.
     // ! Symbols are not responsible for this memory and should never allocate or free memory

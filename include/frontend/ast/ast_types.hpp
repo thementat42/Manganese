@@ -19,8 +19,8 @@ namespace Manganese {
 namespace ast {
 
 enum class TypeKind {
+    AggregateType,
     ArrayType,
-    BundleType,
     FunctionType,
     GenericType,
     PointerType,
@@ -30,6 +30,21 @@ enum class TypeKind {
 /**
  * e.g. int[], float[][], etc.
  */
+
+/**
+ * e.g. aggregate {int, float}
+ */
+class AggregateType : public Type {
+   protected:
+    std::vector<TypeSPtr_t> fieldTypes;
+
+   public:
+    explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) : fieldTypes(std::move(fieldTypes_)) {}
+    AST_STANDARD_INTERFACE;
+    TypeKind kind() const noexcept override { return TypeKind::AggregateType; }
+
+    bool operator==(const Type& other) const noexcept override;
+};
 class ArrayType : public Type {
    protected:
     TypeSPtr_t elementType;
@@ -44,21 +59,6 @@ class ArrayType : public Type {
 
     AST_STANDARD_INTERFACE;
     TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
-
-    bool operator==(const Type& other) const noexcept override;
-};
-
-/**
- * e.g. bundle {int, float}
- */
-class BundleType : public Type {
-   protected:
-    std::vector<TypeSPtr_t> fieldTypes;
-
-   public:
-    explicit BundleType(std::vector<TypeSPtr_t> fieldTypes_) : fieldTypes(std::move(fieldTypes_)) {}
-    AST_STANDARD_INTERFACE;
-    TypeKind kind() const noexcept override { return TypeKind::BundleType; }
 
     bool operator==(const Type& other) const noexcept override;
 };
@@ -94,7 +94,7 @@ class FunctionType : public Type {
 
 /**
  * @brief Represents the application of generic arguments to a base type.
- * e.g. some_function@[T, U](); some_bundle@[T, U]
+ * e.g. some_function@[T, U](args)
  * It does not represent the generic type itself
  */
 class GenericType : public Type {

@@ -13,14 +13,6 @@
 #include <stdexcept>
 #include <utility>
 
-#ifndef DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a fallback
-#ifndef NDEBUG
-#define DEBUG 1
-#else  //^^ ifndef NDEBUG vv ifdef NDEBUG
-#define DEBUG 0
-#endif  // NDEBUG
-#endif  // DEBUG
-
 #define __PRINT_LOCATION                                                                                       \
     std::cerr << "\033[33m In file: " << __FILE__ << ", at line " << __LINE__ << ": when running " << __func__ \
               << "\033[0m\n";

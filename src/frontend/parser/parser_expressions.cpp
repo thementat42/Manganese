@@ -101,13 +101,13 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_rele
         if (type == TokenType::LeftBrace && left->kind() != ast::ExpressionKind::IdentifierExpression
             && left->kind() != ast::ExpressionKind::GenericExpression) [[unlikely]] {
             if (isParsingBlockPrecursor) {
-                // Left braces after an expression can either start a block or a bundle instantiation
+                // Left braces after an expression can either start a block or an aggregate instantiation
                 // If we're parsing a block precursor (if/for/while, etc.) AND the previous expression is not an
                 // identifier, we assume it's the start of a block and break If the previous expression IS an
-                // identifier, it might be an inline bundle instantiation
+                // identifier, it might be an inline aggregate instantiation
                 return left;
             }
-            logError("Left brace after an expression must be preceded by an identifier (bundle instantiation)"
+            logError("Left brace after an expression must be preceded by an identifier (aggregate instantiation)"
                      " or a block precursor (if/for/while, etc.)",
                      token.getLine(), token.getColumn());
         }
@@ -117,6 +117,60 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_rele
 }
 
 // === Specific expression parsing methods ===
+
+ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t left, Precedence precedence) {
+    DISCARD(precedence);  // Avoid unused variable warning
+    std::string aggregateName;
+    std::vector<TypeSPtr_t> genericTypes;
+    // Parse out an aggregate instantiation even if there's an error
+    expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start aggregate instantiation");
+    std::vector<ast::AggregateInstantiationField> fields;
+
+    if (left->kind() == ast::ExpressionKind::GenericExpression) {
+        auto* genericExpr = static_cast<ast::GenericExpression*>(left.get());
+        if (genericExpr->identifier->kind() != ast::ExpressionKind::IdentifierExpression) {
+            logError("Generic aggregate instantiation must start with an aggregate name", left->getLine(), left->getColumn());
+        } else {
+            auto* identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
+            aggregateName = identifierExpr->value;
+            genericTypes = genericExpr->moveTypeParameters();
+        }
+    } else if (left->kind() == ast::ExpressionKind::IdentifierExpression) {
+        auto* underlying = static_cast<ast::IdentifierExpression*>(left.get());
+        aggregateName = underlying->value;
+    } else {
+        logError(std::format("Aggregate instantiation expression must start with an aggregate name, not {}", ast::toStringOr(left)),
+                 left->getLine(), left->getColumn());
+    }
+
+    while (!done()) {
+        if (currentTokenType() == lexer::TokenType::RightBrace) {
+            break;  // Done instantiation
+        }
+        auto propertyName
+            = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation").getLexeme();
+        expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
+        // want precedence to be 1 higher than assignment (e.g. field = x = 10 is invalid)
+        constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+        auto value = parseExpression(static_cast<Precedence>(precedence_));
+
+        auto duplicate = std::find_if(
+            fields.begin(), fields.end(),
+            [propertyName](const ast::AggregateInstantiationField& field) { return field.name == propertyName; });
+        if (duplicate != fields.end()) {
+            logError(std::format("Duplicate field '{}' in aggregate instantiation of '{}'", propertyName, aggregateName),
+                     value->getLine(), value->getColumn());
+        } else {
+            fields.emplace_back(propertyName, std::move(value));
+        }
+        if (currentTokenType() != lexer::TokenType::RightBrace) {
+            expectToken(lexer::TokenType::Comma, "Expected ',' to separate aggregate fields");
+        }
+    }
+    expectToken(lexer::TokenType::RightBrace, "Expected '}' to end aggregate instantiation");
+    return std::make_unique<ast::AggregateInstantiationExpression>(aggregateName, genericTypes, std::move(fields));
+}
+
 
 ExpressionUPtr_t Parser::parseArrayInstantiationExpression() {
     DISCARD(advance());  // Consume the left square bracket
@@ -149,59 +203,6 @@ ExpressionUPtr_t Parser::parseBinaryExpression(ExpressionUPtr_t left, Precedence
     auto right = parseExpression(precedence);
 
     return std::make_unique<ast::BinaryExpression>(std::move(left), op, std::move(right));
-}
-
-ExpressionUPtr_t Parser::parseBundleInstantiationExpression(ExpressionUPtr_t left, Precedence precedence) {
-    DISCARD(precedence);  // Avoid unused variable warning
-    std::string bundleName;
-    std::vector<TypeSPtr_t> genericTypes;
-    // Parse out a bundle instantiation even if there's an error
-    expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start bundle instantiation");
-    std::vector<ast::BundleInstantiationField> fields;
-
-    if (left->kind() == ast::ExpressionKind::GenericExpression) {
-        auto* genericExpr = static_cast<ast::GenericExpression*>(left.get());
-        if (genericExpr->identifier->kind() != ast::ExpressionKind::IdentifierExpression) {
-            logError("Generic bundle instantiation must start with a bundle name", left->getLine(), left->getColumn());
-        } else {
-            auto* identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
-            bundleName = identifierExpr->value;
-            genericTypes = genericExpr->moveTypeParameters();
-        }
-    } else if (left->kind() == ast::ExpressionKind::IdentifierExpression) {
-        auto* underlying = static_cast<ast::IdentifierExpression*>(left.get());
-        bundleName = underlying->value;
-    } else {
-        logError(std::format("Bundle instantiation expression must start with a bundle name, not {}", ast::toStringOr(left)),
-                 left->getLine(), left->getColumn());
-    }
-
-    while (!done()) {
-        if (currentTokenType() == lexer::TokenType::RightBrace) {
-            break;  // Done instantiation
-        }
-        auto propertyName
-            = expectToken(lexer::TokenType::Identifier, "Expected field name in bundle instantiation").getLexeme();
-        expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to bundle field");
-        // want precedence to be 1 higher than assignment (e.g. field = x = 10 is invalid)
-        constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
-        auto value = parseExpression(static_cast<Precedence>(precedence_));
-
-        auto duplicate = std::find_if(
-            fields.begin(), fields.end(),
-            [propertyName](const ast::BundleInstantiationField& field) { return field.name == propertyName; });
-        if (duplicate != fields.end()) {
-            logError(std::format("Duplicate field '{}' in bundle instantiation of '{}'", propertyName, bundleName),
-                     value->getLine(), value->getColumn());
-        } else {
-            fields.emplace_back(propertyName, std::move(value));
-        }
-        if (currentTokenType() != lexer::TokenType::RightBrace) {
-            expectToken(lexer::TokenType::Comma, "Expected ',' to separate bundle fields");
-        }
-    }
-    expectToken(lexer::TokenType::RightBrace, "Expected '}' to end bundle instantiation");
-    return std::make_unique<ast::BundleInstantiationExpression>(bundleName, genericTypes, std::move(fields));
 }
 
 ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence) {

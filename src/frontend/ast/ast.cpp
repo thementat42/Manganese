@@ -44,18 +44,19 @@ bool isPrimitiveType(const Type* type) {
 
 auto typePtrsEqual = [](const TypeSPtr_t& lhs, const TypeSPtr_t& rhs) { return lhs.get() == rhs.get(); };
 
+bool AggregateType::operator==(const Type& other) const noexcept {
+    if (other.kind() != kind()) { return false; }
+    const auto& otherAggregateType = static_cast<const AggregateType&>(other);
+    if (fieldTypes.size() != otherAggregateType.fieldTypes.size()) { return false; }
+    return std::equal(fieldTypes.begin(), fieldTypes.end(), otherAggregateType.fieldTypes.begin(), typePtrsEqual);
+}
+
 bool ArrayType::operator==(const Type& other) const noexcept {
     if (other.kind() != kind()) { return false; }
     const auto& otherArrayType = static_cast<const ArrayType&>(other);
     return elementType.get() == otherArrayType.elementType.get();
 }
 
-bool BundleType::operator==(const Type& other) const noexcept {
-    if (other.kind() != kind()) { return false; }
-    const auto& otherBundleType = static_cast<const BundleType&>(other);
-    if (fieldTypes.size() != otherBundleType.fieldTypes.size()) { return false; }
-    return std::equal(fieldTypes.begin(), fieldTypes.end(), otherBundleType.fieldTypes.begin(), typePtrsEqual);
-}
 
 bool FunctionType::operator==(const Type& other) const noexcept {
     if (other.kind() != kind()) { return false; }

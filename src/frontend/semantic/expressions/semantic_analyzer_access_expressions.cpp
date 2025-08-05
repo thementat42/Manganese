@@ -32,8 +32,8 @@ void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* 
     1. Check the object whose member is being accessed (`foo` in `foo.bar`)
     2. Check that it has a computed type which is a SymbolType (e.g., you can't access a member of a function)
     3. Look up the symbol (`foo` in `foo.bar`) in the symbol table
-    4. Check that the symbol is a bundle (e.g., you can't access a member of an int32)
-    5. Check that the member exists in the bundle
+    4. Check that the symbol is an aggregate (e.g., you can't access a member of an int32)
+    5. Check that the member exists in the aggregate
     6. Set the type of the expression to the type of the member
     */
     checkExpression(expression->object.get());
@@ -53,21 +53,21 @@ void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* 
         logError("Symbol '{}' was not declared in any scope", expression, symbolType->name);
         return;
     }
-    if (symbol->kind != SymbolKind::Bundle) {
-        logError("Cannot access member '{}' of symbol '{}' since it is not a bundle", expression, expression->property,
+    if (symbol->kind != SymbolKind::Aggregate) {
+        logError("Cannot access member '{}' of symbol '{}' since it is not an aggregate", expression, expression->property,
                  symbolType->name);
         return;
     }
-    auto bundleDeclaration = static_cast<ast::BundleDeclarationStatement*>(symbol->declarationNode);
+    auto aggregateDeclaration = static_cast<ast::AggregateDeclarationStatement*>(symbol->declarationNode);
 
-    auto findFieldByName = [&expression](const ast::BundleField& field) { return field.name == expression->property; };
-    auto bundleField = std::find_if(bundleDeclaration->fields.begin(), bundleDeclaration->fields.end(), findFieldByName);
-    if (bundleField == bundleDeclaration->fields.end()) {
-        logError("{} has no member named '{}'. Its bundle type is:\n{}", expression, toStringOr(expression->object),
-                 expression->property, toStringOr(bundleDeclaration));
+    auto findFieldByName = [&expression](const ast::AggregateField& field) { return field.name == expression->property; };
+    auto aggregateField = std::find_if(aggregateDeclaration->fields.begin(), aggregateDeclaration->fields.end(), findFieldByName);
+    if (aggregateField == aggregateDeclaration->fields.end()) {
+        logError("{} has no member named '{}'. Its aggregate type is:\n{}", expression, toStringOr(expression->object),
+                 expression->property, toStringOr(aggregateDeclaration));
         return;
     }
-    expression->setType(bundleField->type);
+    expression->setType(aggregateField->type);
 }
 
 void SemanticAnalyzer::checkScopeResolutionExpression(ast::ScopeResolutionExpression* expression) {

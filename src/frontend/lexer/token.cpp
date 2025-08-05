@@ -3,16 +3,16 @@
  * @brief This file contains the implementation of the Token struct for the Manganese compiler.
  */
 
+#include <format>
 #include <frontend/lexer/token.hpp>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
-#include <utils/number_utils.hpp>
-
-#include <format>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <utils/number_utils.hpp>
+
 
 namespace Manganese {
 namespace lexer {
@@ -167,12 +167,12 @@ std::string tokenTypeToString(TokenType type) noexcept_if_release {
         case TokenType::EndOfFile: return "End Of File";
 
         // Keywords
+        case TokenType::Aggregate: return "aggregate";
         case TokenType::Alias: return "alias";
         case TokenType::As: return "as";
         case TokenType::Blueprint: return "blueprint";
         case TokenType::Bool: return "bool";
         case TokenType::Break: return "break";
-        case TokenType::Bundle: return "bundle";
         case TokenType::Case: return "case";
         case TokenType::Char: return "char";
         case TokenType::Const: return "const";
@@ -330,12 +330,12 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     {"@", TokenType::At}};
 
 std::unordered_map<std::string, const TokenType> keywordMap
-    = {{"alias", TokenType::Alias},
+    = {{"aggregate", TokenType::Aggregate},
+       {"alias", TokenType::Alias},
        {"as", TokenType::As},
        {"blueprint", TokenType::Blueprint},
        {"bool", TokenType::Bool},
        {"break", TokenType::Break},
-       {"bundle", TokenType::Bundle},
        {"case", TokenType::Case},
        {"char", TokenType::Char},
        {"const", TokenType::Const},

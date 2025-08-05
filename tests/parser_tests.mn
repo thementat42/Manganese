@@ -16,9 +16,9 @@ enum Foo: char {
 
 /*
 Here's another block comment
-* This explains what this bundle does
+* This explains what this aggregate does
 */
-bundle B[T] {
+aggregate B[T] {
     x: Foo;
     y: float32;
     z: T[][];

@@ -23,9 +23,9 @@ namespace Manganese {
 namespace ast {
 
 enum class StatementKind {
+    AggregateDeclarationStatement,
     AliasStatement,
     BreakStatement,
-    BundleDeclarationStatement,
     ContinueStatement,
     EmptyStatement,
     EnumDeclarationStatement,
@@ -37,6 +37,28 @@ enum class StatementKind {
     SwitchStatement,
     VariableDeclarationStatement,
     WhileLoopStatement
+};
+
+struct AggregateField {
+    std::string name;
+    TypeSPtr_t type;
+
+    AggregateField(std::string name_, TypeSPtr_t type_) : name(std::move(name_)), type(std::move(type_)) {}
+};
+
+class AggregateDeclarationStatement : public Statement {
+   protected:
+    std::string name;
+    std::vector<std::string> genericTypes;
+    std::vector<AggregateField> fields;
+    Visibility visibility = Visibility::Private;
+
+   public:
+    AggregateDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
+                               std::vector<AggregateField> fields_) :
+        name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
+    AST_STANDARD_INTERFACE;
+    StatementKind kind() const noexcept override { return StatementKind::AggregateDeclarationStatement; };
 };
 
 class AliasStatement : public Statement {
@@ -61,27 +83,6 @@ class BreakStatement : public Statement {
     StatementKind kind() const noexcept override { return StatementKind::BreakStatement; };
 };
 
-struct BundleField {
-    std::string name;
-    TypeSPtr_t type;
-
-    BundleField(std::string name_, TypeSPtr_t type_) : name(std::move(name_)), type(std::move(type_)) {}
-};
-
-class BundleDeclarationStatement : public Statement {
-   protected:
-    std::string name;
-    std::vector<std::string> genericTypes;
-    std::vector<BundleField> fields;
-    Visibility visibility = Visibility::Private;
-
-   public:
-    BundleDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
-                               std::vector<BundleField> fields_) :
-        name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
-    AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::BundleDeclarationStatement; };
-};
 
 class ContinueStatement : public Statement {
    public:

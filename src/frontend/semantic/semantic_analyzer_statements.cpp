@@ -14,14 +14,14 @@ namespace semantic {
 
 void SemanticAnalyzer::checkStatement(ast::Statement* statement) noexcept_if_release {
     switch (statement->kind()) {
+        case ast::StatementKind::AggregateDeclarationStatement:
+            checkAggregateDeclarationStatement(static_cast<ast::AggregateDeclarationStatement*>(statement));
+            break;
         case ast::StatementKind::AliasStatement:
             checkAliasStatement(static_cast<ast::AliasStatement*>(statement));
             break;
         case ast::StatementKind::BreakStatement:
             checkBreakStatement(static_cast<ast::BreakStatement*>(statement));
-            break;
-        case ast::StatementKind::BundleDeclarationStatement:
-            checkBundleDeclarationStatement(static_cast<ast::BundleDeclarationStatement*>(statement));
             break;
         case ast::StatementKind::ContinueStatement:
             checkContinueStatement(static_cast<ast::ContinueStatement*>(statement));

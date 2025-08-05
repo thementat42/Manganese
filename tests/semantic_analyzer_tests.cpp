@@ -97,9 +97,9 @@ bool analyzeAliases() {
     return true;
 }
 
-bool analyzeBundleInstantiation() {
+bool analyzeAggregateInstantiation() {
     semantic::SemanticAnalyzer analyzer;
-    parser::ParsedFile file = parse("bundle Point3D {"
+    parser::ParsedFile file = parse("aggregate Point3D {"
                                     "  x: int64;"
                                     "  y: int64;"
                                     "  z: int64;"
@@ -170,8 +170,8 @@ bool testBinaryExpressions() {
 
 bool checkMemberAccessExpression() {
     semantic::SemanticAnalyzer analyzer;
-    parser::ParsedFile file = parse("bundle A {b: int;}"
-                                    "bundle B {c : A;}"
+    parser::ParsedFile file = parse("aggregate A {b: int;}"
+                                    "aggregate B {c : A;}"
                                     "let a = B{c = A{b = 2}};"
                                     "let x = a.c.b;"
                                     "let y = a.x;  # check non-existent member access\n"
@@ -213,7 +213,7 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Analyze Literals", analyzeLiterals);
     runner.runTest("Analyze Simple Variable Declaration", analyzeSimpleVariableDeclaration);
     runner.runTest("Analyze Aliases", analyzeAliases);
-    runner.runTest("Analyze Bundle Instantiation", analyzeBundleInstantiation);
+    runner.runTest("Analyze aggregate Instantiation", analyzeAggregateInstantiation);
     runner.runTest("Analyze Function Declaration and Call", analyzeFunctionDeclarationAndCall);
     runner.runTest("Binary Expressions", testBinaryExpressions);
     runner.runTest("Member Access", checkMemberAccessExpression);

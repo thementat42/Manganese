@@ -5,9 +5,9 @@ namespace Manganese {
 using ast::toStringOr;
 namespace semantic {
 
-void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationStatement* statement) {
+void SemanticAnalyzer::checkAggregateDeclarationStatement(ast::AggregateDeclarationStatement* statement) {
     if (symbolTable.lookup(statement->name)) {
-        logError("Bundle '{}' was previously declared", statement, statement->name);
+        logError("Aggregate '{}' was previously declared", statement, statement->name);
         return;
     }
 
@@ -21,7 +21,7 @@ void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationSta
         }
         if (!typeExists(field.type)) {
             logError(
-                "Field '{}' in bundle '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
+                "Field '{}' in Aggregate '{}' has type '{}' which was not declared (either as an aggregate or a type alias)",
                 statement, field.name, statement->name, toStringOr(field.type));
             return;
         }
@@ -32,12 +32,12 @@ void SemanticAnalyzer::checkBundleDeclarationStatement(ast::BundleDeclarationSta
     for (size_t i = 0; i < statement->fields.size(); ++i) { fieldTypes[i] = statement->fields[i].type; }
     symbolTable.declare(Symbol{
         .name = statement->name,
-        .kind = SymbolKind::Bundle,
-        .type = std::make_shared<ast::BundleType>(fieldTypes),
+        .kind = SymbolKind::Aggregate,
+        .type = std::make_shared<ast::AggregateType>(fieldTypes),
         .line = statement->getLine(),
         .column = statement->getColumn(),
         .declarationNode = statement,
-        .isConstant = false,  // Bundles are not constants
+        .isConstant = false,  // Aggregates are not constants
         .scopeDepth = symbolTable.currentScopeDepth(),
         .visibility = statement->visibility,
 
@@ -68,7 +68,7 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
         }
         if (!typeExists(param.type)) {
             logError(
-                "Parameter '{}' in function '{}' has type '{}' which was not declared (either as a bundle or a type alias)",
+                "Parameter '{}' in function '{}' has type '{}' which was not declared (either as an aggregate or a type alias)",
                 statement, param.name, statement->name, toStringOr(param.type));
             return;
         }

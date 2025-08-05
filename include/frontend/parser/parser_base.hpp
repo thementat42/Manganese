@@ -93,10 +93,10 @@ class Parser {
 
     // ===== Expression Parsing =====
     ExpressionUPtr_t parseExpression(Precedence precedence) noexcept_if_release;
+    ExpressionUPtr_t parseAggregateInstantiationExpression(ExpressionUPtr_t left, Precedence precedence);
     ExpressionUPtr_t parseArrayInstantiationExpression();
     ExpressionUPtr_t parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence);
     ExpressionUPtr_t parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence);
-    ExpressionUPtr_t parseBundleInstantiationExpression(ExpressionUPtr_t left, Precedence precedence);
     ExpressionUPtr_t parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence);
     ExpressionUPtr_t parseGenericExpression(ExpressionUPtr_t left, Precedence precedence);
     ExpressionUPtr_t parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence);
@@ -111,9 +111,9 @@ class Parser {
     // ===== Statement Parsing =====
 
     StatementUPtr_t parseStatement();
+    StatementUPtr_t parseAggregateDeclarationStatement();
     StatementUPtr_t parseAliasStatement();
     StatementUPtr_t parseBreakStatement();
-    StatementUPtr_t parseBundleDeclarationStatement();
     StatementUPtr_t parseContinueStatement();
     StatementUPtr_t parseDoWhileLoopStatement();
     StatementUPtr_t parseEnumDeclarationStatement();
@@ -128,7 +128,7 @@ class Parser {
     StatementUPtr_t parseVariableDeclarationStatement();
     /**
      * Parses statements that are preceded by a visibility modifier
-     * (public/readonly/private) (function/bundle/enum declaration)
+     * (public/readonly/private) (function/aggregate/enum declaration)
      */
     StatementUPtr_t parseVisibilityAffectedStatement() noexcept_if_release;
     StatementUPtr_t parseWhileLoopStatement();
@@ -137,7 +137,7 @@ class Parser {
 
     TypeSPtr_t parseType(Precedence precedence) noexcept_if_release;
     TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence);
-    TypeSPtr_t parseBundleType();
+    TypeSPtr_t parseAggregateType();
     TypeSPtr_t parseFunctionType();
     TypeSPtr_t parseGenericType(TypeSPtr_t left, Precedence precedence);
     TypeSPtr_t parsePointerType();

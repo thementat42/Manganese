@@ -181,7 +181,7 @@ enum class TokenType : uint8_t {
     As,  // type casting, or module aliasing in an import statement
 
     //* Encapsulation
-    Bundle,  // like C's struct
+    Aggregate,  // like C's struct
     Enum,  // list of named constants
     Blueprint,  // like a class
 

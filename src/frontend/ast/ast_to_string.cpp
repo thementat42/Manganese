@@ -7,18 +7,41 @@
  * The toString() methods are mainly used for error reporting
  * In the test suite, they are used to ensure the program is parsed correctly
  */
+#include <algorithm>
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
-
-#include <algorithm>
 #include <iomanip>
 #include <sstream>
 #include <string>
 #include <variant>
+
 namespace Manganese {
 namespace ast {
 
 // ===== Expressions =====
+std::string AggregateInstantiationExpression::toString() const {
+    std::ostringstream oss;
+    oss << name;
+    if (!genericTypes.empty()) {
+        oss << "@[";
+        for (size_t i = 0; i < genericTypes.size(); ++i) {
+            oss << toStringOr(genericTypes[i]);
+            if (i < genericTypes.size() - 1) [[likely]] { oss << ", "; }
+        }
+        oss << "]";
+    }
+    oss << " {";
+
+    bool first = true;
+    for (const auto& field : fields) {
+        if (!first) { oss << ", "; }
+        first = false;
+        oss << field.name << " = " << field.value->toString();
+    }
+
+    oss << "}";
+    return oss.str();
+}
 std::string ArrayLiteralExpression::toString() const {
     std::ostringstream oss;
     oss << "[";
@@ -44,30 +67,6 @@ std::string BinaryExpression::toString() const {
 }
 
 std::string BoolLiteralExpression::toString() const { return value ? "true" : "false"; }
-
-std::string BundleInstantiationExpression::toString() const {
-    std::ostringstream oss;
-    oss << name;
-    if (!genericTypes.empty()) {
-        oss << "@[";
-        for (size_t i = 0; i < genericTypes.size(); ++i) {
-            oss << toStringOr(genericTypes[i]);
-            if (i < genericTypes.size() - 1) [[likely]] { oss << ", "; }
-        }
-        oss << "]";
-    }
-    oss << " {";
-
-    bool first = true;
-    for (const auto& field : fields) {
-        if (!first) { oss << ", "; }
-        first = false;
-        oss << field.name << " = " << field.value->toString();
-    }
-
-    oss << "}";
-    return oss.str();
-}
 
 std::string CharLiteralExpression::toString() const {
     std::ostringstream oss;
@@ -167,9 +166,9 @@ std::string AliasStatement::toString() const { return "alias (" + baseType->toSt
 
 std::string BreakStatement::toString() const { return "break;"; }
 
-std::string BundleDeclarationStatement::toString() const {
+std::string AggregateDeclarationStatement::toString() const {
     std::ostringstream oss;
-    oss << visibilityToString(visibility) << "bundle " << name;
+    oss << visibilityToString(visibility) << "aggregate " << name;
     if (!genericTypes.empty()) {
         oss << "[";
         for (size_t i = 0; i < genericTypes.size(); ++i) {
@@ -223,7 +222,7 @@ std::string FunctionDeclarationStatement::toString() const {
     if (returnType) { oss << " -> " << returnType->toString(); }
     oss << " {\n";
     if (!body.empty()) {
-        for (size_t i = 0; i < body.size(); ++i) { oss << toStringOr(body[i]) << "\n";}
+        for (size_t i = 0; i < body.size(); ++i) { oss << toStringOr(body[i]) << "\n"; }
     }
     oss << "}";
     return oss.str();
@@ -297,6 +296,17 @@ std::string WhileLoopStatement::toString() const {
 
 // ===== Types =====
 
+std::string AggregateType::toString() const {
+    std::ostringstream oss;
+    oss << "aggregate {";
+    for (size_t i = 0; i < fieldTypes.size(); ++i) {
+        oss << toStringOr(fieldTypes[i]);
+        if (i < fieldTypes.size() - 1) [[likely]] { oss << ", "; }
+    }
+    oss << "}";
+    return oss.str();
+}
+
 std::string ArrayType::toString() const {
     std::ostringstream oss;
     oss << elementType->toString() << "[";
@@ -305,16 +315,6 @@ std::string ArrayType::toString() const {
     return oss.str();
 }
 
-std::string BundleType::toString() const {
-    std::ostringstream oss;
-    oss << "bundle {";
-    for (size_t i = 0; i < fieldTypes.size(); ++i) {
-        oss << toStringOr(fieldTypes[i]);
-        if (i < fieldTypes.size() - 1) [[likely]] { oss << ", "; }
-    }
-    oss << "}";
-    return oss.str();
-}
 
 std::string FunctionType::toString() const {
     std::ostringstream oss;

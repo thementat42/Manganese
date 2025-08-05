@@ -62,7 +62,7 @@ std::string SymbolKindToString(const SymbolKind kind) noexcept_if_release {
         case SymbolKind::Variable: return "Variable";
         case SymbolKind::Constant: return "Constant";
         case SymbolKind::Function: return "Function";
-        case SymbolKind::Bundle: return "Bundle";
+        case SymbolKind::Aggregate: return "Aggregate";
         case SymbolKind::Enum: return "Enum";
         case SymbolKind::Module: return "Module";
         case SymbolKind::Import: return "Import";

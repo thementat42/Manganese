@@ -283,13 +283,13 @@ bool testBitwiseOperators() {
     return validateStatements(getParserResults(expression), expected, "Bitwise Operators");
 }
 
-bool testBundleDeclarationAndInstantiation() {
-    std::string expression = "public bundle Point {\n"
+bool testAggregateDeclarationAndInstantiation() {
+    std::string expression = "public aggregate Point {\n"
                              "    x: int32;\n"
                              "    y: int32;\n"
                              "    some_field: float64;\n"
                              "}\n"
-                             "bundle Rectangle {\n"
+                             "aggregate Rectangle {\n"
                              "    topLeft: Point;\n"
                              "    bottomRight: Point;\n"
                              "    color: uint32;\n"
@@ -304,12 +304,12 @@ bool testBundleDeclarationAndInstantiation() {
 
     // Note: In the final declaration, the numeric value for the colour is the decimal equivalent of 0xFF0000
     std::array<std::string, 5> expected = {
-        "public bundle Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: float64;\n}",
-        "private bundle Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
+        "public aggregate Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: float64;\n}",
+        "private aggregate Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
         "(let p1: private auto = Point {x = 10, y = 20});", "(let p2: private Point = Point {x = 30, y = 40});",
         "(const rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
 
-    return validateStatements(getParserResults(expression), expected, "Bundle Declaration and Instantiation");
+    return validateStatements(getParserResults(expression), expected, "Aggregate Declaration and Instantiation");
 }
 
 bool testFunctionDeclarationAndCall() {
@@ -449,7 +449,7 @@ bool testGenerics() {
                              "    return 3 + valueT + valueU * valueV;\n"
                              "}\n"
                              "let result = genericFunction@[int32, float64, char](5, 2.5, (65 as char));"
-                             "bundle Foo[T, U] {\n"
+                             "aggregate Foo[T, U] {\n"
                              "    x: T;\n"
                              "    y: U;\n"
                              "}\n"
@@ -458,7 +458,7 @@ bool testGenerics() {
     std::array<std::string, 5> expected = {
         "private func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
         "(let result: private auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));",
-        "private bundle Foo[T, U] {\n\tx: T;\n\ty: U;\n}",
+        "private aggregate Foo[T, U] {\n\tx: T;\n\ty: U;\n}",
         "(let foo: private auto = Foo@[int32, float64] {x = 3, y = 4.5});",
         "(let foo_array: readonly Foo@[int32, float64][]);"};
     return validateStatements(getParserResults(expression), expected, "Generic Function Declaration");
@@ -504,9 +504,9 @@ bool testRedundantSemicolons() {
 }
 
 bool miscTests() {
-    std::string expression = "func foo() -> bundle {string, float, char} {}";
+    std::string expression = "func foo() -> aggregate {string, float, char} {}";
 
-    std::string expected = "private func foo() -> bundle {string, float32, char} {\n}";
+    std::string expected = "private func foo() -> aggregate {string, float32, char} {\n}";
     return validateStatement(getParserResults(expression), expected, "Miscellaneous Tests");
 }
 
@@ -525,7 +525,7 @@ int runParserTests(TestRunner& runner) {
     runner.runTest("Typed Variable Declaration", testTypedVariableDeclaration);
     runner.runTest("Postfix Operators", testPostfixOperators);
     runner.runTest("Bitwise Operators", testBitwiseOperators);
-    runner.runTest("Bundle Declaration and Instantiation", testBundleDeclarationAndInstantiation);
+    runner.runTest("Aggregate Declaration and Instantiation", testAggregateDeclarationAndInstantiation);
     runner.runTest("Function Declaration and Call", testFunctionDeclarationAndCall);
     runner.runTest("Loops", testLoops);
     runner.runTest("If/Elif/Else Statements", testIfElseStatements);

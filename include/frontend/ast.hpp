@@ -19,7 +19,7 @@ In Manganese, there are:
         - Variable declaration (+ qualifiers sometimes)
         - Function Declarations
         - Module Declarations
-        - Bundle Declarations
+        - Aggregate Declarations
         - Blueprint Declarations (not yet)
         - Enum Declarations
         - Control flow
