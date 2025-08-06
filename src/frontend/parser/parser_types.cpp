@@ -45,7 +45,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
 
 // ===== Specific type parsing methods =====
 
-TypeSPtr_t Parser::parseAggregateType() {
+TypeSPtr_t Parser::parseAggregateType() noexcept_if_release {
     DISCARD(advance());  // Consume the 'aggregate' token
     if (currentTokenType() == TokenType::Identifier) {
         logging::logWarning("Aggregate names are ignored in aggregate type declarations", currentToken().getLine(),
@@ -74,7 +74,7 @@ TypeSPtr_t Parser::parseAggregateType() {
     return std::make_shared<ast::AggregateType>(std::move(fieldTypes));
 }
 
-TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) {
+TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) noexcept_if_release {
     ExpressionUPtr_t lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
     DISCARD(advance());  // Consume the left square bracket '['
@@ -86,7 +86,7 @@ TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) {
     return std::make_shared<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
-TypeSPtr_t Parser::parseFunctionType() {
+TypeSPtr_t Parser::parseFunctionType() noexcept_if_release {
     DISCARD(advance());  // consume the 'func' token
 
     expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
@@ -117,7 +117,7 @@ TypeSPtr_t Parser::parseFunctionType() {
     return std::make_shared<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
 }
 
-TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) {
+TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) noexcept_if_release {
     DISCARD(advance());
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
@@ -136,19 +136,19 @@ TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) {
     return std::make_shared<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 
-TypeSPtr_t Parser::parseParenthesizedType() {
+TypeSPtr_t Parser::parseParenthesizedType() noexcept_if_release {
     DISCARD(advance());  // Skip the '('
     TypeSPtr_t innerType = parseType(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
     return innerType;
 }
 
-TypeSPtr_t Parser::parsePointerType() {
+TypeSPtr_t Parser::parsePointerType() noexcept_if_release {
     DISCARD(advance());  // Consume `ptr`
     return std::make_shared<ast::PointerType>(parseType(Precedence::Default));
 }
 
-TypeSPtr_t Parser::parseSymbolType() {
+TypeSPtr_t Parser::parseSymbolType() noexcept_if_release {
     Token token = currentToken();
     if (token.isPrimitiveType()) {
         // If the token is a primitive type, we can directly create a SymbolType

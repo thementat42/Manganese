@@ -19,7 +19,7 @@
 namespace Manganese {
 namespace parser {
 
-StatementUPtr_t Parser::parseStatement() {
+StatementUPtr_t Parser::parseStatement() noexcept_if_release {
     auto it = statementLookup.find(currentTokenType());
     if (it != statementLookup.end()) {
         // If possible, parse a statement from the current token
@@ -35,7 +35,7 @@ StatementUPtr_t Parser::parseStatement() {
 
 // ===== Specific statement parsing methods =====
 
-StatementUPtr_t Parser::parseAggregateDeclarationStatement() {
+StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release {
     DISCARD(advance());
     std::vector<std::string> genericTypes;
     std::vector<ast::AggregateField> fields;
@@ -88,7 +88,7 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() {
     return std::make_unique<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
 }
 
-StatementUPtr_t Parser::parseAliasStatement() {
+StatementUPtr_t Parser::parseAliasStatement() noexcept_if_release {
     DISCARD(advance());
     TypeSPtr_t baseType;
     if (currentToken().isPrimitiveType() || currentTokenType() == TokenType::Func
@@ -126,19 +126,19 @@ StatementUPtr_t Parser::parseAliasStatement() {
     return std::make_unique<ast::AliasStatement>(std::move(baseType), std::move(alias));
 }
 
-StatementUPtr_t Parser::parseBreakStatement() {
+StatementUPtr_t Parser::parseBreakStatement() noexcept_if_release {
     DISCARD(advance());
     expectToken(TokenType::Semicolon);
     return std::make_unique<ast::BreakStatement>();
 }
 
-StatementUPtr_t Parser::parseContinueStatement() {
+StatementUPtr_t Parser::parseContinueStatement() noexcept_if_release {
     DISCARD(advance());
     expectToken(TokenType::Semicolon);
     return std::make_unique<ast::ContinueStatement>();
 }
 
-StatementUPtr_t Parser::parseDoWhileLoopStatement() {
+StatementUPtr_t Parser::parseDoWhileLoopStatement() noexcept_if_release {
     DISCARD(advance());
     ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
@@ -149,7 +149,7 @@ StatementUPtr_t Parser::parseDoWhileLoopStatement() {
     return std::make_unique<ast::WhileLoopStatement>(std::move(body), std::move(condition), true);
 }
 
-StatementUPtr_t Parser::parseEnumDeclarationStatement() {
+StatementUPtr_t Parser::parseEnumDeclarationStatement() noexcept_if_release {
     DISCARD(advance());
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
     TypeSPtr_t baseType;
@@ -190,7 +190,7 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() {
     return std::make_unique<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
 }
 
-StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
+StatementUPtr_t Parser::parseFunctionDeclarationStatement() noexcept_if_release {
     // TODO: Handle function visibility
     // TODO: Handle function attributes
     // TODO: Handle function default parameters
@@ -255,7 +255,7 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() {
                                                                std::move(returnType), parseBlock("function body"));
 }
 
-StatementUPtr_t Parser::parseIfStatement() {
+StatementUPtr_t Parser::parseIfStatement() noexcept_if_release {
     this->isParsingBlockPrecursor = true;
     DISCARD(advance());
 
@@ -286,7 +286,7 @@ StatementUPtr_t Parser::parseIfStatement() {
                                               std::move(elseBody));
 }
 
-StatementUPtr_t Parser::parseImportStatement() {
+StatementUPtr_t Parser::parseImportStatement() noexcept_if_release {
     size_t startLine = currentToken().getLine();
     size_t startColumn = currentToken().getColumn();
 
@@ -330,7 +330,7 @@ StatementUPtr_t Parser::parseImportStatement() {
     return std::make_unique<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseModuleDeclarationStatement() {
+StatementUPtr_t Parser::parseModuleDeclarationStatement() noexcept_if_release {
     auto temp = advance();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
@@ -349,12 +349,12 @@ StatementUPtr_t Parser::parseModuleDeclarationStatement() {
     return std::make_unique<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseRedundantSemicolon() {
+StatementUPtr_t Parser::parseRedundantSemicolon() noexcept_if_release {
     DISCARD(advance());
     return std::make_unique<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseRepeatLoopStatement() {
+StatementUPtr_t Parser::parseRepeatLoopStatement() noexcept_if_release {
     DISCARD(advance());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce a number of iterations");
     auto numIterations = parseExpression(Precedence::Default);
@@ -363,7 +363,7 @@ StatementUPtr_t Parser::parseRepeatLoopStatement() {
     return std::make_unique<ast::RepeatLoopStatement>(std::move(numIterations), parseBlock("repeat loop body"));
 }
 
-StatementUPtr_t Parser::parseReturnStatement() {
+StatementUPtr_t Parser::parseReturnStatement() noexcept_if_release {
     DISCARD(advance());
     ExpressionUPtr_t expression = nullptr;
     if (currentTokenType() != TokenType::Semicolon) {
@@ -375,7 +375,7 @@ StatementUPtr_t Parser::parseReturnStatement() {
     return make_unique<ast::ReturnStatement>(std::move(expression));
 }
 
-StatementUPtr_t Parser::parseSwitchStatement() {
+StatementUPtr_t Parser::parseSwitchStatement() noexcept_if_release {
     Token temp = advance();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
@@ -467,7 +467,7 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
     }
 }
 
-StatementUPtr_t Parser::parseVariableDeclarationStatement() {
+StatementUPtr_t Parser::parseVariableDeclarationStatement() noexcept_if_release {
     TypeSPtr_t explicitType;
     ExpressionUPtr_t value;
     ast::Visibility visibility = defaultVisibility;
@@ -506,7 +506,7 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() {
                                                                std::move(explicitType));
 }
 
-StatementUPtr_t Parser::parseWhileLoopStatement() {
+StatementUPtr_t Parser::parseWhileLoopStatement() noexcept_if_release {
     DISCARD(advance());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     auto condition = parseExpression(Precedence::Default);
@@ -516,7 +516,7 @@ StatementUPtr_t Parser::parseWhileLoopStatement() {
 }
 
 // ===== Helper Functions =====
-ast::Block Parser::parseBlock(std::string blockName) {
+ast::Block Parser::parseBlock(std::string blockName) noexcept_if_release {
     expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
     ast::Block block;
     while (!done()) {
