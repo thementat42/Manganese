@@ -10,6 +10,8 @@
 
 #include <memory>
 #include <utility>
+#include "frontend/ast/ast_base.hpp"
+#include "frontend/parser/operators.hpp"
 
 namespace Manganese {
 namespace parser {
@@ -132,6 +134,13 @@ TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) {
     }
     expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
     return std::make_shared<ast::GenericType>(std::move(left), std::move(typeParameters));
+}
+
+TypeSPtr_t Parser::parseParenthesizedType() {
+    DISCARD(advance());  // Skip the '('
+    TypeSPtr_t innerType = parseType(Precedence::Default);
+    expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
+    return innerType;
 }
 
 TypeSPtr_t Parser::parsePointerType() {
