@@ -36,6 +36,6 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build and run test suite
-      run: python build.py -c -d -f -m -r -t --exec-with --all
+      run: python scripts/build.py -c -d -f -m -r -t --exec-with --all
     # - name: Dummy release build
-    #   run: python build.py -c -f -r --exec-with --dummy1 -a
+    #   run: python scripts/build.py -c -f -r --exec-with --dummy1 -a
