@@ -41,6 +41,7 @@ project(manganese)
 # ==============================================================================
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese.cpp")
 set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese_tests.cpp")
 
@@ -95,6 +96,9 @@ endif()
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+list(APPEND INCLUDE_DIRS ${LLVM_INCLUDE_DIRS})
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS_LIST})
 
 # ==============================================================================
 # Source files configuration
@@ -193,6 +197,7 @@ if(BUILD_TESTS)
     
     # Include directories
     target_include_directories(${PROJECT_NAME}_tests PRIVATE ${INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME}_tests ${llvm_libs})
     
     # Output binary to bin directory
     set_target_properties(${PROJECT_NAME}_tests PROPERTIES
@@ -303,6 +308,7 @@ else()
     endif()
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME}_tests ${llvm_libs})
 
     set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
