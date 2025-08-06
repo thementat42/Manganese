@@ -13,6 +13,9 @@ build/
 *.ll
 __pycache__/
 
+# used for things like clang-tidy
+compile_commands.json
+
 # logs
 *.log
 
