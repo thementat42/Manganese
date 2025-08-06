@@ -52,7 +52,7 @@ ParsedFile Parser::parse() {
 }
 
 // ===== Helper functions =====
-bool Parser::isUnaryContext() const {
+bool Parser::isUnaryContext() const noexcept {
     if (tokenCache.empty() || tokenCachePosition == 0) {
         return true;  // If the cache is empty or we're at the start, it's a unary context
     }
@@ -62,7 +62,7 @@ bool Parser::isUnaryContext() const {
         || (lastToken.isOperator() && lastToken.getType() != TokenType::Inc && lastToken.getType() != TokenType::Dec);
 }
 
-[[nodiscard]] Token Parser::currentToken() {
+[[nodiscard]] Token Parser::currentToken() noexcept {
     while (tokenCachePosition >= tokenCache.size()) { tokenCache.push_back(lexer->consumeToken()); }
     return tokenCache[tokenCachePosition];
 }

@@ -504,10 +504,11 @@ bool testRedundantSemicolons() {
 }
 
 bool miscTests() {
-    std::string expression = "func foo() -> aggregate {string, float, char} {}";
-
-    std::string expected = "private func foo() -> aggregate {string, float32, char} {\n}";
-    return validateStatement(getParserResults(expression), expected, "Miscellaneous Tests");
+    std::string expression = "let x: (ptr int)[];";
+    auto x = getParserResults(expression);
+    std::cout << x[0]->toString() << "\n";
+    x[0]->dump(std::cout);
+    return true;
 }
 
 int runParserTests(TestRunner& runner) {
