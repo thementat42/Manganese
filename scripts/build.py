@@ -51,6 +51,24 @@ def check_cmake_installation():
         print("\033[31mCMake is either not installed or not in the PATH.\033[0m")
         sys.exit(1)
 
+def ensure_project_root():
+    """
+    Ensures the script runs from the project root directory by
+    changing to the parent directory if run from scripts/
+    """
+    script_dir = Path(__file__).resolve().parent
+    project_root = script_dir.parent
+
+    if script_dir.name == "scripts":
+        os.chdir(project_root)
+        print(f"\033[34mChanged working directory to project root: {project_root}\033[0m")
+
+    # Verify CMakeLists.txt exists in the current directory
+    if not Path("CMakeLists.txt").exists():
+        print("\033[31mError: CMakeLists.txt not found in the current directory.")
+        print("This script must be run from the project root or scripts/ directory.\033[0m")
+        sys.exit(1)
+
 def run_command(command: list[str]):
     """A wrapper around `subprocess.run`"""
     print(f"\033[34mRunning: \"{' '.join(command)}\"\033[0m")
@@ -61,6 +79,7 @@ def run_command(command: list[str]):
         sys.exit(e.returncode)
 
 check_cmake_installation()
+ensure_project_root()
 
 arg_parser = argparse.ArgumentParser(description = "Runs CMake to build the manganese compiler")
 
