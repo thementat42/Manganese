@@ -308,7 +308,7 @@ else()
     endif()
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME}_tests ${llvm_libs})
+    target_link_libraries(${PROJECT_NAME} ${llvm_libs})
 
     set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
