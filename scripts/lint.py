@@ -16,6 +16,7 @@ def check_clang_tidy_installation():
         subprocess.run(["clang-tidy", "--version"], check = True, stdout = subprocess.PIPE)
     except FileNotFoundError:
         print("\033[31mClang-tidy is either not installed or not in the system PATH.\033[0m")
+        sys.exit(1)
 
 def ensure_project_root():
     """
@@ -85,6 +86,7 @@ def get_filenames_in(*paths: str) -> list[str]:
         all_files.extend(__get_files_from_root(path))
     return all_files
 
+check_clang_tidy_installation()
 ensure_project_root()
 COMPILE_COMMANDS_DIR = str(find_compile_commands())
 
