@@ -7,7 +7,6 @@
 #include <frontend/lexer/token.hpp>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
-#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <utility>
