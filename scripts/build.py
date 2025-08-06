@@ -44,11 +44,13 @@ import shutil
 from pathlib import Path
 
 def check_cmake_installation():
-    """Check that cmake is installed before running"""
+    """Check that cmake is installed before running
+    This script just runs cmake <args>, so it needs cmake in the path
+    """
     try:
         subprocess.run(["cmake", "--version"], check = True, stdout = subprocess.PIPE)
     except FileNotFoundError:
-        print("\033[31mCMake is either not installed or not in the PATH.\033[0m")
+        print("\033[31mCMake is either not installed or not in the system PATH.\033[0m")
         sys.exit(1)
 
 def ensure_project_root():
