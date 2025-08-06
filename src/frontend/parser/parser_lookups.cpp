@@ -62,7 +62,7 @@ void Parser::registerNudHandler_type(TokenType type, nudHandler_types_t handler)
 //! Really long stuff
 
 void Parser::initializeLookups() noexcept {
-    using enum TokenType;
+    using enum lexer::TokenType;
     //~ Assignments (updating variables, not initializing them)
     registerLedHandler_binary(Assignment, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(BitAndAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
@@ -166,7 +166,7 @@ void Parser::initializeLookups() noexcept {
 }
 
 void Parser::initializeTypeLookups() noexcept {
-    using enum TokenType;
+    using enum lexer::TokenType;
     //~ Variable declarations with primitive types
     registerNudHandler_type(Identifier, &Parser::parseSymbolType);
     registerNudHandler_type(Int8, &Parser::parseSymbolType);
