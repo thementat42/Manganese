@@ -71,12 +71,16 @@ bool analyzeSimpleVariableDeclaration() {
     parser::ParsedFile file = parse("let x: int64 = 10; let x: int8 = 20i32;"
                                     "let y: string = \"hello\";"
                                     "const z = x; z = 3;"
-                                    "let a = [[1, 2], [3, 4]]; let b = a[0]; let c = b[1];");
+                                    "let a = [[1, 2], [3, 4]]; const b = a[0]; let c = b[1];"
+                                    "a[1] = 0; # Should fail\n"
+                                    "a[0] = [1, 1];"
+                                    "a[0][1] = 99;"
+                                    "b[0] = 3;");
     analyzer.analyze(file);
     const auto& program = file.program;
     outputAnalyzedAST(program);
-    if (program.size() != 8) {
-        std::cerr << "Expected 8 statements, got " << program.size() << "\n";
+    if (program.size() != 12) {
+        std::cerr << "Expected 21 statements, got " << program.size() << "\n";
         return false;
     }
     return true;
