@@ -536,7 +536,6 @@ bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFl
     if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {
         std::string suffix;
         suffix += tolower(consumeChar());
-        currentChar = peekChar();
 
         // Read the numeric part of the suffix
         std::string numPart = readDigits();
