@@ -290,7 +290,7 @@ else()
             )
         elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             target_compile_options(${PROJECT_NAME} PRIVATE
-                -O3
+                -O2
                 -finline-functions
                 -funroll-loops
                 -flto
@@ -301,7 +301,7 @@ else()
             )
         elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             target_compile_options(${PROJECT_NAME} PRIVATE
-                -O3
+                -O2
                 -finline-functions
                 -funroll-loops
                 -flto
@@ -313,7 +313,7 @@ else()
         else()
             message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic release flags.")
             target_compile_options(${PROJECT_NAME} PRIVATE
-                -O3
+                -O2
                 -DNDEBUG
             )
         endif()
