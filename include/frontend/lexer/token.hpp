@@ -69,12 +69,7 @@ class Token {
      */
     void overrideType(TokenType type_, std::string lexeme_ = "");
 
-    /**
-     * @details This function is used for debugging purposes. (if the debug flag is not set, this function will be
-     * empty)
-     */
-    void log() const noexcept;
-    static void log(const Token& token) noexcept;
+    std::string toString() const noexcept;
 };
 
 //~ Helpers, not tied to the Token class

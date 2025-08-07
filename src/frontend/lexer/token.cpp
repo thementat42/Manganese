@@ -10,6 +10,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <sstream>
 #include <utils/number_utils.hpp>
 
 
@@ -113,15 +114,13 @@ void Token::overrideType(TokenType type_, std::string lexeme_) {
     if (lexeme != "") { lexeme = std::move(lexeme_); }
 }
 
-void Token::log() const noexcept {
-#if DEBUG
-    std::cout << "Token: " << tokenTypeToString(type) << " ('" << getLexeme() << "') at line " << line << ", column "
+std::string Token::toString() const noexcept {
+    std::ostringstream oss;
+    oss << "Token: " << tokenTypeToString(type) << " ('" << getLexeme() << "') at line " << line << ", column "
               << column;
-    std::cout << '\n';
-#endif  // DEBUG
+    oss << '\n';
+    return oss.str();
 }
-
-void Token::log(const Token& token) noexcept { token.log(); }
 
 constexpr bool isBinaryOperator(const TokenType type) noexcept {
     using enum TokenType;

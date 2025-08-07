@@ -34,7 +34,7 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = fals
     std::cout << "Tokens: " << CYAN;
     for (const auto& token : tokens) {
         if (verbose) {
-            token.log();
+            std::cout << token.toString();
         } else {
             std::cout << token.getLexeme() << " ";
         }
