@@ -260,7 +260,6 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
 
 ast::TypeSPtr_t SemanticAnalyzer::widestNumericType(const ast::Type* type1,
                                                     const ast::Type* type2) const noexcept_if_release {
-    using namespace semantic;
     if (!type1 || !type2) return nullptr;
 
     std::string t1 = toStringOr(type1);
