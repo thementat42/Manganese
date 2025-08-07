@@ -40,6 +40,7 @@ A block is a vector of statements
 #define MANGANESE_INCLUDE_FRONTEND_AST_HPP
 
 #include <frontend/ast/ast_base.hpp>
+#include <frontend/ast/ast_block.hpp>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_statements.hpp>
 #include <frontend/ast/ast_types.hpp>
