@@ -14,14 +14,13 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
+#include <functional>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
-#include <utils/number_utils.hpp>
-
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utils/number_utils.hpp>
 #include <vector>
 
 #include "frontend/ast/ast_base.hpp"
@@ -53,8 +52,7 @@ class Parser {
    private:  // private variables
     std::unique_ptr<lexer::Lexer> lexer;
     ast::Visibility defaultVisibility = ast::Visibility::Private;
-    size_t tokenCachePosition = 0;
-    std::vector<Token> tokenCache;  // Old tokens (for lookbehind)
+    std::optional<Token> previousToken;
 
     std::string moduleName;
     std::vector<Import> imports;
@@ -94,7 +92,8 @@ class Parser {
 
     // ===== Expression Parsing =====
     ExpressionUPtr_t parseExpression(Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseAggregateInstantiationExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
+    ExpressionUPtr_t parseAggregateInstantiationExpression(ExpressionUPtr_t left,
+                                                           Precedence precedence) noexcept_if_release;
     ExpressionUPtr_t parseArrayInstantiationExpression() noexcept_if_release;
     ExpressionUPtr_t parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
     ExpressionUPtr_t parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
@@ -155,17 +154,17 @@ class Parser {
 
     /**
      * @details Get the current token, without consuming it
-     * @details Will refill the tokenCache if needed
      */
-    [[nodiscard]] Token currentToken() noexcept;
-
-    [[nodiscard]] inline TokenType currentTokenType() noexcept {return currentToken().getType();}
+    [[nodiscard]] inline Token currentToken() const noexcept { return lexer->peekToken(); }
+    [[nodiscard]] inline TokenType currentTokenType() noexcept { return currentToken().getType(); }
 
     /**
      * @details Consume the current token
-     * @details Will refill the tokenCache if needed
      */
-    [[nodiscard]] Token advance();
+    [[nodiscard]] inline Token advance() noexcept {
+        previousToken = currentToken();
+        return lexer->consumeToken();
+    }
 
     Token expectToken(TokenType expectedType);
     Token expectToken(TokenType expectedType, const std::string& errorMessage);
