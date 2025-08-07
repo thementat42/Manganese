@@ -8,8 +8,8 @@
  * @note Higher values in @ref Precedence indicate higher precedence.
  */
 
-#ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
-#define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
+#define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
 
 #include <frontend/lexer/token.hpp>
 #include <global_macros.hpp>
@@ -67,4 +67,4 @@ struct Operator {
 }  // namespace parser
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP

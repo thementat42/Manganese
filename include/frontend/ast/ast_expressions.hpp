@@ -9,8 +9,8 @@
  * ! The nodes are listed in alphabetical order
  */
 
-#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_H
-#define MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
+#define MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
 
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/ast/ast_types.hpp>
@@ -325,4 +325,4 @@ class TypeCastExpression : public Expression {
 
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP

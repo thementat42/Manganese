@@ -6,8 +6,8 @@
  * The reader abstracts away how this is done so the lexer can just call peekChar and getChar
  */
 
-#ifndef MANGANESE_INCLUDE_IO_READER_H
-#define MANGANESE_INCLUDE_IO_READER_H
+#ifndef MANGANESE_INCLUDE_IO_READER_HPP
+#define MANGANESE_INCLUDE_IO_READER_HPP
 
 #include <global_macros.hpp>
 
@@ -78,4 +78,4 @@ class Reader {
 }  // namespace io
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_IO_READER_H
+#endif  // MANGANESE_INCLUDE_IO_READER_HPP

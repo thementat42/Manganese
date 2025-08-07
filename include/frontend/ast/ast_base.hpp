@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
-#define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
+#define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 
 #include <frontend/lexer.hpp>
 #include <global_macros.hpp>
@@ -261,4 +261,4 @@ inline std::string toStringOr(const TypeSPtr_t& type, const char* fallback = "no
 // TODO: Add line and column setting methods to the derived classes
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP

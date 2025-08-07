@@ -9,8 +9,8 @@
  * sequences, Unicode encoding, and number literal parsing.
  * The lexer contains an io::Reader object to read the source code
  */
-#ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_H
-#define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
+#define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 
 #include <global_macros.hpp>
 #include <io/filereader.hpp>
@@ -225,4 +225,4 @@ class Lexer {
 }  // namespace lexer
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP

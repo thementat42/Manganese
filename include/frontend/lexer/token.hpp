@@ -13,8 +13,8 @@
  * The design separates token type definitions from their usage in the Token class for clarity and maintainability.
  */
 
-#ifndef MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_H
-#define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_HPP
+#define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_HPP
 
 #include <global_macros.hpp>
 
@@ -264,4 +264,4 @@ enum class TokenType : uint8_t {
 
 }  // namespace lexer
 }  // namespace Manganese
-#endif  // MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_HPP

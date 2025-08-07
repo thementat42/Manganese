@@ -6,8 +6,8 @@
 //! Note: This is a temporary file, mainly for testing purposes.
 //! Once the compiler is complete, this will be removed, and only the FileReader will be used.
 
-#ifndef MANGANESE_INCLUDE_IO_STRING_READER_H
-#define MANGANESE_INCLUDE_IO_STRING_READER_H
+#ifndef MANGANESE_INCLUDE_IO_STRING_READER_HPP
+#define MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #include <global_macros.hpp>
 
 #include <string>
@@ -46,4 +46,4 @@ class StringReader : public Reader {
 }  // namespace io
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_IO_STRING_READER_H
+#endif  // MANGANESE_INCLUDE_IO_STRING_READER_HPP

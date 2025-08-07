@@ -8,8 +8,8 @@
  * types) where the set of types is valid on one platform but incomplete on another.
  */
 
-#ifndef MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
-#define MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
+#ifndef MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_HPP
+#define MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_HPP
 
 #include <global_macros.hpp>
 
@@ -72,4 +72,4 @@ std::optional<number_t> stringToNumber(std::string_view str, Base base = Base::D
 
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_H
+#endif  // MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_HPP

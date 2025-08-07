@@ -13,8 +13,8 @@
  * @see reader.h - The base interface class that FileReader implements
  */
 
-#ifndef MANGANESE_INCLUDE_IO_FILEREADER_H
-#define MANGANESE_INCLUDE_IO_FILEREADER_H
+#ifndef MANGANESE_INCLUDE_IO_FILEREADER_HPP
+#define MANGANESE_INCLUDE_IO_FILEREADER_HPP
 
 #include <global_macros.hpp>
 
@@ -66,4 +66,4 @@ class FileReader : public Reader {
 };
 }  // namespace io
 }  // namespace Manganese
-#endif  // MANGANESE_INCLUDE_IO_FILEREADER_H
+#endif  // MANGANESE_INCLUDE_IO_FILEREADER_HPP

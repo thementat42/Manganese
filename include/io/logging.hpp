@@ -9,8 +9,8 @@
  * warnings. It also includes ANSI color codes for enhanced terminal output readability.
  *
  */
-#ifndef MANGANESE_INCLUDE_IO_LOGGING_H
-#define MANGANESE_INCLUDE_IO_LOGGING_H
+#ifndef MANGANESE_INCLUDE_IO_LOGGING_HPP
+#define MANGANESE_INCLUDE_IO_LOGGING_HPP
 
 #include <global_macros.hpp>
 
@@ -77,4 +77,4 @@ inline void logCritical(const std::string& message, size_t line = 0, size_t col 
 }  // namespace logging
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_IO_LOGGING_H
+#endif  // MANGANESE_INCLUDE_IO_LOGGING_HPP

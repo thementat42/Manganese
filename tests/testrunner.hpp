@@ -3,8 +3,8 @@
  * @brief Defines the TestRunner class for running and summarizing unit tests
  */
 
-#ifndef MANGANESE_TESTS_TEST_RUNNER_H
-#define MANGANESE_TESTS_TEST_RUNNER_H
+#ifndef MANGANESE_TESTS_TEST_RUNNER_HPP
+#define MANGANESE_TESTS_TEST_RUNNER_HPP
 
 #include <global_macros.hpp>
 
@@ -28,4 +28,4 @@ class TestRunner {
 }  // namespace tests
 }  // namespace Manganese
 
-#endif  // MANGANESE_TESTS_TEST_RUNNER_H
+#endif  // MANGANESE_TESTS_TEST_RUNNER_HPP

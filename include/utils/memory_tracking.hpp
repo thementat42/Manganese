@@ -8,8 +8,8 @@
  * When MEMORY_TRACKING and DEBUG are enabled (via CMake), the code tracks the total bytes allocated during the
  * program's lifetime If CONTINUOUS_MEMORY_TRACKING is defined as well, each allocation is logged to a file
  */
-#ifndef MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
-#define MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
+#ifndef MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_HPP
+#define MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_HPP
 
 #include <global_macros.hpp>
 #include <io/logging.hpp>
@@ -120,4 +120,4 @@ inline void logTotalAllocatedMemory() {
 #endif  // MEMORY_TRACKING && DEBUG
 }
 
-#endif  // MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_H
+#endif  // MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_HPP

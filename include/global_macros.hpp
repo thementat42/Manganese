@@ -3,8 +3,8 @@
  * @brief Global macros and utility definitions for the project.
  */
 
-#ifndef MANGANESE_INCLUDE_GLOBAL_MACROS_H
-#define MANGANESE_INCLUDE_GLOBAL_MACROS_H
+#ifndef MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
+#define MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
 
 #include <stdint.h>
 #include <utils/compiler_config.h>
@@ -89,4 +89,4 @@
 
 #define NOT_IMPLEMENTED(reason) __NOT_IMPLEMENTED(reason)  // Indicates that a function is not implemented
 
-#endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_H
+#endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_HPP

@@ -8,8 +8,8 @@
  * ! The nodes are listed in alphabetical order.
  */
 
-#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_H
-#define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
+#define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 
 #include <frontend/ast/ast_base.hpp>
 #include <utils/number_utils.hpp>
@@ -150,4 +150,4 @@ bool isPrimitiveType(const Type* type);
 
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP

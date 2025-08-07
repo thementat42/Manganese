@@ -9,8 +9,8 @@
  *
  * ! The nodes are listed in alphabetical order.
  */
-#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_H
-#define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
+#define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/ast/ast_expressions.hpp>
@@ -277,4 +277,4 @@ class WhileLoopStatement : public Statement {
 
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP

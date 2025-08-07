@@ -10,10 +10,10 @@
  * @see lexer_base.h
  * @see token.h
  */
-#ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_H
-#define MANGANESE_INCLUDE_FRONTEND_LEXER_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_HPP
+#define MANGANESE_INCLUDE_FRONTEND_LEXER_HPP
 
 #include <frontend/lexer/lexer_base.hpp>
 #include <frontend/lexer/token.hpp>
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_LEXER_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_LEXER_HPP

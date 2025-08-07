@@ -9,8 +9,8 @@
  * the AST nodes (statements, expressions and types)
  */
 
-#ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_H
-#define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_H
+#ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
+#define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
@@ -257,4 +257,4 @@ class Parser {
 }  // namespace parser
 }  // namespace Manganese
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_H
+#endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
