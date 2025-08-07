@@ -122,7 +122,7 @@ class Expression : public ASTNode {
     virtual Type* getType() const noexcept { return computedType.get(); };
     virtual TypeSPtr_t getTypePtr() const noexcept { return computedType; }
     virtual void setType(TypeSPtr_t type) noexcept { computedType = type; }
-    virtual ExpressionKind kind() const noexcept = 0;
+    constexpr virtual ExpressionKind kind() const noexcept = 0;
     friend parser::Parser;
     friend semantic::SemanticAnalyzer;
 };
@@ -130,7 +130,7 @@ class Expression : public ASTNode {
 class Statement : public ASTNode {
    public:
     virtual ~Statement() noexcept = default;
-    virtual StatementKind kind() const noexcept = 0;
+    constexpr virtual StatementKind kind() const noexcept = 0;
     friend parser::Parser;
     friend semantic::SemanticAnalyzer;
 };
@@ -138,7 +138,7 @@ class Statement : public ASTNode {
 class Type : public ASTNode {
    public:
     virtual ~Type() noexcept = default;
-    virtual TypeKind kind() const noexcept = 0;
+    constexpr virtual TypeKind kind() const noexcept = 0;
     friend parser::Parser;
     friend semantic::SemanticAnalyzer;
     virtual bool operator==(const Type& other) const noexcept = 0;

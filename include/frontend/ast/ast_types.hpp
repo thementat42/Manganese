@@ -41,7 +41,7 @@ class AggregateType : public Type {
    public:
     explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) : fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
-    TypeKind kind() const noexcept override { return TypeKind::AggregateType; }
+    constexpr TypeKind kind() const noexcept override { return TypeKind::AggregateType; }
 
     bool operator==(const Type& other) const noexcept override;
 };
@@ -58,7 +58,7 @@ class ArrayType : public Type {
         elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     AST_STANDARD_INTERFACE;
-    TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
+    constexpr TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
 
     bool operator==(const Type& other) const noexcept override;
 };
@@ -87,7 +87,7 @@ class FunctionType : public Type {
         parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
 
     AST_STANDARD_INTERFACE;
-    TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
+    constexpr TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
 
     bool operator==(const Type& other) const noexcept override;
 };
@@ -106,7 +106,7 @@ class GenericType : public Type {
         baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
     AST_STANDARD_INTERFACE;
-    TypeKind kind() const noexcept override { return TypeKind::GenericType; };
+    constexpr TypeKind kind() const noexcept override { return TypeKind::GenericType; };
 
     bool operator==(const Type& other) const noexcept override;
 };
@@ -122,7 +122,7 @@ class PointerType : public Type {
     explicit PointerType(TypeSPtr_t baseType_) : baseType(std::move(baseType_)) {}
 
     AST_STANDARD_INTERFACE;
-    TypeKind kind() const noexcept override { return TypeKind::PointerType; };
+    constexpr TypeKind kind() const noexcept override { return TypeKind::PointerType; };
 
     bool operator==(const Type& other) const noexcept override;
 };
@@ -138,7 +138,7 @@ class SymbolType : public Type {
     explicit SymbolType(std::string name_) : name(std::move(name_)) {}
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }
-    TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
+    constexpr TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
 
     bool operator==(const Type& other) const noexcept override;
 };

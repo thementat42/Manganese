@@ -58,7 +58,7 @@ class AggregateDeclarationStatement : public Statement {
                                std::vector<AggregateField> fields_) :
         name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::AggregateDeclarationStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::AggregateDeclarationStatement; };
 };
 
 class AliasStatement : public Statement {
@@ -72,7 +72,7 @@ class AliasStatement : public Statement {
         baseType(std::move(baseType_)), alias(std::move(alias_)) {}
 
     AST_STANDARD_INTERFACE
-    StatementKind kind() const noexcept override { return StatementKind::AliasStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::AliasStatement; };
 };
 
 class BreakStatement : public Statement {
@@ -80,7 +80,7 @@ class BreakStatement : public Statement {
     BreakStatement() = default;
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::BreakStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::BreakStatement; };
 };
 
 
@@ -89,14 +89,14 @@ class ContinueStatement : public Statement {
     ContinueStatement() = default;
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::ContinueStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::ContinueStatement; };
 };
 
 class EmptyStatement : public Statement {
     public:
     EmptyStatement() = default;
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::EmptyStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::EmptyStatement; };
 };
 
 struct EnumValue {
@@ -118,7 +118,7 @@ class EnumDeclarationStatement : public Statement {
         name(name_), baseType(std::move(baseType_)), values(std::move(values_)) {}
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::EnumDeclarationStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::EnumDeclarationStatement; };
 };
 
 /**
@@ -132,7 +132,7 @@ class ExpressionStatement : public Statement {
     explicit ExpressionStatement(ExpressionUPtr_t expression_) : expression(std::move(expression_)) {};
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::ExpressionStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::ExpressionStatement; };
 };
 
 struct FunctionParameter {
@@ -163,7 +163,7 @@ class FunctionDeclarationStatement : public Statement {
         body(std::move(body_)) {}
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::FunctionDeclarationStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::FunctionDeclarationStatement; };
 };
 
 struct ElifClause {
@@ -187,7 +187,7 @@ class IfStatement : public Statement {
         elifs(std::move(elifs_)) {}
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::IfStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::IfStatement; };
 };
 
 class RepeatLoopStatement : public Statement {
@@ -200,7 +200,7 @@ class RepeatLoopStatement : public Statement {
         numIterations(std::move(numIterations_)), body(std::move(body_)) {}
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::RepeatLoopStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::RepeatLoopStatement; };
 };
 
 class ReturnStatement : public Statement {
@@ -211,7 +211,7 @@ class ReturnStatement : public Statement {
     explicit ReturnStatement(ExpressionUPtr_t value_ = nullptr) : value(std::move(value_)) {}
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::ReturnStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::ReturnStatement; };
 };
 
 struct CaseClause {
@@ -233,7 +233,7 @@ class SwitchStatement : public Statement {
         variable(std::move(variable_)), cases(std::move(cases_)), defaultBody(std::move(defaultBody_)) {}
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::SwitchStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::SwitchStatement; };
 };
 
 class VariableDeclarationStatement : public Statement {
@@ -256,7 +256,7 @@ class VariableDeclarationStatement : public Statement {
     bool isConstant() const { return isConst; }
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::VariableDeclarationStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::VariableDeclarationStatement; };
 };
 
 class WhileLoopStatement : public Statement {
@@ -270,7 +270,7 @@ class WhileLoopStatement : public Statement {
         body(std::move(body_)), condition(std::move(condition_)), isDoWhile(isDoWhile_) {}
 
     AST_STANDARD_INTERFACE;
-    StatementKind kind() const noexcept override { return StatementKind::WhileLoopStatement; };
+    constexpr StatementKind kind() const noexcept override { return StatementKind::WhileLoopStatement; };
 };
 
 }  // namespace ast
