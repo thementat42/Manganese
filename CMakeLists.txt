@@ -63,6 +63,7 @@ set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 option(BUILD_TESTS "Build the test suite" OFF)
 option(MEMORY_TRACKING "Enable total memory allocation tracking (does not account for deallocations)" OFF)
 option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory usage tracking (detailed logging to file)" OFF)
+option(INSTALL_DEPENDENCIES "Download third-party dependencies used by the project" OFF)
 
 # ==============================================================================
 # Memory tracking configuration
@@ -85,6 +86,13 @@ else()
     add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=0)
 endif()
 
+
+# ==============================================================================
+# Dependencies Install
+# ==============================================================================
+
+# TODO
+
 # ==============================================================================
 # LLVM configuration
 # ==============================================================================
@@ -92,7 +100,11 @@ endif()
 find_package(LLVM REQUIRED CONFIG)
 
 if(NOT LLVM_FOUND)
-  message(FATAL_ERROR "LLVM not found. Please install LLVM and make sure it is in the system PATH.")
+  message(FATAL_ERROR "LLVM could not be found on this system.\n" 
+  "To automatically install it, you can re-run cmake with -DINSTALL_DEPENDENCIES=ON.\n"
+"Alternatively, you can install it manually and add it to the system PATH.\n"
+"If you already have it installed, please make sure it's in the system PATH."
+)
 endif()
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -118,7 +130,7 @@ if(BUILD_TESTS)
 
     set(TEST_SRC ${SRC} ${TEST_SOURCES})
 
-    add_executable(${PROJECT_NAME}_tests ${TEST_SRC} ${TESTS_MAIN})
+    add_executable(${PROJECT_NAME} ${TEST_SRC} ${TESTS_MAIN})
 
     if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         message(WARNING
@@ -129,10 +141,10 @@ if(BUILD_TESTS)
     endif()
 
     # Force DEBUG macro for the test target regardless of global option
-    target_compile_definitions(${PROJECT_NAME}_tests PRIVATE DEBUG=1)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=1)
     
     if(MSVC)
-        target_compile_options(${PROJECT_NAME}_tests PRIVATE
+        target_compile_options(${PROJECT_NAME} PRIVATE
             /Od
             /Zi
             /W4
@@ -144,7 +156,7 @@ if(BUILD_TESTS)
             /GS
         )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(${PROJECT_NAME}_tests PRIVATE
+        target_compile_options(${PROJECT_NAME} PRIVATE
             -O0 -g3
             -Wshadow
             -Wuninitialized
@@ -166,9 +178,9 @@ if(BUILD_TESTS)
             # -lgcov
             --save-temps
         )
-        # target_link_libraries(${PROJECT_NAME}_tests PRIVATE gcov)
+        # target_link_libraries(${PROJECT_NAME} PRIVATE gcov)
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(${PROJECT_NAME}_tests PRIVATE
+        target_compile_options(${PROJECT_NAME} PRIVATE
             -O0 -g3
             -Wshadow
             -Wuninitialized
@@ -188,7 +200,7 @@ if(BUILD_TESTS)
         )
     else()
         message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic compiler flags.")
-        target_compile_options(${PROJECT_NAME}_tests PRIVATE
+        target_compile_options(${PROJECT_NAME} PRIVATE
             -O0 -g3
             -Wall
             -Wextra
@@ -197,11 +209,11 @@ if(BUILD_TESTS)
     endif()
     
     # Include directories
-    target_include_directories(${PROJECT_NAME}_tests PRIVATE ${INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME}_tests ${llvm_libs})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} ${llvm_libs})
     
     # Output binary to bin directory
-    set_target_properties(${PROJECT_NAME}_tests PROPERTIES
+    set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
     
