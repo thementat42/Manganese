@@ -38,10 +38,8 @@ ParsedFile Parser::parse() {
         // No need to move thanks to copy elision
         program.push_back(parseStatement());
 
-        // We don't need to look back at old tokens from previous statements,
-        // clear the cache to save memory
-        tokenCache.clear();
-        tokenCachePosition = 0;
+        // Lookbehind is only needed within a statement, not across them
+        previousToken.reset();
     }
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
     lexer->blockComments.shrink_to_fit();
@@ -53,23 +51,15 @@ ParsedFile Parser::parse() {
 
 // ===== Helper functions =====
 bool Parser::isUnaryContext() const noexcept {
-    if (tokenCache.empty() || tokenCachePosition == 0) {
-        return true;  // If the cache is empty or we're at the start, it's a unary context
+    if (!previousToken) {
+        // No previous token (this is the start of an expression), so it's a unary context
+        // e.g. -3
+        return true;
     }
-    auto lastToken = tokenCache[tokenCachePosition - 1];
+    const Token& lastToken = *previousToken;
 
     return lastToken.getType() == TokenType::LeftParen
         || (lastToken.isOperator() && lastToken.getType() != TokenType::Inc && lastToken.getType() != TokenType::Dec);
-}
-
-[[nodiscard]] Token Parser::currentToken() noexcept {
-    while (tokenCachePosition >= tokenCache.size()) { tokenCache.push_back(lexer->consumeToken()); }
-    return tokenCache[tokenCachePosition];
-}
-
-[[nodiscard]] Token Parser::advance() {
-    while (tokenCachePosition >= tokenCache.size()) { tokenCache.push_back(lexer->consumeToken()); }
-    return tokenCache[tokenCachePosition++];
 }
 
 Token Parser::expectToken(TokenType expectedType) { return expectToken(expectedType, "Unexpected token: "); }
