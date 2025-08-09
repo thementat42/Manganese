@@ -105,8 +105,8 @@ class ASTNode {
     virtual void dump(std::ostream& os, int indent = 0) const = 0;
 #endif  // DEBUG
 
-    size_t getLine() const { return line; }
-    size_t getColumn() const { return column; }
+    constexpr size_t getLine() const noexcept { return line; }
+    constexpr size_t getColumn() const noexcept { return column; }
 
     friend parser::Parser;
     friend semantic::SemanticAnalyzer;
