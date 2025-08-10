@@ -15,7 +15,6 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_types.hpp>
-
 #include <utility>
 
 namespace Manganese {
@@ -47,27 +46,25 @@ struct AggregateField {
 };
 
 class AggregateDeclarationStatement : public Statement {
-   protected:
+   public:
     std::string name;
     std::vector<std::string> genericTypes;
     std::vector<AggregateField> fields;
     Visibility visibility = Visibility::Private;
 
-   public:
     AggregateDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
-                               std::vector<AggregateField> fields_) :
+                                  std::vector<AggregateField> fields_) :
         name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
     AST_STANDARD_INTERFACE;
     constexpr StatementKind kind() const noexcept override { return StatementKind::AggregateDeclarationStatement; };
 };
 
 class AliasStatement : public Statement {
-   protected:
+   public:
     TypeSPtr_t baseType;  // The type being aliased (x in alias x as foo)
     std::string alias;  // The name of the alias (foo in alias x as foo)
     Visibility visibility = Visibility::Private;
 
-   public:
     AliasStatement(TypeSPtr_t baseType_, std::string alias_) :
         baseType(std::move(baseType_)), alias(std::move(alias_)) {}
 
@@ -83,7 +80,6 @@ class BreakStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::BreakStatement; };
 };
 
-
 class ContinueStatement : public Statement {
    public:
     ContinueStatement() = default;
@@ -93,7 +89,7 @@ class ContinueStatement : public Statement {
 };
 
 class EmptyStatement : public Statement {
-    public:
+   public:
     EmptyStatement() = default;
     AST_STANDARD_INTERFACE;
     constexpr StatementKind kind() const noexcept override { return StatementKind::EmptyStatement; };
@@ -107,13 +103,12 @@ struct EnumValue {
 };
 
 class EnumDeclarationStatement : public Statement {
-   protected:
+   public:
     std::string name;
     TypeSPtr_t baseType;
     std::vector<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
-   public:
     EnumDeclarationStatement(std::string name_, TypeSPtr_t baseType_, std::vector<EnumValue> values_) :
         name(name_), baseType(std::move(baseType_)), values(std::move(values_)) {}
 
@@ -125,10 +120,9 @@ class EnumDeclarationStatement : public Statement {
  * @brief Wrapper class to convert an expression into a statement
  */
 class ExpressionStatement : public Statement {
-   protected:
+   public:
     ExpressionUPtr_t expression;
 
-   public:
     explicit ExpressionStatement(ExpressionUPtr_t expression_) : expression(std::move(expression_)) {};
 
     AST_STANDARD_INTERFACE;
@@ -145,7 +139,7 @@ struct FunctionParameter {
 };
 
 class FunctionDeclarationStatement : public Statement {
-   protected:
+   public:
     std::string name;
     std::vector<std::string> genericTypes;
     std::vector<FunctionParameter> parameters;
@@ -153,7 +147,6 @@ class FunctionDeclarationStatement : public Statement {
     Block body;
     Visibility visibility = Visibility::Private;
 
-   public:
     FunctionDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
                                  std::vector<FunctionParameter> parameters_, TypeSPtr_t returnType_, Block body_) :
         name(std::move(name_)),
@@ -174,12 +167,11 @@ struct ElifClause {
 };
 
 class IfStatement : public Statement {
-   protected:
+   public:
     ExpressionUPtr_t condition;
     Block body, elseBody;  // elseBody might be empty
     std::vector<ElifClause> elifs;
 
-   public:
     IfStatement(ExpressionUPtr_t condition_, Block body_, std::vector<ElifClause> elifs_, Block elseBody_ = {}) :
         condition(std::move(condition_)),
         body(std::move(body_)),
@@ -191,11 +183,10 @@ class IfStatement : public Statement {
 };
 
 class RepeatLoopStatement : public Statement {
-   protected:
+   public:
     ExpressionUPtr_t numIterations;
     Block body;
 
-   public:
     RepeatLoopStatement(ExpressionUPtr_t numIterations_, Block body_) :
         numIterations(std::move(numIterations_)), body(std::move(body_)) {}
 
@@ -204,10 +195,9 @@ class RepeatLoopStatement : public Statement {
 };
 
 class ReturnStatement : public Statement {
-   protected:
+   public:
     ExpressionUPtr_t value;
 
-   public:
     explicit ReturnStatement(ExpressionUPtr_t value_ = nullptr) : value(std::move(value_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -223,12 +213,11 @@ struct CaseClause {
 };
 
 class SwitchStatement : public Statement {
-   protected:
+   public:
     ExpressionUPtr_t variable;
     std::vector<CaseClause> cases;
     Block defaultBody;
 
-   public:
     SwitchStatement(ExpressionUPtr_t variable_, std::vector<CaseClause> cases_, Block defaultBody_ = {}) :
         variable(std::move(variable_)), cases(std::move(cases_)), defaultBody(std::move(defaultBody_)) {}
 
@@ -237,14 +226,13 @@ class SwitchStatement : public Statement {
 };
 
 class VariableDeclarationStatement : public Statement {
-   protected:
+   public:
     bool isConst;
     std::string name;
     Visibility visibility;
     ExpressionUPtr_t value;
     TypeSPtr_t type;
 
-   public:
     VariableDeclarationStatement(bool isConst_, std::string name_, Visibility visibility_, ExpressionUPtr_t _value,
                                  TypeSPtr_t _type) :
         isConst(isConst_),
@@ -260,12 +248,12 @@ class VariableDeclarationStatement : public Statement {
 };
 
 class WhileLoopStatement : public Statement {
-   protected:
+    public:
+
     Block body;
     ExpressionUPtr_t condition;
     bool isDoWhile;
 
-   public:
     WhileLoopStatement(Block body_, ExpressionUPtr_t condition_, bool isDoWhile_ = false) :
         body(std::move(body_)), condition(std::move(condition_)), isDoWhile(isDoWhile_) {}
 

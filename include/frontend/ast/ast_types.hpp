@@ -35,10 +35,9 @@ enum class TypeKind {
  * e.g. aggregate {int, float}
  */
 class AggregateType : public Type {
-   protected:
+   public:
     std::vector<TypeSPtr_t> fieldTypes;
 
-   public:
     explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) : fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::AggregateType; }
@@ -46,11 +45,10 @@ class AggregateType : public Type {
     bool operator==(const Type& other) const noexcept override;
 };
 class ArrayType : public Type {
-   protected:
+   public:
     TypeSPtr_t elementType;
     ExpressionUPtr_t lengthExpression;  // If not given, the length is inferred from the number of elements
 
-   public:
     /**
      * @param elementType_ The type of the elements in the array
      */
@@ -78,11 +76,10 @@ struct FunctionParameterType {
  * e.g. func(int, int) -> bool
  */
 class FunctionType : public Type {
-   protected:
+   public:
     std::vector<FunctionParameterType> parameterTypes;
     TypeSPtr_t returnType;
 
-   public:
     FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypeSPtr_t returnType_) :
         parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
 
@@ -98,10 +95,9 @@ class FunctionType : public Type {
  * It does not represent the generic type itself
  */
 class GenericType : public Type {
-   protected:
+   public:
     TypeSPtr_t baseType;  // some_function in `some_function@[T,U]`
     std::vector<TypeSPtr_t> typeParameters;  // T and U in `some_function@[T,U]`
-   public:
     GenericType(TypeSPtr_t baseType_, std::vector<TypeSPtr_t> typeParameters_) :
         baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
@@ -115,10 +111,9 @@ class GenericType : public Type {
  * ptr + any type
  */
 class PointerType : public Type {
-   protected:
+   public:
     TypeSPtr_t baseType;
 
-   public:
     explicit PointerType(TypeSPtr_t baseType_) : baseType(std::move(baseType_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -131,10 +126,9 @@ class PointerType : public Type {
  * e.g. T, int, etc.
  */
 class SymbolType : public Type {
-   protected:
+   public:
     std::string name;
 
-   public:
     explicit SymbolType(std::string name_) : name(std::move(name_)) {}
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }

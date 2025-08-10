@@ -37,26 +37,14 @@
     __OVERRIDE_TO_STRING \
     __OVERRIDE_DUMP_METHOD
 
-#define __FRIEND_DECLS     \
-    friend parser::Parser; \
-    friend semantic::SemanticAnalyzer;
-
 /**
  * Common interface functions for all nodes
  * Combines required methods overrides (toString/dump)
  * and friend declarations (the parser and semantic analyzer) for access to protected members
  */
-#define AST_STANDARD_INTERFACE __NODE_OVERRIDES __FRIEND_DECLS
+#define AST_STANDARD_INTERFACE __NODE_OVERRIDES
 
 namespace Manganese {
-
-namespace parser {
-class Parser;
-}  // namespace parser
-
-namespace semantic {
-class SemanticAnalyzer;
-}  // namespace semantic
 
 namespace ast {
 class Expression;
@@ -88,10 +76,9 @@ enum class Visibility : char {
 std::string visibilityToString(const Visibility& visibility) noexcept_if_release;
 
 class ASTNode {
-   protected:
+   public:
     size_t line = 0, column = 0;
 
-   public:
     virtual ~ASTNode() noexcept = default;
 
     virtual std::string toString() const = 0;
@@ -107,39 +94,29 @@ class ASTNode {
 
     constexpr size_t getLine() const noexcept { return line; }
     constexpr size_t getColumn() const noexcept { return column; }
-
-    friend parser::Parser;
-    friend semantic::SemanticAnalyzer;
 };
 
 class Expression : public ASTNode {
-   protected:
+   public:
     TypeSPtr_t computedType;
 
-   public:
     virtual ~Expression() noexcept = default;
     virtual Type* getType() const noexcept { return computedType.get(); };
     virtual TypeSPtr_t getTypePtr() const noexcept { return computedType; }
     virtual void setType(TypeSPtr_t type) noexcept { computedType = type; }
     constexpr virtual ExpressionKind kind() const noexcept = 0;
-    friend parser::Parser;
-    friend semantic::SemanticAnalyzer;
 };
 
 class Statement : public ASTNode {
    public:
     virtual ~Statement() noexcept = default;
     constexpr virtual StatementKind kind() const noexcept = 0;
-    friend parser::Parser;
-    friend semantic::SemanticAnalyzer;
 };
 
 class Type : public ASTNode {
    public:
     virtual ~Type() noexcept = default;
     constexpr virtual TypeKind kind() const noexcept = 0;
-    friend parser::Parser;
-    friend semantic::SemanticAnalyzer;
     virtual bool operator==(const Type& other) const noexcept = 0;
 };
 
