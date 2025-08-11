@@ -140,6 +140,7 @@ class SemanticAnalyzer {
     bool areTypesPromotableOrDemotable(const ast::Type* from, const ast::Type* to) const noexcept_if_release;
 
     inline bool areTypesCompatible(const ast::Type* type1, const ast::Type* type2) const noexcept_if_release {
+        if (!type1 || !type2) { return false; }
         const ast::Type* type1Resolved = resolveAlias(type1);
         const ast::Type* type2Resolved = resolveAlias(type2);
         return *type1Resolved == *type2Resolved || areTypesPromotableOrDemotable(type1Resolved, type2Resolved);
