@@ -59,7 +59,7 @@ bool Token::isOperator() const noexcept {
 }
 
 bool Token::isPrefixOperator() const noexcept {
-    return type == TokenType::Inc || type == TokenType::Dec || type == TokenType::BitAnd || type == TokenType::Mul
+    return type == TokenType::Inc || type == TokenType::Dec || type == TokenType::BitAnd || type == TokenType::Star
         || type == TokenType::AddressOf || type == TokenType::Dereference;
 }
 
@@ -84,7 +84,7 @@ bool Token::hasUnaryCounterpart() const noexcept {
     return type == TokenType::Plus ||  // + can be addition or unary plus
         type == TokenType::Minus ||  // - can be subtraction or unary minus
         type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
-        type == TokenType::Mul;  // * can be multiplication or dereference operator
+        type == TokenType::Star;  // * can be multiplication or dereference operator
 }
 
 TokenType Token::getUnaryCounterpart() const noexcept_if_release {
@@ -92,7 +92,7 @@ TokenType Token::getUnaryCounterpart() const noexcept_if_release {
         case TokenType::Plus: return TokenType::UnaryPlus;
         case TokenType::Minus: return TokenType::UnaryMinus;
         case TokenType::BitAnd: return TokenType::AddressOf;
-        case TokenType::Mul: return TokenType::Dereference;
+        case TokenType::Star: return TokenType::Dereference;
         default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(type));
     }
 }
@@ -124,7 +124,7 @@ std::string Token::toString() const noexcept {
 
 constexpr bool isBinaryOperator(const TokenType type) noexcept {
     using enum TokenType;
-    return type == Plus || type == Minus || type == Mul || type == Div || type == FloorDiv || type == Mod || type == Exp
+    return type == Plus || type == Minus || type == Star || type == Div || type == FloorDiv || type == Mod || type == Exp
         || type == GreaterThan || type == GreaterThanOrEqual || type == LessThan || type == LessThanOrEqual
         || type == Equal || type == NotEqual || type == And || type == Or || type == BitAnd || type == BitOr
         || type == BitXor || type == BitLShift || type == BitRShift;
@@ -212,7 +212,7 @@ std::string tokenTypeToString(TokenType type) noexcept_if_release {
 
         case TokenType::Plus: return "+";
         case TokenType::Minus: return "-";
-        case TokenType::Mul: return "*";
+        case TokenType::Star: return "*";
         case TokenType::Div: return "/";
         case TokenType::FloorDiv: return "//";
         case TokenType::Mod: return "%";
@@ -268,7 +268,7 @@ std::unordered_map<std::string, const TokenType> operatorMap = {
     // Arithmetic Operators
     {"+", TokenType::Plus},
     {"-", TokenType::Minus},
-    {"*", TokenType::Mul},
+    {"*", TokenType::Star},
     {"/", TokenType::Div},
     {"//", TokenType::FloorDiv},
     {"%", TokenType::Mod},

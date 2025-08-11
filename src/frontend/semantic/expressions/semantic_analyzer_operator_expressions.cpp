@@ -1,5 +1,6 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/semantic_type_helpers.hpp>
+#include <frontend/lexer/token.hpp>
 
 namespace Manganese {
 using ast::toStringOr;
@@ -113,7 +114,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpress
     switch (op) {
         case Plus:
         case Minus:
-        case Mul:
+        case Star:
         case Exp:
         case Div:
         case FloorDiv:
@@ -196,7 +197,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
         return nullptr;
     }
 
-    if (op == TokenType::Mul) {
+    if (op == TokenType::Star) {
         // string * uint or uint * string => string (string repetition)
         if ((isString(leftType.get()) && isUInt(rightType.get()))
             || (isUInt(leftType.get()) && isString(rightType.get()))) {
@@ -309,7 +310,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryEx
 
             return nullptr;
         }
-        case TokenType::Mul: {
+        case TokenType::Star: {
             // Array * Int => Array of the same type repeated n times
             if (isUInt(right->getType())) { return std::make_shared<ast::ArrayType>(leftArrayType->elementType); }
             logError("Operator '*' not supported for array and {}", binaryExpression, toStringOr(right->getType()));
