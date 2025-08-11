@@ -10,10 +10,6 @@
  * @see ast_statements.hpp
  * @see ast_types.hpp
  */
-/**
- *
- */
-
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 
