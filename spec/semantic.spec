@@ -114,4 +114,5 @@ Here, __op__ stands for any of {&, |, ^, <<, >>}
 == Miscillaneous Operators ==
 &
     &{any variable} -> int64 (the address of the variable)
+*
     *{any pointer variable} -> {type} (the type the pointer is pointing to)
