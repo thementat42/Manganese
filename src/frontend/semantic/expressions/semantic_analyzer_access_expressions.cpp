@@ -20,7 +20,6 @@ void SemanticAnalyzer::checkIndexExpression(ast::IndexExpression* expression) {
                  toStringOr(expression->variable), toStringOr(currentType));
         return;
     }
-
     auto* arrayType = static_cast<ast::ArrayType*>(currentType);
     expression->setType(arrayType->elementType);
 

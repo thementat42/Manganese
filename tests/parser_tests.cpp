@@ -503,7 +503,7 @@ bool testRedundantSemicolons() {
     return validateStatements(getParserResults(expression), expected, "Redundant Semicolons");
 }
 
-bool miscTests() {
+static bool miscTests() {
     std::string expression = "let x: (ptr int)[];";
     auto x = getParserResults(expression);
     std::cout << x[0]->toString() << "\n";
