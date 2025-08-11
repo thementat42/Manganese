@@ -236,6 +236,10 @@ bool checkLoops() {
 }
 
 static bool miscTests() {
+    // TODO: Consider immutability by default
+    //! Functions can be assigned to each other (no way to prevent this)
+    //! This is weird
+    //! Having just functions be immutable by default would be unintuitive
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(
         R"(
