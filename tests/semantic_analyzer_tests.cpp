@@ -235,6 +235,27 @@ bool checkLoops() {
     return true;
 }
 
+static bool miscTests() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse(
+        R"(
+        func foo() -> int {return 3;}
+        func bar() -> int {return 1;}
+        let x: int[10] = [1,2,3,4,5,6,7,8,9,10];
+        3 = 10;
+        x[0] = 5;
+        x[0][0] = 100;
+        foo = bar;
+        foo() = 3;
+        bar() = [3];
+        bar()[0] = 3;
+        )");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    outputAnalyzedAST(program);
+    return true;
+}
+
 void runSemanticAnalysisTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -249,6 +270,7 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Member Access", checkMemberAccessExpression);
     runner.runTest("Type Cast Expression", checkTypeCastExpression);
     runner.runTest("Analyze Loops", checkLoops);
+    runner.runTest("Mist Tests", miscTests);
 }
 
 }  // namespace tests

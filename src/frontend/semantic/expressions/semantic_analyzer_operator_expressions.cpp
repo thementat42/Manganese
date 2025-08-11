@@ -1,6 +1,6 @@
+#include <frontend/lexer/token.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/semantic_type_helpers.hpp>
-#include <frontend/lexer/token.hpp>
 
 namespace Manganese {
 using ast::toStringOr;
@@ -43,8 +43,28 @@ void SemanticAnalyzer::checkPostfixExpression(ast::PostfixExpression* expression
     NOT_IMPLEMENTED("Will be implemented soon");
 }
 void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) {
-    DISCARD(expression);
-    NOT_IMPLEMENTED("Will be implemented soon");
+    // Valid prefix operators are: +. -. !, ~, ++, --, &, and *
+    checkExpression(expression->right.get());
+    ast::Type* rightType = expression->right->getType();
+    if (!rightType) {
+        logError("Could not deduce the type of {} in prefix expression {}", expression, toStringOr(expression->right),
+                 toStringOr(expression));
+        expression->setType(nullptr);
+        return;
+    }
+    switch (expression->op) {
+        case lexer::TokenType::Plus: break;
+        case lexer::TokenType::Minus: break;
+        case lexer::TokenType::Not: break;
+        case lexer::TokenType::BitNot: break;
+        case lexer::TokenType::Inc: break;
+        case lexer::TokenType::Dec: break;
+        case lexer::TokenType::AddressOf: break;
+        case lexer::TokenType::Star: break;
+        default:
+            ASSERT_UNREACHABLE(std::format("Unsupported prefix operator {} in expression {}",
+                                           lexer::tokenTypeToString(expression->op), toStringOr(expression)));
+    }
 }
 
 void SemanticAnalyzer::checkTypeCastExpression(ast::TypeCastExpression* expression) {
