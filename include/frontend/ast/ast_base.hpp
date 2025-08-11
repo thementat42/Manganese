@@ -1,14 +1,14 @@
 /**
- * @file ast_base.h
+ * @file ast_base.hpp
  * @brief Defines the base classes and utilities for the Abstract Syntax Tree (AST) in the Manganese frontend.
  *
  * This header provides the foundational ASTNode class and its main derivatives: Type, Expression, and Statement.
  * It also defines common type aliases for AST node pointers and blocks, as well as macros to facilitate
  * overriding methods and declaring parser friendships.
  *
- * @see ast_expressions.h
- * @see ast_statements.h
- * @see ast_types.h
+ * @see ast_expressions.hpp
+ * @see ast_statements.hpp
+ * @see ast_types.hpp
  */
 /**
  *
@@ -92,18 +92,19 @@ class ASTNode {
     virtual void dump(std::ostream& os, int indent = 0) const = 0;
 #endif  // DEBUG
 
-    constexpr size_t getLine() const noexcept { return line; }
-    constexpr size_t getColumn() const noexcept { return column; }
+    constexpr inline size_t getLine() const noexcept { return line; }
+    constexpr inline size_t getColumn() const noexcept { return column; }
 };
 
 class Expression : public ASTNode {
+   private:
+   TypeSPtr_t computedType;
    public:
-    TypeSPtr_t computedType;
 
     virtual ~Expression() noexcept = default;
-    virtual Type* getType() const noexcept { return computedType.get(); };
-    virtual TypeSPtr_t getTypePtr() const noexcept { return computedType; }
-    virtual void setType(TypeSPtr_t type) noexcept { computedType = type; }
+    constexpr inline Type* getType() const noexcept { return computedType.get(); };
+    inline TypeSPtr_t getTypePtr() const noexcept { return computedType; }
+    void setType(TypeSPtr_t type) noexcept { computedType = type; }
     constexpr virtual ExpressionKind kind() const noexcept = 0;
 };
 
@@ -169,8 +170,6 @@ inline std::string toStringOr(const TypeSPtr_t& type, const char* fallback = "no
 }
 
 }  // namespace ast
-
-// TODO: Add line and column setting methods to the derived classes
 }  // namespace Manganese
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
