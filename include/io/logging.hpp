@@ -1,7 +1,7 @@
 
 
 /**
- * @file logging.h
+ * @file logging.hpp
  * @brief Provides logging utilities for the Manganese project, including internal and user-facing logging functions
  * with support for log levels and colored terminal output.
  *

@@ -6,8 +6,8 @@
  * the resulting string representation for correctness. The tests are registered and run
  * via a TestRunner instance.
  *
- * @see include/frontend/parser.h
- * @see testrunner.h
+ * @see include/frontend/parser.hpp
+ * @see testrunner.hpp
  */
 
 #include <frontend/parser.hpp>

@@ -1,5 +1,5 @@
 /**
- * @file global_macros.h
+ * @file global_macros.hpp
  * @brief Global macros and utility definitions for the project.
  */
 

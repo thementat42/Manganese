@@ -1,5 +1,5 @@
 /**
- * @file stringreader.h
+ * @file stringreader.hpp
  * @brief This file contains the definition of the StringReader class
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file semantic.h
+ * @file semantic.hpp
  * @brief Central header for the semantic analysis components
  */
 

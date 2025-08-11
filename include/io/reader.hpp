@@ -1,5 +1,5 @@
 /**
- * @file reader.h
+ * @file reader.hpp
  * @brief This file contains the definition of the virtual Reader class
  *
  * Readers are responsible for taking in raw source code and passing individual characters onto the lexer.

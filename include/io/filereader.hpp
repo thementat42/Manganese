@@ -1,5 +1,5 @@
 /**
- * @file filereader.h
+ * @file filereader.hpp
  * @brief Defines the FileReader class for buffered file I/O operations.
  *
  * This file contains the FileReader class which implements the Reader interface
@@ -10,7 +10,7 @@
  *
  * @note This class is not copyable to prevent unintended duplication of file handles and buffer state.
  *
- * @see reader.h - The base interface class that FileReader implements
+ * @see reader.hpp - The base interface class that FileReader implements
  */
 
 #ifndef MANGANESE_INCLUDE_IO_FILEREADER_HPP

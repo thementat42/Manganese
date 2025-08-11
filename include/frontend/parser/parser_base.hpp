@@ -1,5 +1,5 @@
 /**
- * @file parser_base.h
+ * @file parser_base.hpp
  * @brief Base definitions and declarations for the parser.
  *
  * This header defines the core Parser class and related structures for parsing

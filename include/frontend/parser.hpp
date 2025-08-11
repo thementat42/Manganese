@@ -1,6 +1,6 @@
 
 /**
- * @file parser.h
+ * @file parser.hpp
  * @brief Central header for the parser components
  */
 

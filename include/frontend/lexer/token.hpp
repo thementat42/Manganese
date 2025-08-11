@@ -1,5 +1,5 @@
 /**
- * @file token.h
+ * @file token.hpp
  * @brief This file contains the definition of token functionality for the Manganese compiler.
  *
  * Defines the TokenType enumeration, Token class, and related helper functions for the Manganese language lexer.

@@ -1,7 +1,7 @@
 
 
 /**
- * @file ast_statements.h
+ * @file ast_statements.hpp
  * @brief Contains AST node definitions for various statement types in the Manganese frontend.
  *
  * This header declares the core statement node types used in the AST.

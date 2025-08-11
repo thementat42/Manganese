@@ -1,5 +1,5 @@
 /**
- * @file ast.h
+ * @file ast.hpp
  * @brief Central header for the AST components
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file number_utils.h
+ * @file number_utils.hpp
  * @brief Utility functions for converting strings to numbers
  * These functions differ from the standard library's `std::stox` functions in that they convert to the
  * types defined in cstdint.h (int8_t, int16_t, etc.), which are guaranteed to have the same width across different

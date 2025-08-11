@@ -1,5 +1,5 @@
 /**
- * @file frontend.h
+ * @file frontend.hpp
  * @brief Central header for all frontend components
  */
 

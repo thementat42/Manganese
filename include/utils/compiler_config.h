@@ -2,7 +2,7 @@
  * @file compiler_config.h
  * @brief This file contains configuration settings for the compiler, such as enabling/disabling warnings,
  * and other compiler-specific settings.
- * This file is included in the global_macros.h file for convenience.
+ * This file is included in the global_macros.hpp file for convenience.
  */
 
 #ifndef MANGANESE_INCLUDE_UTILS_COMPILER_CONFIG_H

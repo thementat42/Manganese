@@ -1,5 +1,5 @@
 /**
- * @file operators.h
+ * @file operators.hpp
  * @brief Defines operator precedence levels and operator binding powers for the Manganese parser.
  *
  * This header provides Operator struct, which encapsulates the left and right binding powers for operators.

@@ -1,7 +1,7 @@
 
 
 /**
- * @file memory_tracking.h
+ * @file memory_tracking.hpp
  * @brief Provides memory allocation tracking utilities for debugging and profiling.
  *
  * This header overrides global new and delete operators to track memory allocations and deallocations.

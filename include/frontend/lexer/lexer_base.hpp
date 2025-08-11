@@ -1,7 +1,7 @@
 
 
 /**
- * @file lexer_base.h
+ * @file lexer_base.hpp
  * @brief Defines the base Lexer class and related utilities for tokenizing source code in the Manganese frontend.
  *
  * The lexer is responsible for converting source code (from a string or file)

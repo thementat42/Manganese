@@ -1,5 +1,5 @@
 /**
- * @file ast_expressions.h
+ * @file ast_expressions.hpp
  * @brief Defines AST node classes for various expressions
  *
  * This header declares the core expression node types used in the AST.
