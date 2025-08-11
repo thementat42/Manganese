@@ -39,6 +39,7 @@ Notes:
     int - float -> float
     float - int -> float
     float - float -> float
+
     -int -> int
     -float -> float
 
@@ -48,9 +49,9 @@ Notes:
     float * int -> float
     float * float -> float
     string * uint -> string
-        negative ints are not supported
+        negative integers are not supported
     array * uint -> array
-        negative ints are not supported
+        negative integers are not supported
 
 /
     int / int -> float
@@ -111,7 +112,7 @@ Here, __op__ stands for any of {&, |, ^, <<, >>}
     ~int -> int
 
 
-== Miscillaneous Operators ==
+== Miscellaneous Operators ==
 &
     &{any variable} -> int64 (the address of the variable)
 *
