@@ -2,6 +2,9 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/semantic_type_helpers.hpp>
 
+#include "frontend/ast/ast_base.hpp"
+
+
 namespace Manganese {
 using ast::toStringOr;
 namespace semantic {
@@ -53,15 +56,73 @@ void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) 
         return;
     }
     switch (expression->op) {
-        case lexer::TokenType::Plus: break;
-        case lexer::TokenType::Minus: break;
-        case lexer::TokenType::Not: break;
-        case lexer::TokenType::BitNot: break;
-        case lexer::TokenType::Inc: break;
-        case lexer::TokenType::Dec: break;
-        case lexer::TokenType::AddressOf: break;
-        case lexer::TokenType::Star: break;
+        case lexer::TokenType::UnaryPlus:
+            if (!isAnyInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
+                logError("'+' can only be applied to numeric types, not {}", expression,
+                         toStringOr(expression->getType()));
+                break;
+            }
+            expression->setType(expression->right->getTypePtr());
+            break;
+        case lexer::TokenType::UnaryMinus:
+            if (!isAnyInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
+                logError("'-' can only be applied to numeric types, not {}", expression,
+                         toStringOr(expression->getType()));
+                break;
+            }
+            if (isUInt(expression->right->getType())) {
+                logWarning("Applying '-' to an unsigned integer can cause an integer underflow", expression);
+            }
+            expression->setType(expression->right->getTypePtr());
+            break;
+        case lexer::TokenType::Not:
+            if (!isBool(expression->right->getType())) {
+                logError("'!' can only be applied to a boolean type, not {}", expression,
+                         toStringOr(expression->getType()));
+                return;
+            }
+            expression->setType(expression->right->getTypePtr());
+            break;
+        case lexer::TokenType::BitNot:
+            if (!isAnyInt(expression->right->getType())) {
+                logError("'~' can only be applied to integer types, not {}", expression,
+                         toStringOr(expression->getType()));
+                break;
+            }
+            expression->setType(expression->right->getTypePtr());
+            break;
+        case lexer::TokenType::Inc:
+        case lexer::TokenType::Dec:
+            if (!isAnyInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
+                logError("'{}' can only be applied to numeric types, not {}", expression,
+                         lexer::tokenTypeToString(expression->op), toStringOr(expression->getType()));
+                break;
+            }
+            expression->setType(expression->right->getTypePtr());
+            break;
+        case lexer::TokenType::AddressOf:
+            if (expression->right->kind() != ast::ExpressionKind::IdentifierExpression
+                && expression->right->kind() != ast::ExpressionKind::IndexExpression) {
+                logError(
+                    "Cannot take the address of a non-variable expression: {}\nCan only take the address of variables, functions, and array elements.",
+                    expression, toStringOr(expression->right));
+                return;
+            }
+            expression->setType(std::make_shared<ast::PointerType>(expression->right->getTypePtr()));
+            break;
+        case lexer::TokenType::Dereference: {
+            if (expression->right->getType()->kind() != ast::TypeKind::PointerType) {
+                logError("Cannot dereference a non-pointer type {}", expression,
+                         toStringOr(expression->right->getType()));
+                return;
+            }
+            auto pointerType = static_cast<ast::PointerType*>(expression->right->getType());
+            expression->setType(pointerType->baseType);
+            break;
+        }
+
         default:
+    std::cout << static_cast<int>(expression->op) << "\n";
             ASSERT_UNREACHABLE(std::format("Unsupported prefix operator {} in expression {}",
                                            lexer::tokenTypeToString(expression->op), toStringOr(expression)));
     }
@@ -134,7 +195,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpress
     switch (op) {
         case Plus:
         case Minus:
-        case Star:
+        case Mul:
         case Exp:
         case Div:
         case FloorDiv:
@@ -217,7 +278,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
         return nullptr;
     }
 
-    if (op == TokenType::Star) {
+    if (op == TokenType::Mul) {
         // string * uint or uint * string => string (string repetition)
         if ((isString(leftType.get()) && isUInt(rightType.get()))
             || (isUInt(leftType.get()) && isString(rightType.get()))) {
@@ -330,7 +391,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArrayBinaryExpressionType(ast::BinaryEx
 
             return nullptr;
         }
-        case TokenType::Star: {
+        case TokenType::Mul: {
             // Array * Int => Array of the same type repeated n times
             if (isUInt(right->getType())) { return std::make_shared<ast::ArrayType>(leftArrayType->elementType); }
             logError("Operator '*' not supported for array and {}", binaryExpression, toStringOr(right->getType()));
