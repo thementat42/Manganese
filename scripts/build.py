@@ -18,6 +18,7 @@ Options:
     -h, --help                                             Print this help message and exit
     -i, --install-dependencies                             Have CMake install dependencies (to dependencies/)
     -j, --jobs                                             Number of parallel build jobs.
+    -l, --linker LINKER                                    Specify a linker to use (e.g. gcc, ld, etc.) instead of the default for the system
     -m, --memory-tracking                                  Track the total amount of heap-allocated memory the program uses (ignores deallocations)
     -mc, --memory-tracking-continuous                      Continuously track the amount of heap-allocated memory (accounts for deallocations, accuracy may vary with different compilers)
     --no-move                                              Leave the executable in the build directory after building (by default it will be moved to the root directory)
@@ -144,8 +145,14 @@ arg_parser.add_argument(
 
 arg_parser.add_argument(
     "-j", "--jobs",
-    type=int,
+    type = int,
     help="Number of parallel build jobs"
+)
+
+arg_parser.add_argument(
+    "-l", "--linker",
+    type = str,
+    help = "Specify a linker to use (e.g. gcc, ld, etc.) instead of the default for the system"
 )
 
 arg_parser.add_argument(
@@ -261,6 +268,7 @@ cmake_args = [
     f"-DCMAKE_BUILD_TYPE={("Debug" if args.debug or args.tests else "Release")}",
     f"-DMEMORY_TRACKING={"ON" if args.memory_tracking else "OFF"}",
     f"-DCONTINUOUS_MEMORY_TRACKING={"ON" if args.memory_tracking_continuous else "OFF"}",
+    f"-DCMAKE_EXPORT_COMPILE_COMMANDS={"ON" if args.compile_commands else "OFF"}",
 ]
 
 cmake_build_args = [
@@ -278,9 +286,12 @@ if args.generator is not None:
 if args.ccompiler:
     cmake_args.append(f"-DCMAKE_C_COMPILER={args.ccompiler}")
 if args.compile_commands:
-    cmake_args.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+    cmake_args.append("")
 if args.cxxcompiler:
     cmake_args.append(f"-DCMAKE_CXX_COMPILER={args.cxxcompiler}")
+if args.linker:
+    cmake_args.append(f"-DCMAKE_LINKER={args.linker}")
+
 
 run_command(cmake_args)
 run_command(cmake_build_args)
