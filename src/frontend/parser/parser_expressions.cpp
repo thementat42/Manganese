@@ -61,7 +61,7 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_rele
     // Handle operators which have a unary and a binary version
     // (e.g. `-` can be a unary negation or a binary subtraction)
     if (isUnaryContext() && token.hasUnaryCounterpart()) {
-        token.overrideType(token.getUnaryCounterpart());
+        token.overrideType(token.getUnaryCounterpart(), token.getLexeme());
         precedence = Precedence::Unary;
     }
     TokenType type = token.getType();
@@ -272,9 +272,18 @@ ExpressionUPtr_t Parser::parsePostfixExpression(ExpressionUPtr_t left, Precedenc
 }
 
 ExpressionUPtr_t Parser::parsePrefixExpression() noexcept_if_release {
-    TokenType op = advance().getType();
+    Token token = currentToken();
+    TokenType op = token.getType();
+    
+    // Check if we need to convert to a unary counterpart
+    if (token.hasUnaryCounterpart() && isUnaryContext()) {
+        op = token.getUnaryCounterpart();
+    }
+    
+    // Now advance past the token
+    std::cout << advance().toString() << " HI!\n";
+    
     auto right = parseExpression(Precedence::Unary);
-
     return std::make_unique<ast::PrefixExpression>(op, std::move(right));
 }
 
