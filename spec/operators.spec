@@ -11,11 +11,9 @@ Primitive-ish:
     array
 
 Notes:
-    int here refers to any integer type (int(8/16/32/64) and uint(8/16/32/64))
-        In the actual semantic analysis, these are treated differently -- this is just a shorthand
-    float refers to both float32 and float 64
-        In the actual semantic analysis, these are treated differently -- this is just a shorthand
-    Things between ??? are maybes
+    int here is a shorthand for any integer type (int(8/16/32/64) and uint(8/16/32/64))
+        uint specifically means an unsigned integer type
+    float is a shorthand for both float32 and float 64
 
 === Arithmetic Operators ===
 
