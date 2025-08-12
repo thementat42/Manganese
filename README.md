@@ -1,8 +1,7 @@
 # Manganese
 
 ![Language: C++](https://img.shields.io/badge/language-C%2B%2B-00599C.svg?logo=c%2B%2B&logoColor=white)
-![License: MIT](https://img.shields.io/github/license/thementat42/manganese)
-![Build: GitHub Actions](https://img.shields.io/github/actions/workflow/status/thementat42/manganese/build.yml?branch=main)
+[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](https://opensource.org/licenses/MIT)
 ![CMake](https://img.shields.io/badge/build%20system-CMake-064F8C.svg?logo=cmake)
 
 ![Logo](/logo.svg "Manganese Logo")
