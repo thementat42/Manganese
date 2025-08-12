@@ -207,7 +207,7 @@ bool testOperators() {
     }
 
     return checkToken(tokens[0], TokenType::Plus, "+") && checkToken(tokens[1], TokenType::Minus, "-")
-        && checkToken(tokens[2], TokenType::Star, "*") && checkToken(tokens[3], TokenType::Div, "/")
+        && checkToken(tokens[2], TokenType::Mul, "*") && checkToken(tokens[3], TokenType::Div, "/")
         && checkToken(tokens[4], TokenType::FloorDiv, "//") && checkToken(tokens[5], TokenType::Mod, "%")
         && checkToken(tokens[6], TokenType::Exp, "^^") && checkToken(tokens[7], TokenType::Inc, "++")
         && checkToken(tokens[8], TokenType::Dec, "--") && checkToken(tokens[9], TokenType::PlusAssign, "+=")

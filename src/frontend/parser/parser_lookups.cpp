@@ -100,7 +100,7 @@ void Parser::initializeLookups() noexcept {
     registerLedHandler_binary(FloorDiv, Precedence::Multiplicative, &Parser::parseBinaryExpression);
     registerLedHandler_binary(Minus, Precedence::Additive, &Parser::parseBinaryExpression);
     registerLedHandler_binary(Mod, Precedence::Multiplicative, &Parser::parseBinaryExpression);
-    registerLedHandler_binary(Star, Precedence::Multiplicative, &Parser::parseBinaryExpression);
+    registerLedHandler_binary(Mul, Precedence::Multiplicative, &Parser::parseBinaryExpression);
     registerLedHandler_rightAssoc(Exp, Precedence::Exponential, &Parser::parseBinaryExpression);
     registerLedHandler_binary(Or, Precedence::LogicalOr, &Parser::parseBinaryExpression);
     registerLedHandler_binary(Plus, Precedence::Additive, &Parser::parseBinaryExpression);

@@ -37,14 +37,14 @@ void SemanticAnalyzer::checkRepeatLoopStatement(ast::RepeatLoopStatement* statem
 }
 
 void SemanticAnalyzer::checkWhileLoopStatement(ast::WhileLoopStatement* statement) {
+    ++context.whileLoop;  // We only allow implicit bool conversions in the condition, not the body
     checkExpression(statement->condition.get());
+    --context.whileLoop;
     if (!ast::isPrimitiveType(statement->condition->getType())) {
         logError("Could not convert {} to a boolean", statement, ast::toStringOr(statement->condition));
     }
     enterScope();
-    ++context.whileLoop;
     checkBlock(statement->body);
-    --context.whileLoop;
     exitScope();
 }
 

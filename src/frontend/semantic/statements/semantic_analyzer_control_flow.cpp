@@ -15,14 +15,14 @@ void SemanticAnalyzer::checkContinueStatement(ast::ContinueStatement* statement)
 }
 
 void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
+    ++context.ifStatement;  // We only allow implicit bool conversions in the condition, not the body
     checkExpression(statement->condition.get());
+    --context.ifStatement;
     if (!ast::isPrimitiveType(statement->condition->getType())) {
         logError("Could not convert {} to a boolean", statement, toStringOr(statement->condition));
     }
     enterScope();
-    ++context.ifStatement;
     checkBlock(statement->body);
-    --context.ifStatement;
     exitScope();
 
     for (auto& elif : statement->elifs) {

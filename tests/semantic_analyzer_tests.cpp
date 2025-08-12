@@ -235,6 +235,32 @@ bool checkLoops() {
     return true;
 }
 
+bool checkPrefixAndPostfixExpressions() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse(
+        R"(
+        let x = 10;
+        let y = true;
+
+        ++x;
+        --x;
+        !y;
+        +x;
+        -x;
+        ~x;
+        let p_x = &x;
+        let x2 = *p_x;
+        )");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    outputAnalyzedAST(program);
+    if (program.size() != 10) {
+        std::cerr << "Expected 10 statements, got " << program.size() << "\n";
+        return false;
+    }
+    return true;
+}
+
 static bool miscTests() {
     // TODO: Consider immutability by default
     //! Functions can be assigned to each other (no way to prevent this)
@@ -274,6 +300,7 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Member Access", checkMemberAccessExpression);
     runner.runTest("Type Cast Expression", checkTypeCastExpression);
     runner.runTest("Analyze Loops", checkLoops);
+    runner.runTest("Analyze Prefix and Postfix Expressions", checkPrefixAndPostfixExpressions);
     runner.runTest("Mist Tests", miscTests);
 }
 

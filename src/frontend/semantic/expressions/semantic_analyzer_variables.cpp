@@ -100,7 +100,7 @@ constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenT
     switch (assignmentOp) {
         case PlusAssign: return Plus;
         case MinusAssign: return Minus;
-        case MulAssign: return Star;
+        case MulAssign: return Mul;
         case DivAssign: return Div;
         case FloorDivAssign: return FloorDiv;
         case ModAssign: return Mod;

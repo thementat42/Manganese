@@ -190,7 +190,7 @@ enum class TokenType : uint8_t {
     __OperatorStart,  // Marker for the start of operator token types -- not to be used as an actual token type
     Plus,  // `+`
     Minus,  // `-`
-    Star,  // `*` (multiplication or dereference)
+    Mul,  // `*`
     Div,  // `/`
     FloorDiv,  // `//`
     Mod,  // `%`
