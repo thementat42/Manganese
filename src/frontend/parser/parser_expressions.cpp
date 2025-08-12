@@ -281,7 +281,7 @@ ExpressionUPtr_t Parser::parsePrefixExpression() noexcept_if_release {
     }
     
     // Now advance past the token
-    std::cout << advance().toString() << " HI!\n";
+    DISCARD(advance());
     
     auto right = parseExpression(Precedence::Unary);
     return std::make_unique<ast::PrefixExpression>(op, std::move(right));
