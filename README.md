@@ -1,5 +1,10 @@
 # === Manganese ===
 
+![Language: C++](https://img.shields.io/badge/language-C%2B%2B-00599C.svg?logo=c%2B%2B&logoColor=white)
+![License: MIT](https://img.shields.io/github/license/thementat42/manganese)
+![Build: GitHub Actions](https://img.shields.io/github/actions/workflow/status/thementat42/manganese/build.yml?branch=main)
+![CMake](https://img.shields.io/badge/build%20system-CMake-064F8C.svg?logo=cmake)
+
 ![Logo](/logo.svg "Manganese Logo")
 Manganese is a statically typed programming language built on the LLVM framework. It's a project inspired by an autocomplete text parsing task for ESC190 at the University of Toronto. Manganese compiles to LLVM IR, which is then translated into machine code.
 
