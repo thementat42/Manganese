@@ -19,13 +19,13 @@ On the off chance that you were considering using Manganese for something import
 
 Manganese requires the following dependencies to be installed:
 
-- [LLVM](https://llvm.org/) (version 16 or later)
+- [LLVM](https://llvm.org/) (this project was made using version 20.1.7)
 - [CMake](https://cmake.org/) (version 3.10 or later)
-- [Python](https://www.python.org/) (version 3.8 or later), if you want to use the `build.py` scriptDependencies
+- [Python](https://www.python.org/) (version 3.8 or later), if you want to use the `build.py` script
 
 ## Building
 
-To build from source, first make sure you have the [dependencies](#-dependencies-) installed.
+To build from source, first make sure you have the [dependencies](#dependencies) installed.
 
 Then, clone this repository:
 
