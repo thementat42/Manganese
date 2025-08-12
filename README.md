@@ -1,4 +1,4 @@
-# === Manganese ===
+# Manganese
 
 ![Language: C++](https://img.shields.io/badge/language-C%2B%2B-00599C.svg?logo=c%2B%2B&logoColor=white)
 ![License: MIT](https://img.shields.io/github/license/thementat42/manganese)
@@ -10,13 +10,13 @@ Manganese is a statically typed programming language built on the LLVM framework
 
 This project is licensed under the MIT License. See [LICENSE-MIT](LICENSE-MIT) for details. The LLVM project itself is licensed under the Apache License 2.0 with LLVM Exceptions ([LICENSE-APACHE](LICENSE-APACHE), also available on [LLVM's website](https://llvm.org/LICENSE.txt)).
 
-## === Why Manganese? ===
+## Why Manganese?
 
 Manganese is mainly a fun project for learning about compilers and low-level programming. It's not meant for production use and lacks features like a full standard library.
 
 On the off chance that you were considering using Manganese for something important, please don't.
 
-## === Dependencies ===
+## Dependencies
 
 Manganese requires the following dependencies to be installed:
 
@@ -24,7 +24,7 @@ Manganese requires the following dependencies to be installed:
 - [CMake](https://cmake.org/) (version 3.10 or later)
 - [Python](https://www.python.org/) (version 3.8 or later), if you want to use the `build.py` scriptDependencies
 
-## === Building ===
+## Building
 
 To build from source, first make sure you have the [dependencies](#-dependencies-) installed.
 
@@ -35,7 +35,7 @@ git clone https://github.com/thementat42/Manganese.git
 cd Manganese
 ```
 
-### === The Python Build Script ===
+### The Python Build Script
 
 If you have python installed, you can use the [`build.py`](/build.py) script to automatically invoke CMake.
 NOTE: The Python script requires `CMake` to be installed and available in the system's `PATH`.
@@ -48,7 +48,7 @@ The Python script will automatically run CMake and build the executable using th
 It also automatically moves the executable to the root directory.
 The Python script has different command line arguments to control the build process. Run `python build.py --help` to see the available options.
 
-### === Building manually with CMake ===
+### Building manually with CMake
 
 If you don't have python, you can install it from [the official Python website](https://www.python.org/) or use CMake directly:
 
@@ -68,7 +68,7 @@ To compile Manganese code, use:
 
 If no output file is specified, the source file name will be used (e.g. `foo.mn` becomes `foo`).
 
-## === Testing Framework ===
+## Testing Framework
 
 The [tests](/tests) directory contains tests for the compiler up to IR generation. To run the tests, enable tests during the build:
 
@@ -104,7 +104,7 @@ Running it with no arguments prints a help message. Any other arguments will be 
 
 Note that the testing executable must be in the root directory since it relies on relative paths to access the source files used for testing.
 
-## === File Structure ===
+## File Structure
 
 This project is divided into several directories:
 
@@ -134,7 +134,7 @@ This project is divided into several directories:
 - [`manganese.cpp`](/manganese.cpp): Entry point for the compiler
 - [`manganese-tests.cpp`](/manganese-tests.cpp): Entry point for running tests
 
-### === Miscellaneous Files ===
+### Miscellaneous Files
 
 The root directory has some other files as well:
 
