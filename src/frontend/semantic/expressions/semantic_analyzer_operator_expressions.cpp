@@ -3,6 +3,7 @@
 #include <frontend/semantic/semantic_type_helpers.hpp>
 
 #include "frontend/ast/ast_base.hpp"
+#include "global_macros.hpp"
 
 
 namespace Manganese {
@@ -42,8 +43,25 @@ void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) 
 }
 
 void SemanticAnalyzer::checkPostfixExpression(ast::PostfixExpression* expression) {
-    DISCARD(expression);
-    NOT_IMPLEMENTED("Will be implemented soon");
+    checkExpression(expression->left.get());
+    ast::Type* leftType = expression->left->getType();
+    if (!leftType) {
+        logError("Could not deduce the type of {} in postfix expression {}", expression, toStringOr(expression->left),
+                 toStringOr(expression));
+        expression->setType(nullptr);
+        return;
+    }
+    if (expression->op != lexer::TokenType::Inc && expression->op != lexer::TokenType::Dec) [[unlikely]]{
+        ASSERT_UNREACHABLE(std::format("Invalid postfix operator {} in expression {}", lexer::tokenTypeToString(expression->op), toStringOr(expression)));
+    }
+    if (!isAnyInt(leftType) && !isFloat(leftType)) {
+        logError("'{}' can only be applied to numeric types, not {}", expression, lexer::tokenTypeToString(expression->op),
+                 toStringOr(leftType));
+        expression->setType(nullptr);
+        return;
+    }
+    expression->setType(expression->left->getTypePtr());
+    return;
 }
 void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) {
     // Valid prefix operators are: +. -. !, ~, ++, --, &, and *

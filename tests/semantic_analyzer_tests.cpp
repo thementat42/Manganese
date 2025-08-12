@@ -236,6 +236,7 @@ bool checkLoops() {
 }
 
 bool checkPrefixAndPostfixExpressions() {
+    // Function call and index expressions are also postfix expressions, but they are handled separately
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(
         R"(
@@ -243,7 +244,9 @@ bool checkPrefixAndPostfixExpressions() {
         let y = true;
 
         ++x;
+        x++;
         --x;
+        x--;
         !y;
         +x;
         -x;
@@ -254,8 +257,8 @@ bool checkPrefixAndPostfixExpressions() {
     analyzer.analyze(file);
     const auto& program = file.program;
     outputAnalyzedAST(program);
-    if (program.size() != 10) {
-        std::cerr << "Expected 10 statements, got " << program.size() << "\n";
+    if (program.size() != 12) {
+        std::cerr << "Expected 12 statements, got " << program.size() << "\n";
         return false;
     }
     return true;
