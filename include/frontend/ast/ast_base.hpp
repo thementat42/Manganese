@@ -98,7 +98,7 @@ class Expression : public ASTNode {
    public:
 
     virtual ~Expression() noexcept = default;
-    constexpr inline Type* getType() const noexcept { return computedType.get(); };
+    inline Type* getType() const noexcept { return computedType.get(); };
     inline TypeSPtr_t getTypePtr() const noexcept { return computedType; }
     void setType(TypeSPtr_t type) noexcept { computedType = type; }
     constexpr virtual ExpressionKind kind() const noexcept = 0;
