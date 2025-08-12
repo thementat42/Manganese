@@ -243,7 +243,7 @@ bool checkPrefixAndPostfixExpressions() {
         let x = 10;
         let y = true;
 
-        ++x;
+        ++(x+3);
         x++;
         --x;
         x--;

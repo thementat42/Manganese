@@ -5,7 +5,6 @@
 #include "frontend/ast/ast_base.hpp"
 #include "global_macros.hpp"
 
-
 namespace Manganese {
 using ast::toStringOr;
 namespace semantic {
@@ -51,13 +50,20 @@ void SemanticAnalyzer::checkPostfixExpression(ast::PostfixExpression* expression
         expression->setType(nullptr);
         return;
     }
-    if (expression->op != lexer::TokenType::Inc && expression->op != lexer::TokenType::Dec) [[unlikely]]{
-        ASSERT_UNREACHABLE(std::format("Invalid postfix operator {} in expression {}", lexer::tokenTypeToString(expression->op), toStringOr(expression)));
+    if (expression->op != lexer::TokenType::Inc && expression->op != lexer::TokenType::Dec) [[unlikely]] {
+        ASSERT_UNREACHABLE(std::format("Invalid postfix operator {} in expression {}",
+                                       lexer::tokenTypeToString(expression->op), toStringOr(expression)));
     }
     if (!isAnyInt(leftType) && !isFloat(leftType)) {
-        logError("'{}' can only be applied to numeric types, not {}", expression, lexer::tokenTypeToString(expression->op),
-                 toStringOr(leftType));
+        logError("'{}' can only be applied to numeric types, not {}", expression,
+                 lexer::tokenTypeToString(expression->op), toStringOr(leftType));
         expression->setType(nullptr);
+        return;
+    }
+    if (expression->left->kind() != ast::ExpressionKind::IdentifierExpression
+        && expression->left->kind() != ast::ExpressionKind::IndexExpression) {
+        logError("Cannot {} a non-variable expression: {}.", expression,
+                 (expression->op == lexer::TokenType::Inc ? "increment" : "decrement"), toStringOr(expression->left));
         return;
     }
     expression->setType(expression->left->getTypePtr());
@@ -116,6 +122,13 @@ void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) 
                          lexer::tokenTypeToString(expression->op), toStringOr(expression->getType()));
                 break;
             }
+            if (expression->right->kind() != ast::ExpressionKind::IdentifierExpression
+                && expression->right->kind() != ast::ExpressionKind::IndexExpression) {
+                logError("Cannot {} a non-variable expression: {}.", expression,
+                         (expression->op == lexer::TokenType::Inc ? "increment" : "decrement"),
+                         toStringOr(expression->right));
+                return;
+            }
             expression->setType(expression->right->getTypePtr());
             break;
         case lexer::TokenType::AddressOf:
@@ -140,7 +153,7 @@ void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) 
         }
 
         default:
-    std::cout << static_cast<int>(expression->op) << "\n";
+            std::cout << static_cast<int>(expression->op) << "\n";
             ASSERT_UNREACHABLE(std::format("Unsupported prefix operator {} in expression {}",
                                            lexer::tokenTypeToString(expression->op), toStringOr(expression)));
     }
