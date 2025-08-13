@@ -36,11 +36,12 @@ def ensure_project_root():
         print("This script must be run from the project root or scripts/ directory.\033[0m")
         sys.exit(1)
 
-def check_file(filename: str, compile_commands_path: str):
+def check_file(filename: str, compile_commands_path: str, 
+               extra_args: list[str]):
     """A wrapper around `subprocess.run`"""
     print(f"\033[34mChecking: \"{filename}\"\033[0m")
     try:
-        subprocess.run(["clang-tidy", "-p", compile_commands_path, filename], check = True)
+        subprocess.run(["clang-tidy", "-p", compile_commands_path] + extra_args + [filename], check = True)
     except subprocess.CalledProcessError:
         # clang-tidy exits with error code 1 on linting fails,
         # but we want to check every file, so ignore that error
@@ -86,6 +87,12 @@ def get_filenames_in(*paths: str) -> list[str]:
         all_files.extend(__get_files_from_root(path))
     return all_files
 
+if "-h" in sys.argv or "--help" in sys.argv:
+    print("Usage: python scripts/lint.py [options]")
+    print("Runs clang-tidy on all .cpp, .c, .hpp and .h files in the project, except those prefixed with x.")
+    print("Any arguments passed to this script are passed to clang-tidy.")
+    sys.exit(0)
+
 check_clang_tidy_installation()
 ensure_project_root()
 COMPILE_COMMANDS_DIR = str(find_compile_commands())
@@ -98,4 +105,4 @@ files: list[str] = [file for file in get_filenames_in("src", "include", "tests")
 files = [file for file in files if (file.endswith((".cpp", ".hpp", ".c", ".h")) and "x." not in file)]
 
 for file in files:
-    check_file(file, COMPILE_COMMANDS_DIR)
+    check_file(file, COMPILE_COMMANDS_DIR, sys.argv[1:])
