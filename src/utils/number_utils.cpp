@@ -10,17 +10,17 @@
  * - __stox: Template function for integer conversion using std::from_chars.
  */
 
-#include <global_macros.hpp>
-#include <io/logging.hpp>
-#include <utils/number_utils.hpp>
-
 #include <charconv>
 #include <cstdint>
 #include <functional>
+#include <global_macros.hpp>
+#include <io/logging.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utils/number_utils.hpp>
+
 
 namespace Manganese {
 
@@ -60,7 +60,9 @@ std::optional<number_t> stringToNumber(std::string_view str, Base base, bool isF
 }
 
 template <typename T>
-std::optional<T> __stox(std::string_view str, int base = 10) {
+std::optional<T> __stox(std::string_view str, int base = 10)
+    requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+{
     T temp;
     const char* begin = str.data();
     const char* end = str.data() + str.size();

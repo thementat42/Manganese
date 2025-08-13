@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <utility>
 
+// Custom hashes have to be in namespace std
 namespace std {
 template <>
 struct hash<std::pair<std::string, std::string>> {
