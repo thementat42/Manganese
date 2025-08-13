@@ -15,6 +15,7 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_types.hpp>
+#include <frontend/ast/ast_block.hpp>
 #include <utility>
 
 namespace Manganese {
