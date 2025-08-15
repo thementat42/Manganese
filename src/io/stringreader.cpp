@@ -31,21 +31,5 @@ char StringReader::consumeChar() noexcept {
     return c;
 }
 
-void StringReader::setPosition(size_t newPosition) noexcept {
-    if (newPosition >= source.length()) {
-        position = source.length();
-    } else {
-        position = newPosition;
-    }
-}
-
-inline size_t StringReader::getPosition() const noexcept { return position; }
-
-inline size_t StringReader::getLine() const noexcept { return line; }
-
-inline size_t StringReader::getColumn() const noexcept { return column; }
-
-inline bool StringReader::done() const noexcept { return position >= source.length(); }
-
 }  // namespace io
 }  // namespace Manganese

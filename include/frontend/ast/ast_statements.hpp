@@ -53,7 +53,7 @@ class AggregateDeclarationStatement : public Statement {
     std::vector<AggregateField> fields;
     Visibility visibility = Visibility::Private;
 
-    AggregateDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
+    constexpr AggregateDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
                                   std::vector<AggregateField> fields_) :
         name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
     AST_STANDARD_INTERFACE;
@@ -75,7 +75,7 @@ class AliasStatement : public Statement {
 
 class BreakStatement : public Statement {
    public:
-    BreakStatement() = default;
+    constexpr explicit BreakStatement() = default;
 
     AST_STANDARD_INTERFACE;
     constexpr StatementKind kind() const noexcept override { return StatementKind::BreakStatement; };
@@ -83,7 +83,7 @@ class BreakStatement : public Statement {
 
 class ContinueStatement : public Statement {
    public:
-    ContinueStatement() = default;
+    constexpr explicit ContinueStatement() = default;
 
     AST_STANDARD_INTERFACE;
     constexpr StatementKind kind() const noexcept override { return StatementKind::ContinueStatement; };
@@ -91,7 +91,7 @@ class ContinueStatement : public Statement {
 
 class EmptyStatement : public Statement {
    public:
-    EmptyStatement() = default;
+    constexpr explicit EmptyStatement() = default;
     AST_STANDARD_INTERFACE;
     constexpr StatementKind kind() const noexcept override { return StatementKind::EmptyStatement; };
 };

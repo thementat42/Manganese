@@ -4,17 +4,17 @@
  * readability and maintainability.
  */
 
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
-#include <utils/number_utils.hpp>
-
-#include <format>
 #include <memory>
 #include <string>
 #include <utility>
+#include <utils/number_utils.hpp>
 #include <vector>
+
 
 /**
  * Ambiguous cases:
@@ -118,7 +118,8 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) noexcept_if_rele
 
 // === Specific expression parsing methods ===
 
-ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release {
+ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t left,
+                                                               Precedence precedence) noexcept_if_release {
     DISCARD(precedence);  // Avoid unused variable warning
     std::string aggregateName;
     std::vector<TypeSPtr_t> genericTypes;
@@ -129,7 +130,8 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
     if (left->kind() == ast::ExpressionKind::GenericExpression) {
         auto* genericExpr = static_cast<ast::GenericExpression*>(left.get());
         if (genericExpr->identifier->kind() != ast::ExpressionKind::IdentifierExpression) {
-            logError("Generic aggregate instantiation must start with an aggregate name", left->getLine(), left->getColumn());
+            logError("Generic aggregate instantiation must start with an aggregate name", left->getLine(),
+                     left->getColumn());
         } else {
             auto* identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
             aggregateName = identifierExpr->value;
@@ -139,7 +141,8 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
         auto* underlying = static_cast<ast::IdentifierExpression*>(left.get());
         aggregateName = underlying->value;
     } else {
-        logError(std::format("Aggregate instantiation expression must start with an aggregate name, not {}", ast::toStringOr(left)),
+        logError(std::format("Aggregate instantiation expression must start with an aggregate name, not {}",
+                             ast::toStringOr(left)),
                  left->getLine(), left->getColumn());
     }
 
@@ -158,8 +161,9 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
             fields.begin(), fields.end(),
             [propertyName](const ast::AggregateInstantiationField& field) { return field.name == propertyName; });
         if (duplicate != fields.end()) {
-            logError(std::format("Duplicate field '{}' in aggregate instantiation of '{}'", propertyName, aggregateName),
-                     value->getLine(), value->getColumn());
+            logError(
+                std::format("Duplicate field '{}' in aggregate instantiation of '{}'", propertyName, aggregateName),
+                value->getLine(), value->getColumn());
         } else {
             fields.emplace_back(propertyName, std::move(value));
         }
@@ -170,7 +174,6 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end aggregate instantiation");
     return std::make_unique<ast::AggregateInstantiationExpression>(aggregateName, genericTypes, std::move(fields));
 }
-
 
 ExpressionUPtr_t Parser::parseArrayInstantiationExpression() noexcept_if_release {
     DISCARD(advance());  // Consume the left square bracket
@@ -215,8 +218,7 @@ ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Prec
             break;  // Done with arguments
         }
         arguments.push_back(parseExpression(Precedence::Assignment));
-        if (currentTokenType() != lexer::TokenType::RightParen
-            && currentTokenType() != lexer::TokenType::EndOfFile) {
+        if (currentTokenType() != lexer::TokenType::RightParen && currentTokenType() != lexer::TokenType::EndOfFile) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate function arguments");
         }
     }
@@ -274,15 +276,13 @@ ExpressionUPtr_t Parser::parsePostfixExpression(ExpressionUPtr_t left, Precedenc
 ExpressionUPtr_t Parser::parsePrefixExpression() noexcept_if_release {
     Token token = currentToken();
     TokenType op = token.getType();
-    
+
     // Check if we need to convert to a unary counterpart
-    if (token.hasUnaryCounterpart() && isUnaryContext()) {
-        op = token.getUnaryCounterpart();
-    }
-    
+    if (token.hasUnaryCounterpart() && isUnaryContext()) { op = token.getUnaryCounterpart(); }
+
     // Now advance past the token
     DISCARD(advance());
-    
+
     auto right = parseExpression(Precedence::Unary);
     return std::make_unique<ast::PrefixExpression>(op, std::move(right));
 }
@@ -298,10 +298,20 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
         case TokenType::Identifier: return std::make_unique<ast::IdentifierExpression>(lexeme);
         case TokenType::True: return std::make_unique<ast::BoolLiteralExpression>(true);
         case TokenType::False: return std::make_unique<ast::BoolLiteralExpression>(false);
-        case TokenType::FloatLiteral:
-            // Check for floating-point suffixes
-            return std::make_unique<ast::NumberLiteralExpression>(lexeme.ends_with("f32") ? stof(lexeme)
-                                                                                          : stod(lexeme));
+        case TokenType::FloatLiteral: {
+            // // Check for floating-point suffixes
+            // return std::make_unique<ast::NumberLiteralExpression>(lexeme.ends_with("f32") ? stof(lexeme)
+            //                                                                               : stod(lexeme));
+            std::string suffix;
+            extractSuffix(lexeme, suffix);
+            std::optional<number_t> value = utils::stringToNumber(lexeme, Base::Decimal, true, suffix);
+            if (!value) {
+                logError(std::format("Invalid float literal '{}'", lexeme), token.getLine(), token.getColumn());
+                return std::make_unique<ast::NumberLiteralExpression>(0.0);
+                // Error tolerance: return a default value of 0.0
+            }
+            return std::make_unique<ast::NumberLiteralExpression>(*value);
+        }
         case TokenType::IntegerLiteral: {
             // Extract integer suffix
             Base base = determineNumberBase(lexeme);
@@ -327,7 +337,8 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() noexcept_if_release {
     }
 }
 
-ExpressionUPtr_t Parser::parseScopeResolutionExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release {
+ExpressionUPtr_t Parser::parseScopeResolutionExpression(ExpressionUPtr_t left,
+                                                        Precedence precedence) noexcept_if_release {
     DISCARD(advance());  // Consume the scope resolution operator (::)
     DISCARD(precedence);  // Avoid unused variable warning
     auto element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
@@ -342,7 +353,7 @@ ExpressionUPtr_t Parser::parseTypeCastExpression(ExpressionUPtr_t left, Preceden
 
 // ===== Helper Functions =====
 
-void extractSuffix(std::string& lexeme, std::string& suffix) {
+constexpr void extractSuffix(std::string& lexeme, std::string& suffix) {
     if (lexeme.ends_with("i8") || lexeme.ends_with("I8") || lexeme.ends_with("u8") || lexeme.ends_with("U8")) {
         suffix = lexeme.substr(lexeme.length() - 2);
         lexeme.erase(lexeme.length() - 2);
@@ -367,7 +378,7 @@ void extractSuffix(std::string& lexeme, std::string& suffix) {
     }
 }
 
-Base determineNumberBase(const std::string& lexeme) {
+constexpr Base determineNumberBase(const std::string& lexeme) {
     if (lexeme.length() <= 2) {
         return Base::Decimal;  // Prefixed literals are at least 3 characters long (0x/0b/0o + at least one digit)
     }

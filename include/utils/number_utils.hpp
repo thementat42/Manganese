@@ -11,12 +11,12 @@
 #ifndef MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_HPP
 #define MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_HPP
 
-#include <global_macros.hpp>
-
 #include <cstdint>
+#include <global_macros.hpp>
 #include <optional>
 #include <string_view>
 #include <variant>
+
 
 namespace Manganese {
 
@@ -45,16 +45,16 @@ constexpr std::string char_str = "char";
 
 namespace utils {
 
-std::optional<int8_t> stoi8(std::string_view str, int base = 10);
-std::optional<int16_t> stoi16(std::string_view str, int base = 10);
-std::optional<int32_t> stoi32(std::string_view str, int base = 10);
-std::optional<int64_t> stoi64(std::string_view str, int base = 10);
-std::optional<uint8_t> stoui8(std::string_view str, int base = 10);
-std::optional<uint16_t> stoui16(std::string_view str, int base = 10);
-std::optional<uint32_t> stoui32(std::string_view str, int base = 10);
-std::optional<uint64_t> stoui64(std::string_view str, int base = 10);
-std::optional<float> stof32(std::string_view str);
-std::optional<double> stof64(std::string_view str);
+constexpr std::optional<int8_t> stoi8(std::string_view str, int base = 10);
+constexpr std::optional<int16_t> stoi16(std::string_view str, int base = 10);
+constexpr std::optional<int32_t> stoi32(std::string_view str, int base = 10);
+constexpr std::optional<int64_t> stoi64(std::string_view str, int base = 10);
+constexpr std::optional<uint8_t> stoui8(std::string_view str, int base = 10);
+constexpr std::optional<uint16_t> stoui16(std::string_view str, int base = 10);
+constexpr std::optional<uint32_t> stoui32(std::string_view str, int base = 10);
+constexpr std::optional<uint64_t> stoui64(std::string_view str, int base = 10);
+constexpr std::optional<float> stof32(std::string_view str);
+constexpr std::optional<double> stof64(std::string_view str);
 
 /**
  * @brief Converts a string to a number, if possible
@@ -64,8 +64,9 @@ std::optional<double> stof64(std::string_view str);
  * @param suffix Whether a type suffix was specified (see the lexer for the acceptable type suffixes)
  * @return The string as a number, or nullopt_t if it failed
  */
-std::optional<number_t> stringToNumber(std::string_view str, Base base = Base::Decimal, bool isFloat = false,
-                                       const std::string& suffix = "") noexcept_if_release;
+    std::optional<number_t>
+    stringToNumber(std::string_view str, Base base = Base::Decimal, bool isFloat = false,
+                   const std::string& suffix = "") noexcept_if_release;
 
 }  // namespace utils
 

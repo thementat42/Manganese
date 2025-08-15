@@ -16,9 +16,8 @@
 #ifndef MANGANESE_INCLUDE_IO_FILEREADER_HPP
 #define MANGANESE_INCLUDE_IO_FILEREADER_HPP
 
-#include <global_macros.hpp>
-
 #include <fstream>
+#include <global_macros.hpp>
 #include <memory>
 #include <string>
 
@@ -51,18 +50,22 @@ class FileReader : public Reader {
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
     ~FileReader() noexcept = default;
 
+    // To avoid any issues with multiple file handlers being opened on the same file,
+    // the copy constructor and assignment operator are deleted.
     FileReader(const FileReader&) = delete;
     FileReader& operator=(const FileReader&) = delete;
 
-    char peekChar(size_t offset = 0) override;
-    [[nodiscard]] char consumeChar() override;
+    char peekChar(size_t offset = 0) noexcept override;
+    [[nodiscard]] char consumeChar() noexcept override;
 
-    void setPosition(size_t newPosition) noexcept override;
-    size_t getPosition() const noexcept override;
-    size_t getLine() const noexcept override;
-    size_t getColumn() const noexcept override;
+    constexpr void setPosition(size_t newPosition) noexcept override {
+        position = newPosition >= bufferSize ? bufferSize : newPosition;
+    }
+    constexpr size_t getPosition() const noexcept override { return position; }
+    constexpr size_t getLine() const noexcept override { return line; }
+    constexpr size_t getColumn() const noexcept override { return column; }
 
-    bool done() const noexcept override;
+    constexpr bool done() const noexcept override { return position >= bufferSize && fileStream.eof(); }
 };
 }  // namespace io
 }  // namespace Manganese

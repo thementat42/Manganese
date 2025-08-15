@@ -8,6 +8,8 @@
 #include <functional>
 #include <unordered_map>
 #include <utility>
+#include <string>
+#include <array>
 
 // Custom hashes have to be in namespace std
 namespace std {

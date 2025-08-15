@@ -21,10 +21,17 @@
 #include <unordered_map>
 #include <utils/number_utils.hpp>
 
-
 namespace Manganese {
 
 namespace utils {
+using suffixMap_t = std::unordered_map<std::string, std::function<std::optional<number_t>(std::string_view, int)>>;
+
+static const inline suffixMap_t suffixMap = {
+    {"u8", stoui8},   {"U8", stoui8},   {"u16", stoui16}, {"U16", stoui16}, {"u32", stoui32}, {"U32", stoui32},
+    {"u64", stoui64}, {"U64", stoui64}, {"i8", stoi8},    {"I8", stoi8},    {"i16", stoi16},  {"I16", stoi16},
+    {"i32", stoi32},  {"I32", stoi32},  {"i64", stoi64},  {"I64", stoi64},
+};
+
 std::optional<number_t> stringToNumber(std::string_view str, Base base, bool isFloat,
                                        const std::string& suffix) noexcept_if_release {
     if (isFloat) {
@@ -37,12 +44,6 @@ std::optional<number_t> stringToNumber(std::string_view str, Base base, bool isF
         }
         return stof64(str);
     }
-    using suffixMap_t = std::unordered_map<std::string, std::function<std::optional<number_t>(std::string_view, int)>>;
-    static const suffixMap_t suffixMap = {
-        {"u8", stoui8},   {"U8", stoui8},   {"u16", stoui16}, {"U16", stoui16}, {"u32", stoui32}, {"U32", stoui32},
-        {"u64", stoui64}, {"U64", stoui64}, {"i8", stoi8},    {"I8", stoi8},    {"i16", stoi16},  {"I16", stoi16},
-        {"i32", stoi32},  {"I32", stoi32},  {"i64", stoi64},  {"I64", stoi64},
-    };
     auto it = suffixMap.find(suffix);
     if (it != suffixMap.end()) {
         return it->second(str, static_cast<int>(base));
@@ -60,7 +61,7 @@ std::optional<number_t> stringToNumber(std::string_view str, Base base, bool isF
 }
 
 template <typename T>
-std::optional<T> __stox(std::string_view str, int base = 10)
+constexpr std::optional<T> __stox(std::string_view str, int base = 10)
     requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
 {
     T temp;
@@ -73,25 +74,25 @@ std::optional<T> __stox(std::string_view str, int base = 10)
 
 //~ Wrapper methods for convenience
 
-std::optional<int8_t> stoi8(std::string_view str, int base) { return __stox<int8_t>(str, base); }
+constexpr std::optional<int8_t> stoi8(std::string_view str, int base) { return __stox<int8_t>(str, base); }
 
-std::optional<int16_t> stoi16(std::string_view str, int base) { return __stox<int16_t>(str, base); }
+constexpr std::optional<int16_t> stoi16(std::string_view str, int base) { return __stox<int16_t>(str, base); }
 
-std::optional<int32_t> stoi32(std::string_view str, int base) { return __stox<int32_t>(str, base); }
+constexpr std::optional<int32_t> stoi32(std::string_view str, int base) { return __stox<int32_t>(str, base); }
 
-std::optional<int64_t> stoi64(std::string_view str, int base) { return __stox<int64_t>(str, base); }
+constexpr std::optional<int64_t> stoi64(std::string_view str, int base) { return __stox<int64_t>(str, base); }
 
-std::optional<uint8_t> stoui8(std::string_view str, int base) { return __stox<uint8_t>(str, base); }
+constexpr std::optional<uint8_t> stoui8(std::string_view str, int base) { return __stox<uint8_t>(str, base); }
 
-std::optional<uint16_t> stoui16(std::string_view str, int base) { return __stox<uint16_t>(str, base); }
+constexpr std::optional<uint16_t> stoui16(std::string_view str, int base) { return __stox<uint16_t>(str, base); }
 
-std::optional<uint32_t> stoui32(std::string_view str, int base) { return __stox<uint32_t>(str, base); }
+constexpr std::optional<uint32_t> stoui32(std::string_view str, int base) { return __stox<uint32_t>(str, base); }
 
-std::optional<uint64_t> stoui64(std::string_view str, int base) { return __stox<uint64_t>(str, base); }
+constexpr std::optional<uint64_t> stoui64(std::string_view str, int base) { return __stox<uint64_t>(str, base); }
 
 // from_chars doesn't always support floats so fall back to stl functions
-std::optional<float> stof32(std::string_view str) { return std::stof(std::string(str)); }
+constexpr std::optional<float> stof32(std::string_view str) { return std::stof(std::string(str)); }
 
-std::optional<double> stof64(std::string_view str) { return std::stod(std::string(str)); }
+constexpr std::optional<double> stof64(std::string_view str) { return std::stod(std::string(str)); }
 }  // namespace utils
 }  // namespace Manganese

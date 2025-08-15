@@ -60,16 +60,16 @@ void log(const std::string& message, LogLevel level = LogLevel::Warning, size_t 
 void log(std::initializer_list<std::string> messages, LogLevel level = LogLevel::Warning, size_t line = 0,
          size_t col = 0) noexcept;
 
-inline void logWarning(const std::string& message, size_t line = 0, size_t col = 0,
+FORCE_INLINE void logWarning(const std::string& message, size_t line = 0, size_t col = 0,
                        std::ostream& out = std::cerr) noexcept {
     log(message, LogLevel::Warning, line, col, out);
 }
-inline void logError(const std::string& message, size_t line = 0, size_t col = 0,
+FORCE_INLINE void logError(const std::string& message, size_t line = 0, size_t col = 0,
                      std::ostream& out = std::cerr) noexcept {
     log(message, LogLevel::Error, line, col, out);
 }
 
-inline void logCritical(const std::string& message, size_t line = 0, size_t col = 0,
+FORCE_INLINE void logCritical(const std::string& message, size_t line = 0, size_t col = 0,
                         std::ostream& out = std::cerr) noexcept {
     log(message, LogLevel::Critical, line, col, out);
 }

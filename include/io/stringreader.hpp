@@ -9,7 +9,6 @@
 #ifndef MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #define MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #include <global_macros.hpp>
-
 #include <string>
 
 #include "reader.hpp"
@@ -36,12 +35,14 @@ class StringReader : public Reader {
     char peekChar(size_t offset = 0) noexcept override;
     [[nodiscard]] char consumeChar() noexcept override;
 
-    void setPosition(size_t newPosition) noexcept override;
-    size_t getPosition() const noexcept override;
-    size_t getLine() const noexcept override;
-    size_t getColumn() const noexcept override;
+    constexpr void setPosition(size_t newPosition) noexcept override {
+        position = newPosition >= source.length() ? source.length() : newPosition;
+    }
+    constexpr size_t getPosition() const noexcept override { return position; }
+    constexpr size_t getLine() const noexcept override { return line; }
+    constexpr size_t getColumn() const noexcept override { return column; }
 
-    bool done() const noexcept override;
+    constexpr bool done() const noexcept override { return position >= source.length(); }
 };
 }  // namespace io
 }  // namespace Manganese

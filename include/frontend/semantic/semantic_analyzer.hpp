@@ -26,13 +26,13 @@ struct Context {
     int64_t switchStatement = 0;
     ast::TypeSPtr_t currentFunctionReturnType = nullptr;
 
-    bool isFunctionContext() const noexcept { return functionBody > 0; }
-    bool isIfContext() const noexcept { return ifStatement > 0; }
-    bool isWhileLoopContext() const noexcept { return whileLoop > 0; }
-    bool isRepeatLoopContext() const noexcept { return repeatLoop > 0; }
-    bool isForLoopContext() const noexcept { return forLoop > 0; }
-    bool isSwitchContext() const noexcept { return switchStatement > 0; }
-    bool isLoopContext() const noexcept { return isWhileLoopContext() || isRepeatLoopContext() || isForLoopContext(); }
+    constexpr inline bool isFunctionContext() const noexcept { return functionBody > 0; }
+    constexpr inline bool isIfContext() const noexcept { return ifStatement > 0; }
+    constexpr inline bool isWhileLoopContext() const noexcept { return whileLoop > 0; }
+    constexpr inline bool isRepeatLoopContext() const noexcept { return repeatLoop > 0; }
+    constexpr inline bool isForLoopContext() const noexcept { return forLoop > 0; }
+    constexpr inline bool isSwitchContext() const noexcept { return switchStatement > 0; }
+    constexpr inline bool isLoopContext() const noexcept { return isWhileLoopContext() || isRepeatLoopContext() || isForLoopContext(); }
 };
 
 class SemanticAnalyzer {

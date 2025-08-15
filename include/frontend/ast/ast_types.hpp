@@ -129,7 +129,7 @@ class SymbolType : public Type {
    public:
     std::string name;
 
-    explicit SymbolType(std::string name_) : name(std::move(name_)) {}
+    constexpr explicit SymbolType(std::string name_) : name(std::move(name_)) {}
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }
     constexpr TypeKind kind() const noexcept override { return TypeKind::SymbolType; };

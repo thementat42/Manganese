@@ -56,7 +56,7 @@ void FileReader::refillBuffer() {
     buffer[bufferSize] = '\0';
 }
 
-char FileReader::peekChar(size_t offset) {
+char FileReader::peekChar(size_t offset) noexcept {
     if (position + offset >= bufferSize) {
         refillBuffer();
 
@@ -66,7 +66,7 @@ char FileReader::peekChar(size_t offset) {
     return buffer[position + offset];
 }
 
-char FileReader::consumeChar() {
+char FileReader::consumeChar() noexcept {
     // Ensure buffer has data to consume
     if (position >= bufferSize) {
         refillBuffer();
@@ -82,22 +82,6 @@ char FileReader::consumeChar() {
     }
     return c;
 }
-
-void FileReader::setPosition(size_t newPosition) noexcept {
-    if (newPosition >= bufferSize) {
-        position = bufferSize;
-    } else {
-        position = newPosition;
-    }
-}
-
-size_t FileReader::getPosition() const noexcept { return position; }
-
-size_t FileReader::getLine() const noexcept { return line; }
-
-size_t FileReader::getColumn() const noexcept { return column; }
-
-bool FileReader::done() const noexcept { return position >= bufferSize && fileStream.eof(); }
 
 }  // namespace io
 }  // namespace Manganese

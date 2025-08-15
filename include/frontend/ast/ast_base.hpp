@@ -75,7 +75,7 @@ class ASTNode {
    public:
     size_t line = 0, column = 0;
 
-    virtual ~ASTNode() noexcept = default;
+    constexpr virtual ~ASTNode() noexcept = default;
 
     virtual std::string toString() const = 0;
 

@@ -47,19 +47,19 @@ enum class Precedence : uint8_t {
 struct Operator {
     Precedence leftBindingPower, rightBindingPower;
 
-    static Operator prefix(Precedence rightBindingPower_ = Precedence::Default) {
+    constexpr static Operator prefix(Precedence rightBindingPower_ = Precedence::Default) {
         return Operator{.leftBindingPower = Precedence::Unary, .rightBindingPower = rightBindingPower_};
     }
 
-    static Operator postfix(Precedence leftBindingPower_ = Precedence::Default) {
+    constexpr static Operator postfix(Precedence leftBindingPower_ = Precedence::Default) {
         return Operator{.leftBindingPower = leftBindingPower_, .rightBindingPower = Precedence::Postfix};
     }
 
-    static Operator binary(Precedence bindingPower) {
+    constexpr static Operator binary(Precedence bindingPower) {
         return Operator{.leftBindingPower = bindingPower, .rightBindingPower = bindingPower};
     }
 
-    static Operator rightAssociative(Precedence bindingPower) {
+    constexpr static Operator rightAssociative(Precedence bindingPower) {
         auto rightValue = static_cast<std::underlying_type<Precedence>::type>(bindingPower) - 1;
         return Operator{.leftBindingPower = bindingPower, .rightBindingPower = static_cast<Precedence>(rightValue)};
     }
