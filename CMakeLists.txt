@@ -212,7 +212,8 @@ if(BUILD_TESTS)
     
     # Include directories
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} ${llvm_libs})
+    llvm_map_components_to_libnames(LLVM_LIBS all)
+    target_link_libraries(${PROJECT_NAME} ${LLVM_LIBS})
     
     # Output binary to bin directory
     set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -323,7 +324,8 @@ else()
     endif()
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} ${llvm_libs})
+    llvm_map_components_to_libnames(LLVM_LIBS all)
+    target_link_libraries(${PROJECT_NAME} ${LLVM_LIBS})
 
     set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
