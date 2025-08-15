@@ -155,14 +155,14 @@ class Parser {
     /**
      * @details Get the current token, without consuming it
      */
-    [[nodiscard]] inline Token currentToken() const noexcept { return lexer->peekToken(); }
-    [[nodiscard]] inline TokenType currentTokenType() noexcept { return currentToken().getType(); }
+    [[nodiscard]] inline Token peekToken(size_t offset = 0) const noexcept { return lexer->peekToken(offset); }
+    [[nodiscard]] inline TokenType peekTokenType(size_t offset = 0) noexcept { return lexer->peekToken(offset).getType(); }
 
     /**
      * @details Consume the current token
      */
-    [[nodiscard]] inline Token advance() noexcept {
-        previousToken = currentToken();
+    [[nodiscard]] inline Token consumeToken() noexcept {
+        previousToken = peekToken();
         return lexer->consumeToken();
     }
 
@@ -177,7 +177,7 @@ class Parser {
         hasError = true;
     }
 
-    inline bool done() noexcept { return currentTokenType() == TokenType::EndOfFile; }
+    inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
 
     // ~ Helpers for lookups
 

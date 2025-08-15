@@ -17,7 +17,7 @@ namespace Manganese {
 namespace parser {
 
 TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
-    TokenType type = currentTokenType();
+    TokenType type = peekTokenType();
 
     auto nudIterator = nudLookup_types.find(type);
     if (nudIterator == nudLookup_types.end()) {
@@ -26,7 +26,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
     TypeSPtr_t left = nudIterator->second(this);
 
     while (!done()) {
-        type = currentTokenType();
+        type = peekTokenType();
 
         auto operatorPrecedenceIterator = operatorPrecedenceMap_type.find(type);
         if (operatorPrecedenceIterator == operatorPrecedenceMap_type.end()
@@ -46,26 +46,26 @@ TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
 // ===== Specific type parsing methods =====
 
 TypeSPtr_t Parser::parseAggregateType() noexcept_if_release {
-    DISCARD(advance());  // Consume the 'aggregate' token
-    if (currentTokenType() == TokenType::Identifier) {
-        logging::logWarning("Aggregate names are ignored in aggregate type declarations", currentToken().getLine(),
-                            currentToken().getColumn());
-        DISCARD(advance());  // Skip the identifier token
+    DISCARD(consumeToken());  // Consume the 'aggregate' token
+    if (peekTokenType() == TokenType::Identifier) {
+        logging::logWarning("Aggregate names are ignored in aggregate type declarations", peekToken().getLine(),
+                            peekToken().getColumn());
+        DISCARD(consumeToken());  // Skip the identifier token
     }
 
     expectToken(TokenType::LeftBrace, "Expected a '{' to start aggregate type declaration");
     std::vector<ast::TypeSPtr_t> fieldTypes;
 
-    while (currentTokenType() != TokenType::RightBrace) {
-        if (currentTokenType() == TokenType::Identifier) {
-            logging::logWarning("Variable names are ignored in aggregate type declarations", currentToken().getLine(),
-                                currentToken().getColumn());
-            DISCARD(advance());  // Skip the token
+    while (peekTokenType() != TokenType::RightBrace) {
+        if (peekTokenType() == TokenType::Identifier) {
+            logging::logWarning("Variable names are ignored in aggregate type declarations", peekToken().getLine(),
+                                peekToken().getColumn());
+            DISCARD(consumeToken());  // Skip the token
             expectToken(TokenType::Colon, "Expected ':' after field name in aggregate type declaration");
             continue;
         }
         fieldTypes.push_back(parseType(Precedence::Default));  // Parse the type of the field
-        if (currentTokenType() != TokenType::RightBrace) {
+        if (peekTokenType() != TokenType::RightBrace) {
             expectToken(TokenType::Comma,
                         "Expected ',' to separate fields in aggregate type declaration or '}' to end the declaration");
         }
@@ -77,8 +77,8 @@ TypeSPtr_t Parser::parseAggregateType() noexcept_if_release {
 TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) noexcept_if_release {
     ExpressionUPtr_t lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
-    DISCARD(advance());  // Consume the left square bracket '['
-    if (currentTokenType() != TokenType::RightSquare) {
+    DISCARD(consumeToken());  // Consume the left square bracket '['
+    if (peekTokenType() != TokenType::RightSquare) {
         // If the next token is not a right square bracket, it's a length expression
         lengthExpression = parseExpression(Precedence::Default);
     }
@@ -87,30 +87,30 @@ TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) noexce
 }
 
 TypeSPtr_t Parser::parseFunctionType() noexcept_if_release {
-    DISCARD(advance());  // consume the 'func' token
+    DISCARD(consumeToken());  // consume the 'func' token
 
     expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
     std::vector<ast::FunctionParameterType> parameterTypes;
     while (!done()) {
-        if (currentTokenType() == TokenType::RightParen) {
+        if (peekTokenType() == TokenType::RightParen) {
             break;  // Done with parameter types
         }
         bool isConst = false;
-        if (currentTokenType() == TokenType::Const) {
+        if (peekTokenType() == TokenType::Const) {
             isConst = true;
-            DISCARD(advance());
+            DISCARD(consumeToken());
         }
         parameterTypes.emplace_back(isConst, parseType(Precedence::Default));
 
-        if (currentTokenType() != TokenType::RightParen) {
+        if (peekTokenType() != TokenType::RightParen) {
             expectToken(TokenType::Comma, "Expected ',' to separate parameter types or ')' to end parameter list");
         }
     }
     expectToken(TokenType::RightParen, "Expected ')' to end parameter type list");
 
     TypeSPtr_t returnType = nullptr;
-    if (currentTokenType() == TokenType::Arrow) {
-        DISCARD(advance());  // Consume the '->' token
+    if (peekTokenType() == TokenType::Arrow) {
+        DISCARD(consumeToken());  // Consume the '->' token
         returnType = parseType(Precedence::Default);
     }
 
@@ -118,17 +118,17 @@ TypeSPtr_t Parser::parseFunctionType() noexcept_if_release {
 }
 
 TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) noexcept_if_release {
-    DISCARD(advance());
+    DISCARD(consumeToken());
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
     std::vector<TypeSPtr_t> typeParameters;
     while (!done()) {
-        if (currentTokenType() == TokenType::RightSquare) {
+        if (peekTokenType() == TokenType::RightSquare) {
             break;  // Done with type parameters
         }
         auto nextPrecedence = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
         typeParameters.push_back(parseType(static_cast<Precedence>(nextPrecedence)));
-        if (currentTokenType() != TokenType::RightSquare) {
+        if (peekTokenType() != TokenType::RightSquare) {
             expectToken(TokenType::Comma, "Expected ',' to separate generic types");
         }
     }
@@ -137,22 +137,22 @@ TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) noex
 }
 
 TypeSPtr_t Parser::parseParenthesizedType() noexcept_if_release {
-    DISCARD(advance());  // Skip the '('
+    DISCARD(consumeToken());  // Skip the '('
     TypeSPtr_t innerType = parseType(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
     return innerType;
 }
 
 TypeSPtr_t Parser::parsePointerType() noexcept_if_release {
-    DISCARD(advance());  // Consume `ptr`
+    DISCARD(consumeToken());  // Consume `ptr`
     return std::make_shared<ast::PointerType>(parseType(Precedence::Default));
 }
 
 TypeSPtr_t Parser::parseSymbolType() noexcept_if_release {
-    Token token = currentToken();
+    Token token = peekToken();
     if (token.isPrimitiveType()) {
         // If the token is a primitive type, we can directly create a SymbolType
-        DISCARD(advance());
+        DISCARD(consumeToken());
         return std::make_shared<ast::SymbolType>(token.getLexeme());
     }
     // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
