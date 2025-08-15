@@ -53,8 +53,8 @@ constexpr std::optional<uint8_t> stoui8(std::string_view str, int base = 10);
 constexpr std::optional<uint16_t> stoui16(std::string_view str, int base = 10);
 constexpr std::optional<uint32_t> stoui32(std::string_view str, int base = 10);
 constexpr std::optional<uint64_t> stoui64(std::string_view str, int base = 10);
-constexpr std::optional<float> stof32(std::string_view str);
-constexpr std::optional<double> stof64(std::string_view str);
+std::optional<float> stof32(std::string_view str);
+std::optional<double> stof64(std::string_view str);
 
 /**
  * @brief Converts a string to a number, if possible
