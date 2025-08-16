@@ -18,7 +18,7 @@ namespace Manganese {
 namespace io {
 
 FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
-    position(0), line(1), column(1), bufferCapacity(bufferCapacity_) {
+    position(0), line(1), column(1), filePtr(nullptr), bufferSize(0), bufferCapacity(bufferCapacity_) {
     filePtr = std::fopen(filename.c_str(), "r");
     if (!filePtr) {
         logging::logCritical(std::format("Could not open file {}", filename));
