@@ -26,14 +26,8 @@ class StringReader : public Reader {
 
    public:
     StringReader() = default;
-    StringReader(const std::string& source);
+    StringReader(const std::string& source_) : position(0), line(1), column(1), source(source_) {}
     ~StringReader() noexcept = default;
-
-    StringReader(const StringReader&) = delete;
-    StringReader& operator=(const StringReader&) = delete;
-
-    char peekChar(size_t offset = 0) noexcept override;
-    [[nodiscard]] char consumeChar() noexcept override;
 
     constexpr void setPosition(size_t newPosition) noexcept override {
         position = newPosition >= source.length() ? source.length() : newPosition;
@@ -43,6 +37,17 @@ class StringReader : public Reader {
     constexpr size_t getColumn() const noexcept override { return column; }
 
     constexpr bool done() const noexcept override { return position >= source.length(); }
+
+    char peekChar(size_t offset = 0) noexcept override {
+        return (position + offset >= source.length()) ? Reader::EOF_CHAR : source[position + offset];
+    }
+    [[nodiscard]] char consumeChar() noexcept override {
+        if (position >= source.length()) { return Reader::EOF_CHAR; }
+        char c = source[position++];
+        line += (c == '\n') ? 1 : 0;
+        column = (c == '\n') ? 1 : column + 1;
+        return c;
+    }
 };
 }  // namespace io
 }  // namespace Manganese
