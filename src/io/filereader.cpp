@@ -63,7 +63,7 @@ char FileReader::peekChar(size_t offset) noexcept {
         refillBuffer();
 
         // If still out of bounds after refill, we're done reading the file
-        if (position + offset >= bufferSize) { return EOF_CHAR; }
+        if (position + offset >= bufferSize) { return Reader::EOF_CHAR; }
     }
     return buffer[position + offset];
 }
@@ -72,7 +72,7 @@ char FileReader::consumeChar() noexcept {
     // Ensure buffer has data to consume
     if (position >= bufferSize) {
         refillBuffer();
-        if (position >= bufferSize) { return EOF_CHAR; }
+        if (position >= bufferSize) { return Reader::EOF_CHAR; }
     }
 
     char c = buffer[position++];
