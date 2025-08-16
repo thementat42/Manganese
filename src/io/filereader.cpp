@@ -7,27 +7,31 @@
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 
-#include <algorithm>
 #include <cstring>  // For memmove
 #include <format>
-#include <fstream>
-#include <iostream>
 #include <memory>
 #include <string>
+#include <cstring>
+#include <cstdio>
 
 namespace Manganese {
 namespace io {
+
 FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
     position(0), line(1), column(1), bufferCapacity(bufferCapacity_) {
-    fileStream.open(filename, std::ios::in);
-    if (!fileStream.is_open()) {
+    filePtr = std::fopen(filename.c_str(), "r");
+    if (!filePtr) {
         logging::logCritical(std::format("Could not open file {}", filename));
         this->hasCriticalError_ = true;
         return;
     }
-    buffer = std::make_unique<char[]>(bufferCapacity_ + 1);  // +1 for null terminator
-    fileStream.read(buffer.get(), static_cast<std::streamsize>(bufferCapacity_));
-    bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));
+    // FileReader does its own buffering, with extra stuff to support lookaheads
+    // fread buffers by default, which is redundant and wastes memory (since the same data is stored in two places)
+    // So, disable fread's buffering
+    setvbuf(filePtr, nullptr, _IONBF, 0);
+
+    buffer = std::make_unique<char[]>(bufferCapacity + 1);  // +1 for a null terminator
+    bufferSize = std::fread(buffer.get(), sizeof(char), bufferCapacity_, filePtr);  // initial read
 
     if (bufferSize == 0) {
         logging::logError(std::format("File {} is empty or could not be read", filename));
@@ -38,17 +42,15 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
 }
 
 void FileReader::refillBuffer() {
-    // Save any remaining data that hasn't been processed yet
     const size_t unreadBytes = bufferSize - position;
-    if (unreadBytes > 0) {
-        // Move remaining data to beginning of buffer, handling overlap
+    if (unreadBytes) {
+        // Move any unread data to the beginning of the buffer
+        // This way, if we are near the end of a chunk and try to read into the next chunk
+        // unread data can still be read later
         memmove(buffer.get(), buffer.get() + position, unreadBytes);
     }
-
     const size_t remainingCapacity = bufferCapacity - unreadBytes;
-    // Read more data into the buffer
-    fileStream.read(buffer.get() + unreadBytes, static_cast<std::streamsize>(remainingCapacity));
-    const size_t bytesRead = static_cast<size_t>(fileStream.gcount());
+    size_t bytesRead = std::fread(buffer.get() + unreadBytes, sizeof(char), remainingCapacity, filePtr);
 
     bufferSize = unreadBytes + bytesRead;
     position = 0;  // We moved any remaining data to the front, so reset position to 0
@@ -82,6 +84,50 @@ char FileReader::consumeChar() noexcept {
     }
     return c;
 }
+
+
+// Below are old implementations of the constructor and refillBuffer method
+// They used std::ifstream for file handling instead of std::FILE*
+// They are kept for reference
+
+// FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
+//     position(0), line(1), column(1), bufferCapacity(bufferCapacity_) {
+//     fileStream.open(filename, std::ios::in);
+//     if (!fileStream.is_open()) {
+//         logging::logCritical(std::format("Could not open file {}", filename));
+//         this->hasCriticalError_ = true;
+//         return;
+//     }
+//     buffer = std::make_unique<char[]>(bufferCapacity_ + 1);  // +1 for null terminator
+//     fileStream.read(buffer.get(), static_cast<std::streamsize>(bufferCapacity_));
+//     bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));
+
+//     if (bufferSize == 0) {
+//         logging::logError(std::format("File {} is empty or could not be read", filename));
+//         this->hasCriticalError_ = true;
+//         return;
+//     }
+//     buffer[bufferSize] = '\0';  // Null-terminate the buffer since peekChar will rely on this to determine EOF
+// }
+
+// void FileReader::refillBuffer() {
+//     // Save any remaining data that hasn't been processed yet
+//     const size_t unreadBytes = bufferSize - position;
+//     if (unreadBytes > 0) {
+//         // Move remaining data to beginning of buffer, handling overlap
+//         std::memmove(buffer.get(), buffer.get() + position, unreadBytes);
+//     }
+
+//     const size_t remainingCapacity = bufferCapacity - unreadBytes;
+//     // Read more data into the buffer
+//     fileStream.read(buffer.get() + unreadBytes, static_cast<std::streamsize>(remainingCapacity));
+//     const size_t bytesRead = static_cast<size_t>(fileStream.gcount());
+
+//     bufferSize = unreadBytes + bytesRead;
+//     position = 0;  // We moved any remaining data to the front, so reset position to 0
+//     // Always null-terminate since peeking/consuming determines EOF based on null terminator
+//     buffer[bufferSize] = '\0';
+// }
 
 }  // namespace io
 }  // namespace Manganese

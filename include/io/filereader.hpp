@@ -32,7 +32,8 @@ class FileReader : public Reader {
    private:
     size_t position, line, column;
     std::string source;
-    std::ifstream fileStream;
+    // std::ifstream fileStream;
+    std::FILE* filePtr;
     size_t bufferSize;  // How much data is currently in the buffer
     size_t bufferCapacity;  // How much data the buffer can hold
     static constexpr int DEFAULT_BUFFER_CAPCITY = 2 << 20;  // ~2MB buffer size
@@ -65,7 +66,9 @@ class FileReader : public Reader {
     constexpr size_t getLine() const noexcept override { return line; }
     constexpr size_t getColumn() const noexcept override { return column; }
 
-    constexpr bool done() const noexcept override { return position >= bufferSize && fileStream.eof(); }
+    // constexpr bool done() const noexcept override { return position >= bufferSize && filestream.eof(); }
+    constexpr bool done() const noexcept override { return position >= bufferSize && std::feof(filePtr); }
+    
 };
 }  // namespace io
 }  // namespace Manganese
