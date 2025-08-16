@@ -13,6 +13,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
+#include "io/reader.hpp"
 
 namespace Manganese {
 namespace io {
@@ -38,7 +39,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
         this->hasCriticalError_ = true;
         return;
     }
-    buffer[bufferSize] = '\0';  // Null-terminate the buffer since peekChar will rely on this to determine EOF
+    buffer[bufferSize] = Reader::EOF_CHAR;  // Null-terminate the buffer since peekChar will rely on this to determine EOF
 }
 
 void FileReader::refillBuffer() {
@@ -55,7 +56,7 @@ void FileReader::refillBuffer() {
     bufferSize = unreadBytes + bytesRead;
     position = 0;  // We moved any remaining data to the front, so reset position to 0
     // Always null-terminate since peeking/consuming determines EOF based on null terminator
-    buffer[bufferSize] = '\0';
+    buffer[bufferSize] = Reader::EOF_CHAR;
 }
 
 char FileReader::peekChar(size_t offset) noexcept {
@@ -76,12 +77,8 @@ char FileReader::consumeChar() noexcept {
     }
 
     char c = buffer[position++];
-    if (c == '\n') {
-        ++line;
-        column = 1;
-    } else {
-        ++column;
-    }
+    line += (c == '\n') ? 1 : 0;
+    column = (c == '\n') ? 1 : column + 1;
     return c;
 }
 
