@@ -49,7 +49,11 @@ class FileReader : public Reader {
    public:
     FileReader() = default;
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
-    ~FileReader() noexcept = default;
+    ~FileReader() noexcept override {
+        if (filePtr) {
+            std::fclose(filePtr);
+        }
+    }
 
     // To avoid any issues with multiple file handlers being opened on the same file,
     // the copy constructor and assignment operator are deleted.
