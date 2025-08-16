@@ -60,6 +60,9 @@ class FileReader : public Reader {
     FileReader(const FileReader&) = delete;
     FileReader& operator=(const FileReader&) = delete;
 
+    FileReader(FileReader&&) noexcept = delete;
+    FileReader& operator=(FileReader&&) noexcept = delete;
+
     char peekChar(size_t offset = 0) noexcept override;
     [[nodiscard]] char consumeChar() noexcept override;
 
