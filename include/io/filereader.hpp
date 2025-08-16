@@ -55,14 +55,6 @@ class FileReader : public Reader {
         }
     }
 
-    // To avoid any issues with multiple file handlers being opened on the same file,
-    // the copy constructor and assignment operator are deleted.
-    FileReader(const FileReader&) = delete;
-    FileReader& operator=(const FileReader&) = delete;
-
-    FileReader(FileReader&&) noexcept = delete;
-    FileReader& operator=(FileReader&&) noexcept = delete;
-
     char peekChar(size_t offset = 0) noexcept override;
     [[nodiscard]] char consumeChar() noexcept override;
 

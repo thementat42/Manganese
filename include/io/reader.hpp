@@ -9,10 +9,9 @@
 #ifndef MANGANESE_INCLUDE_IO_READER_HPP
 #define MANGANESE_INCLUDE_IO_READER_HPP
 
+#include <cstddef>
 #include <global_macros.hpp>
 
-#include <cstddef>
-#include <string>
 
 namespace Manganese {
 namespace io {
@@ -28,6 +27,15 @@ class Reader {
     static constexpr char EOF_CHAR = '\0';
     Reader() = default;
     virtual ~Reader() noexcept = default;
+
+    // Any reader should be the only thing reading its source
+    // This is especially important for reading from a file, to prevent double closing or reading from a closed file
+    // So, disable copying and moving
+    Reader(const Reader&) = delete;
+    Reader& operator=(const Reader&) = delete;
+
+    Reader(Reader&&) noexcept = delete;
+    Reader& operator=(Reader&&) noexcept = delete;
 
     constexpr bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
