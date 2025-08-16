@@ -16,22 +16,17 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_HPP
 
+#include <format>
 #include <global_macros.hpp>
-
 #include <string>
 #include <unordered_map>
+#include <utils/number_utils.hpp>
+
+#include "token_type.hpp"
+
 
 namespace Manganese {
 namespace lexer {
-
-/**
- * @brief Defines all supported token types in Manganese
- *
- * This enum represents all tokens recognized by the compiler,
- * categorized by their functional purpose (keywords, identifiers, etc.).
- * Each token is documented with its corresponding
- */
-enum class TokenType : uint8_t;  // Forward declaration -- implementation is at the end of this file for readability
 
 /**
  * @brief Representation of a token
@@ -49,214 +44,213 @@ class Token {
           bool invalid = false) noexcept_if_release;
     ~Token() noexcept = default;
 
-    bool isInvalid() const noexcept;
-    bool isKeyword() const noexcept;
-    bool isOperator() const noexcept;
-    bool isPrefixOperator() const noexcept;
-    bool isLiteral() const noexcept;
-    bool isBracket() const noexcept;
-    bool isPrimitiveType() const noexcept;
-    bool hasUnaryCounterpart() const noexcept;
-    TokenType getUnaryCounterpart() const noexcept_if_release;
+    constexpr bool isKeyword() const noexcept {
+        return type >= TokenType::__KeywordStart && type <= TokenType::__KeywordEnd;
+    }
+    constexpr bool isOperator() const noexcept {
+        return type >= TokenType::__OperatorStart && type <= TokenType::__OperatorEnd;
+    }
+    
+    constexpr bool isInvalid() const noexcept { return invalid; }
+    constexpr TokenType getType() const noexcept { return type; }
+    constexpr std::string getLexeme() const noexcept { return lexeme; }
+    constexpr size_t getLine() const noexcept { return line; }
+    constexpr size_t getColumn() const noexcept { return column; }
 
-    TokenType getType() const noexcept;
-    std::string getLexeme() const noexcept;
-    size_t getLine() const noexcept;
-    size_t getColumn() const noexcept;
+    // These functions are long, so are implemented below
+    constexpr bool isPrefixOperator() const noexcept;
+    constexpr bool isLiteral() const noexcept;
+    constexpr bool isBracket() const noexcept;
+    constexpr bool isPrimitiveType() const noexcept;
+    constexpr bool hasUnaryCounterpart() const noexcept;
+    constexpr TokenType getUnaryCounterpart() const noexcept_if_release;
+    constexpr std::string toString() const noexcept;
 
     /**
      * @note Parser only: be careful
      */
     void overrideType(TokenType type_, std::string lexeme_ = "");
 
-    std::string toString() const noexcept;
 };
 
 //~ Helpers, not tied to the Token class
-std::string tokenTypeToString(TokenType type) noexcept_if_release;
+constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release;
+
 extern std::unordered_map<std::string, const TokenType> keywordMap;
 extern std::unordered_map<std::string, const TokenType> operatorMap;
 TokenType keywordFromString(const std::string& keyword, const size_t line, const size_t column);
 TokenType operatorFromString(const std::string& op, const size_t line, const size_t column);
 
-//~ Helpers for checking token type classifications
-constexpr bool isBinaryOperator(const TokenType type) noexcept;
-constexpr bool isUnaryOperator(const TokenType type) noexcept;
+// ===== Implementations of constexpr functions =====
 
-// Implementation of TokenType
-enum class TokenType : uint8_t {
-    //~ Basic
-    Identifier,  // variables, functions
-    StrLiteral,  // "text"
-    CharLiteral,  // 'a'
-    IntegerLiteral,  // Whole Number
-    FloatLiteral,  // Floating point number
+constexpr std::string Token::toString() const noexcept {
+    return std::format("Token: {} ('{}') at line {}, column {}", tokenTypeToString(type), lexeme, line, column);
+}
 
-    /*
-    Keyword and Operator have generic values here for simplicity in other parts of the compiler
-    The token constructor uses this to assign a specific enum value (see below)
+constexpr bool Token::isPrefixOperator() const noexcept {
+    return type == TokenType::Inc || type == TokenType::Dec || type == TokenType::BitAnd || type == TokenType::Mul
+        || type == TokenType::AddressOf || type == TokenType::Dereference;
+}
 
-    For example, the lexer can just say "this is a keyword" and trust the token will be correctly assigned to that
-    keyword, without having to check what keyword it
-    */
-    Keyword,  // any keyword
-    Operator,  // any operator
+constexpr bool Token::isLiteral() const noexcept {
+    return type == TokenType::IntegerLiteral || type == TokenType::FloatLiteral || type == TokenType::StrLiteral
+        || type == TokenType::CharLiteral || type == TokenType::True || type == TokenType::False;
+}
 
-    //~ Brackets
-    LeftParen,  // (
-    RightParen,  // )
-    LeftBrace,  // {
-    RightBrace,  // }
-    LeftSquare,  // [
-    RightSquare,  // ]
+constexpr bool Token::isBracket() const noexcept {
+    return type == TokenType::LeftParen || type == TokenType::RightParen || type == TokenType::LeftBrace
+        || type == TokenType::RightBrace || type == TokenType::LeftSquare || type == TokenType::RightSquare;
+}
 
-    //~ Punctuation
-    Semicolon,  // ;
-    Colon,  // :
-    Comma,  // ,
+constexpr bool Token::isPrimitiveType() const noexcept {
+    return type == TokenType::Int8 || type == TokenType::Int16 || type == TokenType::Int32 || type == TokenType::Int64
+        || type == TokenType::UInt8 || type == TokenType::UInt16 || type == TokenType::UInt32
+        || type == TokenType::UInt64 || type == TokenType::Float32 || type == TokenType::Float64
+        || type == TokenType::Char || type == TokenType::Bool || type == TokenType::String;
+}
 
-    //~ Misc
-    EndOfFile,
+constexpr bool Token::hasUnaryCounterpart() const noexcept {
+    return type == TokenType::Plus ||  // + can be addition or unary plus
+        type == TokenType::Minus ||  // - can be subtraction or unary minus
+        type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
+        type == TokenType::Mul;  // * can be multiplication or dereference operator
+}
 
-    //~ Keywords
-    __KeywordStart,  // Marker for the start of keyword token types -- not to be used as an actual token type
-    //* Type Qualifiers
-    Let,  // mutable variable
-    Const,  // constant variable
-    Ptr,  // pointer variables
+constexpr TokenType Token::getUnaryCounterpart() const noexcept_if_release {
+    switch (type) {
+        case TokenType::Plus: return TokenType::UnaryPlus;
+        case TokenType::Minus: return TokenType::UnaryMinus;
+        case TokenType::BitAnd: return TokenType::AddressOf;
+        case TokenType::Mul: return TokenType::Dereference;
+        default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(type));
+    }
+}
 
-    //* Access Levels
-    Private,
-    ReadOnly,  // readable, but can't be modified, outside the module
-    Public,  // can be read and modified outside the module
+constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
+    switch (type) {
+        // Basic
+        case TokenType::Identifier: return "Identifier";
+        case TokenType::StrLiteral: return "String Literal";
+        case TokenType::CharLiteral: return "Char Literal";
 
-    //* Primitive Types
-    Int8,  // 8 bit int
-    Int16,  // 16 bit int
-    Int32,  // 32 bit int
-    Int64,  // 64 bit int
-    UInt8,  // unsigned 8 bit int
-    UInt16,  // unsigned 16 bit int
-    UInt32,  // unsigned 32 bit int
-    UInt64,  // unsigned 64 bit int
-    Float32,  // 32-bit float (single precision)
-    Float64,  // 64-bit float (double precision)
-    Char,  // single character
-    Bool,  // true or false
-    True,  // boolean true
-    False,  // boolean false
-    String,  // sequence of characters
+        // Numbers
+        case TokenType::IntegerLiteral: return "Integer";
+        case TokenType::FloatLiteral: return "Float";
 
-    //* Conditionals
-    If,  // check a condition
-    Elif,  // Alternate condition
-    Else,  // if all previous conditions were false, do this
+        // Brackets
+        case TokenType::LeftParen: return "Left Parenthesis";
+        case TokenType::RightParen: return "Right Parenthesis";
+        case TokenType::LeftBrace: return "Left Brace";
+        case TokenType::RightBrace: return "Right Brace";
+        case TokenType::LeftSquare: return "Left Square";
+        case TokenType::RightSquare: return "Right Square";
+        // Punctuation
+        case TokenType::Semicolon: return "Semicolon";
+        case TokenType::Comma: return "Comma";
+        case TokenType::Colon: return "Colon";
 
-    //* Pattern Matching
-    Switch,  // value to compare against
-    Case,  // specific value
-    Default,  // if no values matched, do this
+        // Misc
+        case TokenType::EndOfFile: return "End Of File";
 
-    //* Loops
-    For,
-    While,
-    Repeat,  // execute a block of code `n` times -- don't care about index
-    Do,  // run once before checking condition (in while loop)
-    Break,  // stop loop
-    Continue,  // skip this iteration
+        // Keywords
+        case TokenType::Aggregate: return "aggregate";
+        case TokenType::Alias: return "alias";
+        case TokenType::As: return "as";
+        case TokenType::Blueprint: return "blueprint";
+        case TokenType::Bool: return "bool";
+        case TokenType::Break: return "break";
+        case TokenType::Case: return "case";
+        case TokenType::Char: return "char";
+        case TokenType::Const: return "const";
+        case TokenType::Continue: return "continue";
+        case TokenType::Default: return "default";
+        case TokenType::Do: return "do";
+        case TokenType::Elif: return "elif";
+        case TokenType::Else: return "else";
+        case TokenType::Enum: return "enum";
+        case TokenType::False: return "false";
+        case TokenType::Float32: return "float32";
+        case TokenType::Float64: return "float64";
+        case TokenType::For: return "for";
+        case TokenType::Func: return "func";
+        case TokenType::If: return "if";
+        case TokenType::Import: return "import";
+        case TokenType::Int8: return int8_str;
+        case TokenType::Int16: return int16_str;
+        case TokenType::Int32: return int32_str;
+        case TokenType::Int64: return int64_str;
+        case TokenType::Lambda: return "lambda";
+        case TokenType::Let: return "let";
+        case TokenType::Module: return "module";
+        case TokenType::Ptr: return "ptr";
+        case TokenType::Private: return "Private";
+        case TokenType::Public: return "public";
+        case TokenType::ReadOnly: return "readonly";
+        case TokenType::Repeat: return "repeat";
+        case TokenType::Return: return "return";
+        case TokenType::String: return "string";
+        case TokenType::Switch: return "switch";
+        case TokenType::True: return "true";
+        case TokenType::TypeOf: return "typeof";
+        case TokenType::UInt8: return uint8_str;
+        case TokenType::UInt16: return uint16_str;
+        case TokenType::UInt32: return uint32_str;
+        case TokenType::UInt64: return uint64_str;
+        case TokenType::While: return "while";
 
-    //* Functions
-    Func,  // function
-    Lambda,  // anonymous function
-    Return,  // function returns
-
-    //* Modules & Scoping
-    Import,  // bring in another module
-    Module,  // declare as a module
-    As,  // type casting, or module aliasing in an import statement
-
-    //* Encapsulation
-    Aggregate,  // like C's struct
-    Enum,  // list of named constants
-    Blueprint,  // like a class
-
-    //* Misc Operators
-    Alias,  // type aliasing (alias `a` as `b`)
-    TypeOf,  // get the type of a variable
-    __KeywordEnd,  // Marker for the end of keyword token types -- not to be used as an actual token type
-
-    //~ Operators
-    //* Arithmetic Operators
-    __OperatorStart,  // Marker for the start of operator token types -- not to be used as an actual token type
-    Plus,  // `+`
-    Minus,  // `-`
-    Mul,  // `*`
-    Div,  // `/`
-    FloorDiv,  // `//`
-    Mod,  // `%`
-    Exp,  // `^^`
-    Inc,  // `++`
-    Dec,  // `--`
-    UnaryPlus,  // `+` (unary plus)
-    UnaryMinus,  // `-` (unary minus)
-
-    //* Arithmetic Assignment Operators
-    // Overrides the value of the variable in place (e.g. x += 2 is the same as x = x + 2)
-    PlusAssign,  // `+=`
-    MinusAssign,  // `-=`
-    MulAssign,  // `*=`
-    DivAssign,  // `/=`
-    FloorDivAssign,  // `//=`
-    ModAssign,  // `%=`
-    ExpAssign,  // `^^=`
-
-    //* Comparison Operators
-    GreaterThan,  // `>`
-    GreaterThanOrEqual,  // `>=`
-    LessThan,  // `<`
-    LessThanOrEqual,  // `<=`,
-    Equal,  // `==`
-    NotEqual,  // `!=`
-
-    //* Boolean Operators
-    And,  // `&&`
-    Or,  // `||`
-    Not,  // `!`
-
-    //* Bitwise Operators
-    BitAnd,  // `&`
-    BitOr,  // `|`
-    BitNot,  // `~`
-    BitXor,  // `^`
-    BitLShift,  // `<<`
-    BitRShift,  // `>>`
-
-    //* Bitwise Assignment Operators
-    // Overrides the value of the variable in place (e.g. x &= y is the same as x = x & y)
-    BitAndAssign,  // `&=`
-    BitOrAssign,  // `|=`
-    BitNotAssign,  // `~=`
-    BitXorAssign,  // `^=`
-    BitLShiftAssign,  // `<<=`
-    BitRShiftAssign,  // `>>=`
-
-    //* Pointer Operators
-    AddressOf,  // `&`
-    Dereference,  // `*`
-
-    //* Access Operators
-    MemberAccess,  // `.`
-    ScopeResolution,  // `::`
-
-    //* Misc
-    Assignment,  // `=`
-    Arrow,  // `->`
-    Ellipsis,  // `...`
-    At,  // `@`
-    __OperatorEnd,  // Marker for the end of operator token types -- not to be used as an actual token type
-    Unknown,  // For truly catastrophic failures (e.g, unrecognized character)
-};
-
+        case TokenType::Plus: return "+";
+        case TokenType::Minus: return "-";
+        case TokenType::Mul: return "*";
+        case TokenType::Div: return "/";
+        case TokenType::FloorDiv: return "//";
+        case TokenType::Mod: return "%";
+        case TokenType::Exp: return "^^";
+        case TokenType::Inc: return "++";
+        case TokenType::Dec: return "--";
+        case TokenType::UnaryPlus: return "+";
+        case TokenType::UnaryMinus: return "-";
+        case TokenType::PlusAssign: return "+=";
+        case TokenType::MinusAssign: return "-=";
+        case TokenType::MulAssign: return "*=";
+        case TokenType::DivAssign: return "/=";
+        case TokenType::FloorDivAssign: return "//=";
+        case TokenType::ModAssign: return "%=";
+        case TokenType::ExpAssign: return "^^=";
+        case TokenType::GreaterThan: return ">";
+        case TokenType::GreaterThanOrEqual: return ">=";
+        case TokenType::LessThan: return "<";
+        case TokenType::LessThanOrEqual: return "<=";
+        case TokenType::Equal: return "==";
+        case TokenType::NotEqual: return "!=";
+        case TokenType::And: return "&&";
+        case TokenType::Or: return "||";
+        case TokenType::Not: return "!";
+        case TokenType::BitAnd: return "&";
+        case TokenType::BitOr: return "|";
+        case TokenType::BitNot: return "~";
+        case TokenType::BitXor: return "^";
+        case TokenType::BitLShift: return "<<";
+        case TokenType::BitRShift: return ">>";
+        case TokenType::BitAndAssign: return "&=";
+        case TokenType::BitOrAssign: return "|=";
+        case TokenType::BitNotAssign: return "~=";
+        case TokenType::BitXorAssign: return "^=";
+        case TokenType::BitLShiftAssign: return "<<=";
+        case TokenType::BitRShiftAssign: return ">>=";
+        case TokenType::AddressOf: return "&";
+        case TokenType::Dereference: return "*";
+        case TokenType::MemberAccess: return ".";
+        case TokenType::Ellipsis: return "...";
+        case TokenType::ScopeResolution: return "::";
+        case TokenType::Assignment: return "=";
+        case TokenType::Arrow: return "->";
+        case TokenType::At: return "@";
+        case TokenType::Unknown: return "Unknown Token";
+        default:
+            ASSERT_UNREACHABLE("No string representation for TokenType: "
+                               + std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
+    }
+}
 }  // namespace lexer
 }  // namespace Manganese
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_HPP

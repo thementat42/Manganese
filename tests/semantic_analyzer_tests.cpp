@@ -304,7 +304,7 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Type Cast Expression", checkTypeCastExpression);
     runner.runTest("Analyze Loops", checkLoops);
     runner.runTest("Analyze Prefix and Postfix Expressions", checkPrefixAndPostfixExpressions);
-    runner.runTest("Mist Tests", miscTests);
+    runner.runTest("Misc Tests", miscTests);
 }
 
 }  // namespace tests
