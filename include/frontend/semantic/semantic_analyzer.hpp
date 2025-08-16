@@ -69,7 +69,7 @@ class SemanticAnalyzer {
     inline void exitScope() { symbolTable.exitScope(); }
 
     template <typename... Args>
-    inline void logWarning(const std::format_string<Args...>& fmt, ast::ASTNode* node, Args&&... args) noexcept {
+    inline void logWarning(const std::format_string<Args...>& fmt, const ast::ASTNode* node, Args&&... args) noexcept {
         logging::logWarning(std::format(fmt, std::forward<Args>(args)...), node->getLine(), node->getColumn());
         hasWarning_ = true;
     }
