@@ -170,24 +170,19 @@ class SemanticAnalyzer final : public visitor::Visitor<void> {
 // ===== Helper Functions that don't depend on the SemanticAnalyzer instance =====
 
 constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release;
-inline const auto isSignedInt
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("int"); };
-inline const auto isUInt
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("uint"); };
 
-inline const auto isAnyInt = [](const ast::Type* t) -> bool { return isSignedInt(t) || isUInt(t); };
+inline bool isSignedInt(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("int"); }
 
-inline const auto isFloat
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("float"); };
-inline const auto isChar
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t) == "char"; };
+inline bool isUInt(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("uint"); }
 
-// inline const auto isBool = [](const ast::Type* t) -> bool {
-//     return ast::isPrimitiveType(t) && ast::toStringOr(t) == "bool";
-// };
+inline bool isAnyInt(const ast::Type* t) { return isSignedInt(t) || isUInt(t); }
 
-inline const auto isString
-    = [](const ast::Type* t) -> bool { return ast::isPrimitiveType(t) && ast::toStringOr(t) == "string"; };
+inline bool isFloat(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("float"); }
+
+inline bool isChar(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t) == "char"; }
+
+inline bool isString(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t) == "string"; }
+
 }  // namespace semantic
 
 }  // namespace Manganese
