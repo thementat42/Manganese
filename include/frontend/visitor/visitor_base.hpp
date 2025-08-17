@@ -18,6 +18,7 @@ class Visitor {
    public:
     virtual ~Visitor() noexcept = default;
 
+    protected:
     // ===== Expression Visiting =====
     virtual Result visit(ast::AggregateInstantiationExpression*) = 0;
     virtual Result visit(ast::ArrayLiteralExpression*) = 0;
