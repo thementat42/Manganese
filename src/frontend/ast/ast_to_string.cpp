@@ -115,7 +115,7 @@ std::string NumberLiteralExpression::toString() const {
             oss << +arg;
         }
         // Special handling for floating point types to show decimal point
-        else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>) {
+        else if constexpr (std::is_same_v<T, float32_t> || std::is_same_v<T, float64_t>) {
             std::string s = std::to_string(arg);
             size_t dotPos = s.find('.');
             int precision = 1;

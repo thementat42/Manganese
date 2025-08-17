@@ -64,9 +64,9 @@ void SemanticAnalyzer::visit(ast::NumberLiteralExpression* expression) {
             return std::make_shared<ast::SymbolType>(uint32_str);
         } else if constexpr (std::is_same_v<T, uint64_t>) {
             return std::make_shared<ast::SymbolType>(uint64_str);
-        } else if constexpr (std::is_same_v<T, float>) {
+        } else if constexpr (std::is_same_v<T, float32_t>) {
             return std::make_shared<ast::SymbolType>(float32_str);
-        } else if constexpr (std::is_same_v<T, double>) {
+        } else if constexpr (std::is_same_v<T, float64_t>) {
             return std::make_shared<ast::SymbolType>(float64_str);
         } else {
             ASSERT_UNREACHABLE(std::format("Unsupported number literal type: {}", typeid(T).name()));
