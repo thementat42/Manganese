@@ -1,15 +1,29 @@
 #ifndef MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_CODEGEN_BASE_HPP
 #define MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_CODEGEN_BASE_HPP
 
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
+#include <climits>
 #include <frontend/ast.hpp>
 #include <frontend/visitor/visitor_base.hpp>
+#include <global_macros.hpp>
+#include <map>
+#include <memory>
+#include <string>
 
 namespace Manganese {
 namespace codegen {
 
 class IRGenerator final : public visitor::Visitor<llvm::Value*> {
+   private:
+    std::unique_ptr<llvm::LLVMContext> theContext;
+    std::unique_ptr<llvm::Module> theModule;
+    std::unique_ptr<llvm::IRBuilder<>> theBuilder;
+    std::map<std::string, llvm::Value*> namedValues;
+
    public:
     using visitor::Visitor<llvm::Value*>::visit;
     explicit IRGenerator() noexcept = default;
@@ -59,6 +73,12 @@ class IRGenerator final : public visitor::Visitor<llvm::Value*> {
     visit_t visit(ast::PointerType*) override;
     visit_t visit(ast::SymbolType*) override;
 };
+
+// ===== Helper Functions that are not part of the IRGenerator class =====
+template <class T>
+constexpr FORCE_INLINE unsigned getBitWidth() {
+    return static_cast<unsigned>(sizeof(T) * CHAR_BIT);
+}
 
 }  // namespace codegen
 }  // namespace Manganese
