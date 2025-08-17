@@ -17,46 +17,47 @@ class IRGenerator final : public visitor::Visitor<llvm::Value*> {
 
    private:
     // ===== Specific Expression Code Generation =====
-    visit_t visit(ast::AggregateInstantiationExpression* expression) override;
-    visit_t visit(ast::ArrayLiteralExpression* expression) override;
-    visit_t visit(ast::AssignmentExpression* expression) override;
-    visit_t visit(ast::BinaryExpression* expression) override;
-    visit_t visit(ast::BoolLiteralExpression* expression) override;
-    visit_t visit(ast::CharLiteralExpression* expression) override;
-    visit_t visit(ast::FunctionCallExpression* expression) override;
-    visit_t visit(ast::GenericExpression* expression) override;
-    visit_t visit(ast::IdentifierExpression* expression) override;
-    visit_t visit(ast::IndexExpression* expression) override;
-    visit_t visit(ast::MemberAccessExpression* expression) override;
-    visit_t visit(ast::NumberLiteralExpression* expression) override;
-    visit_t visit(ast::PostfixExpression* expression) override;
-    visit_t visit(ast::PrefixExpression* expression) override;
-    visit_t visit(ast::ScopeResolutionExpression* expression) override;
-    visit_t visit(ast::StringLiteralExpression* expression) override;
-    visit_t visit(ast::TypeCastExpression* expression) override;
+    visit_t visit(ast::AggregateInstantiationExpression*) override;
+    visit_t visit(ast::ArrayLiteralExpression*) override;
+    visit_t visit(ast::AssignmentExpression*) override;
+    visit_t visit(ast::BinaryExpression*) override;
+    visit_t visit(ast::BoolLiteralExpression*) override;
+    visit_t visit(ast::CharLiteralExpression*) override;
+    visit_t visit(ast::FunctionCallExpression*) override;
+    visit_t visit(ast::GenericExpression*) override;
+    visit_t visit(ast::IdentifierExpression*) override;
+    visit_t visit(ast::IndexExpression*) override;
+    visit_t visit(ast::MemberAccessExpression*) override;
+    visit_t visit(ast::NumberLiteralExpression*) override;
+    visit_t visit(ast::PostfixExpression*) override;
+    visit_t visit(ast::PrefixExpression*) override;
+    visit_t visit(ast::ScopeResolutionExpression*) override;
+    visit_t visit(ast::StringLiteralExpression*) override;
+    visit_t visit(ast::TypeCastExpression*) override;
 
     // ===== Specific Statement Code Generation =====
-    visit_t visit(ast::AggregateDeclarationStatement* statement) override;
-    visit_t visit(ast::AliasStatement* statement) override;
-    visit_t visit(ast::BreakStatement* statement) override;
-    visit_t visit(ast::ContinueStatement* statement) override;
-    visit_t visit(ast::EnumDeclarationStatement* statement) override;
-    visit_t visit(ast::ExpressionStatement* statement) override;
-    visit_t visit(ast::FunctionDeclarationStatement* statement) override;
-    visit_t visit(ast::IfStatement* statement) override;
-    visit_t visit(ast::RepeatLoopStatement* statement) override;
-    visit_t visit(ast::ReturnStatement* statement) override;
-    visit_t visit(ast::SwitchStatement* statement) override;
-    visit_t visit(ast::VariableDeclarationStatement* statement) override;
-    visit_t visit(ast::WhileLoopStatement* statement) override;
+    visit_t visit(ast::AggregateDeclarationStatement*) override;
+    visit_t visit(ast::AliasStatement*) override;
+    visit_t visit(ast::BreakStatement*) override;
+    visit_t visit(ast::ContinueStatement*) override;
+    visit_t visit(ast::EnumDeclarationStatement*) override;
+    visit_t visit(ast::EmptyStatement*) override;
+    visit_t visit(ast::ExpressionStatement*) override;
+    visit_t visit(ast::FunctionDeclarationStatement*) override;
+    visit_t visit(ast::IfStatement*) override;
+    visit_t visit(ast::RepeatLoopStatement*) override;
+    visit_t visit(ast::ReturnStatement*) override;
+    visit_t visit(ast::SwitchStatement*) override;
+    visit_t visit(ast::VariableDeclarationStatement*) override;
+    visit_t visit(ast::WhileLoopStatement*) override;
 
     // ===== Specific Type Code Generation =====
-    visit_t visit(ast::AggregateType* type) override;
-    visit_t visit(ast::ArrayType* type) override;
-    visit_t visit(ast::FunctionType* type) override;
-    visit_t visit(ast::GenericType* type) override;
-    visit_t visit(ast::PointerType* type) override;
-    visit_t visit(ast::SymbolType* type) override;
+    visit_t visit(ast::AggregateType*) override;
+    visit_t visit(ast::ArrayType*) override;
+    visit_t visit(ast::FunctionType*) override;
+    visit_t visit(ast::GenericType*) override;
+    visit_t visit(ast::PointerType*) override;
+    visit_t visit(ast::SymbolType*) override;
 };
 
 }  // namespace codegen

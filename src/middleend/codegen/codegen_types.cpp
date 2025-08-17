@@ -6,27 +6,27 @@ namespace Manganese {
 
 namespace codegen {
 
-llvm::Value* generateAggregateType(const ast::AggregateType* type) {
+auto IRGenerator::visit(ast::AggregateType* type) -> visit_t {
     DISCARD(type);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateArrayType(const ast::ArrayType* type) {
+auto IRGenerator::visit(ast::ArrayType* type) -> visit_t {
     DISCARD(type);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateFunctionType(const ast::FunctionType* type) {
+auto IRGenerator::visit(ast::FunctionType* type) -> visit_t {
     DISCARD(type);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateGenericType(const ast::GenericType* type) {
+auto IRGenerator::visit(ast::GenericType* type) -> visit_t {
     DISCARD(type);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generatePointerType(const ast::PointerType* type) {
+auto IRGenerator::visit(ast::PointerType* type) -> visit_t {
     DISCARD(type);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateSymbolType(const ast::SymbolType* type) {
+auto IRGenerator::visit(ast::SymbolType* type) -> visit_t {
     DISCARD(type);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }

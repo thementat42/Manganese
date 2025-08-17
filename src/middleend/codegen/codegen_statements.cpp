@@ -2,64 +2,63 @@
 
 #include <middleend/codegen/codegen_base.hpp>
 
-
 namespace Manganese {
 
 namespace codegen {
 
-llvm::Value* generateAggregateDeclarationStatement(const ast::AggregateDeclarationStatement* statement) {
+auto IRGenerator::visit(ast::AggregateDeclarationStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateAliasStatement(const ast::AliasStatement* statement) {
+auto IRGenerator::visit(ast::AliasStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateBreakStatement(const ast::BreakStatement* statement) {
+auto IRGenerator::visit(ast::BreakStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateContinueStatement(const ast::ContinueStatement* statement) {
+auto IRGenerator::visit(ast::ContinueStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateEmptyStatement(const ast::EmptyStatement* statement) {
+auto IRGenerator::visit(ast::EmptyStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateEnumDeclarationStatement(const ast::EnumDeclarationStatement* statement) {
+auto IRGenerator::visit(ast::EnumDeclarationStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateExpressionStatement(const ast::ExpressionStatement* statement) {
+auto IRGenerator::visit(ast::ExpressionStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateFunctionDeclarationStatement(const ast::FunctionDeclarationStatement* statement) {
+auto IRGenerator::visit(ast::FunctionDeclarationStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateIfStatement(const ast::IfStatement* statement) {
+auto IRGenerator::visit(ast::IfStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateRepeatLoopStatement(const ast::RepeatLoopStatement* statement) {
+auto IRGenerator::visit(ast::RepeatLoopStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateReturnStatement(const ast::ReturnStatement* statement) {
+auto IRGenerator::visit(ast::ReturnStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateSwitchStatement(const ast::SwitchStatement* statement) {
+auto IRGenerator::visit(ast::SwitchStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateVariableDeclarationStatement(const ast::VariableDeclarationStatement* statement) {
+auto IRGenerator::visit(ast::VariableDeclarationStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateWhileLoopStatement(const ast::WhileLoopStatement* statement) {
+auto IRGenerator::visit(ast::WhileLoopStatement* statement) -> visit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }

@@ -1,75 +1,77 @@
-#include <middleend/codegen/codegen_base.hpp>
 #include <llvm/IR/Value.h>
+
+#include <middleend/codegen/codegen_base.hpp>
+
 
 namespace Manganese {
 
 namespace codegen {
 
-llvm::Value* generateAggregateInstantiationExpression(const ast::AggregateInstantiationExpression* expression) {
+auto IRGenerator::visit(ast::AggregateInstantiationExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateArrayLiteralExpression(const ast::ArrayLiteralExpression* expression) {
+auto IRGenerator::visit(ast::ArrayLiteralExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateAssignmentExpression(const ast::AssignmentExpression* expression) {
+auto IRGenerator::visit(ast::AssignmentExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateBinaryExpression(const ast::BinaryExpression* expression) {
+auto IRGenerator::visit(ast::BinaryExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateBoolLiteralExpression(const ast::BoolLiteralExpression* expression) {
+auto IRGenerator::visit(ast::BoolLiteralExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateCharLiteralExpression(const ast::CharLiteralExpression* expression) {
+auto IRGenerator::visit(ast::CharLiteralExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateFunctionCallExpression(const ast::FunctionCallExpression* expression) {
+auto IRGenerator::visit(ast::FunctionCallExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateGenericExpression(const ast::GenericExpression* expression) {
+auto IRGenerator::visit(ast::GenericExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateIdentifierExpression(const ast::IdentifierExpression* expression) {
+auto IRGenerator::visit(ast::IdentifierExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateIndexExpression(const ast::IndexExpression* expression) {
+auto IRGenerator::visit(ast::IndexExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateMemberAccessExpression(const ast::MemberAccessExpression* expression) {
+auto IRGenerator::visit(ast::MemberAccessExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateNumberLiteralExpression(const ast::NumberLiteralExpression* expression) {
+auto IRGenerator::visit(ast::NumberLiteralExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generatePostfixExpression(const ast::PostfixExpression* expression) {
+auto IRGenerator::visit(ast::PostfixExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generatePrefixExpression(const ast::PrefixExpression* expression) {
+auto IRGenerator::visit(ast::PrefixExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateScopeResolutionExpression(const ast::ScopeResolutionExpression* expression) {
+auto IRGenerator::visit(ast::ScopeResolutionExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateStringLiteralExpression(const ast::StringLiteralExpression* expression) {
+auto IRGenerator::visit(ast::StringLiteralExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-llvm::Value* generateTypeCastExpression(const ast::TypeCastExpression* expression) {
+auto IRGenerator::visit(ast::TypeCastExpression* expression) -> visit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
