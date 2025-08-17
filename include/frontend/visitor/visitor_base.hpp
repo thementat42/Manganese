@@ -17,6 +17,7 @@ template <class Result>
 class Visitor {
    public:
     virtual ~Visitor() noexcept = default;
+    using visit_t = Result;
 
     protected:
     // ===== Expression Visiting =====
