@@ -4,57 +4,60 @@
 #include <llvm/IR/Value.h>
 
 #include <frontend/ast.hpp>
-
+#include <frontend/visitor/visitor_base.hpp>
 
 namespace Manganese {
 namespace codegen {
 
-llvm::Value* generateExpression(const ast::Expression* expression);
-llvm::Value* generateStatement(const ast::Statement* statement);
-llvm::Value* generateType(const ast::Type* type);
+class IRGenerator final : public visitor::Visitor<llvm::Value*> {
+   public:
+    using visitor::Visitor<llvm::Value*>::visit;
+    explicit IRGenerator() noexcept = default;
+    ~IRGenerator() noexcept = default;
 
-// ===== Specific Expression Code Generation =====
-llvm::Value* generateAggregateInstantiationExpression(const ast::AggregateInstantiationExpression* expression);
-llvm::Value* generateArrayLiteralExpression(const ast::ArrayLiteralExpression* expression);
-llvm::Value* generateAssignmentExpression(const ast::AssignmentExpression* expression);
-llvm::Value* generateBinaryExpression(const ast::BinaryExpression* expression);
-llvm::Value* generateBoolLiteralExpression(const ast::BoolLiteralExpression* expression);
-llvm::Value* generateCharLiteralExpression(const ast::CharLiteralExpression* expression);
-llvm::Value* generateFunctionCallExpression(const ast::FunctionCallExpression* expression);
-llvm::Value* generateGenericExpression(const ast::GenericExpression* expression);
-llvm::Value* generateIdentifierExpression(const ast::IdentifierExpression* expression);
-llvm::Value* generateIndexExpression(const ast::IndexExpression* expression);
-llvm::Value* generateMemberAccessExpression(const ast::MemberAccessExpression* expression);
-llvm::Value* generateNumberLiteralExpression(const ast::NumberLiteralExpression* expression);
-llvm::Value* generatePostfixExpression(const ast::PostfixExpression* expression);
-llvm::Value* generatePrefixExpression(const ast::PrefixExpression* expression);
-llvm::Value* generateScopeResolutionExpression(const ast::ScopeResolutionExpression* expression);
-llvm::Value* generateStringLiteralExpression(const ast::StringLiteralExpression* expression);
-llvm::Value* generateTypeCastExpression(const ast::TypeCastExpression* expression);
+   private:
+    // ===== Specific Expression Code Generation =====
+    visit_t visit(ast::AggregateInstantiationExpression* expression) override;
+    visit_t visit(ast::ArrayLiteralExpression* expression) override;
+    visit_t visit(ast::AssignmentExpression* expression) override;
+    visit_t visit(ast::BinaryExpression* expression) override;
+    visit_t visit(ast::BoolLiteralExpression* expression) override;
+    visit_t visit(ast::CharLiteralExpression* expression) override;
+    visit_t visit(ast::FunctionCallExpression* expression) override;
+    visit_t visit(ast::GenericExpression* expression) override;
+    visit_t visit(ast::IdentifierExpression* expression) override;
+    visit_t visit(ast::IndexExpression* expression) override;
+    visit_t visit(ast::MemberAccessExpression* expression) override;
+    visit_t visit(ast::NumberLiteralExpression* expression) override;
+    visit_t visit(ast::PostfixExpression* expression) override;
+    visit_t visit(ast::PrefixExpression* expression) override;
+    visit_t visit(ast::ScopeResolutionExpression* expression) override;
+    visit_t visit(ast::StringLiteralExpression* expression) override;
+    visit_t visit(ast::TypeCastExpression* expression) override;
 
-// ===== Specific Statement Code Generation =====
-llvm::Value* generateAggregateDeclarationStatement(const ast::AggregateDeclarationStatement* statement);
-llvm::Value* generateAliasStatement(const ast::AliasStatement* statement);
-llvm::Value* generateBreakStatement(const ast::BreakStatement* statement);
-llvm::Value* generateContinueStatement(const ast::ContinueStatement* statement);
-llvm::Value* generateEmptyStatement(const ast::EmptyStatement* statement);
-llvm::Value* generateEnumDeclarationStatement(const ast::EnumDeclarationStatement* statement);
-llvm::Value* generateExpressionStatement(const ast::ExpressionStatement* statement);
-llvm::Value* generateFunctionDeclarationStatement(const ast::FunctionDeclarationStatement* statement);
-llvm::Value* generateIfStatement(const ast::IfStatement* statement);
-llvm::Value* generateRepeatLoopStatement(const ast::RepeatLoopStatement* statement);
-llvm::Value* generateReturnStatement(const ast::ReturnStatement* statement);
-llvm::Value* generateSwitchStatement(const ast::SwitchStatement* statement);
-llvm::Value* generateVariableDeclarationStatement(const ast::VariableDeclarationStatement* statement);
-llvm::Value* generateWhileLoopStatement(const ast::WhileLoopStatement* statement);
+    // ===== Specific Statement Code Generation =====
+    visit_t visit(ast::AggregateDeclarationStatement* statement) override;
+    visit_t visit(ast::AliasStatement* statement) override;
+    visit_t visit(ast::BreakStatement* statement) override;
+    visit_t visit(ast::ContinueStatement* statement) override;
+    visit_t visit(ast::EnumDeclarationStatement* statement) override;
+    visit_t visit(ast::ExpressionStatement* statement) override;
+    visit_t visit(ast::FunctionDeclarationStatement* statement) override;
+    visit_t visit(ast::IfStatement* statement) override;
+    visit_t visit(ast::RepeatLoopStatement* statement) override;
+    visit_t visit(ast::ReturnStatement* statement) override;
+    visit_t visit(ast::SwitchStatement* statement) override;
+    visit_t visit(ast::VariableDeclarationStatement* statement) override;
+    visit_t visit(ast::WhileLoopStatement* statement) override;
 
-// ===== Specific Type Code Generation =====
-llvm::Value* generateAggregateType(const ast::AggregateType* type);
-llvm::Value* generateArrayType(const ast::ArrayType* type);
-llvm::Value* generateFunctionType(const ast::FunctionType* type);
-llvm::Value* generateGenericType(const ast::GenericType* type);
-llvm::Value* generatePointerType(const ast::PointerType* type);
-llvm::Value* generateSymbolType(const ast::SymbolType* type);
+    // ===== Specific Type Code Generation =====
+    visit_t visit(ast::AggregateType* type) override;
+    visit_t visit(ast::ArrayType* type) override;
+    visit_t visit(ast::FunctionType* type) override;
+    visit_t visit(ast::GenericType* type) override;
+    visit_t visit(ast::PointerType* type) override;
+    visit_t visit(ast::SymbolType* type) override;
+};
 
 }  // namespace codegen
 }  // namespace Manganese
