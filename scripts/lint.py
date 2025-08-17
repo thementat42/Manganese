@@ -2,8 +2,6 @@
 except those prefixed with x.
 """
 
-#TODO: Add argument parsing
-
 import sys
 import os
 import subprocess
@@ -11,6 +9,9 @@ from pathlib import Path
 
 EXTENSIONS = (".cpp", ".hpp", ".c", ".h", ".cxx", ".hxx", ".cc", ".hh")
 EXTENSIONS_STR = ", ".join(EXTENSIONS[:-1]) + " and " + EXTENSIONS[-1]
+
+LINT_SUCCEEDED = 0
+LINT_FAILED = 1
 
 def check_clang_tidy_installation():
     """Check that clang-tidy is installed before running
@@ -52,7 +53,8 @@ def check_file(filename: str, compile_commands_path: str,
     except subprocess.CalledProcessError:
         # clang-tidy exits with error code 1 on linting fails,
         # but we want to check every file, so ignore that error
-        pass
+        return LINT_FAILED
+    return LINT_SUCCEEDED
 
 def find_compile_commands():
     """
@@ -112,5 +114,10 @@ files: list[str] = [file for file in get_filenames_in("src", "include", "tests")
 
 files = [file for file in files if (file.endswith(EXTENSIONS) and "x." not in file)]
 
+failed_files: list[str] = []
+
 for file in files:
-    check_file(file, COMPILE_COMMANDS_DIR, sys.argv[1:])
+    result = check_file(file, COMPILE_COMMANDS_DIR, sys.argv[1:])
+    if result == LINT_FAILED: failed_files.append(file)
+if failed_files:
+    print(f"The following file(s) had lint errors:", *failed_files)
