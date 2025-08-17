@@ -3,6 +3,7 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
+#include <frontend/visitor/visitor_base.hpp>
 #include <global_macros.hpp>
 
 #include "symbol_table.hpp"
@@ -32,11 +33,14 @@ struct Context {
     constexpr inline bool isRepeatLoopContext() const noexcept { return repeatLoop > 0; }
     constexpr inline bool isForLoopContext() const noexcept { return forLoop > 0; }
     constexpr inline bool isSwitchContext() const noexcept { return switchStatement > 0; }
-    constexpr inline bool isLoopContext() const noexcept { return isWhileLoopContext() || isRepeatLoopContext() || isForLoopContext(); }
+    constexpr inline bool isLoopContext() const noexcept {
+        return isWhileLoopContext() || isRepeatLoopContext() || isForLoopContext();
+    }
 };
 
-class SemanticAnalyzer {
+class SemanticAnalyzer final : public visitor::Visitor<void> {
    private:
+    using visitor::Visitor<void>::visit;
     SymbolTable symbolTable;
     std::string currentModule;
 
@@ -48,11 +52,12 @@ class SemanticAnalyzer {
 
    public:
     explicit SemanticAnalyzer() noexcept : hasError_(false), hasWarning_(false) { symbolTable.enterScope(); }
+    ~SemanticAnalyzer() noexcept = default;
 
     inline void analyze(parser::ParsedFile& parsedFile) {
         // checkImports(parsedFile.imports);
         currentModule = parsedFile.moduleName;
-        for (const auto& statement : parsedFile.program) { checkStatement(statement.get()); }
+        for (const auto& statement : parsedFile.program) { visit(statement.get()); }
     }
 
     bool hasError() const noexcept { return hasError_; }
@@ -61,8 +66,6 @@ class SemanticAnalyzer {
    private:
     // ===== Basic AST Traversal =====
     void checkImports(std::vector<parser::Import>& imports);
-    void checkStatement(ast::Statement* statement) noexcept_if_release;
-    void checkExpression(ast::Expression* expression) noexcept_if_release;
 
     // ===== Misc Helpers =====
     inline void enterScope() { symbolTable.enterScope(); }
@@ -81,47 +84,58 @@ class SemanticAnalyzer {
         hasError_ = true;
     }
 
-    inline void checkBlock(ast::Block& block) noexcept(noexcept(checkStatement(std::declval<ast::Statement*>()))) {
-        for (auto& statement : block) { checkStatement(statement.get()); }
+    inline void checkBlock(ast::Block& block) {
+        for (auto& statement : block) { visit(statement.get()); }
     }
 
     // ===== Specific Expression Checks =====
-    void checkAggregateInstantiationExpression(ast::AggregateInstantiationExpression* expression);
-    void checkArrayLiteralExpression(ast::ArrayLiteralExpression* expression);
-    void checkAssignmentExpression(ast::AssignmentExpression* expression);
-    void checkBinaryExpression(ast::BinaryExpression* expression);
-    void checkBoolLiteralExpression(ast::BoolLiteralExpression* expression);
-    void checkCharLiteralExpression(ast::CharLiteralExpression* expression);
-    void checkFunctionCallExpression(ast::FunctionCallExpression* expression);
-    void checkGenericExpression(ast::GenericExpression* expression);
-    void checkIdentifierExpression(ast::IdentifierExpression* expression);
-    void checkIndexExpression(ast::IndexExpression* expression);
-    void checkMemberAccessExpression(ast::MemberAccessExpression* expression);
-    void checkNumberLiteralExpression(ast::NumberLiteralExpression* expression);
-    void checkPostfixExpression(ast::PostfixExpression* expression);
-    void checkPrefixExpression(ast::PrefixExpression* expression);
-    void checkScopeResolutionExpression(ast::ScopeResolutionExpression* expression);
-    void checkStringLiteralExpression(ast::StringLiteralExpression* expression);
-    void checkTypeCastExpression(ast::TypeCastExpression* expression);
+    void visit(ast::AggregateInstantiationExpression*) override;
+    void visit(ast::ArrayLiteralExpression*) override;
+    void visit(ast::AssignmentExpression*) override;
+    void visit(ast::BinaryExpression*) override;
+    void visit(ast::BoolLiteralExpression*) override;
+    void visit(ast::CharLiteralExpression*) override;
+    void visit(ast::FunctionCallExpression*) override;
+    void visit(ast::GenericExpression*) override;
+    void visit(ast::IdentifierExpression*) override;
+    void visit(ast::IndexExpression*) override;
+    void visit(ast::MemberAccessExpression*) override;
+    void visit(ast::NumberLiteralExpression*) override;
+    void visit(ast::PostfixExpression*) override;
+    void visit(ast::PrefixExpression*) override;
+    void visit(ast::ScopeResolutionExpression*) override;
+    void visit(ast::StringLiteralExpression*) override;
+    void visit(ast::TypeCastExpression*) override;
 
     // ===== Specific Statement Checks =====
-    void checkAggregateDeclarationStatement(ast::AggregateDeclarationStatement* statement);
-    void checkAliasStatement(ast::AliasStatement* statement);
-    void checkBreakStatement(ast::BreakStatement* statement);
-    void checkContinueStatement(ast::ContinueStatement* statement);
-    void checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement);
-    void checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement);
-    void checkIfStatement(ast::IfStatement* statement);
-    void checkRepeatLoopStatement(ast::RepeatLoopStatement* statement);
-    void checkReturnStatement(ast::ReturnStatement* statement);
-    void checkSwitchStatement(ast::SwitchStatement* statement);
-    void checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement);
-    void checkWhileLoopStatement(ast::WhileLoopStatement* statement);
+    void visit(ast::AggregateDeclarationStatement*) override;
+    void visit(ast::AliasStatement*) override;
+    void visit(ast::BreakStatement*) override;
+    void visit(ast::ContinueStatement*) override;
+    void visit(ast::EnumDeclarationStatement*) override;
+    void visit(ast::ExpressionStatement*) override;
+    void visit(ast::FunctionDeclarationStatement*) override;
+    void visit(ast::IfStatement*) override;
+    void visit(ast::RepeatLoopStatement*) override;
+    void visit(ast::ReturnStatement*) override;
+    void visit(ast::SwitchStatement*) override;
+    void visit(ast::VariableDeclarationStatement*) override;
+    void visit(ast::WhileLoopStatement*) override;
 
+    // ===== Type checks =====
+    // Note: These need to be implemented to match the visitor interface, but aren't used
+    void visit(ast::AggregateType*) override { return; }
+    void visit(ast::ArrayType*) override { return; }
+    void visit(ast::FunctionType*) override { return; }
+    void visit(ast::GenericType*) override { return; }
+    void visit(ast::PointerType*) override { return; }
+    void visit(ast::SymbolType*) override { return; }
+
+   private:
     // ===== Helpers for Specific Checks =====
-    bool checkIdentifierAssignmentExpression(ast::AssignmentExpression* expression);
-    bool checkIndexAssignmentExpression(ast::AssignmentExpression* expression);
-    bool handleInPlaceAssignment(Manganese::ast::AssignmentExpression* expression);
+    bool checkIdentifierAssignmentExpression(ast::AssignmentExpression*);
+    bool checkIndexAssignmentExpression(ast::AssignmentExpression*);
+    bool handleInPlaceAssignment(Manganese::ast::AssignmentExpression*);
 
     ast::TypeSPtr_t resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;
     ast::TypeSPtr_t resolveArrayBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;

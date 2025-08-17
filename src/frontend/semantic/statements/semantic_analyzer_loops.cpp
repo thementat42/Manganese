@@ -7,8 +7,8 @@ namespace Manganese {
 
 namespace semantic {
 
-void SemanticAnalyzer::checkRepeatLoopStatement(ast::RepeatLoopStatement* statement) {
-    checkExpression(statement->numIterations.get());
+void SemanticAnalyzer::visit(ast::RepeatLoopStatement* statement) {
+    visit(statement->numIterations.get());
     const ast::Type* iterationType = statement->numIterations->getType();
 
     if (!ast::isPrimitiveType(iterationType)) {
@@ -36,9 +36,9 @@ void SemanticAnalyzer::checkRepeatLoopStatement(ast::RepeatLoopStatement* statem
     exitScope();
 }
 
-void SemanticAnalyzer::checkWhileLoopStatement(ast::WhileLoopStatement* statement) {
+void SemanticAnalyzer::visit(ast::WhileLoopStatement* statement) {
     ++context.whileLoop;  // We only allow implicit bool conversions in the condition, not the body
-    checkExpression(statement->condition.get());
+    visit(statement->condition.get());
     --context.whileLoop;
     if (!ast::isPrimitiveType(statement->condition->getType())) {
         logError("Could not convert {} to a boolean", statement, ast::toStringOr(statement->condition));

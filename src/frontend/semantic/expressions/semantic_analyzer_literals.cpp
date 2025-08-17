@@ -4,7 +4,7 @@
 namespace Manganese {
 namespace semantic {
 using ast::toStringOr;
-void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* expression) {
+void SemanticAnalyzer::visit(ast::ArrayLiteralExpression* expression) {
     // Check that each element is the same type
     // Assume that the first element's type is the array's type
     if (expression->elements.empty()) {
@@ -18,7 +18,7 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
 
     for (size_t i = 0; i < expression->elements.size(); ++i) {
         ast::Expression* element = expression->elements[i].get();
-        checkExpression(element);
+        visit(element);
         if (!element->getType()) {
             logError("Could not deduce type of {}, assuming 'int32'", element, toStringOr(element));
             element->setType(std::make_shared<ast::SymbolType>("int32"));
@@ -37,15 +37,15 @@ void SemanticAnalyzer::checkArrayLiteralExpression(ast::ArrayLiteralExpression* 
         elementType, std::make_unique<ast::NumberLiteralExpression>(expression->elements.size())));
 }
 
-void SemanticAnalyzer::checkBoolLiteralExpression(ast::BoolLiteralExpression* expression) {
+void SemanticAnalyzer::visit(ast::BoolLiteralExpression* expression) {
     expression->setType(std::make_shared<ast::SymbolType>("bool"));
 }
 
-void SemanticAnalyzer::checkCharLiteralExpression(ast::CharLiteralExpression* expression) {
+void SemanticAnalyzer::visit(ast::CharLiteralExpression* expression) {
     expression->setType(std::make_shared<ast::SymbolType>("char"));
 }
 
-void SemanticAnalyzer::checkNumberLiteralExpression(ast::NumberLiteralExpression* expression) {
+void SemanticAnalyzer::visit(ast::NumberLiteralExpression* expression) {
     auto visitor = [](auto&& arg) -> ast::TypeSPtr_t {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, int8_t>) {
@@ -81,7 +81,7 @@ void SemanticAnalyzer::checkNumberLiteralExpression(ast::NumberLiteralExpression
     expression->setType(type);
 }
 
-void SemanticAnalyzer::checkStringLiteralExpression(ast::StringLiteralExpression* expression) {
+void SemanticAnalyzer::visit(ast::StringLiteralExpression* expression) {
     expression->setType(std::make_shared<ast::SymbolType>("string"));
 }
 

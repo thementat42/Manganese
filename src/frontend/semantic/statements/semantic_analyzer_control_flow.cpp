@@ -4,19 +4,19 @@ namespace Manganese {
 using ast::toStringOr;
 namespace semantic {
 
-void SemanticAnalyzer::checkBreakStatement(ast::BreakStatement* statement) {
+void SemanticAnalyzer::visit(ast::BreakStatement* statement) {
     if (!context.isLoopContext() && !context.isSwitchContext()) {
         logError("break statements can only be used inside loops or switch statements", statement);
     }
 }
 
-void SemanticAnalyzer::checkContinueStatement(ast::ContinueStatement* statement) {
+void SemanticAnalyzer::visit(ast::ContinueStatement* statement) {
     if (!context.isLoopContext()) { logError("continue statements can only be used inside loops", statement); }
 }
 
-void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
+void SemanticAnalyzer::visit(ast::IfStatement* statement) {
     ++context.ifStatement;  // We only allow implicit bool conversions in the condition, not the body
-    checkExpression(statement->condition.get());
+    visit(statement->condition.get());
     --context.ifStatement;
     if (!ast::isPrimitiveType(statement->condition->getType())) {
         logError("Could not convert {} to a boolean", statement, toStringOr(statement->condition));
@@ -26,7 +26,7 @@ void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
     exitScope();
 
     for (auto& elif : statement->elifs) {
-        checkExpression(elif.condition.get());
+        visit(elif.condition.get());
         if (!ast::isPrimitiveType(elif.condition->getType())) {
             logError("Could not convert {} to a boolean", statement, toStringOr(elif.condition));
         }
@@ -44,9 +44,9 @@ void SemanticAnalyzer::checkIfStatement(ast::IfStatement* statement) {
     exitScope();
 }
 
-void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
+void SemanticAnalyzer::visit(ast::ReturnStatement* statement) {
     if (!context.isFunctionContext()) { logError("return statements can only be used inside functions", statement); }
-    checkExpression(statement->value.get());
+    visit(statement->value.get());
 
     // Function is null, return is null -- ok
     // Function is null, return is not null -- error
@@ -69,7 +69,7 @@ void SemanticAnalyzer::checkReturnStatement(ast::ReturnStatement* statement) {
         return;  // Both the function and the return value are null, so the types are compatible
     }
 }
-void SemanticAnalyzer::checkSwitchStatement(ast::SwitchStatement* statement) {
+void SemanticAnalyzer::visit(ast::SwitchStatement* statement) {
     DISCARD(statement);
     NOT_IMPLEMENTED("Switch statements are a bit more complicated");
 }
