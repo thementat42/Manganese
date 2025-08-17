@@ -44,7 +44,7 @@ class Visitor {
     virtual Result visit(ast::AliasStatement*) = 0;
     virtual Result visit(ast::BreakStatement*) = 0;
     virtual Result visit(ast::ContinueStatement*) = 0;
-    // virtual Result visit(ast::EmptyStatement*) = 0;
+    virtual Result visit(ast::EmptyStatement*) = 0;
     virtual Result visit(ast::EnumDeclarationStatement*) = 0;
     virtual Result visit(ast::ExpressionStatement*) = 0;
     virtual Result visit(ast::FunctionDeclarationStatement*) = 0;

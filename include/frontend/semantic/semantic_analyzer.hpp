@@ -113,6 +113,7 @@ class SemanticAnalyzer final : public visitor::Visitor<void> {
     void visit(ast::BreakStatement*) override;
     void visit(ast::ContinueStatement*) override;
     void visit(ast::EnumDeclarationStatement*) override;
+    void visit(ast::EmptyStatement*) override { return; }  // Empty statements don't do anything
     void visit(ast::ExpressionStatement*) override;
     void visit(ast::FunctionDeclarationStatement*) override;
     void visit(ast::IfStatement*) override;
