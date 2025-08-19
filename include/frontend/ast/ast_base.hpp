@@ -69,13 +69,17 @@ enum class Visibility : char {
     Private = 2,
 };
 
-std::string visibilityToString(const Visibility& visibility) noexcept_if_release;
-
 class ASTNode {
    public:
     size_t line = 0, column = 0;
 
+    constexpr ASTNode() noexcept = default;
     constexpr virtual ~ASTNode() noexcept = default;
+    ASTNode(const ASTNode&) = delete;
+    ASTNode& operator=(const ASTNode&) = delete;
+
+    ASTNode(ASTNode&&) = default;
+    ASTNode& operator=(ASTNode&&) = default;
 
     virtual std::string toString() const = 0;
 
@@ -89,14 +93,16 @@ class ASTNode {
 #endif  // DEBUG
 
     constexpr inline size_t getLine() const noexcept { return line; }
+    constexpr inline void setLine(size_t line_) noexcept { line = line_; }
     constexpr inline size_t getColumn() const noexcept { return column; }
+    constexpr inline void setColumn(size_t column_) noexcept { column = column_; }
 };
 
 class Expression : public ASTNode {
    private:
-   TypeSPtr_t computedType;
-   public:
+    TypeSPtr_t computedType;
 
+   public:
     virtual ~Expression() noexcept = default;
     inline Type* getType() const noexcept { return computedType.get(); };
     inline TypeSPtr_t getTypePtr() const noexcept { return computedType; }
@@ -116,6 +122,15 @@ class Type : public ASTNode {
     constexpr virtual TypeKind kind() const noexcept = 0;
     virtual bool operator==(const Type& other) const noexcept = 0;
 };
+
+constexpr std::string visibilityToString(const Visibility& visibility) noexcept_if_release {
+    switch (visibility) {
+        case Visibility::Public: return "public ";
+        case Visibility::ReadOnly: return "readonly ";
+        case Visibility::Private: return "private ";
+        default: ASSERT_UNREACHABLE("Invalid visibility");
+    }
+}
 
 /**
  * @brief A wrapper around Expression::toString which handles nullptrs with a fallback
