@@ -27,7 +27,9 @@ Options:
     --target                                               Specific CMake target to build.
 
     positional arguments:
-    exec_with         Arguments to pass to the executable when using -r or --run.
+    --cmake-arg CMAKE_ARG                                  Specify an additional argument to pass to CMake. Can be used multiple times to pass multiple args (e.g. --cmake-arg arg1 --cmake-arg arg2)
+    --build-arg BUILD_ARG                                  Specify an additional argument to pass to the build process. Can be used multiple times to pass multiple args (e.g. --build-arg arg1 --build-arg arg2)
+    --exec_with ...                                        Arguments to pass to the executable when using -r or --run.
 
 Examples:
     python build.py -c -d -j 4
@@ -196,6 +198,20 @@ arg_parser.add_argument(
     help="Arguments to pass to the executable when using -r or --run"
 )
 
+arg_parser.add_argument (
+    "--cmake-arg",
+    nargs = 1,
+    action = "append",
+    help = "Specify an additional argument to pass to CMake. Can be used multiple times to pass multiple args (e.g. --cmake-arg arg1 --cmake-arg arg2)"
+)
+
+arg_parser.add_argument (
+    "--build-arg",
+    nargs = 1,
+    action = "append",
+    help = "Specify an additional argument to pass to the build process. Can be used multiple times to pass multiple args (e.g. --build-arg arg1 --build-arg arg2)"
+)
+
 args = arg_parser.parse_args()
 
 BUILD_DIR = Path(args.build_dir)
@@ -271,16 +287,16 @@ cmake_args = [
     f"-DCMAKE_EXPORT_COMPILE_COMMANDS={"ON" if args.compile_commands else "OFF"}",
 ]
 
-cmake_build_args = [
+build_args = [
     "cmake",
     "--build", ".",
 ]
 
 # Extra args
 if args.jobs:
-    cmake_build_args.extend(["--parallel", str(args.jobs)])
+    build_args.extend(["--parallel", str(args.jobs)])
 if args.target:
-    cmake_build_args.extend(["--target", args.target])
+    build_args.extend(["--target", args.target])
 if args.generator is not None:
     cmake_args.extend(["-G", args.generator])
 if args.ccompiler:
@@ -291,10 +307,18 @@ if args.cxxcompiler:
     cmake_args.append(f"-DCMAKE_CXX_COMPILER={args.cxxcompiler}")
 if args.linker:
     cmake_args.append(f"-DCMAKE_LINKER={args.linker}")
-
+if args.cmake_arg:
+    # appended arguments are a list of list of strings (each sub-list contains 1 item)
+    # so collect all those items
+    cmake_args.extend(list(arg[0] for arg in args.cmake_arg))
+if args.build_arg:
+    build_args.append("--")  # tells cmake to treat all subsequent arguments as arguments to the build system
+    # appended arguments are a list of list of strings (each sub-list contains 1 item)
+    # so collect all those items
+    build_args.extend(list(arg[0] for arg in args.build_arg))
 
 run_command(cmake_args)
-run_command(cmake_build_args)
+run_command(build_args)
 
 # Move the output file from build/bin to the root directory
 os.chdir("..")  # since the build directory path is relative to the root, go back there
