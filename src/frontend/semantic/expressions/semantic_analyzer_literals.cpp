@@ -1,5 +1,8 @@
-#include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/ast.hpp>
+#include <frontend/semantic/semantic_analyzer.hpp>
+
+#include "frontend/ast/ast_base.hpp"
+#include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese {
 namespace semantic {
@@ -13,28 +16,26 @@ void SemanticAnalyzer::visit(ast::ArrayLiteralExpression* expression) {
                                                              std::make_unique<ast::NumberLiteralExpression>(0)));
         return;
     }
-
-    ast::TypeSPtr_t elementType;
-
+    ast::TypeSPtr_t arrayElementType;
     for (size_t i = 0; i < expression->elements.size(); ++i) {
-        ast::Expression* element = expression->elements[i].get();
-        visit(element);
-        if (!element->getType()) {
-            logError("Could not deduce type of {}, assuming 'int32'", element, toStringOr(element));
-            element->setType(std::make_shared<ast::SymbolType>("int32"));
+        ast::Expression* currentElement = expression->elements[i].get();
+        visit(currentElement);
+        if (!currentElement->getType()) {
+            logError("Could not deduce type of {}, assuming 'int32'", currentElement, toStringOr(currentElement));
+            currentElement->setType(std::make_shared<ast::SymbolType>("int32"));
         }
         if (i == 0) {
-            elementType = element->getTypePtr();
-        } else if (!areTypesCompatible(element->getType(), elementType.get())) {
-            logError("Element {} has type {}, expected {}", element, toStringOr(element), toStringOr(elementType),
-                     toStringOr(elementType));
+            arrayElementType
+                = currentElement->getTypePtr();  // Assume the array's type matches the type of the first one
+        } else if (!areTypesCompatible(currentElement->getType(), arrayElementType.get())) {
+            logError("{} (element {} of array literal) has type {}, but the array elements have type {}", expression, toStringOr(currentElement), i + 1,
+                      toStringOr(currentElement->getType()), toStringOr(arrayElementType));
         }
     }
-
-    expression->elementType = elementType;
+    expression->elementType = arrayElementType;
     expression->lengthExpression = std::make_unique<ast::NumberLiteralExpression>(expression->elements.size());
     expression->setType(std::make_shared<ast::ArrayType>(
-        elementType, std::make_unique<ast::NumberLiteralExpression>(expression->elements.size())));
+        arrayElementType, std::make_unique<ast::NumberLiteralExpression>(expression->elements.size())));
 }
 
 void SemanticAnalyzer::visit(ast::BoolLiteralExpression* expression) {
