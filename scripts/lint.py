@@ -120,4 +120,4 @@ for file in files:
     result = check_file(file, COMPILE_COMMANDS_DIR, sys.argv[1:])
     if result == LINT_FAILED: failed_files.append(file)
 if failed_files:
-    print(f"The following file(s) had lint errors:", *failed_files)
+    print(f"The following file{'s' if len(failed_files) > 1 else ''} had lint errors:", *failed_files)
