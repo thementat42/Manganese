@@ -8,6 +8,7 @@
 
 #include <climits>
 #include <frontend/ast.hpp>
+#include <frontend/parser.hpp>
 #include <frontend/visitor/visitor_base.hpp>
 #include <global_macros.hpp>
 #include <map>
@@ -26,8 +27,22 @@ class IRGenerator final : public visitor::Visitor<llvm::Value*> {
     std::map<std::string, llvm::Value*> namedValues;
 
    public:
-    explicit IRGenerator() noexcept = default;
+    explicit IRGenerator() noexcept :
+        theContext(std::make_unique<llvm::LLVMContext>()),
+        theModule(std::make_unique<llvm::Module>("Manganese Module", *theContext)),
+        theBuilder(std::make_unique<llvm::IRBuilder<>>(*theContext)) {}
     ~IRGenerator() noexcept = default;
+
+    llvm::LLVMContext* getContext() noexcept { return theContext.get(); }
+    const llvm::LLVMContext* getContext() const noexcept { return theContext.get(); }
+    llvm::Module* getModule() noexcept { return theModule.get(); }
+    const llvm::Module* getModule() const noexcept { return theModule.get(); }
+    llvm::IRBuilder<>* getBuilder() noexcept { return theBuilder.get(); }
+    const llvm::IRBuilder<>* getBuilder() const noexcept { return theBuilder.get(); }
+
+    void generate(parser::ParsedFile& parsedFile) {
+        for (const auto& statement : parsedFile.program) { visit(statement.get()); }
+    }
 
    private:
     // ===== Specific Expression Code Generation =====
