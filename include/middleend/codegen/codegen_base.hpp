@@ -19,13 +19,13 @@ namespace codegen {
 
 class IRGenerator final : public visitor::Visitor<llvm::Value*> {
    private:
+    using visitor::Visitor<llvm::Value*>::visit;
     std::unique_ptr<llvm::LLVMContext> theContext;
     std::unique_ptr<llvm::Module> theModule;
     std::unique_ptr<llvm::IRBuilder<>> theBuilder;
     std::map<std::string, llvm::Value*> namedValues;
 
    public:
-    using visitor::Visitor<llvm::Value*>::visit;
     explicit IRGenerator() noexcept = default;
     ~IRGenerator() noexcept = default;
 
