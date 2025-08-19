@@ -6,9 +6,9 @@ namespace Manganese {
 
 namespace semantic {
 
-void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expression) {
-    checkExpression(expression->assignee.get());
-    checkExpression(expression->value.get());
+void SemanticAnalyzer::visit(ast::AssignmentExpression* expression) {
+    visit(expression->assignee.get());
+    visit(expression->value.get());
     if (expression->assignee->kind() != ast::ExpressionKind::IdentifierExpression
         && expression->assignee->kind() != ast::ExpressionKind::IndexExpression) {
         logError("Cannot assign to non-variable expression: {}", expression, toStringOr(expression->assignee));
@@ -40,7 +40,7 @@ void SemanticAnalyzer::checkAssignmentExpression(ast::AssignmentExpression* expr
     }
 }
 
-void SemanticAnalyzer::checkIdentifierExpression(ast::IdentifierExpression* expression) {
+void SemanticAnalyzer::visit(ast::IdentifierExpression* expression) {
     const Symbol* symbol = symbolTable.lookup(expression->value);
     if (!symbol) { logError("{} was not declared in any scope.", expression, expression->value); }
     expression->setType(symbol->type);
@@ -128,7 +128,7 @@ bool SemanticAnalyzer::handleInPlaceAssignment(Manganese::ast::AssignmentExpress
         // Since the ast nodes only accept unique_ptrs (and take ownership of them)
         std::move(expression->assignee), binaryOperator, std::move(expression->value));
 
-    checkBinaryExpression(tempBinaryExpression.get());
+    visit(tempBinaryExpression.get());
 
     // Regardless of whether or not the expression was valid, we need to retake ownership of the pointers
     // so that the assignment expression remains valid

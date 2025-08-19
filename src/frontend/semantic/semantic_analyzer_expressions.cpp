@@ -13,69 +13,9 @@ namespace Manganese {
 using ast::toStringOr;
 
 namespace semantic {
-void SemanticAnalyzer::checkExpression(ast::Expression* expression) noexcept_if_release {
-    switch (expression->kind()) {
-        case ast::ExpressionKind::AggregateInstantiationExpression:
-            checkAggregateInstantiationExpression(static_cast<ast::AggregateInstantiationExpression*>(expression));
-            break;
-        case ast::ExpressionKind::ArrayLiteralExpression:
-            checkArrayLiteralExpression(static_cast<ast::ArrayLiteralExpression*>(expression));
-            break;
-        case ast::ExpressionKind::AssignmentExpression:
-            checkAssignmentExpression(static_cast<ast::AssignmentExpression*>(expression));
-            break;
-        case ast::ExpressionKind::BinaryExpression:
-            checkBinaryExpression(static_cast<ast::BinaryExpression*>(expression));
-            break;
-        case ast::ExpressionKind::BoolLiteralExpression:
-            checkBoolLiteralExpression(static_cast<ast::BoolLiteralExpression*>(expression));
-            break;
-        case ast::ExpressionKind::CharLiteralExpression:
-            checkCharLiteralExpression(static_cast<ast::CharLiteralExpression*>(expression));
-            break;
-        case ast::ExpressionKind::FunctionCallExpression:
-            checkFunctionCallExpression(static_cast<ast::FunctionCallExpression*>(expression));
-            break;
-        case ast::ExpressionKind::GenericExpression:
-            checkGenericExpression(static_cast<ast::GenericExpression*>(expression));
-            break;
-        case ast::ExpressionKind::IdentifierExpression:
-            checkIdentifierExpression(static_cast<ast::IdentifierExpression*>(expression));
-            break;
-        case ast::ExpressionKind::IndexExpression:
-            checkIndexExpression(static_cast<ast::IndexExpression*>(expression));
-            break;
-        case ast::ExpressionKind::MemberAccessExpression:
-            checkMemberAccessExpression(static_cast<ast::MemberAccessExpression*>(expression));
-            break;
-        case ast::ExpressionKind::NumberLiteralExpression:
-            checkNumberLiteralExpression(static_cast<ast::NumberLiteralExpression*>(expression));
-            break;
-        case ast::ExpressionKind::PostfixExpression:
-            checkPostfixExpression(static_cast<ast::PostfixExpression*>(expression));
-            break;
-        case ast::ExpressionKind::PrefixExpression:
-            checkPrefixExpression(static_cast<ast::PrefixExpression*>(expression));
-            break;
-        case ast::ExpressionKind::ScopeResolutionExpression:
-            checkScopeResolutionExpression(static_cast<ast::ScopeResolutionExpression*>(expression));
-            break;
-        case ast::ExpressionKind::StringLiteralExpression:
-            checkStringLiteralExpression(static_cast<ast::StringLiteralExpression*>(expression));
-            break;
-        case ast::ExpressionKind::TypeCastExpression:
-            checkTypeCastExpression(static_cast<ast::TypeCastExpression*>(expression));
-            break;
-        default:
-            using std::format;
-            ASSERT_UNREACHABLE(
-                format("No semantic analysis method for expression type {}", static_cast<int>(expression->kind())));
-    }
-}
+// ===== Expression checks that don't fit into another file =====
 
-// ===== Specific Expression Checks =====
-
-void SemanticAnalyzer::checkAggregateInstantiationExpression(ast::AggregateInstantiationExpression* expression) {
+void SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) {
     const Symbol* aggregateSymbol = symbolTable.lookup(expression->name);
     if (!aggregateSymbol) {
         logError("Aggregate type {} was not declared in any scope", expression, expression->name);
@@ -108,7 +48,7 @@ void SemanticAnalyzer::checkAggregateInstantiationExpression(ast::AggregateInsta
             validInstantiation = false;
             continue;
         }
-        checkExpression(field.value.get());
+        visit(field.value.get());
         if (!areTypesCompatible(field.value->getType(), expectedField.type.get())) {
             logError("Field {} in aggregate instantiation has type {}, but was declared with type {}", expression,
                      toStringOr(field.value), toStringOr(field.value->getType()), toStringOr(expectedField.type));
@@ -119,7 +59,7 @@ void SemanticAnalyzer::checkAggregateInstantiationExpression(ast::AggregateInsta
     expression->setType(std::make_shared<ast::SymbolType>(expression->name));
 }
 
-void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* expression) {
+void SemanticAnalyzer::visit(ast::FunctionCallExpression* expression) {
     if (expression->callee->kind() != ast::ExpressionKind::IdentifierExpression) {
         // TODO: Support function calls indexing into arrays or module members
         // TODO: Allow calling generic expressions (provided the underlying type is an identifier that was declared
@@ -149,7 +89,7 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
     for (size_t i = 0; i < expression->arguments.size(); ++i) {
         ast::Expression* argument = expression->arguments[i].get();
         ast::Type* expectedType = functionType->parameterTypes[i].type.get();
-        checkExpression(argument);
+        visit(argument);
         if (!argument->getType()) {
             logError("Could not deduce the type of argument {} in function call, assuming 'int32'", expression, i + 1);
             argument->setType(std::make_shared<ast::SymbolType>("int32"));
@@ -164,7 +104,7 @@ void SemanticAnalyzer::checkFunctionCallExpression(ast::FunctionCallExpression* 
     expression->setType(functionType->returnType);
 }
 
-void SemanticAnalyzer::checkGenericExpression(ast::GenericExpression* expression) {
+void SemanticAnalyzer::visit(ast::GenericExpression* expression) {
     DISCARD(expression);
     NOT_IMPLEMENTED("Full generic support is deferred");
 }

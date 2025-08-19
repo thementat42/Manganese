@@ -16,11 +16,33 @@
 #include <optional>
 #include <string_view>
 #include <variant>
+#if __cplusplus > 202002L
+#include <stdfloat>
+#endif  // __cplusplus > 202002L
 
 
 namespace Manganese {
 
-using number_t = std::variant<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, float, double>;
+#if __cplusplus <= 202002L
+typedef float float32_t;
+typedef double float64_t;
+#else  // ^^ __cplusplus <= 202002L vv __cplusplus > 202002L
+// C++23 added support for fixed-width floating point types
+// However, these are not required so may not be available in all standard library implementations
+// Use the (required) macros to check if they are available
+#if __STDCPP_FLOAT32_T__
+typedef std::float32_t float32_t;
+#else  // ^^ __STDCPP_FLOAT32_T__ vv !__STDCPP_FLOAT32_T__
+typedef float float32_t;
+#endif  // __STDCPP_FLOAT32_T__
+#if __STDCPP_FLOAT64_T__
+typedef std::float64_t float64_t;
+#else  // ^^ __STDCPP_FLOAT64_T__ vv !__STDCPP_FLOAT64_T__
+typedef double float64_t;
+#endif  // __STDCPP_FLOAT64_T__
+#endif  // __cplusplus <= 202002L
+
+using number_t = std::variant<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, float32_t, float64_t>;
 
 enum class Base {
     Binary = 2,  // 0b prefix
@@ -53,8 +75,8 @@ constexpr std::optional<uint8_t> stoui8(std::string_view str, int base = 10);
 constexpr std::optional<uint16_t> stoui16(std::string_view str, int base = 10);
 constexpr std::optional<uint32_t> stoui32(std::string_view str, int base = 10);
 constexpr std::optional<uint64_t> stoui64(std::string_view str, int base = 10);
-std::optional<float> stof32(std::string_view str);
-std::optional<double> stof64(std::string_view str);
+std::optional<float32_t> stof32(std::string_view str);
+std::optional<float64_t> stof64(std::string_view str);
 
 /**
  * @brief Converts a string to a number, if possible

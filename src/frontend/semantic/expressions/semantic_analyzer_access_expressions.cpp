@@ -6,9 +6,9 @@ using ast::toStringOr;
 
 namespace semantic {
 
-void SemanticAnalyzer::checkIndexExpression(ast::IndexExpression* expression) {
-    checkExpression(expression->variable.get());
-    checkExpression(expression->index.get());
+void SemanticAnalyzer::visit(ast::IndexExpression* expression) {
+    visit(expression->variable.get());
+    visit(expression->index.get());
     ast::Type* currentType = expression->variable->getType();
     if (!currentType) {
         logError("Cannot index into variable {} -- it has no computed type", expression,
@@ -26,7 +26,7 @@ void SemanticAnalyzer::checkIndexExpression(ast::IndexExpression* expression) {
     // TODO: Bounds checking
 }
 
-void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* expression) {
+void SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) {
     /*
     1. Check the object whose member is being accessed (`foo` in `foo.bar`)
     2. Check that it has a computed type which is a SymbolType (e.g., you can't access a member of a function)
@@ -35,7 +35,7 @@ void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* 
     5. Check that the member exists in the aggregate
     6. Set the type of the expression to the type of the member
     */
-    checkExpression(expression->object.get());
+    visit(expression->object.get());
     ast::Type* currentType = expression->object->getType();
     if (!currentType) {
         logError("Cannot access member {} of object {} (it either does not exist or has no computed type)", expression,
@@ -69,7 +69,7 @@ void SemanticAnalyzer::checkMemberAccessExpression(ast::MemberAccessExpression* 
     expression->setType(aggregateField->type);
 }
 
-void SemanticAnalyzer::checkScopeResolutionExpression(ast::ScopeResolutionExpression* expression) {
+void SemanticAnalyzer::visit(ast::ScopeResolutionExpression* expression) {
     DISCARD(expression);
     NOT_IMPLEMENTED("Imports are delayed to a future release");
 }

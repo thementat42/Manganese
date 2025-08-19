@@ -43,9 +43,9 @@ std::string getNumberTypeName(const number_t& value) {
             return int64_str;
         else if constexpr (std::is_same_v<T, uint64_t>)
             return uint64_str;
-        else if constexpr (std::is_same_v<T, float>)
+        else if constexpr (std::is_same_v<T, float32_t>)
             return float32_str;
-        else if constexpr (std::is_same_v<T, double>)
+        else if constexpr (std::is_same_v<T, float64_t>)
             return float64_str;
         else
             return "unknown";

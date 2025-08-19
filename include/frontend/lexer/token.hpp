@@ -64,7 +64,7 @@ class Token {
     constexpr bool isPrimitiveType() const noexcept;
     constexpr bool hasUnaryCounterpart() const noexcept;
     constexpr TokenType getUnaryCounterpart() const noexcept_if_release;
-    constexpr std::string toString() const noexcept;
+    std::string toString() const noexcept;
 
     /**
      * @note Parser only: be careful
@@ -83,7 +83,7 @@ TokenType operatorFromString(const std::string& op, const size_t line, const siz
 
 // ===== Implementations of constexpr functions =====
 
-constexpr std::string Token::toString() const noexcept {
+inline std::string Token::toString() const noexcept {
     return std::format("Token: {} ('{}') at line {}, column {}", tokenTypeToString(type), lexeme, line, column);
 }
 

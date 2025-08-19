@@ -9,9 +9,9 @@ namespace Manganese {
 using ast::toStringOr;
 namespace semantic {
 
-void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) {
-    checkExpression(expression->left.get());
-    checkExpression(expression->right.get());
+void SemanticAnalyzer::visit(ast::BinaryExpression* expression) {
+    visit(expression->left.get());
+    visit(expression->right.get());
 
     ast::Type* leftType = expression->left->getType();
     ast::Type* rightType = expression->right->getType();
@@ -41,8 +41,8 @@ void SemanticAnalyzer::checkBinaryExpression(ast::BinaryExpression* expression) 
     expression->setType(resultType);
 }
 
-void SemanticAnalyzer::checkPostfixExpression(ast::PostfixExpression* expression) {
-    checkExpression(expression->left.get());
+void SemanticAnalyzer::visit(ast::PostfixExpression* expression) {
+    visit(expression->left.get());
     ast::Type* leftType = expression->left->getType();
     if (!leftType) {
         logError("Could not deduce the type of {} in postfix expression {}", expression, toStringOr(expression->left),
@@ -69,9 +69,9 @@ void SemanticAnalyzer::checkPostfixExpression(ast::PostfixExpression* expression
     expression->setType(expression->left->getTypePtr());
     return;
 }
-void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) {
+void SemanticAnalyzer::visit(ast::PrefixExpression* expression) {
     // Valid prefix operators are: +. -. !, ~, ++, --, &, and *
-    checkExpression(expression->right.get());
+    visit(expression->right.get());
     ast::Type* rightType = expression->right->getType();
     if (!rightType) {
         logError("Could not deduce the type of {} in prefix expression {}", expression, toStringOr(expression->right),
@@ -159,8 +159,8 @@ void SemanticAnalyzer::checkPrefixExpression(ast::PrefixExpression* expression) 
     }
 }
 
-void SemanticAnalyzer::checkTypeCastExpression(ast::TypeCastExpression* expression) {
-    checkExpression(expression->originalValue.get());
+void SemanticAnalyzer::visit(ast::TypeCastExpression* expression) {
+    visit(expression->originalValue.get());
     if (!expression->originalValue->getType()) {
         logError("Cannot cast expression {} to type {} since it has no computed type.", expression,
                  toStringOr(expression->originalValue), toStringOr(expression->targetType));

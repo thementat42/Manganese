@@ -5,7 +5,7 @@ namespace Manganese {
 using ast::toStringOr;
 namespace semantic {
 
-void SemanticAnalyzer::checkAggregateDeclarationStatement(ast::AggregateDeclarationStatement* statement) {
+void SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) {
     if (symbolTable.lookup(statement->name)) {
         logError("Aggregate '{}' was previously declared", statement, statement->name);
         return;
@@ -44,12 +44,12 @@ void SemanticAnalyzer::checkAggregateDeclarationStatement(ast::AggregateDeclarat
     });
 }
 
-void SemanticAnalyzer::checkEnumDeclarationStatement(ast::EnumDeclarationStatement* statement) {
+void SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) {
     DISCARD(statement);
     NOT_IMPLEMENTED("Enums are complicated");
 }
 
-void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclarationStatement* statement) {
+void SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) {
     // TODO: Ensure every path returns a value (some kind of block resolution return type assignment?)
     if (context.isFunctionContext()) {
         logError("Function declarations cannot be nested inside other functions", statement);
@@ -115,7 +115,7 @@ void SemanticAnalyzer::checkFunctionDeclarationStatement(ast::FunctionDeclaratio
     });
 }
 
-void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclarationStatement* statement) {
+void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
     bool isInvalidDeclaration = false;
     if (statement->isConstant() && !statement->value) {
         logError("Constant variable '{}' must be initialized", statement, statement->name);
@@ -151,13 +151,13 @@ void SemanticAnalyzer::checkVariableDeclarationStatement(ast::VariableDeclaratio
     if (isInvalidDeclaration) { return; }
 
     if (statement->type && statement->value) {
-        checkExpression(statement->value.get());
+        visit(statement->value.get());
         if (!areTypesCompatible(statement->value->getType(), statement->type.get())) {
             logError("Type mismatch for variable '{}': expected {}, got {}", statement, statement->name,
                      toStringOr(statement->type), toStringOr(statement->value->getType()));
         }
     } else if (statement->value) {
-        checkExpression(statement->value.get());
+        visit(statement->value.get());
         statement->type = statement->value->getTypePtr();
     }
     // If the variable only has a type and no initializer, there's no need to check the type

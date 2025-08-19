@@ -212,7 +212,8 @@ if(BUILD_TESTS)
     
     # Include directories
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-    llvm_map_components_to_libnames(LLVM_LIBS all)
+    llvm_map_components_to_libnames(LLVM_LIBS Core Support IRReader ExecutionEngine Analysis 
+    BitWriter CodeGen)
     target_link_libraries(${PROJECT_NAME} ${LLVM_LIBS})
     
     # Output binary to bin directory
@@ -324,7 +325,8 @@ else()
     endif()
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-    llvm_map_components_to_libnames(LLVM_LIBS all)
+        llvm_map_components_to_libnames(LLVM_LIBS Core Support IRReader ExecutionEngine Analysis 
+    BitWriter CodeGen)
     target_link_libraries(${PROJECT_NAME} ${LLVM_LIBS})
 
     set_target_properties(${PROJECT_NAME} PROPERTIES

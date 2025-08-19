@@ -91,8 +91,8 @@ constexpr std::optional<uint32_t> stoui32(std::string_view str, int base) { retu
 constexpr std::optional<uint64_t> stoui64(std::string_view str, int base) { return __stox<uint64_t>(str, base); }
 
 // from_chars doesn't always support floats so fall back to stl functions
-std::optional<float> stof32(std::string_view str) { return std::stof(std::string(str)); }
+std::optional<float32_t> stof32(std::string_view str) { return std::stof(std::string(str)); }
 
-std::optional<double> stof64(std::string_view str) { return std::stod(std::string(str)); }
+std::optional<float64_t> stof64(std::string_view str) { return std::stod(std::string(str)); }
 }  // namespace utils
 }  // namespace Manganese
