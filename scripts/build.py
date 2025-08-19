@@ -301,8 +301,6 @@ if args.generator is not None:
     cmake_args.extend(["-G", args.generator])
 if args.ccompiler:
     cmake_args.append(f"-DCMAKE_C_COMPILER={args.ccompiler}")
-if args.compile_commands:
-    cmake_args.append("")
 if args.cxxcompiler:
     cmake_args.append(f"-DCMAKE_CXX_COMPILER={args.cxxcompiler}")
 if args.linker:
