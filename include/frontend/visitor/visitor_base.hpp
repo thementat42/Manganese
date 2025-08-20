@@ -19,7 +19,7 @@ class Visitor {
     virtual ~Visitor() noexcept = default;
     using visit_t = Result;
 
-    protected:
+   protected:
     // ===== Expression Visiting =====
     virtual Result visit(ast::AggregateInstantiationExpression*) = 0;
     virtual Result visit(ast::ArrayLiteralExpression*) = 0;
@@ -64,6 +64,8 @@ class Visitor {
     virtual Result visit(ast::SymbolType*) = 0;
 
     // ===== Dispatch for the different kinds of nodes =====
+    // A wrapper around visit(Expression*) to handle a unique pointer
+    FORCE_INLINE Result visit(ast::ExpressionUPtr_t& expr) { return visit(expr.get()); }
     Result visit(ast::Expression* expr) {
         using enum ast::ExpressionKind;
         switch (expr->kind()) {
@@ -90,6 +92,8 @@ class Visitor {
                     std::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind())));
         }
     }
+    // A wrapper around visit(Statement*) to handle a unique pointer
+    FORCE_INLINE Result visit(ast::StatementUPtr_t& stmt) { return visit(stmt.get()); }
 
     Result visit(ast::Statement* stmt) {
         using enum ast::StatementKind;
@@ -113,6 +117,9 @@ class Visitor {
                     std::format("No visit() overload for statement kind {}", static_cast<int>(stmt->kind())));
         }
     }
+
+    // A wrapper around visit(Type*) to handle a unique pointer
+    FORCE_INLINE Result visit(ast::TypeSPtr_t& type) { return visit(type.get()); }
 
     Result visit(ast::Type* type) {
         using enum ast::TypeKind;
