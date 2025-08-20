@@ -68,10 +68,10 @@ bool analyzeLiterals() {
 
 bool analyzeSimpleVariableDeclaration() {
     semantic::SemanticAnalyzer analyzer;
-    parser::ParsedFile file = parse("let x: int64 = 10; let x: int8 = 20i32;"
-                                    "let y: string = \"hello\";"
-                                    "const z = x; z = 3;"
-                                    "let a = [[1, 2], [3, 4]]; const b = a[0]; let c = b[1];"
+    parser::ParsedFile file = parse("let mut x: int64 = 10; let mut x: int8 = 20i32;"
+                                    "let mut y: string = \"hello\";"
+                                    "let z = x; z = 3;"
+                                    "let mut a = [[1, 2], [3, 4]]; let b = a[0]; let mut c = b[1];"
                                     "a[1] = 0; # Should fail\n"
                                     "a[0] = [1, 1];"
                                     "a[0][1] = 99;"
@@ -109,8 +109,8 @@ bool analyzeAggregateInstantiation() {
                                     "  y: int64;"
                                     "  z: int64;"
                                     "}"
-                                    "let p = Point3D{ x = 1, y = 2, z = 3 };"
-                                    "let q = Point3D{ x = \"Hi!\", z = 5, y = 6 };");
+                                    "let mut p = Point3D{ x = 1, y = 2, z = 3 };"
+                                    "let mut q = Point3D{ x = \"Hi!\", z = 5, y = 6 };");
     analyzer.analyze(file);
     const auto& program = file.program;
     outputAnalyzedAST(program);
@@ -125,8 +125,8 @@ bool analyzeFunctionDeclarationAndCall() {
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse("alias int64 as i64;"
                                     "func foo(a: i64, b: i64) -> i64 { return a; }"
-                                    "let x = foo;"
-                                    "let result = x(5, 10);"
+                                    "let mut x = foo;"
+                                    "let mut result = x(5, 10);"
                                     "func greet(name: string) { print(\"Hello, \" + name); }"
                                     "greet(\"World\");");
     analyzer.analyze(file);
@@ -214,11 +214,12 @@ bool checkLoops() {
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(
         R"(
-        func foo(x: const int, y: const int) -> int {
-            let q = 1;
+        func foo(x: int, y: mut int) -> int {
+            let mut q = 1;
             while (q*x*y <= 100) {
             q = q + 1;
             x = x + 1;  # Should have an error
+            y = y + 1;  # Shouldn't have an error
         }
         return q;
     }
@@ -240,8 +241,8 @@ bool checkPrefixAndPostfixExpressions() {
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(
         R"(
-        let x = 10;
-        let y = true;
+        let mut x = 10;
+        let mut y = true;
 
         ++(x+3);
         x++;
@@ -274,7 +275,7 @@ static bool miscTests() {
         R"(
         func foo() -> int {return 3;}
         func bar() -> int {return 1;}
-        let x: int[10] = [1,2,3,4,5,6,7,8,9,10];
+        let mut x: int[10] = [1,2,3,4,5,6,7,8,9,10];
         3 = 10;
         x[0] = 5;
         x[0][0] = 100;
