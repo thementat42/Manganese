@@ -136,7 +136,7 @@ constexpr std::string visibilityToString(const Visibility& visibility) noexcept_
  * @brief A wrapper around Expression::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the expression is a nullptr
  */
-inline std::string toStringOr(const Expression* expression, const char* fallback = "unknown expression") {
+constexpr inline std::string toStringOr(const Expression* expression, const char* fallback = "unknown expression") {
     return expression ? expression->toString() : fallback;
 }
 
@@ -144,7 +144,7 @@ inline std::string toStringOr(const Expression* expression, const char* fallback
  * @brief A wrapper around Expression::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the expression is a nullptr
  */
-inline std::string toStringOr(const ExpressionUPtr_t& expression, const char* fallback = "unknown expression") {
+constexpr inline std::string toStringOr(const ExpressionUPtr_t& expression, const char* fallback = "unknown expression") {
     return expression ? expression->toString() : fallback;
 }
 
@@ -152,7 +152,7 @@ inline std::string toStringOr(const ExpressionUPtr_t& expression, const char* fa
  * @brief A wrapper around Statement::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the statement is a nullptr
  */
-inline std::string toStringOr(const Statement* statement, const char* fallback = "unknown statement") {
+constexpr inline std::string toStringOr(const Statement* statement, const char* fallback = "unknown statement") {
     return statement ? statement->toString() : fallback;
 }
 
@@ -160,7 +160,7 @@ inline std::string toStringOr(const Statement* statement, const char* fallback =
  * @brief A wrapper around Statement::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the statement is a nullptr
  */
-inline std::string toStringOr(const StatementUPtr_t& statement, const char* fallback = "unknown statement") {
+constexpr inline std::string toStringOr(const StatementUPtr_t& statement, const char* fallback = "unknown statement") {
     return statement ? statement->toString() : fallback;
 }
 
@@ -168,7 +168,7 @@ inline std::string toStringOr(const StatementUPtr_t& statement, const char* fall
  * @brief A wrapper around Type::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the type is a nullptr
  */
-inline std::string toStringOr(const Type* type, const char* fallback = "no type") {
+constexpr inline std::string toStringOr(const Type* type, const char* fallback = "no type") {
     return type ? type->toString() : fallback;
 }
 
@@ -176,7 +176,7 @@ inline std::string toStringOr(const Type* type, const char* fallback = "no type"
  * @brief A wrapper around Type::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the type is a nullptr
  */
-inline std::string toStringOr(const TypeSPtr_t& type, const char* fallback = "no type") {
+constexpr inline std::string toStringOr(const TypeSPtr_t& type, const char* fallback = "no type") {
     return type ? type->toString() : fallback;
 }
 
