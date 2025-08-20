@@ -13,10 +13,11 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 
 #include <frontend/ast/ast_base.hpp>
+#include <frontend/ast/ast_block.hpp>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_types.hpp>
-#include <frontend/ast/ast_block.hpp>
 #include <utility>
+
 
 namespace Manganese {
 
@@ -42,8 +43,10 @@ enum class StatementKind {
 struct AggregateField {
     std::string name;
     TypeSPtr_t type;
+    bool isMutable;
 
-    AggregateField(std::string name_, TypeSPtr_t type_) : name(std::move(name_)), type(std::move(type_)) {}
+    AggregateField(std::string name_, TypeSPtr_t type_, bool isMutable_) :
+        name(std::move(name_)), type(std::move(type_)), isMutable(isMutable_) {}
 };
 
 class AggregateDeclarationStatement final : public Statement {
@@ -54,7 +57,7 @@ class AggregateDeclarationStatement final : public Statement {
     Visibility visibility = Visibility::Private;
 
     constexpr AggregateDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
-                                  std::vector<AggregateField> fields_) :
+                                            std::vector<AggregateField> fields_) :
         name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
     AST_STANDARD_INTERFACE;
     constexpr StatementKind kind() const noexcept override { return StatementKind::AggregateDeclarationStatement; };
@@ -242,14 +245,12 @@ class VariableDeclarationStatement final : public Statement {
         value(std::move(_value)),
         type(std::move(_type)) {}
 
-
     AST_STANDARD_INTERFACE;
     constexpr StatementKind kind() const noexcept override { return StatementKind::VariableDeclarationStatement; };
 };
 
 class WhileLoopStatement final : public Statement {
-    public:
-
+   public:
     Block body;
     ExpressionUPtr_t condition;
     bool isDoWhile;

@@ -37,7 +37,8 @@ void SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) {
         .line = statement->getLine(),
         .column = statement->getColumn(),
         .declarationNode = statement,
-        .isMutable = true,  // Aggregates are not constants
+        // e.g. if Foo and Bar are aggregates, having Foo = Bar doesn't make sense since it'd invalidate existing Foo instances
+        .isMutable = false,
         .scopeDepth = symbolTable.currentScopeDepth(),
         .visibility = statement->visibility,
 

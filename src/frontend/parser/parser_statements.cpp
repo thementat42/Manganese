@@ -70,6 +70,10 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release
         }
         std::string fieldName = consumeToken().getLexeme();
         expectToken(TokenType::Colon, "Expected a ':' to declare an aggregate field type.");
+        bool isMutable = false;
+        if (peekTokenType() == TokenType::Mut) {
+            isMutable = true;
+        }
         TypeSPtr_t type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
@@ -78,7 +82,7 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release
         if (duplicate != fields.end()) {
             logError(std::format("Duplicate field '{}' in aggregate '{}'", fieldName, name));
         } else {
-            fields.emplace_back(fieldName, std::move(type));
+            fields.emplace_back(fieldName, std::move(type), isMutable);
         }
     }
 

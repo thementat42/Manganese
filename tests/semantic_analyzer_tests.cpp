@@ -283,6 +283,9 @@ static bool miscTests() {
         foo() = 3;
         bar() = [3];
         bar()[0] = 3;
+        aggregate Foo {x: int;}
+        let mut x = Foo{x = 3};
+        x.x = 5;
         )");
     analyzer.analyze(file);
     const auto& program = file.program;
