@@ -15,6 +15,8 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/ast/ast_types.hpp>
 
+// TODO? If expressions, Switch Expressions, Variable Declarations as expressions (so let x = 3; evaluates to 3i32)
+
 namespace Manganese {
 
 namespace ast {
