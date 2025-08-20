@@ -1,6 +1,7 @@
+#include <frontend/ast/ast_expressions.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
+#include <global_macros.hpp>
 
-#include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese {
 
@@ -9,8 +10,10 @@ namespace semantic {
 void SemanticAnalyzer::visit(ast::AssignmentExpression* expression) {
     visit(expression->assignee.get());
     visit(expression->value.get());
-    if (expression->assignee->kind() != ast::ExpressionKind::IdentifierExpression
-        && expression->assignee->kind() != ast::ExpressionKind::IndexExpression) {
+    ast::ExpressionKind assigneeKind = expression->assignee->kind();
+    if (assigneeKind != ast::ExpressionKind::IdentifierExpression
+        && assigneeKind != ast::ExpressionKind::IndexExpression
+        && assigneeKind != ast::ExpressionKind::MemberAccessExpression) {
         logError("Cannot assign to non-variable expression: {}", expression, toStringOr(expression->assignee));
         return;
     }
@@ -22,14 +25,12 @@ void SemanticAnalyzer::visit(ast::AssignmentExpression* expression) {
         }
     }
 
-    if (expression->assignee->kind() == ast::ExpressionKind::IdentifierExpression) {
-        if (!checkIdentifierAssignmentExpression(expression)) {
-            return;
-        }
-    } else if (expression->assignee->kind() == ast::ExpressionKind::IndexExpression) {
-        if (!checkIndexAssignmentExpression(expression)) {
-            return;
-        }
+    if (assigneeKind == ast::ExpressionKind::IdentifierExpression) {
+        if (!checkIdentifierAssignmentExpression(expression)) { return; }
+    } else if (assigneeKind == ast::ExpressionKind::IndexExpression) {
+        if (!checkIndexAssignmentExpression(expression)) { return; }
+    } else if (assigneeKind == ast::ExpressionKind::MemberAccessExpression) {
+        if (!checkAggregateFieldAssignmentExpression(expression)) { return; }
     }
     if (!areTypesCompatible(expression->assignee->getType(), expression->value->getType())) {
         logError("{} cannot be assigned to {}. {} has type {}, but {} has type {}", expression,
@@ -49,6 +50,62 @@ void SemanticAnalyzer::visit(ast::IdentifierExpression* expression) {
 
 // ===== Helpers =====
 
+bool SemanticAnalyzer::checkAggregateFieldAssignmentExpression(ast::AssignmentExpression* expression) {
+    auto memberAccessExpression = static_cast<ast::MemberAccessExpression*>(expression->assignee.get());
+
+    // Check if the object whose field is being modified is mutable
+    if (memberAccessExpression->object->kind() == ast::ExpressionKind::IdentifierExpression) {
+        auto objectIdentifier = static_cast<ast::IdentifierExpression*>(memberAccessExpression->object.get());
+        const Symbol* objectSymbol = symbolTable.lookup(objectIdentifier->value);
+
+        if (objectSymbol && !objectSymbol->isMutable) {
+            logError(
+                "{} was declared as constant so its fields cannot be modified. To make it mutable, declare it using 'let mut'",
+                expression, objectIdentifier->value);
+            return false;
+        }
+    }
+
+    // Check if the field being modified is mutable
+    ast::Type* objectType = memberAccessExpression->object->getType();
+    if (!objectType || objectType->kind() != ast::TypeKind::SymbolType) [[unlikely]] {
+        // This should have been caught earlier in visit(MemberAccessExpression*)
+        return false;
+    }
+
+    auto* symbolType = static_cast<ast::SymbolType*>(objectType);
+    const Symbol* symbol = symbolTable.lookup(symbolType->name);
+    if (!symbol || symbol->kind != SymbolKind::Aggregate) {
+        // This should have been caught earlier in visit(MemberAccessExpression*)
+        return false;
+    }
+
+    auto aggregateDeclaration = static_cast<ast::AggregateDeclarationStatement*>(symbol->declarationNode);
+
+    // Find the field in the aggregate declaration
+    auto findFieldByName = [&memberAccessExpression](const ast::AggregateField& field) {
+        return field.name == memberAccessExpression->property;
+    };
+    auto aggregateField
+        = std::find_if(aggregateDeclaration->fields.begin(), aggregateDeclaration->fields.end(), findFieldByName);
+
+    if (aggregateField == aggregateDeclaration->fields.end()) {
+        // This should have been caught earlier in visit(MemberAccessExpression*)
+        return false;
+    }
+
+    // Check if the field is mutable
+    if (!aggregateField->isMutable) {
+        logError(
+            "Cannot modify immutable field '{}' of aggregate '{}'. To make it mutable, declare it using 'mut' in the aggregate declaration ('{} : mut {}')",
+            expression, memberAccessExpression->property, symbolType->name, memberAccessExpression->property,
+            toStringOr(aggregateField->type));
+        return false;
+    }
+
+    return true;
+}
+
 bool SemanticAnalyzer::checkIdentifierAssignmentExpression(ast::AssignmentExpression* expression) {
     // Checking if the identifier is declared in the current scope was already done in checkIdentifierExpression
     auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->assignee.get());
@@ -59,8 +116,9 @@ bool SemanticAnalyzer::checkIdentifierAssignmentExpression(ast::AssignmentExpres
     }
     if (!symbol->isMutable) {
         if (symbol->kind == SymbolKind::Constant) {
-            logError("{} was declared constant, so it cannot be reassigned. To make {} mutable, declare it using 'let mut'",
-                     expression, identifierExpression->value, identifierExpression->value);
+            logError(
+                "{} was declared constant, so it cannot be reassigned. To make {} mutable, declare it using 'let mut'",
+                expression, identifierExpression->value, identifierExpression->value);
         } else if (symbol->kind == SymbolKind::ConstantFunctionParameter) {
             logError(
                 "Cannot modify parameter '{}' as it was declared as constant. Mark the parameter as 'mut' to modify it within the function",
