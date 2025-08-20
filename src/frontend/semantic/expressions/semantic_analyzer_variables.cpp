@@ -57,13 +57,13 @@ bool SemanticAnalyzer::checkIdentifierAssignmentExpression(ast::AssignmentExpres
         logError("{} was not declared in any scope. Declare it using 'let'", expression, identifierExpression->value);
         return false;
     }
-    if (symbol->isConstant) {
+    if (!symbol->isMutable) {
         if (symbol->kind == SymbolKind::Constant) {
-            logError("{} was declared constant, so it cannot be reassigned. To make {} mutable, declare it using 'let'",
+            logError("{} was declared constant, so it cannot be reassigned. To make {} mutable, declare it using 'let mut'",
                      expression, identifierExpression->value, identifierExpression->value);
         } else if (symbol->kind == SymbolKind::ConstantFunctionParameter) {
             logError(
-                "Cannot modify parameter '{}' as it was declared as constant. Remove the 'const' modifier from the parameter declaration if you need to modify it within the function",
+                "Cannot modify parameter '{}' as it was declared as constant. Mark the parameter as 'mut' to modify it within the function",
                 expression, identifierExpression->value);
         }
         return false;
@@ -86,7 +86,7 @@ bool SemanticAnalyzer::checkIndexAssignmentExpression(ast::AssignmentExpression*
         auto containerIdentifier = static_cast<ast::IdentifierExpression*>(currentObject);
         const Symbol* containerSymbol = symbolTable.lookup(containerIdentifier->value);
 
-        if (containerSymbol && containerSymbol->isConstant) {
+        if (containerSymbol && !containerSymbol->isMutable) {
             logError("Cannot modify element of constant array '{}'. To make it mutable, declare it using 'let'",
                      expression, containerIdentifier->value);
             return false;

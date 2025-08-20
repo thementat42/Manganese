@@ -37,7 +37,7 @@ void SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) {
         .line = statement->getLine(),
         .column = statement->getColumn(),
         .declarationNode = statement,
-        .isConstant = false,  // Aggregates are not constants
+        .isMutable = true,  // Aggregates are not constants
         .scopeDepth = symbolTable.currentScopeDepth(),
         .visibility = statement->visibility,
 
@@ -82,12 +82,12 @@ void SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) {
     for (const auto& param : statement->parameters) {
         symbolTable.declare(Symbol{
             .name = param.name,
-            .kind = param.isConst ? SymbolKind::ConstantFunctionParameter : SymbolKind::FunctionParameter,
+            .kind = param.isMutable ? SymbolKind::FunctionParameter : SymbolKind::ConstantFunctionParameter,
             .type = param.type,
             .line = statement->getLine(),
             .column = statement->getColumn(),
             .declarationNode = statement,
-            .isConstant = param.isConst,
+            .isMutable = param.isMutable,
             .scopeDepth = symbolTable.currentScopeDepth(),
             .visibility = ast::Visibility::Private,  // Parameters are always private
         });
@@ -100,7 +100,7 @@ void SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) {
 
     std::vector<ast::FunctionParameterType> parameterTypes;
     parameterTypes.reserve(statement->parameters.size());
-    for (const auto& param : statement->parameters) { parameterTypes.emplace_back(param.isConst, param.type); }
+    for (const auto& param : statement->parameters) { parameterTypes.emplace_back(param.isMutable, param.type); }
 
     symbolTable.declare(Symbol{
         .name = statement->name,
@@ -109,7 +109,7 @@ void SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) {
         .line = statement->getLine(),
         .column = statement->getColumn(),
         .declarationNode = statement,
-        .isConstant = false,  // Functions are not constants
+        .isMutable = false,  // Functions are not constants
         .scopeDepth = symbolTable.currentScopeDepth(),
         .visibility = statement->visibility,
     });
@@ -117,7 +117,7 @@ void SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) {
 
 void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
     bool isInvalidDeclaration = false;
-    if (statement->isConstant() && !statement->value) {
+    if (!statement->isMutable && !statement->value) {
         logError("Constant variable '{}' must be initialized", statement, statement->name);
         isInvalidDeclaration = true;
     }
@@ -126,11 +126,10 @@ void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
     if (symbolTable.lookupInCurrentScope(statement->name)) {
         logError(
             "Variable {} was already defined in this scope. If you meant to change its value, use {} = {} (without {})",
-            statement, statement->name, statement->name, statement->isConstant() ? "const" : "let",
+            statement, statement->name, statement->name, statement->isMutable ? "let mut" : "let",
             toStringOr(statement->value));
         isInvalidDeclaration = true;
     }
-
 
     // Check for shadowing
     const Symbol* outerSymbol = nullptr;
@@ -164,12 +163,12 @@ void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
 
     symbolTable.declare(Symbol{
         .name = statement->name,
-        .kind = statement->isConstant() ? SymbolKind::Constant : SymbolKind::Variable,
+        .kind = statement->isMutable ? SymbolKind::Variable : SymbolKind::Constant,
         .type = statement->type,
         .line = statement->getLine(),
         .column = statement->getColumn(),
         .declarationNode = statement,
-        .isConstant = statement->isConstant(),
+        .isMutable = statement->isMutable,
         .scopeDepth = symbolTable.currentScopeDepth(),
         .visibility = statement->visibility,
     });

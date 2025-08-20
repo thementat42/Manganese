@@ -38,7 +38,7 @@ struct Symbol {
     ast::ASTNode* declarationNode = nullptr;
 
     // === Semantic Info ===
-    bool isConstant;
+    bool isMutable;
     int64_t scopeDepth = 0;
     ast::Visibility visibility = ast::Visibility::Private;  // How the symbol can/can't be accessed outside the module
 
