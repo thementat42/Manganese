@@ -139,14 +139,14 @@ bool testExponentiationAssociativity() {
 }
 
 bool testVariableDeclaration() {
-    std::string expression = "let foo = 45.5;"
-                             "let bar = foo * 10;"
-                             "const baz : public uint32 = foo + 10 ^^ 2 * bar + foo % 7 + foo^^2;"
+    std::string expression = "let mut foo = 45.5;"
+                             "let mut bar = foo * 10;"
+                             "let baz : public uint32 = foo + 10 ^^ 2 * bar + foo % 7 + foo^^2;"
                              "let boolean = true;";
 
     std::array<std::string, 4> expected
-        = {"(let foo: private auto = 45.5);", "(let bar: private auto = (foo * 10));",
-           "(const baz: public uint32 = (((foo + ((10 ^^ 2) * bar)) + (foo % 7)) + (foo ^^ 2)));",
+        = {"(let mut foo: private auto = 45.5);", "(let mut bar: private auto = (foo * 10));",
+           "(let baz: public uint32 = (((foo + ((10 ^^ 2) * bar)) + (foo % 7)) + (foo ^^ 2)));",
            "(let boolean: private auto = true);"};
 
     return validateStatements(getParserResults(expression), expected, "Variable Declaration");
@@ -229,15 +229,15 @@ bool testPointerOperators() {
 }
 
 bool testTypedVariableDeclaration() {
-    std::string expression = "let x: int32 = 42;\n"
-                             "const y: public float64 = 3.14159;\n"
-                             "let z: char = 'A';\n"
-                             "let numbers: int32[3^^2];\n"
-                             "const matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
+    std::string expression = "let mut x: int32 = 42;\n"
+                             "let y: public float64 = 3.14159;\n"
+                             "let mut z: char = 'A';\n"
+                             "let mut numbers: int32[3^^2];\n"
+                             "let matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
-    std::array<std::string, 5> expected = {"(let x: private int32 = 42);", "(const y: public float64 = 3.14159);",
-                                           "(let z: private char = 'A');", "(let numbers: private int32[(3 ^^ 2)]);",
-                                           "(const matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
+    std::array<std::string, 5> expected = {"(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);",
+                                           "(let mut z: private char = 'A');", "(let mut numbers: private int32[(3 ^^ 2)]);",
+                                           "(let matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     return validateStatements(getParserResults(expression), expected, "Typed Variable Declarations");
 }
@@ -294,9 +294,9 @@ bool testAggregateDeclarationAndInstantiation() {
                              "    bottomRight: Point;\n"
                              "    color: uint32;\n"
                              "}\n"
-                             "let p1 = Point{x = 10, y = 20};\n"
-                             "let p2: Point = Point{x = 30, y = 40};\n"
-                             "const rect = Rectangle{\n"
+                             "let mut p1 = Point{x = 10, y = 20};\n"
+                             "let mut p2: Point = Point{x = 30, y = 40};\n"
+                             "let rect = Rectangle{\n"
                              "    topLeft = Point{x = 0, y = 0},\n"
                              "    bottomRight = p2,\n"
                              "    color = 0xFF0000\n"
@@ -306,8 +306,8 @@ bool testAggregateDeclarationAndInstantiation() {
     std::array<std::string, 5> expected = {
         "public aggregate Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: float64;\n}",
         "private aggregate Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
-        "(let p1: private auto = Point {x = 10, y = 20});", "(let p2: private Point = Point {x = 30, y = 40});",
-        "(const rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
+        "(let mut p1: private auto = Point {x = 10, y = 20});", "(let mut p2: private Point = Point {x = 30, y = 40});",
+        "(let rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
 
     return validateStatements(getParserResults(expression), expected, "Aggregate Declaration and Instantiation");
 }
@@ -319,7 +319,7 @@ bool testFunctionDeclarationAndCall() {
                              "func greet(name: string) {\n"
                              "    print(\"Hello, \" + name);\n"
                              "}\n"
-                             "func calculate(x: float64, y: const float64) -> float64 {\n"
+                             "func calculate(x: float64, y: mut float64) -> float64 {\n"
                              "    let result = x * y;\n"
                              "    return result;\n"
                              "}\n"
@@ -330,7 +330,7 @@ bool testFunctionDeclarationAndCall() {
     std::array<std::string, 6> expected = {
         "readonly func add(a: int32, b: int32) -> int32 {\nreturn (a + b);\n}",
         "private func greet(name: string) {\nprint((\"Hello, \" + name));\n}",
-        "private func calculate(x: float64, y: const float64) -> float64 {\n(let result: private auto = (x * y));\nreturn result;\n}",
+        "private func calculate(x: float64, y: mut float64) -> float64 {\n(let result: private auto = (x * y));\nreturn result;\n}",
         "(let sum: private auto = add(5, 3));",
         "greet(\"World\");",
         "(let product: private auto = calculate(2.5, 3.01));"};
@@ -425,19 +425,19 @@ bool testSwitchStatement() {
 }
 
 bool testAccessExpressions() {
-    std::string expression = "let point = Point{x = 10, y = 20};\n"
-                             "let xCoord = point.x;\n"
-                             "let yCoord = point.y;\n"
-                             "let color = rect.color;"
-                             "const array = [1, 2, 3];\n"
+    std::string expression = "let mut point = Point{x = 10, y = 20};\n"
+                             "let mut xCoord = point.x;\n"
+                             "let mut yCoord = point.y;\n"
+                             "let mut color = rect.color;"
+                             "let array = [1, 2, 3];\n"
                              "let firstElement = array[0];\n"
                              "let foo = lib::module_::function(a, b, c);\n";
 
-    std::array<std::string, 7> expected = {"(let point: private auto = Point {x = 10, y = 20});",
-                                           "(let xCoord: private auto = point.x);",
-                                           "(let yCoord: private auto = point.y);",
-                                           "(let color: private auto = rect.color);",
-                                           "(const array: private auto = [1, 2, 3]);",
+    std::array<std::string, 7> expected = {"(let mut point: private auto = Point {x = 10, y = 20});",
+                                           "(let mut xCoord: private auto = point.x);",
+                                           "(let mut yCoord: private auto = point.y);",
+                                           "(let mut color: private auto = rect.color);",
+                                           "(let array: private auto = [1, 2, 3]);",
                                            "(let firstElement: private auto = array[0]);",
                                            "(let foo: private auto = lib::module_::function(a, b, c));"};
 
@@ -471,14 +471,14 @@ bool testImportsAndAliases() {
                              "module dataprocessing;\n"
                              "alias int32 as Integer;\n"
                              "alias ptr float64 as pf64;\n"
-                             "alias func(const Integer, pf64, func(int64) -> int64) -> bool as blah;"
+                             "alias func(mut Integer, pf64, func(int64) -> int64) -> bool as blah;"
                              "alias std::HashMap@[string, Integer] as StringIntMap;\n"
                              "let value: Integer = 42;\n";
 
     std::array<std::string, 6> expected = {"",
                                            "alias (int32) as Integer;",
                                            "alias (ptr float64) as pf64;",
-                                           "alias (func(const Integer, pf64, func(int64) -> int64) -> bool) as blah;",
+                                           "alias (func(mut Integer, pf64, func(int64) -> int64) -> bool) as blah;",
                                            "alias (std::HashMap@[string, Integer]) as StringIntMap;",
                                            "(let value: private Integer = 42);"};
 

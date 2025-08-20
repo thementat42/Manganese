@@ -95,12 +95,12 @@ TypeSPtr_t Parser::parseFunctionType() noexcept_if_release {
         if (peekTokenType() == TokenType::RightParen) {
             break;  // Done with parameter types
         }
-        bool isConst = false;
-        if (peekTokenType() == TokenType::Const) {
-            isConst = true;
+        bool isMutable = false;
+        if (peekTokenType() == TokenType::Mut) {
+            isMutable = true;
             DISCARD(consumeToken());
         }
-        parameterTypes.emplace_back(isConst, parseType(Precedence::Default));
+        parameterTypes.emplace_back(isMutable, parseType(Precedence::Default));
 
         if (peekTokenType() != TokenType::RightParen) {
             expectToken(TokenType::Comma, "Expected ',' to separate parameter types or ')' to end parameter list");

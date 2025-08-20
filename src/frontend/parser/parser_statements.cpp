@@ -231,15 +231,15 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() noexcept_if_release 
 
     while (!done()) {
         if (peekTokenType() == TokenType::RightParen) { break; }
-        bool isConst = false;
+        bool isMutable = false;
         std::string param_name = expectToken(TokenType::Identifier, "Expected a variable name").getLexeme();
         expectToken(TokenType::Colon);
-        if (peekTokenType() == TokenType::Const) {
+        if (peekTokenType() == TokenType::Mut) {
             DISCARD(consumeToken());
-            isConst = true;
+            isMutable = true;
         }
         TypeSPtr_t param_type = parseType(Precedence::Default);
-        params.emplace_back(param_name, std::move(param_type), isConst);
+        params.emplace_back(param_name, std::move(param_type), isMutable);
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
                         "Expected a ',' to separate function parameters, or a ) to close the parameter list");
@@ -472,9 +472,14 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() noexcept_if_release 
     ExpressionUPtr_t value;
     ast::Visibility visibility = defaultVisibility;
 
-    bool isConst = consumeToken().getType() == TokenType::Const;
+    DISCARD(consumeToken());  // Consume the 'let' token
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        DISCARD(consumeToken());  // Consume the 'mut' token
+        isMutable = true;
+    }
     std::string name = expectToken(TokenType::Identifier,
-                                   std::format("Expected variable name after '{}'", isConst ? "const" : "let"))
+                                   std::format("Expected variable name after '{}'", isMutable ? "let mut" : "let"))
                            .getLexeme();
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());  // Consume the colon
@@ -502,7 +507,7 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() noexcept_if_release 
 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
-    return std::make_unique<ast::VariableDeclarationStatement>(isConst, std::move(name), visibility, std::move(value),
+    return std::make_unique<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, std::move(value),
                                                                std::move(explicitType));
 }
 

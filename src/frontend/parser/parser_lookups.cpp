@@ -143,7 +143,6 @@ void Parser::initializeLookups() noexcept {
     registerStmtHandler(Alias, &Parser::parseAliasStatement);
     registerStmtHandler(Break, &Parser::parseBreakStatement);
     registerStmtHandler(Aggregate, &Parser::parseAggregateDeclarationStatement);
-    registerStmtHandler(Const, &Parser::parseVariableDeclarationStatement);
     registerStmtHandler(Continue, &Parser::parseContinueStatement);
     registerStmtHandler(Do, &Parser::parseDoWhileLoopStatement);
     registerStmtHandler(Enum, &Parser::parseEnumDeclarationStatement);

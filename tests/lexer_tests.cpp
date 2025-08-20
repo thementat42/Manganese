@@ -124,7 +124,7 @@ bool testIdentifiers() {
 }
 
 bool testKeywords() {
-    auto tokens = tokensFromString("alias as blueprint bool break aggregate case char const foo while string");
+    auto tokens = tokensFromString("alias as blueprint bool break aggregate case char mut foo while string");
     printAllTokens(tokens);
     if (tokens.size() != 12) {
         std::cout << "Expected 12 tokens, got " << tokens.size() << '\n';
@@ -135,7 +135,7 @@ bool testKeywords() {
         && checkToken(tokens[2], TokenType::Blueprint, "blueprint") && checkToken(tokens[3], TokenType::Bool, "bool")
         && checkToken(tokens[4], TokenType::Break, "break") && checkToken(tokens[5], TokenType::Aggregate, "aggregate")
         && checkToken(tokens[6], TokenType::Case, "case") && checkToken(tokens[7], TokenType::Char, "char")
-        && checkToken(tokens[8], TokenType::Const, "const") && checkToken(tokens[9], TokenType::Identifier, "foo")
+        && checkToken(tokens[8], TokenType::Mut, "mut") && checkToken(tokens[9], TokenType::Identifier, "foo")
         && checkToken(tokens[10], TokenType::While, "while") && checkToken(tokens[11], TokenType::String, "string");
 }
 
