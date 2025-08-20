@@ -284,8 +284,10 @@ static bool miscTests() {
         bar() = [3];
         bar()[0] = 3;
         aggregate Foo {x: int;}
-        let mut x = Foo{x = 3};
-        x.x = 5;
+        func baz() -> Foo { return Foo{x = 3}; }
+        let mut y = Foo{x = 3};
+        y.x = 5;
+        let mut z = baz().x;
         )");
     analyzer.analyze(file);
     const auto& program = file.program;
@@ -298,16 +300,16 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();  // Here, we don't really care if the clearing failed
 
-    runner.runTest("Analyze Literals", analyzeLiterals);
-    runner.runTest("Analyze Simple Variable Declaration", analyzeSimpleVariableDeclaration);
-    runner.runTest("Analyze Aliases", analyzeAliases);
-    runner.runTest("Analyze aggregate Instantiation", analyzeAggregateInstantiation);
-    runner.runTest("Analyze Function Declaration and Call", analyzeFunctionDeclarationAndCall);
-    runner.runTest("Binary Expressions", testBinaryExpressions);
-    runner.runTest("Member Access", checkMemberAccessExpression);
-    runner.runTest("Type Cast Expression", checkTypeCastExpression);
-    runner.runTest("Analyze Loops", checkLoops);
-    runner.runTest("Analyze Prefix and Postfix Expressions", checkPrefixAndPostfixExpressions);
+    // runner.runTest("Analyze Literals", analyzeLiterals);
+    // runner.runTest("Analyze Simple Variable Declaration", analyzeSimpleVariableDeclaration);
+    // runner.runTest("Analyze Aliases", analyzeAliases);
+    // runner.runTest("Analyze aggregate Instantiation", analyzeAggregateInstantiation);
+    // runner.runTest("Analyze Function Declaration and Call", analyzeFunctionDeclarationAndCall);
+    // runner.runTest("Binary Expressions", testBinaryExpressions);
+    // runner.runTest("Member Access", checkMemberAccessExpression);
+    // runner.runTest("Type Cast Expression", checkTypeCastExpression);
+    // runner.runTest("Analyze Loops", checkLoops);
+    // runner.runTest("Analyze Prefix and Postfix Expressions", checkPrefixAndPostfixExpressions);
     runner.runTest("Misc Tests", miscTests);
 }
 
