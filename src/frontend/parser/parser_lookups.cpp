@@ -5,7 +5,7 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include "frontend/lexer/token.hpp"
+#include <frontend/lexer/token_type.hpp>
 
 namespace Manganese {
 namespace parser {
