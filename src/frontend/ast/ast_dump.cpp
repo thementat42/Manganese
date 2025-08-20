@@ -316,7 +316,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, int indent) const {
     for (const auto& param : parameters) {
         os << getIndent(indent + 2) << "{\n";
         os << getIndent(indent + 3) << "name: " << param.name << "\n";
-        os << getIndent(indent + 3) << "isConst: " << (param.isConst ? "true" : "false") << "\n";
+        os << getIndent(indent + 3) << "isMutable: " << (param.isMutable ? "true" : "false") << "\n";
         os << getIndent(indent + 3) << "type: \n";
         param.type->dump(os, indent + 4);
         os << getIndent(indent + 2) << "}\n";
@@ -417,7 +417,7 @@ void SwitchStatement::dump(std::ostream& os, int indent) const {
 void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "VariableDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
-    os << getIndent(indent + 1) << "isConst: " << (isConst ? "true" : "false") << "\n";
+    os << getIndent(indent + 1) << "isMutable: " << (isMutable ? "true" : "false") << "\n";
 
     std::string visString;
     switch (visibility) {
@@ -486,7 +486,7 @@ void FunctionType::dump(std::ostream& os, int indent) const {
     // Parameter types
     os << getIndent(indent + 1) << "parameter types: [\n";
     for (const auto& paramType : parameterTypes) {
-        os << getIndent(indent + 2) << (paramType.isConst ? "const " : "") << "\n";
+        os << getIndent(indent + 2) << (paramType.isMutable ? "mut " : "") << "\n";
         paramType.type->dump(os, indent + 2);
     }
     os << getIndent(indent + 1) << "]\n";

@@ -215,7 +215,7 @@ std::string FunctionDeclarationStatement::toString() const {
     oss << "(";
     for (size_t i = 0; i < parameters.size(); ++i) {
         const auto& param = parameters[i];
-        oss << param.name << ": " << (param.isConst ? "const " : "") << param.type->toString();
+        oss << param.name << ": " << (param.isMutable ? "mut " : "") << param.type->toString();
         if (i < parameters.size() - 1) { oss << ", "; }
     }
     oss << ")";
@@ -273,7 +273,7 @@ std::string SwitchStatement::toString() const {
 
 std::string VariableDeclarationStatement::toString() const {
     // Convert visibility to string
-    std::string prefix = isConst ? "const " : "let ";
+    std::string prefix = isMutable ? "let mut " : "let ";
     std::string typeStr = ": " + visibilityToString(visibility) + (type ? type->toString() : "auto");
     std::string valueStr = value ? " = " + value->toString() : "";
     return "(" + prefix + name + typeStr + valueStr + ");";
@@ -320,7 +320,7 @@ std::string FunctionType::toString() const {
     std::ostringstream oss;
     oss << "func(";
     for (size_t i = 0; i < parameterTypes.size(); ++i) {
-        if (parameterTypes[i].isConst) { oss << "const "; }
+        if (parameterTypes[i].isMutable) { oss << "mut "; }
         oss << parameterTypes[i].type->toString();
         if (i < parameterTypes.size() - 1) [[likely]] { oss << ", "; }
     }
