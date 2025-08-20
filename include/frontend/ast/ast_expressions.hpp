@@ -87,7 +87,8 @@ class ArrayLiteralExpression final : public Expression {
  */
 class AssignmentExpression final : public Expression {
    public:
-    ExpressionUPtr_t assignee, value;
+    ExpressionUPtr_t assignee;  // The thing being assigned to (foo in foo = bar)
+    ExpressionUPtr_t value;  // The value being assigned (bar in foo = bar)
     lexer::TokenType op;
 
     AssignmentExpression(ExpressionUPtr_t assignee_, lexer::TokenType op_, ExpressionUPtr_t value_) :
