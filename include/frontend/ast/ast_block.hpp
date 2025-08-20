@@ -7,7 +7,7 @@
 
 namespace Manganese {
 namespace ast {
-class Block {
+class Block final {
     using T = StatementUPtr_t;
     using size_type = std::vector<T>::size_type;
     public:

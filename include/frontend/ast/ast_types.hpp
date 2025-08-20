@@ -34,7 +34,7 @@ enum class TypeKind {
 /**
  * e.g. aggregate {int, float}
  */
-class AggregateType : public Type {
+class AggregateType final : public Type {
    public:
     std::vector<TypeSPtr_t> fieldTypes;
 
@@ -44,7 +44,7 @@ class AggregateType : public Type {
 
     bool operator==(const Type& other) const noexcept override;
 };
-class ArrayType : public Type {
+class ArrayType final : public Type {
    public:
     TypeSPtr_t elementType;
     ExpressionUPtr_t lengthExpression;  // If not given, the length is inferred from the number of elements
@@ -75,7 +75,7 @@ struct FunctionParameterType {
 /**
  * e.g. func(int, int) -> bool
  */
-class FunctionType : public Type {
+class FunctionType final : public Type {
    public:
     std::vector<FunctionParameterType> parameterTypes;
     TypeSPtr_t returnType;
@@ -94,7 +94,7 @@ class FunctionType : public Type {
  * e.g. some_function@[T, U](args)
  * It does not represent the generic type itself
  */
-class GenericType : public Type {
+class GenericType final : public Type {
    public:
     TypeSPtr_t baseType;  // some_function in `some_function@[T,U]`
     std::vector<TypeSPtr_t> typeParameters;  // T and U in `some_function@[T,U]`
@@ -110,7 +110,7 @@ class GenericType : public Type {
 /**
  * ptr + any type
  */
-class PointerType : public Type {
+class PointerType final : public Type {
    public:
     TypeSPtr_t baseType;
 
@@ -125,7 +125,7 @@ class PointerType : public Type {
 /**
  * e.g. T, int, etc.
  */
-class SymbolType : public Type {
+class SymbolType final : public Type {
    public:
     std::string name;
 

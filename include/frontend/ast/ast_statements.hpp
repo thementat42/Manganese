@@ -46,7 +46,7 @@ struct AggregateField {
     AggregateField(std::string name_, TypeSPtr_t type_) : name(std::move(name_)), type(std::move(type_)) {}
 };
 
-class AggregateDeclarationStatement : public Statement {
+class AggregateDeclarationStatement final : public Statement {
    public:
     std::string name;
     std::vector<std::string> genericTypes;
@@ -60,7 +60,7 @@ class AggregateDeclarationStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::AggregateDeclarationStatement; };
 };
 
-class AliasStatement : public Statement {
+class AliasStatement final : public Statement {
    public:
     TypeSPtr_t baseType;  // The type being aliased (x in alias x as foo)
     std::string alias;  // The name of the alias (foo in alias x as foo)
@@ -73,7 +73,7 @@ class AliasStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::AliasStatement; };
 };
 
-class BreakStatement : public Statement {
+class BreakStatement final : public Statement {
    public:
     constexpr explicit BreakStatement() = default;
 
@@ -81,7 +81,7 @@ class BreakStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::BreakStatement; };
 };
 
-class ContinueStatement : public Statement {
+class ContinueStatement final : public Statement {
    public:
     constexpr explicit ContinueStatement() = default;
 
@@ -89,7 +89,7 @@ class ContinueStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::ContinueStatement; };
 };
 
-class EmptyStatement : public Statement {
+class EmptyStatement final : public Statement {
    public:
     constexpr explicit EmptyStatement() = default;
     AST_STANDARD_INTERFACE;
@@ -103,7 +103,7 @@ struct EnumValue {
         name(std::move(name_)), value(std::move(value_)) {}
 };
 
-class EnumDeclarationStatement : public Statement {
+class EnumDeclarationStatement final : public Statement {
    public:
     std::string name;
     TypeSPtr_t baseType;
@@ -118,9 +118,9 @@ class EnumDeclarationStatement : public Statement {
 };
 
 /**
- * @brief Wrapper class to convert an expression into a statement
+ * @brief Wrapper class to final convert an expression into a statement
  */
-class ExpressionStatement : public Statement {
+class ExpressionStatement final : public Statement {
    public:
     ExpressionUPtr_t expression;
 
@@ -139,7 +139,7 @@ struct FunctionParameter {
         name(std::move(name_)), type(std::move(type_)), isConst(isConst_) {}
 };
 
-class FunctionDeclarationStatement : public Statement {
+class FunctionDeclarationStatement final : public Statement {
    public:
     std::string name;
     std::vector<std::string> genericTypes;
@@ -167,7 +167,7 @@ struct ElifClause {
     ElifClause(ExpressionUPtr_t condition_, Block body_) : condition(std::move(condition_)), body(std::move(body_)) {}
 };
 
-class IfStatement : public Statement {
+class IfStatement final : public Statement {
    public:
     ExpressionUPtr_t condition;
     Block body, elseBody;  // elseBody might be empty
@@ -183,7 +183,7 @@ class IfStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::IfStatement; };
 };
 
-class RepeatLoopStatement : public Statement {
+class RepeatLoopStatement final : public Statement {
    public:
     ExpressionUPtr_t numIterations;
     Block body;
@@ -195,7 +195,7 @@ class RepeatLoopStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::RepeatLoopStatement; };
 };
 
-class ReturnStatement : public Statement {
+class ReturnStatement final : public Statement {
    public:
     ExpressionUPtr_t value;
 
@@ -213,7 +213,7 @@ struct CaseClause {
         literalValue(std::move(literalValue_)), body(std::move(body_)) {}
 };
 
-class SwitchStatement : public Statement {
+class SwitchStatement final : public Statement {
    public:
     ExpressionUPtr_t variable;
     std::vector<CaseClause> cases;
@@ -226,7 +226,7 @@ class SwitchStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::SwitchStatement; };
 };
 
-class VariableDeclarationStatement : public Statement {
+class VariableDeclarationStatement final : public Statement {
    public:
     bool isConst;
     std::string name;
@@ -248,7 +248,7 @@ class VariableDeclarationStatement : public Statement {
     constexpr StatementKind kind() const noexcept override { return StatementKind::VariableDeclarationStatement; };
 };
 
-class WhileLoopStatement : public Statement {
+class WhileLoopStatement final : public Statement {
     public:
 
     Block body;
