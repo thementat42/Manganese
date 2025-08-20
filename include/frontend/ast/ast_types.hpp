@@ -62,13 +62,13 @@ class ArrayType final : public Type {
 };
 
 struct FunctionParameterType {
-    bool isConst;
+    bool isMutable;
     TypeSPtr_t type;
 
-    FunctionParameterType(bool isConst_, TypeSPtr_t type_) : isConst(isConst_), type(std::move(type_)) {}
+    FunctionParameterType(bool isMutable_, TypeSPtr_t type_) : isMutable(isMutable_), type(std::move(type_)) {}
 
     bool operator==(const FunctionParameterType& other) const noexcept {
-        return isConst == other.isConst && type.get() == other.type.get();
+        return isMutable == other.isMutable && *type == *other.type;
     }
 };
 

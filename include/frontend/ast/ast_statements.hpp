@@ -133,10 +133,10 @@ class ExpressionStatement final : public Statement {
 struct FunctionParameter {
     std::string name;
     TypeSPtr_t type;
-    bool isConst;
+    bool isMutable;
 
-    FunctionParameter(std::string name_, TypeSPtr_t type_, bool isConst_) :
-        name(std::move(name_)), type(std::move(type_)), isConst(isConst_) {}
+    FunctionParameter(std::string name_, TypeSPtr_t type_, bool isMutable_) :
+        name(std::move(name_)), type(std::move(type_)), isMutable(isMutable_) {}
 };
 
 class FunctionDeclarationStatement final : public Statement {
@@ -228,21 +228,20 @@ class SwitchStatement final : public Statement {
 
 class VariableDeclarationStatement final : public Statement {
    public:
-    bool isConst;
+    bool isMutable;
     std::string name;
     Visibility visibility;
     ExpressionUPtr_t value;
     TypeSPtr_t type;
 
-    VariableDeclarationStatement(bool isConst_, std::string name_, Visibility visibility_, ExpressionUPtr_t _value,
+    VariableDeclarationStatement(bool isMutable_, std::string name_, Visibility visibility_, ExpressionUPtr_t _value,
                                  TypeSPtr_t _type) :
-        isConst(isConst_),
+        isMutable(isMutable_),
         name(std::move(name_)),
         visibility(visibility_),
         value(std::move(_value)),
         type(std::move(_type)) {}
 
-    bool isConstant() const { return isConst; }
 
     AST_STANDARD_INTERFACE;
     constexpr StatementKind kind() const noexcept override { return StatementKind::VariableDeclarationStatement; };
