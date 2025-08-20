@@ -52,8 +52,8 @@ enum class TokenType : uint8_t {
     //~ Keywords
     __KeywordStart,  // Marker for the start of keyword token types -- not to be used as an actual token type
     //* Type Qualifiers
-    Let,  // mutable variable
-    Const,  // constant variable
+    Let,  // variable declaration
+    Mut, // specify something as mutable
     Ptr,  // pointer variables
 
     //* Access Levels

@@ -24,7 +24,6 @@
 
 #include "token_type.hpp"
 
-
 namespace Manganese {
 namespace lexer {
 
@@ -50,7 +49,7 @@ class Token {
     constexpr bool isOperator() const noexcept {
         return type >= TokenType::__OperatorStart && type <= TokenType::__OperatorEnd;
     }
-    
+
     constexpr bool isInvalid() const noexcept { return invalid; }
     constexpr TokenType getType() const noexcept { return type; }
     constexpr std::string getLexeme() const noexcept { return lexeme; }
@@ -70,7 +69,6 @@ class Token {
      * @note Parser only: be careful
      */
     void overrideType(TokenType type_, std::string lexeme_ = "");
-
 };
 
 //~ Helpers, not tied to the Token class
@@ -161,7 +159,6 @@ constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
         case TokenType::Break: return "break";
         case TokenType::Case: return "case";
         case TokenType::Char: return "char";
-        case TokenType::Const: return "const";
         case TokenType::Continue: return "continue";
         case TokenType::Default: return "default";
         case TokenType::Do: return "do";
@@ -182,6 +179,7 @@ constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
         case TokenType::Lambda: return "lambda";
         case TokenType::Let: return "let";
         case TokenType::Module: return "module";
+        case TokenType::Mut: return "mut";
         case TokenType::Ptr: return "ptr";
         case TokenType::Private: return "Private";
         case TokenType::Public: return "public";

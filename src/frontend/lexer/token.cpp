@@ -12,7 +12,6 @@
 #include <utility>
 #include <utils/number_utils.hpp>
 
-
 namespace Manganese {
 namespace lexer {
 Token::Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_,
@@ -50,7 +49,6 @@ TokenType keywordFromString(const std::string& keyword, const size_t line, const
 }
 
 void Token::overrideType(TokenType type_, std::string lexeme_) {
-
     logging::logInternal(std::format("Overriding token type from {} to {} with lexeme '{}'", tokenTypeToString(type),
                                      tokenTypeToString(type_), lexeme_));
 
@@ -130,7 +128,6 @@ std::unordered_map<std::string, const TokenType> keywordMap
        {"break", TokenType::Break},
        {"case", TokenType::Case},
        {"char", TokenType::Char},
-       {"const", TokenType::Const},
        {"continue", TokenType::Continue},
        {"default", TokenType::Default},
        {"do", TokenType::Do},
@@ -153,6 +150,7 @@ std::unordered_map<std::string, const TokenType> keywordMap
        {"lambda", TokenType::Lambda},
        {"let", TokenType::Let},
        {"module", TokenType::Module},
+       {"mut", TokenType::Mut},
        {"private", TokenType::Private},
        {"ptr", TokenType::Ptr},
        {"public", TokenType::Public},
