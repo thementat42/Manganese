@@ -131,6 +131,12 @@ void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
             toStringOr(statement->value), statement->isMutable ? "let mut" : "let");
         isInvalidDeclaration = true;
     }
+    
+    if (!statement->type && !statement->value) {
+        logError("Variable '{}' must have a type or an initializer", statement, statement->name);
+        isInvalidDeclaration = true;
+    }
+    if (isInvalidDeclaration) { return; }
 
     // Check for shadowing
     const Symbol* outerSymbol = nullptr;
@@ -143,12 +149,6 @@ void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
         logWarning("Variable '{}' shadows another variable with the same name from an outer scope", statement,
                    statement->name);
     }
-
-    if (!statement->type && !statement->value) {
-        logError("Variable '{}' must have a type or an initializer", statement, statement->name);
-        isInvalidDeclaration = true;
-    }
-    if (isInvalidDeclaration) { return; }
 
     if (statement->type && statement->value) {
         visit(statement->value.get());
