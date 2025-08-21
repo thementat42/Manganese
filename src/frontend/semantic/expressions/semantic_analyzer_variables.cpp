@@ -97,8 +97,8 @@ bool SemanticAnalyzer::checkAggregateFieldAssignmentExpression(ast::AssignmentEx
     // Check if the field is mutable
     if (!aggregateField->isMutable) {
         logError(
-            "Cannot modify immutable field '{}' of aggregate '{}'. To make it mutable, declare it using 'mut' in the aggregate declaration ('{} : mut {}')",
-            expression, memberAccessExpression->property, symbolType->name, memberAccessExpression->property,
+            "Cannot modify immutable field '{}' of variable '{}' (of type {}). To make it mutable, declare it using 'mut' in the aggregate declaration ('{} : mut {}')",
+            expression, memberAccessExpression->property, toStringOr(memberAccessExpression->object), symbolType->name, memberAccessExpression->property,
             toStringOr(aggregateField->type));
         return false;
     }
@@ -117,11 +117,11 @@ bool SemanticAnalyzer::checkIdentifierAssignmentExpression(ast::AssignmentExpres
     if (!symbol->isMutable) {
         if (symbol->kind == SymbolKind::Constant) {
             logError(
-                "{} was declared constant, so it cannot be reassigned. To make {} mutable, declare it using 'let mut'",
+                "{} was not declared as mutable, so it cannot be reassigned. To make {} mutable, declare it using 'let mut'",
                 expression, identifierExpression->value, identifierExpression->value);
         } else if (symbol->kind == SymbolKind::ConstantFunctionParameter) {
             logError(
-                "Cannot modify parameter '{}' as it was declared as constant. Mark the parameter as 'mut' to modify it within the function",
+                "Cannot modify parameter '{}' as it was not declared as mutable. Mark the parameter as 'mut' to modify it within the function",
                 expression, identifierExpression->value);
         }
         return false;

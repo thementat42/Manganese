@@ -110,7 +110,7 @@ void SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) {
         .line = statement->getLine(),
         .column = statement->getColumn(),
         .declarationNode = statement,
-        .isMutable = false,  // Functions are not constants
+        .isMutable = false,  // Functions are constants
         .scopeDepth = symbolTable.currentScopeDepth(),
         .visibility = statement->visibility,
     });

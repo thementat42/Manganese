@@ -73,6 +73,7 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release
         bool isMutable = false;
         if (peekTokenType() == TokenType::Mut) {
             isMutable = true;
+            DISCARD(consumeToken());
         }
         TypeSPtr_t type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");

@@ -284,10 +284,14 @@ static bool miscTests() {
         bar() = [3];
         bar()[0] = 3;
         aggregate Foo {x: int;}
+        aggregate Bar {y: mut Foo;}
         func baz() -> Foo { return Foo{x = 3}; }
         let mut y = Foo{x = 3};
         y.x = 5;
         let mut z = baz().x;
+        let mut some_var = Bar{y = baz()};
+        some_var.y = Foo{x = 10};
+        some_var.y.x = 20;
         )");
     analyzer.analyze(file);
     const auto& program = file.program;

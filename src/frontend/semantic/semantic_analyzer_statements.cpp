@@ -37,7 +37,7 @@ void SemanticAnalyzer::visit(ast::AliasStatement* statement) {
         .line = statement->getLine(),
         .column = statement->getColumn(),
         .declarationNode = statement,
-        .isMutable = true,  // Type aliases are not constants
+        .isMutable = true,  // Type aliases are constants
         .scopeDepth = symbolTable.currentScopeDepth(),
         .visibility = statement->visibility,
         });
