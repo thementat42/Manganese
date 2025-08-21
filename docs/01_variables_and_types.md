@@ -5,16 +5,15 @@ Manganese is a statically typed language, so all variables must be declared with
 The general syntax for declaring a variable in Manganese is:
 
 ```manganese
-let <variable name> [: [<visibility>] <type qualifier> <type>] [= <value>];
-const <variable name> [: [<visibility>] <type qualifier> <type>] = <value>;
+let [mut] <variable name> [: [<visibility>] [ptr] <type>] [= <value>];
 ```
 
-`let` declares a mutable variable, while `const` declares an immutable variable.
+`let` declares a mutable variable, while `let mut` declares an immutable variable.
 
 Where:
 
-- [`visiblity`](#-type-qualifiers--visibility-) dictates how the variable can be accessed outside the module in which it is declared
-- a [`type qualifier`](#-type-qualifiers--visibility-) provides extra information to the compiler on how the variable should be interpreted and/or stored. A type qualifier is optional.
+- [`visiblity`](#-type-qualifiers-) dictates how the variable can be accessed outside the module in which it is declared
+- `ptr` declares a variable as a pointer to `<type>` instead of the type itself
 - `<type>` is one of the [primitive types](#-primitive-types-), a built-in [data structure](/docs/02_data_structures.md) or a [user-defined type](/docs/06_data_encapsulation.md)
 - `variable name` is an identifier to refer to the variable. Variable names can contain letters, underscores and numbers (but cannot start with numbers).
 - `value` is an optional initial value for the variable.
@@ -23,7 +22,7 @@ Type declarations are required on variables without an initial value.
 Variables with an initial value generally do not require a type declaration, as the compiler will infer which type the variable is.
 Variables which are declared without a value are uninitialized. Using an uninitialized variable will cause a warning.
 
-## === Type Qualifiers & Visibility ===
+## === Type Qualifiers ===
 
 Visibility modifiers dictate how an object is accessible between modules:
 
@@ -31,13 +30,7 @@ Visibility modifiers dictate how an object is accessible between modules:
 2. `readonly`: Declares that a variable can be accessed but not modified outside its parent [module](/docs/05_modules_and_scoping.md)
 3. `private`: Declares that a variable can only be accessed within its parent [module](/docs/05_modules_and_scoping.md)
 
-Type qualifiers provide extra information to the compiler about how variables should be stored and read. The type qualifiers in Manganese are:
-
-1. `const`: Declares a variable as constant (i.e.) immutable. <br>
-    Once assigned, a `const` variable cannot have its value changed. Variables marked as `const` must have a value assigned when they are declared
-2. `ptr`: Declares a pointer to a variable of the specified type (a `ptr` variable holds the memory address of the variable it points to).
-
-`const` always applies to the type to its right.
+`mut` always applies to the type to its right.
 By default, all variables are private -- they cannot be accessed or modified outside their parent module.
 
 ## === Primitive Types ===
@@ -182,13 +175,14 @@ The Manganese compiler will only automatically cast values in the following scen
 
 Pointers store memory addresses -- dereferencing a pointer accesses the value at that memory address.
 
-### === Using `const` in pointer declarations
+### === Using `mut` in pointer declarations
 
-In a pointer declaration, `const` can be used in two ways:
+In a pointer declaration, `mut` can be used in two ways:
 
-- `const <variable name> : ptr <type>`: creates a pointer which cannot be moved (i.e., cannot be changed to point to another memory address). The underlying value can still be modified. This can be read as "a constant named `<variable name>` which is a pointer to a `<type>`"
-- `let <variable name> : ptr const <type>`: creates a pointer which cannot be used to modify the value it points to, but can be moved to point to another memory address. This can be read as "a variable named `<variable name>` which is a pointer to a constant `<type>`"
+- `let mut <variable name> : ptr <type>`: creates a pointer which can be moved (i.e., can be changed to point to another memory address). The underlying value can still be modified. This can be read as "a mutable variable named `<variable name>` which is a pointer to a `<type>`"
+- `let <variable name> : ptr mut <type>`: creates a pointer which can be used to modify the value it points to, but cannot be moved to point to another memory address. This can be read as "a constant named `<variable name>` which is a pointer to a mutable `<type>`"
 
-Combining these two (`const <variable name> : ptr const <type>`) creates a pointer variable which can neither be reassigned nor used to modify its underlying value.
+Combining these two (`let mut <variable name> : ptr mut <type>`) creates a pointer variable which can be reassigned and used to modify its underlying value.
+By default (without `mut`), neither of these is possible (i.e., pointers cannot be moved and cannot be used to modify their underlying memory)
 
 For more information on Manganese's memory management system, see the [memory documentation](/docs/10_memory_management.md).
