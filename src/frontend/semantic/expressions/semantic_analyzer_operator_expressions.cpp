@@ -131,7 +131,7 @@ void SemanticAnalyzer::visit(ast::PrefixExpression* expression) {
             }
             expression->setType(expression->right->getTypePtr());
             break;
-        case lexer::TokenType::AddressOf:
+        case lexer::TokenType::AddressOf: {
             if (expression->right->kind() != ast::ExpressionKind::IdentifierExpression
                 && expression->right->kind() != ast::ExpressionKind::IndexExpression) {
                 logError(
@@ -139,8 +139,15 @@ void SemanticAnalyzer::visit(ast::PrefixExpression* expression) {
                     expression, toStringOr(expression->right));
                 return;
             }
-            expression->setType(std::make_shared<ast::PointerType>(expression->right->getTypePtr()));
+            bool pointsToMutable = false;
+            if (expression->right->kind() == ast::ExpressionKind::IdentifierExpression) {
+                auto identifierExpression = static_cast<ast::IdentifierExpression*>(expression->right.get());
+                auto varSymbol = symbolTable.lookup(identifierExpression->value);
+                if (varSymbol && varSymbol->kind == SymbolKind::Variable) { pointsToMutable = varSymbol->isMutable; }
+            }
+            expression->setType(std::make_shared<ast::PointerType>(expression->right->getTypePtr(), pointsToMutable));
             break;
+        }
         case lexer::TokenType::Dereference: {
             if (expression->right->getType()->kind() != ast::TypeKind::PointerType) {
                 logError("Cannot dereference a non-pointer type {}", expression,

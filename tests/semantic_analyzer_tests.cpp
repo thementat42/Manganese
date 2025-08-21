@@ -265,11 +265,7 @@ bool checkPrefixAndPostfixExpressions() {
     return true;
 }
 
-static bool miscTests() {
-    // TODO: Consider immutability by default
-    //! Functions can be assigned to each other (no way to prevent this)
-    //! This is weird
-    //! Having just functions be immutable by default would be unintuitive
+bool mutabilityAssignmentTests() {
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(
         R"(
@@ -299,6 +295,21 @@ static bool miscTests() {
     return true;
 }
 
+static bool miscTests() {
+    semantic::SemanticAnalyzer analyzer;
+    parser::ParsedFile file = parse(R"(
+        let x = 10;
+        let y = &x;
+        *y = 3;
+        let z: ptr mut int = &x;
+        *z = 5;
+)");
+    analyzer.analyze(file);
+    const auto& program = file.program;
+    outputAnalyzedAST(program);
+    return true;
+}
+
 void runSemanticAnalysisTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -314,7 +325,8 @@ void runSemanticAnalysisTests(TestRunner& runner) {
     runner.runTest("Type Cast Expression", checkTypeCastExpression);
     runner.runTest("Analyze Loops", checkLoops);
     runner.runTest("Analyze Prefix and Postfix Expressions", checkPrefixAndPostfixExpressions);
-    runner.runTest("Misc Tests", miscTests);
+    runner.runTest("Mutability and Assignment Tests", mutabilityAssignmentTests);
+    runner.runTest("Miscellaneous Tests", miscTests);
 }
 
 }  // namespace tests

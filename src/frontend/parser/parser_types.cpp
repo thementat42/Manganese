@@ -145,7 +145,12 @@ TypeSPtr_t Parser::parseParenthesizedType() noexcept_if_release {
 
 TypeSPtr_t Parser::parsePointerType() noexcept_if_release {
     DISCARD(consumeToken());  // Consume `ptr`
-    return std::make_shared<ast::PointerType>(parseType(Precedence::Default));
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        isMutable = true;
+        DISCARD(consumeToken());  // Consume `mut`
+    }
+    return std::make_shared<ast::PointerType>(parseType(Precedence::Default), isMutable);
 }
 
 TypeSPtr_t Parser::parseSymbolType() noexcept_if_release {

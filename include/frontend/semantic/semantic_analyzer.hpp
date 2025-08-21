@@ -134,9 +134,10 @@ class SemanticAnalyzer final : public visitor::Visitor<void> {
 
    private:
     // ===== Helpers for Specific Checks =====
+    bool checkAggregateFieldAssignmentExpression(ast::AssignmentExpression*);
+    bool checkDereferenceAssignmentExpression(ast::AssignmentExpression*);
     bool checkIdentifierAssignmentExpression(ast::AssignmentExpression*);
     bool checkIndexAssignmentExpression(ast::AssignmentExpression*);
-    bool checkAggregateFieldAssignmentExpression(ast::AssignmentExpression*);
     bool handleInPlaceAssignment(Manganese::ast::AssignmentExpression*);
 
     ast::TypeSPtr_t resolveBinaryExpressionType(ast::BinaryExpression* binaryExpression) const noexcept_if_release;

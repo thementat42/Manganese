@@ -113,8 +113,10 @@ class GenericType final : public Type {
 class PointerType final : public Type {
    public:
     TypeSPtr_t baseType;
+    bool isMutable;
 
-    explicit PointerType(TypeSPtr_t baseType_) : baseType(std::move(baseType_)) {}
+    PointerType(TypeSPtr_t baseType_, bool isMutable_) :
+        baseType(std::move(baseType_)), isMutable(isMutable_) {}
 
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::PointerType; };

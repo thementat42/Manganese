@@ -2,7 +2,6 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <global_macros.hpp>
 
-
 namespace Manganese {
 
 namespace semantic {
@@ -13,7 +12,8 @@ void SemanticAnalyzer::visit(ast::AssignmentExpression* expression) {
     ast::ExpressionKind assigneeKind = expression->assignee->kind();
     if (assigneeKind != ast::ExpressionKind::IdentifierExpression
         && assigneeKind != ast::ExpressionKind::IndexExpression
-        && assigneeKind != ast::ExpressionKind::MemberAccessExpression) {
+        && assigneeKind != ast::ExpressionKind::MemberAccessExpression
+        && assigneeKind != ast::ExpressionKind::PrefixExpression) {
         logError("Cannot assign to non-variable expression: {}", expression, toStringOr(expression->assignee));
         return;
     }
@@ -25,12 +25,24 @@ void SemanticAnalyzer::visit(ast::AssignmentExpression* expression) {
         }
     }
 
-    if (assigneeKind == ast::ExpressionKind::IdentifierExpression) {
-        if (!checkIdentifierAssignmentExpression(expression)) { return; }
-    } else if (assigneeKind == ast::ExpressionKind::IndexExpression) {
-        if (!checkIndexAssignmentExpression(expression)) { return; }
-    } else if (assigneeKind == ast::ExpressionKind::MemberAccessExpression) {
-        if (!checkAggregateFieldAssignmentExpression(expression)) { return; }
+    switch (assigneeKind) {
+        case ast::ExpressionKind::IdentifierExpression:
+            if (!checkIdentifierAssignmentExpression(expression)) { return; }
+            break;
+
+        case ast::ExpressionKind::IndexExpression:
+            if (!checkIndexAssignmentExpression(expression)) { return; }
+            break;
+
+        case ast::ExpressionKind::MemberAccessExpression:
+            if (!checkAggregateFieldAssignmentExpression(expression)) { return; }
+            break;
+
+        case ast::ExpressionKind::PrefixExpression:
+            if (!checkDereferenceAssignmentExpression(expression)) { return; }
+            break;
+
+        default: ASSERT_UNREACHABLE("Unexpected expression kind in assignment"); return;
     }
     if (!areTypesCompatible(expression->assignee->getType(), expression->value->getType())) {
         logError("{} cannot be assigned to {}. {} has type {}, but {} has type {}", expression,
@@ -76,7 +88,7 @@ bool SemanticAnalyzer::checkAggregateFieldAssignmentExpression(ast::AssignmentEx
     auto* symbolType = static_cast<ast::SymbolType*>(objectType);
     const Symbol* symbol = symbolTable.lookup(symbolType->name);
     if (!symbol || symbol->kind != SymbolKind::Aggregate) {
-        // This should have been caught earlier in visit(MemberAccessExpression*)
+        // This should have been caught earlier
         return false;
     }
 
@@ -90,19 +102,41 @@ bool SemanticAnalyzer::checkAggregateFieldAssignmentExpression(ast::AssignmentEx
         = std::find_if(aggregateDeclaration->fields.begin(), aggregateDeclaration->fields.end(), findFieldByName);
 
     if (aggregateField == aggregateDeclaration->fields.end()) {
-        // This should have been caught earlier in visit(MemberAccessExpression*)
+        // This should have been caught earlier
         return false;
     }
 
     // Check if the field is mutable
     if (!aggregateField->isMutable) {
-        logError(
-            "Cannot modify immutable field '{}' of variable '{}' (of type {}). To make it mutable, declare it using 'mut' in the aggregate declaration ('{} : mut {}')",
-            expression, memberAccessExpression->property, toStringOr(memberAccessExpression->object), symbolType->name, memberAccessExpression->property,
-            toStringOr(aggregateField->type));
+        logError("Cannot modify immutable field '{}' of variable '{}' (of type {})."
+                 "To make it mutable, declare it using 'mut' in the aggregate declaration ('{} : mut {}')",
+                 expression, memberAccessExpression->property, toStringOr(memberAccessExpression->object),
+                 symbolType->name, memberAccessExpression->property, toStringOr(aggregateField->type));
         return false;
     }
 
+    return true;
+}
+
+bool SemanticAnalyzer::checkDereferenceAssignmentExpression(ast::AssignmentExpression* expression) {
+    auto prefixExpression = static_cast<ast::PrefixExpression*>(expression->assignee.get());
+    if (prefixExpression->op != lexer::TokenType::Dereference) {
+        logError("Cannot assign to a prefix expression that is not a dereference: {}", expression,
+                 toStringOr(prefixExpression));
+        return false;
+    }
+    auto rightExpr = prefixExpression->right.get();
+    if (!rightExpr->getType() || rightExpr->getType()->kind() != ast::TypeKind::PointerType) {
+        logError("Cannot assign to a dereference of a non-pointer type: {}", expression, toStringOr(prefixExpression));
+        return false;
+    }
+    auto pointerType = static_cast<ast::PointerType*>(rightExpr->getType());
+    if (!pointerType->isMutable) {
+        logError(
+            "Cannot modify value through pointer to immutable type. The pointer should be declared as 'ptr mut' to allow this",
+            expression);
+        return false;
+    }
     return true;
 }
 

@@ -72,7 +72,7 @@ bool GenericType::operator==(const Type& other) const noexcept {
 bool PointerType::operator==(const Type& other) const noexcept {
     if (other.kind() != kind()) { return false; }
     const auto& otherPointerType = static_cast<const PointerType&>(other);
-    return typePtrsEqual(baseType, otherPointerType.baseType);
+    return typePtrsEqual(baseType, otherPointerType.baseType) && isMutable == otherPointerType.isMutable;
 }
 
 bool SymbolType::operator==(const Type& other) const noexcept {

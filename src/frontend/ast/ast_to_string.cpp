@@ -341,7 +341,12 @@ std::string GenericType::toString() const {
     return oss.str();
 }
 
-std::string PointerType::toString() const { return "ptr " + baseType->toString(); }
+std::string PointerType::toString() const {
+    std::string result = "ptr ";
+    if (isMutable) { result += "mut "; }
+    result += baseType->toString();
+    return result;
+}
 
 std::string SymbolType::toString() const { return name; }
 
