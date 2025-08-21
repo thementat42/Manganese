@@ -6,6 +6,13 @@ namespace Manganese {
 
 namespace semantic {
 
+void SemanticAnalyzer::visit(ast::IdentifierExpression* expression) {
+    const Symbol* symbol = symbolTable.lookup(expression->value);
+    if (!symbol) { logError("{} was not declared in any scope.", expression, expression->value); }
+    expression->setType(symbol->type);
+    return;
+}
+
 void SemanticAnalyzer::visit(ast::AssignmentExpression* expression) {
     visit(expression->assignee.get());
     visit(expression->value.get());
@@ -51,13 +58,6 @@ void SemanticAnalyzer::visit(ast::AssignmentExpression* expression) {
                  toStringOr(expression->assignee->getType()));
         return;
     }
-}
-
-void SemanticAnalyzer::visit(ast::IdentifierExpression* expression) {
-    const Symbol* symbol = symbolTable.lookup(expression->value);
-    if (!symbol) { logError("{} was not declared in any scope.", expression, expression->value); }
-    expression->setType(symbol->type);
-    return;
 }
 
 // ===== Helpers =====
