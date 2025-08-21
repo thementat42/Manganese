@@ -127,8 +127,8 @@ void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
     if (symbolTable.lookupInCurrentScope(statement->name)) {
         logError(
             "Variable {} was already defined in this scope. If you meant to change its value, use {} = {} (without {})",
-            statement, statement->name, statement->name, statement->isMutable ? "let mut" : "let",
-            toStringOr(statement->value));
+            statement, statement->name, statement->name,
+            toStringOr(statement->value), statement->isMutable ? "let mut" : "let");
         isInvalidDeclaration = true;
     }
 
