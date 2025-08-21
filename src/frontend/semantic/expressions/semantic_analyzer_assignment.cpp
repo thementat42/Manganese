@@ -187,30 +187,8 @@ bool SemanticAnalyzer::checkIndexAssignmentExpression(ast::AssignmentExpression*
     return true;
 }
 
-constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release {
-    using enum lexer::TokenType;
-    switch (assignmentOp) {
-        case PlusAssign: return Plus;
-        case MinusAssign: return Minus;
-        case MulAssign: return Mul;
-        case DivAssign: return Div;
-        case FloorDivAssign: return FloorDiv;
-        case ModAssign: return Mod;
-        case ExpAssign: return Exp;
-        case BitAndAssign: return BitAnd;
-        case BitOrAssign: return BitOr;
-        case BitXorAssign: return BitXor;
-        case BitLShiftAssign: return BitLShift;
-        case BitRShiftAssign: return BitRShift;
-        default:
-            ASSERT_UNREACHABLE(std::format("Cannot convert assignment operator {} to binary operator",
-                                           lexer::tokenTypeToString(assignmentOp)));
-            return Unknown;
-    }
-}
-
 bool SemanticAnalyzer::handleInPlaceAssignment(Manganese::ast::AssignmentExpression* expression) {
-    auto binaryOperator = getBinaryOperatorFromAssignmentOperator(expression->op);
+    auto binaryOperator = lexer::getBinaryOperatorFromAssignmentOperator(expression->op);
 
     // x op= y is basically just x = x op y
     // So for type checking, make a temporary binary expression with x op y

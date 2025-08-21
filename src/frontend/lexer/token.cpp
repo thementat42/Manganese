@@ -160,7 +160,7 @@ std::unordered_map<std::string, const TokenType> keywordMap
        {"string", TokenType::String},
        {"switch", TokenType::Switch},
        {"true", TokenType::True},
-       {"typeof", TokenType::TypeOf},
+    //    {"typeof", TokenType::TypeOf},
        {"uint", TokenType::UInt32},  // default to uint32 when integer width isn't specified
        {"uint8", TokenType::UInt8},
        {"uint16", TokenType::UInt16},

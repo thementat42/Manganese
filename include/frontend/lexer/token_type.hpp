@@ -113,7 +113,7 @@ enum class TokenType : uint8_t {
 
     //* Misc Operators
     Alias,  // type aliasing (alias `a` as `b`)
-    TypeOf,  // get the type of a variable
+    // TypeOf,  // get the type of a variable
     __KeywordEnd,  // Marker for the end of keyword token types -- not to be used as an actual token type
 
     //~ Operators
