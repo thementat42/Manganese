@@ -175,7 +175,7 @@ The Manganese compiler will only automatically cast values in the following scen
 
 Pointers store memory addresses -- dereferencing a pointer accesses the value at that memory address.
 
-### === Using `mut` in pointer declarations
+### === Using `mut` in pointer declarations ===
 
 In a pointer declaration, `mut` can be used in two ways:
 
