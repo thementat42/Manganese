@@ -150,8 +150,35 @@ auto IRGenerator::visit(ast::NumberLiteralExpression* expression) -> visit_t {
     return std::visit(numberVisitor, expression->value);
 }
 auto IRGenerator::visit(ast::PostfixExpression* expression) -> visit_t {
-    DISCARD(expression);
-    NOT_IMPLEMENTED("Codegen is not available yet");
+    if (expression->op != lexer::TokenType::Inc && expression->op != lexer::TokenType::Dec) {
+        ASSERT_UNREACHABLE(std::format("Unsupported postfix operator: {}", static_cast<int>(expression->op)));
+        return nullptr;
+    }
+    llvm::Value* left = visit(expression->left);
+    llvm::Value* oldValue = theBuilder->CreateLoad(left->getType(), left, "loadtmp");
+    if (semantic::isAnyInt(expression->left->getType())) {
+        bool isSigned = semantic::isSignedInt(expression->left->getType());
+        llvm::Value* one = llvm::ConstantInt::get(oldValue->getType(), 1, isSigned);
+        llvm::Value* newValue;
+        if (expression->op == lexer::TokenType::Inc) {
+            newValue = theBuilder->CreateAdd(oldValue, one, "inc");
+        } else {
+            newValue = theBuilder->CreateSub(oldValue, one, "dec");
+        }
+        theBuilder->CreateStore(newValue, left);
+        return oldValue;  // Postfix increment/decrement returns the old value
+    } else {
+        // Floating point types
+        llvm::Value* one = llvm::ConstantFP::get(oldValue->getType(), 1.0);
+        llvm::Value* newValue;
+        if (expression->op == lexer::TokenType::Inc) {
+            newValue = theBuilder->CreateFAdd(oldValue, one, "finc");
+        } else {
+            newValue = theBuilder->CreateFSub(oldValue, one, "fdec");
+        }
+        theBuilder->CreateStore(newValue, left);
+        return oldValue;
+    }
 }
 auto IRGenerator::visit(ast::PrefixExpression* expression) -> visit_t {
     DISCARD(expression);
