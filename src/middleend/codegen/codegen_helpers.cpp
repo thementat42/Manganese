@@ -21,7 +21,11 @@ auto IRGenerator::generateShortCircuitBinaryExpression(ast::BinaryExpression* ex
         - If the left operand is true, we can short-circuit to true (since true || b = true).
         - If the left operand is false, we evaluate the right operand (since false || b = b).
 
-    LLVM doesn't have built-in short-circuiting behaviour, so we can model this using branches (skipping over the value of right if we don't need to evaluate it) and storing where we came from (if we arrived at the end straight from the left, we short ciruited, so use the short-circuit value. if we arrived from the right, we didn't, so use the value of right)
+    LLVM doesn't have built-in short-circuiting behaviour, so we can model this using branches
+    Each side of the expression has a branch. If the left side can be short-circuited, we jump over the right
+    side and go straight to setting the result to the short circuit value (true for OR and false for AND).
+    If the left side can't be short circuited, we continue to evaluating the right branch, then setting the result
+    to the value of the right hand side.
 */
 
     llvm::Value* left = visit(expression->left);
