@@ -13,19 +13,19 @@ namespace Manganese {
 
 namespace codegen {
 
-auto IRGenerator::visit(ast::AggregateInstantiationExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::ArrayLiteralExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::AssignmentExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::BinaryExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     using enum lexer::TokenType;
     if (expression->op == And || expression->op == Or) { return generateShortCircuitBinaryExpression(expression); }
     llvm::Value* left = visit(expression->left);
@@ -74,24 +74,24 @@ auto IRGenerator::visit(ast::BinaryExpression* expression) -> visit_t {
             return nullptr;
     }
 }
-auto IRGenerator::visit(ast::BoolLiteralExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
     // Note: LLVM doesn't have a dedicated boolean type per se (it represents boolean values as i1)
     return llvm::ConstantInt::get(llvm::Type::getInt1Ty(*theContext), expression->value);
 }
-auto IRGenerator::visit(ast::CharLiteralExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
     // Since we're using char32_t for character literals
     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*theContext), static_cast<uint32_t>(expression->value),
                                   /*isSigned=*/false);
 }
-auto IRGenerator::visit(ast::FunctionCallExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::GenericExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::GenericExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::IdentifierExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
     // Look up the identifier in the named values map
     llvm::Value* value = namedValues[expression->value];
     if (!value) {
@@ -101,15 +101,15 @@ auto IRGenerator::visit(ast::IdentifierExpression* expression) -> visit_t {
     }
     return value;
 }
-auto IRGenerator::visit(ast::IndexExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::IndexExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::MemberAccessExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::NumberLiteralExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     auto numberVisitor = [this](auto&& arg) -> llvm::Constant* {
         llvm::LLVMContext& ctxt = *theContext;
         using T = std::decay_t<decltype(arg)>;
@@ -133,7 +133,7 @@ auto IRGenerator::visit(ast::NumberLiteralExpression* expression) -> visit_t {
     };
     return std::visit(numberVisitor, expression->value);
 }
-auto IRGenerator::visit(ast::PostfixExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     if (expression->op != lexer::TokenType::Inc && expression->op != lexer::TokenType::Dec) {
         ASSERT_UNREACHABLE(std::format("Unsupported postfix operator: {}", static_cast<int>(expression->op)));
         return nullptr;
@@ -164,19 +164,19 @@ auto IRGenerator::visit(ast::PostfixExpression* expression) -> visit_t {
         return oldValue;
     }
 }
-auto IRGenerator::visit(ast::PrefixExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::ScopeResolutionExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::StringLiteralExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::TypeCastExpression* expression) -> visit_t {
+auto IRGenerator::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }

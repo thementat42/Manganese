@@ -11,7 +11,7 @@
 namespace Manganese {
 
 namespace codegen {
-auto IRGenerator::generateShortCircuitBinaryExpression(ast::BinaryExpression* expression) noexcept -> visit_t {
+auto IRGenerator::generateShortCircuitBinaryExpression(ast::BinaryExpression* expression) noexcept -> exprvisit_t {
     /*
     We want short-circuit behaviour for logical AND and OR operations.
     For AND:
