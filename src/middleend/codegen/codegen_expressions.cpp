@@ -1,10 +1,13 @@
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Function.h>
 #include <llvm/IR/Value.h>
 
+#include <frontend/lexer.hpp>
+#include <frontend/semantic.hpp>
 #include <global_macros.hpp>
 #include <middleend/codegen/codegen_base.hpp>
-#include <frontend/semantic.hpp>
 #include <type_traits>
-#include "frontend/semantic/semantic_analyzer.hpp"
 
 namespace Manganese {
 
@@ -23,7 +26,8 @@ auto IRGenerator::visit(ast::AssignmentExpression* expression) -> visit_t {
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
 auto IRGenerator::visit(ast::BinaryExpression* expression) -> visit_t {
-
+    using enum lexer::TokenType;
+    if (expression->op == And || expression->op == Or) { return generateShortCircuitBinaryExpression(expression); }
     llvm::Value* left = visit(expression->left);
     llvm::Value* right = visit(expression->right);
     if (!left || !right) {
@@ -32,57 +36,37 @@ auto IRGenerator::visit(ast::BinaryExpression* expression) -> visit_t {
         return nullptr;
     }
     switch (expression->op) {
-
         // TODO: Handle unsigned/signed distinction in division and mod
-        case lexer::TokenType::Plus:
-            return theBuilder->CreateAdd(left, right, "addtmp");
-        case lexer::TokenType::Minus:
-            return theBuilder->CreateSub(left, right, "subtmp");
-        case lexer::TokenType::Mul:
-            return theBuilder->CreateMul(left, right, "multmp");
-        case lexer::TokenType::Div:
-            return theBuilder->CreateSDiv(left, right, "divtmp");
-        case lexer::TokenType::FloorDiv:
+        case Plus: return theBuilder->CreateAdd(left, right, "addtmp");
+        case Minus: return theBuilder->CreateSub(left, right, "subtmp");
+        case Mul: return theBuilder->CreateMul(left, right, "multmp");
+        case Div: return theBuilder->CreateSDiv(left, right, "divtmp");
+        case FloorDiv:
             NOT_IMPLEMENTED("Floor division is not implemented yet");
             return nullptr;  // Placeholder for future implementation
-        case lexer::TokenType::Mod:
-            return theBuilder->CreateSRem(left, right, "modtmp");
-        case lexer::TokenType::Exp:
+        case Mod: return theBuilder->CreateSRem(left, right, "modtmp");
+        case Exp:
             NOT_IMPLEMENTED("Exponentiation is not implemented yet");
             return nullptr;  // Placeholder for future implementation
-        case lexer::TokenType::GreaterThan:
-            return theBuilder->CreateICmpSGT(left, right, "cmptmp");
-        case lexer::TokenType::GreaterThanOrEqual:
-            return theBuilder->CreateICmpSGE(left, right, "cmptmp");
-        case lexer::TokenType::LessThan:
-            return theBuilder->CreateICmpSLT(left, right, "cmptmp");
-        case lexer::TokenType::LessThanOrEqual:
-            return theBuilder->CreateICmpSLE(left, right, "cmptmp");
-        case lexer::TokenType::Equal:
-            return theBuilder->CreateICmpEQ(left, right, "cmptmp");
-        case lexer::TokenType::NotEqual:
-            return theBuilder->CreateICmpNE(left, right, "cmptmp");
-        case lexer::TokenType::And:
-        case lexer::TokenType::Or:
-            NOT_IMPLEMENTED("Logical operators (and/or) are not implemented yet");
-            return nullptr;  // Placeholder for future implementation
-        case lexer::TokenType::BitAnd:
-            return theBuilder->CreateAnd(left, right, "bitandtmp");
-        case lexer::TokenType::BitOr:
-            return theBuilder->CreateOr(left, right, "bitorTmp");
-        case lexer::TokenType::BitXor:
-            return theBuilder->CreateXor(left, right, "bitxortmp");
-        case lexer::TokenType::BitLShift:
-            return theBuilder->CreateShl(left, right, "bitshltmp");
-        case lexer::TokenType::BitRShift:
+        case GreaterThan: return theBuilder->CreateICmpSGT(left, right, "cmptmp");
+        case GreaterThanOrEqual: return theBuilder->CreateICmpSGE(left, right, "cmptmp");
+        case LessThan: return theBuilder->CreateICmpSLT(left, right, "cmptmp");
+        case LessThanOrEqual: return theBuilder->CreateICmpSLE(left, right, "cmptmp");
+        case Equal: return theBuilder->CreateICmpEQ(left, right, "cmptmp");
+        case NotEqual: return theBuilder->CreateICmpNE(left, right, "cmptmp");
+        case BitAnd: return theBuilder->CreateAnd(left, right, "bitandtmp");
+        case BitOr: return theBuilder->CreateOr(left, right, "bitorTmp");
+        case BitXor: return theBuilder->CreateXor(left, right, "bitxortmp");
+        case BitLShift: return theBuilder->CreateShl(left, right, "bitshltmp");
+        case BitRShift:
             if (semantic::isSignedInt(expression->left->getType())) {
                 return theBuilder->CreateAShr(left, right, "ashrtmp");
             }
             return theBuilder->CreateLShr(left, right, "lshrtmp");
-        case lexer::TokenType::MemberAccess:
+        case MemberAccess:
             NOT_IMPLEMENTED("Member access operator is not implemented yet");
             return nullptr;  // Placeholder for future implementation
-        case lexer::TokenType::ScopeResolution:
+        case ScopeResolution:
             NOT_IMPLEMENTED("Scope resolution operator is not implemented yet");
             return nullptr;  // Placeholder for future implementation
         default:
@@ -131,8 +115,8 @@ auto IRGenerator::visit(ast::NumberLiteralExpression* expression) -> visit_t {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
             // Note: llvm::ConstantInt::get expects a uint64_t for the value, so we cast it accordingly
-            // This does not change the actual value since LLVM will interpret the bits as a signed integer (from the
-            // isSigned parameter)
+            // This does not change the actual value since LLVM will interpret the bits as a signed integer (from
+            // the isSigned parameter)
 
             return llvm::ConstantInt::get(llvm::IntegerType::get(ctxt, getBitWidth<T>()), static_cast<uint64_t>(arg),
                                           /*isSigned=*/true);

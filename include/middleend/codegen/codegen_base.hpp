@@ -87,6 +87,9 @@ class IRGenerator final : public visitor::Visitor<llvm::Value*> {
     visit_t visit(ast::GenericType*) override;
     visit_t visit(ast::PointerType*) override;
     visit_t visit(ast::SymbolType*) override;
+
+    // ===== Helper Functions =====
+    visit_t generateShortCircuitBinaryExpression(ast::BinaryExpression* expression) noexcept;
 };
 
 // ===== Helper Functions that are not part of the IRGenerator class =====
