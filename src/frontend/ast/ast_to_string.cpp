@@ -15,35 +15,6 @@
 #include <sstream>
 #include <string>
 #include <variant>
-#include "frontend/ast/ast_base.hpp"
-
-namespace std {
-
-template <>
-struct formatter<Manganese::ast::ExpressionUPtr_t> : formatter<std::string> {
-    template <typename FormatContext>
-    auto format(const Manganese::ast::Expression& expr, FormatContext& ctx) const {
-        return formatter<std::string>::format(Manganese::ast::toStringOr(&expr), ctx);
-    }
-};
-
-template <>
-struct formatter<Manganese::ast::StatementUPtr_t> : formatter<std::string> {
-    template <typename FormatContext>
-    auto format(const Manganese::ast::Statement& stmt, FormatContext& ctx) const {
-        return formatter<std::string>::format(Manganese::ast::toStringOr(&stmt), ctx);
-    }
-};
-
-template <>
-struct formatter<Manganese::ast::TypeSPtr_t> : formatter<std::string> {
-    template <typename FormatContext>
-    auto format(const Manganese::ast::Type& type, FormatContext& ctx) const {
-        return formatter<std::string>::format(Manganese::ast::toStringOr(&type), ctx);
-    }
-};
-
-} // namespace std
 
 namespace Manganese {
 namespace ast {
@@ -84,11 +55,11 @@ std::string ArrayLiteralExpression::toString() const {
 }
 
 std::string AssignmentExpression::toString() const {
-    return std::format("({} {} {})", assignee, lexer::tokenTypeToString(op), value);
+    return std::format("({} {} {})", assignee->toString(), lexer::tokenTypeToString(op), value->toString());
 }
 
 std::string BinaryExpression::toString() const {
-    return std::format("({} {} {})", left, lexer::tokenTypeToString(op), right);
+    return std::format("({} {} {})", left->toString(), lexer::tokenTypeToString(op), right->toString());
 }
 
 std::string BoolLiteralExpression::toString() const { return value ? "true" : "false"; }
@@ -121,9 +92,9 @@ std::string GenericExpression::toString() const {
 
 std::string IdentifierExpression::toString() const { return value; }
 
-std::string IndexExpression::toString() const { return std::format("{}[{}]", variable, index); }
+std::string IndexExpression::toString() const { return std::format("{}[{}]", variable->toString(), index->toString()); }
 
-std::string MemberAccessExpression::toString() const { return std::format("{}.{}", object, property); }
+std::string MemberAccessExpression::toString() const { return std::format("{}.{}", object->toString(), property); }
 
 std::string NumberLiteralExpression::toString() const {
     std::ostringstream oss;
@@ -164,24 +135,24 @@ std::string NumberLiteralExpression::toString() const {
 }
 
 std::string PostfixExpression::toString() const {
-    return std::format("({}{})", left, lexer::tokenTypeToString(op));
+    return std::format("({}{})", left->toString(), lexer::tokenTypeToString(op));
 }
 
 std::string PrefixExpression::toString() const {
-    return std::format("({}{})", lexer::tokenTypeToString(op), right);
+    return std::format("({}{})", lexer::tokenTypeToString(op), right->toString());
 }
 
-std::string ScopeResolutionExpression::toString() const { return std::format("{}::{}", scope, element); }
+std::string ScopeResolutionExpression::toString() const { return std::format("{}::{}", scope->toString(), element); }
 
 std::string StringLiteralExpression::toString() const { return std::format("\"{}\"", value); }
 
 std::string TypeCastExpression::toString() const {
-    return std::format("({} as {})", originalValue, targetType);
+    return std::format("({} as {})", originalValue->toString(), targetType->toString());
 }
 
 // ===== Statements =====
 
-std::string AliasStatement::toString() const { return std::format("alias ({}) as {};", baseType, alias); }
+std::string AliasStatement::toString() const { return std::format("alias ({}) as {};", baseType->toString(), alias); }
 
 std::string BreakStatement::toString() const { return "break;"; }
 
@@ -361,7 +332,7 @@ std::string GenericType::toString() const {
 }
 
 std::string PointerType::toString() const {
-    return std::format("ptr {}{}", (isMutable? "mut " : ""), baseType);
+    return std::format("ptr {}{}", (isMutable? "mut " : ""), baseType->toString());
 }
 
 std::string SymbolType::toString() const { return name; }
