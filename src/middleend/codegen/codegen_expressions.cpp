@@ -9,6 +9,8 @@
 #include <middleend/codegen/codegen_base.hpp>
 #include <type_traits>
 
+#include "frontend/semantic/semantic_analyzer.hpp"
+
 namespace Manganese {
 
 namespace codegen {
@@ -28,41 +30,54 @@ auto IRGenerator::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
 auto IRGenerator::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     using enum lexer::TokenType;
     if (expression->op == And || expression->op == Or) { return generateShortCircuitBinaryExpression(expression); }
-    llvm::Value* left = visit(expression->left);
-    llvm::Value* right = visit(expression->right);
-    if (!left || !right) {
+    ast::Expression* left = expression->left.get();
+    ast::Expression* right = expression->right.get();
+    llvm::Value* leftValue = visit(left);
+    llvm::Value* rightValue = visit(right);
+    if (!leftValue || !rightValue) {
         // If either side is null, we cannot generate the binary expression
         ASSERT_UNREACHABLE("Left or right expression in binary expression is null");
         return nullptr;
     }
     switch (expression->op) {
         // TODO: Handle unsigned/signed distinction in division and mod
-        case Plus: return theBuilder->CreateAdd(left, right, "addtmp");
-        case Minus: return theBuilder->CreateSub(left, right, "subtmp");
-        case Mul: return theBuilder->CreateMul(left, right, "multmp");
-        case Div: return theBuilder->CreateSDiv(left, right, "divtmp");
+        case Plus: return theBuilder->CreateAdd(leftValue, rightValue, "addtmp");
+        case Minus: return theBuilder->CreateSub(leftValue, rightValue, "subtmp");
+        case Mul: return theBuilder->CreateMul(leftValue, rightValue, "multmp");
+        case Div:
+            if (semantic::isUInt(left->getType()) && semantic::isUInt(right->getType())) {
+                // Only do unsigned division if both arguments are unsigned (since there's no sign info to lose)
+                return theBuilder->CreateUDiv(leftValue, rightValue, "udivtmp");
+            } else if (semantic::isFloat(left->getType())
+                       || semantic::isFloat(right->getType())) {
+                // If at least one of the arguments is a float, we want to preserve that
+                return theBuilder->CreateFDiv(leftValue, rightValue, "fdivtmp");
+            } else {
+                // IF at least one of the arguments is signed, we want to preserve signedness
+                return theBuilder->CreateSDiv(leftValue, rightValue, "sdivtmp");
+            }
         case FloorDiv:
             NOT_IMPLEMENTED("Floor division is not implemented yet");
             return nullptr;  // Placeholder for future implementation
-        case Mod: return theBuilder->CreateSRem(left, right, "modtmp");
+        case Mod: return theBuilder->CreateSRem(leftValue, rightValue, "modtmp");
         case Exp:
             NOT_IMPLEMENTED("Exponentiation is not implemented yet");
             return nullptr;  // Placeholder for future implementation
-        case GreaterThan: return theBuilder->CreateICmpSGT(left, right, "cmptmp");
-        case GreaterThanOrEqual: return theBuilder->CreateICmpSGE(left, right, "cmptmp");
-        case LessThan: return theBuilder->CreateICmpSLT(left, right, "cmptmp");
-        case LessThanOrEqual: return theBuilder->CreateICmpSLE(left, right, "cmptmp");
-        case Equal: return theBuilder->CreateICmpEQ(left, right, "cmptmp");
-        case NotEqual: return theBuilder->CreateICmpNE(left, right, "cmptmp");
-        case BitAnd: return theBuilder->CreateAnd(left, right, "bitandtmp");
-        case BitOr: return theBuilder->CreateOr(left, right, "bitorTmp");
-        case BitXor: return theBuilder->CreateXor(left, right, "bitxortmp");
-        case BitLShift: return theBuilder->CreateShl(left, right, "bitshltmp");
+        case GreaterThan: return theBuilder->CreateICmpSGT(leftValue, rightValue, "cmptmp");
+        case GreaterThanOrEqual: return theBuilder->CreateICmpSGE(leftValue, rightValue, "cmptmp");
+        case LessThan: return theBuilder->CreateICmpSLT(leftValue, rightValue, "cmptmp");
+        case LessThanOrEqual: return theBuilder->CreateICmpSLE(leftValue, rightValue, "cmptmp");
+        case Equal: return theBuilder->CreateICmpEQ(leftValue, rightValue, "cmptmp");
+        case NotEqual: return theBuilder->CreateICmpNE(leftValue, rightValue, "cmptmp");
+        case BitAnd: return theBuilder->CreateAnd(leftValue, rightValue, "bitandtmp");
+        case BitOr: return theBuilder->CreateOr(leftValue, rightValue, "bitorTmp");
+        case BitXor: return theBuilder->CreateXor(leftValue, rightValue, "bitxortmp");
+        case BitLShift: return theBuilder->CreateShl(leftValue, rightValue, "bitshltmp");
         case BitRShift:
-            if (semantic::isSignedInt(expression->left->getType())) {
-                return theBuilder->CreateAShr(left, right, "ashrtmp");
+            if (semantic::isSignedInt(left->getType())) {
+                return theBuilder->CreateAShr(leftValue, rightValue, "ashrtmp");
             }
-            return theBuilder->CreateLShr(left, right, "lshrtmp");
+            return theBuilder->CreateLShr(leftValue, rightValue, "lshrtmp");
         case MemberAccess:
             NOT_IMPLEMENTED("Member access operator is not implemented yet");
             return nullptr;  // Placeholder for future implementation
@@ -138,10 +153,11 @@ auto IRGenerator::visit(ast::PostfixExpression* expression) -> exprvisit_t {
         ASSERT_UNREACHABLE(std::format("Unsupported postfix operator: {}", static_cast<int>(expression->op)));
         return nullptr;
     }
-    llvm::Value* left = visit(expression->left);
-    llvm::Value* oldValue = theBuilder->CreateLoad(left->getType(), left, "loadtmp");
-    if (semantic::isAnyInt(expression->left->getType())) {
-        bool isSigned = semantic::isSignedInt(expression->left->getType());
+    ast::Expression* left = expression->left.get();
+    llvm::Value* leftVal = visit(expression->left);
+    llvm::Value* oldValue = theBuilder->CreateLoad(leftVal->getType(), leftVal, "loadtmp");
+    if (semantic::isAnyInt(left->getType())) {
+        bool isSigned = semantic::isSignedInt(left->getType());
         llvm::Value* one = llvm::ConstantInt::get(oldValue->getType(), 1, isSigned);
         llvm::Value* newValue;
         if (expression->op == lexer::TokenType::Inc) {
@@ -149,7 +165,7 @@ auto IRGenerator::visit(ast::PostfixExpression* expression) -> exprvisit_t {
         } else {
             newValue = theBuilder->CreateSub(oldValue, one, "dec");
         }
-        theBuilder->CreateStore(newValue, left);
+        theBuilder->CreateStore(newValue, leftVal);
         return oldValue;  // Postfix increment/decrement returns the old value
     } else {
         // Floating point types
@@ -160,7 +176,7 @@ auto IRGenerator::visit(ast::PostfixExpression* expression) -> exprvisit_t {
         } else {
             newValue = theBuilder->CreateFSub(oldValue, one, "fdec");
         }
-        theBuilder->CreateStore(newValue, left);
+        theBuilder->CreateStore(newValue, leftVal);
         return oldValue;
     }
 }
