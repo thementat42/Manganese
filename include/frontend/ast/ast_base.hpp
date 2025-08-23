@@ -92,10 +92,9 @@ class ASTNode {
     virtual void dump(std::ostream& os, int indent = 0) const = 0;
 #endif  // DEBUG
 
-    constexpr inline size_t getLine() const noexcept { return line; }
-    constexpr inline void setLine(size_t line_) noexcept { line = line_; }
+    constexpr inline size_t getLine() const noexcept { return line; } 
     constexpr inline size_t getColumn() const noexcept { return column; }
-    constexpr inline void setColumn(size_t column_) noexcept { column = column_; }
+    constexpr inline void setLineColumn(size_t line_, size_t column_) noexcept {line = line_; column = column_;}
 };
 
 class Expression : public ASTNode {
