@@ -108,7 +108,7 @@ bool SemanticAnalyzer::checkAggregateFieldAssignmentExpression(ast::AssignmentEx
 
     // Check if the field is mutable
     if (!aggregateField->isMutable) {
-        logError("Cannot modify immutable field '{}' of variable '{}' (of type {})."
+        logError("Cannot modify immutable field '{}' of variable '{}' (of type {}). "
                  "To make it mutable, declare it using 'mut' in the aggregate declaration ('{} : mut {}')",
                  expression, memberAccessExpression->property, toStringOr(memberAccessExpression->object),
                  symbolType->name, memberAccessExpression->property, toStringOr(aggregateField->type));
