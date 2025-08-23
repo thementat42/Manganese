@@ -8,12 +8,42 @@
  * In the test suite, they are used to ensure the program is parsed correctly
  */
 #include <algorithm>
+#include <format>
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
 #include <iomanip>
 #include <sstream>
 #include <string>
 #include <variant>
+#include "frontend/ast/ast_base.hpp"
+
+namespace std {
+
+template <>
+struct formatter<Manganese::ast::ExpressionUPtr_t> : formatter<std::string> {
+    template <typename FormatContext>
+    auto format(const Manganese::ast::Expression& expr, FormatContext& ctx) const {
+        return formatter<std::string>::format(Manganese::ast::toStringOr(&expr), ctx);
+    }
+};
+
+template <>
+struct formatter<Manganese::ast::StatementUPtr_t> : formatter<std::string> {
+    template <typename FormatContext>
+    auto format(const Manganese::ast::Statement& stmt, FormatContext& ctx) const {
+        return formatter<std::string>::format(Manganese::ast::toStringOr(&stmt), ctx);
+    }
+};
+
+template <>
+struct formatter<Manganese::ast::TypeSPtr_t> : formatter<std::string> {
+    template <typename FormatContext>
+    auto format(const Manganese::ast::Type& type, FormatContext& ctx) const {
+        return formatter<std::string>::format(Manganese::ast::toStringOr(&type), ctx);
+    }
+};
+
+} // namespace std
 
 namespace Manganese {
 namespace ast {
@@ -54,25 +84,16 @@ std::string ArrayLiteralExpression::toString() const {
 }
 
 std::string AssignmentExpression::toString() const {
-    std::string opStr = lexer::tokenTypeToString(op);
-    return "(" + assignee->toString() + " " + opStr + " " + value->toString() + ")";
+    return std::format("({} {} {})", assignee, lexer::tokenTypeToString(op), value);
 }
 
 std::string BinaryExpression::toString() const {
-    std::ostringstream oss;
-    oss << "(" << left->toString() << " ";
-    oss << lexer::tokenTypeToString(op) << " ";
-    oss << right->toString() << ")";
-    return oss.str();
+    return std::format("({} {} {})", left, lexer::tokenTypeToString(op), right);
 }
 
 std::string BoolLiteralExpression::toString() const { return value ? "true" : "false"; }
 
-std::string CharLiteralExpression::toString() const {
-    std::ostringstream oss;
-    oss << "'" << static_cast<char>(value) << "'";
-    return oss.str();
-}
+std::string CharLiteralExpression::toString() const { return std::format("'{}'", static_cast<char>(value)); }
 
 std::string FunctionCallExpression::toString() const {
     std::ostringstream oss;
@@ -100,9 +121,9 @@ std::string GenericExpression::toString() const {
 
 std::string IdentifierExpression::toString() const { return value; }
 
-std::string IndexExpression::toString() const { return variable->toString() + "[" + index->toString() + "]"; }
+std::string IndexExpression::toString() const { return std::format("{}[{}]", variable, index); }
 
-std::string MemberAccessExpression::toString() const { return object->toString() + "." + property; }
+std::string MemberAccessExpression::toString() const { return std::format("{}.{}", object, property); }
 
 std::string NumberLiteralExpression::toString() const {
     std::ostringstream oss;
@@ -143,26 +164,24 @@ std::string NumberLiteralExpression::toString() const {
 }
 
 std::string PostfixExpression::toString() const {
-    std::string opStr = lexer::tokenTypeToString(op);
-    return "(" + left->toString() + opStr + ")";
+    return std::format("({}{})", left, lexer::tokenTypeToString(op));
 }
 
 std::string PrefixExpression::toString() const {
-    std::string opStr = lexer::tokenTypeToString(op);
-    return "(" + opStr + right->toString() + ")";
+    return std::format("({}{})", lexer::tokenTypeToString(op), right);
 }
 
-std::string ScopeResolutionExpression::toString() const { return scope->toString() + "::" + element; }
+std::string ScopeResolutionExpression::toString() const { return std::format("{}::{}", scope, element); }
 
-std::string StringLiteralExpression::toString() const { return "\"" + value + "\""; }
+std::string StringLiteralExpression::toString() const { return std::format("\"{}\"", value); }
 
 std::string TypeCastExpression::toString() const {
-    return "(" + originalValue->toString() + " as " + targetType->toString() + ")";
+    return std::format("({} as {})", originalValue, targetType);
 }
 
 // ===== Statements =====
 
-std::string AliasStatement::toString() const { return "alias (" + baseType->toString() + ") as " + alias + ";"; }
+std::string AliasStatement::toString() const { return std::format("alias ({}) as {};", baseType, alias); }
 
 std::string BreakStatement::toString() const { return "break;"; }
 
@@ -273,13 +292,14 @@ std::string SwitchStatement::toString() const {
 
 std::string VariableDeclarationStatement::toString() const {
     // Convert visibility to string
-    std::string prefix = isMutable ? "let mut " : "let ";
-    std::string typeStr = ": " + visibilityToString(visibility) + (type ? type->toString() : "auto");
+    std::string typeStr = visibilityToString(visibility) + toStringOr(type, "auto");
     std::string valueStr = value ? " = " + value->toString() : "";
-    return "(" + prefix + name + typeStr + valueStr + ");";
+    return std::format("({} {}: {}{});", isMutable ? "let mut" : "let", name, typeStr, valueStr);
 }
 
-std::string ReturnStatement::toString() const { return "return" + (value ? " " + value->toString() : "") + ";"; }
+std::string ReturnStatement::toString() const {
+    return std::format("return{};", (value ? " " + value->toString() : ""));
+}
 
 std::string WhileLoopStatement::toString() const {
     std::ostringstream oss;
@@ -315,7 +335,6 @@ std::string ArrayType::toString() const {
     return oss.str();
 }
 
-
 std::string FunctionType::toString() const {
     std::ostringstream oss;
     oss << "func(";
@@ -325,7 +344,7 @@ std::string FunctionType::toString() const {
         if (i < parameterTypes.size() - 1) [[likely]] { oss << ", "; }
     }
     oss << ")";
-    oss << " -> " << (returnType ? returnType->toString() : "no return");
+    oss << " -> " << toStringOr(returnType, "no return");
 
     return oss.str();
 }
@@ -342,10 +361,7 @@ std::string GenericType::toString() const {
 }
 
 std::string PointerType::toString() const {
-    std::string result = "ptr ";
-    if (isMutable) { result += "mut "; }
-    result += baseType->toString();
-    return result;
+    return std::format("ptr {}{}", (isMutable? "mut " : ""), baseType);
 }
 
 std::string SymbolType::toString() const { return name; }
