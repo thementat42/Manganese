@@ -154,7 +154,7 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
             = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation").getLexeme();
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
         // want precedence to be 1 higher than assignment (e.g. field = x = 10 is invalid)
-        constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+        constexpr auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         auto value = parseExpression(static_cast<Precedence>(precedence_));
 
         auto duplicate = std::find_if(
@@ -182,7 +182,7 @@ ExpressionUPtr_t Parser::parseArrayInstantiationExpression() noexcept_if_release
         if (peekTokenType() == lexer::TokenType::RightSquare) {
             break;  // Done instantiation
         }
-        constexpr auto precedence = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+        constexpr auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         auto element = parseExpression(static_cast<Precedence>(precedence));
         elements.push_back(std::move(element));
         if (peekTokenType() != lexer::TokenType::RightSquare) {
@@ -247,7 +247,7 @@ ExpressionUPtr_t Parser::parseGenericExpression(ExpressionUPtr_t left, Precedenc
 ExpressionUPtr_t Parser::parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release {
     DISCARD(consumeToken());  // Consume the left square bracket
     DISCARD(precedence);  // Avoid unused variable warning
-    constexpr auto precedence_ = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+    constexpr auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
     ExpressionUPtr_t index = parseExpression(static_cast<Precedence>(precedence_));
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
     return std::make_unique<ast::IndexExpression>(std::move(left), std::move(index));

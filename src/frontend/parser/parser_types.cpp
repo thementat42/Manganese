@@ -126,7 +126,7 @@ TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) noex
         if (peekTokenType() == TokenType::RightSquare) {
             break;  // Done with type parameters
         }
-        auto nextPrecedence = static_cast<std::underlying_type<Precedence>::type>(Precedence::Assignment) + 1;
+        auto nextPrecedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         typeParameters.push_back(parseType(static_cast<Precedence>(nextPrecedence)));
         if (peekTokenType() != TokenType::RightSquare) {
             expectToken(TokenType::Comma, "Expected ',' to separate generic types");
