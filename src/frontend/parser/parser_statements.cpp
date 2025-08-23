@@ -196,7 +196,6 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() noexcept_if_release {
 }
 
 StatementUPtr_t Parser::parseFunctionDeclarationStatement() noexcept_if_release {
-    // TODO: Handle function visibility
     // TODO: Handle function attributes
     // TODO: Handle function default parameters
     // TODO: Handle function variadic parameters
