@@ -37,7 +37,8 @@ void SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) {
         .line = statement->getLine(),
         .column = statement->getColumn(),
         .declarationNode = statement,
-        // e.g. if Foo and Bar are aggregates, having Foo = Bar doesn't make sense since it'd invalidate existing Foo instances
+        // e.g. if Foo and Bar are aggregates, having Foo = Bar doesn't make sense since it'd invalidate existing Foo
+        // instances
         .isMutable = false,
         .scopeDepth = symbolTable.currentScopeDepth(),
         .visibility = statement->visibility,
@@ -127,11 +128,11 @@ void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
     if (symbolTable.lookupInCurrentScope(statement->name)) {
         logError(
             "Variable {} was already defined in this scope. If you meant to change its value, use {} = {} (without {})",
-            statement, statement->name, statement->name,
-            toStringOr(statement->value), statement->isMutable ? "let mut" : "let");
+            statement, statement->name, statement->name, toStringOr(statement->value),
+            statement->isMutable ? "let mut" : "let");
         isInvalidDeclaration = true;
     }
-    
+
     if (!statement->type && !statement->value) {
         logError("Variable '{}' must have a type or an initializer", statement, statement->name);
         isInvalidDeclaration = true;
@@ -142,7 +143,7 @@ void SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) {
     const Symbol* outerSymbol = nullptr;
     for (int64_t depth = symbolTable.currentScopeDepth() - 1; depth >= 0; --depth) {
         outerSymbol = symbolTable.lookupAtDepth(statement->name, depth);
-        if (outerSymbol) break;
+        if (outerSymbol) { break; }
     }
 
     if (outerSymbol) {
