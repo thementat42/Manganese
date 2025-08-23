@@ -10,8 +10,6 @@
 
 #include <memory>
 #include <utility>
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/parser/operators.hpp"
 
 namespace Manganese {
 namespace parser {

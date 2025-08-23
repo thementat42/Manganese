@@ -13,7 +13,6 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
-#include "io/reader.hpp"
 
 namespace Manganese {
 namespace io {

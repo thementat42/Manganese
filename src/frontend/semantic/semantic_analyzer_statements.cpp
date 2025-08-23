@@ -8,7 +8,6 @@
 #include <global_macros.hpp>
 
 #include <format>
-#include "frontend/ast/ast_statements.hpp"
 
 namespace Manganese {
 namespace semantic {

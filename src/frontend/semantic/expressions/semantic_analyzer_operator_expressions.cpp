@@ -2,8 +2,7 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/semantic_type_helpers.hpp>
 
-#include "frontend/ast/ast_base.hpp"
-#include "global_macros.hpp"
+#include <global_macros.hpp>
 
 namespace Manganese {
 using ast::toStringOr;

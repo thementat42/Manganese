@@ -1,6 +1,5 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
-#include "frontend/ast/ast_base.hpp"
 
 
 namespace Manganese {
