@@ -20,9 +20,8 @@
 namespace Manganese {
 namespace ast {
 // There are lots of implicit conversions between integer types -- for convenience, ignore those warnings
-DISABLE_CONVERSION_WARNING
 
-inline std::string getIndent(int indent) { return std::string(indent * 2, ' '); }
+inline std::string getIndent(size_t indent) { return std::string(indent * 2, ' '); }
 
 // Helper function to get the type of a number variant
 std::string getNumberTypeName(const number_t& value) {
@@ -55,7 +54,7 @@ std::string getNumberTypeName(const number_t& value) {
 
 // ===== Expressions =====
 
-void AggregateInstantiationExpression::dump(std::ostream& os, int indent) const {
+void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AggregateInstantiationExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "Name: " << name << "\n";
@@ -73,7 +72,7 @@ void AggregateInstantiationExpression::dump(std::ostream& os, int indent) const 
     os << getIndent(indent) << "}\n";
 }
 
-void ArrayLiteralExpression::dump(std::ostream& os, int indent) const {
+void ArrayLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ArrayLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "elements: [\n";
@@ -88,7 +87,7 @@ void ArrayLiteralExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void AssignmentExpression::dump(std::ostream& os, int indent) const {
+void AssignmentExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AssignmentExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
@@ -99,7 +98,7 @@ void AssignmentExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void BinaryExpression::dump(std::ostream& os, int indent) const {
+void BinaryExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "BinaryExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
@@ -110,14 +109,14 @@ void BinaryExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void BoolLiteralExpression::dump(std::ostream& os, int indent) const {
+void BoolLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "BoolExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
     os << getIndent(indent) << "}\n";
 }
 
-void CharLiteralExpression::dump(std::ostream& os, int indent) const {
+void CharLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "CharLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: '" << static_cast<char>(value) << "'\n";
@@ -125,7 +124,7 @@ void CharLiteralExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void FunctionCallExpression::dump(std::ostream& os, int indent) const {
+void FunctionCallExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "FunctionCallExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "callee: \n";
@@ -142,7 +141,7 @@ void FunctionCallExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void GenericExpression::dump(std::ostream& os, int indent) const {
+void GenericExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "GenericExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "identifier: " << toStringOr(identifier) << "\n";
@@ -154,14 +153,14 @@ void GenericExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void IdentifierExpression::dump(std::ostream& os, int indent) const {
+void IdentifierExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "IdentifierExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "name: " << value << "\n";
     os << getIndent(indent) << "}\n";
 }
 
-void IndexExpression::dump(std::ostream& os, int indent) const {
+void IndexExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "IndexExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "variable: \n";
@@ -171,7 +170,7 @@ void IndexExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void MemberAccessExpression::dump(std::ostream& os, int indent) const {
+void MemberAccessExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "MemberAccessExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "object: \n";
@@ -180,7 +179,7 @@ void MemberAccessExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void NumberLiteralExpression::dump(std::ostream& os, int indent) const {
+void NumberLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "NumberLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
@@ -188,7 +187,7 @@ void NumberLiteralExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void PostfixExpression::dump(std::ostream& os, int indent) const {
+void PostfixExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "PostfixExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
@@ -197,7 +196,7 @@ void PostfixExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void PrefixExpression::dump(std::ostream& os, int indent) const {
+void PrefixExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "PrefixExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
@@ -206,7 +205,7 @@ void PrefixExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void ScopeResolutionExpression::dump(std::ostream& os, int indent) const {
+void ScopeResolutionExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ScopeResolutionExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "scope: \n";
@@ -215,7 +214,7 @@ void ScopeResolutionExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void StringLiteralExpression::dump(std::ostream& os, int indent) const {
+void StringLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "StringLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
@@ -223,7 +222,7 @@ void StringLiteralExpression::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void TypeCastExpression::dump(std::ostream& os, int indent) const {
+void TypeCastExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "TypeCastExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "expression: \n";
@@ -235,7 +234,7 @@ void TypeCastExpression::dump(std::ostream& os, int indent) const {
 
 // ===== Statements =====
 
-void AliasStatement::dump(std::ostream& os, int indent) const {
+void AliasStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AliasStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "alias: " << alias << "\n";
     os << getIndent(indent + 1) << "base type: ";
@@ -243,11 +242,11 @@ void AliasStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void BreakStatement::dump(std::ostream& os, int indent) const {
+void BreakStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "BreakStatement [" << getLine() << ":" << getColumn() << "]\n";
 }
 
-void AggregateDeclarationStatement::dump(std::ostream& os, int indent) const {
+void AggregateDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AggregateDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
@@ -265,15 +264,15 @@ void AggregateDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void ContinueStatement::dump(std::ostream& os, int indent) const {
+void ContinueStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ContinueStatement [" << getLine() << ":" << getColumn() << "]\n";
 }
 
-void EmptyStatement::dump(std::ostream& os, int indent) const {
+void EmptyStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "EmptyStatement [" << getLine() << ":" << getColumn() << "]\n";
 }
 
-void EnumDeclarationStatement::dump(std::ostream& os, int indent) const {
+void EnumDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "EnumDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
@@ -290,13 +289,13 @@ void EnumDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void ExpressionStatement::dump(std::ostream& os, int indent) const {
+void ExpressionStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ExpressionStatement [" << getLine() << ":" << getColumn() << "] {\n";
     expression->dump(os, indent + 1);
     os << getIndent(indent) << "}\n";
 }
 
-void FunctionDeclarationStatement::dump(std::ostream& os, int indent) const {
+void FunctionDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "FunctionDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
@@ -340,7 +339,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void IfStatement::dump(std::ostream& os, int indent) const {
+void IfStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "IfStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "condition: \n";
     condition->dump(os, indent + 2);
@@ -368,7 +367,7 @@ void IfStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void RepeatLoopStatement::dump(std::ostream& os, int indent) const {
+void RepeatLoopStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "RepeatLoopStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "numIterations: \n";
     numIterations->dump(os, indent + 2);
@@ -378,7 +377,7 @@ void RepeatLoopStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void ReturnStatement::dump(std::ostream& os, int indent) const {
+void ReturnStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ReturnStatement [" << getLine() << ":" << getColumn() << "] {\n";
     if (value) {
         os << getIndent(indent + 1) << "value: \n";
@@ -389,7 +388,7 @@ void ReturnStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void SwitchStatement::dump(std::ostream& os, int indent) const {
+void SwitchStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "SwitchStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "variable: \n";
     variable->dump(os, indent + 2);
@@ -414,7 +413,7 @@ void SwitchStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
+void VariableDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "VariableDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "isMutable: " << (isMutable ? "true" : "false") << "\n";
@@ -444,7 +443,7 @@ void VariableDeclarationStatement::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void WhileLoopStatement::dump(std::ostream& os, int indent) const {
+void WhileLoopStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "WhileLoopStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "body: [\n";
     for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
@@ -456,7 +455,7 @@ void WhileLoopStatement::dump(std::ostream& os, int indent) const {
 
 // ===== Types =====
 
-void ArrayType::dump(std::ostream& os, int indent) const {
+void ArrayType::dump(std::ostream& os, size_t indent) const {
     os << std::string(indent, ' ') << "ArrayType: " << '\n';
     os << std::string(indent + 2, ' ') << "elementType: " << '\n';
     elementType->dump(os, indent + 4);
@@ -467,7 +466,7 @@ void ArrayType::dump(std::ostream& os, int indent) const {
     }
 }
 
-void AggregateType::dump(std::ostream& os, int indent) const {
+void AggregateType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "Type [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "fields: [\n";
 
@@ -480,7 +479,7 @@ void AggregateType::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void FunctionType::dump(std::ostream& os, int indent) const {
+void FunctionType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "FunctionType [" << getLine() << ":" << getColumn() << "] {\n";
 
     // Parameter types
@@ -503,7 +502,7 @@ void FunctionType::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void GenericType::dump(std::ostream& os, int indent) const {
+void GenericType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "GenericType [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "base: ";
     baseType->dump(os, indent + 1);
@@ -516,20 +515,19 @@ void GenericType::dump(std::ostream& os, int indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void PointerType::dump(std::ostream& os, int indent) const {
+void PointerType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "PointerType [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "base type: \n";
     baseType->dump(os, indent + 2);
     os << getIndent(indent) << "}\n";
 }
 
-void SymbolType::dump(std::ostream& os, int indent) const {
+void SymbolType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "SymbolType [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent) << "}\n";
 }
 
-ENABLE_CONVERSION_WARNING
 }  // namespace ast
 }  // namespace Manganese
 #endif  // DEBUG

@@ -21,7 +21,7 @@
 
 #if DEBUG
 #define __OVERRIDE_DUMP_METHOD \
-    void dump(std::ostream& os, int indent = 0) const override;  // Makes overriding dump() less cumbersome to type
+    void dump(std::ostream& os, size_t indent = 0) const override;  // Makes overriding dump() less cumbersome to type
 #else
 #define __OVERRIDE_DUMP_METHOD  // Don't dump in non-debug builds
 #endif
@@ -89,7 +89,7 @@ class ASTNode {
      * @param os The output stream to dump to
      * @param indent The indentation level for pretty-printing
      */
-    virtual void dump(std::ostream& os, int indent = 0) const = 0;
+    virtual void dump(std::ostream& os, size_t indent = 0) const = 0;
 #endif  // DEBUG
 
     constexpr inline size_t getLine() const noexcept { return line; } 
