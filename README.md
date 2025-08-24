@@ -3,15 +3,39 @@
 ![Language: C++](https://img.shields.io/badge/language-C%2B%2B-00599C.svg?logo=c%2B%2B&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](https://opensource.org/licenses/MIT)
 ![CMake](https://img.shields.io/badge/build%20system-CMake-064F8C.svg?logo=cmake)
+![Project Status: WIP](https://img.shields.io/badge/status-work_in_progress-orange)
 
 ![Logo](/logo.svg "Manganese Logo")
-Manganese is a statically typed programming language built on the LLVM framework. It's a project inspired by an autocomplete text parsing task for ESC190 at the University of Toronto. Manganese compiles to LLVM IR, which is then translated into machine code.
+Manganese is a statically-typed programming language built on top of the LLVM framework. It was inspired by the autocomplete text-parsing project
+for ESC190 at the University of Toronto.
 
 This project is licensed under the MIT License. See [LICENSE-MIT](LICENSE-MIT) for details. The LLVM project itself is licensed under the Apache License 2.0 with LLVM Exceptions ([LICENSE-APACHE](LICENSE-APACHE), also available on [LLVM's website](https://llvm.org/LICENSE.txt)).
 
+## Quickstart
+
+If you just want to get into this project:
+
+```bash
+git clone https://github.com/thementat42/Manganese.git
+cd Manganese
+python scripts/build.py
+./manganese
+```
+
+> Note: Make sure you have the necessary [dependencies](#dependencies) installed
+
+## Table of Contents
+
+- [Why Manganese?](#why-manganese)
+- [Dependencies](#dependencies)
+- [Building the compiler](#building)
+- [The testing framework](#testing-framework)
+- [File Structure](#file-structure)
+
 ## Why Manganese?
 
-Manganese is mainly a fun project for learning about compilers and low-level programming. It's not meant for production use and lacks features like a full standard library.
+Manganese is mainly an educational project for learning about compilers, programming language design and low-level programming.
+> Manganese is currently a work-in-progress.
 
 On the off chance that you were considering using Manganese for something important, please don't.
 
@@ -36,20 +60,19 @@ cd Manganese
 
 ### The Python Build Script
 
-If you have python installed, you can use the [`build.py`](/build.py) script to automatically invoke CMake.
-NOTE: The Python script requires `CMake` to be installed and available in the system's `PATH`.
+If you have Python installed, you can use the [`build.py`](/scripts/build.py) script to automatically invoke CMake.
+> Note: The Python script requires `CMake` to be installed and available in the system's `PATH`.
 
 ```bash
-python build.py
+python scripts/build.py
 ```
 
-The Python script will automatically run CMake and build the executable using the system-configures build system (via `cmake --build`).
-It also automatically moves the executable to the root directory.
-The Python script has different command line arguments to control the build process. Run `python build.py --help` to see the available options.
+The Python script will automatically run CMake and build the executable using the system-configured build system (via `cmake --build`).
+The Python script has different command line arguments to control the build process. Run `python scripts/build.py --help` to see the available options.
 
-### Building manually with CMake
+### Building with CMake
 
-If you don't have python, you can install it from [the official Python website](https://www.python.org/) or use CMake directly:
+Building the project with CMake is relatively simple:
 
 ```bash
 mkdir build
@@ -58,23 +81,23 @@ cmake ..
 cmake --build .
 ```
 
-This will create an executable called `manganese` in the `build/bin` directory, which should be moved to the project root.
-To compile Manganese code, use:
+This will create an executable called `manganese` in the `build/bin` directory.
+<!-- To compile Manganese code, use:
 
 ```bash
 ./manganese <source file> -o <output file>
 ```
 
-If no output file is specified, the source file name will be used (e.g. `foo.mn` becomes `foo`).
+If no output file is specified, the source file name will be used (e.g. `foo.mn` becomes `foo`). -->
 
 ## Testing Framework
 
-The [tests](/tests) directory contains tests for the compiler up to IR generation. To run the tests, enable tests during the build:
+The [tests](/tests) directory contains tests for the compiler from lexical analysis through to LLVM IR generation. To run the tests, enable tests during the build:
 
 Using the Python script:
 
 ```bash
-python build.py --tests
+python scripts/build.py --tests
 ```
 
 Or, using CMake directly, run the following commands in the `build` directory:
@@ -84,11 +107,13 @@ cmake .. -DBUILD_TESTS=ON
 cmake --build .
 ```
 
-Then, move the `manganese-tests` executable to the root directory and run the tests (the python script will automatically move the executable):
+Then, move the `manganese` executable to the root directory and run the tests (the python script will automatically move the executable):
 
 ```bash
-./manganese_tests [options]
+./manganese [options]
 ```
+
+> Note: The testing executable _must_ be in the root directory since it relies on relative paths to access source files.
 
 The tests executable takes the following command line arguments:
 
@@ -101,35 +126,35 @@ The tests executable takes the following command line arguments:
 
 Running it with no arguments prints a help message. Any other arguments will be ignored.
 
-Note that the testing executable must be in the root directory since it relies on relative paths to access the source files used for testing.
-
 ## File Structure
 
 This project is divided into several directories:
 
-- [`.spec`](/.spec/): Contains the formal specification of the manganese language, including its EBNF grammar
+- [`.spec`](/.spec/): Contains the formal(-ish) specification of the Manganese language, including its EBNF grammar
 
-- [`docs`](/docs): Language documentation. The documentation represents a hypothetical version of Manganese -- right now, not everything in the docs is implemented, but will be at some point in the future.
-  - [`Syntax`](/docs/syntax/): Documentation for the core language syntax.
+- [`docs`](/docs): Language documentation. The documentation represents a hypothetical version of Manganese; right now, not everything in the docs is implemented, but will be at some point in the future.
   - [`Library`](/docs/library/): Documentation for the standard library
 
 - [`examples`](/examples): Sample Manganese programs
 
 - [`include`](/include): Contains the header files for the compiler, defining the public interface of the compiler, split by phase
-  - [`frontend`](/include/frontend): Header files for the frontend phase (lexer, parser, semantic analyzer)
+  - [`frontend`](/include/frontend): Header files for the frontend phase (lexer, ast, parser, semantic analyzer)
   - [`middleend`](/include/middleend): Header files for the middleend phase (LLVM IR generation, optimization passes)
-  - [`backend`](/include/backend): Header files for the backend phase (LLVM backend to generate machine code)
-  - [`io`](/include/io): Header files for the I/O library, which handles things like logging and file I/O
+  - [`backend`](/include/backend): Header files for the backend phase (LLVM IR to machine code)
+  - [`io`](/include/io): Various I/O utils (error logging and file reading)
+  - [`utils`](/include/utils): miscellaneous utilities (string-to-int conversions, compiler configurations, memory tracking)
 
 - [`src`](/src): The implementation of the compiler, split by phase. This mirrors the structure of the [`include`](/include/) directory.
   - [`frontend`](/src/frontend): Lexer, parser, semantic analyzer
   - [`middleend`](/src/middleend): Generates LLVM IR, runs LLVM's optimization passes
   - [`backend`](/src/backend): LLVM backend to generate machine code
-  - [`io`](/src/io): I/O library implementation, which handles things like logging and file I/O
+  - [`io`](/src/io): Handles logging and file I/O
+  - [`utils`](/src/utils): Utilities (naming is hard)
 
-- [`scripts`](/scripts/): Contains some Python scripts to help generate snippets of C++ code
-  - [`gen_header.py`]: Python script to generate a header file from a .cpp file
-- [`tests`](/tests): Compiler Tests
+- [`scripts`](/scripts/): Contains some Python scripts
+  - [`build.py`](/scripts/build.py): Wraps CMake
+  - [`lint.py`](/scripts/lint.py): Runs clang-tidy (requires clang-tidy to be in the PATH)
+- [`tests`](/tests): Compiler Tests (because making a compiler is hard)
 - [`manganese.cpp`](/manganese.cpp): Entry point for the compiler
 - [`manganese-tests.cpp`](/manganese-tests.cpp): Entry point for running tests
 
@@ -137,10 +162,9 @@ This project is divided into several directories:
 
 The root directory has some other files as well:
 
-- [`build.py`](/build.py): Python script to build the compiler
 - [`.clang-format`](/.clang-format)
 - [`CMakeLists.txt`](/CMakeLists.txt): CMake build script
 - [`LICENSE-MIT`](/LICENSE-MIT) and [`LICENSE-APACHE`](/LICENSE-APACHE): License files
   - This project is licensed under the MIT License.
   - LLVM is licensed under the Apache License 2.0 with LLVM Exceptions.
-- [`logo.svg`](/logo.svg): The Manganese logo
+- [`logo.svg`](/logo.svg): The Manganese logo. This has no specific copyright.
