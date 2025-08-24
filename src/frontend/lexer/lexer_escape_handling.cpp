@@ -168,7 +168,6 @@ std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, bool is
 }
 
 std::string encodeUTF8String(char32_t wideChar) {
-    DISABLE_SIGN_COMPARE_WARNING
     std::string result;
     if (wideChar <= UTF8_1B_MAX) {
         result += static_cast<char>(wideChar);  // Narrow character
@@ -190,7 +189,6 @@ std::string encodeUTF8String(char32_t wideChar) {
     }
 
     return result;
-    ENABLE_SIGN_COMPARE_WARNING
 }
 
 }  // namespace lexer

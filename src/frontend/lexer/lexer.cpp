@@ -524,9 +524,8 @@ bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFl
         NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
         */
 
-    DISABLE_CONVERSION_WARNING
 
-    char currentChar = tolower(peekChar());
+    char currentChar = (char)tolower(peekChar());
     auto readDigits = [this]() -> std::string {
         std::string digits;
         while (!done() && isdigit(peekChar())) { digits += consumeChar(); }
@@ -535,7 +534,7 @@ bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFl
 
     if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {
         std::string suffix;
-        suffix += tolower(consumeChar());
+        suffix += (char)tolower(consumeChar());
 
         // Read the numeric part of the suffix
         std::string numPart = readDigits();
@@ -563,11 +562,11 @@ bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFl
             return false;
         }
     }
-    currentChar = tolower(peekChar());  // Update current character after processing the suffix
+    currentChar = (char)tolower(peekChar());  // Update current character after processing the suffix
     // Scientific notation handling
     if (currentChar == 'e' && base == Base::Decimal) {
         // Scientific notation
-        numberLiteral += tolower(consumeChar());  // Add the 'e' or 'E'
+        numberLiteral += (char)tolower(consumeChar());  // Add the 'e' or 'E'
         currentChar = peekChar();
         if (currentChar == '+' || currentChar == '-') {
             numberLiteral += consumeChar();  // Add the sign
@@ -586,7 +585,7 @@ bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFl
                 return false;
             }
             // Hexadecimal exponentiation (e.g., 0x1.23p4)
-            numberLiteral += tolower(consumeChar());  // Add the 'p' or 'P'
+            numberLiteral += (char)tolower(consumeChar());  // Add the 'p' or 'P'
             currentChar = peekChar();
             if (currentChar == '+' || currentChar == '-') {
                 numberLiteral += consumeChar();  // Add the sign
@@ -599,7 +598,6 @@ bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFl
             numberLiteral += readDigits();  // Add the exponent digits
         }
     }
-    ENABLE_CONVERSION_WARNING
 
     return true;
 }
