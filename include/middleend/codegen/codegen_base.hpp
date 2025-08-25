@@ -45,6 +45,8 @@ class IRGenerator final : public visitor::Visitor<llvm::Value*, void, llvm::Type
     }
 
    private:
+    int64_t globalStrCounter = 0;
+
     // ===== Specific Expression Code Generation =====
     exprvisit_t visit(ast::AggregateInstantiationExpression*) override;
     exprvisit_t visit(ast::ArrayLiteralExpression*) override;
