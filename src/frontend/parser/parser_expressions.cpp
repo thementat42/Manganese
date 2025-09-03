@@ -180,24 +180,17 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
 ExpressionUPtr_t Parser::parseAggregateLiteralExpression() noexcept_if_release {
     DISCARD(consumeToken());  // disacrd the aggregate keyword
 
-    TokenType t
-        = expectToken({TokenType::LeftBrace, TokenType::LeftParen}, "Expected '(' or '{' to start an aggregate literal")
-              .getType();
-    TokenType closingDelimiter = (t == TokenType::LeftBrace) ? TokenType::RightBrace : TokenType::RightParen;
+    expectToken(TokenType::LeftBrace, "Expected '{' to start an aggregate literal");
 
     std::vector<ExpressionUPtr_t> expressions;
-    while (peekTokenType() != closingDelimiter) {
+    while (peekTokenType() != TokenType::RightBrace) {
         expressions.push_back(parseExpression(Precedence::Default));
-        if (peekTokenType() != closingDelimiter) {
-            expectToken(
-                TokenType::Comma,
-                std::format("Expected a ',' to separate aggregate literal fields, or a '{}' to close the declaration",
-                            lexer::tokenTypeToString(closingDelimiter)));
+        if (peekTokenType() != TokenType::RightBrace) {
+            expectToken(TokenType::Comma,
+                        "Expected a ',' to separate aggregate literal fields, or a '}' to close the declaration");
         }
     }
-    expectToken(
-        closingDelimiter,
-        std::format("Expected a '{}' to end an aggreagate literal", lexer::tokenTypeToString(closingDelimiter)));
+    expectToken(TokenType::RightBrace, "Expected a '}' to end an aggreagate literal");
     return std::make_unique<ast::AggregateLiteralExpression>(std::move(expressions));
 }
 
