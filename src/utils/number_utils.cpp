@@ -35,7 +35,7 @@ static const inline suffixMap_t suffixMap = {
 std::optional<number_t> stringToNumber(std::string_view str, Base base, bool isFloat,
                                        const std::string& suffix) noexcept_if_release {
     if (isFloat) {
-        if (suffix == "f" || suffix == "F") {
+        if (suffix == "f32" || suffix == "F32") {
             return stof32(str);
         } else if (suffix == "") {
             auto val = stof32(str);
