@@ -4,6 +4,12 @@
 namespace Manganese {
 namespace semantic {
 using ast::toStringOr;
+
+void SemanticAnalyzer::visit(ast::AggregateLiteralExpression* expression) {
+    DISCARD(expression);
+    NOT_IMPLEMENTED("");
+}
+
 void SemanticAnalyzer::visit(ast::ArrayLiteralExpression* expression) {
     // Check that each element is the same type
     // Assume that the first element's type is the array's type

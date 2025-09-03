@@ -12,10 +12,10 @@
 #if DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
-#include <utils/number_utils.hpp>
-
 #include <string>
+#include <utils/number_utils.hpp>
 #include <variant>
+
 
 namespace Manganese {
 namespace ast {
@@ -70,6 +70,13 @@ void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) con
 
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent) << "}\n";
+}
+
+void AggregateLiteralExpression::dump(std::ostream& os, size_t indent) const {
+    os << getIndent(indent) << "AggregateLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "Elements {\n";
+    for (const auto& element : elements) { element->dump(os, indent + 2); }
+    os << getIndent(indent + 1) << "}\n";
 }
 
 void ArrayLiteralExpression::dump(std::ostream& os, size_t indent) const {

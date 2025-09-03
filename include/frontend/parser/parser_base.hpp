@@ -16,6 +16,7 @@
 #include <frontend/lexer.hpp>
 #include <functional>
 #include <global_macros.hpp>
+#include <initializer_list>
 #include <io/logging.hpp>
 #include <memory>
 #include <string>
@@ -94,6 +95,7 @@ class Parser {
     ExpressionUPtr_t parseExpression(Precedence precedence) noexcept_if_release;
     ExpressionUPtr_t parseAggregateInstantiationExpression(ExpressionUPtr_t left,
                                                            Precedence precedence) noexcept_if_release;
+    ExpressionUPtr_t parseAggregateLiteralExpression() noexcept_if_release;
     ExpressionUPtr_t parseArrayInstantiationExpression() noexcept_if_release;
     ExpressionUPtr_t parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
     ExpressionUPtr_t parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
@@ -168,6 +170,8 @@ class Parser {
 
     Token expectToken(TokenType expectedType);
     Token expectToken(TokenType expectedType, const std::string& errorMessage);
+    Token expectToken(std::initializer_list<TokenType> expectedTypes);
+    Token expectToken(std::initializer_list<TokenType> expectedTypes, const std::string& errorMessage);
 
     /**
      * @brief A wrapper around logging::logError that sets the parser's hasError flag to true.

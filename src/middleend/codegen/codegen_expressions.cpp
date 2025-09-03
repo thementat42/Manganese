@@ -1,6 +1,9 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/GlobalValue.h>
+#include <llvm/IR/GlobalVariable.h>
 #include <llvm/IR/Value.h>
 
 #include <frontend/lexer.hpp>
@@ -16,6 +19,10 @@ namespace Manganese {
 namespace codegen {
 
 auto IRGenerator::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+    DISCARD(expression);
+    NOT_IMPLEMENTED("Codegen is not available yet");
+}
+auto IRGenerator::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
@@ -48,8 +55,7 @@ auto IRGenerator::visit(ast::BinaryExpression* expression) -> exprvisit_t {
             if (semantic::isUInt(left->getType()) && semantic::isUInt(right->getType())) {
                 // Only do unsigned division if both arguments are unsigned (since there's no sign info to lose)
                 return theBuilder->CreateUDiv(leftValue, rightValue, "udivtmp");
-            } else if (semantic::isFloat(left->getType())
-                       || semantic::isFloat(right->getType())) {
+            } else if (semantic::isFloat(left->getType()) || semantic::isFloat(right->getType())) {
                 // If at least one of the arguments is a float, we want to preserve that
                 return theBuilder->CreateFDiv(leftValue, rightValue, "fdivtmp");
             } else {
@@ -189,8 +195,17 @@ auto IRGenerator::visit(ast::ScopeResolutionExpression* expression) -> exprvisit
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
 auto IRGenerator::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
-    DISCARD(expression);
-    NOT_IMPLEMENTED("Codegen is not available yet");
+    llvm::Constant* strConstant = llvm::ConstantDataArray::getString(*theContext, expression->value, /*AddNull=*/true);
+    llvm::GlobalVariable* globalStr = new llvm::GlobalVariable(
+        *theModule, strConstant->getType(), /*isConstant=*/true, llvm::GlobalValue::PrivateLinkage, strConstant,
+        /*Name=*/"str_literal_" + std::to_string(this->globalStrCounter++));
+
+    // Index in GEP (tells LLVM to start from the beginning)
+    llvm::Constant* zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*theContext), 0);
+    llvm::Constant* indices[] = {zero /*indexes into the global variable holding the string literal*/,
+                                 zero /*indexes into the first element of the array (first char)*/};
+    llvm::Constant* strPtr = llvm::ConstantExpr::getInBoundsGetElementPtr(strConstant->getType(), globalStr, indices);
+    return strPtr;
 }
 auto IRGenerator::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     DISCARD(expression);
