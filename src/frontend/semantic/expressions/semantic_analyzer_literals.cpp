@@ -6,8 +6,20 @@ namespace semantic {
 using ast::toStringOr;
 
 void SemanticAnalyzer::visit(ast::AggregateLiteralExpression* expression) {
-    DISCARD(expression);
-    NOT_IMPLEMENTED("");
+    // check each expression in the initalization
+    std::vector<ast::TypeSPtr_t> aggregateFieldTypes;
+    aggregateFieldTypes.reserve(expression->elements.size());
+    for (auto& element : expression->elements) {
+        visit(element.get());
+        if (!element->getType()) {
+            logError("Could not deduce type of expression {}, in aggregate literal {}", expression,
+                     toStringOr(element.get()), toStringOr(expression));
+            aggregateFieldTypes.push_back(nullptr);
+        } else {
+            aggregateFieldTypes.push_back(element->getTypePtr());
+        }
+    }
+    expression->setType(std::make_shared<ast::AggregateType>(std::move(aggregateFieldTypes)));
 }
 
 void SemanticAnalyzer::visit(ast::ArrayLiteralExpression* expression) {
@@ -31,8 +43,9 @@ void SemanticAnalyzer::visit(ast::ArrayLiteralExpression* expression) {
             arrayElementType
                 = currentElement->getTypePtr();  // Assume the array's type matches the type of the first one
         } else if (!areTypesCompatible(currentElement->getType(), arrayElementType.get())) {
-            logError("{} (element {} of array literal) has type {}, but the array elements have type {}", expression, toStringOr(currentElement), i + 1,
-                      toStringOr(currentElement->getType()), toStringOr(arrayElementType));
+            logError("{} (element {} of array literal) has type {}, but the array elements have type {}", expression,
+                     toStringOr(currentElement), i + 1, toStringOr(currentElement->getType()),
+                     toStringOr(arrayElementType));
         }
     }
     expression->elementType = arrayElementType;
