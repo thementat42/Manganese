@@ -14,11 +14,9 @@
 #include <utility>
 #include <utils/number_utils.hpp>
 #include <vector>
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/ast/ast_expressions.hpp"
-#include "frontend/lexer/token_type.hpp"
-#include "frontend/parser/operators.hpp"
 
+#include "frontend/lexer/token_base.hpp"
+#include "frontend/lexer/token_type.hpp"
 
 /**
  * Ambiguous cases:
@@ -181,15 +179,25 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
 
 ExpressionUPtr_t Parser::parseAggregateLiteralExpression() noexcept_if_release {
     DISCARD(consumeToken());  // disacrd the aggregate keyword
-    expectToken(TokenType::LeftBrace, "Expected a '{' to start the aggregate literal");
+
+    TokenType t
+        = expectToken({TokenType::LeftBrace, TokenType::LeftParen}, "Expected '(' or '{' to start an aggregate literal")
+              .getType();
+    TokenType closingDelimiter = (t == TokenType::LeftBrace) ? TokenType::RightBrace : TokenType::RightParen;
+
     std::vector<ExpressionUPtr_t> expressions;
-    while (peekTokenType() != TokenType::RightBrace) {
+    while (peekTokenType() != closingDelimiter) {
         expressions.push_back(parseExpression(Precedence::Default));
-        if (peekTokenType() != TokenType::RightBrace) {
-            expectToken(TokenType::Comma, "Expected a ',' to separate aggregate literal fields, or a '}' to close the declaration");
+        if (peekTokenType() != closingDelimiter) {
+            expectToken(
+                TokenType::Comma,
+                std::format("Expected a ',' to separate aggregate literal fields, or a '{}' to close the declaration",
+                            lexer::tokenTypeToString(closingDelimiter)));
         }
     }
-    expectToken(TokenType::RightBrace, "Expected '}' to end aggregate literal");
+    expectToken(
+        closingDelimiter,
+        std::format("Expected a '{}' to end an aggreagate literal", lexer::tokenTypeToString(closingDelimiter)));
     return std::make_unique<ast::AggregateLiteralExpression>(std::move(expressions));
 }
 
