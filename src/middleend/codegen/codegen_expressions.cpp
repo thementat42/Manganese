@@ -22,6 +22,10 @@ auto IRGenerator::visit(ast::AggregateInstantiationExpression* expression) -> ex
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
+auto IRGenerator::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
+    DISCARD(expression);
+    NOT_IMPLEMENTED("Codegen is not available yet");
+}
 auto IRGenerator::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     DISCARD(expression);
     NOT_IMPLEMENTED("Codegen is not available yet");

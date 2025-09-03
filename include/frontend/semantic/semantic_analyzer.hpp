@@ -6,6 +6,7 @@
 #include <frontend/visitor/visitor_base.hpp>
 #include <global_macros.hpp>
 
+#include "frontend/ast/ast_expressions.hpp"
 #include "symbol_table.hpp"
 
 //! The semantic analyzer should never "fix" errors -- only report them
@@ -90,6 +91,7 @@ class SemanticAnalyzer final : public visitor::Visitor<void> {
 
     // ===== Specific Expression Checks =====
     void visit(ast::AggregateInstantiationExpression*) override;
+    void visit(ast::AggregateLiteralExpression*) override;
     void visit(ast::ArrayLiteralExpression*) override;
     void visit(ast::AssignmentExpression*) override;
     void visit(ast::BinaryExpression*) override;

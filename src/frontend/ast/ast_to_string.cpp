@@ -15,6 +15,7 @@
 #include <sstream>
 #include <string>
 #include <variant>
+#include "frontend/ast/ast_base.hpp"
 
 namespace Manganese {
 namespace ast {
@@ -43,6 +44,18 @@ std::string AggregateInstantiationExpression::toString() const {
     oss << "}";
     return oss.str();
 }
+
+std::string AggregateLiteralExpression::toString() const {
+    std::ostringstream oss;
+    oss << "{";
+    for (size_t i = 0; i < elements.size(); ++i) {
+        oss << toStringOr(elements[i]);
+        if (i < elements.size() - 1) [[likely]] {oss << ", ";}
+    }
+    oss << "}";
+    return oss.str();
+}
+
 std::string ArrayLiteralExpression::toString() const {
     std::ostringstream oss;
     oss << "[";

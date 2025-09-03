@@ -23,6 +23,7 @@ namespace ast {
 
 enum class ExpressionKind {
     AggregateInstantiationExpression,
+    AggregateLiteralExpression,
     ArrayLiteralExpression,
     AssignmentExpression,
     BinaryExpression,
@@ -59,11 +60,22 @@ class AggregateInstantiationExpression final : public Expression {
     std::vector<AggregateInstantiationField> fields;
 
     constexpr AggregateInstantiationExpression(std::string name_, std::vector<TypeSPtr_t> genericTypes_,
-                                     std::vector<AggregateInstantiationField> fields_) :
+                                               std::vector<AggregateInstantiationField> fields_) :
         name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
 
     AST_STANDARD_INTERFACE;
     constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::AggregateInstantiationExpression; }
+};
+
+/**
+ * @brief represents a sequence of elements of different types (like Rust's tuple)
+ */
+class AggregateLiteralExpression final : public Expression {
+   public:
+    std::vector<ExpressionUPtr_t> elements;
+    explicit AggregateLiteralExpression(std::vector<ExpressionUPtr_t> elements_) : elements(std::move(elements_)) {}
+    AST_STANDARD_INTERFACE;
+    constexpr ExpressionKind kind() const noexcept override {return ExpressionKind::AggregateLiteralExpression;}
 };
 
 /**

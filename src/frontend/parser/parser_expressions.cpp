@@ -1,5 +1,5 @@
 /**
- * @file parser_expressions.cpp
+ * @file expressions.cpp
  * @brief This file contains the implementation of expression parsing in the parser. It is split into its own file for
  * readability and maintainability.
  */
@@ -14,6 +14,10 @@
 #include <utility>
 #include <utils/number_utils.hpp>
 #include <vector>
+#include "frontend/ast/ast_base.hpp"
+#include "frontend/ast/ast_expressions.hpp"
+#include "frontend/lexer/token_type.hpp"
+#include "frontend/parser/operators.hpp"
 
 
 /**
@@ -173,6 +177,20 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
     }
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end aggregate instantiation");
     return std::make_unique<ast::AggregateInstantiationExpression>(aggregateName, genericTypes, std::move(fields));
+}
+
+ExpressionUPtr_t Parser::parseAggregateLiteralExpression() noexcept_if_release {
+    DISCARD(consumeToken());  // disacrd the aggregate keyword
+    expectToken(TokenType::LeftBrace, "Expected a '{' to start the aggregate literal");
+    std::vector<ExpressionUPtr_t> expressions;
+    while (peekTokenType() != TokenType::RightBrace) {
+        expressions.push_back(parseExpression(Precedence::Default));
+        if (peekTokenType() != TokenType::RightBrace) {
+            expectToken(TokenType::Comma, "Expected a ',' to separate aggregate literal fields, or a '}' to close the declaration");
+        }
+    }
+    expectToken(TokenType::RightBrace, "Expected '}' to end aggregate literal");
+    return std::make_unique<ast::AggregateLiteralExpression>(std::move(expressions));
 }
 
 ExpressionUPtr_t Parser::parseArrayInstantiationExpression() noexcept_if_release {

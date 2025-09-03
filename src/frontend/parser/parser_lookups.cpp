@@ -162,6 +162,7 @@ void Parser::initializeLookups() noexcept {
     //~ Misc
     registerLedHandler_binary(As, Precedence::TypeCast, &Parser::parseTypeCastExpression);
     registerStmtHandler(Semicolon, &Parser::parseRedundantSemicolon);
+    registerNudHandler_binary(Aggregate, &Parser::parseAggregateLiteralExpression);
 }
 
 void Parser::initializeTypeLookups() noexcept {

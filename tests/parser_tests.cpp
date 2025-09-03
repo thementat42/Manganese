@@ -504,11 +504,9 @@ bool testRedundantSemicolons() {
 }
 
 static bool miscTests() {
-    std::string expression = "let x: (ptr int)[]; let y = 0; let p_y: ptr mut float32 = &y;";
+    std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
     auto x = getParserResults(expression);
     std::cout << x[0]->toString() << "\n";
-    std::cout << x[1]->toString() << "\n";
-    std::cout << x[2]->toString() << "\n";
     return true;
 }
 

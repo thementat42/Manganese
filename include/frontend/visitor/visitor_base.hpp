@@ -24,6 +24,7 @@ class Visitor {
    protected:
     // ===== Expression Visiting =====
     virtual exprvisit_t visit(ast::AggregateInstantiationExpression*) = 0;
+    virtual exprvisit_t visit(ast::AggregateLiteralExpression*) = 0;
     virtual exprvisit_t visit(ast::ArrayLiteralExpression*) = 0;
     virtual exprvisit_t visit(ast::AssignmentExpression*) = 0;
     virtual exprvisit_t visit(ast::BinaryExpression*) = 0;
@@ -73,6 +74,7 @@ class Visitor {
         switch (expr->kind()) {
             case AggregateInstantiationExpression:
                 return visit(static_cast<ast::AggregateInstantiationExpression*>(expr));
+            case AggregateLiteralExpression: return visit(static_cast<ast::AggregateLiteralExpression*>(expr));
             case ArrayLiteralExpression: return visit(static_cast<ast::ArrayLiteralExpression*>(expr));
             case AssignmentExpression: return visit(static_cast<ast::AssignmentExpression*>(expr));
             case BinaryExpression: return visit(static_cast<ast::BinaryExpression*>(expr));
