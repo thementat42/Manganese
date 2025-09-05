@@ -175,11 +175,11 @@ class SemanticAnalyzer final : public visitor::Visitor<void> {
 
 constexpr lexer::TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release;
 
-inline bool isSignedInt(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("int"); }
+inline bool isSInt(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("int"); }
 
 inline bool isUInt(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("uint"); }
 
-inline bool isAnyInt(const ast::Type* t) { return isSignedInt(t) || isUInt(t); }
+inline bool isInt(const ast::Type* t) { return isSInt(t) || isUInt(t); }
 
 inline bool isFloat(const ast::Type* t) { return ast::isPrimitiveType(t) && ast::toStringOr(t).starts_with("float"); }
 
