@@ -11,6 +11,60 @@
 namespace Manganese {
 
 namespace codegen {
+
+auto IRGenerator::generateDivInstruction(ast::Expression* left, ast::Expression* right, exprvisit_t leftValue,
+                                         exprvisit_t rightValue) -> exprvisit_t {
+    if (semantic::isSInt(left->getType()) && semantic::isSInt(right->getType())) {
+        return theBuilder->CreateSDiv(leftValue, rightValue, "ssdivtmp");
+    }
+
+    else if (semantic::isUInt(left->getType()) && semantic::isUInt(right->getType())) {
+        return theBuilder->CreateUDiv(leftValue, rightValue, "usdivtmp");
+    }
+
+    else if (semantic::isSInt(left->getType()) && semantic::isUInt(right->getType())) {
+        llvm::Value* rhsSigned = theBuilder->CreateSExt(rightValue, leftValue->getType(), "sudivsexttmp");
+        return theBuilder->CreateSDiv(leftValue, rhsSigned, "sudivtmp");
+    }
+
+    else if (semantic::isUInt(left->getType()) && semantic::isSInt(right->getType())) {
+        llvm::Value* lhsUnsigned = theBuilder->CreateZExt(leftValue, rightValue->getType(), "uudivzexttmp");
+        return theBuilder->CreateUDiv(lhsUnsigned, rightValue, "uudivtmp");
+    }
+
+    else if (semantic::isFloat(left->getType()) && semantic::isFloat(right->getType())) {
+        return theBuilder->CreateFDiv(leftValue, rightValue, "ffdivtmp");
+    } else if (semantic::isFloat(left->getType()) && semantic::isInt(right->getType())) {
+        llvm::Value* rhsFloat = theBuilder->CreateSIToFP(rightValue, llvm::Type::getFloatTy(*theContext));
+        return theBuilder->CreateFDiv(leftValue, rhsFloat, "fidivtmp");
+    } else {
+        // left is int, right is float
+        llvm::Value* lhsFloat = theBuilder->CreateSIToFP(leftValue, llvm::Type::getFloatTy(*theContext));
+        return theBuilder->CreateFDiv(lhsFloat, rightValue, "ifdivtmp");
+    }
+}
+
+auto IRGenerator::generateFloorDivInstruction(ast::Expression* left, ast::Expression* right, exprvisit_t leftValue,
+                                              exprvisit_t rightValue) -> exprvisit_t {
+    if (semantic::isUInt(left->getType()) && semantic::isUInt(right->getType())) {
+        return theBuilder->CreateUDiv(leftValue, rightValue, "uudivtmp");
+    } else if (semantic::isSInt(left->getType()) && semantic::isSInt(right->getType())) {
+        llvm::Value* divResult = theBuilder->CreateSDiv(leftValue, rightValue, "ssdivtmp");
+        // Adjust for truncation towards negative infinity
+        llvm::Value* remainder = theBuilder->CreateSRem(leftValue, rightValue, "ssdivremtmp");
+        llvm::Value* correction = theBuilder->CreateICmpSGT(remainder, llvm::ConstantInt::get(leftValue->getType(), 0));
+        return theBuilder->CreateSelect(
+            correction, theBuilder->CreateSub(divResult, llvm::ConstantInt::get(divResult->getType(), 1)), divResult);
+    } else if (semantic::isSInt(left->getType()) && semantic::isUInt(right->getType())) {
+        llvm::Value* rhsSigned = theBuilder->CreateSExt(rightValue, leftValue->getType(), "sudivsexttmp");
+        return theBuilder->CreateSDiv(leftValue, rhsSigned, "sudivtmp");
+    } else {
+        // left is uint, right is sint
+        llvm::Value* lhsUnsigned = theBuilder->CreateZExt(leftValue, rightValue->getType(), "usdivzexttmp");
+        return theBuilder->CreateUDiv(lhsUnsigned, rightValue, "usdivtmp");
+    }
+}
+
 auto IRGenerator::generateShortCircuitBinaryExpression(ast::BinaryExpression* expression) noexcept -> exprvisit_t {
     /*
     We want short-circuit behaviour for logical AND and OR operations.

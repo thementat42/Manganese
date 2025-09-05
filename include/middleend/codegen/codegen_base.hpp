@@ -14,7 +14,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese {
 namespace codegen {
@@ -94,6 +93,8 @@ class IRGenerator final : public visitor::Visitor<llvm::Value*, void, llvm::Type
 
     // ===== Helper Functions =====
     exprvisit_t generateShortCircuitBinaryExpression(ast::BinaryExpression* expression) noexcept;
+    exprvisit_t generateDivInstruction(ast::Expression*, ast::Expression*, exprvisit_t, exprvisit_t);
+    exprvisit_t generateFloorDivInstruction(ast::Expression*, ast::Expression*, exprvisit_t, exprvisit_t);
 };
 
 // ===== Helper Functions that are not part of the IRGenerator class =====

@@ -51,20 +51,8 @@ auto IRGenerator::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         case Plus: return theBuilder->CreateAdd(leftValue, rightValue, "addtmp");
         case Minus: return theBuilder->CreateSub(leftValue, rightValue, "subtmp");
         case Mul: return theBuilder->CreateMul(leftValue, rightValue, "multmp");
-        case Div:
-            if (semantic::isUInt(left->getType()) && semantic::isUInt(right->getType())) {
-                // Only do unsigned division if both arguments are unsigned (since there's no sign info to lose)
-                return theBuilder->CreateUDiv(leftValue, rightValue, "udivtmp");
-            } else if (semantic::isFloat(left->getType()) || semantic::isFloat(right->getType())) {
-                // If at least one of the arguments is a float, we want to preserve that
-                return theBuilder->CreateFDiv(leftValue, rightValue, "fdivtmp");
-            } else {
-                // IF at least one of the arguments is signed, we want to preserve signedness
-                return theBuilder->CreateSDiv(leftValue, rightValue, "sdivtmp");
-            }
-        case FloorDiv:
-            NOT_IMPLEMENTED("Floor division is not implemented yet");
-            return nullptr;  // Placeholder for future implementation
+        case Div: return this->generateDivInstruction(left, right, leftValue, rightValue);
+        case FloorDiv: return this->generateFloorDivInstruction(left, right, leftValue, rightValue);
         case Mod: return theBuilder->CreateSRem(leftValue, rightValue, "modtmp");
         case Exp:
             NOT_IMPLEMENTED("Exponentiation is not implemented yet");
@@ -80,7 +68,7 @@ auto IRGenerator::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         case BitXor: return theBuilder->CreateXor(leftValue, rightValue, "bitxortmp");
         case BitLShift: return theBuilder->CreateShl(leftValue, rightValue, "bitshltmp");
         case BitRShift:
-            if (semantic::isSignedInt(left->getType())) {
+            if (semantic::isSInt(left->getType())) {
                 return theBuilder->CreateAShr(leftValue, rightValue, "ashrtmp");
             }
             return theBuilder->CreateLShr(leftValue, rightValue, "lshrtmp");
@@ -162,8 +150,8 @@ auto IRGenerator::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     ast::Expression* left = expression->left.get();
     llvm::Value* leftVal = visit(expression->left);
     llvm::Value* oldValue = theBuilder->CreateLoad(leftVal->getType(), leftVal, "loadtmp");
-    if (semantic::isAnyInt(left->getType())) {
-        bool isSigned = semantic::isSignedInt(left->getType());
+    if (semantic::isInt(left->getType())) {
+        bool isSigned = semantic::isSInt(left->getType());
         llvm::Value* one = llvm::ConstantInt::get(oldValue->getType(), 1, isSigned);
         llvm::Value* newValue;
         if (expression->op == lexer::TokenType::Inc) {
