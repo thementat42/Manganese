@@ -30,10 +30,6 @@
 
 //~ Unreachable Code
 
-// A function marked [[noreturn]] with no body invokes undefined behaviour
-#define __MANGANESE_FALLBACK_UNREACHABLE \
-    [[noreturn]] FORCE_INLINE void __manganese_fallback_unreachable() {}
-
 #if __cplusplus >= 202302L
 #define __MANGANESE_UNREACHABLE std::unreachable();  // compiler agnostic, but still allows for optimisation
 // If < C++23, use a compiler-specific implementation
@@ -41,8 +37,8 @@
 #define __MANGANESE_UNREACHABLE __builtin_unreachable();
 #elif defined(_MSC_VER)
 #define __MANGANESE_UNREACHABLE __assume(false);
-#else  // If no (known) compiler-specific implementation is available, fall back to a hacky implementation
-#define __MANGANESE_UNREACHABLE __manganese_fallback_unreachable();
+#else  // If no (known) compiler-specific implementation is available, fall back to nothing
+#define __MANGANESE_UNREACHABLE
 #endif  // __cplusplus >= 202302L
 
 /**
