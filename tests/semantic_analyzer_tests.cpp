@@ -299,7 +299,7 @@ static bool miscTests() {
     semantic::SemanticAnalyzer analyzer;
     parser::ParsedFile file = parse(R"(
         let mut x = aggregate{1, "asdf", 3.0f32};
-        x = aggregate(44, "e", 2.3f32);
+        x = aggregate{44, "e", 2.3f32};
 )");
     analyzer.analyze(file);
     const auto& program = file.program;
