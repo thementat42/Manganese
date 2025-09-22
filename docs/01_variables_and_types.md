@@ -67,7 +67,7 @@ Manganese also has two types that behave like primitive types:
 | `string` | A sequence of characters       | Variable (8 bits * length)                         |
 | `T[]`    | An array of elements of type T | Variable (size of element * length)                |
 
-Strings are declared using double quotes.
+Strings are declared using double quotes. Raw strings can be declared in enclosing backticks.
 Arrays are homogenous, meaning that all the elements must be of the same type.
 
 ```manganese

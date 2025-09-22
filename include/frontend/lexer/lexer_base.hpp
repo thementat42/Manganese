@@ -17,14 +17,13 @@
 #include <io/reader.hpp>
 #include <io/stringreader.hpp>
 #include <utils/number_utils.hpp>
+#include <frontend/lexer/token.hpp>
 
 #include <deque>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
-
-#include "token.hpp"
 
 namespace Manganese {
 namespace lexer {
@@ -133,6 +132,11 @@ class Lexer {
      * @brief Process a string literal and generate a token. Triggered when a double quote (") is encountered
      */
     void tokenizeStringLiteral();
+
+    /**
+    * @brief Process a raw string literal (escape sequences are ignored). Triggered when a backtick (`) is encountered
+    */
+    void tokenizeRawStringLiteral();
 
     /**
      * @brief Process a number literal and generate a token

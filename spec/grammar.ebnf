@@ -39,6 +39,7 @@ float_literal = ("-" | "+")? (decimal_float | hex_float) float_suffix?;
 char_literal = "'" [^'] "'";
 
 string_literal = '"' (unescaped_char | escape_seq)* '"';
+raw_string_literal = '`' unescaped_char* '`';
 
 unescaped_char = [^"\];
 

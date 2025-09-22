@@ -84,16 +84,15 @@ if current char is an operator (after doing the above checks), look at the next 
 - otherwise, push it as a regular operator
 */
 
+#include <algorithm>
+#include <format>
 #include <frontend/lexer.hpp>
+#include <functional>
 #include <global_macros.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 #include <io/reader.hpp>
 #include <io/stringreader.hpp>
-
-#include <algorithm>
-#include <format>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -144,6 +143,9 @@ void Lexer::lex(size_t numTokens) {
             // TODO: Add raw string literals (r"stuff" -- maybe r""text"")
             //? TODO: f-strings? (f"stuff {expression} more stuff")
             tokenizeStringLiteral();
+            ++numTokensMade;
+        } else if (currentChar == '`') {
+            tokenizeRawStringLiteral();
             ++numTokensMade;
         } else if (std::isdigit(currentChar)) {
             tokenizeNumber();
@@ -275,6 +277,42 @@ void Lexer::tokenizeStringLiteral() {
         stringLiteral = std::move(result.value());
     }
     tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+}
+
+void Lexer::tokenizeRawStringLiteral() {
+    advance();  // move past the opening backtick
+    std::string rawStringLiteral;
+    while (true) {
+        if (done()) {
+            logging::logError("Unclosed raw string literal", getLine(), getCol());
+            tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol, true);
+            return;
+        }
+        if (peekChar() == '`') { break; }
+        if (peekChar() == '\\') {
+            if (peekChar(1) == '`') {
+                // use \` to put a backtick within a raw string
+                advance();  // skip the backslash
+                rawStringLiteral += consumeChar();
+                continue;
+            } else if (peekChar(1) == '\n') {
+                // continuing across lines
+                advance(2);
+                continue;
+            }
+        } else if (peekChar() == '\n') {
+            logging::logError(std::string("Raw string literal cannot span multiple lines.")
+                                  + "If you wanted a raw string literal that spans lines,"
+                                  + "add a backslash ('\\') at the end of the line",
+                              getLine(), getCol());
+            tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol, true);
+            return;
+        }
+        rawStringLiteral += consumeChar();
+    }
+    advance();  // skip closing backtick
+    // no need to process escape sequences since this is raw
+    tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol);
 }
 
 void Lexer::tokenizeKeywordOrIdentifier() {
@@ -523,7 +561,6 @@ bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFl
         - f32, f64 (floating-point numbers with the corresponding bit width)
         NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
         */
-
 
     char currentChar = (char)tolower(peekChar());
     auto readDigits = [this]() -> std::string {
