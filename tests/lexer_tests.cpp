@@ -9,18 +9,18 @@
  * @see include/frontend/lexer.h
  * @see testrunner.h
  */
-#include <frontend/lexer.hpp>
-#include <global_macros.hpp>
-#include <io/logging.hpp>
-
 #include <cassert>
 #include <filesystem>
+#include <frontend/lexer.hpp>
 #include <functional>
+#include <global_macros.hpp>
+#include <io/logging.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "testrunner.hpp"
+
 
 namespace Manganese {
 namespace tests {
@@ -197,6 +197,18 @@ bool testStringLiterals() {
         && checkToken(tokens[2], TokenType::StrLiteral, "escaped \"quote\"");
 }
 
+bool testRawStringLiterals() {
+    auto tokens = tokensFromString("`hi` `\\n` `asdf\\` asf`");
+    printAllTokens(tokens);
+    if (tokens.size() != 3) {
+        std::cout << "Expected 3 tokens, got " << tokens.size() << '\n';
+        return false;
+    }
+    return checkToken(tokens[0], TokenType::StrLiteral, "hi")
+        && checkToken(tokens[1], TokenType::StrLiteral, "\\n")
+        && checkToken(tokens[2], TokenType::StrLiteral, "asdf` asf");
+}
+
 bool testOperators() {
     auto tokens = tokensFromString(
         "+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
@@ -340,6 +352,7 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Float Literals", testFloatLiterals);
     runner.runTest("Character Literals", testCharLiterals);
     runner.runTest("String Literals", testStringLiterals);
+    runner.runTest("Raw String Literals", testRawStringLiterals);
     runner.runTest("Brackets", testBrackets);
     runner.runTest("Punctuation", testPunctuation);
     runner.runTest("Nested Brackets", testNestedBrackets);

@@ -22,17 +22,14 @@ auto IRGenerator::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
-auto IRGenerator::visit(ast::EmptyStatement* statement) -> stmtvisit_t {
-    DISCARD(statement);
-    NOT_IMPLEMENTED("Codegen is not available yet");
-}
+auto IRGenerator::visit(ast::EmptyStatement* statement) -> stmtvisit_t { DISCARD(statement); }
+
 auto IRGenerator::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     DISCARD(statement);
     NOT_IMPLEMENTED("Codegen is not available yet");
 }
 auto IRGenerator::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
-    DISCARD(statement);
-    NOT_IMPLEMENTED("Codegen is not available yet");
+    visit(statement->expression);
 }
 auto IRGenerator::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
     DISCARD(statement);

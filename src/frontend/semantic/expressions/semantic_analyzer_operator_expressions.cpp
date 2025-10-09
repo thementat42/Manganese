@@ -53,7 +53,7 @@ void SemanticAnalyzer::visit(ast::PostfixExpression* expression) {
         ASSERT_UNREACHABLE(std::format("Invalid postfix operator {} in expression {}",
                                        lexer::tokenTypeToString(expression->op), toStringOr(expression)));
     }
-    if (!isAnyInt(leftType) && !isFloat(leftType)) {
+    if (!isInt(leftType) && !isFloat(leftType)) {
         logError("'{}' can only be applied to numeric types, not {}", expression,
                  lexer::tokenTypeToString(expression->op), toStringOr(leftType));
         expression->setType(nullptr);
@@ -80,7 +80,7 @@ void SemanticAnalyzer::visit(ast::PrefixExpression* expression) {
     }
     switch (expression->op) {
         case lexer::TokenType::UnaryPlus:
-            if (!isAnyInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
+            if (!isInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
                 logError("'+' can only be applied to numeric types, not {}", expression,
                          toStringOr(expression->getType()));
                 break;
@@ -88,7 +88,7 @@ void SemanticAnalyzer::visit(ast::PrefixExpression* expression) {
             expression->setType(expression->right->getTypePtr());
             break;
         case lexer::TokenType::UnaryMinus:
-            if (!isAnyInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
+            if (!isInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
                 logError("'-' can only be applied to numeric types, not {}", expression,
                          toStringOr(expression->getType()));
                 break;
@@ -107,7 +107,7 @@ void SemanticAnalyzer::visit(ast::PrefixExpression* expression) {
             expression->setType(expression->right->getTypePtr());
             break;
         case lexer::TokenType::BitNot:
-            if (!isAnyInt(expression->right->getType())) {
+            if (!isInt(expression->right->getType())) {
                 logError("'~' can only be applied to integer types, not {}", expression,
                          toStringOr(expression->getType()));
                 break;
@@ -116,7 +116,7 @@ void SemanticAnalyzer::visit(ast::PrefixExpression* expression) {
             break;
         case lexer::TokenType::Inc:
         case lexer::TokenType::Dec:
-            if (!isAnyInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
+            if (!isInt(expression->right->getType()) && !isFloat(expression->right->getType())) {
                 logError("'{}' can only be applied to numeric types, not {}", expression,
                          lexer::tokenTypeToString(expression->op), toStringOr(expression->getType()));
                 break;
@@ -256,7 +256,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveBinaryExpressionType(ast::BinaryExpress
         case BitXor:
         case BitLShift:
         case BitRShift: {
-            if (!isAnyInt(leftType.get()) || !isAnyInt(rightType.get())) {
+            if (!isInt(leftType.get()) || !isInt(rightType.get())) {
                 logError("Bitwise operations can only be performed on integer types "
                          "not {} and {}",
                          binaryExpression, toStringOr(leftType), toStringOr(rightType));
@@ -296,8 +296,8 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
             return std::make_shared<ast::SymbolType>("string");
         }
         // numeric + numeric => widest numeric type
-        if ((isAnyInt(leftType.get()) || isFloat(leftType.get()))
-            && (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
+        if ((isInt(leftType.get()) || isFloat(leftType.get()))
+            && (isInt(rightType.get()) || isFloat(rightType.get()))) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
         logError("Operator '+' not supported for types {} and {}", binaryExpression, toStringOr(leftType),
@@ -306,8 +306,8 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
     }
 
     if (op == TokenType::Minus || op == TokenType::Exp) {
-        if ((isAnyInt(leftType.get()) || isFloat(leftType.get()))
-            && (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
+        if ((isInt(leftType.get()) || isFloat(leftType.get()))
+            && (isInt(rightType.get()) || isFloat(rightType.get()))) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
         logError("Operator '{}' not supported for types {} and {}", binaryExpression, lexer::tokenTypeToString(op),
@@ -322,8 +322,8 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
             return std::make_shared<ast::SymbolType>("string");
         }
         // numeric * numeric => widest numeric type
-        if ((isAnyInt(leftType.get()) || isFloat(leftType.get()))
-            && (isAnyInt(rightType.get()) || isFloat(rightType.get()))) {
+        if ((isInt(leftType.get()) || isFloat(leftType.get()))
+            && (isInt(rightType.get()) || isFloat(rightType.get()))) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
         logError("Operator '*' not supported for types {} and {}", binaryExpression, toStringOr(leftType),
@@ -333,8 +333,8 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
 
     if (op == TokenType::Div) {
         // Division always returns a float (float64 if either operand is float, else float32)
-        bool isNumeric = (isAnyInt(leftType.get()) || isFloat(leftType.get()))
-            && (isAnyInt(rightType.get()) || isFloat(rightType.get()));
+        bool isNumeric = (isInt(leftType.get()) || isFloat(leftType.get()))
+            && (isInt(rightType.get()) || isFloat(rightType.get()));
         if (!isNumeric) {
             logError("Division can only be performed on numeric types, not {} and {}", binaryExpression,
                      toStringOr(leftType), toStringOr(rightType));
@@ -348,7 +348,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
     }
     if (op == TokenType::FloorDiv) {
         // Floor division always returns an int (int64 if either operand is int64, else int32)
-        if (!(isAnyInt(leftType.get()) && isAnyInt(rightType.get()))) {
+        if (!(isInt(leftType.get()) && isInt(rightType.get()))) {
             logError("Floor division can only be performed on integer types, not {} and {}", binaryExpression,
                      toStringOr(leftType), toStringOr(rightType));
             return nullptr;
@@ -367,7 +367,7 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
     }
 
     if (op == TokenType::Mod) {
-        if (isAnyInt(leftType.get()) && isAnyInt(rightType.get())) {
+        if (isInt(leftType.get()) && isInt(rightType.get())) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
         logError("Modulus operation can only be performed on integer types not {} and {}", binaryExpression,

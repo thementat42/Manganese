@@ -15,7 +15,7 @@ void SemanticAnalyzer::visit(ast::RepeatLoopStatement* statement) {
                  ast::toStringOr(iterationType));
         return;
     }
-    if (!isAnyInt(iterationType)) {
+    if (!isInt(iterationType)) {
         logError("Repeat loops must have an integer type, not {}", statement, ast::toStringOr(iterationType));
         // if (isFloat(iterationType)) {
         //     logWarning("Repeat loop iteration count should be an integer, not {}. Value will be rounded up",

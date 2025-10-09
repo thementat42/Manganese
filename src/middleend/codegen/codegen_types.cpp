@@ -3,6 +3,7 @@
 
 #include <middleend/codegen/codegen_base.hpp>
 #include <vector>
+#include "global_macros.hpp"
 
 
 namespace Manganese {
@@ -37,7 +38,9 @@ auto IRGenerator::visit(ast::GenericType* type) -> typevisit_t {
 }
 auto IRGenerator::visit(ast::PointerType* type) -> typevisit_t {
     // TODO: Specialize address space
-    return llvm::PointerType::get(visit(type->baseType), /*AddressSpace=*/LLVM_GLOBAL_ADDRESS_SPACE);
+    visit(type->baseType);
+    // return llvm::PointerType::get(baseType, LLVM_GLOBAL_ADDRESS_SPACE);
+    return llvm::PointerType::get(*theContext, LLVM_GLOBAL_ADDRESS_SPACE);
 }
 auto IRGenerator::visit(ast::SymbolType* type) -> typevisit_t {
     DISCARD(type);

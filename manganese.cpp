@@ -4,12 +4,13 @@
  *
  * This file is responsible for calling the various components to compile source code
  */
-#include <global_macros.hpp>
 
-#include <iostream>
+#include <stdio.h>
+
+// This is a placeholder
 
 int main(int argc, const char* argv[]) {
-    std::cout << "Hello, World!" << '\n';
-    for (int i = 1; i < argc; ++i) { std::cout << "Arg" << i << ": " << argv[i] << '\n'; }
+    printf("Hello from Manganese!\n");
+    for (int i = 1; i < argc; ++i) {printf("Arg %d : %s\n", i, argv[i]); }
     return 0;
 }
