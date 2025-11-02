@@ -1,5 +1,7 @@
 # === Modules ===
 
+> NOTE: ❗Modules are not likely to be supported for some time
+
 Modules allow code to be split across multiple files. Modules can be imported to access the function and variables declared in the module.
 
 To declare a module, place `module <module name>` at the top of a file. This must be the first line in a module declaration (except for comments).
