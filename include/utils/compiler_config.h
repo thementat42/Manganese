@@ -30,22 +30,17 @@
 
 //~ Unreachable Code
 
+[[noreturn]] inline void manganese_unreachable() {
 #if __cplusplus >= 202302L
-#define __MANGANESE_UNREACHABLE std::unreachable();  // compiler agnostic, but still allows for optimisation
+    std::unreachable();  // compiler agnostic, but still allows for optimisation
 // If < C++23, use a compiler-specific implementation
 #elif defined(__GNUC__) || defined(__clang__)
-#define __MANGANESE_UNREACHABLE __builtin_unreachable();
+    __builtin_unreachable();
 #elif defined(_MSC_VER)
-#define __MANGANESE_UNREACHABLE __assume(false);
+    __assume(false);
 #else  // If no (known) compiler-specific implementation is available, fall back to nothing
-#define __MANGANESE_UNREACHABLE
+       // Still invoked undefined behaviour
 #endif  // __cplusplus >= 202302L
-
-/**
- * In pre-C++23 builds, uses a compile-specific unreachable code marker, if available.
- * MSVC, Clang and GCC are supported.
- * In C++23+, uses `std::unreachable()`
- */
-#define COMPILER_UNREACHABLE __MANGANESE_UNREACHABLE
+}
 
 #endif  // MANGANESE_INCLUDE_UTILS_COMPILER_CONFIG_H

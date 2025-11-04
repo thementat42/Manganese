@@ -27,7 +27,7 @@
         throw std::runtime_error(message);                                           \
     } while (0);
 #else  // ^^ DEBUG vv !DEBUG
-#define __MANGANESE_ASSERT_UNREACHABLE(message) COMPILER_UNREACHABLE
+#define __MANGANESE_ASSERT_UNREACHABLE(message) manganese_unreachable();
 #endif  // DEBUG
 
 /**
