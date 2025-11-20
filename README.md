@@ -5,7 +5,9 @@
 ![CMake](https://img.shields.io/badge/build%20system-CMake-064F8C.svg?logo=cmake)
 ![Project Status: WIP](https://img.shields.io/badge/status-work_in_progress-orange)
 
-![Logo](/logo.svg "Manganese Logo")
+<p align="center">
+<img src="logo.svg" width="300" alt="Manganese Logo" />
+</p>
 Manganese is a statically-typed programming language built on top of the LLVM framework. It was inspired by the autocomplete text-parsing project
 for ESC190 at the University of Toronto.
 
