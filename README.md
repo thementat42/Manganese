@@ -135,7 +135,6 @@ This project is divided into several directories:
 - [`.spec`](/.spec/): Contains the formal(-ish) specification of the Manganese language, including its EBNF grammar
 
 - [`docs`](/docs): Language documentation. The documentation represents a hypothetical version of Manganese; right now, not everything in the docs is implemented, but will be at some point in the future.
-  - [`Library`](/docs/library/): Documentation for the standard library
 
 - [`examples`](/examples): Sample Manganese programs
 
@@ -144,19 +143,19 @@ This project is divided into several directories:
   - [`middleend`](/include/middleend): Header files for the middleend phase (LLVM IR generation, optimization passes)
   - [`backend`](/include/backend): Header files for the backend phase (LLVM IR to machine code)
   - [`io`](/include/io): Various I/O utils (error logging and file reading)
-  - [`utils`](/include/utils): miscellaneous utilities (string-to-int conversions, compiler configurations, memory tracking)
+  - [`utils`](/include/utils): miscellaneous utilities (string-to-number conversions, compiler configurations, memory tracking)
 
 - [`src`](/src): The implementation of the compiler, split by phase. This mirrors the structure of the [`include`](/include/) directory.
   - [`frontend`](/src/frontend): Lexer, parser, semantic analyzer
   - [`middleend`](/src/middleend): Generates LLVM IR, runs LLVM's optimization passes
   - [`backend`](/src/backend): LLVM backend to generate machine code
   - [`io`](/src/io): Handles logging and file I/O
-  - [`utils`](/src/utils): Utilities (naming is hard)
+  - [`utils`](/src/utils): Utilities
 
-- [`scripts`](/scripts/): Contains some Python scripts
+- [`scripts`](/scripts/): Contains some utility Python scripts
   - [`build.py`](/scripts/build.py): Wraps CMake
   - [`lint.py`](/scripts/lint.py): Runs clang-tidy (requires clang-tidy to be in the PATH)
-- [`tests`](/tests): Compiler Tests (because making a compiler is hard)
+- [`tests`](/tests): The compiler test suite
 - [`manganese.cpp`](/manganese.cpp): Entry point for the compiler
 - [`manganese-tests.cpp`](/manganese-tests.cpp): Entry point for running tests
 
