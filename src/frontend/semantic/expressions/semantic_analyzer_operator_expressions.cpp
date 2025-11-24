@@ -326,6 +326,9 @@ ast::TypeSPtr_t SemanticAnalyzer::resolveArithmeticBinaryExpressionType(ast::Bin
             && (isInt(rightType.get()) || isFloat(rightType.get()))) {
             return SemanticAnalyzer::widestNumericType(leftType.get(), rightType.get());
         }
+
+        // TODO: Add array * uint
+
         logError("Operator '*' not supported for types {} and {}", binaryExpression, toStringOr(leftType),
                  toStringOr(rightType));
         return nullptr;
