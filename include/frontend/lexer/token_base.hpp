@@ -18,7 +18,6 @@
 
 #include <global_macros.hpp>
 #include <string>
-#include <unordered_map>
 #include <utils/number_utils.hpp>
 
 #include "token_type.hpp"
@@ -38,8 +37,20 @@ class Token {
 
    public:
     Token() noexcept = default;
-    Token(const TokenType type, const std::string lexeme, const size_t line, const size_t column,
-          bool invalid = false) noexcept_if_release;
+    Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_,
+          bool invalid_ = false) noexcept_if_release :
+        type(type_),
+        lexeme(lexeme_),
+        line(line_),
+        column(column_),
+        invalid(invalid_) {
+        // Special lexeme override cases
+        if (type == TokenType::Int32) {
+            lexeme = "int32";
+        } else if (type == TokenType::Float32) {
+            lexeme = "float32";
+        }
+    };
     ~Token() noexcept = default;
 
     constexpr bool isKeyword() const noexcept {
@@ -73,12 +84,8 @@ class Token {
 //~ Helpers, not tied to the Token class
 constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release;
 
-extern std::unordered_map<std::string, const TokenType> keywordMap;
-extern std::unordered_map<std::string, const TokenType> operatorMap;
-TokenType keywordFromString(const std::string& keyword, const size_t line, const size_t column);
-TokenType operatorFromString(const std::string& op, const size_t line, const size_t column);
-
-
+constexpr TokenType keyword_lookup(const std::string_view& s);
+constexpr TokenType operator_lookup(const std::string_view& s);
 
 }  // namespace lexer
 }  // namespace Manganese

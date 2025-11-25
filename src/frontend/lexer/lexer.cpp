@@ -97,6 +97,10 @@ if current char is an operator (after doing the above checks), look at the next 
 #include <string>
 #include <utility>
 
+#include "frontend/lexer/token_base.hpp"
+#include "frontend/lexer/token_type.hpp"
+
+
 namespace Manganese {
 
 namespace lexer {
@@ -318,10 +322,11 @@ void Lexer::tokenizeRawStringLiteral() {
 void Lexer::tokenizeKeywordOrIdentifier() {
     std::string lexeme = "";
     while (!done() && (isalnum(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
-    auto it = keywordMap.find(lexeme);
+    TokenType t = keyword_lookup(lexeme);
 
-    tokenStream.emplace_back(it != keywordMap.end() ? TokenType::Keyword : TokenType::Identifier, lexeme,
-                             tokenStartLine, tokenStartCol);
+    // if t is unknown, assume it's an identifier, otherwise use the given keyword type
+    tokenStream.emplace_back(t == TokenType::Unknown ? TokenType::Identifier : t, lexeme, tokenStartLine,
+                             tokenStartCol);
 }
 
 void Lexer::tokenizeNumber() {
@@ -370,6 +375,8 @@ void Lexer::tokenizeSymbol() {
     char next = peekChar(1);
     char nextnext = peekChar(2);
     std::string lexeme = std::string(1, current);
+
+    // In here, use TokenType::Operator as a generic value (exact enum mapping determined at the end)
     switch (current) {
         //~ Brackets
         case '(': type = TokenType::LeftParen; break;
@@ -481,6 +488,7 @@ void Lexer::tokenizeSymbol() {
             break;
     }
     advance(lexeme.length());
+    type = (type == TokenType::Operator ? operator_lookup(lexeme) : type);
     tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
 }
 
