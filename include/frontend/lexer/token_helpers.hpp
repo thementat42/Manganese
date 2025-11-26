@@ -206,6 +206,8 @@ constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
                                + std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
     }
 }
+
+// TODO: Use gperf to make perfect hash
 constexpr size_t _lexeme_hash(const std::string_view& s) {
     size_t _hash_val = 0;
     for (const char c : s) { _hash_val = _hash_val * 33 + (uint8_t)c; }
