@@ -17,7 +17,7 @@ void Token::overrideType(TokenType type_, std::string lexeme_) {
                                      tokenTypeToString(type_), lexeme_));
 
     type = type_;
-    if (lexeme != "") { lexeme = std::move(lexeme_); }
+    if (lexeme_ != "") { lexeme = std::move(lexeme_); }
 }
 
 }  // namespace lexer
