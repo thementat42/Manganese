@@ -62,6 +62,7 @@ expensive, so shared_pointer is much more efficient
 enum class ExpressionKind;
 enum class StatementKind;
 enum class TypeKind;
+enum class PrimitiveType_t;
 
 enum class Visibility : char {
     Public = 0,
@@ -119,6 +120,7 @@ class Type : public ASTNode {
    public:
     virtual ~Type() noexcept = default;
     constexpr virtual TypeKind kind() const noexcept = 0;
+    constexpr virtual PrimitiveType_t primitive_type() const noexcept = 0;
 };
 
 constexpr std::string visibilityToString(const Visibility& visibility) noexcept_if_release {

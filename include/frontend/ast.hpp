@@ -6,7 +6,7 @@
 /*
 We want one object for each language construct
 In Manganese, there are:
-    - Expressions (produce a value) -- Have to handle the angle bracket ambiguity here once generics get implemented
+    - Expressions (produce a value)
         - Binary Operator Expressions (x + y, x && y)
         - Unary Operator Expressions (++x, *y)
         - Cast expressions (x as int)

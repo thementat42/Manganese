@@ -27,6 +27,24 @@ enum class TypeKind {
     SymbolType
 };
 
+enum class PrimitiveType_t {
+    not_primitive = 0,
+    i8,
+    ui8,
+    i16,
+    ui16,
+    i32,
+    ui32,
+    i64,
+    ui64,
+    f32,
+    f64,
+    character,
+    str,
+    boolean
+
+};
+
 /**
  * e.g. int[], float[][], etc.
  */
@@ -41,6 +59,9 @@ class AggregateType final : public Type {
     explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) : fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::AggregateType; }
+    constexpr virtual PrimitiveType_t primitive_type() const noexcept override {
+        return PrimitiveType_t::not_primitive;
+    }
 };
 class ArrayType final : public Type {
    public:
@@ -55,6 +76,9 @@ class ArrayType final : public Type {
 
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
+    constexpr virtual PrimitiveType_t primitive_type() const noexcept override {
+        return PrimitiveType_t::not_primitive;
+    }
 };
 
 struct FunctionParameterType {
@@ -77,7 +101,9 @@ class FunctionType final : public Type {
 
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
-
+    constexpr virtual PrimitiveType_t primitive_type() const noexcept override {
+        return PrimitiveType_t::not_primitive;
+    }
 };
 
 /**
@@ -94,7 +120,9 @@ class GenericType final : public Type {
 
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::GenericType; };
-
+    constexpr virtual PrimitiveType_t primitive_type() const noexcept override {
+        return PrimitiveType_t::not_primitive;
+    }
 };
 
 /**
@@ -105,12 +133,13 @@ class PointerType final : public Type {
     TypeSPtr_t baseType;
     bool isMutable;
 
-    PointerType(TypeSPtr_t baseType_, bool isMutable_) :
-        baseType(std::move(baseType_)), isMutable(isMutable_) {}
+    PointerType(TypeSPtr_t baseType_, bool isMutable_) : baseType(std::move(baseType_)), isMutable(isMutable_) {}
 
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::PointerType; };
-
+    constexpr virtual PrimitiveType_t primitive_type() const noexcept override {
+        return PrimitiveType_t::not_primitive;
+    }
 };
 
 /**
@@ -119,13 +148,14 @@ class PointerType final : public Type {
 class SymbolType final : public Type {
    public:
     std::string name;
+    PrimitiveType_t _primitive = PrimitiveType_t::not_primitive;
 
     constexpr explicit SymbolType(std::string name_) : name(std::move(name_)) {}
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }
     constexpr TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
+        constexpr virtual PrimitiveType_t primitive_type() const noexcept override {return _primitive; }
 };
-
 
 }  // namespace ast
 

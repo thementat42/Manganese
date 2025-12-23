@@ -7,9 +7,11 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
-
 #include <memory>
 #include <utility>
+
+#include "frontend/ast/ast_base.hpp"
+#include "utils/compiler_config.h"
 
 namespace Manganese {
 namespace parser {
@@ -152,11 +154,46 @@ TypeSPtr_t Parser::parsePointerType() noexcept_if_release {
 }
 
 TypeSPtr_t Parser::parseSymbolType() noexcept_if_release {
+    using prim = ast::PrimitiveType_t;
     Token token = peekToken();
     if (token.isPrimitiveType()) {
         // If the token is a primitive type, we can directly create a SymbolType
         DISCARD(consumeToken());
-        return std::make_shared<ast::SymbolType>(token.getLexeme());
+        std::string lex = token.getLexeme();
+        ast::PrimitiveType_t prim_t = prim::not_primitive;
+        if (lex == "int8") {
+            prim_t = prim::i8;
+        } else if (lex == "int16") {
+            prim_t = prim::i16;
+        } else if (lex == "int32") {
+            prim_t = prim::i32;
+        } else if (lex == "int64") {
+            prim_t = prim::i64;
+        } else if (lex == "uint8") {
+            prim_t = prim::ui8;
+        } else if (lex == "uint16") {
+            prim_t = prim::ui16;
+        } else if (lex == "uint32") {
+            prim_t = prim::ui32;
+        } else if (lex == "uint64") {
+            prim_t = prim::ui64;
+        } else if (lex == "float32") {
+            prim_t = prim::f32;
+        } else if (lex == "float64") {
+            prim_t = prim::f64;
+        } else if (lex == "string") {
+            prim_t = prim::str;
+        } else if (lex == "char") {
+            prim_t = prim::character;
+        } else if (lex == "bool") {
+            prim_t = prim::boolean;
+        }
+        else {
+            manganese_unreachable();
+        }
+        auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());
+        symbol_type->_primitive = prim_t;
+        return symbol_type;
     }
     // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
     return std::make_shared<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
