@@ -7,6 +7,10 @@
 
 #include <format>
 #include <frontend/lexer/token_base.hpp>
+#include <string_view>
+#include <utility>
+
+#include "token_type.hpp"
 
 namespace Manganese {
 
@@ -207,130 +211,129 @@ constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
     }
 }
 
-// TODO: Use gperf to make perfect hash
-constexpr size_t _lexeme_hash(const std::string_view& s) {
-    size_t _hash_val = 0;
-    for (const char c : s) { _hash_val = _hash_val * 33 + (uint8_t)c; }
-    return _hash_val;
+constexpr std::pair<std::string_view, TokenType> keywordTable[] = {
+    {"aggregate", TokenType::Aggregate},
+    {"alias", TokenType::Alias},
+    {"as", TokenType::As},
+    {"blueprint", TokenType::Blueprint},
+    {"bool", TokenType::Bool},
+    {"break", TokenType::Break},
+    {"case", TokenType::Case},
+    {"char", TokenType::Char},
+    {"continue", TokenType::Continue},
+    {"default", TokenType::Default},
+    {"do", TokenType::Do},
+    {"elif", TokenType::Elif},
+    {"else", TokenType::Else},
+    {"enum", TokenType::Enum},
+    {"false", TokenType::False},
+    {"float", TokenType::Float32},
+    {"float32", TokenType::Float32},
+    {"float64", TokenType::Float64},
+    {"for", TokenType::For},
+    {"func", TokenType::Func},
+    {"if", TokenType::If},
+    {"import", TokenType::Import},
+    {"int", TokenType::Int32},
+    {"int16", TokenType::Int16},
+    {"int32", TokenType::Int32},
+    {"int64", TokenType::Int64},
+    {"int8", TokenType::Int8},
+    {"lambda", TokenType::Lambda},
+    {"let", TokenType::Let},
+    {"module", TokenType::Module},
+    {"mut", TokenType::Mut},
+    {"private", TokenType::Private},
+    {"ptr", TokenType::Ptr},
+    {"public", TokenType::Public},
+    {"readonly", TokenType::ReadOnly},
+    {"repeat", TokenType::Repeat},
+    {"return", TokenType::Return},
+    {"string", TokenType::String},
+    {"switch", TokenType::Switch},
+    {"true", TokenType::True},
+    {"uint", TokenType::UInt32},
+    {"uint8", TokenType::UInt8},
+    {"uint16", TokenType::UInt16},
+    {"uint32", TokenType::UInt32},
+    {"uint64", TokenType::UInt64},
+    {"while", TokenType::While},
+};
+
+constexpr std::pair<std::string_view, TokenType> operatorTable[] = {
+    // Arithmetic Operators
+    {"+", TokenType::Plus},
+    {"-", TokenType::Minus},
+    {"*", TokenType::Mul},
+    {"/", TokenType::Div},
+    {"//", TokenType::FloorDiv},
+    {"%", TokenType::Mod},
+    {"^^", TokenType::Exp},
+    {"++", TokenType::Inc},
+    {"--", TokenType::Dec},
+
+    // Arithmetic Assignment Operators
+    {"+=", TokenType::PlusAssign},
+    {"-=", TokenType::MinusAssign},
+    {"*=", TokenType::MulAssign},
+    {"/=", TokenType::DivAssign},
+    {"//=", TokenType::FloorDivAssign},
+    {"%=", TokenType::ModAssign},
+    {"^^=", TokenType::ExpAssign},
+
+    // Comparison Operators
+    {">", TokenType::GreaterThan},
+    {">=", TokenType::GreaterThanOrEqual},
+    {"<", TokenType::LessThan},
+    {"<=", TokenType::LessThanOrEqual},
+    {"==", TokenType::Equal},
+    {"!=", TokenType::NotEqual},
+
+    // Boolean Operators
+    {"&&", TokenType::And},
+    {"||", TokenType::Or},
+    {"!", TokenType::Not},
+
+    // Bitwise Operators
+    {"&", TokenType::BitAnd},
+    {"|", TokenType::BitOr},
+    {"~", TokenType::BitNot},
+    {"^", TokenType::BitXor},
+    {"<<", TokenType::BitLShift},
+    {">>", TokenType::BitRShift},
+
+    // Bitwise Assignment Operators
+    {"&=", TokenType::BitAndAssign},
+    {"|=", TokenType::BitOrAssign},
+    {"~=", TokenType::BitNotAssign},
+    {"^=", TokenType::BitXorAssign},
+    {"<<=", TokenType::BitLShiftAssign},
+    {">>=", TokenType::BitRShiftAssign},
+
+    // Pointer Operators  use the same symbols as bitwise AND and multiplication (distinction in parser)
+
+    // Access Operators
+    {".", TokenType::MemberAccess},
+    {"...", TokenType::Ellipsis},
+    {"::", TokenType::ScopeResolution},
+
+    // Misc
+    {"=", TokenType::Assignment},
+    {"->", TokenType::Arrow},
+    {"@", TokenType::At}
+
+};
+
+constexpr inline TokenType keyword_lookup(const std::string_view& s) {
+    for (const auto& p : keywordTable)
+        if (p.first == s) { return p.second; }
+    return TokenType::Unknown;
 }
 
-constexpr TokenType keyword_lookup(const std::string_view& s) {
-    switch (_lexeme_hash(s)) {
-        case _lexeme_hash("aggregate"): return TokenType::Aggregate;
-        case _lexeme_hash("alias"): return TokenType::Alias;
-        case _lexeme_hash("as"): return TokenType::As;
-        case _lexeme_hash("blueprint"): return TokenType::Blueprint;
-        case _lexeme_hash("bool"): return TokenType::Bool;
-        case _lexeme_hash("break"): return TokenType::Break;
-        case _lexeme_hash("case"): return TokenType::Case;
-        case _lexeme_hash("char"): return TokenType::Char;
-        case _lexeme_hash("continue"): return TokenType::Continue;
-        case _lexeme_hash("default"): return TokenType::Default;
-        case _lexeme_hash("do"): return TokenType::Do;
-        case _lexeme_hash("elif"): return TokenType::Elif;
-        case _lexeme_hash("else"): return TokenType::Else;
-        case _lexeme_hash("enum"): return TokenType::Enum;
-        case _lexeme_hash("false"): return TokenType::False;
-        case _lexeme_hash("float"): return TokenType::Float32;
-        case _lexeme_hash("float32"): return TokenType::Float32;
-        case _lexeme_hash("float64"): return TokenType::Float64;
-        case _lexeme_hash("for"): return TokenType::For;
-        case _lexeme_hash("func"): return TokenType::Func;
-        case _lexeme_hash("if"): return TokenType::If;
-        case _lexeme_hash("import"): return TokenType::Import;
-        case _lexeme_hash("int"): return TokenType::Int32;
-        case _lexeme_hash("int16"): return TokenType::Int16;
-        case _lexeme_hash("int32"): return TokenType::Int32;
-        case _lexeme_hash("int64"): return TokenType::Int64;
-        case _lexeme_hash("int8"): return TokenType::Int8;
-        case _lexeme_hash("lambda"): return TokenType::Lambda;
-        case _lexeme_hash("let"): return TokenType::Let;
-        case _lexeme_hash("module"): return TokenType::Module;
-        case _lexeme_hash("mut"): return TokenType::Mut;
-        case _lexeme_hash("private"): return TokenType::Private;
-        case _lexeme_hash("ptr"): return TokenType::Ptr;
-        case _lexeme_hash("public"): return TokenType::Public;
-        case _lexeme_hash("readonly"): return TokenType::ReadOnly;
-        case _lexeme_hash("repeat"): return TokenType::Repeat;
-        case _lexeme_hash("return"): return TokenType::Return;
-        case _lexeme_hash("string"): return TokenType::String;
-        case _lexeme_hash("switch"): return TokenType::Switch;
-        case _lexeme_hash("true"): return TokenType::True;
-        case _lexeme_hash("uint"): return TokenType::UInt32;
-        case _lexeme_hash("uint8"): return TokenType::UInt8;
-        case _lexeme_hash("uint16"): return TokenType::UInt16;
-        case _lexeme_hash("uint32"): return TokenType::UInt32;
-        case _lexeme_hash("uint64"): return TokenType::UInt64;
-        case _lexeme_hash("while"): return TokenType::While;
-        default: return TokenType::Unknown;
-    }
-}
-
-constexpr TokenType operator_lookup(const std::string_view& s) {
-    switch (_lexeme_hash(s)) {
-            // Arithmetic Operators
-        case _lexeme_hash("+"): return TokenType::Plus;
-        case _lexeme_hash("-"): return TokenType::Minus;
-        case _lexeme_hash("*"): return TokenType::Mul;
-        case _lexeme_hash("/"): return TokenType::Div;
-        case _lexeme_hash("//"): return TokenType::FloorDiv;
-        case _lexeme_hash("%"): return TokenType::Mod;
-        case _lexeme_hash("^^"): return TokenType::Exp;
-        case _lexeme_hash("++"): return TokenType::Inc;
-        case _lexeme_hash("--"): return TokenType::Dec;
-
-        // Arithmetic Assignment Operators
-        case _lexeme_hash("+="): return TokenType::PlusAssign;
-        case _lexeme_hash("-="): return TokenType::MinusAssign;
-        case _lexeme_hash("*="): return TokenType::MulAssign;
-        case _lexeme_hash("/="): return TokenType::DivAssign;
-        case _lexeme_hash("//="): return TokenType::FloorDivAssign;
-        case _lexeme_hash("%="): return TokenType::ModAssign;
-        case _lexeme_hash("^^="): return TokenType::ExpAssign;
-
-        // Comparison Operators
-        case _lexeme_hash(">"): return TokenType::GreaterThan;
-        case _lexeme_hash(">="): return TokenType::GreaterThanOrEqual;
-        case _lexeme_hash("<"): return TokenType::LessThan;
-        case _lexeme_hash("<="): return TokenType::LessThanOrEqual;
-        case _lexeme_hash("=="): return TokenType::Equal;
-        case _lexeme_hash("!="): return TokenType::NotEqual;
-
-        // Boolean Operators
-        case _lexeme_hash("&&"): return TokenType::And;
-        case _lexeme_hash("||"): return TokenType::Or;
-        case _lexeme_hash("!"): return TokenType::Not;
-
-        // Bitwise Operators
-        case _lexeme_hash("&"): return TokenType::BitAnd;
-        case _lexeme_hash("|"): return TokenType::BitOr;
-        case _lexeme_hash("~"): return TokenType::BitNot;
-        case _lexeme_hash("^"): return TokenType::BitXor;
-        case _lexeme_hash("<<"): return TokenType::BitLShift;
-        case _lexeme_hash(">>"): return TokenType::BitRShift;
-
-        // Bitwise Assignment Operators
-        case _lexeme_hash("&="): return TokenType::BitAndAssign;
-        case _lexeme_hash("|="): return TokenType::BitOrAssign;
-        case _lexeme_hash("~="): return TokenType::BitNotAssign;
-        case _lexeme_hash("^="): return TokenType::BitXorAssign;
-        case _lexeme_hash("<<="): return TokenType::BitLShiftAssign;
-        case _lexeme_hash(">>="): return TokenType::BitRShiftAssign;
-
-        // Pointer Operators aren't here since they use the same symbols as bitwise AND and multiplication
-        // that would cause a duplicate key error
-
-        // Access Operators
-        case _lexeme_hash("."): return TokenType::MemberAccess;
-        case _lexeme_hash("..."): return TokenType::Ellipsis;
-        case _lexeme_hash("::"): return TokenType::ScopeResolution;
-
-        // Misc
-        case _lexeme_hash("="): return TokenType::Assignment;
-        case _lexeme_hash("->"): return TokenType::Arrow;
-        case _lexeme_hash("@"): return TokenType::At;
-        default: return TokenType::Unknown;
-    }
+constexpr inline TokenType operator_lookup(const std::string_view& s) {
+    for (const auto& p : operatorTable)
+        if (p.first == s) { return p.second; }
+    return TokenType::Unknown;
 }
 
 }  // namespace lexer
