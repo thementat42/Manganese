@@ -119,7 +119,6 @@ class Type : public ASTNode {
    public:
     virtual ~Type() noexcept = default;
     constexpr virtual TypeKind kind() const noexcept = 0;
-    virtual bool operator==(const Type& other) const noexcept = 0;
 };
 
 constexpr std::string visibilityToString(const Visibility& visibility) noexcept_if_release {

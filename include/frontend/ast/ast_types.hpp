@@ -41,8 +41,6 @@ class AggregateType final : public Type {
     explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) : fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::AggregateType; }
-
-    bool operator==(const Type& other) const noexcept override;
 };
 class ArrayType final : public Type {
    public:
@@ -57,8 +55,6 @@ class ArrayType final : public Type {
 
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
-
-    bool operator==(const Type& other) const noexcept override;
 };
 
 struct FunctionParameterType {
@@ -66,10 +62,6 @@ struct FunctionParameterType {
     TypeSPtr_t type;
 
     FunctionParameterType(bool isMutable_, TypeSPtr_t type_) : isMutable(isMutable_), type(std::move(type_)) {}
-
-    bool operator==(const FunctionParameterType& other) const noexcept {
-        return isMutable == other.isMutable && *type == *other.type;
-    }
 };
 
 /**
@@ -86,7 +78,6 @@ class FunctionType final : public Type {
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
 
-    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -104,7 +95,6 @@ class GenericType final : public Type {
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::GenericType; };
 
-    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -121,7 +111,6 @@ class PointerType final : public Type {
     AST_STANDARD_INTERFACE;
     constexpr TypeKind kind() const noexcept override { return TypeKind::PointerType; };
 
-    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -135,13 +124,9 @@ class SymbolType final : public Type {
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }
     constexpr TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
-
-    bool operator==(const Type& other) const noexcept override;
 };
 
-bool isPrimitiveType(const TypeSPtr_t& type);
 
-bool isPrimitiveType(const Type* type);
 }  // namespace ast
 
 }  // namespace Manganese
