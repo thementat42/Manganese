@@ -325,14 +325,16 @@ constexpr std::pair<std::string_view, TokenType> operatorTable[] = {
 };
 
 constexpr inline TokenType keyword_lookup(const std::string_view& s) {
-    for (const auto& p : keywordTable)
+    for (const auto& p : keywordTable) {
         if (p.first == s) { return p.second; }
+    }
     return TokenType::Unknown;
 }
 
 constexpr inline TokenType operator_lookup(const std::string_view& s) {
-    for (const auto& p : operatorTable)
+    for (const auto& p : operatorTable) {
         if (p.first == s) { return p.second; }
+    }
     return TokenType::Unknown;
 }
 
