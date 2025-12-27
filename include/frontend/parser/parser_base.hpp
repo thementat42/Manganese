@@ -66,8 +66,14 @@ class Parser {
 
    public:  // public methods
     Parser() = default;
-    Parser(const std::string& source, lexer::Mode mode);
     ~Parser() noexcept = default;
+
+    // Avoid file ownership issues
+    Parser(const Parser&) = delete;
+    Parser(Parser&&) = delete;
+    Parser& operator=(const Parser&) = delete;
+    Parser& operator=(Parser&&) = delete;
+    Parser(const std::string& source, lexer::Mode mode);
 
     ParsedFile parse();
     bool hasCriticalError() const noexcept { return hasCriticalError_; }

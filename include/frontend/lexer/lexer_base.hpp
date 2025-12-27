@@ -91,6 +91,12 @@ class Lexer {
     explicit Lexer(const std::string& source, const Mode mode = Mode::File);
     ~Lexer() noexcept = default;
 
+    // Avoid file ownership issues
+    Lexer(const Lexer&) = delete;
+    Lexer(Lexer&&) = delete;
+    Lexer& operator=(const Lexer&) = delete;
+    Lexer& operator=(Lexer&&) = delete;
+
     /**
      * @brief See the next token in the input stream without consuming it
      * @param offset How many tokens to look ahead (default is 0 -- the current token)
