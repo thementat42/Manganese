@@ -11,7 +11,6 @@
 
 #include <utils/debug_utils.hpp>
 
-
 // Some common includes that are used frequently
 
 /**
@@ -27,6 +26,8 @@
 #define noexcept_if_release noexcept  // In release builds, optimize these functions more
 #endif
 
+#ifndef DISCARD
 #define DISCARD(value) (void)(value)  // Explicitly discard a value
+#endif  // DISCARD
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
