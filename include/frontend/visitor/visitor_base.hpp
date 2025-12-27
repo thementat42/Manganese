@@ -8,7 +8,7 @@ namespace Manganese {
 
 namespace visitor {
 
-template <class ExpressionResult, class StatementResult = ExpressionResult, class TypeResult = ExpressionResult>
+template <class ExpressionResult, class StatementResult, class TypeResult>
 class Visitor {
    public:
     virtual ~Visitor() noexcept = default;
