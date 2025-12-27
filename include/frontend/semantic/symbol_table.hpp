@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#include <cstdint>
 #include <format>
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
