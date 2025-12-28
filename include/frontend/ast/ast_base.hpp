@@ -165,7 +165,7 @@ class Type : public ASTNode {
     constexpr explicit Type(TypeKind k_) noexcept : kind_(k_), prim_(PrimitiveType_t::not_primitive) {}
 };
 
-constexpr std::string visibilityToString(const Visibility& visibility) noexcept_if_release {
+constexpr std::string visibilityToString(const Visibility& visibility) NOEXCEPT_IF_RELEASE {
     switch (visibility) {
         case Visibility::Public: return "public ";
         case Visibility::ReadOnly: return "readonly ";

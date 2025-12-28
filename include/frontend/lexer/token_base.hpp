@@ -38,7 +38,7 @@ class Token {
    public:
     Token() noexcept = default;
     Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_,
-          bool invalid_ = false) noexcept_if_release :
+          bool invalid_ = false) NOEXCEPT_IF_RELEASE :
         type(type_),
         lexeme(lexeme_),
         line(line_),
@@ -72,7 +72,7 @@ class Token {
     constexpr bool isBracket() const noexcept;
     constexpr bool isPrimitiveType() const noexcept;
     constexpr bool hasUnaryCounterpart() const noexcept;
-    constexpr TokenType getUnaryCounterpart() const noexcept_if_release;
+    constexpr TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
     std::string toString() const noexcept;
 
     /**
@@ -82,7 +82,7 @@ class Token {
 };
 
 //~ Helpers, not tied to the Token class
-constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release;
+constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE;
 
 constexpr TokenType keyword_lookup(const std::string_view& s);
 constexpr TokenType operator_lookup(const std::string_view& s);

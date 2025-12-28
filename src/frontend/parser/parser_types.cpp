@@ -13,7 +13,7 @@
 namespace Manganese {
 namespace parser {
 
-TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
+TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
     TokenType type = peekTokenType();
 
     auto nudIterator = nudLookup_types.find(type);
@@ -42,7 +42,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
 
 // ===== Specific type parsing methods =====
 
-TypeSPtr_t Parser::parseAggregateType() noexcept_if_release {
+TypeSPtr_t Parser::parseAggregateType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the 'aggregate' token
     if (peekTokenType() == TokenType::Identifier) {
         logging::logWarning("Aggregate names are ignored in aggregate type declarations", peekToken().getLine(),
@@ -71,7 +71,7 @@ TypeSPtr_t Parser::parseAggregateType() noexcept_if_release {
     return std::make_shared<ast::AggregateType>(std::move(fieldTypes));
 }
 
-TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) noexcept_if_release {
+TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     ExpressionUPtr_t lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
     DISCARD(consumeToken());  // Consume the left square bracket '['
@@ -83,7 +83,7 @@ TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) noexce
     return std::make_shared<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
-TypeSPtr_t Parser::parseFunctionType() noexcept_if_release {
+TypeSPtr_t Parser::parseFunctionType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // consume the 'func' token
 
     expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
@@ -114,7 +114,7 @@ TypeSPtr_t Parser::parseFunctionType() noexcept_if_release {
     return std::make_shared<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
 }
 
-TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) noexcept_if_release {
+TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
@@ -133,14 +133,14 @@ TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) noex
     return std::make_shared<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 
-TypeSPtr_t Parser::parseParenthesizedType() noexcept_if_release {
+TypeSPtr_t Parser::parseParenthesizedType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Skip the '('
     TypeSPtr_t innerType = parseType(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
     return innerType;
 }
 
-TypeSPtr_t Parser::parsePointerType() noexcept_if_release {
+TypeSPtr_t Parser::parsePointerType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume `ptr`
     bool isMutable = false;
     if (peekTokenType() == TokenType::Mut) {
@@ -150,7 +150,7 @@ TypeSPtr_t Parser::parsePointerType() noexcept_if_release {
     return std::make_shared<ast::PointerType>(parseType(Precedence::Default), isMutable);
 }
 
-TypeSPtr_t Parser::parseSymbolType() noexcept_if_release {
+TypeSPtr_t Parser::parseSymbolType() NOEXCEPT_IF_RELEASE {
     using prim = ast::PrimitiveType_t;
     Token token = peekToken();
     if (token.isPrimitiveType()) {

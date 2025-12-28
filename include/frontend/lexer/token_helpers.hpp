@@ -51,7 +51,7 @@ constexpr bool Token::hasUnaryCounterpart() const noexcept {
         type == TokenType::Mul;  // * can be multiplication or dereference operator
 }
 
-constexpr TokenType Token::getUnaryCounterpart() const noexcept_if_release {
+constexpr TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
     switch (type) {
         case TokenType::Plus: return TokenType::UnaryPlus;
         case TokenType::Minus: return TokenType::UnaryMinus;
@@ -61,7 +61,7 @@ constexpr TokenType Token::getUnaryCounterpart() const noexcept_if_release {
     }
 }
 
-constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release {
+constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) NOEXCEPT_IF_RELEASE {
     using enum lexer::TokenType;
     switch (assignmentOp) {
         case PlusAssign: return Plus;
@@ -83,7 +83,7 @@ constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType ass
     }
 }
 
-constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
+constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
     switch (type) {
         // Basic
         case TokenType::Identifier: return "Identifier";

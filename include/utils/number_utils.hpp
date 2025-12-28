@@ -88,7 +88,7 @@ std::optional<float64_t> stof64(std::string_view str);
  */
     std::optional<number_t>
     stringToNumber(std::string_view str, Base base = Base::Decimal, bool isFloat = false,
-                   const std::string& suffix = "") noexcept_if_release;
+                   const std::string& suffix = "") NOEXCEPT_IF_RELEASE;
 
 }  // namespace utils
 

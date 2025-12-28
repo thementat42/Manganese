@@ -21,19 +21,14 @@
  */
 
 #if DEBUG
-#define noexcept_if_release  // In debug mode, these functions are more likely to throw -- don't use noexcept
+#define NOEXCEPT_IF_RELEASE  // In debug mode, these functions are more likely to throw -- don't use noexcept
 #else  // ^^ DEBUG vv !DEBUG
-#define noexcept_if_release noexcept  // In release builds, optimize these functions more
+#define NOEXCEPT_IF_RELEASE noexcept  // In release builds, optimize these functions more
 #endif
 
 #ifndef DISCARD
 #define DISCARD(value) (void)(value)  // Explicitly discard a value
 #endif  // DISCARD
-
-#ifndef DEFAULT_ENUM_T
-#define DEFAULT_ENUM_T
-typedef unsigned char enum_underlying_t;
-#endif // DEFAULT_ENUM_T
 
 //~ Build type
 
@@ -55,6 +50,14 @@ typedef unsigned char enum_underlying_t;
 #define FORCE_INLINE inline
 #endif
 
+
+#define MANGANESE_PRINT_LOCATION_                                                                             \
+    std::cerr << "\033[33m In file: " << __FILE__ << ", at line " << __LINE__ << ": when running " << __func__ \
+              << "\033[0m\n";
+
+#define PRINT_LOCATION \
+    MANGANESE_PRINT_LOCATION_  // Print the location of the log message (in the compiler source, not the user code)
+
 //~ Unreachable Code
 
 [[noreturn]] inline void manganese_unreachable() {
@@ -69,13 +72,6 @@ typedef unsigned char enum_underlying_t;
        // Still invoked undefined behaviour
 #endif  // __cplusplus >= 202302L
 }
-
-#define MANGANESE_PRINT_LOCATION_                                                                             \
-    std::cerr << "\033[33m In file: " << __FILE__ << ", at line " << __LINE__ << ": when running " << __func__ \
-              << "\033[0m\n";
-
-#define PRINT_LOCATION \
-    MANGANESE_PRINT_LOCATION_  // Print the location of the log message (in the compiler source, not the user code)
 
 #if DEBUG
 #define MANGANESE_ASSERT_UNREACHABLE_(message)                                      \
@@ -95,21 +91,5 @@ typedef unsigned char enum_underlying_t;
  * @note see
  */
 #define ASSERT_UNREACHABLE(message) MANGANESE_ASSERT_UNREACHABLE_(message)
-
-#if DEBUG
-#define MANGANESE_NOT_IMPLEMENTED_(reason)                                                                              \
-    do {                                                                                                                 \
-        std::cerr << "\033[31m" << __func__ << "is not implemented yet!";                                                \
-        std::cerr << "Reason: " << reason << "\n";                                                                       \
-        std::cerr                                                                                                        \
-            << " (if this occurred in a test run, make sure to implement the function, then re-run the tests)\n\033[0m"; \
-        PRINT_LOCATION;                                                                                                  \
-        throw std::runtime_error("Not implemented yet");                                                                 \
-    } while (0);
-#else  // ^^ DEBUG vv !DEBUG
-#define MANGANESE_NOT_IMPLEMENTED_(reason)
-#endif  // DEBUG
-
-#define NOT_IMPLEMENTED(reason) MANGANESE_NOT_IMPLEMENTED_(reason)  // Indicates that a function is not implemented
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
