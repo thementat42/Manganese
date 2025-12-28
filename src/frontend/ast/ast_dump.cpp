@@ -25,7 +25,7 @@ inline std::string getIndent(size_t indent) { return std::string(indent * 2, ' '
 
 // Helper function to get the type of a number variant
 std::string getNumberTypeName(const number_t& value) {
-    auto visitor = [](auto&& arg) -> std::string {
+    auto _number_visitor = [](auto&& arg) -> std::string {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, int8_t>) return int8_str;
         else if constexpr (std::is_same_v<T, uint8_t>)
@@ -49,7 +49,7 @@ std::string getNumberTypeName(const number_t& value) {
         else
             return "unknown";
     };
-    return std::visit(visitor, value);
+    return std::visit(_number_visitor, value);
 }
 
 // ===== Expressions =====
