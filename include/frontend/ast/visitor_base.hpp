@@ -1,12 +1,15 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_VISITOR_VISITOR_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_VISITOR_VISITOR_BASE_HPP
 
-#include <frontend/ast.hpp>
+#include <frontend/ast/ast_base.hpp>
+#include <frontend/ast/ast_expressions.hpp>
+#include <frontend/ast/ast_statements.hpp>
+#include <frontend/ast/ast_types.hpp>
 #include <global_macros.hpp>
 
 namespace Manganese {
 
-namespace visitor {
+namespace ast {
 
 template <class ExpressionResult, class StatementResult, class TypeResult>
 class Visitor {
@@ -77,7 +80,7 @@ class Visitor {
 
 };
 
-}  // namespace visitor
+}  // namespace ast
 
 }  // namespace Manganese
 
