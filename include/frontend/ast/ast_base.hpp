@@ -62,7 +62,23 @@ expensive, so shared_pointer is much more efficient
 enum class ExpressionKind;
 enum class StatementKind;
 enum class TypeKind;
-enum class PrimitiveType_t;
+
+enum class PrimitiveType_t {
+    not_primitive = 0,
+    i8,
+    ui8,
+    i16,
+    ui16,
+    i32,
+    ui32,
+    i64,
+    ui64,
+    f32,
+    f64,
+    character,
+    str,
+    boolean
+};
 
 enum class Visibility : char {
     Public = 0,
@@ -109,26 +125,44 @@ class ASTNode {
 class Expression : public ASTNode {
    private:
     TypeSPtr_t computedType;
+    ExpressionKind kind_;
 
    public:
     virtual ~Expression() noexcept = default;
     inline Type* getType() const noexcept { return computedType.get(); };
     inline TypeSPtr_t getTypePtr() const noexcept { return computedType; }
     void setType(TypeSPtr_t type) noexcept { computedType = type; }
-    constexpr virtual ExpressionKind kind() const noexcept = 0;
+    constexpr inline ExpressionKind kind() const noexcept { return kind_; }
+
+   protected:
+    constexpr explicit Expression(ExpressionKind k_) noexcept : kind_(k_) {}
 };
 
 class Statement : public ASTNode {
+   private:
+    StatementKind kind_;
+
    public:
     virtual ~Statement() noexcept = default;
-    constexpr virtual StatementKind kind() const noexcept = 0;
+    constexpr inline StatementKind kind() const noexcept { return kind_; }
+
+   protected:
+    constexpr explicit Statement(StatementKind k_) noexcept : kind_(k_) {}
 };
 
 class Type : public ASTNode {
+   private:
+    TypeKind kind_;
+    PrimitiveType_t prim_;
+
    public:
     virtual ~Type() noexcept = default;
-    constexpr virtual TypeKind kind() const noexcept = 0;
-    constexpr virtual PrimitiveType_t primitive_type() const noexcept = 0;
+    constexpr inline TypeKind kind() const noexcept { return kind_; }
+    constexpr inline PrimitiveType_t primitive_type() const noexcept { return prim_; }
+    constexpr inline void set_primitive_type(PrimitiveType_t prim_type) noexcept {prim_ = prim_type;}
+
+   protected:
+    constexpr explicit Type(TypeKind k_) noexcept : kind_(k_), prim_(PrimitiveType_t::not_primitive) {}
 };
 
 constexpr std::string visibilityToString(const Visibility& visibility) noexcept_if_release {

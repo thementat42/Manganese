@@ -18,7 +18,6 @@
 #include <frontend/ast/ast_types.hpp>
 #include <utility>
 
-
 namespace Manganese {
 
 namespace ast {
@@ -58,9 +57,11 @@ class AggregateDeclarationStatement final : public Statement {
 
     constexpr AggregateDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
                                             std::vector<AggregateField> fields_) :
-        name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
+        Statement(StatementKind::AggregateDeclarationStatement),
+        name(std::move(name_)),
+        genericTypes(std::move(genericTypes_)),
+        fields(std::move(fields_)) {}
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::AggregateDeclarationStatement; };
 };
 
 class AliasStatement final : public Statement {
@@ -70,33 +71,29 @@ class AliasStatement final : public Statement {
     Visibility visibility = Visibility::Private;
 
     AliasStatement(TypeSPtr_t baseType_, std::string alias_) :
-        baseType(std::move(baseType_)), alias(std::move(alias_)) {}
+        Statement(StatementKind::AliasStatement), baseType(std::move(baseType_)), alias(std::move(alias_)) {}
 
     AST_STANDARD_INTERFACE
-    constexpr StatementKind kind() const noexcept override { return StatementKind::AliasStatement; };
 };
 
 class BreakStatement final : public Statement {
    public:
-    constexpr explicit BreakStatement() = default;
+    constexpr explicit BreakStatement() : Statement(StatementKind::BreakStatement) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::BreakStatement; };
 };
 
 class ContinueStatement final : public Statement {
    public:
-    constexpr explicit ContinueStatement() = default;
+    constexpr explicit ContinueStatement() : Statement(StatementKind::ContinueStatement) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::ContinueStatement; };
 };
 
 class EmptyStatement final : public Statement {
    public:
-    constexpr explicit EmptyStatement() = default;
+    constexpr explicit EmptyStatement() : Statement(StatementKind::EmptyStatement) {}
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::EmptyStatement; };
 };
 
 struct EnumValue {
@@ -114,10 +111,12 @@ class EnumDeclarationStatement final : public Statement {
     Visibility visibility = Visibility::Private;
 
     EnumDeclarationStatement(std::string name_, TypeSPtr_t baseType_, std::vector<EnumValue> values_) :
-        name(name_), baseType(std::move(baseType_)), values(std::move(values_)) {}
+        Statement(StatementKind::EnumDeclarationStatement),
+        name(name_),
+        baseType(std::move(baseType_)),
+        values(std::move(values_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::EnumDeclarationStatement; };
 };
 
 /**
@@ -127,10 +126,10 @@ class ExpressionStatement final : public Statement {
    public:
     ExpressionUPtr_t expression;
 
-    explicit ExpressionStatement(ExpressionUPtr_t expression_) : expression(std::move(expression_)) {};
+    explicit ExpressionStatement(ExpressionUPtr_t expression_) :
+        Statement(StatementKind::ExpressionStatement), expression(std::move(expression_)) {};
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::ExpressionStatement; };
 };
 
 struct FunctionParameter {
@@ -153,6 +152,7 @@ class FunctionDeclarationStatement final : public Statement {
 
     FunctionDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
                                  std::vector<FunctionParameter> parameters_, TypeSPtr_t returnType_, Block body_) :
+        Statement(StatementKind::FunctionDeclarationStatement),
         name(std::move(name_)),
         genericTypes(std::move(genericTypes_)),
         parameters(std::move(parameters_)),
@@ -160,7 +160,6 @@ class FunctionDeclarationStatement final : public Statement {
         body(std::move(body_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::FunctionDeclarationStatement; };
 };
 
 struct ElifClause {
@@ -177,13 +176,13 @@ class IfStatement final : public Statement {
     std::vector<ElifClause> elifs;
 
     IfStatement(ExpressionUPtr_t condition_, Block body_, std::vector<ElifClause> elifs_, Block elseBody_ = {}) :
+        Statement(StatementKind::IfStatement),
         condition(std::move(condition_)),
         body(std::move(body_)),
         elseBody(std::move(elseBody_)),
         elifs(std::move(elifs_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::IfStatement; };
 };
 
 class RepeatLoopStatement final : public Statement {
@@ -192,20 +191,21 @@ class RepeatLoopStatement final : public Statement {
     Block body;
 
     RepeatLoopStatement(ExpressionUPtr_t numIterations_, Block body_) :
-        numIterations(std::move(numIterations_)), body(std::move(body_)) {}
+        Statement(StatementKind::RepeatLoopStatement),
+        numIterations(std::move(numIterations_)),
+        body(std::move(body_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::RepeatLoopStatement; };
 };
 
 class ReturnStatement final : public Statement {
    public:
     ExpressionUPtr_t value;
 
-    explicit ReturnStatement(ExpressionUPtr_t value_ = nullptr) : value(std::move(value_)) {}
+    explicit ReturnStatement(ExpressionUPtr_t value_ = nullptr) :
+        Statement(StatementKind::ReturnStatement), value(std::move(value_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::ReturnStatement; };
 };
 
 struct CaseClause {
@@ -223,10 +223,12 @@ class SwitchStatement final : public Statement {
     Block defaultBody;
 
     SwitchStatement(ExpressionUPtr_t variable_, std::vector<CaseClause> cases_, Block defaultBody_ = {}) :
-        variable(std::move(variable_)), cases(std::move(cases_)), defaultBody(std::move(defaultBody_)) {}
+        Statement(StatementKind::SwitchStatement),
+        variable(std::move(variable_)),
+        cases(std::move(cases_)),
+        defaultBody(std::move(defaultBody_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::SwitchStatement; };
 };
 
 class VariableDeclarationStatement final : public Statement {
@@ -239,6 +241,7 @@ class VariableDeclarationStatement final : public Statement {
 
     VariableDeclarationStatement(bool isMutable_, std::string name_, Visibility visibility_, ExpressionUPtr_t _value,
                                  TypeSPtr_t _type) :
+        Statement(StatementKind::VariableDeclarationStatement),
         isMutable(isMutable_),
         name(std::move(name_)),
         visibility(visibility_),
@@ -246,7 +249,6 @@ class VariableDeclarationStatement final : public Statement {
         type(std::move(_type)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::VariableDeclarationStatement; };
 };
 
 class WhileLoopStatement final : public Statement {
@@ -256,10 +258,12 @@ class WhileLoopStatement final : public Statement {
     bool isDoWhile;
 
     WhileLoopStatement(Block body_, ExpressionUPtr_t condition_, bool isDoWhile_ = false) :
-        body(std::move(body_)), condition(std::move(condition_)), isDoWhile(isDoWhile_) {}
+        Statement(StatementKind::WhileLoopStatement),
+        body(std::move(body_)),
+        condition(std::move(condition_)),
+        isDoWhile(isDoWhile_) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr StatementKind kind() const noexcept override { return StatementKind::WhileLoopStatement; };
 };
 
 }  // namespace ast
