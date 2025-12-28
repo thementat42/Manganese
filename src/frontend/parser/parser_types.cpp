@@ -186,10 +186,10 @@ TypeSPtr_t Parser::parseSymbolType() noexcept_if_release {
             prim_t = prim::boolean;
         }
         else {
-            manganese_unreachable();
+            ASSERT_UNREACHABLE("Unknown primitive type " + lex);
         }
         auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());
-        symbol_type->_primitive = prim_t;
+        symbol_type->set_primitive_type(prim_t);
         return symbol_type;
     }
     // If it's not a primitive type, expect an identifier (i.e., a user-defined type)

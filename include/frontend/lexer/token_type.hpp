@@ -50,7 +50,7 @@ enum class TokenType : uint8_t {
     EndOfFile,
 
     //~ Keywords
-    __KeywordStart,  // Marker for the start of keyword token types -- not to be used as an actual token type
+    _keywordStart,  // Marker for the start of keyword token types -- not to be used as an actual token type
     //* Type Qualifiers
     Let,  // variable declaration
     Mut, // specify something as mutable
@@ -114,11 +114,11 @@ enum class TokenType : uint8_t {
     //* Misc Operators
     Alias,  // type aliasing (alias `a` as `b`)
     // TypeOf,  // get the type of a variable
-    __KeywordEnd,  // Marker for the end of keyword token types -- not to be used as an actual token type
+    _keywordEnd,  // Marker for the end of keyword token types -- not to be used as an actual token type
 
     //~ Operators
     //* Arithmetic Operators
-    __OperatorStart,  // Marker for the start of operator token types -- not to be used as an actual token type
+    _operatorStart,  // Marker for the start of operator token types -- not to be used as an actual token type
     Plus,  // `+`
     Minus,  // `-`
     Mul,  // `*`
@@ -184,7 +184,7 @@ enum class TokenType : uint8_t {
     Arrow,  // `->`
     Ellipsis,  // `...`
     At,  // `@`
-    __OperatorEnd,  // Marker for the end of operator token types -- not to be used as an actual token type
+    _operatorEnd,  // Marker for the end of operator token types -- not to be used as an actual token type
     Unknown,  // For truly catastrophic failures (e.g, unrecognized character)
 };
 

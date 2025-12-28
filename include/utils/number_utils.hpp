@@ -44,7 +44,7 @@ typedef double float64_t;
 
 using number_t = std::variant<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, float32_t, float64_t>;
 
-enum class Base {
+enum class Base: uint8_t {
     Binary = 2,  // 0b prefix
     Octal = 8,  // 0o prefix
     Decimal = 10,  // Default base, no prefix

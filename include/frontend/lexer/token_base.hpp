@@ -54,10 +54,10 @@ class Token {
     ~Token() noexcept = default;
 
     constexpr bool isKeyword() const noexcept {
-        return type >= TokenType::__KeywordStart && type <= TokenType::__KeywordEnd;
+        return type >= TokenType::_keywordStart && type <= TokenType::_keywordEnd;
     }
     constexpr bool isOperator() const noexcept {
-        return type >= TokenType::__OperatorStart && type <= TokenType::__OperatorEnd;
+        return type >= TokenType::_operatorStart && type <= TokenType::_operatorEnd;
     }
 
     constexpr bool isInvalid() const noexcept { return invalid; }

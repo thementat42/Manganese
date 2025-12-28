@@ -7,7 +7,7 @@
  *
  *
  * Internal:
- * - __stox: Template function for integer conversion using std::from_chars.
+ * - _stox: Template function for integer conversion using std::from_chars.
  */
 
 #include <charconv>
@@ -61,7 +61,7 @@ std::optional<number_t> stringToNumber(std::string_view str, Base base, bool isF
 }
 
 template <typename T>
-constexpr std::optional<T> __stox(std::string_view str, int base = 10)
+constexpr std::optional<T> _stox(std::string_view str, int base = 10)
     requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
 {
     T temp;
@@ -74,21 +74,21 @@ constexpr std::optional<T> __stox(std::string_view str, int base = 10)
 
 //~ Wrapper methods for convenience
 
-constexpr FORCE_INLINE std::optional<int8_t> stoi8(std::string_view str, int base) { return __stox<int8_t>(str, base); }
+constexpr FORCE_INLINE std::optional<int8_t> stoi8(std::string_view str, int base) { return _stox<int8_t>(str, base); }
 
-constexpr FORCE_INLINE std::optional<int16_t> stoi16(std::string_view str, int base) { return __stox<int16_t>(str, base); }
+constexpr FORCE_INLINE std::optional<int16_t> stoi16(std::string_view str, int base) { return _stox<int16_t>(str, base); }
 
-constexpr FORCE_INLINE std::optional<int32_t> stoi32(std::string_view str, int base) { return __stox<int32_t>(str, base); }
+constexpr FORCE_INLINE std::optional<int32_t> stoi32(std::string_view str, int base) { return _stox<int32_t>(str, base); }
 
-constexpr FORCE_INLINE std::optional<int64_t> stoi64(std::string_view str, int base) { return __stox<int64_t>(str, base); }
+constexpr FORCE_INLINE std::optional<int64_t> stoi64(std::string_view str, int base) { return _stox<int64_t>(str, base); }
 
-constexpr FORCE_INLINE std::optional<uint8_t> stoui8(std::string_view str, int base) { return __stox<uint8_t>(str, base); }
+constexpr FORCE_INLINE std::optional<uint8_t> stoui8(std::string_view str, int base) { return _stox<uint8_t>(str, base); }
 
-constexpr FORCE_INLINE std::optional<uint16_t> stoui16(std::string_view str, int base) { return __stox<uint16_t>(str, base); }
+constexpr FORCE_INLINE std::optional<uint16_t> stoui16(std::string_view str, int base) { return _stox<uint16_t>(str, base); }
 
-constexpr FORCE_INLINE std::optional<uint32_t> stoui32(std::string_view str, int base) { return __stox<uint32_t>(str, base); }
+constexpr FORCE_INLINE std::optional<uint32_t> stoui32(std::string_view str, int base) { return _stox<uint32_t>(str, base); }
 
-constexpr FORCE_INLINE std::optional<uint64_t> stoui64(std::string_view str, int base) { return __stox<uint64_t>(str, base); }
+constexpr FORCE_INLINE std::optional<uint64_t> stoui64(std::string_view str, int base) { return _stox<uint64_t>(str, base); }
 
 // from_chars doesn't always support floats so fall back to stl functions
 FORCE_INLINE std::optional<float32_t> stof32(std::string_view str) { return std::stof(std::string(str)); }

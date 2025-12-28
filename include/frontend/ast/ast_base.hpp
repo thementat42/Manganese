@@ -20,25 +20,25 @@
 #include <utils/number_utils.hpp>
 
 #if DEBUG
-#define __OVERRIDE_DUMP_METHOD \
+#define OVERRIDE_DUMP_METHOD_ \
     void dump(std::ostream& os, size_t indent = 0) const override;  // Makes overriding dump() less cumbersome to type
 #else
-#define __OVERRIDE_DUMP_METHOD  // Don't dump in non-debug builds
+#define OVERRIDE_DUMP_METHOD_  // Don't dump in non-debug builds
 #endif
 
-#define __OVERRIDE_TO_STRING \
+#define OVERRIDE_TO_STRING_ \
     std::string toString() const override;  // Makes overriding toString() less cumbersome to type
 
-#define __NODE_OVERRIDES \
-    __OVERRIDE_TO_STRING \
-    __OVERRIDE_DUMP_METHOD
+#define NODE_OVERRIDES_ \
+    OVERRIDE_TO_STRING_ \
+    OVERRIDE_DUMP_METHOD_
 
 /**
  * Common interface functions for all nodes
  * Combines required methods overrides (toString/dump)
  * and friend declarations (the parser and semantic analyzer) for access to protected members
  */
-#define AST_STANDARD_INTERFACE __NODE_OVERRIDES
+#define AST_STANDARD_INTERFACE NODE_OVERRIDES_
 
 namespace Manganese {
 
