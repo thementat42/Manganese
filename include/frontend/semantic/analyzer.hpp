@@ -7,7 +7,6 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <global_macros.hpp>
 
-
 namespace Manganese {
 
 namespace semantic {
@@ -22,16 +21,16 @@ class analyzer final : public ast::Visitor<void, void, void> {
    public:
     analyzer(parser::ParsedFile& file) : table(), parsed(file) {}
     void analyze() {
-        collect_types();
-        collect_symbols();
-        check_statements();
+        collectTypes();
+        collectSymbols();
+        checkStatements();
     }
     ~analyzer() override = default;
 
    private:
-    void collect_types();  // first pass -- collect all user-defined types
-    void collect_symbols();  // second pass -- collect variables, functions, etc.
-    inline void check_statements() {  // semantic analysis pass
+    void collectTypes();  // first pass -- collect all user-defined types
+    void collectSymbols();  // second pass -- collect variables, functions, etc.
+    inline void checkStatements() {  // semantic analysis pass
         for (auto& stmt : parsed.program) { this->visit(stmt); }
     }
 
