@@ -10,8 +10,9 @@
 namespace Manganese {
 
 namespace semantic {
+using analyzer_base_t = ast::Visitor<bool, bool, bool>;
 
-class analyzer final : public ast::Visitor<void, void, void> {
+class analyzer final : public analyzer_base_t {
     // note: with `final`, the compiler can more intelligently detect when analyzer is abstract (i.e., a particular
     // visit() override hasn't been implemented) right here, instead of failing at an analyzer instantiation
    private:
@@ -20,23 +21,26 @@ class analyzer final : public ast::Visitor<void, void, void> {
 
    public:
     analyzer(parser::ParsedFile& file) : table(), parsed(file) {}
-    void analyze() {
+    bool analyze() {
         collectTypes();
         collectSymbols();
-        checkStatements();
+        bool isSemanticallyValid = checkStatements();
+        return isSemanticallyValid;
     }
     ~analyzer() override = default;
 
    private:
     void collectTypes();  // first pass -- collect all user-defined types
     void collectSymbols();  // second pass -- collect variables, functions, etc.
-    inline void checkStatements() {  // semantic analysis pass
-        for (auto& stmt : parsed.program) { this->visit(stmt); }
+    inline bool checkStatements() {  // semantic analysis pass
+        bool isSemanticallyValid = true;
+        for (auto& stmt : parsed.program) { isSemanticallyValid = isSemanticallyValid && this->visit(stmt); }
+        return isSemanticallyValid;
     }
 
    protected:
     // overrides for visitor functions
-    using ast::Visitor<void, void, void>::visit;
+    using analyzer_base_t::visit;
 
     // ===== Expression Visiting =====
     exprvisit_t visit(ast::AggregateInstantiationExpression*) override;
