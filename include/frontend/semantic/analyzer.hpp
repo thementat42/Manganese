@@ -10,9 +10,9 @@
 namespace Manganese {
 
 namespace semantic {
-using analyzer_base_t = ast::Visitor<bool, bool, bool>;
+using _analyzer_base_t = ast::Visitor<bool, bool, bool>;
 
-class analyzer final : public analyzer_base_t {
+class analyzer final : public _analyzer_base_t {
     // note: with `final`, the compiler can more intelligently detect when analyzer is abstract (i.e., a particular
     // visit() override hasn't been implemented) right here, instead of failing at an analyzer instantiation
    private:
@@ -23,7 +23,8 @@ class analyzer final : public analyzer_base_t {
     analyzer(parser::ParsedFile& file) : table(), parsed(file) {}
     bool analyze() {
         collectTypes();
-        collectSymbols();
+        collectGlobals();
+        collectAndSpecializeGenerics();
         bool isSemanticallyValid = checkStatements();
         return isSemanticallyValid;
     }
@@ -31,8 +32,11 @@ class analyzer final : public analyzer_base_t {
 
    private:
     void collectTypes();  // first pass -- collect all user-defined types
-    void collectSymbols();  // second pass -- collect variables, functions, etc.
-    inline bool checkStatements() {  // semantic analysis pass
+    void _collectTypesInBody(ast::Statement*);
+    void collectGlobals();  // second pass -- collect publicly available symbols for modules
+    void collectAndSpecializeGenerics();  // third pass -- look at specific generic instantiations and specialize them (e.g.
+                                // foo@[int] -> create a specialization of foo w/ int)
+    inline bool checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
         bool isSemanticallyValid = true;
         for (auto& stmt : parsed.program) { isSemanticallyValid = isSemanticallyValid && this->visit(stmt); }
         return isSemanticallyValid;
@@ -40,7 +44,7 @@ class analyzer final : public analyzer_base_t {
 
    protected:
     // overrides for visitor functions
-    using analyzer_base_t::visit;
+    using _analyzer_base_t::visit;
 
     // ===== Expression Visiting =====
     exprvisit_t visit(ast::AggregateInstantiationExpression*) override;
