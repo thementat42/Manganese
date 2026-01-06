@@ -25,6 +25,7 @@ constexpr const char* RED = "\033[31m";
 constexpr const char* YELLOW = "\033[33m";
 constexpr const char* BLUE = "\033[34m";
 constexpr const char* CYAN = "\033[36m";
+constexpr const char* CRITICAL = "\033[91;1m";
 constexpr const char* RESET = "\033[0m";
 
 namespace Manganese {

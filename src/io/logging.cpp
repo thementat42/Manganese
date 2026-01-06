@@ -35,10 +35,10 @@ void logInternal(const std::string& message, LogLevel level, std::ostream& out) 
 void log(const std::string& message, LogLevel level, size_t line, size_t col, std::ostream& out) noexcept {
     switch (level) {
         case LogLevel::Info: return;  // No user info
-        case LogLevel::Warning: out << "\033[33m Warning: " << message << "\033[0m"; break;
-        case LogLevel::Error: out << "\033[31mError: " << message << "\033[0m"; break;
+        case LogLevel::Warning: out << YELLOW << "Warning: " << message << RESET; break;
+        case LogLevel::Error: out << RED << "Error: " << message << RESET; break;
         case LogLevel::Critical:
-            out << "\033[91;1mCritical error: " << message << " Compilation aborted." << "\033[0m";
+            out << CRITICAL << "Critical error: " << message << " Compilation aborted." << RESET;
             break;
     }
     out << " (line " << line << ", column " << col << ")\n";
@@ -48,12 +48,12 @@ void log(std::initializer_list<std::string> messages, LogLevel level, size_t lin
          std::ostream& out) noexcept {
     switch (level) {
         case LogLevel::Info: break;  // No user info
-        case LogLevel::Warning: out << "\033[33mWarning: "; break;
-        case LogLevel::Error: out << "\033[31mError: "; break;
-        case LogLevel::Critical: out << "\033[91;1mCritical error: "; break;
+        case LogLevel::Warning: out << YELLOW << "Warning: "; break;
+        case LogLevel::Error: out << RED << "Error: "; break;
+        case LogLevel::Critical: out << CRITICAL << "Critical error: "; break;
     }
     for (const auto& message : messages) { out << message << "\n"; }
-    out << "\033[0m\n";
+    out << RESET;
     if (line != 0 && col != 0) { out << "(line " << line << ", column " << col << ")\n"; }
 }
 }  // namespace logging
