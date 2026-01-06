@@ -34,7 +34,6 @@ struct Symbol {
     std::string name;
     SymbolKind kind;
     ast::TypeSPtr_t type;
-    size_t line, column;
 
     ast::ASTNode* node = nullptr;
 
@@ -77,6 +76,7 @@ class SymbolTable {
             logInternal("Attempted to exit scope when no scope was available", LogLevel::Warning);
             return;
         }
+        // since we're doing multiple passes, we want to preserve scope information between passes
         --_currentDepth;
     }
     bool declare(Symbol symbol) {
@@ -86,7 +86,7 @@ class SymbolTable {
             return false;
         }
         symbol.scopeDepth = getCurrentDepth();
-        return _scopes[getCurrentDepth() - 1].insert(std::move(symbol));
+        return _scopes[getCurrentDepth()].insert(std::move(symbol));
     }
 
     const Symbol* lookup(const std::string& name) const noexcept {
@@ -102,7 +102,7 @@ class SymbolTable {
             logging::logInternal("No active scope to lookup symbol.", logging::LogLevel::Error);
             return nullptr;
         }
-        const Symbol* symbol = _scopes[getCurrentDepth() - 1].lookup(name);
+        const Symbol* symbol = _scopes[getCurrentDepth()].lookup(name);
         if (!symbol) {
             logging::logInternal("Symbol '" + name + "' not found in current scope.", logging::LogLevel::Warning);
         }
@@ -110,11 +110,11 @@ class SymbolTable {
     }
     const Symbol* lookupAtDepth(const std::string& name, int64_t depth) const noexcept {
         if (depth < 0 || depth >= (int64_t)getCurrentDepth()) [[unlikely]] {
-            logging::logInternal(std::format("Invalid scope depth {} (valid range: 0-{})", depth, getCurrentDepth() - 1),
+            logging::logInternal(std::format("Invalid scope depth {} (valid range: 0-{})", depth, getCurrentDepth()),
                                  logging::LogLevel::Warning);
             return nullptr;
         }
-        size_t _index = getCurrentDepth() - 1 - (size_t)depth;  // go to the appropriate depth
+        size_t _index = getCurrentDepth() - (size_t)depth;  // go to the appropriate depth
         return _scopes[_index].lookup(name);
     }
     constexpr inline size_t getCurrentDepth() const noexcept { return _currentDepth; }
