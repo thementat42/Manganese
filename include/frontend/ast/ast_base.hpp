@@ -158,11 +158,11 @@ class Type : public ASTNode {
    public:
     virtual ~Type() noexcept = default;
     constexpr inline TypeKind kind() const noexcept { return kind_; }
-    constexpr inline PrimitiveType_t primitive_type() const noexcept { return prim_; }
-    constexpr inline void set_primitive_type(PrimitiveType_t prim_type) noexcept {prim_ = prim_type;}
+    constexpr inline PrimitiveType_t primitiveType() const noexcept { return prim_; }
+    constexpr inline void setPrimitiveType(PrimitiveType_t prim_type) noexcept {prim_ = prim_type;}
 
    protected:
-    constexpr explicit Type(TypeKind k_) noexcept : kind_(k_), prim_(PrimitiveType_t::not_primitive) {}
+    constexpr explicit Type(TypeKind _k, PrimitiveType_t _p = PrimitiveType_t::not_primitive) noexcept : kind_(_k), prim_(_p) {}
 };
 
 constexpr std::string visibilityToString(const Visibility& visibility) NOEXCEPT_IF_RELEASE {
