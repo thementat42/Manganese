@@ -158,38 +158,38 @@ TypeSPtr_t Parser::parseSymbolType() NOEXCEPT_IF_RELEASE {
         DISCARD(consumeToken());
         std::string lex = token.getLexeme();
         ast::PrimitiveType_t prim_t = prim::not_primitive;
-        if (lex == "int8") {
+        if (lex == int8_str) {
             prim_t = prim::i8;
-        } else if (lex == "int16") {
+        } else if (lex == int16_str) {
             prim_t = prim::i16;
-        } else if (lex == "int32") {
+        } else if (lex == int32_str) {
             prim_t = prim::i32;
-        } else if (lex == "int64") {
+        } else if (lex == int64_str) {
             prim_t = prim::i64;
-        } else if (lex == "uint8") {
+        } else if (lex == uint8_str) {
             prim_t = prim::ui8;
-        } else if (lex == "uint16") {
+        } else if (lex == uint16_str) {
             prim_t = prim::ui16;
-        } else if (lex == "uint32") {
+        } else if (lex == uint32_str) {
             prim_t = prim::ui32;
-        } else if (lex == "uint64") {
+        } else if (lex == uint64_str) {
             prim_t = prim::ui64;
-        } else if (lex == "float32") {
+        } else if (lex == float32_str) {
             prim_t = prim::f32;
-        } else if (lex == "float64") {
+        } else if (lex == float64_str) {
             prim_t = prim::f64;
-        } else if (lex == "string") {
+        } else if (lex == string_str) {
             prim_t = prim::str;
-        } else if (lex == "char") {
+        } else if (lex == char_str) {
             prim_t = prim::character;
-        } else if (lex == "bool") {
+        } else if (lex == bool_str) {
             prim_t = prim::boolean;
         }
         else {
             ASSERT_UNREACHABLE("Unknown primitive type " + lex);
         }
         auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());
-        symbol_type->set_primitive_type(prim_t);
+        symbol_type->setPrimitiveType(prim_t);
         return symbol_type;
     }
     // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
