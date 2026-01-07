@@ -67,14 +67,14 @@ constexpr std::string char_str = "char";
 
 namespace utils {
 
-constexpr std::optional<int8_t> stoi8(std::string_view str, int base = 10);
-constexpr std::optional<int16_t> stoi16(std::string_view str, int base = 10);
-constexpr std::optional<int32_t> stoi32(std::string_view str, int base = 10);
-constexpr std::optional<int64_t> stoi64(std::string_view str, int base = 10);
-constexpr std::optional<uint8_t> stoui8(std::string_view str, int base = 10);
-constexpr std::optional<uint16_t> stoui16(std::string_view str, int base = 10);
-constexpr std::optional<uint32_t> stoui32(std::string_view str, int base = 10);
-constexpr std::optional<uint64_t> stoui64(std::string_view str, int base = 10);
+constexpr std::optional<int8_t> stoi8(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<int16_t> stoi16(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<int32_t> stoi32(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<int64_t> stoi64(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<uint8_t> stoui8(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<uint16_t> stoui16(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<uint32_t> stoui32(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<uint64_t> stoui64(std::string_view str, Base base = Base::Decimal);
 std::optional<float32_t> stof32(std::string_view str);
 std::optional<float64_t> stof64(std::string_view str);
 
