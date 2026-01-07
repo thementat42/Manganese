@@ -9,6 +9,7 @@
 #include <frontend/lexer/token_base.hpp>
 #include <string_view>
 #include <utility>
+#include <utils/type_names.hpp>
 
 #include "token_type.hpp"
 

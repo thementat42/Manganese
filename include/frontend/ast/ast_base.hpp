@@ -17,7 +17,7 @@
 #include <global_macros.hpp>
 #include <memory>
 #include <string>
-#include <utils/number_utils.hpp>
+#include <utils/type_names.hpp>
 
 #if DEBUG
 #define OVERRIDE_DUMP_METHOD_ \
