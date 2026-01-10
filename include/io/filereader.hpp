@@ -36,7 +36,7 @@ class FileReader : public Reader {
     std::FILE* filePtr;
     size_t bufferSize;  // How much data is currently in the buffer
     size_t bufferCapacity;  // How much data the buffer can hold
-    static constexpr int DEFAULT_BUFFER_CAPCITY = 2 << 20;  // ~2MB buffer size
+    static constexpr int DEFAULT_BUFFER_CAPCITY = 64 * 1024;  // 64 KiB buffer size
     std::unique_ptr<char[]> buffer;  // Buffer for file reading
 
     /**
