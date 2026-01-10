@@ -148,9 +148,6 @@ void Lexer::lex(size_t numTokens) {
             //? TODO: f-strings? (f"stuff {expression} more stuff")
             tokenizeStringLiteral();
             ++numTokensMade;
-        } else if (currentChar == '`') {
-            tokenizeRawStringLiteral();
-            ++numTokensMade;
         } else if (std::isdigit(currentChar)) {
             tokenizeNumber();
             ++numTokensMade;
@@ -281,42 +278,6 @@ void Lexer::tokenizeStringLiteral() {
         stringLiteral = std::move(result.value());
     }
     tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
-}
-
-void Lexer::tokenizeRawStringLiteral() {
-    advance();  // move past the opening backtick
-    std::string rawStringLiteral;
-    while (true) {
-        if (done()) {
-            logging::logError("Unclosed raw string literal", getLine(), getCol());
-            tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol, true);
-            return;
-        }
-        if (peekChar() == '`') { break; }
-        if (peekChar() == '\\') {
-            if (peekChar(1) == '`') {
-                // use \` to put a backtick within a raw string
-                advance();  // skip the backslash
-                rawStringLiteral += consumeChar();
-                continue;
-            } else if (peekChar(1) == '\n') {
-                // continuing across lines
-                advance(2);
-                continue;
-            }
-        } else if (peekChar() == '\n') {
-            logging::logError(std::string("Raw string literal cannot span multiple lines.")
-                                  + "If you wanted a raw string literal that spans lines,"
-                                  + "add a backslash ('\\') at the end of the line",
-                              getLine(), getCol());
-            tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol, true);
-            return;
-        }
-        rawStringLiteral += consumeChar();
-    }
-    advance();  // skip closing backtick
-    // no need to process escape sequences since this is raw
-    tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol);
 }
 
 void Lexer::tokenizeKeywordOrIdentifier() {

@@ -140,11 +140,6 @@ class Lexer {
     void tokenizeStringLiteral();
 
     /**
-    * @brief Process a raw string literal (escape sequences are ignored). Triggered when a backtick (`) is encountered
-    */
-    void tokenizeRawStringLiteral();
-
-    /**
      * @brief Process a number literal and generate a token
      */
     void tokenizeNumber();
