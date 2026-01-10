@@ -34,8 +34,11 @@ class analyzer final : public _analyzer_base_t {
     void collectTypes();  // first pass -- collect all user-defined types
     void _collectTypesInBody(ast::Statement*);
     void collectGlobals();  // second pass -- collect publicly available symbols for modules
-    void collectAndSpecializeGenerics();  // third pass -- look at specific generic instantiations and specialize them (e.g.
-                                // foo@[int] -> create a specialization of foo w/ int)
+    void collectAndSpecializeGenerics() {
+        // third pass -- look at specific generic instantiations and specialize them (e.g.
+        // foo@[int] -> create a specialization of foo w/ int)
+        // does nothing for now
+    }
     inline bool checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
         bool isSemanticallyValid = true;
         for (auto& stmt : parsed.program) { isSemanticallyValid = isSemanticallyValid && this->visit(stmt); }
