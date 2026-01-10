@@ -228,14 +228,14 @@ constexpr std::pair<std::string_view, TokenType> keywordTable[] = {
     {"else", TokenType::Else},
     {"enum", TokenType::Enum},
     {"false", TokenType::False},
-    {"float", TokenType::Float32},
+    {"float", TokenType::Float32},  // if no width is specified, default to a 32-bit float
     {"float32", TokenType::Float32},
     {"float64", TokenType::Float64},
     {"for", TokenType::For},
     {"func", TokenType::Func},
     {"if", TokenType::If},
     {"import", TokenType::Import},
-    {"int", TokenType::Int32},
+    {"int", TokenType::Int32},  // if no width is specified, default to a 32-bit integer
     {"int16", TokenType::Int16},
     {"int32", TokenType::Int32},
     {"int64", TokenType::Int64},
@@ -253,7 +253,7 @@ constexpr std::pair<std::string_view, TokenType> keywordTable[] = {
     {"string", TokenType::String},
     {"switch", TokenType::Switch},
     {"true", TokenType::True},
-    {"uint", TokenType::UInt32},
+    {"uint", TokenType::UInt32},  // if no width is specified, default to a 32-bit unsigned integer
     {"uint8", TokenType::UInt8},
     {"uint16", TokenType::UInt16},
     {"uint32", TokenType::UInt32},
