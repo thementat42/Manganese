@@ -143,7 +143,6 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
         case TokenType::Ptr: return "ptr";
         case TokenType::Private: return "Private";
         case TokenType::Public: return "public";
-        case TokenType::ReadOnly: return "readonly";
         case TokenType::Repeat: return "repeat";
         case TokenType::Return: return "return";
         case TokenType::String: return "string";
@@ -247,7 +246,6 @@ constexpr std::pair<std::string_view, TokenType> keywordTable[] = {
     {"private", TokenType::Private},
     {"ptr", TokenType::Ptr},
     {"public", TokenType::Public},
-    {"readonly", TokenType::ReadOnly},
     {"repeat", TokenType::Repeat},
     {"return", TokenType::Return},
     {"string", TokenType::String},

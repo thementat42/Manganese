@@ -82,7 +82,6 @@ enum class PrimitiveType_t {
 
 enum class Visibility : char {
     Public = 0,
-    ReadOnly = 1,
     Private = 2,
 };
 
@@ -159,19 +158,15 @@ class Type : public ASTNode {
     virtual ~Type() noexcept = default;
     constexpr inline TypeKind kind() const noexcept { return kind_; }
     constexpr inline PrimitiveType_t primitiveType() const noexcept { return prim_; }
-    constexpr inline void setPrimitiveType(PrimitiveType_t prim_type) noexcept {prim_ = prim_type;}
+    constexpr inline void setPrimitiveType(PrimitiveType_t prim_type) noexcept { prim_ = prim_type; }
 
    protected:
-    constexpr explicit Type(TypeKind _k, PrimitiveType_t _p = PrimitiveType_t::not_primitive) noexcept : kind_(_k), prim_(_p) {}
+    constexpr explicit Type(TypeKind _k, PrimitiveType_t _p = PrimitiveType_t::not_primitive) noexcept :
+        kind_(_k), prim_(_p) {}
 };
 
-constexpr std::string visibilityToString(const Visibility& visibility) NOEXCEPT_IF_RELEASE {
-    switch (visibility) {
-        case Visibility::Public: return "public ";
-        case Visibility::ReadOnly: return "readonly ";
-        case Visibility::Private: return "private ";
-        default: ASSERT_UNREACHABLE("Invalid visibility");
-    }
+constexpr std::string visibilityToString(Visibility visibility) NOEXCEPT_IF_RELEASE {
+    return visibility == Visibility::Public ? "public " : "private ";
 }
 
 /**

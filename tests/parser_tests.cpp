@@ -18,6 +18,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <fstream>
 
 #include "testrunner.hpp"
 
@@ -233,11 +234,11 @@ bool testTypedVariableDeclaration() {
                              "let y: public float64 = 3.14159;\n"
                              "let mut z: char = 'A';\n"
                              "let mut numbers: int32[3^^2];\n"
-                             "let matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
+                             "let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
     std::array<std::string, 5> expected = {"(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);",
                                            "(let mut z: private char = 'A');", "(let mut numbers: private int32[(3 ^^ 2)]);",
-                                           "(let matrix: readonly float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
+                                           "(let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     return validateStatements(getParserResults(expression), expected, "Typed Variable Declarations");
 }
@@ -313,7 +314,7 @@ bool testAggregateDeclarationAndInstantiation() {
 }
 
 bool testFunctionDeclarationAndCall() {
-    std::string expression = "readonly func add(a: int32, b: int32) -> int32 {\n"
+    std::string expression = "public func add(a: int32, b: int32) -> int32 {\n"
                              "    return a + b;\n"
                              "}\n"
                              "func greet(name: string) {\n"
@@ -328,7 +329,7 @@ bool testFunctionDeclarationAndCall() {
                              "let product = calculate(2.5f64, 3.01);\n";
 
     std::array<std::string, 6> expected = {
-        "readonly func add(a: int32, b: int32) -> int32 {\nreturn (a + b);\n}",
+        "public func add(a: int32, b: int32) -> int32 {\nreturn (a + b);\n}",
         "private func greet(name: string) {\nprint((\"Hello, \" + name));\n}",
         "private func calculate(x: float64, y: mut float64) -> float64 {\n(let result: private auto = (x * y));\nreturn result;\n}",
         "(let sum: private auto = add(5, 3));",
@@ -387,7 +388,7 @@ bool testEnumDeclarationStatement() {
                              "    Green,\n"
                              "    Blue,\n"
                              "}\n"
-                             "readonly enum Status: float64 {\n"
+                             "private enum Status: float64 {\n"
                              "    Success = 0,\n"
                              "    Error = 1,\n"
                              "    Unknown = -1,\n"
@@ -454,13 +455,13 @@ bool testGenerics() {
                              "    y: U;\n"
                              "}\n"
                              "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n"
-                             "let foo_array: readonly Foo@[int32, float64][];";
+                             "let foo_array: private Foo@[int32, float64][];";
     std::array<std::string, 5> expected = {
         "private func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
         "(let result: private auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));",
         "private aggregate Foo[T, U] {\n\tx: T;\n\ty: U;\n}",
         "(let foo: private auto = Foo@[int32, float64] {x = 3, y = 4.5});",
-        "(let foo_array: readonly Foo@[int32, float64][]);"};
+        "(let foo_array: private Foo@[int32, float64][]);"};
     return validateStatements(getParserResults(expression), expected, "Generic Function Declaration");
 }
 

@@ -80,7 +80,7 @@ binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)
 
 #* Variables
 variable_decl = ("let" | "const") variable_name (":" access_modifer? type)? ("=" expression)? ";"  # semantically, the expression must match the given type
-access_modifer = "public" | "readonly" | "private"  # default access is readonly
+access_modifer = "public" | "private"  # default access is private
 type = primitive_type | user_type | pointer_type;
 pointer_type = "ptr" "const"? type  # recursive: allows for ptr ptr ptr ... x
 primitive_type = int_type | float_type | "char" | "bool";

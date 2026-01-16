@@ -52,7 +52,7 @@ std::string importToString(const Import& import);
 class Parser {
    private:  // private variables
     std::unique_ptr<lexer::Lexer> lexer;
-    ast::Visibility defaultVisibility = ast::Visibility::Private;
+    constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
     std::optional<Token> previousToken;
 
     std::string moduleName;
@@ -135,7 +135,7 @@ class Parser {
     StatementUPtr_t parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE;
     /**
      * @brief Parses statements that are preceded by a visibility modifier
-     * @example (public/readonly/private) (function/aggregate/enum declaration)
+     * @example (public/private) (function/aggregate/enum declaration)
      */
     StatementUPtr_t parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE;
     StatementUPtr_t parseWhileLoopStatement() NOEXCEPT_IF_RELEASE;

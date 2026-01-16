@@ -58,7 +58,6 @@ enum class TokenType : uint8_t {
 
     //* Access Levels
     Private,
-    ReadOnly,  // readable, but can't be modified, outside the module
     Public,  // can be read and modified outside the module
 
     //* Primitive Types

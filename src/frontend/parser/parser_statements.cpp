@@ -421,7 +421,6 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
     switch (consumeToken().getType()) {
         case TokenType::Private: visibility = ast::Visibility::Private; break;
         case TokenType::Public: visibility = ast::Visibility::Public; break;
-        case TokenType::ReadOnly: visibility = ast::Visibility::ReadOnly; break;
         default:
             ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
                                + lexer::tokenTypeToString(peekTokenType()));
@@ -430,29 +429,17 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
     switch (peekTokenType()) {
         case TokenType::Alias: {
             auto tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement().release());
-            if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Aliases can only be public or private, not readonly", startLine, startColumn);
-                visibility = ast::Visibility::Private;  // Default to private
-            }
             tempAlias->visibility = visibility;
             return std::unique_ptr<ast::AliasStatement>(tempAlias);
         }
         case TokenType::Aggregate: {
             auto tempAggregate
                 = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement().release());
-            if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Aggregates can only be public or private, not readonly", startLine, startColumn);
-                visibility = ast::Visibility::Private;  // Default to private
-            }
             tempAggregate->visibility = visibility;
             return std::unique_ptr<ast::AggregateDeclarationStatement>(tempAggregate);
         }
         case TokenType::Enum: {
             auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement().release());
-            if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Enums can only be public or private, not readonly", startLine, startColumn);
-                visibility = ast::Visibility::Private;  // Default to private
-            }
             tempEnum->visibility = visibility;
             return std::unique_ptr<ast::EnumDeclarationStatement>(tempEnum);
         }
@@ -490,10 +477,8 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE 
         if (peekTokenType() == TokenType::Public) {
             visibility = ast::Visibility::Public;
             DISCARD(consumeToken());  // Consume the public keyword
-        } else if (peekTokenType() == TokenType::ReadOnly) {
-            visibility = ast::Visibility::ReadOnly;
-            DISCARD(consumeToken());  // Consume the read-only keyword
-        } else if (peekTokenType() == TokenType::Private) [[unlikely]] {
+        }
+        else if (peekTokenType() == TokenType::Private) [[unlikely]] {
             // private is the default so it'd mainly be used for emphasis
             visibility = ast::Visibility::Private;
             DISCARD(consumeToken());  // Consume the private keyword

@@ -9,6 +9,7 @@
  * @note This file does nothing in release builds.
  */
 
+#include "frontend/ast/ast_base.hpp"
 #if DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
@@ -443,13 +444,7 @@ void VariableDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "isMutable: " << (isMutable ? "true" : "false") << "\n";
 
-    std::string visString;
-    switch (visibility) {
-        case Visibility::Public: visString = "Public"; break;
-        case Visibility::ReadOnly: visString = "ReadOnly"; break;
-        case Visibility::Private: visString = "Private"; break;
-    }
-    os << getIndent(indent + 1) << "visibility: " << visString << "\n";
+    os << getIndent(indent + 1) << "visibility: " << (visibility == Visibility::Public ? "Public" : "Private") << "\n";
 
     os << getIndent(indent + 1) << "value: \n";
     if (value) {
