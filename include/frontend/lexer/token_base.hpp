@@ -66,19 +66,40 @@ class Token {
     constexpr size_t getLine() const noexcept { return line; }
     constexpr size_t getColumn() const noexcept { return column; }
 
-    // These functions are long, so are implemented below
-    constexpr bool isPrefixOperator() const noexcept;
-    constexpr bool isLiteral() const noexcept;
-    constexpr bool isBracket() const noexcept;
-    constexpr bool isPrimitiveType() const noexcept;
-    constexpr bool hasUnaryCounterpart() const noexcept;
-    constexpr TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
-    std::string toString() const noexcept;
+    constexpr bool isPrefixOperator() const noexcept {
+        return type == TokenType::Inc || type == TokenType::Dec || type == TokenType::BitAnd || type == TokenType::Mul
+            || type == TokenType::AddressOf || type == TokenType::Dereference;
+    }
+    constexpr bool isLiteral() const noexcept {
+        return type == TokenType::IntegerLiteral || type == TokenType::FloatLiteral || type == TokenType::StrLiteral
+            || type == TokenType::CharLiteral || type == TokenType::True || type == TokenType::False;
+    }
+    constexpr bool isBracket() const noexcept {
+        return type == TokenType::LeftParen || type == TokenType::RightParen || type == TokenType::LeftBrace
+            || type == TokenType::RightBrace || type == TokenType::LeftSquare || type == TokenType::RightSquare;
+    }
+    constexpr bool isPrimitiveType() const noexcept {
+        return type == TokenType::Int8 || type == TokenType::Int16 || type == TokenType::Int32
+            || type == TokenType::Int64 || type == TokenType::UInt8 || type == TokenType::UInt16
+            || type == TokenType::UInt32 || type == TokenType::UInt64 || type == TokenType::Float32
+            || type == TokenType::Float64 || type == TokenType::Char || type == TokenType::Bool
+            || type == TokenType::String;
+    }
+    constexpr bool hasUnaryCounterpart() const noexcept {
+    return type == TokenType::Plus ||  // + can be addition or unary plus
+        type == TokenType::Minus ||  // - can be subtraction or unary minus
+        type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
+        type == TokenType::Mul;  // * can be multiplication or dereference operator
+    }
 
-    /**
+        /**
      * @note Parser only: be careful
      */
     void overrideType(TokenType type_, std::string lexeme_ = "");
+
+    // These functions are long, so are implemented in a separate header
+    constexpr TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
+    std::string toString() const noexcept;
 };
 
 //~ Helpers, not tied to the Token class
