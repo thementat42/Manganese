@@ -8,7 +8,6 @@
 #include <format>
 #include <frontend/lexer/token_base.hpp>
 #include <string_view>
-#include <utility>
 #include <utils/type_names.hpp>
 
 #include "token_type.hpp"
@@ -16,6 +15,11 @@
 namespace Manganese {
 
 namespace lexer {
+
+struct lookup_table_entry_t {
+    std::string_view as_str;
+    TokenType token_type;
+};
 
 //! Most of this is long
 
@@ -182,7 +186,7 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
     }
 }
 
-constexpr std::pair<std::string_view, TokenType> keywordTable[] = {
+constexpr lookup_table_entry_t  keywordTable[] = {
     {"aggregate", TokenType::Aggregate},
     {"alias", TokenType::Alias},
     {"as", TokenType::As},
@@ -230,7 +234,7 @@ constexpr std::pair<std::string_view, TokenType> keywordTable[] = {
     {"while", TokenType::While},
 };
 
-constexpr std::pair<std::string_view, TokenType> operatorTable[] = {
+constexpr lookup_table_entry_t  operatorTable[] = {
     // Arithmetic Operators
     {"+", TokenType::Plus},
     {"-", TokenType::Minus},
@@ -296,14 +300,14 @@ constexpr std::pair<std::string_view, TokenType> operatorTable[] = {
 
 constexpr inline TokenType keyword_lookup(const std::string_view& s) {
     for (const auto& p : keywordTable) {
-        if (p.first == s) { return p.second; }
+        if (p.as_str == s) { return p.token_type; }
     }
     return TokenType::Unknown;
 }
 
 constexpr inline TokenType operator_lookup(const std::string_view& s) {
     for (const auto& p : operatorTable) {
-        if (p.first == s) { return p.second; }
+        if (p.as_str == s) { return p.token_type; }
     }
     return TokenType::Unknown;
 }
