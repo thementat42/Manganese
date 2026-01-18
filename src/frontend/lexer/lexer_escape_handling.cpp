@@ -3,13 +3,13 @@
  * @brief Helper file for processing string/char literals with escape sequences
  */
 
+#include <format>
 #include <frontend/lexer.hpp>
 #include <io/logging.hpp>
-#include <utils/number_utils.hpp>
-
-#include <format>
 #include <optional>
 #include <string>
+#include <utils/number_utils.hpp>
+
 
 namespace Manganese {
 namespace lexer {
@@ -46,7 +46,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
         }
         ++i;  // skip the backslash
         if (i >= escapeString.length()) {
-            logging::logError("Error: incomplete escape sequence at end of string", 0, 0);
+            logging::logError(getLine(), getCol(), "Incomplete escape sequence at end of string");
             return NONE;
         }
         std::optional<char32_t> escapeChar;
@@ -68,9 +68,9 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
         }
         if (!escapeChar) {
             if (escapeString[i] == 'x') {
-                logging::logError("Invalid hex escape sequence (expected \\xXX)", getLine(), getCol());
+                logging::logError(getLine(), getCol(), "Invalid hex escape sequence (expected \\xXX)");
             } else if (escapeString[i] == 'u') {
-                logging::logError("Invalid unicode escape sequence (expected \\uXXXX)", getLine(), getCol());
+                logging::logError(getLine(), getCol(), "Invalid unicode escape sequence (expected \\uXXXX)");
             }
             return NONE;
         }
@@ -83,7 +83,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
 void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
-        logging::logError("Invalid character literal " + charLiteral, getLine(), getCol());
+        logging::logError(getLine(), getCol(), "Invalid character literal", charLiteral);
         tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), true);
         return;
     }
@@ -99,14 +99,14 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
             (byteCount == 4 && (firstByte & 0xF8) == 0xF0);  // 4-byte UTF-8 character
     }
     if (!isValidSingleCodePoint) {
-        logging::logError("Invalid character literal " + charLiteral, getLine(), getCol());
+        logging::logError(getLine(), getCol(), "Invalid character literal ", charLiteral);
         tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
         return;
     }
     tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
 }
 
-std::optional<char> getEscapeCharacter(const char escapeChar) {
+std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_t col) {
     switch (escapeChar) {
         case '\\': return '\\';
         case '\'': return '\'';
@@ -120,9 +120,10 @@ std::optional<char> getEscapeCharacter(const char escapeChar) {
         case 'v': return '\v';
         case '0': return '\0';
         default:
-            logging::logError(std::format("\\{} is not a valid escape sequence.", escapeChar)
-                                  + "If you meant to type a backslash ('\\'), use two backslashes ",
-                              0, 0);
+            logging::logError(
+                line, col,
+                "\\{} is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ",
+                escapeChar);
             return NONE;
     }
 }
@@ -145,7 +146,7 @@ std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
     return hexChar;
 }
 
-std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, bool isLongUnicode) {
+std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, bool isLongUnicode, size_t line, size_t col) {
     size_t expectedLength = isLongUnicode ? 8 : 4;  // 8 for \UXXXXXXXX, 4 for \uXXXX
     if (esc.length() != expectedLength) { return NONE; }
     char32_t unicodeChar = 0;
@@ -156,12 +157,12 @@ std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, bool is
     }
     if (unicodeChar >= UTF16_SURROGATE_MIN && unicodeChar <= UTF16_SURROGATE_MAX) {
         // Invalid Unicode character in the surrogate range
-        logging::logError("Error: Invalid Unicode character in the surrogate range", 0, 0);
+        logging::logError(line, col, "Error: Invalid Unicode character in the surrogate range");
         return NONE;
     }
     if (unicodeChar > UTF8_4B_MAX) {
         // Unicode character is outside the valid range for UTF-8
-        logging::logError("Error: Unicode character is outside the valid range for UTF-8", 0, 0);
+        logging::logError(line, col, "Error: Unicode character is outside the valid range for UTF-8");
         return NONE;
     }
     return unicodeChar;

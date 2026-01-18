@@ -61,19 +61,18 @@ class SymbolTable {
     size_t _currentDepth;
 
    public:
-    SymbolTable() noexcept: _currentDepth(0) { enterScope(); }
+    SymbolTable() noexcept : _currentDepth(0) { enterScope(); }
     constexpr ~SymbolTable() = default;
 
     void enterScope() {
         ++_currentDepth;
         // if we've exceeded the current symbol table depth, create a new scope
         // otherwise, we're just moving our current scope to the next nested one
-        if (_currentDepth >= _scopes.size()) {_scopes.emplace_back(); }
+        if (_currentDepth >= _scopes.size()) { _scopes.emplace_back(); }
     }
     void exitScope() noexcept {
         if (_scopes.empty()) [[unlikely]] {
-            using logging::logInternal, logging::LogLevel;
-            logInternal("Attempted to exit scope when no scope was available", LogLevel::Warning);
+            logging::logInternal(logging::LogLevel::Warning, "Attempted to exit scope when no scope was available");
             return;
         }
         // since we're doing multiple passes, we want to preserve scope information between passes
@@ -81,8 +80,7 @@ class SymbolTable {
     }
     bool declare(Symbol symbol) {
         if (_scopes.empty()) [[unlikely]] {
-            using logging::logInternal, logging::LogLevel;
-            logInternal("No active scope to declare a symbol", LogLevel::Error);
+            logging::logInternal(logging::LogLevel::Error, "No active scope in which to declare a symbol");
             return false;
         }
         symbol.scopeDepth = getCurrentDepth();
@@ -94,24 +92,22 @@ class SymbolTable {
             const Symbol* _sym = it->lookup(name);
             if (_sym) { return _sym; }
         }
-        logging::logInternal("Symbol '" + name + "' not found in any scope.", logging::LogLevel::Warning);
+        logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any scope.", name);
         return nullptr;
     }
     const Symbol* lookupAtCurrentDepth(const std::string& name) const noexcept {
         if (_scopes.empty()) {
-            logging::logInternal("No active scope to lookup symbol.", logging::LogLevel::Error);
+            logging::logInternal(logging::LogLevel::Error, "No active scope in which to look up symbol");
             return nullptr;
         }
         const Symbol* symbol = _scopes[getCurrentDepth()].lookup(name);
-        if (!symbol) {
-            logging::logInternal("Symbol '" + name + "' not found in current scope.", logging::LogLevel::Warning);
-        }
+        if (!symbol) { logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any scope", name); }
         return symbol;
     }
     const Symbol* lookupAtDepth(const std::string& name, int64_t depth) const noexcept {
         if (depth < 0 || depth >= (int64_t)getCurrentDepth()) [[unlikely]] {
-            logging::logInternal(std::format("Invalid scope depth {} (valid range: 0-{})", depth, getCurrentDepth()),
-                                 logging::LogLevel::Warning);
+            logging::logInternal(logging::LogLevel::Warning, "Invalid scope depth {} (valid range: 0-{})", depth,
+                                 getCurrentDepth());
             return nullptr;
         }
         size_t _index = getCurrentDepth() - (size_t)depth;  // go to the appropriate depth

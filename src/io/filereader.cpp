@@ -21,7 +21,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
     position(0), line(1), column(1), filePtr(nullptr), bufferSize(0), bufferCapacity(bufferCapacity_) {
     filePtr = std::fopen(filename.c_str(), "r");
     if (!filePtr) {
-        logging::logCritical(std::format("Could not open file {}", filename));
+        logging::logCritical(0, 0, "Could not open file {}", filename);
         this->hasCriticalError_ = true;
         return;
     }
@@ -34,7 +34,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
     bufferSize = std::fread(buffer.get(), sizeof(char), bufferCapacity_, filePtr);  // initial read
 
     if (bufferSize == 0) {
-        logging::logError(std::format("File {} is empty or could not be read", filename));
+        logging::logError(0, 0, "File {} is empty or could not be read", filename);
         this->hasCriticalError_ = true;
         return;
     }

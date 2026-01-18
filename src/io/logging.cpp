@@ -8,23 +8,24 @@
  * contextual information such as line and column numbers.
  */
 
+#include <format>
 #include <io/logging.hpp>
-
 #include <iostream>
-#include <string>
 
 namespace Manganese {
 namespace logging {
-void logInternal(const std::string& message, LogLevel level, std::ostream& out) NOEXCEPT_IF_RELEASE {
+template <class... Args>
+void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) NOEXCEPT_IF_RELEASE {
 #if DEBUG
+    auto message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
-        case LogLevel::Info: out << BLUE << "[Internal Info] " << message << RESET << "\n"; break;
-        case LogLevel::Warning: out << YELLOW << "[Internal Warning] " << message << RESET << "\n"; break;
-        case LogLevel::Error: out << RED << "[Internal Error] " << message << RESET << "\n"; break;
-        case LogLevel::Critical: out << RED << "[Internal Critical Error] " << message << RESET << "\n"; break;
+        case LogLevel::Info: std::cerr << BLUE << "[Internal Info] " << message << RESET << "\n"; break;
+        case LogLevel::Warning: std::cerr << YELLOW << "[Internal Warning] " << message << RESET << "\n"; break;
+        case LogLevel::Error: std::cerr << RED << "[Internal Error] " << message << RESET << "\n"; break;
+        case LogLevel::Critical: std::cerr << RED << "[Internal Critical Error] " << message << RESET << "\n"; break;
     }
     if (level == LogLevel::Critical) {
-        out << ("Critical error encountered");
+        std::cerr << ("Critical error encountered");
         throw std::runtime_error("Critical error");
     }
 #else  // ^^ DEBUG vv !DEBUG
@@ -32,29 +33,18 @@ void logInternal(const std::string& message, LogLevel level, std::ostream& out) 
 #endif  // DEBUG
 }
 
-void log(const std::string& message, LogLevel level, size_t line, size_t col, std::ostream& out) noexcept {
+template <class... Args>
+void log(LogLevel level, size_t line, size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
+    auto message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
         case LogLevel::Info: return;  // No user info
-        case LogLevel::Warning: out << YELLOW << "Warning: " << message << RESET; break;
-        case LogLevel::Error: out << RED << "Error: " << message << RESET; break;
+        case LogLevel::Warning: std::cerr << YELLOW << "Warning: " << message << RESET; break;
+        case LogLevel::Error: std::cerr << RED << "Error: " << message << RESET; break;
         case LogLevel::Critical:
-            out << CRITICAL << "Critical error: " << message << " Compilation aborted." << RESET;
+            std::cerr << CRITICAL << "Critical error: " << message << " Compilation aborted." << RESET;
             break;
     }
-    out << " (line " << line << ", column " << col << ")\n";
-}
-
-void log(std::initializer_list<std::string> messages, LogLevel level, size_t line, size_t col,
-         std::ostream& out) noexcept {
-    switch (level) {
-        case LogLevel::Info: break;  // No user info
-        case LogLevel::Warning: out << YELLOW << "Warning: "; break;
-        case LogLevel::Error: out << RED << "Error: "; break;
-        case LogLevel::Critical: out << CRITICAL << "Critical error: "; break;
-    }
-    for (const auto& message : messages) { out << message << "\n"; }
-    out << RESET;
-    if (line != 0 && col != 0) { out << "(line " << line << ", column " << col << ")\n"; }
+    std::cerr << " (line " << line << ", column " << col << ")\n";
 }
 }  // namespace logging
 }  // namespace Manganese

@@ -13,8 +13,7 @@ namespace Manganese {
 namespace lexer {
 
 void Token::overrideType(TokenType type_, std::string lexeme_) {
-    logging::logInternal(std::format("Overriding token type from {} to {} with lexeme '{}'", tokenTypeToString(type),
-                                     tokenTypeToString(type_), lexeme_));
+    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {} with lexeme '{}'", tokenTypeToString(type), tokenTypeToString(type_), lexeme_);
 
     type = type_;
     if (lexeme_ != "") { lexeme = std::move(lexeme_); }

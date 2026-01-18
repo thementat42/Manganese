@@ -45,8 +45,8 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
 TypeSPtr_t Parser::parseAggregateType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the 'aggregate' token
     if (peekTokenType() == TokenType::Identifier) {
-        logging::logWarning("Aggregate names are ignored in aggregate type declarations", peekToken().getLine(),
-                            peekToken().getColumn());
+        logging::logWarning(peekToken().getLine(),
+                            peekToken().getColumn(),"Aggregate names are ignored in aggregate type declarations");
         DISCARD(consumeToken());  // Skip the identifier token
     }
 
@@ -55,8 +55,8 @@ TypeSPtr_t Parser::parseAggregateType() NOEXCEPT_IF_RELEASE {
 
     while (peekTokenType() != TokenType::RightBrace) {
         if (peekTokenType() == TokenType::Identifier) {
-            logging::logWarning("Variable names are ignored in aggregate type declarations", peekToken().getLine(),
-                                peekToken().getColumn());
+            logging::logWarning(peekToken().getLine(),
+                                peekToken().getColumn(), "Variable names are ignored in aggregate type declarations");
             DISCARD(consumeToken());  // Skip the token
             expectToken(TokenType::Colon, "Expected ':' after field name in aggregate type declaration");
             continue;

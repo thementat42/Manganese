@@ -12,11 +12,9 @@
 #ifndef MANGANESE_INCLUDE_IO_LOGGING_HPP
 #define MANGANESE_INCLUDE_IO_LOGGING_HPP
 
+#include <format>  // Include format here so any files that use logging have it included
 #include <global_macros.hpp>
 
-#include <format>  // Include format here so any files that use logging have it included
-#include <iostream>
-#include <stdexcept>
 
 // ANSI color codes for terminal output
 constexpr const char* GREEN = "\033[32m";
@@ -44,35 +42,26 @@ enum class LogLevel {
  * @param level The log level (default is Info)
  *
  */
-void logInternal(const std::string& message, LogLevel level = LogLevel::Info,
-                 std::ostream& out = std::cerr) NOEXCEPT_IF_RELEASE;
 
-/**
- * @brief Logging function for the user (e.g., syntax errors)
- * @param message The message to log
- * @param line The line number in the user code where the error occurred
- * @param col The column number in the user code where the error occurred
- * @param level The log level (default is Warning)
- * @param out The output stream to log to (default is std::cerr)
- */
-void log(const std::string& message, LogLevel level = LogLevel::Warning, size_t line = 0, size_t col = 0,
-         std::ostream& out = std::cerr) noexcept;
+template <class... Args>
+void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) NOEXCEPT_IF_RELEASE;
 
-void log(std::initializer_list<std::string> messages, LogLevel level = LogLevel::Warning, size_t line = 0,
-         size_t col = 0) noexcept;
+template <class... Args>
+void log(LogLevel level, size_t line, size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept;
 
-FORCE_INLINE void logWarning(const std::string& message, size_t line = 0, size_t col = 0,
-                       std::ostream& out = std::cerr) noexcept {
-    log(message, LogLevel::Warning, line, col, out);
-}
-FORCE_INLINE void logError(const std::string& message, size_t line = 0, size_t col = 0,
-                     std::ostream& out = std::cerr) noexcept {
-    log(message, LogLevel::Error, line, col, out);
+template <class... Args>
+FORCE_INLINE void logWarning(size_t line, size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
+    log(LogLevel::Warning, line, col, fmt, std::forward<Args>(args)...);
 }
 
-FORCE_INLINE void logCritical(const std::string& message, size_t line = 0, size_t col = 0,
-                        std::ostream& out = std::cerr) noexcept {
-    log(message, LogLevel::Critical, line, col, out);
+template <class... Args>
+FORCE_INLINE void logError(size_t line, size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
+    log(LogLevel::Error, line, col, fmt, std::forward<Args>(args)...);
+}
+
+template <class... Args>
+FORCE_INLINE void logCritical(size_t line, size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
+    log(LogLevel::Critical, line, col, fmt, std::forward<Args>(args)...);
 }
 
 }  // namespace logging

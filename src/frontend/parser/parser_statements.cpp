@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace Manganese {
 namespace parser {
 
@@ -295,7 +294,7 @@ StatementUPtr_t Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
     size_t startColumn = peekToken().getColumn();
 
     if (this->hasParsedFileHeader) {
-        logging::logWarning("Imports should go at the top of the file", startLine, startColumn);
+        logging::logWarning(startLine, startColumn, "Imports should go at the top of the file");
     }
     DISCARD(consumeToken());
     std::vector<std::string> path;
@@ -319,12 +318,12 @@ StatementUPtr_t Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
                                   existingPath[0],  // existingPath should never be empty
                                   [](const std::string& a, const std::string& b) { return a + "::" + b; });
 
-            logging::logWarning(std::format("Duplicate import of {}", imported), startLine, startColumn);
+            logging::logWarning(startLine, startColumn, "Duplicate import of {}", imported);
             duplicate = true;
             break;
 
         } else if (alias == existingAlias && !alias.empty()) {
-            logging::logWarning(std::format("Alias {} was already used", existingAlias), startLine, startColumn);
+            logging::logWarning(startLine, startColumn, "Alias {} was already used", existingAlias);
             duplicate = true;
             break;
         }
@@ -338,7 +337,7 @@ StatementUPtr_t Parser::parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE {
     auto temp = consumeToken();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
-        logging::logWarning("Module declarations should go at the top of the file", startLine, startColumn);
+        logging::logWarning(startLine, startColumn, "Module declarations should go at the top of the file");
     }
     std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
     expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
@@ -409,7 +408,7 @@ StatementUPtr_t Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
         while (peekTokenType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
     }
     if (cases.empty() && defaultBody.empty()) {
-        logging::logWarning("Switch statement has no cases or default body", startLine, startColumn);
+        logging::logWarning(startLine, startColumn, "Switch statement has no cases or default body");
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
@@ -519,7 +518,7 @@ ast::Block Parser::parseBlock(std::string blockName) NOEXCEPT_IF_RELEASE {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end " + blockName);
     if (block.empty()) {
-        logging::logWarning(std::format("{} is empty", blockName), peekToken().getLine(), peekToken().getColumn());
+        logging::logWarning(peekToken().getLine(), peekToken().getColumn(), "{} is empty", blockName);
     }
     return block;
 }
