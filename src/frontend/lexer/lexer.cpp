@@ -164,20 +164,13 @@ void Lexer::lex(size_t numTokens) {
 }
 
 Token Lexer::peekToken() noexcept {
-    if (done() && tokenStream.empty()) {
-        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
-    }
-    if (tokenStream.empty()) {
-        lex(QUEUE_LOOKAHEAD_AMOUNT);
-    }
-    // If the token stream can't be filled up with enough tokens, we're reading past the end -- indicate that
+    if (done() && tokenStream.empty()) { return Token(TokenType::EndOfFile, "EOF", getLine(), getCol()); }
+    if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
     return tokenStream[0];
 }
 
 Token Lexer::consumeToken() noexcept {
-    if (tokenStream.empty()) {
-        lex(QUEUE_LOOKAHEAD_AMOUNT);  // If queue empty, generate 1 token to read
-    }
+    if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
     if (tokenStream.empty()) {
         // still empty -- we are done tokenizing
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
@@ -261,7 +254,7 @@ void Lexer::tokenizeStringLiteral() {
 
     advance();
     if (containsEscapeSequence) {
-        auto result = resolveEscapeCharacters(stringLiteral);
+        std::optional<std::string> result = resolveEscapeCharacters(stringLiteral);
         if (!result) {
             tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
             return;
@@ -321,6 +314,7 @@ void Lexer::tokenizeNumber() {
                              tokenStartLine, tokenStartCol);
 }
 
+// TODO: Rewrite to not require operator table lookup
 void Lexer::tokenizeSymbol() {
     TokenType type;
     char current = peekChar();
@@ -339,100 +333,185 @@ void Lexer::tokenizeSymbol() {
         case ']': type = TokenType::RightSquare; break;
 
         // ~ Boolean / Bitwise operators
-        case '&':  // Let the parser decide if '&' is a bitwise AND or an address-of operator, default to bitwise AND
-        case '|':
-            type = TokenType::Operator;
-            if (next == current || next == '=') {
-                // If next is the same character, it's a logical operator (&& or ||)
-                // or a bitwise assignment operator (&= or |=)
+        case '&': {
+            if (next == '&') {  // logical AND (&&)
                 lexeme += next;
+                type = TokenType::And;
+            } else if (next == '=') {
+                lexeme += next;
+                type = TokenType::BitAndAssign;
+            } else {
+                type = TokenType::BitAnd;
             }
-            // Otherwise, just a single & or | operator
             break;
-        case '^':  // Bitwise XOR
-            type = TokenType::Operator;
+        }
+            // Let the parser decide if '&' is a bitwise AND or an address-of operator, default to bitwise AND
+        case '|': {
+            if (next == '|') {  // logical OR (||)
+                lexeme += next;
+                type = TokenType::Or;
+            } else if (next == '=') {
+                lexeme += next;
+                type = TokenType::BitOrAssign;
+            } else {
+                type = TokenType::BitOr;
+            }
+            break;
+        }
+        case '^': {  // Bitwise XOR
             if (next == '=') {
                 // Bitwise assignment operator (^=)
                 lexeme += '=';
+                type = TokenType::BitXorAssign;
             } else if (next == '^') {
                 // Exponentiation operator (^^)
                 lexeme += '^';
                 lexeme += (nextnext == '=') ? "=" : "";  // ^^=, in place exponentiation
+                type = (nextnext == '=') ? TokenType::ExpAssign : TokenType::Exp;
+            } else {
+                type = TokenType::BitXor;
             }
             break;
-        case '!':  // NOT
-        case '~':  // Bitwise NOT
-        case '=':  // Assignment
-            type = TokenType::Operator;
-            if (next == '=') {
-                // Assignment operator (!= or ~=)
-                // or equality check (==)
-                lexeme += '=';
-            }
-            break;
-        case '<':
-        case '>':
-            type = TokenType::Operator;
-            if (next == '=') {
-                // <= (less than or equal to) or >= (greater than or equal to)
-                lexeme += '=';
-            } else if (next == current) {
-                // << (bitwise left shift) or >> (bitwise right shift)
+        }
+        case '!': {
+            if (next == '=') {  // Inequality (!=)
                 lexeme += next;
-                // <<= (in place left shift) or >>= (in place right shift)
-                lexeme += (nextnext == '=') ? "=" : "";
+                type = TokenType::NotEqual;
+            } else {
+                type = TokenType::Not;
             }
-            // Otherwise, just a regular comparison
             break;
+        }
+        case '~': {
+            if (next == '=') {
+                lexeme += next;
+                type = TokenType::BitNotAssign;
+            } else {
+                type = TokenType::BitNot;
+            }
+            break;
+        }
+        case '=': {
+            if (next == '=') {  // Equality (==)
+                lexeme += next;
+                type = TokenType::Equal;
+            } else {
+                type = TokenType::Assignment;
+            }
+            break;
+        }
+        case '<': {
+            if (next == '=') {
+                // Less than or Equal to (<=)
+                lexeme += '=';
+                type = TokenType::LessThanOrEqual;
+            } else if (next == current) {
+                // Bitwise left shift (<<)
+                lexeme += next;
+                // In place left shift (<<=)
+                lexeme += (nextnext == '=') ? "=" : "";
+                type = (nextnext == '=') ? TokenType::BitLShiftAssign : TokenType::BitLShift;
+            } else {
+                type = TokenType::LessThan;
+            }
+            break;
+        }
+        case '>': {
+            if (next == '=') {
+                // Greater than or Equal to (>=)
+                lexeme += '=';
+                type = TokenType::GreaterThanOrEqual;
+            } else if (next == current) {
+                // Bitwise right shift (>>)
+                lexeme += next;
+                // In place right shift (>>=)
+                lexeme += (nextnext == '=') ? "=" : "";
+                type = (nextnext == '=') ? TokenType::BitRShiftAssign : TokenType::BitRShift;
+            } else {
+                type = TokenType::GreaterThan;
+            }
+            break;
+        }
 
         // ~ Other punctuation
         case ';': type = TokenType::Semicolon; break;
         case ',': type = TokenType::Comma; break;
-        case '.':
-            if (next == '.' && nextnext == '.') { lexeme = "..."; }
-            type = TokenType::Operator;
+        case '.': {
+            if (next == '.' && nextnext == '.') {
+                lexeme = "...";
+                type = TokenType::Ellipsis;
+            } else {
+                type = TokenType::MemberAccess;
+            }
             break;
-        case ':':
-            type = (next == ':') ? TokenType::Operator : TokenType::Colon;
+        }
+        case ':': {
+            type = (next == ':') ? TokenType::ScopeResolution : TokenType::Colon;
             lexeme = (next == ':') ? "::" : ":";
             break;
-        case '@': type = TokenType::Operator; break;
+        }
+        case '@': type = TokenType::At; break;
 
         //~ Arithmetic operators
-        case '+':
-            type = TokenType::Operator;
-            if (next == '+' || next == '=') {
-                // ++ (increment) or += (in-place addition)
+        case '+': {
+            if (next == '+') {
                 lexeme += next;
-            }
-            break;
-        case '-':
-            type = TokenType::Operator;
-            if (next == '-' || next == '=' || next == '>') {
-                //* -- (decrement) or -= (in-place subtraction) or -> (arrow operator)
+                type = TokenType::Inc;
+            } else if (next == '=') {
                 lexeme += next;
+                type = TokenType::PlusAssign;
+            } else {
+                type = TokenType::Plus;
             }
             break;
-        case '%':
-        case '*':
-            type = TokenType::Operator;
-            if (next == '=') {
-                // %= or *= (in-place modulus or multiplication)
-                lexeme += '=';
+        }
+        case '-': {
+            if (next == '-') {
+                lexeme += next;
+                type = TokenType::Dec;
+            } else if (next == '=') {
+                lexeme += next;
+                type = TokenType::MinusAssign;
+            } else if (next == '>') {
+                lexeme += next;
+                type = TokenType::Arrow;
+            } else {
+                type = TokenType::Minus;
             }
             break;
-        case '/':
-            type = TokenType::Operator;
+        }
+        case '%': {
             if (next == '=') {
-                //* /= (in-place division)
                 lexeme += '=';
+                type = TokenType::ModAssign;
+            } else {
+                type = TokenType::Mod;
+            }
+            break;
+        }
+        case '*': {
+            if (next == '=') {
+                lexeme += '=';
+                type = TokenType::MulAssign;
+            } else {
+                type = TokenType::Mul;
+            }
+            break;
+        }
+        case '/': {
+            if (next == '=') {
+                lexeme += '=';
+                type = TokenType::DivAssign;
             } else if (next == '/') {
-                //* // (floor division) or //= (in-place floor division)
                 lexeme += next;
                 lexeme += (nextnext == '=') ? "=" : "";
+                type = (nextnext == '=') ? TokenType::FloorDivAssign : TokenType::FloorDiv;
+            } else {
+                type = TokenType::Div;
             }
             // Multiline comments handled in the main loop
             break;
+        }
         default:
             type = TokenType::Unknown;
             logging::logError(std::format("Invalid character: '{}'", current), getLine(), getCol());
@@ -440,7 +519,6 @@ void Lexer::tokenizeSymbol() {
             break;
     }
     advance(lexeme.length());
-    type = (type == TokenType::Operator ? operator_lookup(lexeme) : type);
     tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
 }
 
@@ -500,9 +578,8 @@ NumberPrefixResult Lexer::processNumberPrefix() {
                 .base = Base::Octal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; }, .prefix = "0o"};
         default:
             // Not a valid base indicator -- just treat it as a decimal number
-            return NumberPrefixResult{.base = Base::Decimal,
-                                      .isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); },
-                                      .prefix = ""};
+            return NumberPrefixResult{
+                .base = Base::Decimal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '9'; }, .prefix = ""};
     }
 }
 

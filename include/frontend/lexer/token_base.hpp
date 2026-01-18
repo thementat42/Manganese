@@ -104,9 +104,7 @@ class Token {
 
 //~ Helpers, not tied to the Token class
 constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE;
-
-constexpr TokenType keyword_lookup(const std::string_view& s);
-constexpr TokenType operator_lookup(const std::string_view& s);
+constexpr TokenType keyword_lookup(const std::string_view& s) noexcept;
 
 }  // namespace lexer
 }  // namespace Manganese

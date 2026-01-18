@@ -16,11 +16,6 @@ namespace Manganese {
 
 namespace lexer {
 
-struct lookup_table_entry_t {
-    std::string_view as_str;
-    TokenType token_type;
-};
-
 //! Most of this is long
 
 inline std::string Token::toString() const noexcept {
@@ -186,7 +181,10 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
     }
 }
 
-constexpr lookup_table_entry_t  keywordTable[] = {
+constexpr struct {
+    std::string_view as_str;
+    TokenType token_type;
+} keywordTable[] = {
     {"aggregate", TokenType::Aggregate},
     {"alias", TokenType::Alias},
     {"as", TokenType::As},
@@ -234,79 +232,8 @@ constexpr lookup_table_entry_t  keywordTable[] = {
     {"while", TokenType::While},
 };
 
-constexpr lookup_table_entry_t  operatorTable[] = {
-    // Arithmetic Operators
-    {"+", TokenType::Plus},
-    {"-", TokenType::Minus},
-    {"*", TokenType::Mul},
-    {"/", TokenType::Div},
-    {"//", TokenType::FloorDiv},
-    {"%", TokenType::Mod},
-    {"^^", TokenType::Exp},
-    {"++", TokenType::Inc},
-    {"--", TokenType::Dec},
-
-    // Arithmetic Assignment Operators
-    {"+=", TokenType::PlusAssign},
-    {"-=", TokenType::MinusAssign},
-    {"*=", TokenType::MulAssign},
-    {"/=", TokenType::DivAssign},
-    {"//=", TokenType::FloorDivAssign},
-    {"%=", TokenType::ModAssign},
-    {"^^=", TokenType::ExpAssign},
-
-    // Comparison Operators
-    {">", TokenType::GreaterThan},
-    {">=", TokenType::GreaterThanOrEqual},
-    {"<", TokenType::LessThan},
-    {"<=", TokenType::LessThanOrEqual},
-    {"==", TokenType::Equal},
-    {"!=", TokenType::NotEqual},
-
-    // Boolean Operators
-    {"&&", TokenType::And},
-    {"||", TokenType::Or},
-    {"!", TokenType::Not},
-
-    // Bitwise Operators
-    {"&", TokenType::BitAnd},
-    {"|", TokenType::BitOr},
-    {"~", TokenType::BitNot},
-    {"^", TokenType::BitXor},
-    {"<<", TokenType::BitLShift},
-    {">>", TokenType::BitRShift},
-
-    // Bitwise Assignment Operators
-    {"&=", TokenType::BitAndAssign},
-    {"|=", TokenType::BitOrAssign},
-    {"~=", TokenType::BitNotAssign},
-    {"^=", TokenType::BitXorAssign},
-    {"<<=", TokenType::BitLShiftAssign},
-    {">>=", TokenType::BitRShiftAssign},
-
-    // Pointer Operators  use the same symbols as bitwise AND and multiplication (distinction in parser)
-
-    // Access Operators
-    {".", TokenType::MemberAccess},
-    {"...", TokenType::Ellipsis},
-    {"::", TokenType::ScopeResolution},
-
-    // Misc
-    {"=", TokenType::Assignment},
-    {"->", TokenType::Arrow},
-    {"@", TokenType::At}
-
-};
-
-constexpr inline TokenType keyword_lookup(const std::string_view& s) {
+constexpr inline TokenType keyword_lookup(const std::string_view& s) noexcept {
     for (const auto& p : keywordTable) {
-        if (p.as_str == s) { return p.token_type; }
-    }
-    return TokenType::Unknown;
-}
-
-constexpr inline TokenType operator_lookup(const std::string_view& s) {
-    for (const auto& p : operatorTable) {
         if (p.as_str == s) { return p.token_type; }
     }
     return TokenType::Unknown;
