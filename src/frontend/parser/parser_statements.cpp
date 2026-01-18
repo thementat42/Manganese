@@ -45,7 +45,8 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE
         while (!done() && peekTokenType() != TokenType::RightSquare) {
             std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
             if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
-                logError(std::format("Generic type '{}' in aggregate '{}' was already declared", genericName, name));
+                logError(peekToken().getLine(), peekToken().getColumn(),
+                         "Generic type '{}' in aggregate '{}' was already declared", genericName, name);
             } else {
                 genericTypes.push_back(genericName);
             }
@@ -63,11 +64,12 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE
             break;  // Done declaration
         }
         if (peekTokenType() != TokenType::Identifier) {
-            logError(std::format("Unexpected token '{}' in aggregate declaration. Expected field name.",
-                                 peekToken().getLexeme()));
+            logError(peekToken().getLine(), peekToken().getColumn(),
+                     "Unexpected token '{}' in aggregate declaration. Expected field name.", peekToken().getLexeme());
             DISCARD(consumeToken());  // Skip the unexpected token to avoid infinite loop
         }
-        std::string fieldName = consumeToken().getLexeme();
+        Token t = consumeToken();
+        std::string fieldName = t.getLexeme();
         expectToken(TokenType::Colon, "Expected a ':' to declare an aggregate field type.");
         bool isMutable = false;
         if (peekTokenType() == TokenType::Mut) {
@@ -81,7 +83,7 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE
             return field.name == fieldName;
         });
         if (duplicate != fields.end()) {
-            logError(std::format("Duplicate field '{}' in aggregate '{}'", fieldName, name));
+            logError(t.getLine(), t.getColumn(), "Duplicate field '{}' in aggregate '{}'", fieldName, name);
         } else {
             fields.emplace_back(fieldName, std::move(type), isMutable);
         }
@@ -154,15 +156,15 @@ StatementUPtr_t Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
 }
 
 StatementUPtr_t Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
-    DISCARD(consumeToken());
+    Token enumStartToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
     TypeSPtr_t baseType;
     std::vector<ast::EnumValue> values;
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());
         if (!peekToken().isPrimitiveType()) {
-            logError(std::format("Enums can only have primitive types as their underlying type, not {}",
-                                 peekToken().getLexeme()));
+            logError(peekToken().getLine(), peekToken().getColumn(),
+                     "Enums can only have primitive types as their underlying type, not {}", peekToken().getLexeme());
         }
         baseType = std::make_shared<ast::SymbolType>(consumeToken().getLexeme());
     } else {
@@ -181,7 +183,8 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
                                       [valueName](const ast::EnumValue& value) { return value.name == valueName; });
 
         if (duplicate != values.end()) {
-            logError(std::format("Enum value '{}' (in enum '{}') was previously declared", valueName, name));
+            logError(peekToken().getLine(), peekToken().getColumn(),
+                     "Enum value '{}' (in enum '{}') was previously declared", valueName, name);
         } else {
             values.emplace_back(valueName, std::move(valueExpression));
         }
@@ -190,7 +193,9 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the enum body");
-    if (values.empty()) { logError(std::format("Enum '{}' has no values", name)); }
+    if (values.empty()) {
+        logError(enumStartToken.getLine(), enumStartToken.getColumn(), "Enum '{}' has no values", name);
+    }
     return std::make_unique<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
 }
 
@@ -214,12 +219,14 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE 
                 break;  // End of generics
             }
             if (peekTokenType() != TokenType::Identifier) {
-                logError("Expected a generic type name");
+                logError(peekToken().getLine(), peekToken().getColumn(), "Expected a generic type name");
                 DISCARD(consumeToken());  // Skip the unexpected token to avoid infinite loop
             }
-            std::string genericName = expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme();
+            Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
+            std::string genericName = genericToken.getLexeme();
             if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
-                logError(std::format("Duplicate generic type '{}' in function '{}'", genericName, name));
+                logError(genericToken.getLine(), genericToken.getColumn(),
+                         "Duplicate generic type '{}' in function '{}'", genericName, name);
             } else {
                 genericTypes.push_back(std::move(genericName));
             }
@@ -342,8 +349,9 @@ StatementUPtr_t Parser::parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE {
     std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
     expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
     if (!this->moduleName.empty()) {
-        logError("A module name has previously been declared in this file. Files can only have one module declaration.",
-                 startLine, startColumn);
+        logError(
+            startLine, startColumn,
+            "A module name has previously been declared in this file. Files can only have one module declaration.");
     } else {
         this->moduleName = name;
     }
@@ -449,8 +457,8 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
             return std::unique_ptr<ast::FunctionDeclarationStatement>(tempFunction);
         }
         default:
-            logError(std::format("{} cannot follow a visibility modifier", lexer::tokenTypeToString(peekTokenType())),
-                     startLine, startColumn);
+            logError(startLine, startColumn, "{} cannot follow a visibility modifier",
+                     lexer::tokenTypeToString(peekTokenType()));
             // Parse the statement as if it had no visibility modifier
             return parseStatement();
     }

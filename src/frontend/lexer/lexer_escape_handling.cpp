@@ -53,18 +53,18 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
         uint8_t skipLength = 1;
         if (escapeString[i] == 'u') {
             std::string escDigits = escapeString.substr(i + 1, 4);  // 4 for uXXXX
-            escapeChar = resolveUnicodeCharacters(escDigits);
+            escapeChar = resolveUnicodeCharacters(escDigits, getLine(), getCol());
             skipLength = 5;
         } else if (escapeString[i] == 'U') {
             std::string escDigits = escapeString.substr(i + 1, 8);  // 8 for UXXXXXXXX
-            escapeChar = resolveUnicodeCharacters(escDigits, true);
+            escapeChar = resolveUnicodeCharacters(escDigits, getLine(), getCol(), /*isLongUnicode=*/ true);
             skipLength = 9;
         } else if (escapeString[i] == 'x') [[unlikely]] {  // Hex escape sequences aren't usually used
             std::string escDigits = escapeString.substr(i + 1, 2);  // 2 for xXX
             escapeChar = resolveHexCharacters(escDigits);
             skipLength = 3;
         } else {
-            escapeChar = getEscapeCharacter(escapeString[i]);
+            escapeChar = getEscapeCharacter(escapeString[i], getLine(), getCol());
         }
         if (!escapeChar) {
             if (escapeString[i] == 'x') {
@@ -146,7 +146,7 @@ std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
     return hexChar;
 }
 
-std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, bool isLongUnicode, size_t line, size_t col) {
+std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, size_t line, size_t col, bool isLongUnicode) {
     size_t expectedLength = isLongUnicode ? 8 : 4;  // 8 for \UXXXXXXXX, 4 for \uXXXX
     if (esc.length() != expectedLength) { return NONE; }
     char32_t unicodeChar = 0;

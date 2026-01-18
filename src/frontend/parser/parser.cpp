@@ -74,35 +74,9 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
     //, skipping any other logic in the conditional
     TokenType type = peekTokenType();
     if (type == expectedType) { return consumeToken(); }
-    std::string message = errorMessage + " (expected " + lexer::tokenTypeToString(expectedType) + ", but found "
-        + lexer::tokenTypeToString(type) + ")";
-    logError(message, peekToken().getLine(), peekToken().getColumn());
+    std::cerr << errorMessage << std::format("(expected {}, but got {})", lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(type));
     hasError = true;
 
-    return consumeToken();
-}
-
-Token Parser::expectToken(std::initializer_list<TokenType> expectedTypes) {
-    return expectToken(expectedTypes, "Unexpected token: ");
-}
-Token Parser::expectToken(std::initializer_list<TokenType> expectedTypes, const std::string& errorMessage) {
-    TokenType type = peekTokenType();
-    for (TokenType expectedType : expectedTypes) {
-        if (type == expectedType) { return consumeToken(); }
-    }
-    std::string typesString;
-    bool first = true;
-    for (TokenType expectedType : expectedTypes) {
-        if (!first) [[likely]] { typesString += ", "; }
-        typesString += lexer::tokenTypeToString(expectedType);
-        first = false;
-    }
-
-    std::string message = errorMessage + " (expected one of [" + typesString + "], but found "
-        + lexer::tokenTypeToString(type) + ")";
-
-    logError(message, peekToken().getLine(), peekToken().getColumn());
-    hasError = true;
     return consumeToken();
 }
 

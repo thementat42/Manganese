@@ -109,9 +109,9 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
                 // identifier, it might be an inline aggregate instantiation
                 return left;
             }
-            logError("Left brace after an expression must be preceded by an identifier (aggregate instantiation)"
-                     " or a block precursor (if/for/while, etc.)",
-                     token.getLine(), token.getColumn());
+            logError(token.getLine(), token.getColumn(),
+                     "Left brace after an expression must be preceded by an identifier (aggregate instantiation)"
+                     " or a block precursor (if/for/while, etc.)");
         }
         left = ledIterator->second(this, std::move(left), precedenceIterator->second.rightBindingPower);
     }
@@ -132,8 +132,8 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
     if (left->kind() == ast::ExpressionKind::GenericExpression) {
         auto* genericExpr = static_cast<ast::GenericExpression*>(left.get());
         if (genericExpr->identifier->kind() != ast::ExpressionKind::IdentifierExpression) {
-            logError("Generic aggregate instantiation must start with an aggregate name", left->getLine(),
-                     left->getColumn());
+            logError(left->getLine(), left->getColumn(),
+                     "Generic aggregate instantiation must start with an aggregate name");
         } else {
             auto* identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
             aggregateName = identifierExpr->value;
@@ -143,9 +143,8 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
         auto* underlying = static_cast<ast::IdentifierExpression*>(left.get());
         aggregateName = underlying->value;
     } else {
-        logError(std::format("Aggregate instantiation expression must start with an aggregate name, not {}",
-                             ast::toStringOr(left)),
-                 left->getLine(), left->getColumn());
+        logError(left->getLine(), left->getColumn(),
+                 "Aggregate instantiation expression must start with an aggregate name, not {}", ast::toStringOr(left));
     }
 
     while (!done()) {
@@ -163,9 +162,8 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
             fields.begin(), fields.end(),
             [propertyName](const ast::AggregateInstantiationField& field) { return field.name == propertyName; });
         if (duplicate != fields.end()) {
-            logError(
-                std::format("Duplicate field '{}' in aggregate instantiation of '{}'", propertyName, aggregateName),
-                value->getLine(), value->getColumn());
+            logError(value->getLine(), value->getColumn(), "Duplicate field '{}' in aggregate instantiation of '{}'",
+                     propertyName, aggregateName);
         } else {
             fields.emplace_back(propertyName, std::move(value));
         }
@@ -325,7 +323,7 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
             extractSuffix(lexeme, suffix);
             std::optional<number_t> value = utils::stringToNumber(lexeme, Base::Decimal, true, suffix);
             if (!value) {
-                logError(std::format("Invalid float literal '{}'", lexeme), token.getLine(), token.getColumn());
+                logError(token.getLine(), token.getColumn(),"Invalid float literal '{}'", lexeme);
                 return std::make_unique<ast::NumberLiteralExpression>(0.0);
                 // Error tolerance: return a default value of 0.0
             }
@@ -344,7 +342,7 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
 
             std::optional<number_t> value = utils::stringToNumber(numericPart, base, false, suffix);
             if (!value) {
-                logError(std::format("Invalid integer literal '{}'", lexeme), token.getLine(), token.getColumn());
+                logError(token.getLine(), token.getColumn(), "Invalid integer literal '{}'", lexeme);
                 return std::make_unique<ast::NumberLiteralExpression>(0);
                 // Error tolerance: return a default value of 0
             }

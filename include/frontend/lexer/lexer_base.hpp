@@ -48,7 +48,7 @@ struct NumberPrefixResult {
  * @return An optional character representing the escape sequence, or NONE if the character is not a valid escape
  * sequence
  */
-std::optional<char> getEscapeCharacter(const char escapeChar);
+std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_t col);
 
 /**
  * @brief Convert a wide character to a UTF-8 encoded string
@@ -70,7 +70,7 @@ std::optional<char32_t> resolveHexCharacters(const std::string& escDigits);
  * @param isLongUnicode Whether the escape sequence is a long Unicode escape sequence (\UXXXXXXXX)
  * @return An optional character representing the resolved escape sequence, or NONE if the sequence is invalid
  */
-std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, bool isLongUnicode = false);
+std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, size_t line, size_t col, bool isLongUnicode = false);
 
 /**
  * @brief The lexer is responsible for turning the source code into a non-textual representation that the parser can

@@ -16,7 +16,6 @@
 #include <frontend/lexer.hpp>
 #include <functional>
 #include <global_macros.hpp>
-#include <initializer_list>
 #include <io/logging.hpp>
 #include <memory>
 #include <string>
@@ -175,14 +174,13 @@ class Parser {
 
     Token expectToken(TokenType expectedType);
     Token expectToken(TokenType expectedType, const std::string& errorMessage);
-    Token expectToken(std::initializer_list<TokenType> expectedTypes);
-    Token expectToken(std::initializer_list<TokenType> expectedTypes, const std::string& errorMessage);
 
     /**
      * @brief A wrapper around logging::logError that sets the parser's hasError flag to true.
      */
-    inline void logError(const std::string& message, size_t line = 0, size_t col = 0) noexcept {
-        logging::logError(message, line, col);
+    template <class... Args>
+    inline void logError(size_t line, size_t col, std::format_string<Args...> message, Args&&... args) noexcept {
+        logging::logError(line, col, message, std::forward<Args>(args)...);
         hasError = true;
     }
 
