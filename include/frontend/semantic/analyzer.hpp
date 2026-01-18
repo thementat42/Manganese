@@ -13,8 +13,8 @@ namespace semantic {
 using _analyzer_base_t = ast::Visitor<bool, bool, bool>;
 
 class analyzer final : public _analyzer_base_t {
-    // note: with `final`, the compiler can more intelligently detect when analyzer is abstract (i.e., a particular
-    // visit() override hasn't been implemented) right here, instead of failing at an analyzer instantiation
+    // note: with `final`, the compiler can more intelligently detect when analyzer is abstract
+    // (i.e., a particular visit() override hasn't been declared), instead of failing at an analyzer instantiation
    private:
     SymbolTable table;
     parser::ParsedFile& parsed;
@@ -31,8 +31,11 @@ class analyzer final : public _analyzer_base_t {
     ~analyzer() override = default;
 
    private:
-    void collectTypes();  // first pass -- collect all user-defined types
-    void _collectTypesInBody(ast::Statement*);
+    inline void collectTypes() {  // first pass -- collect all user-defined types
+        for (const auto& stmt : parsed.program) { _collectTypesInStatement(stmt.get()); }
+    }
+    void _collectTypesInStatement(ast::Statement*);
+    void _collectTypesInStatementBody(ast::Statement*);
     void collectGlobals();  // second pass -- collect publicly available symbols for modules
     void collectAndSpecializeGenerics() {
         // third pass -- look at specific generic instantiations and specialize them (e.g.
@@ -40,9 +43,11 @@ class analyzer final : public _analyzer_base_t {
         // does nothing for now
     }
     inline bool checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
-        bool isSemanticallyValid = true;
-        for (auto& stmt : parsed.program) { isSemanticallyValid = isSemanticallyValid && this->visit(stmt); }
-        return isSemanticallyValid;
+        bool programIsSemanticallyValid = true;
+        for (auto& stmt : parsed.program) {
+            programIsSemanticallyValid = programIsSemanticallyValid && this->visit(stmt);
+        }
+        return programIsSemanticallyValid;
     }
 
    protected:

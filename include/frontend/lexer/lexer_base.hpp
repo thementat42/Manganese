@@ -12,18 +12,18 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 
+#include <deque>
+#include <frontend/lexer/token.hpp>
+#include <functional>
 #include <global_macros.hpp>
 #include <io/filereader.hpp>
 #include <io/reader.hpp>
 #include <io/stringreader.hpp>
-#include <utils/number_utils.hpp>
-#include <frontend/lexer/token.hpp>
-
-#include <deque>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utils/number_utils.hpp>
+
 
 namespace Manganese {
 namespace lexer {
@@ -78,8 +78,6 @@ std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, b
  */
 class Lexer {
    public:  // public variables
-    std::vector<std::string> blockComments;  // Store block comments (e.g. for documentation)
-
    private:  // private variables
     std::unique_ptr<io::Reader> reader;
     size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
@@ -99,11 +97,10 @@ class Lexer {
 
     /**
      * @brief See the next token in the input stream without consuming it
-     * @param offset How many tokens to look ahead (default is 0 -- the current token)
      * @return The peeked token
      * @details This function will not advance the reader position
      */
-    Token peekToken(size_t offset = 0) noexcept;
+    Token peekToken() noexcept;
 
     /**
      * @brief Consume the next token in the input stream
@@ -156,9 +153,10 @@ class Lexer {
     void tokenizeSymbol();
 
     /**
-     * @brief Process a block comment and store it in the blockComments vector
+     * @brief Skip over a block comment
+     * @note Allows for nested block comments
      */
-    void tokenizeBlockComment();
+    void skipBlockComment();
 
     //~ Helper functions
 

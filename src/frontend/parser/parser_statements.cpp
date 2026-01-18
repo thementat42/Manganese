@@ -4,17 +4,17 @@
  * readability and maintainability.
  */
 
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
-
-#include <format>
 #include <memory>
 #include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
+
 
 namespace Manganese {
 namespace parser {
@@ -78,8 +78,9 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE
         TypeSPtr_t type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
-        auto duplicate = std::find_if(fields.begin(), fields.end(),
-                                      [fieldName](const ast::AggregateField& field) { return field.name == fieldName; });
+        auto duplicate = std::find_if(fields.begin(), fields.end(), [fieldName](const ast::AggregateField& field) {
+            return field.name == fieldName;
+        });
         if (duplicate != fields.end()) {
             logError(std::format("Duplicate field '{}' in aggregate '{}'", fieldName, name));
         } else {
@@ -96,8 +97,7 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE
 StatementUPtr_t Parser::parseAliasStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     TypeSPtr_t baseType;
-    if (peekToken().isPrimitiveType() || peekTokenType() == TokenType::Func
-        || peekTokenType() == TokenType::Ptr) {
+    if (peekToken().isPrimitiveType() || peekTokenType() == TokenType::Func || peekTokenType() == TokenType::Ptr) {
         // Primitive types are easy to alias -- just parse a regular type
         baseType = parseType(Precedence::Default);
     } else {
@@ -151,7 +151,7 @@ StatementUPtr_t Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
     auto condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
     expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
-    return std::make_unique<ast::WhileLoopStatement>(std::move(body), std::move(condition), true);
+    return std::make_unique<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
 }
 
 StatementUPtr_t Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
@@ -450,8 +450,7 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
             return std::unique_ptr<ast::FunctionDeclarationStatement>(tempFunction);
         }
         default:
-            logError(std::format("{} cannot follow a visibility modifier",
-                                 lexer::tokenTypeToString(peekTokenType())),
+            logError(std::format("{} cannot follow a visibility modifier", lexer::tokenTypeToString(peekTokenType())),
                      startLine, startColumn);
             // Parse the statement as if it had no visibility modifier
             return parseStatement();
@@ -477,8 +476,7 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE 
         if (peekTokenType() == TokenType::Public) {
             visibility = ast::Visibility::Public;
             DISCARD(consumeToken());  // Consume the public keyword
-        }
-        else if (peekTokenType() == TokenType::Private) [[unlikely]] {
+        } else if (peekTokenType() == TokenType::Private) [[unlikely]] {
             // private is the default so it'd mainly be used for emphasis
             visibility = ast::Visibility::Private;
             DISCARD(consumeToken());  // Consume the private keyword
@@ -521,8 +519,7 @@ ast::Block Parser::parseBlock(std::string blockName) NOEXCEPT_IF_RELEASE {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end " + blockName);
     if (block.empty()) {
-        logging::logWarning(std::format("{} is empty", blockName), peekToken().getLine(),
-                            peekToken().getColumn());
+        logging::logWarning(std::format("{} is empty", blockName), peekToken().getLine(), peekToken().getColumn());
     }
     return block;
 }

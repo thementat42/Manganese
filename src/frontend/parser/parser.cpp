@@ -41,11 +41,9 @@ ParsedFile Parser::parse() {
         previousToken.reset();
     }
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
-    lexer->blockComments.shrink_to_fit();
     return ParsedFile{.moduleName = moduleName,
                       .imports = std::move(imports),
-                      .program = std::move(program),
-                      .blockComments = std::move(lexer->blockComments)};
+                      .program = std::move(program)};
 }
 
 // ===== Helper functions =====

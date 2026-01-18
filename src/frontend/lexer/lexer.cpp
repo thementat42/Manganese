@@ -84,7 +84,6 @@ if current char is an operator (after doing the above checks), look at the next 
 - otherwise, push it as a regular operator
 */
 
-#include <algorithm>
 #include <format>
 #include <frontend/lexer.hpp>
 #include <functional>
@@ -99,7 +98,6 @@ if current char is an operator (after doing the above checks), look at the next 
 
 #include "frontend/lexer/token_base.hpp"
 #include "frontend/lexer/token_type.hpp"
-
 
 namespace Manganese {
 
@@ -134,7 +132,7 @@ void Lexer::lex(size_t numTokens) {
             } while (!done() && currentChar != '\n');
             advance();  // Skip the newline
         } else if (currentChar == '/' && peekChar(1) == '*') {
-            tokenizeBlockComment();
+            skipBlockComment();
         } else if (std::isspace(currentChar)) [[likely]] {  // lots of whitespace
             advance();  // Skip whitespace
         } else if (isalpha(currentChar) || currentChar == '_') [[likely]] {  // Mostly identifiers and keywords
@@ -165,22 +163,15 @@ void Lexer::lex(size_t numTokens) {
     }
 }
 
-[[deprecated("Lookahead behaviour isn't used")]] Token Lexer::peekToken(size_t offset) noexcept {
-    if (done() && offset >= tokenStream.size()) {
-        // Only return EOF if we are done tokenizing and trying to read past the end
+Token Lexer::peekToken() noexcept {
+    if (done() && tokenStream.empty()) {
         return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
     }
     if (tokenStream.empty()) {
-        size_t numToMake = offset == 0 ? 1 : offset;
-        numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
-        lex(numToMake);  // If queue empty, generate {offset} tokens to read
-    } else if (tokenStream.size() <= offset) {
-        size_t numToMake = offset - tokenStream.size();
-        numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
-        lex(numToMake);  // fill the queue with more tokens
+        lex(QUEUE_LOOKAHEAD_AMOUNT);
     }
     // If the token stream can't be filled up with enough tokens, we're reading past the end -- indicate that
-    return offset < tokenStream.size() ? tokenStream[offset] : Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+    return tokenStream[0];
 }
 
 Token Lexer::consumeToken() noexcept {
@@ -453,26 +444,20 @@ void Lexer::tokenizeSymbol() {
     tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
 }
 
-void Lexer::tokenizeBlockComment() {
+void Lexer::skipBlockComment() {
     advance(2);  // Skip the /*
-    std::string comment;
     int64_t commentDepth = 1;  // Allow nested comments
     size_t startLine = getLine(), startCol = getCol();
     while (!done() && commentDepth > 0) {
         if (peekChar() == '/' && peekChar(1) == '*') {
             ++commentDepth;
-            comment += consumeChar();
-            comment += consumeChar();
+            advance(2);
         } else if (peekChar() == '*' && peekChar(1) == '/') {
             --commentDepth;
-            if (commentDepth == 0) {
-                advance(2);
-                break;  // End of the outermost comment
-            }
-            comment += consumeChar();
-            comment += consumeChar();
+            advance(2);
+            if (commentDepth == 0) { break; }
         } else {
-            comment += consumeChar();
+            advance();
         }
     }
     if (commentDepth > 0) {
@@ -480,7 +465,6 @@ void Lexer::tokenizeBlockComment() {
                                       startLine, startCol),
                           getLine(), getCol());
     }
-    blockComments.push_back(std::move(comment));
 }
 
 //~ Helper Functions

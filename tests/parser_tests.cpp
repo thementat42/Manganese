@@ -41,11 +41,6 @@ ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer:
         for (const auto& element : file.imports) { std::cout << parser::importToString(element) << "\n"; }
     }
 
-    if (!file.blockComments.empty()) {
-        std::cout << "Block comments:\n";
-        for (const auto& comment : file.blockComments) { std::cout << comment << '\n'; }
-    }
-
     return std::move(file.program);
 }
 

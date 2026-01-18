@@ -41,7 +41,6 @@ struct ParsedFile {
     std::string moduleName;
     std::vector<Import> imports;
     ast::Block program;
-    std::vector<std::string> blockComments;  // These come from the lexer
 };
 
 //~ Helper functions that don't depend on the parser class's methods/variables
@@ -163,8 +162,8 @@ class Parser {
     /**
      * @details Get the current token, without consuming it
      */
-    [[nodiscard]] inline Token peekToken(size_t offset = 0) const noexcept { return lexer->peekToken(offset); }
-    [[nodiscard]] inline TokenType peekTokenType(size_t offset = 0) noexcept { return lexer->peekToken(offset).getType(); }
+    [[nodiscard]] inline Token peekToken() const noexcept { return lexer->peekToken(); }
+    [[nodiscard]] inline TokenType peekTokenType() noexcept { return lexer->peekToken().getType(); }
 
     /**
      * @details Consume the current token
