@@ -1,7 +1,6 @@
 #include <format>
 #include <frontend/ast/visitor_base.hpp>
 
-
 namespace Manganese {
 namespace ast {
 
@@ -28,8 +27,8 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Expression* expr) -> exprvisit_t {
         case StringLiteralExpression: return visit(static_cast<ast::StringLiteralExpression*>(expr));
         case TypeCastExpression: return visit(static_cast<ast::TypeCastExpression*>(expr));
         default:
-            ASSERT_UNREACHABLE(
-                std::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind())));
+            manganese_unreachable(
+                std ::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind())));
     }
 }
 template <class Expr, class Stmt, class Type>
@@ -51,8 +50,8 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Statement* stmt) -> stmtvisit_t {
         case VariableDeclarationStatement: return visit(static_cast<ast::VariableDeclarationStatement*>(stmt));
         case WhileLoopStatement: return visit(static_cast<ast::WhileLoopStatement*>(stmt));
         default:
-            ASSERT_UNREACHABLE(
-                std::format("No visit() overload for statement kind {}", static_cast<int>(stmt->kind())));
+            manganese_unreachable(
+                std ::format("No visit() overload for statement kind {}", static_cast<int>(stmt->kind())));
     }
 }
 template <class Expr, class Stmt, class Type>
@@ -66,7 +65,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Type* type) -> typevisit_t {
         case PointerType: return visit(static_cast<ast::PointerType*>(type));
         case SymbolType: return visit(static_cast<ast::SymbolType*>(type));
         default:
-            ASSERT_UNREACHABLE(std::format("No visit() overload for type kind {}", static_cast<int>(type->kind())));
+            manganese_unreachable(std ::format("No visit() overload for type kind {}", static_cast<int>(type->kind())));
     }
 }
 

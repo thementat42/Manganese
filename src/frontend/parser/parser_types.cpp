@@ -18,7 +18,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
 
     auto nudIterator = nudLookup_types.find(type);
     if (nudIterator == nudLookup_types.end()) {
-        ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
+        manganese_unreachable("No type null denotation handler for token type: " + lexer ::tokenTypeToString(type));
     }
     TypeSPtr_t left = nudIterator->second(this);
 
@@ -33,7 +33,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
 
         auto ledIterator = ledLookup_types.find(type);
         if (ledIterator == ledLookup_types.end()) {
-            ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer::tokenTypeToString(type));
+            manganese_unreachable("No type left denotation handler for token type: " + lexer ::tokenTypeToString(type));
         }
         left = ledIterator->second(this, std::move(left), operatorPrecedenceMap_type[type].rightBindingPower);
     }
@@ -186,7 +186,7 @@ TypeSPtr_t Parser::parseSymbolType() NOEXCEPT_IF_RELEASE {
             prim_t = prim::boolean;
         }
         else {
-            ASSERT_UNREACHABLE("Unknown primitive type " + lex);
+            manganese_unreachable("Unknown primitive type " + lex);
         }
         auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());
         symbol_type->setPrimitiveType(prim_t);

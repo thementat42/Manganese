@@ -71,7 +71,7 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
     auto nudIterator = nudLookup.find(type);
     if (nudIterator == nudLookup.end()) {
         // TODO: This should be an error handled gracefully, not a throw
-        ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
+        manganese_unreachable("No null denotation handler for token type: " + lexer ::tokenTypeToString(type));
     }
     ExpressionUPtr_t left = nudIterator->second(this);
 
@@ -97,7 +97,7 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
         auto ledIterator = ledLookup.find(type);
         if (ledIterator == ledLookup.end()) {
             // TODO: This should be an error handled gracefully, not a throw
-            ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
+            manganese_unreachable("No left denotation handler for token type: " + lexer ::tokenTypeToString(type));
         }
 
         if (type == TokenType::LeftBrace && left->kind() != ast::ExpressionKind::IdentifierExpression
@@ -349,8 +349,8 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
             return std::make_unique<ast::NumberLiteralExpression>(*value);
         }
         default:
-            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
-                               + lexer::tokenTypeToString(token.getType()));
+            manganese_unreachable("Invalid Token Type in parsePrimaryExpression: "
+                                  + lexer ::tokenTypeToString(token.getType()));
     }
 }
 

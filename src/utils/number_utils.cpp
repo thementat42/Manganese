@@ -56,7 +56,7 @@ std::optional<number_t> stringToNumber(std::string_view str, Base base, bool isF
         // If i64 fails, try ui64
         return stoui64(str, base);
     } else {
-        ASSERT_UNREACHABLE("Invalid Number Suffix: " + suffix);
+        manganese_unreachable("Invalid Number Suffix: " + suffix);
     }
 }
 
@@ -76,19 +76,33 @@ constexpr std::optional<T> _stox(std::string_view str, Base base = Base::Decimal
 
 constexpr FORCE_INLINE std::optional<int8_t> stoi8(std::string_view str, Base base) { return _stox<int8_t>(str, base); }
 
-constexpr FORCE_INLINE std::optional<int16_t> stoi16(std::string_view str, Base base) { return _stox<int16_t>(str, base); }
+constexpr FORCE_INLINE std::optional<int16_t> stoi16(std::string_view str, Base base) {
+    return _stox<int16_t>(str, base);
+}
 
-constexpr FORCE_INLINE std::optional<int32_t> stoi32(std::string_view str, Base base) { return _stox<int32_t>(str, base); }
+constexpr FORCE_INLINE std::optional<int32_t> stoi32(std::string_view str, Base base) {
+    return _stox<int32_t>(str, base);
+}
 
-constexpr FORCE_INLINE std::optional<int64_t> stoi64(std::string_view str, Base base) { return _stox<int64_t>(str, base); }
+constexpr FORCE_INLINE std::optional<int64_t> stoi64(std::string_view str, Base base) {
+    return _stox<int64_t>(str, base);
+}
 
-constexpr FORCE_INLINE std::optional<uint8_t> stoui8(std::string_view str, Base base) { return _stox<uint8_t>(str, base); }
+constexpr FORCE_INLINE std::optional<uint8_t> stoui8(std::string_view str, Base base) {
+    return _stox<uint8_t>(str, base);
+}
 
-constexpr FORCE_INLINE std::optional<uint16_t> stoui16(std::string_view str, Base base) { return _stox<uint16_t>(str, base); }
+constexpr FORCE_INLINE std::optional<uint16_t> stoui16(std::string_view str, Base base) {
+    return _stox<uint16_t>(str, base);
+}
 
-constexpr FORCE_INLINE std::optional<uint32_t> stoui32(std::string_view str, Base base) { return _stox<uint32_t>(str, base); }
+constexpr FORCE_INLINE std::optional<uint32_t> stoui32(std::string_view str, Base base) {
+    return _stox<uint32_t>(str, base);
+}
 
-constexpr FORCE_INLINE std::optional<uint64_t> stoui64(std::string_view str, Base base) { return _stox<uint64_t>(str, base); }
+constexpr FORCE_INLINE std::optional<uint64_t> stoui64(std::string_view str, Base base) {
+    return _stox<uint64_t>(str, base);
+}
 
 // from_chars doesn't always support floats so fall back to stl functions
 FORCE_INLINE std::optional<float32_t> stof32(std::string_view str) { return std::stof(std::string(str)); }

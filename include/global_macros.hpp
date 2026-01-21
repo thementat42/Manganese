@@ -7,6 +7,7 @@
 #define MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
 
 #include <stdint.h>
+
 #include <iostream>
 #include <stdexcept>
 #include <utility>
@@ -50,8 +51,7 @@
 #define FORCE_INLINE inline
 #endif
 
-
-#define MANGANESE_PRINT_LOCATION_                                                                             \
+#define MANGANESE_PRINT_LOCATION_                                                                              \
     std::cerr << "\033[33m In file: " << __FILE__ << ", at line " << __LINE__ << ": when running " << __func__ \
               << "\033[0m\n";
 
@@ -60,7 +60,12 @@
 
 //~ Unreachable Code
 
-[[noreturn]] inline void manganese_unreachable() {
+[[noreturn]] inline void manganese_unreachable(const char* message = "") {
+#if DEBUG
+    std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m";
+    PRINT_LOCATION;
+    std::abort();
+#else
 #if __cplusplus >= 202302L
     std::unreachable();  // compiler agnostic, but still allows for optimisation
 // If < C++23, use a compiler-specific implementation
@@ -70,26 +75,11 @@
     __assume(false);
 #else  // If no (known) compiler-specific implementation is available, fall back to nothing
        // Still invoked undefined behaviour
+    std::terminate();
 #endif  // __cplusplus >= 202302L
+#endif  // DEBUG
 }
 
-#if DEBUG
-#define MANGANESE_ASSERT_UNREACHABLE_(message)                                      \
-    do {                                                                             \
-        std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m"; \
-        PRINT_LOCATION;                                                              \
-        throw std::runtime_error(message);                                           \
-    } while (0);
-#else  // ^^ DEBUG vv !DEBUG
-#define MANGANESE_ASSERT_UNREACHABLE_(message) manganese_unreachable();
-#endif  // DEBUG
-
-/**
- * Indicates a place that should never be reached
- * In debug mode, throws an std::runtime_error
- * In release mode, marks the block as unreachable, for optimizations
- * @note see
- */
-#define ASSERT_UNREACHABLE(message) MANGANESE_ASSERT_UNREACHABLE_(message)
+[[noreturn]] inline void manganese_unreachable(const std::string& message) { manganese_unreachable(message.c_str()); }
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
