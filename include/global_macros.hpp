@@ -9,8 +9,8 @@
 #include <stdint.h>
 
 #include <iostream>
-#include <stdexcept>
 #include <utility>
+
 
 // Some common includes that are used frequently
 
@@ -51,19 +51,11 @@
 #define FORCE_INLINE inline
 #endif
 
-#define MANGANESE_PRINT_LOCATION_                                                                              \
-    std::cerr << "\033[33m In file: " << __FILE__ << ", at line " << __LINE__ << ": when running " << __func__ \
-              << "\033[0m\n";
-
-#define PRINT_LOCATION \
-    MANGANESE_PRINT_LOCATION_  // Print the location of the log message (in the compiler source, not the user code)
-
-//~ Unreachable Code
-
-[[noreturn]] inline void manganese_unreachable(const char* message = "") {
+[[noreturn]] inline void manganese_unreachable(const char* message = "", const char* file = "", size_t line = 0, const char* func = 0) {
 #if DEBUG
     std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m";
-    PRINT_LOCATION;
+    std::cerr << "\033[33m In file: " << file << ", at line " << line << ": when running " << func
+              << "\033[0m\n";
     std::abort();
 #else
 #if __cplusplus >= 202302L
@@ -73,13 +65,17 @@
     __builtin_unreachable();
 #elif defined(_MSC_VER)
     __assume(false);
-#else  // If no (known) compiler-specific implementation is available, fall back to nothing
-       // Still invoked undefined behaviour
-    std::terminate();
+#else
+    std::exit();  // no known compiler unrechable, just abort
 #endif  // __cplusplus >= 202302L
 #endif  // DEBUG
 }
 
-[[noreturn]] inline void manganese_unreachable(const std::string& message) { manganese_unreachable(message.c_str()); }
+[[noreturn]] inline void manganese_unreachable(const std::string& message, const char* file, size_t line,
+                                               const char* func) {
+    manganese_unreachable(message.c_str(), file, line, func);
+}
+
+#define ASSERT_UNREACHABLE(message) manganese_unreachable((message), __FILE__, __LINE__, __func__)
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_HPP

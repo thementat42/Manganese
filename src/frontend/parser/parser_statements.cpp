@@ -429,7 +429,7 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
         case TokenType::Private: visibility = ast::Visibility::Private; break;
         case TokenType::Public: visibility = ast::Visibility::Public; break;
         default:
-            manganese_unreachable("Unexpected token type in parseVisibilityAffectedStatement: "
+            ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
                                   + lexer ::tokenTypeToString(peekTokenType()));
     }
     size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();

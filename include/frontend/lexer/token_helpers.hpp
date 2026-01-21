@@ -28,7 +28,7 @@ constexpr TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
         case TokenType::Minus: return TokenType::UnaryMinus;
         case TokenType::BitAnd: return TokenType::AddressOf;
         case TokenType::Mul: return TokenType::Dereference;
-        default: manganese_unreachable("No unary counterpart for token type: " + tokenTypeToString(type));
+        default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(type));
     }
 }
 
@@ -48,7 +48,7 @@ constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType ass
         case BitLShiftAssign: return BitLShift;
         case BitRShiftAssign: return BitRShift;
         default:
-            manganese_unreachable(std ::format("Cannot convert assignment operator {} to binary operator",
+            ASSERT_UNREACHABLE(std ::format("Cannot convert assignment operator {} to binary operator",
                                                lexer ::tokenTypeToString(assignmentOp)));
             return Unknown;
     }
@@ -176,7 +176,7 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
         case TokenType::Keyword: return "Keyword";
         case TokenType::Operator: return "Operator";
         default:
-            manganese_unreachable("No string representation for TokenType: "
+            ASSERT_UNREACHABLE("No string representation for TokenType: "
                                   + std ::to_string(static_cast<std ::underlying_type<TokenType>::type>(type)));
     }
 }

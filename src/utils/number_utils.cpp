@@ -56,7 +56,7 @@ std::optional<number_t> stringToNumber(std::string_view str, Base base, bool isF
         // If i64 fails, try ui64
         return stoui64(str, base);
     } else {
-        manganese_unreachable("Invalid Number Suffix: " + suffix);
+        ASSERT_UNREACHABLE("Invalid Number Suffix: " + suffix);
     }
 }
 
