@@ -51,7 +51,7 @@
 #define FORCE_INLINE inline
 #endif
 
-[[noreturn]] inline void manganese_unreachable(const char* message = "", const char* file = "", size_t line = 0, const char* func = 0) {
+[[noreturn]] inline void manganese_unreachable(const char* message = "", const char* file = "", unsigned line = 0, const char* func = "") {
 #if DEBUG
     std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m";
     std::cerr << "\033[33m In file: " << file << ", at line " << line << ": when running " << func
@@ -66,12 +66,12 @@
 #elif defined(_MSC_VER)
     __assume(false);
 #else
-    std::exit();  // no known compiler unrechable, just abort
+    // still invokes UB
 #endif  // __cplusplus >= 202302L
 #endif  // DEBUG
 }
 
-[[noreturn]] inline void manganese_unreachable(const std::string& message, const char* file, size_t line,
+[[noreturn]] inline void manganese_unreachable(const std::string& message, const char* file, unsigned line,
                                                const char* func) {
     manganese_unreachable(message.c_str(), file, line, func);
 }
