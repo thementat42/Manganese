@@ -135,7 +135,7 @@ bool testExponentiationAssociativity() {
 }
 
 bool testVariableDeclaration() {
-    std::string expression = "let mut foo = 45.5;"
+    std::string expression = "let mut foo = 45.5a;"
                              "let mut bar = foo * 10;"
                              "let baz : public uint32 = foo + 10 ^^ 2 * bar + foo % 7 + foo^^2;"
                              "let boolean = true;";
