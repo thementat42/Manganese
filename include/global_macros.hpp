@@ -11,7 +11,6 @@
 #include <iostream>
 #include <utility>
 
-
 // Some common includes that are used frequently
 
 /**
@@ -51,12 +50,12 @@
 #define FORCE_INLINE inline
 #endif
 
-[[noreturn]] inline void manganese_unreachable(const char* message = "", const char* file = "", unsigned line = 0, const char* func = "") {
+[[noreturn]] inline void manganese_unreachable(const char* message = "", const char* file = "", unsigned line = 0,
+                                               const char* func = "") NOEXCEPT_IF_RELEASE {
 #if DEBUG
     std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m";
-    std::cerr << "\033[33m In file: " << file << ", at line " << line << ": when running " << func
-              << "\033[0m\n";
-    std::abort();
+    std::cerr << "\033[33m In file: " << file << ", at line " << line << ": when running " << func << "\033[0m\n";
+    throw(message);
 #else
 #if __cplusplus >= 202302L
     std::unreachable();  // compiler agnostic, but still allows for optimisation
