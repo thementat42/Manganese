@@ -74,7 +74,7 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
     //, skipping any other logic in the conditional
     TokenType type = peekTokenType();
     if (type == expectedType) { return consumeToken(); }
-    std::cerr << errorMessage << std::format("(expected {}, but got {})", lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(type));
+    std::cerr << errorMessage << std::format(" (expected {}, but got {}) ", lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(type));
     hasError = true;
 
     return consumeToken();
