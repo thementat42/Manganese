@@ -281,31 +281,41 @@ void Lexer::tokenizeNumber() {
     numberLiteral += prefix;
     char currentChar = peekChar();  // If there was a number prefix, update the current char
 
-    while (!done() && (isValidBaseChar(currentChar) || currentChar == '.' || currentChar == '_')) {
+    while (!done()) {
+        currentChar = peekChar();
         if (currentChar == '_') {
             // Ignore underscores
             advance();
-            currentChar = peekChar();
             continue;
         } else if (currentChar == '.') {
             if (isFloat) {
                 // Invalid number -- two decimal points
                 logging::logError(getLine(), getCol(), "Invalid number literal: multiple decimal points");
-                tokenStream.emplace_back(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
-                return;
+                advance();
+                continue;
             }
             // Reject floating point for octal and binary numbers
             if (base == Base::Octal || base == Base::Binary) {
                 logging::logError(getLine(), getCol(),
                                   "Invalid number literal: floating point not allowed for {} numbers",
                                   (base == Base::Octal ? "octal" : "binary"));
-                tokenStream.emplace_back(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
-                return;
+                advance();
+                continue;
             }
             isFloat = true;
+        } else if (!std::isalnum(currentChar)) {
+            break;
+        } else if (!isValidBaseChar(currentChar)) {
+            char lower_char = (char)tolower(currentChar);
+            if (lower_char == 'i' || lower_char == 'f' || lower_char == 'u' || lower_char == 'e' || lower_char == 'p') {
+                // suffix starts
+                break;
+            }
+            logging::logError(getLine(), getCol(), "Invalid digit '{}' in numeric constant", currentChar);
+            advance();
+            continue;
         }
         numberLiteral += consumeChar();
-        currentChar = peekChar();
     }
 
     // Handle scientific notation (e.g., 1.23e4), size suffixes (e.g., 1.23f), etc.
