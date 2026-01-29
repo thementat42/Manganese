@@ -305,9 +305,9 @@ bool testInvalidChar() {
         return false;
     }
 
-    return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid()
-        && tokens[1].getType() == TokenType::CharLiteral && tokens[1].isInvalid()
-        && tokens[2].getType() == TokenType::CharLiteral && tokens[2].isInvalid();
+    return tokens[0].getType() == TokenType::CharLiteral
+        && tokens[1].getType() == TokenType::CharLiteral
+        && tokens[2].getType() == TokenType::CharLiteral;
 }
 
 bool testInvalidEscapeSequence() {
@@ -318,7 +318,7 @@ bool testInvalidEscapeSequence() {
         return false;
     }
 
-    return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid();
+    return tokens[0].getType() == TokenType::CharLiteral;
 }
 
 bool testBadFileAccess() {

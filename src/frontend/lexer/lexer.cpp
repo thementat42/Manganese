@@ -97,9 +97,6 @@ if current char is an operator (after doing the above checks), look at the next 
 #include <string>
 #include <utility>
 
-#include "frontend/lexer/token_base.hpp"
-#include "frontend/lexer/token_type.hpp"
-
 namespace Manganese {
 
 namespace lexer {
@@ -191,14 +188,14 @@ void Lexer::tokenizeCharLiteral() {
     while (true) {
         if (done()) {
             logging::logError(getLine(), getCol(), "Unclosed character literal");
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
             return;
         }
         if (peekChar() == '\'') { break; }
         if (peekChar() == '\n') {
             logging::logError(getLine(), getCol(), "Unclosed character literal");
 
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
             return;
         }
         if (peekChar() == '\\') {
@@ -213,7 +210,7 @@ void Lexer::tokenizeCharLiteral() {
         return;
     } else if (charLiteral.length() > 1) {
         logging::logError(getLine(), getCol(), "Character literal exceeds 1 character limit");
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
+        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
         return;
     }
     tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
@@ -228,7 +225,7 @@ void Lexer::tokenizeStringLiteral() {
     while (true) {
         if (done()) {
             logging::logError(getLine(), getCol(), "Unclosed string literal");
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
             return;
         }
         if (peekChar() == '"') { break; }
@@ -246,7 +243,7 @@ void Lexer::tokenizeStringLiteral() {
                 getLine(), getCol(),
                 "String literal cannot span multiple lines. If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line");
 
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
             return;
         }
         stringLiteral += consumeChar();  // Add the character to the string
@@ -256,7 +253,7 @@ void Lexer::tokenizeStringLiteral() {
     if (containsEscapeSequence) {
         std::optional<std::string> result = resolveEscapeCharacters(stringLiteral);
         if (!result) {
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
             return;
         }
         stringLiteral = std::move(result.value());
@@ -525,7 +522,7 @@ void Lexer::tokenizeSymbol() {
         default:
             type = TokenType::Unknown;
             logging::logError(getLine(), getCol(), "Invalid character: '{}'", current);
-            tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol, true);
+            tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
             break;
     }
     advance(lexeme.length());

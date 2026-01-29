@@ -84,7 +84,7 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
         logging::logError(getLine(), getCol(), "Invalid character literal", charLiteral);
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), true);
+        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
         return;
     }
     std::string processed = *resolved;

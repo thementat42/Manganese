@@ -40,6 +40,11 @@ struct NumberPrefixResult {
     std::string prefix;
 };
 
+enum class TokenizationResult : bool {
+    Success,
+    Failure
+};
+
 //~ Static helper functions
 
 /**
@@ -83,6 +88,7 @@ class Lexer {
     size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
     constexpr static const size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
     bool hasCriticalError_ = false;
+    bool hasError_ = false;
     std::deque<Token> tokenStream;
 
    public:  // public methods
@@ -115,7 +121,8 @@ class Lexer {
      */
     bool done() const noexcept { return reader->done(); }
 
-    bool hasCriticalError() const noexcept { return hasCriticalError_; }
+   constexpr bool hasCriticalError() const noexcept { return hasCriticalError_; }
+   constexpr bool hasError() const noexcept { return hasError_; }
 
    private:  // private methods
     //~ Main tokenization functions

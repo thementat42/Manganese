@@ -33,17 +33,14 @@ class Token {
     TokenType type;
     std::string lexeme;
     size_t line, column;
-    bool invalid;
 
    public:
     Token() noexcept = default;
-    Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_,
-          bool invalid_ = false) NOEXCEPT_IF_RELEASE :
+    Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_) NOEXCEPT_IF_RELEASE :
         type(type_),
         lexeme(lexeme_),
         line(line_),
-        column(column_),
-        invalid(invalid_) {
+        column(column_) {
         // Special lexeme override cases
         if (type == TokenType::Int32) {
             lexeme = "int32";
@@ -60,7 +57,6 @@ class Token {
         return type >= TokenType::_operatorStart && type <= TokenType::_operatorEnd;
     }
 
-    constexpr bool isInvalid() const noexcept { return invalid; }
     constexpr TokenType getType() const noexcept { return type; }
     constexpr std::string getLexeme() const noexcept { return lexeme; }
     constexpr size_t getLine() const noexcept { return line; }
