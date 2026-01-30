@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <utils/number_utils.hpp>
+#include "frontend/lexer/lexer_base.hpp"
 
 
 namespace Manganese {
@@ -80,12 +81,12 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
     return processed;
 }
 
-void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
+TokenizationResult Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
         logging::logError(getLine(), getCol(), "Invalid character literal", charLiteral);
         tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
-        return;
+        return TokenizationResult::Failure;
     }
     std::string processed = *resolved;
     // For escaped characters, we need to check if it represents a single code point
@@ -98,12 +99,13 @@ void Lexer::processCharEscapeSequence(const std::string& charLiteral) {
             (byteCount == 3 && (firstByte & 0xF0) == 0xE0) ||  // 3-byte UTF-8 character
             (byteCount == 4 && (firstByte & 0xF8) == 0xF0);  // 4-byte UTF-8 character
     }
+    TokenizationResult result = TokenizationResult::Success;
     if (!isValidSingleCodePoint) {
         logging::logError(getLine(), getCol(), "Invalid character literal ", charLiteral);
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
-        return;
+        result = TokenizationResult::Failure;
     }
     tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
+    return result;
 }
 
 std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_t col) {
