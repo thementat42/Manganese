@@ -38,7 +38,9 @@ constexpr std::string primitiveTypeToString(PrimitiveType_t prim) {
         case PrimitiveType_t::f64: return float64_str;
         case PrimitiveType_t::character: return char_str;
         case PrimitiveType_t::str: return string_str;
-        case PrimitiveType_t::boolean: return bool_str;
+        case PrimitiveType_t::boolean:
+            return bool_str;
+            default: ASSERT_UNREACHABLE("Invalid primitive type");
     }
 }
 
