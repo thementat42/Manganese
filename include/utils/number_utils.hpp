@@ -56,7 +56,9 @@ constexpr std::string baseToString(Base b) {
         case Base::Binary: return "binary";
         case Base::Octal: return "octal";
         case Base::Decimal: return "decimal";
-        case Base::Hexadecimal: return "hexadecimal";
+        case Base::Hexadecimal:
+            return "hexadecimal";
+            default: ASSERT_UNREACHABLE("Invalid base");
     }
 }
 
