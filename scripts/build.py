@@ -7,11 +7,11 @@ Options:
     NOTE: These options may be out of date if the docstring has not been correctly updated.
     NOTE: For the most recent set of available arguments, run the script with the -h flag
     
-    -b, --build-dir                                        Specify a custom build directory (default: 'build').
+    -b, --build-dir                                        Specify a build directory (default: 'build').
     -c, --clean                                            Clean the build directory after the build (removes everything except the output executable).
-    -cc, --ccompiler CCOMPILER                             Specify a custom C compiler to use for the build instead of the default for the system
+    -cc, --ccompiler CCOMPILER                             Specify a C compiler to use for the build instead of the default for the system
     --compile-commands                                     Generate compile_commands.json in the build directory.
-    -cxx, -cpp, --cxxcompiler, --cppcompiler CXXCOMPILER   Specify a custom C++ compiler to use for the build instead of the default for the system
+    -cxx, -cpp, --cxxcompiler, --cppcompiler CXXCOMPILER   Specify a C++ compiler to use for the build instead of the default for the system
     -d, --debug                                            Build the compiler in debug mode instead of release mode.
     -f, --fresh                                            Run a fresh build by clearing the build directory before running CMake
     -g, --generator                                        Set a generator for CMake's build files.
@@ -93,7 +93,7 @@ arg_parser.add_argument(
     "-b", "--build-dir",
     type=str,
     default="build",
-    help="Specify a custom build directory (default: 'build')"
+    help="Specify a build directory (default: 'build')"
 )
 
 arg_parser.add_argument(
@@ -106,7 +106,7 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     "-cc", "--ccompiler",
     type=str,
-    help="Specify a custom C compiler to use for the build instead of the default for the system"
+    help="Specify a C compiler to use for the build instead of the default for the system"
 )
 
 arg_parser.add_argument(
@@ -119,7 +119,7 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     "-cxx", "-cpp", "--cxxcompiler", "--cppcompiler",
     type=str,
-    help="Specify a custom C++ compiler to use for the build instead of the default for the system"
+    help="Specify a C++ compiler to use for the build instead of the default for the system"
 )
 
 arg_parser.add_argument(

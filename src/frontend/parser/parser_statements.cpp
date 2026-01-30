@@ -4,12 +4,11 @@
  * readability and maintainability.
  */
 
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
-
-#include <format>
 #include <memory>
 #include <numeric>
 #include <string>
@@ -19,7 +18,7 @@
 namespace Manganese {
 namespace parser {
 
-StatementUPtr_t Parser::parseStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseStatement() NOEXCEPT_IF_RELEASE {
     auto it = statementLookup.find(peekTokenType());
     if (it != statementLookup.end()) {
         // If possible, parse a statement from the current token
@@ -35,7 +34,7 @@ StatementUPtr_t Parser::parseStatement() noexcept_if_release {
 
 // ===== Specific statement parsing methods =====
 
-StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     std::vector<std::string> genericTypes;
     std::vector<ast::AggregateField> fields;
@@ -46,7 +45,8 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release
         while (!done() && peekTokenType() != TokenType::RightSquare) {
             std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
             if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
-                logError(std::format("Generic type '{}' in aggregate '{}' was already declared", genericName, name));
+                logError(peekToken().getLine(), peekToken().getColumn(),
+                         "Generic type '{}' in aggregate '{}' was already declared", genericName, name);
             } else {
                 genericTypes.push_back(genericName);
             }
@@ -64,11 +64,12 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release
             break;  // Done declaration
         }
         if (peekTokenType() != TokenType::Identifier) {
-            logError(std::format("Unexpected token '{}' in aggregate declaration. Expected field name.",
-                                 peekToken().getLexeme()));
+            logError(peekToken().getLine(), peekToken().getColumn(),
+                     "Unexpected token '{}' in aggregate declaration. Expected field name.", peekToken().getLexeme());
             DISCARD(consumeToken());  // Skip the unexpected token to avoid infinite loop
         }
-        std::string fieldName = consumeToken().getLexeme();
+        Token t = consumeToken();
+        std::string fieldName = t.getLexeme();
         expectToken(TokenType::Colon, "Expected a ':' to declare an aggregate field type.");
         bool isMutable = false;
         if (peekTokenType() == TokenType::Mut) {
@@ -78,10 +79,11 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release
         TypeSPtr_t type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
-        auto duplicate = std::find_if(fields.begin(), fields.end(),
-                                      [fieldName](const ast::AggregateField& field) { return field.name == fieldName; });
+        auto duplicate = std::find_if(fields.begin(), fields.end(), [fieldName](const ast::AggregateField& field) {
+            return field.name == fieldName;
+        });
         if (duplicate != fields.end()) {
-            logError(std::format("Duplicate field '{}' in aggregate '{}'", fieldName, name));
+            logError(t.getLine(), t.getColumn(), "Duplicate field '{}' in aggregate '{}'", fieldName, name);
         } else {
             fields.emplace_back(fieldName, std::move(type), isMutable);
         }
@@ -93,11 +95,10 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() noexcept_if_release
     return std::make_unique<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
 }
 
-StatementUPtr_t Parser::parseAliasStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseAliasStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     TypeSPtr_t baseType;
-    if (peekToken().isPrimitiveType() || peekTokenType() == TokenType::Func
-        || peekTokenType() == TokenType::Ptr) {
+    if (peekToken().isPrimitiveType() || peekTokenType() == TokenType::Func || peekTokenType() == TokenType::Ptr) {
         // Primitive types are easy to alias -- just parse a regular type
         baseType = parseType(Precedence::Default);
     } else {
@@ -131,19 +132,19 @@ StatementUPtr_t Parser::parseAliasStatement() noexcept_if_release {
     return std::make_unique<ast::AliasStatement>(std::move(baseType), std::move(alias));
 }
 
-StatementUPtr_t Parser::parseBreakStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseBreakStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     expectToken(TokenType::Semicolon);
     return std::make_unique<ast::BreakStatement>();
 }
 
-StatementUPtr_t Parser::parseContinueStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseContinueStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     expectToken(TokenType::Semicolon);
     return std::make_unique<ast::ContinueStatement>();
 }
 
-StatementUPtr_t Parser::parseDoWhileLoopStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
@@ -151,19 +152,19 @@ StatementUPtr_t Parser::parseDoWhileLoopStatement() noexcept_if_release {
     auto condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
     expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
-    return std::make_unique<ast::WhileLoopStatement>(std::move(body), std::move(condition), true);
+    return std::make_unique<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
 }
 
-StatementUPtr_t Parser::parseEnumDeclarationStatement() noexcept_if_release {
-    DISCARD(consumeToken());
+StatementUPtr_t Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
+    Token enumStartToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
     TypeSPtr_t baseType;
     std::vector<ast::EnumValue> values;
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());
         if (!peekToken().isPrimitiveType()) {
-            logError(std::format("Enums can only have primitive types as their underlying type, not {}",
-                                 peekToken().getLexeme()));
+            logError(peekToken().getLine(), peekToken().getColumn(),
+                     "Enums can only have primitive types as their underlying type, not {}", peekToken().getLexeme());
         }
         baseType = std::make_shared<ast::SymbolType>(consumeToken().getLexeme());
     } else {
@@ -182,7 +183,8 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() noexcept_if_release {
                                       [valueName](const ast::EnumValue& value) { return value.name == valueName; });
 
         if (duplicate != values.end()) {
-            logError(std::format("Enum value '{}' (in enum '{}') was previously declared", valueName, name));
+            logError(peekToken().getLine(), peekToken().getColumn(),
+                     "Enum value '{}' (in enum '{}') was previously declared", valueName, name);
         } else {
             values.emplace_back(valueName, std::move(valueExpression));
         }
@@ -191,11 +193,13 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() noexcept_if_release {
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the enum body");
-    if (values.empty()) { logError(std::format("Enum '{}' has no values", name)); }
+    if (values.empty()) {
+        logError(enumStartToken.getLine(), enumStartToken.getColumn(), "Enum '{}' has no values", name);
+    }
     return std::make_unique<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
 }
 
-StatementUPtr_t Parser::parseFunctionDeclarationStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE {
     // TODO: Handle function attributes
     // TODO: Handle function default parameters
     // TODO: Handle function variadic parameters
@@ -215,12 +219,14 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() noexcept_if_release 
                 break;  // End of generics
             }
             if (peekTokenType() != TokenType::Identifier) {
-                logError("Expected a generic type name");
+                logError(peekToken().getLine(), peekToken().getColumn(), "Expected a generic type name");
                 DISCARD(consumeToken());  // Skip the unexpected token to avoid infinite loop
             }
-            std::string genericName = expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme();
+            Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
+            std::string genericName = genericToken.getLexeme();
             if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
-                logError(std::format("Duplicate generic type '{}' in function '{}'", genericName, name));
+                logError(genericToken.getLine(), genericToken.getColumn(),
+                         "Duplicate generic type '{}' in function '{}'", genericName, name);
             } else {
                 genericTypes.push_back(std::move(genericName));
             }
@@ -259,7 +265,7 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() noexcept_if_release 
                                                                std::move(returnType), parseBlock("function body"));
 }
 
-StatementUPtr_t Parser::parseIfStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
     this->isParsingBlockPrecursor = true;
     DISCARD(consumeToken());
 
@@ -290,12 +296,12 @@ StatementUPtr_t Parser::parseIfStatement() noexcept_if_release {
                                               std::move(elseBody));
 }
 
-StatementUPtr_t Parser::parseImportStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
     size_t startLine = peekToken().getLine();
     size_t startColumn = peekToken().getColumn();
 
     if (this->hasParsedFileHeader) {
-        logging::logWarning("Imports should go at the top of the file", startLine, startColumn);
+        logging::logWarning(startLine, startColumn, "Imports should go at the top of the file");
     }
     DISCARD(consumeToken());
     std::vector<std::string> path;
@@ -319,12 +325,12 @@ StatementUPtr_t Parser::parseImportStatement() noexcept_if_release {
                                   existingPath[0],  // existingPath should never be empty
                                   [](const std::string& a, const std::string& b) { return a + "::" + b; });
 
-            logging::logWarning(std::format("Duplicate import of {}", imported), startLine, startColumn);
+            logging::logWarning(startLine, startColumn, "Duplicate import of {}", imported);
             duplicate = true;
             break;
 
         } else if (alias == existingAlias && !alias.empty()) {
-            logging::logWarning(std::format("Alias {} was already used", existingAlias), startLine, startColumn);
+            logging::logWarning(startLine, startColumn, "Alias {} was already used", existingAlias);
             duplicate = true;
             break;
         }
@@ -334,17 +340,18 @@ StatementUPtr_t Parser::parseImportStatement() noexcept_if_release {
     return std::make_unique<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseModuleDeclarationStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE {
     auto temp = consumeToken();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
-        logging::logWarning("Module declarations should go at the top of the file", startLine, startColumn);
+        logging::logWarning(startLine, startColumn, "Module declarations should go at the top of the file");
     }
     std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
     expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
     if (!this->moduleName.empty()) {
-        logError("A module name has previously been declared in this file. Files can only have one module declaration.",
-                 startLine, startColumn);
+        logError(
+            startLine, startColumn,
+            "A module name has previously been declared in this file. Files can only have one module declaration.");
     } else {
         this->moduleName = name;
     }
@@ -353,12 +360,12 @@ StatementUPtr_t Parser::parseModuleDeclarationStatement() noexcept_if_release {
     return std::make_unique<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseRedundantSemicolon() noexcept_if_release {
+StatementUPtr_t Parser::parseRedundantSemicolon() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     return std::make_unique<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseRepeatLoopStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce a number of iterations");
     auto numIterations = parseExpression(Precedence::Default);
@@ -367,7 +374,7 @@ StatementUPtr_t Parser::parseRepeatLoopStatement() noexcept_if_release {
     return std::make_unique<ast::RepeatLoopStatement>(std::move(numIterations), parseBlock("repeat loop body"));
 }
 
-StatementUPtr_t Parser::parseReturnStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseReturnStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     ExpressionUPtr_t expression = nullptr;
     if (peekTokenType() != TokenType::Semicolon) {
@@ -379,7 +386,7 @@ StatementUPtr_t Parser::parseReturnStatement() noexcept_if_release {
     return make_unique<ast::ReturnStatement>(std::move(expression));
 }
 
-StatementUPtr_t Parser::parseSwitchStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
     Token temp = consumeToken();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
@@ -409,50 +416,37 @@ StatementUPtr_t Parser::parseSwitchStatement() noexcept_if_release {
         while (peekTokenType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
     }
     if (cases.empty() && defaultBody.empty()) {
-        logging::logWarning("Switch statement has no cases or default body", startLine, startColumn);
+        logging::logWarning(startLine, startColumn, "Switch statement has no cases or default body");
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
     return std::make_unique<ast::SwitchStatement>(std::move(variable), std::move(cases), std::move(defaultBody));
 }
 
-StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
     ast::Visibility visibility;
     switch (consumeToken().getType()) {
         case TokenType::Private: visibility = ast::Visibility::Private; break;
         case TokenType::Public: visibility = ast::Visibility::Public; break;
-        case TokenType::ReadOnly: visibility = ast::Visibility::ReadOnly; break;
         default:
             ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
-                               + lexer::tokenTypeToString(peekTokenType()));
+                                  + lexer ::tokenTypeToString(peekTokenType()));
     }
     size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
     switch (peekTokenType()) {
         case TokenType::Alias: {
             auto tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement().release());
-            if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Aliases can only be public or private, not readonly", startLine, startColumn);
-                visibility = ast::Visibility::Private;  // Default to private
-            }
             tempAlias->visibility = visibility;
             return std::unique_ptr<ast::AliasStatement>(tempAlias);
         }
         case TokenType::Aggregate: {
             auto tempAggregate
                 = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement().release());
-            if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Aggregates can only be public or private, not readonly", startLine, startColumn);
-                visibility = ast::Visibility::Private;  // Default to private
-            }
             tempAggregate->visibility = visibility;
             return std::unique_ptr<ast::AggregateDeclarationStatement>(tempAggregate);
         }
         case TokenType::Enum: {
             auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement().release());
-            if (visibility == ast::Visibility::ReadOnly) {
-                logging::logWarning("Enums can only be public or private, not readonly", startLine, startColumn);
-                visibility = ast::Visibility::Private;  // Default to private
-            }
             tempEnum->visibility = visibility;
             return std::unique_ptr<ast::EnumDeclarationStatement>(tempEnum);
         }
@@ -463,15 +457,14 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() noexcept_if_release {
             return std::unique_ptr<ast::FunctionDeclarationStatement>(tempFunction);
         }
         default:
-            logError(std::format("{} cannot follow a visibility modifier",
-                                 lexer::tokenTypeToString(peekTokenType())),
-                     startLine, startColumn);
+            logError(startLine, startColumn, "{} cannot follow a visibility modifier",
+                     lexer::tokenTypeToString(peekTokenType()));
             // Parse the statement as if it had no visibility modifier
             return parseStatement();
     }
 }
 
-StatementUPtr_t Parser::parseVariableDeclarationStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE {
     TypeSPtr_t explicitType;
     ExpressionUPtr_t value;
     ast::Visibility visibility = defaultVisibility;
@@ -490,9 +483,6 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() noexcept_if_release 
         if (peekTokenType() == TokenType::Public) {
             visibility = ast::Visibility::Public;
             DISCARD(consumeToken());  // Consume the public keyword
-        } else if (peekTokenType() == TokenType::ReadOnly) {
-            visibility = ast::Visibility::ReadOnly;
-            DISCARD(consumeToken());  // Consume the read-only keyword
         } else if (peekTokenType() == TokenType::Private) [[unlikely]] {
             // private is the default so it'd mainly be used for emphasis
             visibility = ast::Visibility::Private;
@@ -515,7 +505,7 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() noexcept_if_release 
                                                                std::move(explicitType));
 }
 
-StatementUPtr_t Parser::parseWhileLoopStatement() noexcept_if_release {
+StatementUPtr_t Parser::parseWhileLoopStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     auto condition = parseExpression(Precedence::Default);
@@ -525,7 +515,7 @@ StatementUPtr_t Parser::parseWhileLoopStatement() noexcept_if_release {
 }
 
 // ===== Helper Functions =====
-ast::Block Parser::parseBlock(std::string blockName) noexcept_if_release {
+ast::Block Parser::parseBlock(std::string blockName) NOEXCEPT_IF_RELEASE {
     expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
     ast::Block block;
     while (!done()) {
@@ -536,8 +526,7 @@ ast::Block Parser::parseBlock(std::string blockName) noexcept_if_release {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end " + blockName);
     if (block.empty()) {
-        logging::logWarning(std::format("{} is empty", blockName), peekToken().getLine(),
-                            peekToken().getColumn());
+        logging::logWarning(peekToken().getLine(), peekToken().getColumn(), "{} is empty", blockName);
     }
     return block;
 }

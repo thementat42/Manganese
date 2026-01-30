@@ -1,13 +1,16 @@
 #ifndef MANGANGESE_INCLUDE_FRONTEND_LEXER_TOKEN_CONSTEXPR_IMPL_INL
 #define MANGANGESE_INCLUDE_FRONTEND_LEXER_TOKEN_CONSTEXPR_IMPL_INL
 /**
-* @file token_constexpr_impl.inl
-* @brief Implementation of constexpr functions for the Token class
-*/
+ * @file token_helpers.hpp
+ * @brief Implementation of constexpr functions for the Token class
+ */
 
-#include <frontend/lexer/token_base.hpp>
 #include <format>
+#include <frontend/lexer/token_base.hpp>
+#include <string_view>
+#include <utils/type_names.hpp>
 
+#include "token_type.hpp"
 
 namespace Manganese {
 
@@ -19,36 +22,7 @@ inline std::string Token::toString() const noexcept {
     return std::format("Token: {} ('{}') at line {}, column {}", tokenTypeToString(type), lexeme, line, column);
 }
 
-constexpr bool Token::isPrefixOperator() const noexcept {
-    return type == TokenType::Inc || type == TokenType::Dec || type == TokenType::BitAnd || type == TokenType::Mul
-        || type == TokenType::AddressOf || type == TokenType::Dereference;
-}
-
-constexpr bool Token::isLiteral() const noexcept {
-    return type == TokenType::IntegerLiteral || type == TokenType::FloatLiteral || type == TokenType::StrLiteral
-        || type == TokenType::CharLiteral || type == TokenType::True || type == TokenType::False;
-}
-
-constexpr bool Token::isBracket() const noexcept {
-    return type == TokenType::LeftParen || type == TokenType::RightParen || type == TokenType::LeftBrace
-        || type == TokenType::RightBrace || type == TokenType::LeftSquare || type == TokenType::RightSquare;
-}
-
-constexpr bool Token::isPrimitiveType() const noexcept {
-    return type == TokenType::Int8 || type == TokenType::Int16 || type == TokenType::Int32 || type == TokenType::Int64
-        || type == TokenType::UInt8 || type == TokenType::UInt16 || type == TokenType::UInt32
-        || type == TokenType::UInt64 || type == TokenType::Float32 || type == TokenType::Float64
-        || type == TokenType::Char || type == TokenType::Bool || type == TokenType::String;
-}
-
-constexpr bool Token::hasUnaryCounterpart() const noexcept {
-    return type == TokenType::Plus ||  // + can be addition or unary plus
-        type == TokenType::Minus ||  // - can be subtraction or unary minus
-        type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
-        type == TokenType::Mul;  // * can be multiplication or dereference operator
-}
-
-constexpr TokenType Token::getUnaryCounterpart() const noexcept_if_release {
+constexpr TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
     switch (type) {
         case TokenType::Plus: return TokenType::UnaryPlus;
         case TokenType::Minus: return TokenType::UnaryMinus;
@@ -58,7 +32,7 @@ constexpr TokenType Token::getUnaryCounterpart() const noexcept_if_release {
     }
 }
 
-constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) noexcept_if_release {
+constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) NOEXCEPT_IF_RELEASE {
     using enum lexer::TokenType;
     switch (assignmentOp) {
         case PlusAssign: return Plus;
@@ -74,13 +48,13 @@ constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType ass
         case BitLShiftAssign: return BitLShift;
         case BitRShiftAssign: return BitRShift;
         default:
-            ASSERT_UNREACHABLE(std::format("Cannot convert assignment operator {} to binary operator",
-                                           lexer::tokenTypeToString(assignmentOp)));
+            ASSERT_UNREACHABLE(std ::format("Cannot convert assignment operator {} to binary operator",
+                                               lexer ::tokenTypeToString(assignmentOp)));
             return Unknown;
     }
 }
 
-constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
+constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
     switch (type) {
         // Basic
         case TokenType::Identifier: return "Identifier";
@@ -139,7 +113,6 @@ constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
         case TokenType::Ptr: return "ptr";
         case TokenType::Private: return "Private";
         case TokenType::Public: return "public";
-        case TokenType::ReadOnly: return "readonly";
         case TokenType::Repeat: return "repeat";
         case TokenType::Return: return "return";
         case TokenType::String: return "string";
@@ -200,15 +173,74 @@ constexpr std::string tokenTypeToString(TokenType type) noexcept_if_release {
         case TokenType::Arrow: return "->";
         case TokenType::At: return "@";
         case TokenType::Unknown: return "Unknown Token";
+        case TokenType::Keyword: return "Keyword";
+        case TokenType::Operator: return "Operator";
         default:
             ASSERT_UNREACHABLE("No string representation for TokenType: "
-                               + std::to_string(static_cast<std::underlying_type<TokenType>::type>(type)));
+                                  + std ::to_string(static_cast<std ::underlying_type<TokenType>::type>(type)));
     }
 }
 
-} // namespace lexer
+constexpr struct {
+    std::string_view as_str;
+    TokenType token_type;
+} keywordTable[] = {
+    {"aggregate", TokenType::Aggregate},
+    {"alias", TokenType::Alias},
+    {"as", TokenType::As},
+    {"blueprint", TokenType::Blueprint},
+    {"bool", TokenType::Bool},
+    {"break", TokenType::Break},
+    {"case", TokenType::Case},
+    {"char", TokenType::Char},
+    {"continue", TokenType::Continue},
+    {"default", TokenType::Default},
+    {"do", TokenType::Do},
+    {"elif", TokenType::Elif},
+    {"else", TokenType::Else},
+    {"enum", TokenType::Enum},
+    {"false", TokenType::False},
+    {"float", TokenType::Float32},  // if no width is specified, default to a 32-bit float
+    {"float32", TokenType::Float32},
+    {"float64", TokenType::Float64},
+    {"for", TokenType::For},
+    {"func", TokenType::Func},
+    {"if", TokenType::If},
+    {"import", TokenType::Import},
+    {"int", TokenType::Int32},  // if no width is specified, default to a 32-bit integer
+    {"int16", TokenType::Int16},
+    {"int32", TokenType::Int32},
+    {"int64", TokenType::Int64},
+    {"int8", TokenType::Int8},
+    {"lambda", TokenType::Lambda},
+    {"let", TokenType::Let},
+    {"module", TokenType::Module},
+    {"mut", TokenType::Mut},
+    {"private", TokenType::Private},
+    {"ptr", TokenType::Ptr},
+    {"public", TokenType::Public},
+    {"repeat", TokenType::Repeat},
+    {"return", TokenType::Return},
+    {"string", TokenType::String},
+    {"switch", TokenType::Switch},
+    {"true", TokenType::True},
+    {"uint", TokenType::UInt32},  // if no width is specified, default to a 32-bit unsigned integer
+    {"uint8", TokenType::UInt8},
+    {"uint16", TokenType::UInt16},
+    {"uint32", TokenType::UInt32},
+    {"uint64", TokenType::UInt64},
+    {"while", TokenType::While},
+};
 
-} // namespace Manganese
+constexpr inline TokenType keyword_lookup(const std::string_view& s) noexcept {
+    for (const auto& p : keywordTable) {
+        if (p.as_str == s) { return p.token_type; }
+    }
+    return TokenType::Unknown;
+}
 
+}  // namespace lexer
 
-#endif // MANGANGESE_INCLUDE_FRONTEND_LEXER_TOKEN_CONSTEXPR_IMPL_INL
+}  // namespace Manganese
+
+#endif  // MANGANGESE_INCLUDE_FRONTEND_LEXER_TOKEN_CONSTEXPR_IMPL_INL

@@ -12,18 +12,17 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 
+#include <deque>
+#include <frontend/lexer/token.hpp>
+#include <functional>
 #include <global_macros.hpp>
 #include <io/filereader.hpp>
 #include <io/reader.hpp>
 #include <io/stringreader.hpp>
-#include <utils/number_utils.hpp>
-#include <frontend/lexer/token.hpp>
-
-#include <deque>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utils/number_utils.hpp>
 
 namespace Manganese {
 namespace lexer {
@@ -40,6 +39,11 @@ struct NumberPrefixResult {
     std::string prefix;
 };
 
+enum class TokenizationResult {
+    Success,
+    Failure,
+};
+
 //~ Static helper functions
 
 /**
@@ -48,7 +52,7 @@ struct NumberPrefixResult {
  * @return An optional character representing the escape sequence, or NONE if the character is not a valid escape
  * sequence
  */
-std::optional<char> getEscapeCharacter(const char escapeChar);
+std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_t col);
 
 /**
  * @brief Convert a wide character to a UTF-8 encoded string
@@ -70,7 +74,8 @@ std::optional<char32_t> resolveHexCharacters(const std::string& escDigits);
  * @param isLongUnicode Whether the escape sequence is a long Unicode escape sequence (\UXXXXXXXX)
  * @return An optional character representing the resolved escape sequence, or NONE if the sequence is invalid
  */
-std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, bool isLongUnicode = false);
+std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, size_t line, size_t col,
+                                                 bool isLongUnicode = false);
 
 /**
  * @brief The lexer is responsible for turning the source code into a non-textual representation that the parser can
@@ -78,26 +83,30 @@ std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, b
  */
 class Lexer {
    public:  // public variables
-    std::vector<std::string> blockComments;  // Store block comments (e.g. for documentation)
-
    private:  // private variables
     std::unique_ptr<io::Reader> reader;
     size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
     constexpr static const size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
     bool hasCriticalError_ = false;
+    bool hasError_ = false;
     std::deque<Token> tokenStream;
 
    public:  // public methods
     explicit Lexer(const std::string& source, const Mode mode = Mode::File);
     ~Lexer() noexcept = default;
 
+    // Avoid file ownership issues
+    Lexer(const Lexer&) = delete;
+    Lexer(Lexer&&) = delete;
+    Lexer& operator=(const Lexer&) = delete;
+    Lexer& operator=(Lexer&&) = delete;
+
     /**
      * @brief See the next token in the input stream without consuming it
-     * @param offset How many tokens to look ahead (default is 0 -- the current token)
      * @return The peeked token
      * @details This function will not advance the reader position
      */
-    Token peekToken(size_t offset = 0) noexcept;
+    Token peekToken() noexcept;
 
     /**
      * @brief Consume the next token in the input stream
@@ -112,7 +121,8 @@ class Lexer {
      */
     bool done() const noexcept { return reader->done(); }
 
-    bool hasCriticalError() const noexcept { return hasCriticalError_; }
+    constexpr bool hasCriticalError() const noexcept { return hasCriticalError_; }
+    constexpr bool hasError() const noexcept { return hasError_; }
 
    private:  // private methods
     //~ Main tokenization functions
@@ -126,38 +136,34 @@ class Lexer {
     /**
      * @brief Process a character literal and generate a token. Triggered when a single quote (') is encountered
      */
-    void tokenizeCharLiteral();
-
-    /**
-     * @brief Process a string literal and generate a token. Triggered when a double quote (") is encountered
-     */
-    void tokenizeStringLiteral();
-
-    /**
-    * @brief Process a raw string literal (escape sequences are ignored). Triggered when a backtick (`) is encountered
-    */
-    void tokenizeRawStringLiteral();
-
-    /**
-     * @brief Process a number literal and generate a token
-     */
-    void tokenizeNumber();
+    TokenizationResult tokenizeCharLiteral();
 
     /**
      * @brief Process any sequence of alphanumeric characters and underscores
      * @details If the sequence is a keyword (e.g. "if"), it will be tokenized as such
      */
-    void tokenizeKeywordOrIdentifier();
+    TokenizationResult tokenizeKeywordOrIdentifier();
+
+    /**
+     * @brief Process a number literal and generate a token
+     */
+    TokenizationResult tokenizeNumber();
+
+    /**
+     * @brief Skip over a block comment
+     * @note Allows for nested block comments
+     */
+    TokenizationResult skipBlockComment();
+
+    /**
+     * @brief Process a string literal and generate a token. Triggered when a double quote (") is encountered
+     */
+    TokenizationResult tokenizeStringLiteral();
 
     /**
      * @brief Process any character that is neither alphanumeric, a number, an underscore, quotes or whitespace (e.g. +)
      */
-    void tokenizeSymbol();
-
-    /**
-     * @brief Process a block comment and store it in the blockComments vector
-     */
-    void tokenizeBlockComment();
+    TokenizationResult tokenizeSymbol();
 
     //~ Helper functions
 
@@ -174,9 +180,8 @@ class Lexer {
      * @param base The base of the number literal
      * @param numberLiteral The lexeme for the number literal (the base prefix will be appended if there is one)
      * @param isFloat Whether the number literal is a float (e.g., 1.23f)
-     * @return True if the suffix was processed successfully, false otherwise
      */
-    bool processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat);
+    TokenizationResult processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat);
 
     /**
      * @brief Replaces raw escape sequences in a string with their corresponding characters (e.g. "\n" (literally)
@@ -190,7 +195,7 @@ class Lexer {
      * @brief Helper function specifically to handle escape sequences in char literals
      * @param charLiteral The char literal to process
      */
-    void processCharEscapeSequence(const std::string& charLiteral);
+    TokenizationResult processCharEscapeSequence(const std::string& charLiteral);
 
     //~ Reader wrapper functions
 

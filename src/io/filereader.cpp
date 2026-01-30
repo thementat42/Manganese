@@ -21,7 +21,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
     position(0), line(1), column(1), filePtr(nullptr), bufferSize(0), bufferCapacity(bufferCapacity_) {
     filePtr = std::fopen(filename.c_str(), "r");
     if (!filePtr) {
-        logging::logCritical(std::format("Could not open file {}", filename));
+        logging::logCritical(0, 0, "Could not open file {}", filename);
         this->hasCriticalError_ = true;
         return;
     }
@@ -34,7 +34,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
     bufferSize = std::fread(buffer.get(), sizeof(char), bufferCapacity_, filePtr);  // initial read
 
     if (bufferSize == 0) {
-        logging::logError(std::format("File {} is empty or could not be read", filename));
+        logging::logError(0, 0, "File {} is empty or could not be read", filename);
         this->hasCriticalError_ = true;
         return;
     }
@@ -80,50 +80,6 @@ char FileReader::consumeChar() noexcept {
     column = (c == '\n') ? 1 : column + 1;
     return c;
 }
-
-
-// Below are old implementations of the constructor and refillBuffer method
-// They used std::ifstream for file handling instead of std::FILE*
-// They are kept for reference
-
-// FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
-//     position(0), line(1), column(1), bufferCapacity(bufferCapacity_) {
-//     fileStream.open(filename, std::ios::in);
-//     if (!fileStream.is_open()) {
-//         logging::logCritical(std::format("Could not open file {}", filename));
-//         this->hasCriticalError_ = true;
-//         return;
-//     }
-//     buffer = std::make_unique<char[]>(bufferCapacity_ + 1);  // +1 for null terminator
-//     fileStream.read(buffer.get(), static_cast<std::streamsize>(bufferCapacity_));
-//     bufferSize = static_cast<size_t>(std::max<std::streamsize>(0, fileStream.gcount()));
-
-//     if (bufferSize == 0) {
-//         logging::logError(std::format("File {} is empty or could not be read", filename));
-//         this->hasCriticalError_ = true;
-//         return;
-//     }
-//     buffer[bufferSize] = '\0';  // Null-terminate the buffer since peekChar will rely on this to determine EOF
-// }
-
-// void FileReader::refillBuffer() {
-//     // Save any remaining data that hasn't been processed yet
-//     const size_t unreadBytes = bufferSize - position;
-//     if (unreadBytes > 0) {
-//         // Move remaining data to beginning of buffer, handling overlap
-//         std::memmove(buffer.get(), buffer.get() + position, unreadBytes);
-//     }
-
-//     const size_t remainingCapacity = bufferCapacity - unreadBytes;
-//     // Read more data into the buffer
-//     fileStream.read(buffer.get() + unreadBytes, static_cast<std::streamsize>(remainingCapacity));
-//     const size_t bytesRead = static_cast<size_t>(fileStream.gcount());
-
-//     bufferSize = unreadBytes + bytesRead;
-//     position = 0;  // We moved any remaining data to the front, so reset position to 0
-//     // Always null-terminate since peeking/consuming determines EOF based on null terminator
-//     buffer[bufferSize] = '\0';
-// }
 
 }  // namespace io
 }  // namespace Manganese

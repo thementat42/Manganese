@@ -7,19 +7,18 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
-
 #include <memory>
 #include <utility>
 
 namespace Manganese {
 namespace parser {
 
-TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
+TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
     TokenType type = peekTokenType();
 
     auto nudIterator = nudLookup_types.find(type);
     if (nudIterator == nudLookup_types.end()) {
-        ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
+        ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer ::tokenTypeToString(type));
     }
     TypeSPtr_t left = nudIterator->second(this);
 
@@ -34,7 +33,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
 
         auto ledIterator = ledLookup_types.find(type);
         if (ledIterator == ledLookup_types.end()) {
-            ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer::tokenTypeToString(type));
+            ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer ::tokenTypeToString(type));
         }
         left = ledIterator->second(this, std::move(left), operatorPrecedenceMap_type[type].rightBindingPower);
     }
@@ -43,11 +42,11 @@ TypeSPtr_t Parser::parseType(Precedence precedence) noexcept_if_release {
 
 // ===== Specific type parsing methods =====
 
-TypeSPtr_t Parser::parseAggregateType() noexcept_if_release {
+TypeSPtr_t Parser::parseAggregateType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the 'aggregate' token
     if (peekTokenType() == TokenType::Identifier) {
-        logging::logWarning("Aggregate names are ignored in aggregate type declarations", peekToken().getLine(),
-                            peekToken().getColumn());
+        logging::logWarning(peekToken().getLine(),
+                            peekToken().getColumn(),"Aggregate names are ignored in aggregate type declarations");
         DISCARD(consumeToken());  // Skip the identifier token
     }
 
@@ -56,8 +55,8 @@ TypeSPtr_t Parser::parseAggregateType() noexcept_if_release {
 
     while (peekTokenType() != TokenType::RightBrace) {
         if (peekTokenType() == TokenType::Identifier) {
-            logging::logWarning("Variable names are ignored in aggregate type declarations", peekToken().getLine(),
-                                peekToken().getColumn());
+            logging::logWarning(peekToken().getLine(),
+                                peekToken().getColumn(), "Variable names are ignored in aggregate type declarations");
             DISCARD(consumeToken());  // Skip the token
             expectToken(TokenType::Colon, "Expected ':' after field name in aggregate type declaration");
             continue;
@@ -72,7 +71,7 @@ TypeSPtr_t Parser::parseAggregateType() noexcept_if_release {
     return std::make_shared<ast::AggregateType>(std::move(fieldTypes));
 }
 
-TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) noexcept_if_release {
+TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     ExpressionUPtr_t lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
     DISCARD(consumeToken());  // Consume the left square bracket '['
@@ -84,7 +83,7 @@ TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) noexce
     return std::make_shared<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
-TypeSPtr_t Parser::parseFunctionType() noexcept_if_release {
+TypeSPtr_t Parser::parseFunctionType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // consume the 'func' token
 
     expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
@@ -115,7 +114,7 @@ TypeSPtr_t Parser::parseFunctionType() noexcept_if_release {
     return std::make_shared<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
 }
 
-TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) noexcept_if_release {
+TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
@@ -134,14 +133,14 @@ TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) noex
     return std::make_shared<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 
-TypeSPtr_t Parser::parseParenthesizedType() noexcept_if_release {
+TypeSPtr_t Parser::parseParenthesizedType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Skip the '('
     TypeSPtr_t innerType = parseType(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
     return innerType;
 }
 
-TypeSPtr_t Parser::parsePointerType() noexcept_if_release {
+TypeSPtr_t Parser::parsePointerType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume `ptr`
     bool isMutable = false;
     if (peekTokenType() == TokenType::Mut) {
@@ -151,12 +150,47 @@ TypeSPtr_t Parser::parsePointerType() noexcept_if_release {
     return std::make_shared<ast::PointerType>(parseType(Precedence::Default), isMutable);
 }
 
-TypeSPtr_t Parser::parseSymbolType() noexcept_if_release {
+TypeSPtr_t Parser::parseSymbolType() NOEXCEPT_IF_RELEASE {
+    using prim = ast::PrimitiveType_t;
     Token token = peekToken();
     if (token.isPrimitiveType()) {
         // If the token is a primitive type, we can directly create a SymbolType
         DISCARD(consumeToken());
-        return std::make_shared<ast::SymbolType>(token.getLexeme());
+        std::string lex = token.getLexeme();
+        ast::PrimitiveType_t prim_t = prim::not_primitive;
+        if (lex == int8_str) {
+            prim_t = prim::i8;
+        } else if (lex == int16_str) {
+            prim_t = prim::i16;
+        } else if (lex == int32_str) {
+            prim_t = prim::i32;
+        } else if (lex == int64_str) {
+            prim_t = prim::i64;
+        } else if (lex == uint8_str) {
+            prim_t = prim::ui8;
+        } else if (lex == uint16_str) {
+            prim_t = prim::ui16;
+        } else if (lex == uint32_str) {
+            prim_t = prim::ui32;
+        } else if (lex == uint64_str) {
+            prim_t = prim::ui64;
+        } else if (lex == float32_str) {
+            prim_t = prim::f32;
+        } else if (lex == float64_str) {
+            prim_t = prim::f64;
+        } else if (lex == string_str) {
+            prim_t = prim::str;
+        } else if (lex == char_str) {
+            prim_t = prim::character;
+        } else if (lex == bool_str) {
+            prim_t = prim::boolean;
+        }
+        else {
+            ASSERT_UNREACHABLE("Unknown primitive type " + lex);
+        }
+        auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());
+        symbol_type->setPrimitiveType(prim_t);
+        return symbol_type;
     }
     // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
     return std::make_shared<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());

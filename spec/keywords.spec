@@ -31,7 +31,6 @@ module
 private
 ptr
 public
-readonly
 repeat
 return
 switch

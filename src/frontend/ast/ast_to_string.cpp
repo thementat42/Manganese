@@ -112,7 +112,7 @@ std::string MemberAccessExpression::toString() const { return std::format("{}.{}
 std::string NumberLiteralExpression::toString() const {
     std::ostringstream oss;
 
-    auto visitor = [&oss](auto&& arg) {
+    auto _number_visitor = [&oss](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
 
         if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
@@ -142,7 +142,7 @@ std::string NumberLiteralExpression::toString() const {
         }
     };
 
-    std::visit(visitor, value);
+    std::visit(_number_visitor, value);
 
     return oss.str();
 }

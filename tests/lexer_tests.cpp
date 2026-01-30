@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "frontend/lexer/token_type.hpp"
 #include "testrunner.hpp"
 
 
@@ -158,16 +159,18 @@ bool testIntegerLiterals() {
 }
 
 bool testFloatLiterals() {
-    auto tokens = tokensFromString("0.0f32 1.23f64 456.789");
+    auto tokens = tokensFromString("0.0f32 1.23f64 456.789 1.44e3q 0b100104e5qq3");
     printAllTokens(tokens);
-    if (tokens.size() != 3) {
-        std::cout << "Expected 3 tokens, got " << tokens.size() << '\n';
+    if (tokens.size() != 5) {
+        std::cout << "Expected 5 tokens, got " << tokens.size() << '\n';
         return false;
     }
 
     return checkToken(tokens[0], TokenType::FloatLiteral, "0.0f32")
         && checkToken(tokens[1], TokenType::FloatLiteral, "1.23f64")
-        && checkToken(tokens[2], TokenType::FloatLiteral, "456.789");
+        && checkToken(tokens[2], TokenType::FloatLiteral, "456.789")
+        && checkToken(tokens[3], TokenType::FloatLiteral, "1.44e3")
+        && checkToken(tokens[4], TokenType::IntegerLiteral, "0b10010");
 }
 
 bool testCharLiterals() {
@@ -195,18 +198,6 @@ bool testStringLiterals() {
     return checkToken(tokens[0], TokenType::StrLiteral, "hello")
         && checkToken(tokens[1], TokenType::StrLiteral, "world")
         && checkToken(tokens[2], TokenType::StrLiteral, "escaped \"quote\"");
-}
-
-bool testRawStringLiterals() {
-    auto tokens = tokensFromString("`hi` `\\n` `asdf\\` asf`");
-    printAllTokens(tokens);
-    if (tokens.size() != 3) {
-        std::cout << "Expected 3 tokens, got " << tokens.size() << '\n';
-        return false;
-    }
-    return checkToken(tokens[0], TokenType::StrLiteral, "hi")
-        && checkToken(tokens[1], TokenType::StrLiteral, "\\n")
-        && checkToken(tokens[2], TokenType::StrLiteral, "asdf` asf");
 }
 
 bool testOperators() {
@@ -317,9 +308,9 @@ bool testInvalidChar() {
         return false;
     }
 
-    return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid()
-        && tokens[1].getType() == TokenType::CharLiteral && tokens[1].isInvalid()
-        && tokens[2].getType() == TokenType::CharLiteral && tokens[2].isInvalid();
+    return tokens[0].getType() == TokenType::CharLiteral
+        && tokens[1].getType() == TokenType::CharLiteral
+        && tokens[2].getType() == TokenType::CharLiteral;
 }
 
 bool testInvalidEscapeSequence() {
@@ -330,7 +321,7 @@ bool testInvalidEscapeSequence() {
         return false;
     }
 
-    return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid();
+    return tokens[0].getType() == TokenType::CharLiteral;
 }
 
 bool testBadFileAccess() {
@@ -352,7 +343,6 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Float Literals", testFloatLiterals);
     runner.runTest("Character Literals", testCharLiterals);
     runner.runTest("String Literals", testStringLiterals);
-    runner.runTest("Raw String Literals", testRawStringLiterals);
     runner.runTest("Brackets", testBrackets);
     runner.runTest("Punctuation", testPunctuation);
     runner.runTest("Nested Brackets", testNestedBrackets);

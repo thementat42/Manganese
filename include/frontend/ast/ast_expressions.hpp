@@ -60,11 +60,10 @@ class AggregateInstantiationExpression final : public Expression {
     std::vector<AggregateInstantiationField> fields;
 
     constexpr AggregateInstantiationExpression(std::string name_, std::vector<TypeSPtr_t> genericTypes_,
-                                               std::vector<AggregateInstantiationField> fields_) :
+                                               std::vector<AggregateInstantiationField> fields_) : Expression(ExpressionKind::AggregateInstantiationExpression),
         name(std::move(name_)), genericTypes(std::move(genericTypes_)), fields(std::move(fields_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::AggregateInstantiationExpression; }
 };
 
 /**
@@ -73,9 +72,8 @@ class AggregateInstantiationExpression final : public Expression {
 class AggregateLiteralExpression final : public Expression {
    public:
     std::vector<ExpressionUPtr_t> elements;
-    explicit AggregateLiteralExpression(std::vector<ExpressionUPtr_t> elements_) : elements(std::move(elements_)) {}
+    explicit AggregateLiteralExpression(std::vector<ExpressionUPtr_t> elements_) : Expression(ExpressionKind::AggregateLiteralExpression), elements(std::move(elements_)) {}
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override {return ExpressionKind::AggregateLiteralExpression;}
 };
 
 /**
@@ -87,11 +85,10 @@ class ArrayLiteralExpression final : public Expression {
     TypeSPtr_t elementType;  // Optional, can be inferred from the elements
     ExpressionUPtr_t lengthExpression = nullptr;
 
-    ArrayLiteralExpression(std::vector<ExpressionUPtr_t> elements_, TypeSPtr_t elementType_ = nullptr) :
+    ArrayLiteralExpression(std::vector<ExpressionUPtr_t> elements_, TypeSPtr_t elementType_ = nullptr) : Expression(ExpressionKind::ArrayLiteralExpression),
         elements(std::move(elements_)), elementType(std::move(elementType_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::ArrayLiteralExpression; }
 };
 
 /**
@@ -103,11 +100,10 @@ class AssignmentExpression final : public Expression {
     ExpressionUPtr_t value;  // The value being assigned (bar in foo = bar)
     lexer::TokenType op;
 
-    AssignmentExpression(ExpressionUPtr_t assignee_, lexer::TokenType op_, ExpressionUPtr_t value_) :
+    AssignmentExpression(ExpressionUPtr_t assignee_, lexer::TokenType op_, ExpressionUPtr_t value_) : Expression(ExpressionKind::AssignmentExpression),
         assignee(std::move(assignee_)), value(std::move(value_)), op(op_) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::AssignmentExpression; }
 };
 
 /**
@@ -118,11 +114,10 @@ class BinaryExpression final : public Expression {
     ExpressionUPtr_t left, right;
     lexer::TokenType op;
 
-    BinaryExpression(ExpressionUPtr_t left_, lexer::TokenType op_, ExpressionUPtr_t right_) :
+    BinaryExpression(ExpressionUPtr_t left_, lexer::TokenType op_, ExpressionUPtr_t right_) : Expression(ExpressionKind::BinaryExpression),
         left(std::move(left_)), right(std::move(right_)), op(op_) {};
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::BinaryExpression; }
 };
 
 /**
@@ -132,10 +127,9 @@ class BoolLiteralExpression final : public Expression {
    public:
     bool value;
 
-    constexpr explicit BoolLiteralExpression(const bool value_) : value(value_) {};
+    constexpr explicit BoolLiteralExpression(const bool value_) : Expression(ExpressionKind::BoolLiteralExpression), value(value_) {};
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::BoolLiteralExpression; }
 };
 
 /**
@@ -148,11 +142,10 @@ class CharLiteralExpression final : public Expression {
     /**
      * @param value_ The character value of the expression (char32_t)
      */
-    constexpr explicit CharLiteralExpression(char32_t value_) : value(value_) {};
-    constexpr explicit CharLiteralExpression(char value_) : value(static_cast<char32_t>(value_)) {};
+    constexpr explicit CharLiteralExpression(char32_t value_) : Expression(ExpressionKind::CharLiteralExpression), value(value_) {};
+    constexpr explicit CharLiteralExpression(char value_) : Expression(ExpressionKind::CharLiteralExpression), value(static_cast<char32_t>(value_)) {};
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::CharLiteralExpression; }
 };
 
 /**
@@ -163,11 +156,10 @@ class FunctionCallExpression final : public Expression {
     ExpressionUPtr_t callee;
     std::vector<ExpressionUPtr_t> arguments;
 
-    FunctionCallExpression(ExpressionUPtr_t callee_, std::vector<ExpressionUPtr_t> arguments_) :
+    FunctionCallExpression(ExpressionUPtr_t callee_, std::vector<ExpressionUPtr_t> arguments_) : Expression(ExpressionKind::FunctionCallExpression),
         callee(std::move(callee_)), arguments(std::move(arguments_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::FunctionCallExpression; }
 };
 
 /**
@@ -178,7 +170,7 @@ class GenericExpression final : public Expression {
     ExpressionUPtr_t identifier;
     std::vector<TypeSPtr_t> types;
 
-    GenericExpression(ExpressionUPtr_t identifier_, std::vector<TypeSPtr_t> types_) :
+    GenericExpression(ExpressionUPtr_t identifier_, std::vector<TypeSPtr_t> types_) :Expression(ExpressionKind::GenericExpression),
         identifier(std::move(identifier_)), types(std::move(types_)) {}
 
     /**
@@ -188,7 +180,6 @@ class GenericExpression final : public Expression {
     std::vector<TypeSPtr_t> moveTypeParameters() { return std::move(types); }
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::GenericExpression; }
 };
 
 /**
@@ -198,10 +189,9 @@ class IdentifierExpression final : public Expression {
    public:
     std::string value;
 
-    constexpr explicit IdentifierExpression(const std::string& value_) : value(std::move(value_)) {}
+    constexpr explicit IdentifierExpression(const std::string& value_) : Expression(ExpressionKind::IdentifierExpression), value(std::move(value_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::IdentifierExpression; }
 };
 
 /**
@@ -212,11 +202,10 @@ class IndexExpression final : public Expression {
     ExpressionUPtr_t variable;
     ExpressionUPtr_t index;
 
-    IndexExpression(ExpressionUPtr_t variable_, ExpressionUPtr_t index_) :
+    IndexExpression(ExpressionUPtr_t variable_, ExpressionUPtr_t index_) :Expression(ExpressionKind::IndexExpression),
         variable(std::move(variable_)), index(std::move(index_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::IndexExpression; }
 };
 
 /**
@@ -227,11 +216,10 @@ class MemberAccessExpression final : public Expression {
     ExpressionUPtr_t object;
     std::string property;
 
-    MemberAccessExpression(ExpressionUPtr_t object_, std::string property_) :
+    MemberAccessExpression(ExpressionUPtr_t object_, std::string property_) : Expression(ExpressionKind::MemberAccessExpression),
         object(std::move(object_)), property(std::move(property_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::MemberAccessExpression; }
 };
 
 /**
@@ -241,10 +229,9 @@ class NumberLiteralExpression final : public Expression {
    public:
     number_t value;
 
-    constexpr explicit NumberLiteralExpression(number_t value_) : value(value_) {};
+    constexpr explicit NumberLiteralExpression(number_t value_) : Expression(ExpressionKind::NumberLiteralExpression), value(value_) {};
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::NumberLiteralExpression; }
 };
 
 /**
@@ -255,10 +242,9 @@ class PostfixExpression final : public Expression {
     ExpressionUPtr_t left;
     lexer::TokenType op;
 
-    PostfixExpression(ExpressionUPtr_t left_, lexer::TokenType op_) : left(std::move(left_)), op(op_) {}
+    PostfixExpression(ExpressionUPtr_t left_, lexer::TokenType op_) : Expression(ExpressionKind::PostfixExpression), left(std::move(left_)), op(op_) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::PostfixExpression; }
 };
 
 /**
@@ -269,10 +255,9 @@ class PrefixExpression final : public Expression {
     lexer::TokenType op;
     ExpressionUPtr_t right;
 
-    PrefixExpression(lexer::TokenType op_, ExpressionUPtr_t right_) : op(op_), right(std::move(right_)) {}
+    PrefixExpression(lexer::TokenType op_, ExpressionUPtr_t right_) :Expression(ExpressionKind::PrefixExpression), op(op_), right(std::move(right_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::PrefixExpression; }
 };
 
 /**
@@ -283,11 +268,10 @@ class ScopeResolutionExpression final : public Expression {
     ExpressionUPtr_t scope;
     std::string element;
 
-    ScopeResolutionExpression(ExpressionUPtr_t scope_, std::string element_) :
+    ScopeResolutionExpression(ExpressionUPtr_t scope_, std::string element_) :Expression(ExpressionKind::ScopeResolutionExpression),
         scope(std::move(scope_)), element(std::move(element_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::ScopeResolutionExpression; }
 };
 
 /**
@@ -297,11 +281,10 @@ class StringLiteralExpression final : public Expression {
    public:
     std::string value;
 
-    constexpr explicit StringLiteralExpression(const std::string& value_) : value(std::move(value_)) {};
-    constexpr explicit StringLiteralExpression(const char* value_) : value(value_) {};
+    constexpr explicit StringLiteralExpression(const std::string& value_) : Expression(ExpressionKind::StringLiteralExpression), value(std::move(value_)) {};
+    constexpr explicit StringLiteralExpression(const char* value_) : Expression(ExpressionKind::StringLiteralExpression), value(value_) {};
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::StringLiteralExpression; }
 };
 
 /**
@@ -312,11 +295,10 @@ class TypeCastExpression final : public Expression {
     ExpressionUPtr_t originalValue;
     TypeSPtr_t targetType;
 
-    TypeCastExpression(ExpressionUPtr_t originalValue_, TypeSPtr_t targetType_) :
+    TypeCastExpression(ExpressionUPtr_t originalValue_, TypeSPtr_t targetType_) : Expression(ExpressionKind::TypeCastExpression),
         originalValue(std::move(originalValue_)), targetType(std::move(targetType_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr ExpressionKind kind() const noexcept override { return ExpressionKind::TypeCastExpression; }
 };
 
 }  // namespace ast

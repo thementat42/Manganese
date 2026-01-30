@@ -16,7 +16,6 @@
 #include <frontend/lexer.hpp>
 #include <functional>
 #include <global_macros.hpp>
-#include <initializer_list>
 #include <io/logging.hpp>
 #include <memory>
 #include <string>
@@ -41,7 +40,6 @@ struct ParsedFile {
     std::string moduleName;
     std::vector<Import> imports;
     ast::Block program;
-    std::vector<std::string> blockComments;  // These come from the lexer
 };
 
 //~ Helper functions that don't depend on the parser class's methods/variables
@@ -52,7 +50,7 @@ std::string importToString(const Import& import);
 class Parser {
    private:  // private variables
     std::unique_ptr<lexer::Lexer> lexer;
-    ast::Visibility defaultVisibility = ast::Visibility::Private;
+    constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
     std::optional<Token> previousToken;
 
     std::string moduleName;
@@ -66,8 +64,14 @@ class Parser {
 
    public:  // public methods
     Parser() = default;
-    Parser(const std::string& source, lexer::Mode mode);
     ~Parser() noexcept = default;
+
+    // Avoid file ownership issues
+    Parser(const Parser&) = delete;
+    Parser(Parser&&) = delete;
+    Parser& operator=(const Parser&) = delete;
+    Parser& operator=(Parser&&) = delete;
+    Parser(const std::string& source, lexer::Mode mode);
 
     ParsedFile parse();
     bool hasCriticalError() const noexcept { return hasCriticalError_; }
@@ -92,61 +96,61 @@ class Parser {
     //~ Parsing functions
 
     // ===== Expression Parsing =====
-    ExpressionUPtr_t parseExpression(Precedence precedence) noexcept_if_release;
+    ExpressionUPtr_t parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE;
     ExpressionUPtr_t parseAggregateInstantiationExpression(ExpressionUPtr_t left,
-                                                           Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseAggregateLiteralExpression() noexcept_if_release;
-    ExpressionUPtr_t parseArrayInstantiationExpression() noexcept_if_release;
-    ExpressionUPtr_t parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseGenericExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseMemberAccessExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseParenthesizedExpression() noexcept_if_release;
-    ExpressionUPtr_t parsePostfixExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parsePrefixExpression() noexcept_if_release;
-    ExpressionUPtr_t parsePrimaryExpression() noexcept_if_release;
-    ExpressionUPtr_t parseScopeResolutionExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
-    ExpressionUPtr_t parseTypeCastExpression(ExpressionUPtr_t left, Precedence precedence) noexcept_if_release;
+                                                           Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseGenericExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseMemberAccessExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseParenthesizedExpression() NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parsePostfixExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parsePrefixExpression() NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parsePrimaryExpression() NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseScopeResolutionExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ExpressionUPtr_t parseTypeCastExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
 
     // ===== Statement Parsing =====
-    StatementUPtr_t parseStatement() noexcept_if_release;
-    StatementUPtr_t parseAggregateDeclarationStatement() noexcept_if_release;
-    StatementUPtr_t parseAliasStatement() noexcept_if_release;
-    StatementUPtr_t parseBreakStatement() noexcept_if_release;
-    StatementUPtr_t parseContinueStatement() noexcept_if_release;
-    StatementUPtr_t parseDoWhileLoopStatement() noexcept_if_release;
-    StatementUPtr_t parseEnumDeclarationStatement() noexcept_if_release;
-    StatementUPtr_t parseFunctionDeclarationStatement() noexcept_if_release;
-    StatementUPtr_t parseIfStatement() noexcept_if_release;
-    StatementUPtr_t parseImportStatement() noexcept_if_release;
-    StatementUPtr_t parseModuleDeclarationStatement() noexcept_if_release;
-    StatementUPtr_t parseRedundantSemicolon() noexcept_if_release;
-    StatementUPtr_t parseRepeatLoopStatement() noexcept_if_release;
-    StatementUPtr_t parseReturnStatement() noexcept_if_release;
-    StatementUPtr_t parseSwitchStatement() noexcept_if_release;
-    StatementUPtr_t parseVariableDeclarationStatement() noexcept_if_release;
+    StatementUPtr_t parseStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseAliasStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseBreakStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseContinueStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseIfStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseImportStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseRedundantSemicolon() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseReturnStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseSwitchStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE;
     /**
      * @brief Parses statements that are preceded by a visibility modifier
-     * @example (public/readonly/private) (function/aggregate/enum declaration)
+     * @example (public/private) (function/aggregate/enum declaration)
      */
-    StatementUPtr_t parseVisibilityAffectedStatement() noexcept_if_release;
-    StatementUPtr_t parseWhileLoopStatement() noexcept_if_release;
+    StatementUPtr_t parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE;
+    StatementUPtr_t parseWhileLoopStatement() NOEXCEPT_IF_RELEASE;
 
     // ===== Type Parsing =====
 
-    TypeSPtr_t parseType(Precedence precedence) noexcept_if_release;
-    TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence) noexcept_if_release;
-    TypeSPtr_t parseAggregateType() noexcept_if_release;
-    TypeSPtr_t parseFunctionType() noexcept_if_release;
-    TypeSPtr_t parseGenericType(TypeSPtr_t left, Precedence precedence) noexcept_if_release;
-    TypeSPtr_t parsePointerType() noexcept_if_release;
-    TypeSPtr_t parseParenthesizedType() noexcept_if_release;
-    TypeSPtr_t parseSymbolType() noexcept_if_release;
+    TypeSPtr_t parseType(Precedence precedence) NOEXCEPT_IF_RELEASE;
+    TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    TypeSPtr_t parseAggregateType() NOEXCEPT_IF_RELEASE;
+    TypeSPtr_t parseFunctionType() NOEXCEPT_IF_RELEASE;
+    TypeSPtr_t parseGenericType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    TypeSPtr_t parsePointerType() NOEXCEPT_IF_RELEASE;
+    TypeSPtr_t parseParenthesizedType() NOEXCEPT_IF_RELEASE;
+    TypeSPtr_t parseSymbolType() NOEXCEPT_IF_RELEASE;
 
     // ~ Helpers
-    ast::Block parseBlock(std::string blockName) noexcept_if_release;
+    ast::Block parseBlock(std::string blockName) NOEXCEPT_IF_RELEASE;
 
     /**
      * @details The context is considered unary if the previous token was a left parenthesis
@@ -157,8 +161,8 @@ class Parser {
     /**
      * @details Get the current token, without consuming it
      */
-    [[nodiscard]] inline Token peekToken(size_t offset = 0) const noexcept { return lexer->peekToken(offset); }
-    [[nodiscard]] inline TokenType peekTokenType(size_t offset = 0) noexcept { return lexer->peekToken(offset).getType(); }
+    [[nodiscard]] inline Token peekToken() const noexcept { return lexer->peekToken(); }
+    [[nodiscard]] inline TokenType peekTokenType() noexcept { return lexer->peekToken().getType(); }
 
     /**
      * @details Consume the current token
@@ -170,14 +174,13 @@ class Parser {
 
     Token expectToken(TokenType expectedType);
     Token expectToken(TokenType expectedType, const std::string& errorMessage);
-    Token expectToken(std::initializer_list<TokenType> expectedTypes);
-    Token expectToken(std::initializer_list<TokenType> expectedTypes, const std::string& errorMessage);
 
     /**
      * @brief A wrapper around logging::logError that sets the parser's hasError flag to true.
      */
-    inline void logError(const std::string& message, size_t line = 0, size_t col = 0) noexcept {
-        logging::logError(message, line, col);
+    template <class... Args>
+    inline void logError(size_t line, size_t col, std::format_string<Args...> message, Args&&... args) noexcept {
+        logging::logError(line, col, message, std::forward<Args>(args)...);
         hasError = true;
     }
 

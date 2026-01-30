@@ -9,6 +9,7 @@
  * @note This file does nothing in release builds.
  */
 
+#include "frontend/ast/ast_base.hpp"
 #if DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
@@ -16,16 +17,34 @@
 #include <utils/number_utils.hpp>
 #include <variant>
 
-
 namespace Manganese {
 namespace ast {
 // There are lots of implicit conversions between integer types -- for convenience, ignore those warnings
 
 inline std::string getIndent(size_t indent) { return std::string(indent * 2, ' '); }
 
+constexpr std::string primitiveTypeToString(PrimitiveType_t prim) {
+    switch (prim) {
+        case PrimitiveType_t::not_primitive: return "not primitive";
+        case PrimitiveType_t::i8: return int8_str;
+        case PrimitiveType_t::ui8: return uint8_str;
+        case PrimitiveType_t::i16: return int16_str;
+        case PrimitiveType_t::ui16: return uint16_str;
+        case PrimitiveType_t::i32: return int32_str;
+        case PrimitiveType_t::ui32: return uint32_str;
+        case PrimitiveType_t::i64: return int64_str;
+        case PrimitiveType_t::ui64: return uint64_str;
+        case PrimitiveType_t::f32: return float32_str;
+        case PrimitiveType_t::f64: return float64_str;
+        case PrimitiveType_t::character: return char_str;
+        case PrimitiveType_t::str: return string_str;
+        case PrimitiveType_t::boolean: return bool_str;
+    }
+}
+
 // Helper function to get the type of a number variant
 std::string getNumberTypeName(const number_t& value) {
-    auto visitor = [](auto&& arg) -> std::string {
+    auto _number_visitor = [](auto&& arg) -> std::string {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, int8_t>) return int8_str;
         else if constexpr (std::is_same_v<T, uint8_t>)
@@ -49,7 +68,7 @@ std::string getNumberTypeName(const number_t& value) {
         else
             return "unknown";
     };
-    return std::visit(visitor, value);
+    return std::visit(_number_visitor, value);
 }
 
 // ===== Expressions =====
@@ -425,13 +444,7 @@ void VariableDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "isMutable: " << (isMutable ? "true" : "false") << "\n";
 
-    std::string visString;
-    switch (visibility) {
-        case Visibility::Public: visString = "Public"; break;
-        case Visibility::ReadOnly: visString = "ReadOnly"; break;
-        case Visibility::Private: visString = "Private"; break;
-    }
-    os << getIndent(indent + 1) << "visibility: " << visString << "\n";
+    os << getIndent(indent + 1) << "visibility: " << (visibility == Visibility::Public ? "Public" : "Private") << "\n";
 
     os << getIndent(indent + 1) << "value: \n";
     if (value) {
@@ -532,6 +545,7 @@ void PointerType::dump(std::ostream& os, size_t indent) const {
 void SymbolType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "SymbolType [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
+    os << getIndent(indent + 1) << "primitive type: " << primitiveTypeToString(primitiveType()) << "\n";
     os << getIndent(indent) << "}\n";
 }
 

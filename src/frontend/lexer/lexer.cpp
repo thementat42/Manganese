@@ -84,7 +84,7 @@ if current char is an operator (after doing the above checks), look at the next 
 - otherwise, push it as a regular operator
 */
 
-#include <algorithm>
+#include <cctype>
 #include <format>
 #include <frontend/lexer.hpp>
 #include <functional>
@@ -96,6 +96,9 @@ if current char is an operator (after doing the above checks), look at the next 
 #include <memory>
 #include <string>
 #include <utility>
+
+#include "frontend/lexer/lexer_base.hpp"
+#include "utils/number_utils.hpp"
 
 namespace Manganese {
 
@@ -119,6 +122,7 @@ void Lexer::lex(size_t numTokens) {
     size_t numTokensMade = 0;
     char currentChar = peekChar();
     while (!done() && numTokensMade < numTokens) {
+        TokenizationResult result = TokenizationResult::Success;
         // ? TODO: Output comments as tokens (or to a separate stream?)
         // ? Multiline probably, single line probably not
         // ? TODO: Update parser to skip past comment tokens
@@ -130,33 +134,31 @@ void Lexer::lex(size_t numTokens) {
             } while (!done() && currentChar != '\n');
             advance();  // Skip the newline
         } else if (currentChar == '/' && peekChar(1) == '*') {
-            tokenizeBlockComment();
+            result = skipBlockComment();
         } else if (std::isspace(currentChar)) [[likely]] {  // lots of whitespace
             advance();  // Skip whitespace
         } else if (isalpha(currentChar) || currentChar == '_') [[likely]] {  // Mostly identifiers and keywords
-            tokenizeKeywordOrIdentifier();
+            result = tokenizeKeywordOrIdentifier();
             ++numTokensMade;
         } else if (currentChar == '\'') {
-            tokenizeCharLiteral();
+            result = tokenizeCharLiteral();
             ++numTokensMade;
         } else if (currentChar == '"') {
             // TODO: Add raw string literals (r"stuff" -- maybe r""text"")
             //? TODO: f-strings? (f"stuff {expression} more stuff")
-            tokenizeStringLiteral();
-            ++numTokensMade;
-        } else if (currentChar == '`') {
-            tokenizeRawStringLiteral();
+            result = tokenizeStringLiteral();
             ++numTokensMade;
         } else if (std::isdigit(currentChar)) {
-            tokenizeNumber();
+            result = tokenizeNumber();
             ++numTokensMade;
         } else {
-            tokenizeSymbol();
+            result = tokenizeSymbol();
             ++numTokensMade;
         }
         currentChar = peekChar();
         tokenStartLine = getLine();
         tokenStartCol = getCol();
+        hasError_ = hasError_ || (result == TokenizationResult::Failure);
     }
     if (done()) {
         // Just finished tokenizing
@@ -164,32 +166,16 @@ void Lexer::lex(size_t numTokens) {
     }
 }
 
-[[deprecated("Lookahead behaviour isn't used")]] Token Lexer::peekToken(size_t offset) noexcept {
-    if (done() && offset >= tokenStream.size()) {
-        // Only return EOF if we are done tokenizing and trying to read past the end
-        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
-    }
-    if (tokenStream.empty()) {
-        size_t numToMake = offset == 0 ? 1 : offset;
-        numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
-        lex(numToMake);  // If queue empty, generate {offset} tokens to read
-    } else if (tokenStream.size() <= offset) {
-        size_t numToMake = offset - tokenStream.size();
-        numToMake = std::max(numToMake, QUEUE_LOOKAHEAD_AMOUNT);
-        lex(numToMake);  // fill the queue with more tokens
-    }
-    // If the token stream can't be filled up with enough tokens, we're reading past the end -- indicate that
-    return offset < tokenStream.size() ? tokenStream[offset] : Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
+Token Lexer::peekToken() noexcept {
+    if (done() && tokenStream.empty()) { return Token(TokenType::EndOfFile, "EOF", getLine(), getCol()); }
+    if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
+    return tokenStream[0];
 }
 
 Token Lexer::consumeToken() noexcept {
-    if (tokenStream.empty()) {
-        lex(QUEUE_LOOKAHEAD_AMOUNT);  // If queue empty, generate 1 token to read
-    }
-    if (tokenStream.empty()) {
-        // still empty -- we are done tokenizing
-        return Token(TokenType::EndOfFile, "EOF", getLine(), getCol());
-    }
+    if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
+    // check if queue is still empty if it is, we are done tokenizing
+    if (tokenStream.empty()) { return Token(TokenType::EndOfFile, "EOF", getLine(), getCol()); }
     Token token = tokenStream.front();
     tokenStream.pop_front();  // get rid of the token
     return token;
@@ -197,23 +183,23 @@ Token Lexer::consumeToken() noexcept {
 
 //~ Main State Machine Functions
 
-void Lexer::tokenizeCharLiteral() {
+TokenizationResult Lexer::tokenizeCharLiteral() {
     advance();  // Move past the opening quote
     std::string charLiteral;
     // For simplicity, just extract a chunk of text, handle it later
     // Look for a closing quote
     while (true) {
         if (done()) {
-            logging::logError("Unclosed character literal", getLine(), getCol());
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
-            return;
+            logging::logError(getLine(), getCol(), "Unclosed character literal");
+            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
+            return TokenizationResult::Failure;
         }
         if (peekChar() == '\'') { break; }
         if (peekChar() == '\n') {
-            logging::logError("Unclosed character literal", getLine(), getCol());
+            logging::logError(getLine(), getCol(), "Unclosed character literal");
 
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
-            return;
+            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
+            return TokenizationResult::Failure;
         }
         if (peekChar() == '\\') {
             // Skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
@@ -222,18 +208,111 @@ void Lexer::tokenizeCharLiteral() {
         charLiteral += consumeChar();  // Add the character to the string
     }
     advance();
+    TokenizationResult result = TokenizationResult::Success;
     if (charLiteral[0] == '\\') {
-        processCharEscapeSequence(charLiteral);
-        return;
+        return processCharEscapeSequence(charLiteral);
     } else if (charLiteral.length() > 1) {
-        logging::logError("Character literal exceeds 1 character limit", getLine(), getCol());
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol, true);
-        return;
+        logging::logError(getLine(), getCol(), "Character literal exceeds 1 character limit");
+        result = TokenizationResult::Failure;
     }
     tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
+    return result;
 }
 
-void Lexer::tokenizeStringLiteral() {
+TokenizationResult Lexer::tokenizeKeywordOrIdentifier() {
+    std::string lexeme = "";
+    while (!done() && (isalnum(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
+    TokenType t = keyword_lookup(lexeme);
+
+    // if t is unknown, assume it's an identifier, otherwise use the given keyword type
+    tokenStream.emplace_back(t == TokenType::Unknown ? TokenType::Identifier : t, lexeme, tokenStartLine,
+                             tokenStartCol);
+    return TokenizationResult::Success;
+}
+
+TokenizationResult Lexer::tokenizeNumber() {
+    std::string numberLiteral;
+    TokenizationResult result = TokenizationResult::Success;
+    bool isFloat = false;
+    auto [base, isValidBaseChar, prefix] = processNumberPrefix();
+    numberLiteral += prefix;
+    char currentChar = peekChar();  // If there was a number prefix, update the current char
+
+    while (!done()) {
+        currentChar = peekChar();
+        if (currentChar == '_') {
+            // Ignore underscores
+            advance();
+            continue;
+        } else if (currentChar == '.') {
+            if (isFloat) {
+                // Invalid number -- two decimal points
+                logging::logError(getLine(), getCol(), "Invalid number literal: multiple decimal points");
+                advance();
+                result = TokenizationResult::Failure;
+                continue;
+            }
+            // Reject floating point for octal and binary numbers
+            if (base == Base::Octal || base == Base::Binary) {
+                logging::logError(getLine(), getCol(),
+                                  "Invalid number literal: floating point not allowed for {} numbers",
+                                  baseToString(base));
+                advance();
+                result = TokenizationResult::Failure;
+                continue;
+            }
+            isFloat = true;
+        } else if (!std::isalnum(currentChar)) {
+            break;
+        } else if (!isValidBaseChar(currentChar)) {
+            char lower_char = (char)tolower(currentChar);
+            if (lower_char == 'i' || lower_char == 'f' || lower_char == 'u' || lower_char == 'e' || lower_char == 'p') {
+                // suffix starts
+                break;
+            }
+            logging::logError(getLine(), getCol(), "Invalid digit '{}' in numeric constant", currentChar);
+            advance();
+            result = TokenizationResult::Failure;
+            continue;
+        }
+        numberLiteral += consumeChar();
+    }
+
+    // Handle scientific notation (e.g., 1.23e4), size suffixes (e.g., 1.23f), etc.
+    if (processNumberSuffix(base, numberLiteral, isFloat) == TokenizationResult::Failure) {
+        result = TokenizationResult::Failure;
+    }
+    tokenStream.emplace_back(isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral, numberLiteral,
+                             tokenStartLine, tokenStartCol);
+    return result;
+}
+
+TokenizationResult Lexer::skipBlockComment() {
+    advance(2);  // Skip the /*
+    int64_t commentDepth = 1;  // Allow nested comments
+    size_t startLine = getLine(), startCol = getCol();
+    while (!done() && commentDepth > 0) {
+        if (peekChar() == '/' && peekChar(1) == '*') {
+            ++commentDepth;
+            advance(2);
+        } else if (peekChar() == '*' && peekChar(1) == '/') {
+            --commentDepth;
+            advance(2);
+            if (commentDepth == 0) { break; }
+        } else {
+            advance();
+        }
+    }
+    if (commentDepth > 0) {
+        logging::logError(getLine(), getCol(),
+                          "Unclosed block comment at end of file (comment started at line {}, column {})", startLine,
+                          startCol);
+        return TokenizationResult::Failure;
+    }
+    return TokenizationResult::Success;
+}
+
+TokenizationResult Lexer::tokenizeStringLiteral() {
     advance();  // Move past the opening quote
     bool containsEscapeSequence = false;
     std::string stringLiteral;
@@ -241,9 +320,9 @@ void Lexer::tokenizeStringLiteral() {
     // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
     while (true) {
         if (done()) {
-            logging::logError("Unclosed string literal", getLine(), getCol());
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
-            return;
+            logging::logError(getLine(), getCol(), "Unclosed string literal");
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+            return TokenizationResult::Failure;
         }
         if (peekChar() == '"') { break; }
         if (peekChar() == '\\') {
@@ -256,120 +335,39 @@ void Lexer::tokenizeStringLiteral() {
             stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
         } else if (peekChar() == '\n') {
-            logging::logError(std::string("String literal cannot span multiple lines.")
-                                  + "If you wanted a string literal that spans lines,"
-                                  + "add a backslash ('\\') at the end of the line",
-                              getLine(), getCol());
+            logging::logError(
+                getLine(), getCol(),
+                "String literal cannot span multiple lines. If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line");
 
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
-            return;
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+            return TokenizationResult::Failure;
         }
         stringLiteral += consumeChar();  // Add the character to the string
     }
 
+    TokenizationResult result = TokenizationResult::Success;
     advance();
     if (containsEscapeSequence) {
-        auto result = resolveEscapeCharacters(stringLiteral);
-        if (!result) {
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol, true);
-            return;
+        std::optional<std::string> processedString = resolveEscapeCharacters(stringLiteral);
+        if (!processedString) {
+            result = TokenizationResult::Failure;
+        } else {
+            stringLiteral = std::move(processedString.value());
         }
-        stringLiteral = std::move(result.value());
     }
     tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+    return result;
 }
 
-void Lexer::tokenizeRawStringLiteral() {
-    advance();  // move past the opening backtick
-    std::string rawStringLiteral;
-    while (true) {
-        if (done()) {
-            logging::logError("Unclosed raw string literal", getLine(), getCol());
-            tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol, true);
-            return;
-        }
-        if (peekChar() == '`') { break; }
-        if (peekChar() == '\\') {
-            if (peekChar(1) == '`') {
-                // use \` to put a backtick within a raw string
-                advance();  // skip the backslash
-                rawStringLiteral += consumeChar();
-                continue;
-            } else if (peekChar(1) == '\n') {
-                // continuing across lines
-                advance(2);
-                continue;
-            }
-        } else if (peekChar() == '\n') {
-            logging::logError(std::string("Raw string literal cannot span multiple lines.")
-                                  + "If you wanted a raw string literal that spans lines,"
-                                  + "add a backslash ('\\') at the end of the line",
-                              getLine(), getCol());
-            tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol, true);
-            return;
-        }
-        rawStringLiteral += consumeChar();
-    }
-    advance();  // skip closing backtick
-    // no need to process escape sequences since this is raw
-    tokenStream.emplace_back(TokenType::StrLiteral, rawStringLiteral, tokenStartLine, tokenStartCol);
-}
-
-void Lexer::tokenizeKeywordOrIdentifier() {
-    std::string lexeme = "";
-    while (!done() && (isalnum(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
-    auto it = keywordMap.find(lexeme);
-
-    tokenStream.emplace_back(it != keywordMap.end() ? TokenType::Keyword : TokenType::Identifier, lexeme,
-                             tokenStartLine, tokenStartCol);
-}
-
-void Lexer::tokenizeNumber() {
-    std::string numberLiteral;
-    bool isFloat = false;
-    auto [base, isValidBaseChar, prefix] = processNumberPrefix();
-    numberLiteral += prefix;
-    char currentChar = peekChar();  // If there was a number prefix, update the current char
-
-    while (!done() && (isValidBaseChar(currentChar) || currentChar == '.' || currentChar == '_')) {
-        if (currentChar == '_') {
-            // Ignore underscores
-            advance();
-            currentChar = peekChar();
-            continue;
-        } else if (currentChar == '.') {
-            if (isFloat) {
-                // Invalid number -- two decimal points
-                logging::logError("Invalid number literal: multiple decimal points", getLine(), getCol());
-                tokenStream.emplace_back(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
-                return;
-            }
-            // Reject floating point for octal and binary numbers
-            if (base == Base::Octal || base == Base::Binary) {
-                logging::logError(std::format("Invalid number literal: floating point not allowed for {} numbers",
-                                              (base == Base::Octal ? "octal" : "binary")),
-                                  getLine(), getCol());
-                tokenStream.emplace_back(TokenType::FloatLiteral, numberLiteral, tokenStartLine, tokenStartCol, true);
-                return;
-            }
-            isFloat = true;
-        }
-        numberLiteral += consumeChar();
-        currentChar = peekChar();
-    }
-
-    // Handle scientific notation (e.g., 1.23e4), size suffixes (e.g., 1.23f), etc.
-    processNumberSuffix(base, numberLiteral, isFloat);
-    tokenStream.emplace_back(isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral, numberLiteral,
-                             tokenStartLine, tokenStartCol);
-}
-
-void Lexer::tokenizeSymbol() {
+TokenizationResult Lexer::tokenizeSymbol() {
+    TokenizationResult result = TokenizationResult::Success;
     TokenType type;
     char current = peekChar();
     char next = peekChar(1);
     char nextnext = peekChar(2);
     std::string lexeme = std::string(1, current);
+
+    // In here, use TokenType::Operator as a generic value (exact enum mapping determined at the end)
     switch (current) {
         //~ Brackets
         case '(': type = TokenType::LeftParen; break;
@@ -380,138 +378,195 @@ void Lexer::tokenizeSymbol() {
         case ']': type = TokenType::RightSquare; break;
 
         // ~ Boolean / Bitwise operators
-        case '&':  // Let the parser decide if '&' is a bitwise AND or an address-of operator, default to bitwise AND
-        case '|':
-            type = TokenType::Operator;
-            if (next == current || next == '=') {
-                // If next is the same character, it's a logical operator (&& or ||)
-                // or a bitwise assignment operator (&= or |=)
+        case '&': {
+            if (next == '&') {  // logical AND (&&)
                 lexeme += next;
+                type = TokenType::And;
+            } else if (next == '=') {
+                lexeme += next;
+                type = TokenType::BitAndAssign;
+            } else {
+                type = TokenType::BitAnd;
             }
-            // Otherwise, just a single & or | operator
             break;
-        case '^':  // Bitwise XOR
-            type = TokenType::Operator;
+        }
+            // Let the parser decide if '&' is a bitwise AND or an address-of operator, default to bitwise AND
+        case '|': {
+            if (next == '|') {  // logical OR (||)
+                lexeme += next;
+                type = TokenType::Or;
+            } else if (next == '=') {
+                lexeme += next;
+                type = TokenType::BitOrAssign;
+            } else {
+                type = TokenType::BitOr;
+            }
+            break;
+        }
+        case '^': {  // Bitwise XOR
             if (next == '=') {
                 // Bitwise assignment operator (^=)
                 lexeme += '=';
+                type = TokenType::BitXorAssign;
             } else if (next == '^') {
                 // Exponentiation operator (^^)
                 lexeme += '^';
                 lexeme += (nextnext == '=') ? "=" : "";  // ^^=, in place exponentiation
+                type = (nextnext == '=') ? TokenType::ExpAssign : TokenType::Exp;
+            } else {
+                type = TokenType::BitXor;
             }
             break;
-        case '!':  // NOT
-        case '~':  // Bitwise NOT
-        case '=':  // Assignment
-            type = TokenType::Operator;
-            if (next == '=') {
-                // Assignment operator (!= or ~=)
-                // or equality check (==)
-                lexeme += '=';
-            }
-            break;
-        case '<':
-        case '>':
-            type = TokenType::Operator;
-            if (next == '=') {
-                // <= (less than or equal to) or >= (greater than or equal to)
-                lexeme += '=';
-            } else if (next == current) {
-                // << (bitwise left shift) or >> (bitwise right shift)
+        }
+        case '!': {
+            if (next == '=') {  // Inequality (!=)
                 lexeme += next;
-                // <<= (in place left shift) or >>= (in place right shift)
-                lexeme += (nextnext == '=') ? "=" : "";
+                type = TokenType::NotEqual;
+            } else {
+                type = TokenType::Not;
             }
-            // Otherwise, just a regular comparison
             break;
+        }
+        case '~': {
+            if (next == '=') {
+                lexeme += next;
+                type = TokenType::BitNotAssign;
+            } else {
+                type = TokenType::BitNot;
+            }
+            break;
+        }
+        case '=': {
+            if (next == '=') {  // Equality (==)
+                lexeme += next;
+                type = TokenType::Equal;
+            } else {
+                type = TokenType::Assignment;
+            }
+            break;
+        }
+        case '<': {
+            if (next == '=') {
+                // Less than or Equal to (<=)
+                lexeme += '=';
+                type = TokenType::LessThanOrEqual;
+            } else if (next == current) {
+                // Bitwise left shift (<<)
+                lexeme += next;
+                // In place left shift (<<=)
+                lexeme += (nextnext == '=') ? "=" : "";
+                type = (nextnext == '=') ? TokenType::BitLShiftAssign : TokenType::BitLShift;
+            } else {
+                type = TokenType::LessThan;
+            }
+            break;
+        }
+        case '>': {
+            if (next == '=') {
+                // Greater than or Equal to (>=)
+                lexeme += '=';
+                type = TokenType::GreaterThanOrEqual;
+            } else if (next == current) {
+                // Bitwise right shift (>>)
+                lexeme += next;
+                // In place right shift (>>=)
+                lexeme += (nextnext == '=') ? "=" : "";
+                type = (nextnext == '=') ? TokenType::BitRShiftAssign : TokenType::BitRShift;
+            } else {
+                type = TokenType::GreaterThan;
+            }
+            break;
+        }
 
         // ~ Other punctuation
         case ';': type = TokenType::Semicolon; break;
         case ',': type = TokenType::Comma; break;
-        case '.':
-            if (next == '.' && nextnext == '.') { lexeme = "..."; }
-            type = TokenType::Operator;
+        case '.': {
+            if (next == '.' && nextnext == '.') {
+                lexeme = "...";
+                type = TokenType::Ellipsis;
+            } else {
+                type = TokenType::MemberAccess;
+            }
             break;
-        case ':':
-            type = (next == ':') ? TokenType::Operator : TokenType::Colon;
+        }
+        case ':': {
+            type = (next == ':') ? TokenType::ScopeResolution : TokenType::Colon;
             lexeme = (next == ':') ? "::" : ":";
             break;
-        case '@': type = TokenType::Operator; break;
+        }
+        case '@': type = TokenType::At; break;
 
         //~ Arithmetic operators
-        case '+':
-            type = TokenType::Operator;
-            if (next == '+' || next == '=') {
-                // ++ (increment) or += (in-place addition)
+        case '+': {
+            if (next == '+') {
                 lexeme += next;
-            }
-            break;
-        case '-':
-            type = TokenType::Operator;
-            if (next == '-' || next == '=' || next == '>') {
-                //* -- (decrement) or -= (in-place subtraction) or -> (arrow operator)
+                type = TokenType::Inc;
+            } else if (next == '=') {
                 lexeme += next;
+                type = TokenType::PlusAssign;
+            } else {
+                type = TokenType::Plus;
             }
             break;
-        case '%':
-        case '*':
-            type = TokenType::Operator;
-            if (next == '=') {
-                // %= or *= (in-place modulus or multiplication)
-                lexeme += '=';
+        }
+        case '-': {
+            if (next == '-') {
+                lexeme += next;
+                type = TokenType::Dec;
+            } else if (next == '=') {
+                lexeme += next;
+                type = TokenType::MinusAssign;
+            } else if (next == '>') {
+                lexeme += next;
+                type = TokenType::Arrow;
+            } else {
+                type = TokenType::Minus;
             }
             break;
-        case '/':
-            type = TokenType::Operator;
+        }
+        case '%': {
             if (next == '=') {
-                //* /= (in-place division)
                 lexeme += '=';
+                type = TokenType::ModAssign;
+            } else {
+                type = TokenType::Mod;
+            }
+            break;
+        }
+        case '*': {
+            if (next == '=') {
+                lexeme += '=';
+                type = TokenType::MulAssign;
+            } else {
+                type = TokenType::Mul;
+            }
+            break;
+        }
+        case '/': {
+            if (next == '=') {
+                lexeme += '=';
+                type = TokenType::DivAssign;
             } else if (next == '/') {
-                //* // (floor division) or //= (in-place floor division)
                 lexeme += next;
                 lexeme += (nextnext == '=') ? "=" : "";
+                type = (nextnext == '=') ? TokenType::FloorDivAssign : TokenType::FloorDiv;
+            } else {
+                type = TokenType::Div;
             }
             // Multiline comments handled in the main loop
             break;
+        }
         default:
             type = TokenType::Unknown;
-            logging::logError(std::format("Invalid character: '{}'", current), getLine(), getCol());
-            tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol, true);
+            logging::logError(getLine(), getCol(), "Invalid character: '{}'", current);
+            tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
+            result = TokenizationResult::Failure;
             break;
     }
     advance(lexeme.length());
     tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
-}
-
-void Lexer::tokenizeBlockComment() {
-    advance(2);  // Skip the /*
-    std::string comment;
-    int64_t commentDepth = 1;  // Allow nested comments
-    size_t startLine = getLine(), startCol = getCol();
-    while (!done() && commentDepth > 0) {
-        if (peekChar() == '/' && peekChar(1) == '*') {
-            ++commentDepth;
-            comment += consumeChar();
-            comment += consumeChar();
-        } else if (peekChar() == '*' && peekChar(1) == '/') {
-            --commentDepth;
-            if (commentDepth == 0) {
-                advance(2);
-                break;  // End of the outermost comment
-            }
-            comment += consumeChar();
-            comment += consumeChar();
-        } else {
-            comment += consumeChar();
-        }
-    }
-    if (commentDepth > 0) {
-        logging::logError(std::format("Unclosed block comment at end of file (comment started at line {}, column {})",
-                                      startLine, startCol),
-                          getLine(), getCol());
-    }
-    blockComments.push_back(std::move(comment));
+    return result;
 }
 
 //~ Helper Functions
@@ -547,13 +602,15 @@ NumberPrefixResult Lexer::processNumberPrefix() {
                 .base = Base::Octal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; }, .prefix = "0o"};
         default:
             // Not a valid base indicator -- just treat it as a decimal number
-            return NumberPrefixResult{.base = Base::Decimal,
-                                      .isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); },
-                                      .prefix = ""};
+            logging::logWarning(
+                getLine(), getCol(),
+                "Leading zeros in numeric literals are treated as decimal numbers. Use a 0o prefix for octal numbers.");
+            return NumberPrefixResult{
+                .base = Base::Decimal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '9'; }, .prefix = ""};
     }
 }
 
-bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat) {
+TokenizationResult Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat) {
     /*
         The valid numeric suffixes are:
         - i8, i16, i32, i64 (signed integers with the corresponding bit width)
@@ -562,81 +619,100 @@ bool Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFl
         NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
         */
 
-    char currentChar = (char)tolower(peekChar());
-    auto readDigits = [this]() -> std::string {
-        std::string digits;
-        while (!done() && isdigit(peekChar())) { digits += consumeChar(); }
-        return digits;
+    auto readUint = [this]() -> int {
+        int value = 0;
+        while (!done() && std::isdigit(peekChar())) { value = value * 10 + (consumeChar() - '0'); }
+        return value;
     };
 
+    // Suffix Handling
+
+    char currentChar = (char)tolower(peekChar());
     if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {
-        std::string suffix;
-        suffix += (char)tolower(consumeChar());
+        char suffix = static_cast<char>(std::tolower(consumeChar()));
+        int width = readUint();
+        if (width == 0) {
+            logging::logError(getLine(), getCol(), "Invalid Numeric Suffix {}", width);
+            return TokenizationResult::Failure;
+        }
+        const bool validIntWidth = (width == 8 || width == 16 || width == 32 || width == 64);
+        const bool validFloatWidth = (width == 32 || width == 64);
 
-        // Read the numeric part of the suffix
-        std::string numPart = readDigits();
-        if (suffix[0] == 'i' || suffix[0] == 'u') {
-            // Integer types: i8, i16, i32, i64, u8, u16, u32, u64
-            if (numPart != "8" && numPart != "16" && numPart != "32" && numPart != "64") {
-                logging::logError("Invalid integer suffix: must be 8, 16, 32, or 64", getLine(), getCol());
-                return false;
-            }
-        } else if (numPart != "32" && numPart != "64") {
-            // Float types: f32, f64
-            logging::logError("Invalid float suffix: must be 32 or 64", getLine(), getCol());
-            return false;
+        if ((suffix == 'i' || suffix == 'u') && !validIntWidth) {
+            logging::logError(getLine(), getCol(), "Invalid integer suffix: must be 8, 16, 32, or 64");
+            return TokenizationResult::Failure;
+        }
+        if (suffix == 'f' && !validFloatWidth) {
+            logging::logError(getLine(), getCol(), "Invalid float suffix: must be 32 or 64");
+            return TokenizationResult::Failure;
+        }
+        if (suffix == 'f' && !isFloat) {
+            logging::logError(getLine(), getCol(), "Float suffix can only be used with floating-point literals");
+            return TokenizationResult::Failure;
         }
 
-        numberLiteral += suffix + numPart;  // Append the suffix to the number literal
-
-        // Type validation - float suffix only for float literals and vice versa
-        if (suffix[0] == 'f' && !isFloat) {
-            logging::logError("Float suffix can only be used with floating-point literals", getLine(), getCol());
-            return false;
+        if ((suffix == 'i' || suffix == 'u') && isFloat) {
+            logging::logError(getLine(), getCol(), "Integer suffix cannot be used with floating-point literals");
+            return TokenizationResult::Failure;
         }
-        if ((suffix[0] == 'i' || suffix[0] == 'u') && isFloat) {
-            logging::logError("Integer suffix cannot be used with floating-point literals", getLine(), getCol());
-            return false;
-        }
-    }
-    currentChar = (char)tolower(peekChar());  // Update current character after processing the suffix
-    // Scientific notation handling
-    if (currentChar == 'e' && base == Base::Decimal) {
-        // Scientific notation
-        numberLiteral += (char)tolower(consumeChar());  // Add the 'e' or 'E'
-        currentChar = peekChar();
-        if (currentChar == '+' || currentChar == '-') {
-            numberLiteral += consumeChar();  // Add the sign
-            currentChar = peekChar();
-        }
-        if (!isdigit(currentChar)) {
-            logging::logError("Invalid scientific notation: exponent must be a number", getLine(), getCol());
-            return false;
-        }
-        numberLiteral += readDigits();
-    } else if (base == Base::Hexadecimal) {
-        // Hexadecimal floats must have a 'p' or 'P' exponent if they are floats
-        if (isFloat) {
-            if (currentChar != 'p') {
-                logging::logError("Invalid hexadecimal float: must have 'p' or 'P' exponent", getLine(), getCol());
-                return false;
-            }
-            // Hexadecimal exponentiation (e.g., 0x1.23p4)
-            numberLiteral += (char)tolower(consumeChar());  // Add the 'p' or 'P'
-            currentChar = peekChar();
-            if (currentChar == '+' || currentChar == '-') {
-                numberLiteral += consumeChar();  // Add the sign
-                currentChar = peekChar();
-            }
-            if (!isdigit(currentChar)) {
-                logging::logError("Invalid hexadecimal float: exponent must be a decimal number", getLine(), getCol());
-                return false;
-            }
-            numberLiteral += readDigits();  // Add the exponent digits
-        }
+        numberLiteral += suffix;
+        numberLiteral += std::to_string(width);
     }
 
-    return true;
+    // Scientific Notation
+
+    currentChar = (char)std::tolower(peekChar());
+
+    if (!std::isalpha(currentChar)) {  // there's no scientific notation
+        return TokenizationResult::Success;
+    }
+
+    auto processScientificNotation = [&](char expected) -> TokenizationResult {
+        if (currentChar != expected) { return TokenizationResult::Failure; }
+
+        numberLiteral += static_cast<char>(std::tolower(consumeChar()));
+
+        char next = peekChar();
+        if (next == '+' || next == '-') { numberLiteral += consumeChar(); }
+
+        if (!std::isdigit(peekChar())) {
+            logging::logError(getLine(), getCol(), "Invalid exponent: must be a number");
+            return TokenizationResult::Failure;
+        }
+
+        while (!done() && std::isalnum(peekChar())) {
+            if (!std::isdigit(peekChar())) {
+                logging::logError(getLine(), getCol(), "Invalid character {} in exponent", peekChar());
+                advance();
+                continue;
+            }
+            numberLiteral += consumeChar();
+        }
+
+        return TokenizationResult::Success;
+    };
+
+    if (base == Base::Decimal) {
+        if (processScientificNotation('e') == TokenizationResult::Failure) {
+            logging::logError(getLine(), getCol(), "Invalid decimal float: must have 'e' exponent");
+            return TokenizationResult::Failure;
+        }
+    } else if (base == Base::Hexadecimal && isFloat) {
+        if (processScientificNotation('p') == TokenizationResult::Failure) {
+            logging::logError(getLine(), getCol(), "Invalid hexadecimal float: must have 'p' exponent");
+            return TokenizationResult::Failure;
+        }
+    } else {
+        if ((char)std::tolower(peekChar()) == 'e' || (char)std::tolower(peekChar()) == 'p') {
+            logging::logError(getLine(), getCol(), "{} numbers do not support exponents",
+                              baseToString(base));
+        }
+        while (std::isalnum(peekChar())) {
+            logging::logError(getLine(), getCol(), "Invalid character {} in numeric literal", consumeChar());
+        }
+        return TokenizationResult::Failure;
+    }
+    return TokenizationResult::Success;
 }
 
 }  // namespace lexer

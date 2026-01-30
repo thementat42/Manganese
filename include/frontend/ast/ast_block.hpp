@@ -14,34 +14,32 @@ namespace ast {
  */
 class Block final {
    private:
-    using block_t_ = std::vector<StatementUPtr_t>;
-    block_t_ block_;
+    using _block_t = std::vector<StatementUPtr_t>;
+    _block_t block_;
 
    public:
-    using value_type = block_t_::value_type;
-    using allocator_type = block_t_::allocator_type;
-    using size_type = block_t_::size_type;
-    using difference_type = block_t_::difference_type;
-    using reference = block_t_::reference;
-    using const_reference = block_t_::const_reference;
-    using pointer = block_t_::pointer;
-    using const_pointer = block_t_::const_pointer;
-    using iterator = block_t_::iterator;
-    using const_iterator = block_t_::const_iterator;
-    using reverse_iterator = block_t_::reverse_iterator;
-    using const_reverse_iterator = block_t_::const_reverse_iterator;
+    using value_type = _block_t::value_type;
+    using allocator_type = _block_t::allocator_type;
+    using size_type = _block_t::size_type;
+    using difference_type = _block_t::difference_type;
+    using reference = _block_t::reference;
+    using const_reference = _block_t::const_reference;
+    using pointer = _block_t::pointer;
+    using const_pointer = _block_t::const_pointer;
+    using iterator = _block_t::iterator;
+    using const_iterator = _block_t::const_iterator;
+    using reverse_iterator = _block_t::reverse_iterator;
+    using const_reverse_iterator = _block_t::const_reverse_iterator;
 
     TypeSPtr_t blockType;
 
    public:
-    constexpr const block_t_& get_block() const noexcept { return block_; }
-    constexpr block_t_& get_block() noexcept { return block_; }
+    constexpr const _block_t& get_block() const noexcept { return block_; }
+    constexpr _block_t& get_block() noexcept { return block_; }
     
     // Wrappers around std::vector methods
     // This is partially for backwards compatibility, partially for ease of use
     // Use FORCE_INLINE since these are just wrappers and can very easily be substituted
-    // Note: The commented out implementations are included for future use. They aren't currently used
-    // but are available if need be
 
     //~ Element Access
     constexpr FORCE_INLINE reference operator[](size_type pos) { return block_[pos]; }

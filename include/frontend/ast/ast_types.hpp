@@ -38,11 +38,9 @@ class AggregateType final : public Type {
    public:
     std::vector<TypeSPtr_t> fieldTypes;
 
-    explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) : fieldTypes(std::move(fieldTypes_)) {}
+    explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) :
+        Type(TypeKind::AggregateType), fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
-    constexpr TypeKind kind() const noexcept override { return TypeKind::AggregateType; }
-
-    bool operator==(const Type& other) const noexcept override;
 };
 class ArrayType final : public Type {
    public:
@@ -53,12 +51,9 @@ class ArrayType final : public Type {
      * @param elementType_ The type of the elements in the array
      */
     explicit ArrayType(TypeSPtr_t elementType_, ExpressionUPtr_t lengthExpr_ = nullptr) :
-        elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
+        Type(TypeKind::ArrayType), elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr TypeKind kind() const noexcept override { return TypeKind::ArrayType; };
-
-    bool operator==(const Type& other) const noexcept override;
 };
 
 struct FunctionParameterType {
@@ -66,10 +61,6 @@ struct FunctionParameterType {
     TypeSPtr_t type;
 
     FunctionParameterType(bool isMutable_, TypeSPtr_t type_) : isMutable(isMutable_), type(std::move(type_)) {}
-
-    bool operator==(const FunctionParameterType& other) const noexcept {
-        return isMutable == other.isMutable && *type == *other.type;
-    }
 };
 
 /**
@@ -81,12 +72,9 @@ class FunctionType final : public Type {
     TypeSPtr_t returnType;
 
     FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypeSPtr_t returnType_) :
-        parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
+        Type(TypeKind::FunctionType), parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr TypeKind kind() const noexcept override { return TypeKind::FunctionType; };
-
-    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -99,12 +87,9 @@ class GenericType final : public Type {
     TypeSPtr_t baseType;  // some_function in `some_function@[T,U]`
     std::vector<TypeSPtr_t> typeParameters;  // T and U in `some_function@[T,U]`
     GenericType(TypeSPtr_t baseType_, std::vector<TypeSPtr_t> typeParameters_) :
-        baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
+        Type(TypeKind::GenericType), baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr TypeKind kind() const noexcept override { return TypeKind::GenericType; };
-
-    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -116,12 +101,9 @@ class PointerType final : public Type {
     bool isMutable;
 
     PointerType(TypeSPtr_t baseType_, bool isMutable_) :
-        baseType(std::move(baseType_)), isMutable(isMutable_) {}
+        Type(TypeKind::PointerType), baseType(std::move(baseType_)), isMutable(isMutable_) {}
 
     AST_STANDARD_INTERFACE;
-    constexpr TypeKind kind() const noexcept override { return TypeKind::PointerType; };
-
-    bool operator==(const Type& other) const noexcept override;
 };
 
 /**
@@ -131,17 +113,11 @@ class SymbolType final : public Type {
    public:
     std::string name;
 
-    constexpr explicit SymbolType(std::string name_) : name(std::move(name_)) {}
+    constexpr explicit SymbolType(std::string name_) : Type(TypeKind::SymbolType), name(std::move(name_)) {}
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }
-    constexpr TypeKind kind() const noexcept override { return TypeKind::SymbolType; };
-
-    bool operator==(const Type& other) const noexcept override;
 };
 
-bool isPrimitiveType(const TypeSPtr_t& type);
-
-bool isPrimitiveType(const Type* type);
 }  // namespace ast
 
 }  // namespace Manganese

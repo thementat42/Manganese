@@ -44,37 +44,32 @@ typedef double float64_t;
 
 using number_t = std::variant<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, float32_t, float64_t>;
 
-enum class Base {
+enum class Base: uint8_t {
     Binary = 2,  // 0b prefix
     Octal = 8,  // 0o prefix
     Decimal = 10,  // Default base, no prefix
     Hexadecimal = 16  // 0x prefix
 };
 
-constexpr std::string int8_str = "int8";
-constexpr std::string int16_str = "int16";
-constexpr std::string int32_str = "int32";
-constexpr std::string int64_str = "int64";
-constexpr std::string uint8_str = "uint8";
-constexpr std::string uint16_str = "uint16";
-constexpr std::string uint32_str = "uint32";
-constexpr std::string uint64_str = "uint64";
-constexpr std::string float32_str = "float32";
-constexpr std::string float64_str = "float64";
-constexpr std::string bool_str = "bool";
-constexpr std::string string_str = "string";
-constexpr std::string char_str = "char";
+constexpr std::string baseToString(Base b) {
+    switch (b) {
+        case Base::Binary: return "binary";
+        case Base::Octal: return "octal";
+        case Base::Decimal: return "decimal";
+        case Base::Hexadecimal: return "hexadecimal";
+    }
+}
 
 namespace utils {
 
-constexpr std::optional<int8_t> stoi8(std::string_view str, int base = 10);
-constexpr std::optional<int16_t> stoi16(std::string_view str, int base = 10);
-constexpr std::optional<int32_t> stoi32(std::string_view str, int base = 10);
-constexpr std::optional<int64_t> stoi64(std::string_view str, int base = 10);
-constexpr std::optional<uint8_t> stoui8(std::string_view str, int base = 10);
-constexpr std::optional<uint16_t> stoui16(std::string_view str, int base = 10);
-constexpr std::optional<uint32_t> stoui32(std::string_view str, int base = 10);
-constexpr std::optional<uint64_t> stoui64(std::string_view str, int base = 10);
+constexpr std::optional<int8_t> stoi8(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<int16_t> stoi16(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<int32_t> stoi32(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<int64_t> stoi64(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<uint8_t> stoui8(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<uint16_t> stoui16(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<uint32_t> stoui32(std::string_view str, Base base = Base::Decimal);
+constexpr std::optional<uint64_t> stoui64(std::string_view str, Base base = Base::Decimal);
 std::optional<float32_t> stof32(std::string_view str);
 std::optional<float64_t> stof64(std::string_view str);
 
@@ -88,7 +83,7 @@ std::optional<float64_t> stof64(std::string_view str);
  */
     std::optional<number_t>
     stringToNumber(std::string_view str, Base base = Base::Decimal, bool isFloat = false,
-                   const std::string& suffix = "") noexcept_if_release;
+                   const std::string& suffix = "") NOEXCEPT_IF_RELEASE;
 
 }  // namespace utils
 
