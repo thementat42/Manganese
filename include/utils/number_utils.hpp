@@ -51,6 +51,15 @@ enum class Base: uint8_t {
     Hexadecimal = 16  // 0x prefix
 };
 
+constexpr std::string baseToString(Base b) {
+    switch (b) {
+        case Base::Binary: return "binary";
+        case Base::Octal: return "octal";
+        case Base::Decimal: return "decimal";
+        case Base::Hexadecimal: return "hexadecimal";
+    }
+}
+
 namespace utils {
 
 constexpr std::optional<int8_t> stoi8(std::string_view str, Base base = Base::Decimal);
