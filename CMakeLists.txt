@@ -1,44 +1,15 @@
-# ==============================================================================
-# CMakeLists.txt for the Manganese Project
-#
-# This CMake configuration builds the Manganese compiler and its optional test
-# suite. It supports various build options for debugging and memory tracking,
-# and enforces best practices for build directory structure and compiler flags.
-#
-# Main Features:
-#  - Requires CMake 3.10+ and LLVM (via find_package).
-#  - Requires C++20
-#  - Prevents in-source builds to keep source tree clean.
-#  - Options:
-#      * BUILD_TESTS: Enable building the test suite (default: OFF).
-#      * MEMORY_TRACKING: Enable memory allocation tracking (default: OFF).
-#      * CONTINUOUS_MEMORY_TRACKING: Enable detailed memory tracking (default: OFF). Requires MEMORY_TRACKING.
-#  - Automatically defines preprocessor macros for memory/debug options.
-#  - Configures strict compiler warnings and debug flags for test and debug builds.
-#  - Links against LLVM and (for tests) gcov for coverage.
-#  - Outputs binaries to the build/bin directory.
-#
-# Usage:
-#   mkdir build
-#   cd build
-#   cmake .. [-DBUILD_TESTS=ON] [-DCMAKE_BUILD_TYPE="Debug"|"Release"] [-DMEMORY_TRACKING=ON] [-DCONTINUOUS_MEMORY_TRACKING=ON]
-#   cmake --build .
-#
 # Notes:
 #  - When BUILD_TESTS is ON, the test suite will be built with the DEBUG macro enabled
     # regardless of whether DEBUG is ON or OFF.
-#  - CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled. If it is not, a warning will be issued.
+#  - CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled.
 #  - Compiler flags are set to be extra strict in debug/test builds.
 #  - Release builds use more aggressive optimizations.
-# ==============================================================================
 
 
 cmake_minimum_required(VERSION 3.10)
 project(manganese)
 
-# ==============================================================================
 # Build configuration and options
-# ==============================================================================
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -65,9 +36,7 @@ option(MEMORY_TRACKING "Enable total memory allocation tracking (does not accoun
 option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory usage tracking (detailed logging to file)" OFF)
 option(INSTALL_DEPENDENCIES "Download third-party dependencies used by the project" OFF)
 
-# ==============================================================================
 # Memory tracking configuration
-# ==============================================================================
 
 if(MEMORY_TRACKING)
     add_compile_definitions(MEMORY_TRACKING=1)
@@ -86,14 +55,7 @@ else()
     add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=0)
 endif()
 
-
-# ==============================================================================
-# Dependencies Install
-# ==============================================================================
-
-# ==============================================================================
 # LLVM configuration
-# ==============================================================================
 
 find_package(LLVM REQUIRED CONFIG)
 
@@ -113,9 +75,7 @@ include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
-# ==============================================================================
 # Source files configuration
-# ==============================================================================
 
 file(GLOB_RECURSE SRC 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
@@ -207,12 +167,7 @@ if(BUILD_TESTS)
             -Werror
         )
     endif()
-    
-    # Include directories
-    target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-    llvm_map_components_to_libnames(LLVM_LIBS Core Support IRReader ExecutionEngine Analysis 
-    BitWriter CodeGen)
-    target_link_libraries(${PROJECT_NAME} ${LLVM_LIBS})
+
     
     # Output binary to bin directory
     set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -322,13 +277,14 @@ else()
         message(STATUS "Building compiler in RELEASE mode")
     endif()
 
-    target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-        llvm_map_components_to_libnames(LLVM_LIBS Core Support IRReader ExecutionEngine Analysis 
-    BitWriter CodeGen)
-    target_link_libraries(${PROJECT_NAME} ${LLVM_LIBS})
-
     set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
     message(STATUS "Configured to build main compiler")
 endif()
+
+# LLVM Linkage
+    target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+    llvm_map_components_to_libnames(LLVM_LIBS Core Support IRReader ExecutionEngine Analysis 
+    BitWriter CodeGen)
+    target_link_libraries(${PROJECT_NAME} ${LLVM_LIBS})
