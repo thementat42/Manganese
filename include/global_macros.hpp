@@ -50,13 +50,7 @@
 #define FORCE_INLINE inline
 #endif
 
-[[noreturn]] inline void manganese_unreachable(const char* message = "", const char* file = "", unsigned line = 0,
-                                               const char* func = "") NOEXCEPT_IF_RELEASE {
-#if DEBUG
-    std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m";
-    std::cerr << "\033[33m In file: " << file << ", at line " << line << ": when running " << func << "\033[0m\n";
-    throw(message);
-#else
+[[noreturn]] inline void manganese_unreachable() {
 #if __cplusplus >= 202302L
     std::unreachable();  // compiler agnostic, but still allows for optimisation
 // If < C++23, use a compiler-specific implementation
@@ -67,14 +61,24 @@
 #else
     // still invokes UB
 #endif  // __cplusplus >= 202302L
+}
+
+[[noreturn]] inline void panic(const char* message = "", const char* file = "", unsigned line = 0,
+                               const char* func = "") NOEXCEPT_IF_RELEASE {
+    std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m";
+    std::cerr << "\033[33m In file: " << file << ", at line " << line << ": when running " << func << "\033[0m\n";
+    throw(message);
+}
+
+[[noreturn]] FORCE_INLINE void panic(const std::string& message, const char* file, unsigned line, const char* func) {
+    panic(message.c_str(), file, line, func);
+}
+
+
+#if DEBUG
+#define ASSERT_UNREACHABLE(message) panic((message), __FILE__, __LINE__, __func__)
+#else
+#define ASSERT_UNREACHABLE(message) manganese_unreachable()
 #endif  // DEBUG
-}
-
-[[noreturn]] inline void manganese_unreachable(const std::string& message, const char* file, unsigned line,
-                                               const char* func) {
-    manganese_unreachable(message.c_str(), file, line, func);
-}
-
-#define ASSERT_UNREACHABLE(message) manganese_unreachable((message), __FILE__, __LINE__, __func__)
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
