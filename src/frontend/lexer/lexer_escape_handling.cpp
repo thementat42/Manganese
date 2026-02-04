@@ -9,8 +9,8 @@
 #include <optional>
 #include <string>
 #include <utils/number_utils.hpp>
-#include "frontend/lexer/lexer_base.hpp"
 
+#include "frontend/lexer/lexer_base.hpp"
 
 namespace Manganese {
 namespace lexer {
@@ -58,7 +58,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
             skipLength = 5;
         } else if (escapeString[i] == 'U') {
             std::string escDigits = escapeString.substr(i + 1, 8);  // 8 for UXXXXXXXX
-            escapeChar = resolveUnicodeCharacters(escDigits, getLine(), getCol(), /*isLongUnicode=*/ true);
+            escapeChar = resolveUnicodeCharacters(escDigits, getLine(), getCol(), /*isLongUnicode=*/true);
             skipLength = 9;
         } else if (escapeString[i] == 'x') [[unlikely]] {  // Hex escape sequences aren't usually used
             std::string escDigits = escapeString.substr(i + 1, 2);  // 2 for xXX
@@ -85,7 +85,7 @@ TokenizationResult Lexer::processCharEscapeSequence(const std::string& charLiter
     std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
         logging::logError(getLine(), getCol(), "Invalid character literal", charLiteral);
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol());
+        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), /*invalid=*/true);
         return TokenizationResult::Failure;
     }
     std::string processed = *resolved;
@@ -104,7 +104,8 @@ TokenizationResult Lexer::processCharEscapeSequence(const std::string& charLiter
         logging::logError(getLine(), getCol(), "Invalid character literal ", charLiteral);
         result = TokenizationResult::Failure;
     }
-    tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol());
+    tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol(),
+                             /*invalid=*/result == TokenizationResult::Failure);
     return result;
 }
 

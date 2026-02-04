@@ -191,14 +191,16 @@ TokenizationResult Lexer::tokenizeCharLiteral() {
     while (true) {
         if (done()) {
             logging::logError(getLine(), getCol(), "Unclosed character literal");
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol,
+                                     /*invalid=*/true);
             return TokenizationResult::Failure;
         }
         if (peekChar() == '\'') { break; }
         if (peekChar() == '\n') {
             logging::logError(getLine(), getCol(), "Unclosed character literal");
 
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol,
+                                     /*invalid=*/true);
             return TokenizationResult::Failure;
         }
         if (peekChar() == '\\') {
@@ -215,7 +217,8 @@ TokenizationResult Lexer::tokenizeCharLiteral() {
         logging::logError(getLine(), getCol(), "Character literal exceeds 1 character limit");
         result = TokenizationResult::Failure;
     }
-    tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol);
+    tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol,
+                             /*invalid=*/result == TokenizationResult::Failure);
     return result;
 }
 
@@ -283,7 +286,7 @@ TokenizationResult Lexer::tokenizeNumber() {
         result = TokenizationResult::Failure;
     }
     tokenStream.emplace_back(isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral, numberLiteral,
-                             tokenStartLine, tokenStartCol);
+                             tokenStartLine, tokenStartCol, /*invalid=*/result == TokenizationResult::Failure);
     return result;
 }
 
@@ -321,7 +324,8 @@ TokenizationResult Lexer::tokenizeStringLiteral() {
     while (true) {
         if (done()) {
             logging::logError(getLine(), getCol(), "Unclosed string literal");
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol,
+                                     /*invalid=*/true);
             return TokenizationResult::Failure;
         }
         if (peekChar() == '"') { break; }
@@ -339,7 +343,8 @@ TokenizationResult Lexer::tokenizeStringLiteral() {
                 getLine(), getCol(),
                 "String literal cannot span multiple lines. If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line");
 
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol,
+                                     /*invalid=*/true);
             return TokenizationResult::Failure;
         }
         stringLiteral += consumeChar();  // Add the character to the string
@@ -355,7 +360,8 @@ TokenizationResult Lexer::tokenizeStringLiteral() {
             stringLiteral = std::move(processedString.value());
         }
     }
-    tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol);
+    tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol,
+                             /*invalid=*/result == TokenizationResult::Failure);
     return result;
 }
 
@@ -560,12 +566,12 @@ TokenizationResult Lexer::tokenizeSymbol() {
         default:
             type = TokenType::Unknown;
             logging::logError(getLine(), getCol(), "Invalid character: '{}'", current);
-            tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
             result = TokenizationResult::Failure;
             break;
     }
     advance(lexeme.length());
-    tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol);
+    tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol,
+                             /*invalid=*/result == TokenizationResult::Failure);
     return result;
 }
 
@@ -669,27 +675,29 @@ TokenizationResult Lexer::processNumberSuffix(Base base, std::string& numberLite
 
     auto processScientificNotation = [&](char expected) -> TokenizationResult {
         if (currentChar != expected) { return TokenizationResult::Failure; }
-
+        
         numberLiteral += static_cast<char>(std::tolower(consumeChar()));
-
+        
         char next = peekChar();
         if (next == '+' || next == '-') { numberLiteral += consumeChar(); }
-
+        
         if (!std::isdigit(peekChar())) {
             logging::logError(getLine(), getCol(), "Invalid exponent: must be a number");
             return TokenizationResult::Failure;
         }
+        TokenizationResult result = TokenizationResult::Success;
 
         while (!done() && std::isalnum(peekChar())) {
             if (!std::isdigit(peekChar())) {
                 logging::logError(getLine(), getCol(), "Invalid character {} in exponent", peekChar());
+                result = TokenizationResult::Failure;
                 advance();
                 continue;
             }
             numberLiteral += consumeChar();
         }
 
-        return TokenizationResult::Success;
+        return result;
     };
 
     if (base == Base::Decimal) {
@@ -704,8 +712,7 @@ TokenizationResult Lexer::processNumberSuffix(Base base, std::string& numberLite
         }
     } else {
         if ((char)std::tolower(peekChar()) == 'e' || (char)std::tolower(peekChar()) == 'p') {
-            logging::logError(getLine(), getCol(), "{} numbers do not support exponents",
-                              baseToString(base));
+            logging::logError(getLine(), getCol(), "{} numbers do not support exponents", baseToString(base));
         }
         while (std::isalnum(peekChar())) {
             logging::logError(getLine(), getCol(), "Invalid character {} in numeric literal", consumeChar());

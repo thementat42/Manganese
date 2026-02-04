@@ -30,13 +30,16 @@ namespace lexer {
  */
 class Token {
    private:
+    bool invalid;
     TokenType type;
     std::string lexeme;
     size_t line, column;
 
    public:
     Token() noexcept = default;
-    Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_) NOEXCEPT_IF_RELEASE :
+    Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_,
+          bool invalid_ = false) NOEXCEPT_IF_RELEASE :
+        invalid(invalid_),
         type(type_),
         lexeme(lexeme_),
         line(line_),
@@ -57,6 +60,7 @@ class Token {
         return type >= TokenType::_operatorStart && type <= TokenType::_operatorEnd;
     }
 
+    constexpr bool isInvalid() const noexcept { return invalid; }
     constexpr TokenType getType() const noexcept { return type; }
     constexpr std::string getLexeme() const noexcept { return lexeme; }
     constexpr size_t getLine() const noexcept { return line; }
@@ -82,13 +86,13 @@ class Token {
             || type == TokenType::String;
     }
     constexpr bool hasUnaryCounterpart() const noexcept {
-    return type == TokenType::Plus ||  // + can be addition or unary plus
-        type == TokenType::Minus ||  // - can be subtraction or unary minus
-        type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
-        type == TokenType::Mul;  // * can be multiplication or dereference operator
+        return type == TokenType::Plus ||  // + can be addition or unary plus
+            type == TokenType::Minus ||  // - can be subtraction or unary minus
+            type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
+            type == TokenType::Mul;  // * can be multiplication or dereference operator
     }
 
-        /**
+    /**
      * @note Parser only: be careful
      */
     void overrideType(TokenType type_, std::string lexeme_ = "");

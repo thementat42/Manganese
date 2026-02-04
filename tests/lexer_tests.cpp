@@ -22,7 +22,6 @@
 #include "frontend/lexer/token_type.hpp"
 #include "testrunner.hpp"
 
-
 namespace Manganese {
 namespace tests {
 using lexer::Token, lexer::TokenType;
@@ -169,8 +168,8 @@ bool testFloatLiterals() {
     return checkToken(tokens[0], TokenType::FloatLiteral, "0.0f32")
         && checkToken(tokens[1], TokenType::FloatLiteral, "1.23f64")
         && checkToken(tokens[2], TokenType::FloatLiteral, "456.789")
-        && checkToken(tokens[3], TokenType::FloatLiteral, "1.44e3")
-        && checkToken(tokens[4], TokenType::IntegerLiteral, "0b10010");
+        && checkToken(tokens[3], TokenType::FloatLiteral, "1.44e3") && tokens[3].isInvalid()
+        && checkToken(tokens[4], TokenType::IntegerLiteral, "0b10010") && tokens[4].isInvalid();
 }
 
 bool testCharLiterals() {
@@ -308,9 +307,9 @@ bool testInvalidChar() {
         return false;
     }
 
-    return tokens[0].getType() == TokenType::CharLiteral
-        && tokens[1].getType() == TokenType::CharLiteral
-        && tokens[2].getType() == TokenType::CharLiteral;
+    return tokens[0].getType() == TokenType::CharLiteral && tokens[0].isInvalid()
+        && tokens[1].getType() == TokenType::CharLiteral && tokens[1].isInvalid()
+        && tokens[2].getType() == TokenType::CharLiteral && tokens[2].isInvalid();
 }
 
 bool testInvalidEscapeSequence() {
