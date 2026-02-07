@@ -1,46 +1,32 @@
-# Notes:
-#  - When BUILD_TESTS is ON, the test suite will be built with the DEBUG macro enabled
-    # regardless of whether DEBUG is ON or OFF.
-#  - CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled.
-#  - Compiler flags are set to be extra strict in debug/test builds.
-#  - Release builds use more aggressive optimizations.
-
-
 cmake_minimum_required(VERSION 3.10)
-project(manganese)
+project(manganese LANGUAGES C CXX)
 
-# Build configuration and options
+# Configuration
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese.cpp")
-set(TESTS_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/manganese_tests.cpp")
 
 # Prevent in-source builds
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-  message(FATAL_ERROR "In-source builds not allowed. Please make a new build directory and run CMake from there.")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+    message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
 
 # Default to a release build
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build (Debug/Release)" FORCE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
-
-# Define include directories
-set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Build options
 option(BUILD_TESTS "Build the test suite" OFF)
-option(MEMORY_TRACKING "Enable total memory allocation tracking (does not account for deallocations)" OFF)
-option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory usage tracking (detailed logging to file)" OFF)
-option(INSTALL_DEPENDENCIES "Download third-party dependencies used by the project" OFF)
+option(MEMORY_TRACKING "Enable memory allocation tracking" OFF)
+option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory tracking" OFF)
 
 # Memory tracking configuration
 
 if(MEMORY_TRACKING)
     add_compile_definitions(MEMORY_TRACKING=1)
-    message(WARNING "Memory tracking is enabled. This will track total memory allocations but may not be 100% accurate, and will vary by compiler")
+    message(STATUS "Memory tracking is enabled. This will track total memory allocations but may not be 100% accurate, and will vary by compiler")
 else()
     add_compile_definitions(MEMORY_TRACKING=0)
 endif()
@@ -49,242 +35,146 @@ if(CONTINUOUS_MEMORY_TRACKING)
     if(NOT MEMORY_TRACKING)
         message(WARNING "CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled. Continuous memory tracking will have no effect unless MEMORY_TRACKING is also enabled.")
     endif()
-    message(WARNING "CONTINUOUS_MEMORY_TRACKING may not be 100% accurate and can vary between compilers and platforms.")
+    message(STATUS "CONTINUOUS_MEMORY_TRACKING may not be 100% accurate and can vary between compilers and platforms.")
     add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=1)
 else()
     add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=0)
 endif()
 
-# LLVM configuration
+# LLVM Configuration
 
 find_package(LLVM REQUIRED CONFIG)
-
-if(NOT LLVM_FOUND)
-  message(FATAL_ERROR "LLVM could not be found on this system.\n" 
-  "To automatically install it, you can re-run cmake with -DINSTALL_DEPENDENCIES=ON.\n"
-"Alternatively, you can install it manually and add it to the system PATH.\n"
-"If you already have it installed, please make sure it's in the system PATH."
-)
-endif()
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-# Treat LLVM includes as system includes to suppress warnings
-include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
-separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-add_definitions(${LLVM_DEFINITIONS_LIST})
+# Set up sources
 
-# Source files configuration
-
-file(GLOB_RECURSE SRC 
+file(GLOB_RECURSE SOURCES 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
+
+
+set(MAIN_SRC manganese.cpp)
+set(TEST_MAIN_SRC manganese_tests.cpp)
 
 if(BUILD_TESTS)
     file(GLOB_RECURSE TEST_SOURCES
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp"
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c"
         )
-
-    set(TEST_SRC ${SRC} ${TEST_SOURCES})
-
-    add_executable(${PROJECT_NAME} ${TEST_SRC} ${TESTS_MAIN})
-
-    if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-        message(WARNING
-            "The test suite relies on the DEBUG macro being enabled.\n"
-            "DEBUG will be forcibly set to ON for test builds."
-        )
-        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type" FORCE)
-    endif()
-
-    # Force DEBUG macro for the test target regardless of global option
-    target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=1)
-    
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE
-            /Od
-            /Zi
-            /W4
-            /permissive-
-            /WX
-            /EHsc
-            /RTC1
-            /RTCu
-            /GS
-        )
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(${PROJECT_NAME} PRIVATE
-            -O0 -g3
-            -Wshadow
-            -Wuninitialized
-            -Wnull-dereference
-            -Wall
-            -Wextra
-            -Wformat
-            -Wformat=2
-            -Wconversion
-            -Wimplicit-fallthrough
-            -Werror
-            -fno-omit-frame-pointer
-            -fno-inline
-            -fcheck-new
-            -DGLIBCXX_DEBUG
-            # --coverage
-            # -fprofile-arcs
-            # -ftest-coverage
-            # -lgcov
-            --save-temps
-        )
-        # target_link_libraries(${PROJECT_NAME} PRIVATE gcov)
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(${PROJECT_NAME} PRIVATE
-            -O0 -g3
-            -Wshadow
-            -Wuninitialized
-            -Wnull-dereference
-            -Wall
-            -Wextra
-            -Wformat
-            -Wformat=2
-            -Wconversion
-            -Wimplicit-fallthrough
-            -Werror
-            -fno-omit-frame-pointer
-            -fno-inline
-            -fcheck-new
-            -Wno-unused-private-field
-            -Wno-missing-prototypes
-        )
-    else()
-        message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic compiler flags.")
-        target_compile_options(${PROJECT_NAME} PRIVATE
-            -O0 -g3
-            -Wall
-            -Wextra
-            -Werror
-        )
-    endif()
-
-    
-    # Output binary to bin directory
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
-    
+    add_executable(manganese ${SOURCES} ${TEST_SOURCES} ${TEST_MAIN_SRC})
     message(STATUS "Configured to build test suite")
 else()
-    add_executable(${PROJECT_NAME} ${SRC} ${MAIN})
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=1)        
-        if(MSVC)
-            target_compile_options(${PROJECT_NAME} PRIVATE
-                /Od
-                /Zi
-                /W4
-                /permissive-
-                /WX
-                /EHsc
-                /RTC1
-                /RTCu
-                /GS
-                /analyze
-            )
-        elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-            target_compile_options(${PROJECT_NAME} PRIVATE
-                -O0 -g3
-                -Wshadow
-                -Wuninitialized
-                -Wnull-dereference
-                -Wall
-                -Wextra
-                -Wformat
-                -Wformat=2
-                -Wconversion
-                -Wimplicit-fallthrough
-                -Werror
-                -fno-omit-frame-pointer
-                -DGLIBCXX_DEBUG
-            )
-        elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            target_compile_options(${PROJECT_NAME} PRIVATE
-                -O0 -g3
-                -Wshadow
-                -Wuninitialized
-                -Wnull-dereference
-                -Wall
-                -Wextra
-                -Wformat
-                -Wformat=2
-                -Wconversion
-                -Wimplicit-fallthrough
-                -Werror
-                -fno-omit-frame-pointer
-                -Wno-unused-private-field
-                -Wno-missing-prototypes
-            )
-        else()
-            message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic debug flags.")
-            target_compile_options(${PROJECT_NAME} PRIVATE
-                -O0 -g3
-                -Wall
-                -Wextra
-                -Werror
-            )
-        endif()
-        message(STATUS "Building compiler in DEBUG mode")
-    else()
-        target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=0)
-        if(MSVC)
-            target_compile_options(${PROJECT_NAME} PRIVATE
-                /O2
-                /Ob2
-                /Ot
-                /EHsc
-                /Qspectre
-            )
-        elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-            target_compile_options(${PROJECT_NAME} PRIVATE
-                -O2
-                -finline-functions
-                -funroll-loops
-                -flto
-                -fomit-frame-pointer
-                -fstack-protector-strong
-                -march=native
-                -g0
-            )
-        elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            target_compile_options(${PROJECT_NAME} PRIVATE
-                -O2
-                -finline-functions
-                -funroll-loops
-                -flto
-                -fomit-frame-pointer
-                -fstack-protector-strong
-                -march=native
-                -g0
-            )
-        else()
-            message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic release flags.")
-            target_compile_options(${PROJECT_NAME} PRIVATE
-                -O2
-                -DNDEBUG
-            )
-        endif()
-        message(STATUS "Building compiler in RELEASE mode")
-    endif()
-
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
+    add_executable(manganese ${SOURCES} ${MAIN_SRC})
     message(STATUS "Configured to build main compiler")
 endif()
 
-# LLVM Linkage
-    target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-    llvm_map_components_to_libnames(LLVM_LIBS Core Support IRReader ExecutionEngine Analysis 
-    BitWriter CodeGen)
-    target_link_libraries(${PROJECT_NAME} ${LLVM_LIBS})
+target_include_directories(manganese
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+set_target_properties(manganese PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+# `#define` stuff
+
+target_compile_definitions(manganese PRIVATE
+    DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
+)
+
+if(CONTINUOUS_MEMORY_TRACKING AND NOT MEMORY_TRACKING)
+    message(WARNING "CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING")
+endif()
+
+# Flags
+function(enable_strict_warnings target)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE
+            /W4 /WX /permissive- /EHsc
+        )
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(${target} PRIVATE
+            -Wall -Wextra -Werror -Wshadow -Wformat=2 -Wuninitialized -Wnull-dereference
+            -Wconversion -Wimplicit-fallthrough -Wno-unused-private-field -Wno-missing-prototypes
+            )
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(${target} PRIVATE
+            -Wall -Wextra -Werror -Wshadow -Wformat=2 -Wuninitialized -Wnull-dereference
+            -Wconversion -Wimplicit-fallthrough -Wno-unused-private-field -Wno-missing-prototypes
+        )
+    else()
+            message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic warning flags.")
+            target_compile_options(${target} PRIVATE
+            -Wall -Wextra -Werror
+        )
+    endif()
+endfunction()
+
+function(enable_debug_flags target)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE
+            /Od /Zi /RTC1 /GS /analyze
+        )
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(${target} PRIVATE
+            -O0 -g3 -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fcheck-new --save-temps
+            -DGLIBCXX_DEBUG
+        )
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(${target} PRIVATE
+            -O0 -g3 -fno-omit-frame-pointer  -fno-inline -fno-inline-functions
+        )
+    else()
+            message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic debug flags.")
+            target_compile_options(${target} PRIVATE
+            -O0
+        )
+    endif()
+endfunction()
+
+function(enable_release_flags target)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE
+            /O2 /Ob2 /Ot /Qspectre
+        )
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(${target} PRIVATE
+            -O2 -finline-functions -funroll-loops -flto -fomit-frame-pointer
+            -fstack-protector-strong -march=native -g0
+        )
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(${target} PRIVATE
+            -O2 -finline-functions -funroll-loops -flto -fomit-frame-pointer
+            -fstack-protector-strong -march=native -g0
+        )
+    else()
+            message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic debug flags.")
+            target_compile_options(${target} PRIVATE
+            -O2 -DNDEBUG
+        )
+    endif()
+endfunction()
+
+enable_strict_warnings(manganese)
+if(BUILD_TESTS)
+    enable_debug_flags(manganese)
+elseif(CMAKE_BUILD_TYPE STREQUAL Debug)
+    enable_debug_flags(manganese)
+else()
+    enable_release_flags(manganese)
+endif()
+
+target_include_directories(manganese SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+target_compile_options(manganese PRIVATE ${LLVM_DEFINITIONS_LIST})
+
+llvm_map_components_to_libnames(LLVM_LIBS
+    Core Support IRReader ExecutionEngine Analysis
+    BitWriter CodeGen
+)
+
+target_link_libraries(manganese PRIVATE ${LLVM_LIBS})
