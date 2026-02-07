@@ -64,7 +64,7 @@
 }
 
 [[noreturn]] inline void panic(const char* message = "", const char* file = "", unsigned line = 0,
-                               const char* func = "") NOEXCEPT_IF_RELEASE {
+                               const char* func = "") {
     std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m";
     std::cerr << "\033[33m In file: " << file << ", at line " << line << ": when running " << func << "\033[0m\n";
     throw(message);

@@ -57,6 +57,9 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
         throw std::runtime_error("Critical error");
     }
 #else  // ^^ DEBUG vv !DEBUG
+    DISCARD(level);
+    DISCARD(fmt);
+    (void)((void)args, ...);
     return;  // No internal logging in non-debug builds
 #endif  // DEBUG
 }

@@ -143,12 +143,12 @@ function(enable_release_flags target)
         )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(${target} PRIVATE
-            -O2 -finline-functions -funroll-loops -flto -fomit-frame-pointer
+            -O2 -finline-functions -funroll-loops -fomit-frame-pointer
             -fstack-protector-strong -march=native -g0
         )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         target_compile_options(${target} PRIVATE
-            -O2 -finline-functions -funroll-loops -flto -fomit-frame-pointer
+            -O2 -finline-functions -funroll-loops -fomit-frame-pointer
             -fstack-protector-strong -march=native -g0
         )
     else()
@@ -156,6 +156,11 @@ function(enable_release_flags target)
             target_compile_options(${target} PRIVATE
             -O2 -DNDEBUG
         )
+    endif()
+
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")  # -flto seems to break on windows
+    target_compile_options(${target} PRIVATE -flto)
+    target_link_options(${target} PRIVATE -flto)
     endif()
 endfunction()
 
