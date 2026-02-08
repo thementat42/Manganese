@@ -16,7 +16,6 @@ Options:
     -f, --fresh                                            Run a fresh build by clearing the build directory before running CMake
     -g, --generator                                        Set a generator for CMake's build files.
     -h, --help                                             Print this help message and exit
-    -i, --install-dependencies                             Have CMake install dependencies (to dependencies/)
     -j, --jobs                                             Number of parallel build jobs.
     -l, --linker LINKER                                    Specify a linker to use (e.g. gcc, ld, etc.) instead of the default for the system
     -m, --memory-tracking                                  Track the total amount of heap-allocated memory the program uses (ignores deallocations)
@@ -137,12 +136,6 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     "-g", "--generator",
     help = "Set a generator for cmake's build file other than the default",
-)
-
-arg_parser.add_argument(
-    "-i", "--install-dependencies",
-    action = "store_true",
-    help = "Have CMake install dependencies (to dependencies/)"
 )
 
 arg_parser.add_argument(
