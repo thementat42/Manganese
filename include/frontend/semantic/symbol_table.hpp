@@ -59,10 +59,13 @@ class SymbolTable {
    private:
     std::vector<Scope> _scopes;
     size_t _currentDepth;
+    bool _hasError;
 
    public:
     SymbolTable() noexcept : _currentDepth(0) { enterScope(); }
     constexpr ~SymbolTable() = default;
+
+    constexpr bool hasError() const noexcept { return _hasError; }
 
     void enterScope() {
         ++_currentDepth;
