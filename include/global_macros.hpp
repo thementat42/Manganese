@@ -54,7 +54,7 @@
 #if __cplusplus >= 202302L
     std::unreachable();  // compiler agnostic, but still allows for optimisation
 // If < C++23, use a compiler-specific implementation
-#elif defined(__GNUC__) || defined(__clang__)
+#elif defined(__GNUC__) || defined(__clang__) || (defined(__has_builtin) && __has_builtin(__builtin_unreachable))
     __builtin_unreachable();
 #elif defined(_MSC_VER)
     __assume(false);
