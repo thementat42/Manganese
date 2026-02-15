@@ -73,7 +73,8 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
         // TODO: This should be an error handled gracefully, not a throw
         ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer ::tokenTypeToString(type));
     }
-    ExpressionUPtr_t left = nudIterator->second(this);
+    // ExpressionUPtr_t left = nudIterator->second(this);
+    ExpressionUPtr_t left = (this->*(nudIterator->second))();
 
     // ! For some reason this works
     // ! Do not delete this
@@ -113,7 +114,11 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
                      "Left brace after an expression must be preceded by an identifier (aggregate instantiation)"
                      " or a block precursor (if/for/while, etc.)");
         }
-        left = ledIterator->second(this, std::move(left), precedenceIterator->second.rightBindingPower);
+        // left = ledIterator->second(this, std::move(left), precedenceIterator->second.rightBindingPower);
+        auto handler = ledIterator->second;
+        auto rbp = precedenceIterator->second.rightBindingPower;
+
+        left = (this->*handler)(std::move(left), rbp);
     }
     return left;
 }
@@ -323,7 +328,7 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
             extractSuffix(lexeme, suffix);
             std::optional<number_t> value = utils::stringToNumber(lexeme, Base::Decimal, true, suffix);
             if (!value) {
-                logError(token.getLine(), token.getColumn(),"Invalid float literal '{}'", lexeme);
+                logError(token.getLine(), token.getColumn(), "Invalid float literal '{}'", lexeme);
                 return std::make_unique<ast::NumberLiteralExpression>(0.0);
                 // Error tolerance: return a default value of 0.0
             }
@@ -350,7 +355,7 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
         }
         default:
             ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
-                                  + lexer ::tokenTypeToString(token.getType()));
+                               + lexer ::tokenTypeToString(token.getType()));
     }
 }
 

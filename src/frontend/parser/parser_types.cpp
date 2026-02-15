@@ -20,7 +20,8 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
     if (nudIterator == nudLookup_types.end()) {
         ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer ::tokenTypeToString(type));
     }
-    TypeSPtr_t left = nudIterator->second(this);
+    // TypeSPtr_t left = nudIterator->second(this);
+    TypeSPtr_t left = (this->*(nudIterator->second))();
 
     while (!done()) {
         type = peekTokenType();
@@ -35,7 +36,10 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
         if (ledIterator == ledLookup_types.end()) {
             ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer ::tokenTypeToString(type));
         }
-        left = ledIterator->second(this, std::move(left), operatorPrecedenceMap_type[type].rightBindingPower);
+        // left = ledIterator->second(this, std::move(left), operatorPrecedenceMap_type[type].rightBindingPower);
+        auto handler = ledIterator->second;
+        auto rbp = operatorPrecedenceMap_type[type].rightBindingPower;
+        left = (this->*handler)(std::move(left), rbp);
     }
     return left;
 }
@@ -45,8 +49,8 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
 TypeSPtr_t Parser::parseAggregateType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the 'aggregate' token
     if (peekTokenType() == TokenType::Identifier) {
-        logging::logWarning(peekToken().getLine(),
-                            peekToken().getColumn(),"Aggregate names are ignored in aggregate type declarations");
+        logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
+                            "Aggregate names are ignored in aggregate type declarations");
         DISCARD(consumeToken());  // Skip the identifier token
     }
 
@@ -55,8 +59,8 @@ TypeSPtr_t Parser::parseAggregateType() NOEXCEPT_IF_RELEASE {
 
     while (peekTokenType() != TokenType::RightBrace) {
         if (peekTokenType() == TokenType::Identifier) {
-            logging::logWarning(peekToken().getLine(),
-                                peekToken().getColumn(), "Variable names are ignored in aggregate type declarations");
+            logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
+                                "Variable names are ignored in aggregate type declarations");
             DISCARD(consumeToken());  // Skip the token
             expectToken(TokenType::Colon, "Expected ':' after field name in aggregate type declaration");
             continue;
@@ -184,8 +188,7 @@ TypeSPtr_t Parser::parseSymbolType() NOEXCEPT_IF_RELEASE {
             prim_t = prim::character;
         } else if (lex == bool_str) {
             prim_t = prim::boolean;
-        }
-        else {
+        } else {
             ASSERT_UNREACHABLE("Unknown primitive type " + lex);
         }
         auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());

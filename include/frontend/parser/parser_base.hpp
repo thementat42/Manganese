@@ -14,7 +14,6 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
-#include <functional>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
 #include <memory>
@@ -77,11 +76,11 @@ class Parser {
     bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
    private:  // private methods
-    using statementHandler_t = std::function<StatementUPtr_t(Parser*)>;
-    using nudHandler_t = std::function<ExpressionUPtr_t(Parser*)>;
-    using nudHandler_types_t = std::function<TypeSPtr_t(Parser*)>;
-    using ledHandler_t = std::function<ExpressionUPtr_t(Parser*, ExpressionUPtr_t, Precedence)>;
-    using ledHandler_types_t = std::function<TypeSPtr_t(Parser*, TypeSPtr_t, Precedence)>;
+    using statementHandler_t = StatementUPtr_t (Parser::*)();
+    using nudHandler_t = ExpressionUPtr_t (Parser::*)();
+    using nudHandler_types_t = TypeSPtr_t (Parser::*)();
+    using ledHandler_t = ExpressionUPtr_t (Parser::*)(ExpressionUPtr_t, Precedence);
+    using ledHandler_types_t = TypeSPtr_t (Parser::*)(TypeSPtr_t, Precedence);
 
     //~ Lookups
     std::unordered_map<TokenType, statementHandler_t> statementLookup;

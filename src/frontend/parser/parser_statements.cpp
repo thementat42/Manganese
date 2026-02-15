@@ -23,7 +23,7 @@ StatementUPtr_t Parser::parseStatement() NOEXCEPT_IF_RELEASE {
     if (it != statementLookup.end()) {
         // If possible, parse a statement from the current token
         // Call the handler for the current token type
-        return it->second(this);
+        return (this->*(it->second))();
     }
 
     // Parse out an expression then convert it to a statement
