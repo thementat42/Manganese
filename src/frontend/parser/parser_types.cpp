@@ -15,30 +15,32 @@ namespace parser {
 
 TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
     TokenType type = peekTokenType();
+    const auto index = tokenToIndex(type);
 
-    auto nudIterator = nudLookup_types.find(type);
-    if (nudIterator == nudLookup_types.end()) {
-        ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer ::tokenTypeToString(type));
+    auto nudHandler = nudLookup_types[index];
+    if (!nudHandler) {
+        ASSERT_UNREACHABLE("No type null denotation handler for token type: "
+            + lexer::tokenTypeToString(type));
     }
     // TypeSPtr_t left = nudIterator->second(this);
-    TypeSPtr_t left = (this->*(nudIterator->second))();
+    TypeSPtr_t left = (this->*nudHandler)();
 
     while (!done()) {
         type = peekTokenType();
+        const auto idx = tokenToIndex(type);
 
-        auto operatorPrecedenceIterator = operatorPrecedenceMap_type.find(type);
-        if (operatorPrecedenceIterator == operatorPrecedenceMap_type.end()
-            || operatorPrecedenceIterator->second.leftBindingPower <= precedence) {
+        const Operator& op = operatorPrecedenceMap_type[idx];
+        if (op.leftBindingPower <= precedence) {
             break;
         }
 
-        auto ledIterator = ledLookup_types.find(type);
-        if (ledIterator == ledLookup_types.end()) {
-            ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer ::tokenTypeToString(type));
+        auto handler = ledLookup_types[idx];
+        if (!handler) {
+            ASSERT_UNREACHABLE("No type left denotation handler for token type: "
+                + lexer::tokenTypeToString(type));
         }
         // left = ledIterator->second(this, std::move(left), operatorPrecedenceMap_type[type].rightBindingPower);
-        auto handler = ledIterator->second;
-        auto rbp = operatorPrecedenceMap_type[type].rightBindingPower;
+        auto rbp = op.rightBindingPower;
         left = (this->*handler)(std::move(left), rbp);
     }
     return left;

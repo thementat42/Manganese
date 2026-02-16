@@ -185,6 +185,9 @@ enum class TokenType : uint8_t {
     At,  // `@`
     _operatorEnd,  // Marker for the end of operator token types -- not to be used as an actual token type
     Unknown,  // For truly catastrophic failures (e.g, unrecognized character)
+
+    //* Sentinel Count value for arrays
+    _tokenCount
 };
 
 }  // namespace lexer

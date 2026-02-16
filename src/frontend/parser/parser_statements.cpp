@@ -19,12 +19,11 @@ namespace Manganese {
 namespace parser {
 
 StatementUPtr_t Parser::parseStatement() NOEXCEPT_IF_RELEASE {
-    auto it = statementLookup.find(peekTokenType());
-    if (it != statementLookup.end()) {
-        // If possible, parse a statement from the current token
-        // Call the handler for the current token type
-        return (this->*(it->second))();
-    }
+    const TokenType type = peekTokenType();
+    const auto index = tokenToIndex(type);
+
+    auto handler = statementLookup[index];
+    if (handler) { return (this->*handler)(); }
 
     // Parse out an expression then convert it to a statement
     ExpressionUPtr_t expr = parseExpression(Precedence::Default);
@@ -430,7 +429,7 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
         case TokenType::Public: visibility = ast::Visibility::Public; break;
         default:
             ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
-                                  + lexer ::tokenTypeToString(peekTokenType()));
+                               + lexer ::tokenTypeToString(peekTokenType()));
     }
     size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
     switch (peekTokenType()) {

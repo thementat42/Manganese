@@ -46,22 +46,23 @@ enum class Precedence : uint8_t {
 
 struct Operator {
     Precedence leftBindingPower, rightBindingPower;
+    bool isValid = false;
 
     constexpr static Operator prefix(Precedence rightBindingPower_ = Precedence::Default) noexcept {
-        return Operator{.leftBindingPower = Precedence::Unary, .rightBindingPower = rightBindingPower_};
+        return Operator{.leftBindingPower = Precedence::Unary, .rightBindingPower = rightBindingPower_, .isValid = true};
     }
 
     constexpr static Operator postfix(Precedence leftBindingPower_ = Precedence::Default) noexcept {
-        return Operator{.leftBindingPower = leftBindingPower_, .rightBindingPower = Precedence::Postfix};
+        return Operator{.leftBindingPower = leftBindingPower_, .rightBindingPower = Precedence::Postfix, .isValid = true};
     }
 
     constexpr static Operator binary(Precedence bindingPower) noexcept {
-        return Operator{.leftBindingPower = bindingPower, .rightBindingPower = bindingPower};
+        return Operator{.leftBindingPower = bindingPower, .rightBindingPower = bindingPower, .isValid = true};
     }
 
     constexpr static Operator rightAssociative(Precedence bindingPower) noexcept {
         auto rightValue = static_cast<std::underlying_type_t<Precedence>>(bindingPower) - 1;
-        return Operator{.leftBindingPower = bindingPower, .rightBindingPower = static_cast<Precedence>(rightValue)};
+        return Operator{.leftBindingPower = bindingPower, .rightBindingPower = static_cast<Precedence>(rightValue), .isValid = true};
     }
 };
 }  // namespace parser

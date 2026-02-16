@@ -67,14 +67,14 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
         precedence = Precedence::Unary;
     }
     TokenType type = token.getType();
+    const auto index = tokenToIndex(type);
 
-    auto nudIterator = nudLookup.find(type);
-    if (nudIterator == nudLookup.end()) {
-        // TODO: This should be an error handled gracefully, not a throw
-        ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer ::tokenTypeToString(type));
+    auto nudHandler = nudLookup[index];
+    if (!nudHandler) {
+        ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
     // ExpressionUPtr_t left = nudIterator->second(this);
-    ExpressionUPtr_t left = (this->*(nudIterator->second))();
+    ExpressionUPtr_t left = (this->*nudHandler)();
 
     // ! For some reason this works
     // ! Do not delete this
@@ -88,17 +88,14 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
             precedence = Precedence::Unary;
         }
         type = token.getType();
+        const auto idx = tokenToIndex(type);
+        const Operator& op = operatorPrecedenceMap[idx];
 
-        auto precedenceIterator = operatorPrecedenceMap.find(type);
-        if (precedenceIterator == operatorPrecedenceMap.end()
-            || precedenceIterator->second.leftBindingPower <= precedence) {
-            break;
-        }
+        if (op.leftBindingPower <= precedence || !op.isValid) { break; }
 
-        auto ledIterator = ledLookup.find(type);
-        if (ledIterator == ledLookup.end()) {
-            // TODO: This should be an error handled gracefully, not a throw
-            ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer ::tokenTypeToString(type));
+        auto handler = ledLookup[idx];
+        if (!handler) {
+            ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
 
         if (type == TokenType::LeftBrace && left->kind() != ast::ExpressionKind::IdentifierExpression
@@ -115,10 +112,7 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
                      " or a block precursor (if/for/while, etc.)");
         }
         // left = ledIterator->second(this, std::move(left), precedenceIterator->second.rightBindingPower);
-        auto handler = ledIterator->second;
-        auto rbp = precedenceIterator->second.rightBindingPower;
-
-        left = (this->*handler)(std::move(left), rbp);
+        left = (this->*handler)(std::move(left), op.rightBindingPower);
     }
     return left;
 }
