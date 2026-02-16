@@ -285,6 +285,11 @@ TokenizationResult Lexer::tokenizeNumber() {
     if (processNumberSuffix(base, numberLiteral, isFloat) == TokenizationResult::Failure) {
         result = TokenizationResult::Failure;
     }
+    if (isFloat && base != Base::Decimal) {
+        logging::logError(getLine(), getCol(), "Invalid floating-point literal {}. Only decimal floats are supported.",
+                          numberLiteral);
+        result = TokenizationResult::Failure;
+    }
     tokenStream.emplace_back(isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral, numberLiteral,
                              tokenStartLine, tokenStartCol, /*invalid=*/result == TokenizationResult::Failure);
     return result;
@@ -675,12 +680,12 @@ TokenizationResult Lexer::processNumberSuffix(Base base, std::string& numberLite
 
     auto processScientificNotation = [&](char expected) -> TokenizationResult {
         if (currentChar != expected) { return TokenizationResult::Failure; }
-        
+
         numberLiteral += static_cast<char>(std::tolower(consumeChar()));
-        
+
         char next = peekChar();
         if (next == '+' || next == '-') { numberLiteral += consumeChar(); }
-        
+
         if (!std::isdigit(peekChar())) {
             logging::logError(getLine(), getCol(), "Invalid exponent: must be a number");
             return TokenizationResult::Failure;
@@ -706,12 +711,12 @@ TokenizationResult Lexer::processNumberSuffix(Base base, std::string& numberLite
             return TokenizationResult::Failure;
         }
     } else if (base == Base::Hexadecimal && isFloat) {
-        if (processScientificNotation('p') == TokenizationResult::Failure) {
-            logging::logError(getLine(), getCol(), "Invalid hexadecimal float: must have 'p' exponent");
-            return TokenizationResult::Failure;
-        }
+        // if (processScientificNotation('p') == TokenizationResult::Failure) {
+        //     logging::logError(getLine(), getCol(), "Invalid hexadecimal float: must have 'p' exponent");
+        //     return TokenizationResult::Failure;
+        // }
     } else {
-        if ((char)std::tolower(peekChar()) == 'e' || (char)std::tolower(peekChar()) == 'p') {
+        if ((char)std::tolower(peekChar()) == 'e') {  //|| (char)std::tolower(peekChar()) == 'p') {
             logging::logError(getLine(), getCol(), "{} numbers do not support exponents", baseToString(base));
         }
         while (std::isalnum(peekChar())) {
