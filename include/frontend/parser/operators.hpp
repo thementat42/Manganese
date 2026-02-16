@@ -49,11 +49,13 @@ struct Operator {
     bool isValid = false;
 
     constexpr static Operator prefix(Precedence rightBindingPower_ = Precedence::Default) noexcept {
-        return Operator{.leftBindingPower = Precedence::Unary, .rightBindingPower = rightBindingPower_, .isValid = true};
+        return Operator{
+            .leftBindingPower = Precedence::Unary, .rightBindingPower = rightBindingPower_, .isValid = true};
     }
 
     constexpr static Operator postfix(Precedence leftBindingPower_ = Precedence::Default) noexcept {
-        return Operator{.leftBindingPower = leftBindingPower_, .rightBindingPower = Precedence::Postfix, .isValid = true};
+        return Operator{
+            .leftBindingPower = leftBindingPower_, .rightBindingPower = Precedence::Postfix, .isValid = true};
     }
 
     constexpr static Operator binary(Precedence bindingPower) noexcept {
@@ -62,7 +64,9 @@ struct Operator {
 
     constexpr static Operator rightAssociative(Precedence bindingPower) noexcept {
         auto rightValue = static_cast<std::underlying_type_t<Precedence>>(bindingPower) - 1;
-        return Operator{.leftBindingPower = bindingPower, .rightBindingPower = static_cast<Precedence>(rightValue), .isValid = true};
+        return Operator{.leftBindingPower = bindingPower,
+                        .rightBindingPower = static_cast<Precedence>(rightValue),
+                        .isValid = true};
     }
 };
 }  // namespace parser
