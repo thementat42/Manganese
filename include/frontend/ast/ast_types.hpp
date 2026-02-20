@@ -28,10 +28,6 @@ enum class TypeKind {
 };
 
 /**
- * e.g. int[], float[][], etc.
- */
-
-/**
  * e.g. aggregate {int, float}
  */
 class AggregateType final : public Type {
@@ -42,6 +38,10 @@ class AggregateType final : public Type {
         Type(TypeKind::AggregateType), fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
 };
+
+/**
+ * e.g. int[], float[][], etc.
+ */
 class ArrayType final : public Type {
    public:
     TypeSPtr_t elementType;
