@@ -99,12 +99,12 @@ function(enable_strict_warnings target)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(${target} PRIVATE
             -Wall -Wextra -Werror -Wshadow -Wformat=2 -Wuninitialized -Wnull-dereference
-            -Wconversion -Wimplicit-fallthrough -Wno-unused-private-field -Wno-missing-prototypes
+            -Wconversion -Wimplicit-fallthrough 
             )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         target_compile_options(${target} PRIVATE
             -Wall -Wextra -Werror -Wshadow -Wformat=2 -Wuninitialized -Wnull-dereference
-            -Wconversion -Wimplicit-fallthrough -Wno-unused-private-field -Wno-missing-prototypes
+            -Wconversion -Wimplicit-fallthrough 
         )
     else()
             message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic warning flags.")
