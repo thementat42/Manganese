@@ -49,7 +49,7 @@ constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType ass
         case BitRShiftAssign: return BitRShift;
         default:
             ASSERT_UNREACHABLE(std ::format("Cannot convert assignment operator {} to binary operator",
-                                               lexer ::tokenTypeToString(assignmentOp)));
+                                            lexer ::tokenTypeToString(assignmentOp)));
             return Unknown;
     }
 }
@@ -177,64 +177,70 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
         case TokenType::Operator: return "Operator";
         default:
             ASSERT_UNREACHABLE("No string representation for TokenType: "
-                                  + std ::to_string(static_cast<std ::underlying_type<TokenType>::type>(type)));
+                               + std ::to_string(static_cast<std ::underlying_type<TokenType>::type>(type)));
     }
 }
 
-constexpr struct {
-    std::string_view as_str;
-    TokenType token_type;
-} keywordTable[] = {
-    {"aggregate", TokenType::Aggregate},
-    {"alias", TokenType::Alias},
-    {"as", TokenType::As},
-    {"blueprint", TokenType::Blueprint},
-    {"bool", TokenType::Bool},
-    {"break", TokenType::Break},
-    {"case", TokenType::Case},
-    {"char", TokenType::Char},
-    {"continue", TokenType::Continue},
-    {"default", TokenType::Default},
-    {"do", TokenType::Do},
-    {"elif", TokenType::Elif},
-    {"else", TokenType::Else},
-    {"enum", TokenType::Enum},
-    {"false", TokenType::False},
-    {"float", TokenType::Float32},  // if no width is specified, default to a 32-bit float
-    {"float32", TokenType::Float32},
-    {"float64", TokenType::Float64},
-    {"for", TokenType::For},
-    {"func", TokenType::Func},
-    {"if", TokenType::If},
-    {"import", TokenType::Import},
-    {"int", TokenType::Int32},  // if no width is specified, default to a 32-bit integer
-    {"int16", TokenType::Int16},
-    {"int32", TokenType::Int32},
-    {"int64", TokenType::Int64},
-    {"int8", TokenType::Int8},
-    {"lambda", TokenType::Lambda},
-    {"let", TokenType::Let},
-    {"module", TokenType::Module},
-    {"mut", TokenType::Mut},
-    {"private", TokenType::Private},
-    {"ptr", TokenType::Ptr},
-    {"public", TokenType::Public},
-    {"repeat", TokenType::Repeat},
-    {"return", TokenType::Return},
-    {"string", TokenType::String},
-    {"switch", TokenType::Switch},
-    {"true", TokenType::True},
-    {"uint", TokenType::UInt32},  // if no width is specified, default to a 32-bit unsigned integer
-    {"uint8", TokenType::UInt8},
-    {"uint16", TokenType::UInt16},
-    {"uint32", TokenType::UInt32},
-    {"uint64", TokenType::UInt64},
-    {"while", TokenType::While},
+struct keyword_map_entry {
+    std::string_view str;
+    TokenType type;
+};
+
+// let template argument deduction figure out the size (more flexible for adding/removing keywords)
+constexpr std::array keywordTable = {
+    keyword_map_entry{"aggregate", TokenType::Aggregate},
+    keyword_map_entry{"alias", TokenType::Alias},
+    keyword_map_entry{"as", TokenType::As},
+    keyword_map_entry{"blueprint", TokenType::Blueprint},
+    keyword_map_entry{"bool", TokenType::Bool},
+    keyword_map_entry{"break", TokenType::Break},
+    keyword_map_entry{"case", TokenType::Case},
+    keyword_map_entry{"char", TokenType::Char},
+    keyword_map_entry{"continue", TokenType::Continue},
+    keyword_map_entry{"default", TokenType::Default},
+    keyword_map_entry{"do", TokenType::Do},
+    keyword_map_entry{"elif", TokenType::Elif},
+    keyword_map_entry{"else", TokenType::Else},
+    keyword_map_entry{"enum", TokenType::Enum},
+    keyword_map_entry{"false", TokenType::False},
+    // if no width is specified, default to a 32-bit float
+    keyword_map_entry{"float", TokenType::Float32},
+    keyword_map_entry{"float32", TokenType::Float32},
+    keyword_map_entry{"float64", TokenType::Float64},
+    keyword_map_entry{"for", TokenType::For},
+    keyword_map_entry{"func", TokenType::Func},
+    keyword_map_entry{"if", TokenType::If},
+    keyword_map_entry{"import", TokenType::Import},
+    // if no width is specified, default to a 32-bit integer
+    keyword_map_entry{"int", TokenType::Int32},
+    keyword_map_entry{"int16", TokenType::Int16},
+    keyword_map_entry{"int32", TokenType::Int32},
+    keyword_map_entry{"int64", TokenType::Int64},
+    keyword_map_entry{"int8", TokenType::Int8},
+    keyword_map_entry{"lambda", TokenType::Lambda},
+    keyword_map_entry{"let", TokenType::Let},
+    keyword_map_entry{"module", TokenType::Module},
+    keyword_map_entry{"mut", TokenType::Mut},
+    keyword_map_entry{"private", TokenType::Private},
+    keyword_map_entry{"ptr", TokenType::Ptr},
+    keyword_map_entry{"public", TokenType::Public},
+    keyword_map_entry{"repeat", TokenType::Repeat},
+    keyword_map_entry{"return", TokenType::Return},
+    keyword_map_entry{"string", TokenType::String},
+    keyword_map_entry{"switch", TokenType::Switch},
+    keyword_map_entry{"true", TokenType::True},
+    // if no width is specified, default to a 32-bit unsigned integer
+    keyword_map_entry{"uint", TokenType::UInt32},
+    keyword_map_entry{"uint8", TokenType::UInt8},
+    keyword_map_entry{"uint16", TokenType::UInt16},
+    keyword_map_entry{"uint32", TokenType::UInt32},
+    keyword_map_entry{"uint64", TokenType::UInt64},
+    keyword_map_entry{"while", TokenType::While},
 };
 
 constexpr inline TokenType keyword_lookup(const std::string_view& s) noexcept {
     for (const auto& p : keywordTable) {
-        if (p.as_str == s) { return p.token_type; }
+        if (p.str == s) { return p.type; }
     }
     return TokenType::Unknown;
 }
