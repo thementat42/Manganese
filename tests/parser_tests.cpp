@@ -119,30 +119,21 @@ bool validateStatement(const ast::Block& block, const std::string& expected, con
 bool testArithmeticOperatorsAndCasting() {
     // Test all arithmetic operators including their precedence and associativity
     // Also test type casting with 'as' operator
-    std::string expression = "8 - 4 + 6 * 2 // 5 % 3 ^^ 2 ^^ 2 / 7 as float32;";
-    std::string expected = "(((8 - 4) + ((((6 * 2) // 5) % (3 ^^ (2 ^^ 2))) / 7)) as float32);";
+    std::string expression = "8 - 4 + 6 * 2 // 5 % 3 * 2 * 2 / 7 as float32;";
+    std::string expected = "(((8 - 4) + ((((((6 * 2) // 5) % 3) * 2) * 2) / 7)) as float32);";
 
     return validateStatement(getParserResults(expression), expected, "Arithmetic Operators and Casting");
-}
-
-bool testExponentiationAssociativity() {
-    // Test that exponentiation is right-associative:
-    // i.e. Evaluate the exponent before grouping it with the base
-    std::string expression = "2 ^^ 3 ^^ 2;";
-    std::string expected = "(2 ^^ (3 ^^ 2));";
-
-    return validateStatement(getParserResults(expression), expected, "Exponentiation Associativity");
 }
 
 bool testVariableDeclaration() {
     std::string expression = "let mut foo = 45.5a;"
                              "let mut bar = foo * 10;"
-                             "let baz : public uint32 = foo + 10 ^^ 2 * bar + foo % 7 + foo^^2;"
+                             "let baz : public uint32 = foo + 10 * 2 * bar + foo % 7 + foo*2;"
                              "let boolean = true;";
 
     std::array<std::string, 4> expected
         = {"(let mut foo: private auto = 45.5);", "(let mut bar: private auto = (foo * 10));",
-           "(let baz: public uint32 = (((foo + ((10 ^^ 2) * bar)) + (foo % 7)) + (foo ^^ 2)));",
+           "(let baz: public uint32 = (((foo + ((10 * 2) * bar)) + (foo % 7)) + (foo * 2)));",
            "(let boolean: private auto = true);"};
 
     return validateStatements(getParserResults(expression), expected, "Variable Declaration");
@@ -156,9 +147,8 @@ bool testAssignmentExpressions() {
                              "e *= f + 1;\n"
                              "g /= h - -2;\n"
                              "i %= 4;\n"
-                             "j ^^= 2;\n"
                              "k //= 3;"
-                             "l = (3 + 4) * 2 - (1 + 1) ^^ 5;"
+                             "l = (3 + 4) * 2 - (1 + 1) * 5;"
                              "a &= b;\n"
                              "c |= d;\n"
                              "e ^= f;\n"
@@ -168,11 +158,11 @@ bool testAssignmentExpressions() {
                              "m |= n & p;\n"
                              "x ^= ~y;\n";
 
-    std::array<std::string, 18> expected = {"(a = 5);",        "(b += 3);",
+    std::array<std::string, 17> expected = {"(a = 5);",        "(b += 3);",
                                             "(c -= (2 * b));", "(d = (-(c + 3)));",
                                             "(e *= (f + 1));", "(g /= (h - (-2)));",
-                                            "(i %= 4);",       "(j ^^= 2);",
-                                            "(k //= 3);",      "(l = (((3 + 4) * 2) - ((1 + 1) ^^ 5)));",
+                                            "(i %= 4);",       
+                                            "(k //= 3);",      "(l = (((3 + 4) * 2) - ((1 + 1) * 5)));",
                                             "(a &= b);",       "(c |= d);",
                                             "(e ^= f);",       "(g <<= 2);",
                                             "(h >>= 3);",      "(i &= (j | k));",
@@ -201,11 +191,11 @@ bool testParenthesizedExpressions() {
     std::string expression = "(2 + 3) * 4;\n"
                              "2 * (3 + 4);\n"
                              "((5 + 2) * (8 - 3)) / 2;\n"
-                             "1 + (2 ^^ (3 + 1));\n"
+                             "1 + (2 * (3 + 1));\n"
                              "((2 + 3) * 4) - (6 / (1 + 1));";
 
     std::array<std::string, 5> expected = {"((2 + 3) * 4);", "(2 * (3 + 4));", "(((5 + 2) * (8 - 3)) / 2);",
-                                           "(1 + (2 ^^ (3 + 1)));", "(((2 + 3) * 4) - (6 / (1 + 1)));"};
+                                           "(1 + (2 * (3 + 1)));", "(((2 + 3) * 4) - (6 / (1 + 1)));"};
 
     return validateStatements(getParserResults(expression), expected, "Parenthesized Expressions");
 }
@@ -228,11 +218,11 @@ bool testTypedVariableDeclaration() {
     std::string expression = "let mut x: int32 = 42;\n"
                              "let y: public float64 = 3.14159;\n"
                              "let mut z: char = 'A';\n"
-                             "let mut numbers: int32[3^^2];\n"
+                             "let mut numbers: int32[3*2];\n"
                              "let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
     std::array<std::string, 5> expected = {"(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);",
-                                           "(let mut z: private char = 'A');", "(let mut numbers: private int32[(3 ^^ 2)]);",
+                                           "(let mut z: private char = 'A');", "(let mut numbers: private int32[(3 * 2)]);",
                                            "(let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     return validateStatements(getParserResults(expression), expected, "Typed Variable Declarations");
@@ -343,12 +333,12 @@ bool testLoops() {
                              "    print(j--);"
                              "    if (j <= 0) { break; }"
                              "}"
-                             "repeat ((5 + 30 - 2 ^^ 3) << 2) {print(\"Hello\");}";
+                             "repeat ((5 + 30 - 2 * 3) << 2) {print(\"Hello\");}";
 
     std::array<std::string, 5> expected = {
         "(let i: private auto = 0);", "do {\n\t(++i);\n\tprint(i);\n} while ((i < 5));", "(let j: private int32 = 10);",
         "while (true) {\n\tif ((j == 5)) {\n\tcontinue;\n}\n\tprint((j--));\n\tif ((j <= 0)) {\n\tbreak;\n}\n}",
-        "repeat ((((5 + 30) - (2 ^^ 3)) << 2)) {\n\tprint(\"Hello\");\n}"};
+        "repeat ((((5 + 30) - (2 * 3)) << 2)) {\n\tprint(\"Hello\");\n}"};
 
     return validateStatements(getParserResults(expression), expected, "Loops");
 }
@@ -512,7 +502,6 @@ int runParserTests(TestRunner& runner) {
     logFile.close();  // Here, we don't really care if the clearing failed
 
     runner.runTest("Arithmetic Expression and Casting", testArithmeticOperatorsAndCasting);
-    runner.runTest("Exponentiation Right Associativity", testExponentiationAssociativity);
     runner.runTest("Variable Declaration", testVariableDeclaration);
     runner.runTest("Assignment Expressions", testAssignmentExpressions);
     runner.runTest("Prefix Operators", testPrefixOperators);

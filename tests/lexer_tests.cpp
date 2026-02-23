@@ -201,9 +201,9 @@ bool testStringLiterals() {
 
 bool testOperators() {
     auto tokens = tokensFromString(
-        "+ - * / // % ^^ ++ -- += -= *= /= //= %= ^^= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
+        "+ - * / // % ++ -- += -= *= /= //= %= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
     printAllTokens(tokens);
-    if (tokens.size() != 44) {
+    if (tokens.size() != 42) {
         std::cout << "Expected 44 tokens, got " << tokens.size() << '\n';
         return false;
     }
@@ -211,28 +211,27 @@ bool testOperators() {
     return checkToken(tokens[0], TokenType::Plus, "+") && checkToken(tokens[1], TokenType::Minus, "-")
         && checkToken(tokens[2], TokenType::Mul, "*") && checkToken(tokens[3], TokenType::Div, "/")
         && checkToken(tokens[4], TokenType::FloorDiv, "//") && checkToken(tokens[5], TokenType::Mod, "%")
-        && checkToken(tokens[6], TokenType::Exp, "^^") && checkToken(tokens[7], TokenType::Inc, "++")
-        && checkToken(tokens[8], TokenType::Dec, "--") && checkToken(tokens[9], TokenType::PlusAssign, "+=")
-        && checkToken(tokens[10], TokenType::MinusAssign, "-=") && checkToken(tokens[11], TokenType::MulAssign, "*=")
-        && checkToken(tokens[12], TokenType::DivAssign, "/=")
-        && checkToken(tokens[13], TokenType::FloorDivAssign, "//=")
-        && checkToken(tokens[14], TokenType::ModAssign, "%=") && checkToken(tokens[15], TokenType::ExpAssign, "^^=")
-        && checkToken(tokens[16], TokenType::Equal, "==") && checkToken(tokens[17], TokenType::NotEqual, "!=")
-        && checkToken(tokens[18], TokenType::And, "&&") && checkToken(tokens[19], TokenType::Or, "||")
-        && checkToken(tokens[20], TokenType::Not, "!") && checkToken(tokens[21], TokenType::BitAnd, "&")
-        && checkToken(tokens[22], TokenType::BitOr, "|") && checkToken(tokens[23], TokenType::BitNot, "~")
-        && checkToken(tokens[24], TokenType::BitXor, "^") && checkToken(tokens[25], TokenType::BitAndAssign, "&=")
-        && checkToken(tokens[26], TokenType::BitOrAssign, "|=") && checkToken(tokens[27], TokenType::BitNotAssign, "~=")
-        && checkToken(tokens[28], TokenType::BitXorAssign, "^=") && checkToken(tokens[29], TokenType::MemberAccess, ".")
-        && checkToken(tokens[30], TokenType::Colon, ":") && checkToken(tokens[31], TokenType::ScopeResolution, "::")
-        && checkToken(tokens[32], TokenType::Assignment, "=") && checkToken(tokens[33], TokenType::Arrow, "->")
-        && checkToken(tokens[34], TokenType::Ellipsis, "...") && checkToken(tokens[35], TokenType::At, "@")
-        && checkToken(tokens[36], TokenType::LessThan, "<") && checkToken(tokens[37], TokenType::LessThanOrEqual, "<=")
-        && checkToken(tokens[38], TokenType::GreaterThan, ">")
-        && checkToken(tokens[39], TokenType::GreaterThanOrEqual, ">=")
-        && checkToken(tokens[40], TokenType::BitLShift, "<<") && checkToken(tokens[41], TokenType::BitRShift, ">>")
-        && checkToken(tokens[42], TokenType::BitLShiftAssign, "<<=")
-        && checkToken(tokens[43], TokenType::BitRShiftAssign, ">>=");
+        && checkToken(tokens[6], TokenType::Inc, "++") && checkToken(tokens[7], TokenType::Dec, "--")
+        && checkToken(tokens[8], TokenType::PlusAssign, "+=") && checkToken(tokens[9], TokenType::MinusAssign, "-=")
+        && checkToken(tokens[10], TokenType::MulAssign, "*=") && checkToken(tokens[11], TokenType::DivAssign, "/=")
+        && checkToken(tokens[12], TokenType::FloorDivAssign, "//=")
+        && checkToken(tokens[13], TokenType::ModAssign, "%=") && checkToken(tokens[14], TokenType::Equal, "==")
+        && checkToken(tokens[15], TokenType::NotEqual, "!=") && checkToken(tokens[16], TokenType::And, "&&")
+        && checkToken(tokens[17], TokenType::Or, "||") && checkToken(tokens[18], TokenType::Not, "!")
+        && checkToken(tokens[19], TokenType::BitAnd, "&") && checkToken(tokens[20], TokenType::BitOr, "|")
+        && checkToken(tokens[21], TokenType::BitNot, "~") && checkToken(tokens[22], TokenType::BitXor, "^")
+        && checkToken(tokens[23], TokenType::BitAndAssign, "&=") && checkToken(tokens[24], TokenType::BitOrAssign, "|=")
+        && checkToken(tokens[25], TokenType::BitNotAssign, "~=")
+        && checkToken(tokens[26], TokenType::BitXorAssign, "^=") && checkToken(tokens[27], TokenType::MemberAccess, ".")
+        && checkToken(tokens[28], TokenType::Colon, ":") && checkToken(tokens[29], TokenType::ScopeResolution, "::")
+        && checkToken(tokens[30], TokenType::Assignment, "=") && checkToken(tokens[31], TokenType::Arrow, "->")
+        && checkToken(tokens[32], TokenType::Ellipsis, "...") && checkToken(tokens[33], TokenType::At, "@")
+        && checkToken(tokens[34], TokenType::LessThan, "<") && checkToken(tokens[35], TokenType::LessThanOrEqual, "<=")
+        && checkToken(tokens[36], TokenType::GreaterThan, ">")
+        && checkToken(tokens[37], TokenType::GreaterThanOrEqual, ">=")
+        && checkToken(tokens[38], TokenType::BitLShift, "<<") && checkToken(tokens[39], TokenType::BitRShift, ">>")
+        && checkToken(tokens[40], TokenType::BitLShiftAssign, "<<=")
+        && checkToken(tokens[41], TokenType::BitRShiftAssign, ">>=");
 }
 
 bool testBrackets() {

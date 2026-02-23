@@ -66,12 +66,6 @@ Notes:
 %
     int % int -> int
 
-^^
-    int ^^ int -> int
-    int ^^ float -> float
-    float ^^ int -> float
-    float ^^ float -> float
-
 ++
     ++int -> int
     int++ -> int

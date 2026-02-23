@@ -204,14 +204,6 @@ class Parser {
 
     /**
      * @brief Register a left denotation handler for `type`
-     * @param type The token type associated with the handler (a right-associative operator)
-     * @param precedence How strongly that operator binds to its neighbour(s)
-     * @param handler The function to call when the token type is encountered
-     */
-    constexpr void registerLedHandler_rightAssoc(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
-
-    /**
-     * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a postfix operator)
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered

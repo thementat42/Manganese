@@ -67,7 +67,7 @@ int_suffix = ("u" | "U") (("l" | "L") | ("ll" | "LL"))? |
 float_suffix = "f" | "F" | "d" | "D";
 
 #* Operators
-arithmetic_op = "+" | "-" | "*" | "/" | "//" | "%" | "^^";  # ^^ is exponentiation
+arithmetic_op = "+" | "-" | "*" | "/" | "//" | "%";
 comparison_op = "<" | "<=" | ">" | ">=" | "==" | "!=";
 boolean_op = "&&" | "||" | "!";
 bitwise_op = "&" | "|" | "~" | "^" | "<<" | ">>";

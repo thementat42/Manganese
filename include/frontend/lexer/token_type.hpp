@@ -124,7 +124,6 @@ enum class TokenType : uint8_t {
     Div,  // `/`
     FloorDiv,  // `//`
     Mod,  // `%`
-    Exp,  // `^^`
     Inc,  // `++`
     Dec,  // `--`
     UnaryPlus,  // `+` (unary plus)
@@ -138,7 +137,6 @@ enum class TokenType : uint8_t {
     DivAssign,  // `/=`
     FloorDivAssign,  // `//=`
     ModAssign,  // `%=`
-    ExpAssign,  // `^^=`
 
     //* Comparison Operators
     GreaterThan,  // `>`

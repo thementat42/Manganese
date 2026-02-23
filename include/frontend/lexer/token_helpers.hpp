@@ -41,7 +41,6 @@ constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType ass
         case DivAssign: return Div;
         case FloorDivAssign: return FloorDiv;
         case ModAssign: return Mod;
-        case ExpAssign: return Exp;
         case BitAndAssign: return BitAnd;
         case BitOrAssign: return BitOr;
         case BitXorAssign: return BitXor;
@@ -131,7 +130,6 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
         case TokenType::Div: return "/";
         case TokenType::FloorDiv: return "//";
         case TokenType::Mod: return "%";
-        case TokenType::Exp: return "^^";
         case TokenType::Inc: return "++";
         case TokenType::Dec: return "--";
         case TokenType::UnaryPlus: return "+";
@@ -142,7 +140,6 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
         case TokenType::DivAssign: return "/=";
         case TokenType::FloorDivAssign: return "//=";
         case TokenType::ModAssign: return "%=";
-        case TokenType::ExpAssign: return "^^=";
         case TokenType::GreaterThan: return ">";
         case TokenType::GreaterThanOrEqual: return ">=";
         case TokenType::LessThan: return "<";

@@ -419,12 +419,14 @@ TokenizationResult Lexer::tokenizeSymbol() {
                 // Bitwise assignment operator (^=)
                 lexeme += '=';
                 type = TokenType::BitXorAssign;
-            } else if (next == '^') {
-                // Exponentiation operator (^^)
-                lexeme += '^';
-                lexeme += (nextnext == '=') ? "=" : "";  // ^^=, in place exponentiation
-                type = (nextnext == '=') ? TokenType::ExpAssign : TokenType::Exp;
-            } else {
+            }
+            // else if (next == '^') {
+            //     // Exponentiation operator (^^)
+            //     lexeme += '^';
+            //     lexeme += (nextnext == '=') ? "=" : "";  // ^^=, in place exponentiation
+            //     type = (nextnext == '=') ? TokenType::ExpAssign : TokenType::Exp;
+            // }
+            else {
                 type = TokenType::BitXor;
             }
             break;

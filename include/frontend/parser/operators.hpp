@@ -61,13 +61,6 @@ struct Operator {
     constexpr static Operator binary(Precedence bindingPower) noexcept {
         return Operator{.leftBindingPower = bindingPower, .rightBindingPower = bindingPower, .isValid = true};
     }
-
-    constexpr static Operator rightAssociative(Precedence bindingPower) noexcept {
-        auto rightValue = static_cast<std::underlying_type_t<Precedence>>(bindingPower) - 1;
-        return Operator{.leftBindingPower = bindingPower,
-                        .rightBindingPower = static_cast<Precedence>(rightValue),
-                        .isValid = true};
-    }
 };
 }  // namespace parser
 }  // namespace Manganese

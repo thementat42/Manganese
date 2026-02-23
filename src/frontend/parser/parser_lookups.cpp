@@ -16,11 +16,6 @@ constexpr void Parser::registerLedHandler_binary(TokenType type, Precedence bind
     operatorPrecedenceMap[_index] = Operator::binary(bindingPower);
     ledLookup[_index] = handler;
 }
-constexpr void Parser::registerLedHandler_rightAssoc(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap[_index] = Operator::rightAssociative(bindingPower);
-    ledLookup[_index] = handler;
-}
 constexpr void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::postfix(bindingPower);
@@ -81,7 +76,6 @@ void Parser::initializeLookups() noexcept {
     registerLedHandler_binary(BitRShiftAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(BitXorAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(DivAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
-    registerLedHandler_binary(ExpAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(FloorDivAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(MinusAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(ModAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
@@ -110,7 +104,6 @@ void Parser::initializeLookups() noexcept {
     registerLedHandler_binary(Minus, Precedence::Additive, &Parser::parseBinaryExpression);
     registerLedHandler_binary(Mod, Precedence::Multiplicative, &Parser::parseBinaryExpression);
     registerLedHandler_binary(Mul, Precedence::Multiplicative, &Parser::parseBinaryExpression);
-    registerLedHandler_rightAssoc(Exp, Precedence::Exponential, &Parser::parseBinaryExpression);
     registerLedHandler_binary(Or, Precedence::LogicalOr, &Parser::parseBinaryExpression);
     registerLedHandler_binary(Plus, Precedence::Additive, &Parser::parseBinaryExpression);
 
