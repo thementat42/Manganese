@@ -81,12 +81,12 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
     return processed;
 }
 
-TokenizationResult Lexer::processCharEscapeSequence(const std::string& charLiteral) {
+Result Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
         logging::logError(getLine(), getCol(), "Invalid character literal", charLiteral);
         tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), /*invalid=*/true);
-        return TokenizationResult::Failure;
+        return Result::Failure;
     }
     std::string processed = *resolved;
     // For escaped characters, we need to check if it represents a single code point
@@ -99,13 +99,13 @@ TokenizationResult Lexer::processCharEscapeSequence(const std::string& charLiter
             (byteCount == 3 && (firstByte & 0xF0) == 0xE0) ||  // 3-byte UTF-8 character
             (byteCount == 4 && (firstByte & 0xF8) == 0xF0);  // 4-byte UTF-8 character
     }
-    TokenizationResult result = TokenizationResult::Success;
+    Result result = Result::Success;
     if (!isValidSingleCodePoint) {
         logging::logError(getLine(), getCol(), "Invalid character literal ", charLiteral);
-        result = TokenizationResult::Failure;
+        result = Result::Failure;
     }
     tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol(),
-                             /*invalid=*/result == TokenizationResult::Failure);
+                             /*invalid=*/result == Result::Failure);
     return result;
 }
 

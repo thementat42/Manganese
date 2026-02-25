@@ -23,6 +23,7 @@
 #include <optional>
 #include <string>
 #include <utils/number_utils.hpp>
+#include <utils/result.hpp>
 
 namespace Manganese {
 namespace lexer {
@@ -37,11 +38,6 @@ struct NumberPrefixResult {
     Base base;
     std::function<bool(char)> isValidBaseChar;
     std::string prefix;
-};
-
-enum class TokenizationResult {
-    Success,
-    Failure,
 };
 
 //~ Static helper functions
@@ -136,34 +132,34 @@ class Lexer {
     /**
      * @brief Process a character literal and generate a token. Triggered when a single quote (') is encountered
      */
-    TokenizationResult tokenizeCharLiteral();
+    Result tokenizeCharLiteral();
 
     /**
      * @brief Process any sequence of alphanumeric characters and underscores
      * @details If the sequence is a keyword (e.g. "if"), it will be tokenized as such
      */
-    TokenizationResult tokenizeKeywordOrIdentifier();
+    Result tokenizeKeywordOrIdentifier();
 
     /**
      * @brief Process a number literal and generate a token
      */
-    TokenizationResult tokenizeNumber();
+    Result tokenizeNumber();
 
     /**
      * @brief Skip over a block comment
      * @note Allows for nested block comments
      */
-    TokenizationResult skipBlockComment();
+    Result skipBlockComment();
 
     /**
      * @brief Process a string literal and generate a token. Triggered when a double quote (") is encountered
      */
-    TokenizationResult tokenizeStringLiteral();
+    Result tokenizeStringLiteral();
 
     /**
      * @brief Process any character that is neither alphanumeric, a number, an underscore, quotes or whitespace (e.g. +)
      */
-    TokenizationResult tokenizeSymbol();
+    Result tokenizeSymbol();
 
     //~ Helper functions
 
@@ -181,7 +177,7 @@ class Lexer {
      * @param numberLiteral The lexeme for the number literal (the base prefix will be appended if there is one)
      * @param isFloat Whether the number literal is a float (e.g., 1.23f)
      */
-    TokenizationResult processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat);
+    Result processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat);
 
     /**
      * @brief Replaces raw escape sequences in a string with their corresponding characters (e.g. "\n" (literally)
@@ -195,7 +191,7 @@ class Lexer {
      * @brief Helper function specifically to handle escape sequences in char literals
      * @param charLiteral The char literal to process
      */
-    TokenizationResult processCharEscapeSequence(const std::string& charLiteral);
+    Result processCharEscapeSequence(const std::string& charLiteral);
 
     //~ Reader wrapper functions
 

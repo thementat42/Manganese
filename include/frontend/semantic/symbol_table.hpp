@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include "utils/result.hpp"
+
 namespace Manganese {
 namespace semantic {
 
@@ -47,7 +49,10 @@ struct Symbol {
 
 struct Scope {
     std::unordered_map<std::string, Symbol> symbols;
-    inline bool insert(Symbol&& symbol) { return symbols.emplace(symbol.name, std::move(symbol)).second; }
+    inline Result insert(Symbol&& symbol) {
+        bool result = symbols.emplace(symbol.name, std::move(symbol)).second;
+        return result ? Result::Success : Result::Failure;
+    }
 
     const Symbol* lookup(const std::string& name) const noexcept {
         auto it = symbols.find(name);
@@ -81,10 +86,10 @@ class SymbolTable {
         // since we're doing multiple passes, we want to preserve scope information between passes
         --_currentDepth;
     }
-    bool declare(Symbol symbol) {
+    Result declare(Symbol symbol) {
         if (_scopes.empty()) [[unlikely]] {
             logging::logInternal(logging::LogLevel::Error, "No active scope in which to declare a symbol");
-            return false;
+            return Result::Failure;
         }
         symbol.scopeDepth = getCurrentDepth();
         return _scopes[getCurrentDepth()].insert(std::move(symbol));
