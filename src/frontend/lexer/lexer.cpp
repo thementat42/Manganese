@@ -362,7 +362,7 @@ Result Lexer::tokenizeStringLiteral() {
         if (!processedString) {
             result = Result::Failure;
         } else {
-            stringLiteral = std::move(processedString.value());
+            stringLiteral = std::move(*processedString);
         }
     }
     tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol,
