@@ -16,7 +16,8 @@
 namespace Manganese {
 namespace parser {
 
-Parser::Parser(const std::string& source, lexer::Mode mode) : lexer(make_unique<lexer::Lexer>(source, mode)) {
+Parser::Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& _arena) :
+    lexer(make_unique<lexer::Lexer>(source, mode)), arena(_arena) {
     if (lexer->hasCriticalError()) {
         this->hasCriticalError_ = true;
         return;
@@ -41,9 +42,7 @@ ParsedFile Parser::parse() {
         previousToken.reset();
     }
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
-    return ParsedFile{.moduleName = moduleName,
-                      .imports = std::move(imports),
-                      .program = std::move(program)};
+    return ParsedFile{.moduleName = moduleName, .imports = std::move(imports), .program = std::move(program)};
 }
 
 // ===== Helper functions =====
@@ -74,7 +73,9 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
     //, skipping any other logic in the conditional
     TokenType type = peekTokenType();
     if (type == expectedType) { return consumeToken(); }
-    std::cerr << errorMessage << std::format(" (expected {}, but got {}) ", lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(type));
+    std::cerr << errorMessage
+              << std::format(" (expected {}, but got {}) ", lexer::tokenTypeToString(expectedType),
+                             lexer::tokenTypeToString(type));
     hasError = true;
 
     return consumeToken();

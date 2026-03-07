@@ -1,6 +1,7 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BLOCK_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BLOCK_HPP
 
+#include <type_traits>
 #include <vector>
 
 #include "ast_base.hpp"
@@ -14,7 +15,7 @@ namespace ast {
  */
 class Block final {
    private:
-    using block_t = std::vector<StatementUPtr_t>;
+    using block_t = std::vector<Statement*>;
     block_t block;
 
    public:
@@ -30,8 +31,6 @@ class Block final {
     using const_iterator = block_t::const_iterator;
     using reverse_iterator = block_t::reverse_iterator;
     using const_reverse_iterator = block_t::const_reverse_iterator;
-
-    TypeSPtr_t blockType;
 
    public:
     constexpr const block_t& get_block() const noexcept { return block; }
@@ -80,8 +79,12 @@ class Block final {
 
     //~ Modifiers
     constexpr FORCE_INLINE void clear() noexcept { block.clear(); }
-    constexpr FORCE_INLINE void push_back(const value_type& value) = delete;  // Can't copy a unique_ptr
-    constexpr FORCE_INLINE void push_back(value_type&& value) { block.push_back(std::move(value)); }
+
+    template <class Node>
+        requires(std::is_base_of_v<Statement, Node>)
+    constexpr FORCE_INLINE void push_back(Node* value) {
+        block.push_back(value);
+    }
 
     template <class... Args>
     constexpr FORCE_INLINE reference emplace_back(Args&&... args) {

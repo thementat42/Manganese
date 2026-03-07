@@ -71,8 +71,6 @@ class Visitor {
     FORCE_INLINE exprvisit_t visit(ast::ExpressionUPtr_t& expr) { return visit(expr.get()); }
 
     stmtvisit_t visit(ast::Statement*);
-    // A wrapper around visit(Statement*) to handle a unique pointer
-    FORCE_INLINE stmtvisit_t visit(ast::StatementUPtr_t& stmt) { return visit(stmt.get()); }
 
     typevisit_t visit(ast::Type*);
     // A wrapper around visit(Type*) to handle a unique pointer

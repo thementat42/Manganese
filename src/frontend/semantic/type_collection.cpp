@@ -1,7 +1,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <global_macros.hpp>
-#include <memory>
 
 namespace Manganese {
 
@@ -88,22 +87,22 @@ void analyzer::_collectTypesInStatementBody(ast::Statement* stmt) {
         }
         case FunctionDeclarationStatement: {
             auto _stmtWithBody = static_cast<ast::FunctionDeclarationStatement*>(stmt);
-            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement.get()); }
+            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement); }
             break;
         }
         case IfStatement: {
             auto _stmtWithBody = static_cast<ast::IfStatement*>(stmt);
-            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement.get()); }
+            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement); }
             break;
         }
         case RepeatLoopStatement: {
             auto _stmtWithBody = static_cast<ast::RepeatLoopStatement*>(stmt);
-            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement.get()); }
+            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement); }
             break;
         }
         case WhileLoopStatement: {
             auto _stmtWithBody = static_cast<ast::WhileLoopStatement*>(stmt);
-            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement.get()); }
+            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement); }
             break;
         }
         default: ASSERT_UNREACHABLE("");

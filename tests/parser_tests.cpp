@@ -10,17 +10,17 @@
  * @see testrunner.hpp
  */
 
-#include <frontend/parser.hpp>
-#include <global_macros.hpp>
-
 #include <array>
 #include <filesystem>
-#include <iostream>
-#include <memory>
-#include <string>
+#include <frontend/parser.hpp>
 #include <fstream>
+#include <global_macros.hpp>
+#include <iostream>
+#include <string>
 
+#include "frontend/parser/parser_base.hpp"
 #include "testrunner.hpp"
+
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
@@ -30,9 +30,10 @@ namespace Manganese {
 namespace tests {
 
 static const char* logFileName = "logs/parser_tests.log";
+mnstl::chunk_allocator alloc;
 
 ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
-    parser::Parser parser(source, mode);
+    parser::Parser parser(source, mode, alloc);
     if (parser.hasCriticalError()) { throw std::runtime_error("Compilation Aborted\n"); }
     parser::ParsedFile file = parser.parse();
 
@@ -158,15 +159,13 @@ bool testAssignmentExpressions() {
                              "m |= n & p;\n"
                              "x ^= ~y;\n";
 
-    std::array<std::string, 17> expected = {"(a = 5);",        "(b += 3);",
-                                            "(c -= (2 * b));", "(d = (-(c + 3)));",
-                                            "(e *= (f + 1));", "(g /= (h - (-2)));",
-                                            "(i %= 4);",       
-                                            "(k //= 3);",      "(l = (((3 + 4) * 2) - ((1 + 1) * 5)));",
-                                            "(a &= b);",       "(c |= d);",
-                                            "(e ^= f);",       "(g <<= 2);",
-                                            "(h >>= 3);",      "(i &= (j | k));",
-                                            "(m |= (n & p));", "(x ^= (~y));"};
+    std::array<std::string, 17> expected
+        = {"(a = 5);",          "(b += 3);",       "(c -= (2 * b));",
+           "(d = (-(c + 3)));", "(e *= (f + 1));", "(g /= (h - (-2)));",
+           "(i %= 4);",         "(k //= 3);",      "(l = (((3 + 4) * 2) - ((1 + 1) * 5)));",
+           "(a &= b);",         "(c |= d);",       "(e ^= f);",
+           "(g <<= 2);",        "(h >>= 3);",      "(i &= (j | k));",
+           "(m |= (n & p));",   "(x ^= (~y));"};
 
     return validateStatements(getParserResults(expression), expected, "Assignment Expressions");
 }
@@ -221,9 +220,9 @@ bool testTypedVariableDeclaration() {
                              "let mut numbers: int32[3*2];\n"
                              "let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
-    std::array<std::string, 5> expected = {"(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);",
-                                           "(let mut z: private char = 'A');", "(let mut numbers: private int32[(3 * 2)]);",
-                                           "(let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
+    std::array<std::string, 5> expected = {
+        "(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);", "(let mut z: private char = 'A');",
+        "(let mut numbers: private int32[(3 * 2)]);", "(let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     return validateStatements(getParserResults(expression), expected, "Typed Variable Declarations");
 }
@@ -473,7 +472,8 @@ bool testImportsAndAliases() {
 
 bool testParseFromFile() {
     std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
-    parser::Parser p(fullPath.string(), lexer::Mode::File);
+    mnstl::chunk_allocator file_allocator{};
+    parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
     auto x = p.parse();
     if (!x.moduleName.empty()) { std::cout << "module " << x.moduleName << ";\n"; }
     for (const auto& element : x.imports) { std::cout << parser::importToString(element) << "\n"; }

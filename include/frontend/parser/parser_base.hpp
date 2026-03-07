@@ -20,13 +20,14 @@
 #include <string>
 #include <utils/number_utils.hpp>
 #include <vector>
+#include <mnstl/chunk_allocator.hxx>
 
 #include "frontend/ast/ast_base.hpp"
 #include "operators.hpp"
 
 namespace Manganese {
 namespace parser {
-using ast::StatementUPtr_t, ast::ExpressionUPtr_t, ast::TypeSPtr_t;
+using ast::ExpressionUPtr_t, ast::TypeSPtr_t;
 using lexer::TokenType, lexer::Token;
 
 struct Import {
@@ -53,6 +54,7 @@ class Parser {
 
     std::string moduleName;
     std::vector<Import> imports;
+    mnstl::chunk_allocator& arena;
 
     // Some flags
     bool hasParsedFileHeader = false;  // Processing module and import
@@ -61,8 +63,7 @@ class Parser {
     bool isParsingBlockPrecursor = false;  // Used to determine if we are parsing a block precursor (if/for/while, etc.)
 
    public:  // public methods
-    Parser() = default;
-    Parser(const std::string& source, lexer::Mode mode);
+    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& arena);
     
     // Avoid file ownership issues
     Parser(const Parser&) = delete;
@@ -76,7 +77,7 @@ class Parser {
     bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
    private:  // private methods
-    using statementHandler_t = StatementUPtr_t (Parser::*)();
+    using statementHandler_t = ast::Statement* (Parser::*)();
     using nudHandler_t = ExpressionUPtr_t (Parser::*)();
     using nudHandler_types_t = TypeSPtr_t (Parser::*)();
     using ledHandler_t = ExpressionUPtr_t (Parser::*)(ExpressionUPtr_t, Precedence);
@@ -114,28 +115,28 @@ class Parser {
     ExpressionUPtr_t parseTypeCastExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
 
     // ===== Statement Parsing =====
-    StatementUPtr_t parseStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseAliasStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseBreakStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseContinueStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseIfStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseImportStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseRedundantSemicolon() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseReturnStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseSwitchStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseAliasStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseBreakStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseContinueStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseIfStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseImportStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseRedundantSemicolon() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseReturnStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseSwitchStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE;
     /**
      * @brief Parses statements that are preceded by a visibility modifier
      * @example (public/private) (function/aggregate/enum declaration)
      */
-    StatementUPtr_t parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE;
-    StatementUPtr_t parseWhileLoopStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseWhileLoopStatement() NOEXCEPT_IF_RELEASE;
 
     // ===== Type Parsing =====
 

@@ -47,7 +47,6 @@ class Expression;
 class Statement;
 class Type;
 using ExpressionUPtr_t = std::unique_ptr<Expression>;
-using StatementUPtr_t = std::unique_ptr<Statement>;
 using TypeSPtr_t = std::shared_ptr<Type>;
 
 /*
@@ -190,14 +189,6 @@ inline std::string toStringOr(const ExpressionUPtr_t& expression, const char* fa
  * @param fallback The fallback string representation if the statement is a nullptr
  */
 inline std::string toStringOr(const Statement* statement, const char* fallback = "unknown statement") {
-    return statement ? statement->toString() : fallback;
-}
-
-/**
- * @brief A wrapper around Statement::toString which handles nullptrs with a fallback
- * @param fallback The fallback string representation if the statement is a nullptr
- */
-inline std::string toStringOr(const StatementUPtr_t& statement, const char* fallback = "unknown statement") {
     return statement ? statement->toString() : fallback;
 }
 

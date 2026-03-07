@@ -32,7 +32,7 @@ class analyzer final : public _analyzer_base_t {
 
    private:
     inline void collectTypes() {  // first pass -- collect all user-defined types
-        for (const auto& stmt : parsed.program) { _collectTypesInStatement(stmt.get()); }
+        for (const auto& stmt : parsed.program) { _collectTypesInStatement(stmt); }
     }
     void _collectTypesInStatement(ast::Statement*);
     void _collectTypesInStatementBody(ast::Statement*);

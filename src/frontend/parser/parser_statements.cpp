@@ -18,7 +18,7 @@
 namespace Manganese {
 namespace parser {
 
-StatementUPtr_t Parser::parseStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseStatement() NOEXCEPT_IF_RELEASE {
     const TokenType type = peekTokenType();
     const auto index = tokenToIndex(type);
 
@@ -28,12 +28,12 @@ StatementUPtr_t Parser::parseStatement() NOEXCEPT_IF_RELEASE {
     // Parse out an expression then convert it to a statement
     ExpressionUPtr_t expr = parseExpression(Precedence::Default);
     if (!isParsingBlockPrecursor) { expectToken(TokenType::Semicolon, "Expected semicolon after expression"); }
-    return std::make_unique<ast::ExpressionStatement>(std::move(expr));
+    return arena.add_node<ast::ExpressionStatement>(std::move(expr));
 }
 
 // ===== Specific statement parsing methods =====
 
-StatementUPtr_t Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     std::vector<std::string> genericTypes;
     std::vector<ast::AggregateField> fields;
@@ -91,10 +91,10 @@ StatementUPtr_t Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE
     expectToken(TokenType::RightBrace);
 
     // Move since AggregateField contains a unique_ptr which is not copyable
-    return std::make_unique<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
+    return arena.add_node<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
 }
 
-StatementUPtr_t Parser::parseAliasStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseAliasStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     TypeSPtr_t baseType;
     if (peekToken().isPrimitiveType() || peekTokenType() == TokenType::Func || peekTokenType() == TokenType::Ptr) {
@@ -128,22 +128,22 @@ StatementUPtr_t Parser::parseAliasStatement() NOEXCEPT_IF_RELEASE {
     expectToken(TokenType::As, "Expected 'as' to introduce the type alias");
     std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
-    return std::make_unique<ast::AliasStatement>(std::move(baseType), std::move(alias));
+    return arena.add_node<ast::AliasStatement>(std::move(baseType), std::move(alias));
 }
 
-StatementUPtr_t Parser::parseBreakStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseBreakStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     expectToken(TokenType::Semicolon);
-    return std::make_unique<ast::BreakStatement>();
+    return arena.add_node<ast::BreakStatement>();
 }
 
-StatementUPtr_t Parser::parseContinueStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseContinueStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     expectToken(TokenType::Semicolon);
-    return std::make_unique<ast::ContinueStatement>();
+    return arena.add_node<ast::ContinueStatement>();
 }
 
-StatementUPtr_t Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
@@ -151,10 +151,10 @@ StatementUPtr_t Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
     auto condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
     expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
-    return std::make_unique<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
+    return arena.add_node<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
 }
 
-StatementUPtr_t Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
     Token enumStartToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
     TypeSPtr_t baseType;
@@ -195,10 +195,10 @@ StatementUPtr_t Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
     if (values.empty()) {
         logError(enumStartToken.getLine(), enumStartToken.getColumn(), "Enum '{}' has no values", name);
     }
-    return std::make_unique<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
+    return arena.add_node<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
 }
 
-StatementUPtr_t Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE {
     // TODO: Handle function attributes
     // TODO: Handle function default parameters
     // TODO: Handle function variadic parameters
@@ -259,12 +259,11 @@ StatementUPtr_t Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE 
         DISCARD(consumeToken());
         returnType = parseType(Precedence::Default);
     }
-    // Don't need to std::move body because of return value optimization
-    return std::make_unique<ast::FunctionDeclarationStatement>(name, std::move(genericTypes), std::move(params),
+    return arena.add_node<ast::FunctionDeclarationStatement>(name, std::move(genericTypes), std::move(params),
                                                                std::move(returnType), parseBlock("function body"));
 }
 
-StatementUPtr_t Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
     this->isParsingBlockPrecursor = true;
     DISCARD(consumeToken());
 
@@ -291,11 +290,11 @@ StatementUPtr_t Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
         DISCARD(consumeToken());
         elseBody = parseBlock("else body");
     }
-    return std::make_unique<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs),
+    return arena.add_node<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs),
                                               std::move(elseBody));
 }
 
-StatementUPtr_t Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
     size_t startLine = peekToken().getLine();
     size_t startColumn = peekToken().getColumn();
 
@@ -336,10 +335,10 @@ StatementUPtr_t Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
     }
     if (!duplicate) { imports.emplace_back(path, alias); }
     // Dummy node since imports are stored separately
-    return std::make_unique<ast::EmptyStatement>();
+    return arena.add_node<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE {
     auto temp = consumeToken();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
@@ -356,24 +355,24 @@ StatementUPtr_t Parser::parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE {
     }
 
     // Dummy node since there's no need to semantically analyze module declarations (that happens here)
-    return std::make_unique<ast::EmptyStatement>();
+    return arena.add_node<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseRedundantSemicolon() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseRedundantSemicolon() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
-    return std::make_unique<ast::EmptyStatement>();
+    return arena.add_node<ast::EmptyStatement>();
 }
 
-StatementUPtr_t Parser::parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce a number of iterations");
     auto numIterations = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end the number of iterations");
     // Don't need to std::move because of return value optimization
-    return std::make_unique<ast::RepeatLoopStatement>(std::move(numIterations), parseBlock("repeat loop body"));
+    return arena.add_node<ast::RepeatLoopStatement>(std::move(numIterations), parseBlock("repeat loop body"));
 }
 
-StatementUPtr_t Parser::parseReturnStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseReturnStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     ExpressionUPtr_t expression = nullptr;
     if (peekTokenType() != TokenType::Semicolon) {
@@ -382,10 +381,10 @@ StatementUPtr_t Parser::parseReturnStatement() NOEXCEPT_IF_RELEASE {
         expression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::Semicolon, "Expected semicolon after return statement");
-    return make_unique<ast::ReturnStatement>(std::move(expression));
+    return arena.add_node<ast::ReturnStatement>(std::move(expression));
 }
 
-StatementUPtr_t Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
     Token temp = consumeToken();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
@@ -419,10 +418,10 @@ StatementUPtr_t Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
-    return std::make_unique<ast::SwitchStatement>(std::move(variable), std::move(cases), std::move(defaultBody));
+    return arena.add_node<ast::SwitchStatement>(std::move(variable), std::move(cases), std::move(defaultBody));
 }
 
-StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
     ast::Visibility visibility;
     switch (consumeToken().getType()) {
         case TokenType::Private: visibility = ast::Visibility::Private; break;
@@ -434,26 +433,26 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
     size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
     switch (peekTokenType()) {
         case TokenType::Alias: {
-            auto tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement().release());
+            auto tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement());
             tempAlias->visibility = visibility;
-            return std::unique_ptr<ast::AliasStatement>(tempAlias);
+            return tempAlias;
         }
         case TokenType::Aggregate: {
             auto tempAggregate
-                = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement().release());
+                = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
             tempAggregate->visibility = visibility;
-            return std::unique_ptr<ast::AggregateDeclarationStatement>(tempAggregate);
+            return tempAggregate;
         }
         case TokenType::Enum: {
-            auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement().release());
+            auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement());
             tempEnum->visibility = visibility;
-            return std::unique_ptr<ast::EnumDeclarationStatement>(tempEnum);
+            return tempEnum;
         }
         case TokenType::Func: {
             auto tempFunction
-                = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement().release());
+                = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement());
             tempFunction->visibility = visibility;
-            return std::unique_ptr<ast::FunctionDeclarationStatement>(tempFunction);
+            return tempFunction;
         }
         default:
             logError(startLine, startColumn, "{} cannot follow a visibility modifier",
@@ -463,7 +462,7 @@ StatementUPtr_t Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
     }
 }
 
-StatementUPtr_t Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE {
     TypeSPtr_t explicitType;
     ExpressionUPtr_t value;
     ast::Visibility visibility = defaultVisibility;
@@ -500,17 +499,17 @@ StatementUPtr_t Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE 
 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
-    return std::make_unique<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, std::move(value),
+    return arena.add_node<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, std::move(value),
                                                                std::move(explicitType));
 }
 
-StatementUPtr_t Parser::parseWhileLoopStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseWhileLoopStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     auto condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end while condition");
     // Don't need to std::move because of return value optimization
-    return std::make_unique<ast::WhileLoopStatement>(parseBlock("while loop body"), std::move(condition));
+    return arena.add_node<ast::WhileLoopStatement>(parseBlock("while loop body"), std::move(condition));
 }
 
 // ===== Helper Functions =====
