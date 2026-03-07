@@ -98,8 +98,8 @@ class EmptyStatement final : public Statement {
 
 struct EnumValue {
     std::string name;
-    ExpressionUPtr_t value;
-    explicit EnumValue(std::string name_, ExpressionUPtr_t value_ = nullptr) :
+    Expression* value;
+    explicit EnumValue(std::string name_, Expression* value_ = nullptr) :
         name(std::move(name_)), value(std::move(value_)) {}
 };
 
@@ -124,9 +124,9 @@ class EnumDeclarationStatement final : public Statement {
  */
 class ExpressionStatement final : public Statement {
    public:
-    ExpressionUPtr_t expression;
+    Expression* expression;
 
-    explicit ExpressionStatement(ExpressionUPtr_t expression_) :
+    explicit ExpressionStatement(Expression* expression_) :
         Statement(StatementKind::ExpressionStatement), expression(std::move(expression_)) {};
 
     AST_STANDARD_INTERFACE;
@@ -163,19 +163,19 @@ class FunctionDeclarationStatement final : public Statement {
 };
 
 struct ElifClause {
-    ExpressionUPtr_t condition;
+    Expression* condition;
     Block body;
 
-    ElifClause(ExpressionUPtr_t condition_, Block body_) : condition(std::move(condition_)), body(std::move(body_)) {}
+    ElifClause(Expression* condition_, Block body_) : condition(std::move(condition_)), body(std::move(body_)) {}
 };
 
 class IfStatement final : public Statement {
    public:
-    ExpressionUPtr_t condition;
+    Expression* condition;
     Block body, elseBody;  // elseBody might be empty
     std::vector<ElifClause> elifs;
 
-    IfStatement(ExpressionUPtr_t condition_, Block body_, std::vector<ElifClause> elifs_, Block elseBody_ = {}) :
+    IfStatement(Expression* condition_, Block body_, std::vector<ElifClause> elifs_, Block elseBody_ = {}) :
         Statement(StatementKind::IfStatement),
         condition(std::move(condition_)),
         body(std::move(body_)),
@@ -187,10 +187,10 @@ class IfStatement final : public Statement {
 
 class RepeatLoopStatement final : public Statement {
    public:
-    ExpressionUPtr_t numIterations;
+    Expression* numIterations;
     Block body;
 
-    RepeatLoopStatement(ExpressionUPtr_t numIterations_, Block body_) :
+    RepeatLoopStatement(Expression* numIterations_, Block body_) :
         Statement(StatementKind::RepeatLoopStatement),
         numIterations(std::move(numIterations_)),
         body(std::move(body_)) {}
@@ -200,29 +200,29 @@ class RepeatLoopStatement final : public Statement {
 
 class ReturnStatement final : public Statement {
    public:
-    ExpressionUPtr_t value;
+    Expression* value;
 
-    explicit ReturnStatement(ExpressionUPtr_t value_ = nullptr) :
+    explicit ReturnStatement(Expression* value_ = nullptr) :
         Statement(StatementKind::ReturnStatement), value(std::move(value_)) {}
 
     AST_STANDARD_INTERFACE;
 };
 
 struct CaseClause {
-    ExpressionUPtr_t literalValue;
+    Expression* literalValue;
     Block body;
 
-    CaseClause(ExpressionUPtr_t literalValue_, Block body_) :
+    CaseClause(Expression* literalValue_, Block body_) :
         literalValue(std::move(literalValue_)), body(std::move(body_)) {}
 };
 
 class SwitchStatement final : public Statement {
    public:
-    ExpressionUPtr_t variable;
+    Expression* variable;
     std::vector<CaseClause> cases;
     Block defaultBody;
 
-    SwitchStatement(ExpressionUPtr_t variable_, std::vector<CaseClause> cases_, Block defaultBody_ = {}) :
+    SwitchStatement(Expression* variable_, std::vector<CaseClause> cases_, Block defaultBody_ = {}) :
         Statement(StatementKind::SwitchStatement),
         variable(std::move(variable_)),
         cases(std::move(cases_)),
@@ -236,10 +236,10 @@ class VariableDeclarationStatement final : public Statement {
     bool isMutable;
     std::string name;
     Visibility visibility;
-    ExpressionUPtr_t value;
+    Expression* value;
     TypeSPtr_t type;
 
-    VariableDeclarationStatement(bool isMutable_, std::string name_, Visibility visibility_, ExpressionUPtr_t _value,
+    VariableDeclarationStatement(bool isMutable_, std::string name_, Visibility visibility_, Expression* _value,
                                  TypeSPtr_t _type) :
         Statement(StatementKind::VariableDeclarationStatement),
         isMutable(isMutable_),
@@ -254,10 +254,10 @@ class VariableDeclarationStatement final : public Statement {
 class WhileLoopStatement final : public Statement {
    public:
     Block body;
-    ExpressionUPtr_t condition;
+    Expression* condition;
     bool isDoWhile;
 
-    WhileLoopStatement(Block body_, ExpressionUPtr_t condition_, bool isDoWhile_ = false) :
+    WhileLoopStatement(Block body_, Expression* condition_, bool isDoWhile_ = false) :
         Statement(StatementKind::WhileLoopStatement),
         body(std::move(body_)),
         condition(std::move(condition_)),

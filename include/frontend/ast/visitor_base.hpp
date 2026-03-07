@@ -67,8 +67,6 @@ class Visitor {
     // ===== Dispatch for the different kinds of nodes =====
 
     exprvisit_t visit(ast::Expression*);
-    // A wrapper around visit(Expression*) to handle a unique pointer
-    FORCE_INLINE exprvisit_t visit(ast::ExpressionUPtr_t& expr) { return visit(expr.get()); }
 
     stmtvisit_t visit(ast::Statement*);
 

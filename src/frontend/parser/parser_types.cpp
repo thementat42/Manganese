@@ -78,7 +78,7 @@ TypeSPtr_t Parser::parseAggregateType() NOEXCEPT_IF_RELEASE {
 }
 
 TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
-    ExpressionUPtr_t lengthExpression = nullptr;
+    ast::Expression* lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
     DISCARD(consumeToken());  // Consume the left square bracket '['
     if (peekTokenType() != TokenType::RightSquare) {

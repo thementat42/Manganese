@@ -44,9 +44,9 @@ enum class ExpressionKind {
 
 struct AggregateInstantiationField {
     std::string name;
-    ExpressionUPtr_t value;
+    Expression* value;
 
-    AggregateInstantiationField(std::string name_, ExpressionUPtr_t value_) :
+    AggregateInstantiationField(std::string name_, Expression* value_) :
         name(std::move(name_)), value(std::move(value_)) {}
 };
 
@@ -71,8 +71,8 @@ class AggregateInstantiationExpression final : public Expression {
  */
 class AggregateLiteralExpression final : public Expression {
    public:
-    std::vector<ExpressionUPtr_t> elements;
-    explicit AggregateLiteralExpression(std::vector<ExpressionUPtr_t> elements_) : Expression(ExpressionKind::AggregateLiteralExpression), elements(std::move(elements_)) {}
+    std::vector<Expression*> elements;
+    explicit AggregateLiteralExpression(std::vector<Expression*> elements_) : Expression(ExpressionKind::AggregateLiteralExpression), elements(std::move(elements_)) {}
     AST_STANDARD_INTERFACE;
 };
 
@@ -81,11 +81,11 @@ class AggregateLiteralExpression final : public Expression {
  */
 class ArrayLiteralExpression final : public Expression {
    public:
-    std::vector<ExpressionUPtr_t> elements;
+    std::vector<Expression*> elements;
     TypeSPtr_t elementType;  // Optional, can be inferred from the elements
-    ExpressionUPtr_t lengthExpression = nullptr;
+    Expression* lengthExpression = nullptr;
 
-    ArrayLiteralExpression(std::vector<ExpressionUPtr_t> elements_, TypeSPtr_t elementType_ = nullptr) : Expression(ExpressionKind::ArrayLiteralExpression),
+    ArrayLiteralExpression(std::vector<Expression*> elements_, TypeSPtr_t elementType_ = nullptr) : Expression(ExpressionKind::ArrayLiteralExpression),
         elements(std::move(elements_)), elementType(std::move(elementType_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -96,11 +96,11 @@ class ArrayLiteralExpression final : public Expression {
  */
 class AssignmentExpression final : public Expression {
    public:
-    ExpressionUPtr_t assignee;  // The thing being assigned to (foo in foo = bar)
-    ExpressionUPtr_t value;  // The value being assigned (bar in foo = bar)
+    Expression* assignee;  // The thing being assigned to (foo in foo = bar)
+    Expression* value;  // The value being assigned (bar in foo = bar)
     lexer::TokenType op;
 
-    AssignmentExpression(ExpressionUPtr_t assignee_, lexer::TokenType op_, ExpressionUPtr_t value_) : Expression(ExpressionKind::AssignmentExpression),
+    AssignmentExpression(Expression* assignee_, lexer::TokenType op_, Expression* value_) : Expression(ExpressionKind::AssignmentExpression),
         assignee(std::move(assignee_)), value(std::move(value_)), op(op_) {}
 
     AST_STANDARD_INTERFACE;
@@ -111,10 +111,11 @@ class AssignmentExpression final : public Expression {
  */
 class BinaryExpression final : public Expression {
    public:
-    ExpressionUPtr_t left, right;
+    Expression* left;
+    Expression* right;
     lexer::TokenType op;
 
-    BinaryExpression(ExpressionUPtr_t left_, lexer::TokenType op_, ExpressionUPtr_t right_) : Expression(ExpressionKind::BinaryExpression),
+    BinaryExpression(Expression* left_, lexer::TokenType op_, Expression* right_) : Expression(ExpressionKind::BinaryExpression),
         left(std::move(left_)), right(std::move(right_)), op(op_) {};
 
     AST_STANDARD_INTERFACE;
@@ -153,10 +154,10 @@ class CharLiteralExpression final : public Expression {
  */
 class FunctionCallExpression final : public Expression {
    public:
-    ExpressionUPtr_t callee;
-    std::vector<ExpressionUPtr_t> arguments;
+    Expression* callee;
+    std::vector<Expression*> arguments;
 
-    FunctionCallExpression(ExpressionUPtr_t callee_, std::vector<ExpressionUPtr_t> arguments_) : Expression(ExpressionKind::FunctionCallExpression),
+    FunctionCallExpression(Expression* callee_, std::vector<Expression*> arguments_) : Expression(ExpressionKind::FunctionCallExpression),
         callee(std::move(callee_)), arguments(std::move(arguments_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -167,10 +168,10 @@ class FunctionCallExpression final : public Expression {
  */
 class GenericExpression final : public Expression {
    public:
-    ExpressionUPtr_t identifier;
+    Expression* identifier;
     std::vector<TypeSPtr_t> types;
 
-    GenericExpression(ExpressionUPtr_t identifier_, std::vector<TypeSPtr_t> types_) :Expression(ExpressionKind::GenericExpression),
+    GenericExpression(Expression* identifier_, std::vector<TypeSPtr_t> types_) :Expression(ExpressionKind::GenericExpression),
         identifier(std::move(identifier_)), types(std::move(types_)) {}
 
     /**
@@ -199,10 +200,10 @@ class IdentifierExpression final : public Expression {
  */
 class IndexExpression final : public Expression {
    public:
-    ExpressionUPtr_t variable;
-    ExpressionUPtr_t index;
+    Expression* variable;
+    Expression* index;
 
-    IndexExpression(ExpressionUPtr_t variable_, ExpressionUPtr_t index_) :Expression(ExpressionKind::IndexExpression),
+    IndexExpression(Expression* variable_, Expression* index_) :Expression(ExpressionKind::IndexExpression),
         variable(std::move(variable_)), index(std::move(index_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -213,10 +214,10 @@ class IndexExpression final : public Expression {
  */
 class MemberAccessExpression final : public Expression {
    public:
-    ExpressionUPtr_t object;
+    Expression* object;
     std::string property;
 
-    MemberAccessExpression(ExpressionUPtr_t object_, std::string property_) : Expression(ExpressionKind::MemberAccessExpression),
+    MemberAccessExpression(Expression* object_, std::string property_) : Expression(ExpressionKind::MemberAccessExpression),
         object(std::move(object_)), property(std::move(property_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -239,10 +240,10 @@ class NumberLiteralExpression final : public Expression {
  */
 class PostfixExpression final : public Expression {
    public:
-    ExpressionUPtr_t left;
+    Expression* left;
     lexer::TokenType op;
 
-    PostfixExpression(ExpressionUPtr_t left_, lexer::TokenType op_) : Expression(ExpressionKind::PostfixExpression), left(std::move(left_)), op(op_) {}
+    PostfixExpression(Expression* left_, lexer::TokenType op_) : Expression(ExpressionKind::PostfixExpression), left(std::move(left_)), op(op_) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -253,9 +254,9 @@ class PostfixExpression final : public Expression {
 class PrefixExpression final : public Expression {
    public:
     lexer::TokenType op;
-    ExpressionUPtr_t right;
+    Expression* right;
 
-    PrefixExpression(lexer::TokenType op_, ExpressionUPtr_t right_) :Expression(ExpressionKind::PrefixExpression), op(op_), right(std::move(right_)) {}
+    PrefixExpression(lexer::TokenType op_, Expression* right_) :Expression(ExpressionKind::PrefixExpression), op(op_), right(std::move(right_)) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -265,10 +266,10 @@ class PrefixExpression final : public Expression {
  */
 class ScopeResolutionExpression final : public Expression {
    public:
-    ExpressionUPtr_t scope;
+    Expression* scope;
     std::string element;
 
-    ScopeResolutionExpression(ExpressionUPtr_t scope_, std::string element_) :Expression(ExpressionKind::ScopeResolutionExpression),
+    ScopeResolutionExpression(Expression* scope_, std::string element_) :Expression(ExpressionKind::ScopeResolutionExpression),
         scope(std::move(scope_)), element(std::move(element_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -292,10 +293,10 @@ class StringLiteralExpression final : public Expression {
  */
 class TypeCastExpression final : public Expression {
    public:
-    ExpressionUPtr_t originalValue;
+    Expression* originalValue;
     TypeSPtr_t targetType;
 
-    TypeCastExpression(ExpressionUPtr_t originalValue_, TypeSPtr_t targetType_) : Expression(ExpressionKind::TypeCastExpression),
+    TypeCastExpression(Expression* originalValue_, TypeSPtr_t targetType_) : Expression(ExpressionKind::TypeCastExpression),
         originalValue(std::move(originalValue_)), targetType(std::move(targetType_)) {}
 
     AST_STANDARD_INTERFACE;

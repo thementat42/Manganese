@@ -9,7 +9,6 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
-#include <memory>
 #include <string>
 #include <utility>
 #include <utils/number_utils.hpp>
@@ -57,7 +56,7 @@ namespace Manganese {
 
 namespace parser {
 
-ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE {
     Token token = peekToken();
 
     // Handle operators which have a unary and a binary version
@@ -73,8 +72,8 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
     if (!nudHandler) {
         ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
-    // ExpressionUPtr_t left = nudIterator->second(this);
-    ExpressionUPtr_t left = (this->*nudHandler)();
+    // ast::Expression* left = nudIterator->second(this);
+    ast::Expression* left = (this->*nudHandler)();
 
     // ! For some reason this works
     // ! Do not delete this
@@ -119,7 +118,7 @@ ExpressionUPtr_t Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
 
 // === Specific expression parsing methods ===
 
-ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t left,
+ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* left,
                                                                Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(precedence);  // Avoid unused variable warning
     std::string aggregateName;
@@ -129,17 +128,17 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
     std::vector<ast::AggregateInstantiationField> fields;
 
     if (left->kind() == ast::ExpressionKind::GenericExpression) {
-        auto* genericExpr = static_cast<ast::GenericExpression*>(left.get());
+        auto* genericExpr = static_cast<ast::GenericExpression*>(left);
         if (genericExpr->identifier->kind() != ast::ExpressionKind::IdentifierExpression) {
             logError(left->getLine(), left->getColumn(),
                      "Generic aggregate instantiation must start with an aggregate name");
         } else {
-            auto* identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier.get());
+            auto identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier);
             aggregateName = identifierExpr->value;
             genericTypes = genericExpr->moveTypeParameters();
         }
     } else if (left->kind() == ast::ExpressionKind::IdentifierExpression) {
-        auto* underlying = static_cast<ast::IdentifierExpression*>(left.get());
+        auto* underlying = static_cast<ast::IdentifierExpression*>(left);
         aggregateName = underlying->value;
     } else {
         logError(left->getLine(), left->getColumn(),
@@ -171,15 +170,15 @@ ExpressionUPtr_t Parser::parseAggregateInstantiationExpression(ExpressionUPtr_t 
         }
     }
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end aggregate instantiation");
-    return std::make_unique<ast::AggregateInstantiationExpression>(aggregateName, genericTypes, std::move(fields));
+    return arena.add_node<ast::AggregateInstantiationExpression>(aggregateName, genericTypes, std::move(fields));
 }
 
-ExpressionUPtr_t Parser::parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // disacrd the aggregate keyword
 
     expectToken(TokenType::LeftBrace, "Expected '{' to start an aggregate literal");
 
-    std::vector<ExpressionUPtr_t> expressions;
+    std::vector<ast::Expression*> expressions;
     while (peekTokenType() != TokenType::RightBrace) {
         expressions.push_back(parseExpression(Precedence::Default));
         if (peekTokenType() != TokenType::RightBrace) {
@@ -188,12 +187,12 @@ ExpressionUPtr_t Parser::parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE {
         }
     }
     expectToken(TokenType::RightBrace, "Expected a '}' to end an aggreagate literal");
-    return std::make_unique<ast::AggregateLiteralExpression>(std::move(expressions));
+    return arena.add_node<ast::AggregateLiteralExpression>(std::move(expressions));
 }
 
-ExpressionUPtr_t Parser::parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the left square bracket
-    std::vector<ExpressionUPtr_t> elements;
+    std::vector<ast::Expression*> elements;
     while (!done()) {
         if (peekTokenType() == lexer::TokenType::RightSquare) {
             break;  // Done instantiation
@@ -207,27 +206,27 @@ ExpressionUPtr_t Parser::parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE
     }
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end array instantiation");
 
-    return make_unique<ast::ArrayLiteralExpression>(std::move(elements));
+    return arena.add_node<ast::ArrayLiteralExpression>(std::move(elements));
 }
 
-ExpressionUPtr_t Parser::parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseAssignmentExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     TokenType op = consumeToken().getType();
-    ExpressionUPtr_t right = parseExpression(precedence);
+    ast::Expression* right = parseExpression(precedence);
 
-    return std::make_unique<ast::AssignmentExpression>(std::move(left), op, std::move(right));
+    return arena.add_node<ast::AssignmentExpression>(std::move(left), op, std::move(right));
 }
 
-ExpressionUPtr_t Parser::parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     auto op = consumeToken().getType();
     auto right = parseExpression(precedence);
 
-    return std::make_unique<ast::BinaryExpression>(std::move(left), op, std::move(right));
+    return arena.add_node<ast::BinaryExpression>(std::move(left), op, std::move(right));
 }
 
-ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
     DISCARD(precedence);  // Avoid unused variable warning
-    std::vector<ExpressionUPtr_t> arguments;
+    std::vector<ast::Expression*> arguments;
 
     while (!done()) {
         if (peekTokenType() == lexer::TokenType::RightParen) {
@@ -239,10 +238,10 @@ ExpressionUPtr_t Parser::parseFunctionCallExpression(ExpressionUPtr_t left, Prec
         }
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to end function call");
-    return std::make_unique<ast::FunctionCallExpression>(std::move(left), std::move(arguments));
+    return arena.add_node<ast::FunctionCallExpression>(std::move(left), std::move(arguments));
 }
 
-ExpressionUPtr_t Parser::parseGenericExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the '@' token
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
@@ -257,39 +256,39 @@ ExpressionUPtr_t Parser::parseGenericExpression(ExpressionUPtr_t left, Precedenc
         }
     }
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return std::make_unique<ast::GenericExpression>(std::move(left), typeParameters);
+    return arena.add_node<ast::GenericExpression>(std::move(left), typeParameters);
 }
 
-ExpressionUPtr_t Parser::parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the left square bracket
     DISCARD(precedence);  // Avoid unused variable warning
     constexpr auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
-    ExpressionUPtr_t index = parseExpression(static_cast<Precedence>(precedence_));
+    ast::Expression* index = parseExpression(static_cast<Precedence>(precedence_));
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
-    return std::make_unique<ast::IndexExpression>(std::move(left), std::move(index));
+    return arena.add_node<ast::IndexExpression>(std::move(left), std::move(index));
 }
 
-ExpressionUPtr_t Parser::parseMemberAccessExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the member access operator (.)
     DISCARD(precedence);  // Avoid unused variable warning
-    return std::make_unique<ast::MemberAccessExpression>(
+    return arena.add_node<ast::MemberAccessExpression>(
         std::move(left), expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
 }
 
-ExpressionUPtr_t Parser::parseParenthesizedExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseParenthesizedExpression() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the left parenthesis
-    ExpressionUPtr_t expr = parseExpression(Precedence::Default);
+    ast::Expression* expr = parseExpression(Precedence::Default);
     expectToken(lexer::TokenType::RightParen, "Expected a right parenthesis to close the expression");
     return expr;
 }
 
-ExpressionUPtr_t Parser::parsePostfixExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parsePostfixExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     TokenType op = consumeToken().getType();
     DISCARD(precedence);  // Avoid unused variable warning
-    return std::make_unique<ast::PostfixExpression>(std::move(left), op);
+    return arena.add_node<ast::PostfixExpression>(std::move(left), op);
 }
 
-ExpressionUPtr_t Parser::parsePrefixExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parsePrefixExpression() NOEXCEPT_IF_RELEASE {
     Token token = peekToken();
     TokenType op = token.getType();
 
@@ -300,33 +299,32 @@ ExpressionUPtr_t Parser::parsePrefixExpression() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
 
     auto right = parseExpression(Precedence::Unary);
-    return std::make_unique<ast::PrefixExpression>(op, std::move(right));
+    return arena.add_node<ast::PrefixExpression>(op, std::move(right));
 }
 
-ExpressionUPtr_t Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
     auto token = consumeToken();
     std::string lexeme = token.getLexeme();
 
     switch (token.getType()) {
-        case TokenType::CharLiteral:
-            return std::make_unique<ast::CharLiteralExpression>(lexeme[0]);  // Single character
-        case TokenType::StrLiteral: return std::make_unique<ast::StringLiteralExpression>(lexeme);
-        case TokenType::Identifier: return std::make_unique<ast::IdentifierExpression>(lexeme);
-        case TokenType::True: return std::make_unique<ast::BoolLiteralExpression>(true);
-        case TokenType::False: return std::make_unique<ast::BoolLiteralExpression>(false);
+        case TokenType::CharLiteral: return arena.add_node<ast::CharLiteralExpression>(lexeme[0]);  // Single character
+        case TokenType::StrLiteral: return arena.add_node<ast::StringLiteralExpression>(lexeme);
+        case TokenType::Identifier: return arena.add_node<ast::IdentifierExpression>(lexeme);
+        case TokenType::True: return arena.add_node<ast::BoolLiteralExpression>(true);
+        case TokenType::False: return arena.add_node<ast::BoolLiteralExpression>(false);
         case TokenType::FloatLiteral: {
             // // Check for floating-point suffixes
-            // return std::make_unique<ast::NumberLiteralExpression>(lexeme.ends_with("f32") ? stof(lexeme)
+            // return arena.add_node<ast::NumberLiteralExpression>(lexeme.ends_with("f32") ? stof(lexeme)
             //                                                                               : stod(lexeme));
             std::string suffix;
             extractSuffix(lexeme, suffix);
             std::optional<number_t> value = utils::stringToNumber(lexeme, Base::Decimal, true, suffix);
             if (!value) {
                 logError(token.getLine(), token.getColumn(), "Invalid float literal '{}'", lexeme);
-                return std::make_unique<ast::NumberLiteralExpression>(0.0);
+                return arena.add_node<ast::NumberLiteralExpression>(0.0);
                 // Error tolerance: return a default value of 0.0
             }
-            return std::make_unique<ast::NumberLiteralExpression>(*value);
+            return arena.add_node<ast::NumberLiteralExpression>(*value);
         }
         case TokenType::IntegerLiteral: {
             // Extract integer suffix
@@ -342,10 +340,10 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
             std::optional<number_t> value = utils::stringToNumber(numericPart, base, false, suffix);
             if (!value) {
                 logError(token.getLine(), token.getColumn(), "Invalid integer literal '{}'", lexeme);
-                return std::make_unique<ast::NumberLiteralExpression>(0);
+                return arena.add_node<ast::NumberLiteralExpression>(0);
                 // Error tolerance: return a default value of 0
             }
-            return std::make_unique<ast::NumberLiteralExpression>(*value);
+            return arena.add_node<ast::NumberLiteralExpression>(*value);
         }
         default:
             ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
@@ -353,18 +351,18 @@ ExpressionUPtr_t Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
     }
 }
 
-ExpressionUPtr_t Parser::parseScopeResolutionExpression(ExpressionUPtr_t left,
+ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left,
                                                         Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the scope resolution operator (::)
     DISCARD(precedence);  // Avoid unused variable warning
     auto element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
-    return std::make_unique<ast::ScopeResolutionExpression>(std::move(left), element);
+    return arena.add_node<ast::ScopeResolutionExpression>(std::move(left), element);
 }
 
-ExpressionUPtr_t Parser::parseTypeCastExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the 'as' token
     TypeSPtr_t type = parseType(precedence);
-    return std::make_unique<ast::TypeCastExpression>(std::move(left), std::move(type));
+    return arena.add_node<ast::TypeCastExpression>(std::move(left), std::move(type));
 }
 
 // ===== Helper Functions =====

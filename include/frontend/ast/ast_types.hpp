@@ -45,12 +45,12 @@ class AggregateType final : public Type {
 class ArrayType final : public Type {
    public:
     TypeSPtr_t elementType;
-    ExpressionUPtr_t lengthExpression;  // If not given, the length is inferred from the number of elements
+    Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
 
     /**
      * @param elementType_ The type of the elements in the array
      */
-    explicit ArrayType(TypeSPtr_t elementType_, ExpressionUPtr_t lengthExpr_ = nullptr) :
+    explicit ArrayType(TypeSPtr_t elementType_, Expression* lengthExpr_ = nullptr) :
         Type(TypeKind::ArrayType), elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     AST_STANDARD_INTERFACE;

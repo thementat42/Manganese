@@ -17,17 +17,18 @@
 #include <global_macros.hpp>
 #include <io/logging.hpp>
 #include <memory>
+#include <mnstl/chunk_allocator.hxx>
 #include <string>
 #include <utils/number_utils.hpp>
 #include <vector>
-#include <mnstl/chunk_allocator.hxx>
 
 #include "frontend/ast/ast_base.hpp"
 #include "operators.hpp"
 
+
 namespace Manganese {
 namespace parser {
-using ast::ExpressionUPtr_t, ast::TypeSPtr_t;
+using ast::TypeSPtr_t;
 using lexer::TokenType, lexer::Token;
 
 struct Import {
@@ -64,7 +65,7 @@ class Parser {
 
    public:  // public methods
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& arena);
-    
+
     // Avoid file ownership issues
     Parser(const Parser&) = delete;
     Parser(Parser&&) = delete;
@@ -78,41 +79,40 @@ class Parser {
 
    private:  // private methods
     using statementHandler_t = ast::Statement* (Parser::*)();
-    using nudHandler_t = ExpressionUPtr_t (Parser::*)();
+    using nudHandler_t = ast::Expression* (Parser::*)();
     using nudHandler_types_t = TypeSPtr_t (Parser::*)();
-    using ledHandler_t = ExpressionUPtr_t (Parser::*)(ExpressionUPtr_t, Precedence);
+    using ledHandler_t = ast::Expression* (Parser::*)(ast::Expression*, Precedence);
     using ledHandler_types_t = TypeSPtr_t (Parser::*)(TypeSPtr_t, Precedence);
 
     //~ Lookups
-    std::array<statementHandler_t, static_cast<size_t>(TokenType::_tokenCount)> statementLookup {};
-    std::array<nudHandler_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup {};
-    std::array<ledHandler_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup {};
-    std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap {};
+    std::array<statementHandler_t, static_cast<size_t>(TokenType::_tokenCount)> statementLookup{};
+    std::array<nudHandler_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup{};
+    std::array<ledHandler_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup{};
+    std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap{};
 
-    std::array<nudHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup_types {};
-    std::array<ledHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup_types {};
-    std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type {};
+    std::array<nudHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup_types{};
+    std::array<ledHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup_types{};
+    std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type{};
 
     //~ Parsing functions
 
     // ===== Expression Parsing =====
-    ExpressionUPtr_t parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseAggregateInstantiationExpression(ExpressionUPtr_t left,
-                                                           Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseAssignmentExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseBinaryExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseFunctionCallExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseGenericExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseIndexingExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseMemberAccessExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseParenthesizedExpression() NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parsePostfixExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parsePrefixExpression() NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parsePrimaryExpression() NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseScopeResolutionExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ExpressionUPtr_t parseTypeCastExpression(ExpressionUPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseAggregateInstantiationExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseBinaryExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseFunctionCallExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseGenericExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseIndexingExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseMemberAccessExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseParenthesizedExpression() NOEXCEPT_IF_RELEASE;
+    ast::Expression* parsePostfixExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parsePrefixExpression() NOEXCEPT_IF_RELEASE;
+    ast::Expression* parsePrimaryExpression() NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseScopeResolutionExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseTypeCastExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
 
     // ===== Statement Parsing =====
     ast::Statement* parseStatement() NOEXCEPT_IF_RELEASE;

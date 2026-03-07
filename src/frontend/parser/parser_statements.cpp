@@ -26,7 +26,7 @@ ast::Statement* Parser::parseStatement() NOEXCEPT_IF_RELEASE {
     if (handler) { return (this->*handler)(); }
 
     // Parse out an expression then convert it to a statement
-    ExpressionUPtr_t expr = parseExpression(Precedence::Default);
+    ast::Expression* expr = parseExpression(Precedence::Default);
     if (!isParsingBlockPrecursor) { expectToken(TokenType::Semicolon, "Expected semicolon after expression"); }
     return arena.add_node<ast::ExpressionStatement>(std::move(expr));
 }
@@ -172,7 +172,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
     while (!done() && peekTokenType() != TokenType::RightBrace) {
         std::string valueName = expectToken(TokenType::Identifier, "Expected enum value name").getLexeme();
-        ExpressionUPtr_t valueExpression = nullptr;
+        ast::Expression* valueExpression = nullptr;
         if (peekTokenType() == TokenType::Assignment) {
             DISCARD(consumeToken());
             valueExpression = parseExpression(Precedence::Default);
@@ -374,7 +374,7 @@ ast::Statement* Parser::parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE {
 
 ast::Statement* Parser::parseReturnStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
-    ExpressionUPtr_t expression = nullptr;
+    ast::Expression* expression = nullptr;
     if (peekTokenType() != TokenType::Semicolon) {
         // If the next token is not a semicolon, parse an expression
         // If it is, this is a null return statement
@@ -389,7 +389,7 @@ ast::Statement* Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
     this->isParsingBlockPrecursor = true;
-    ExpressionUPtr_t variable = parseExpression(Precedence::Default);
+    ast::Expression* variable = parseExpression(Precedence::Default);
     this->isParsingBlockPrecursor = false;
     expectToken(TokenType::RightParen, "Expected ')' to end switch variable");
     expectToken(TokenType::LeftBrace, "Expected '{' to start the switch body");
@@ -464,7 +464,7 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
 
 ast::Statement* Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE {
     TypeSPtr_t explicitType;
-    ExpressionUPtr_t value;
+    ast::Expression* value = nullptr;
     ast::Visibility visibility = defaultVisibility;
 
     DISCARD(consumeToken());  // Consume the 'let' token

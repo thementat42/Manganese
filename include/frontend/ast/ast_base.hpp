@@ -46,7 +46,6 @@ namespace ast {
 class Expression;
 class Statement;
 class Type;
-using ExpressionUPtr_t = std::unique_ptr<Expression>;
 using TypeSPtr_t = std::shared_ptr<Type>;
 
 /*
@@ -173,14 +172,6 @@ constexpr std::string visibilityToString(Visibility visibility) NOEXCEPT_IF_RELE
  * @param fallback The fallback string representation if the expression is a nullptr
  */
 inline std::string toStringOr(const Expression* expression, const char* fallback = "unknown expression") {
-    return expression ? expression->toString() : fallback;
-}
-
-/**
- * @brief A wrapper around Expression::toString which handles nullptrs with a fallback
- * @param fallback The fallback string representation if the expression is a nullptr
- */
-inline std::string toStringOr(const ExpressionUPtr_t& expression, const char* fallback = "unknown expression") {
     return expression ? expression->toString() : fallback;
 }
 
