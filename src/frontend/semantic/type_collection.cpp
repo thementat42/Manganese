@@ -15,32 +15,34 @@ void analyzer::_collectTypesInStatement(ast::Statement* stmt) {
     switch (stmt->kind()) {
         case AggregateDeclarationStatement: {
             auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
-            table.declare(Symbol{.name = aggregateStmt->name,
-                                 .kind = SymbolKind::Aggregate,
-                                 .type = nullptr,
-                                 .node = aggregateStmt,
-                                 .isMutable = false,
-                                 .visibility = aggregateStmt->visibility});
+            table.declare(aggregateStmt->name,
+                          Symbol{
+                              .type = nullptr,
+                              .node = aggregateStmt,
+                              .kind = SymbolKind::Aggregate,
+                              .visibility = aggregateStmt->visibility,
+                              .isMutable = false,
+                          });
             break;
         }
         case AliasStatement: {
             auto aliasStmt = static_cast<ast::AliasStatement*>(stmt);
-            table.declare(Symbol{.name = aliasStmt->alias,
-                                 .kind = SymbolKind::TypeAlias,
-                                 .type = nullptr,
+            table.declare(aliasStmt->alias,
+                          Symbol{.type = nullptr,
                                  .node = aliasStmt,
-                                 .isMutable = false,
-                                 .visibility = aliasStmt->visibility});
+                                 .kind = SymbolKind::TypeAlias,
+                                 .visibility = aliasStmt->visibility,
+                                 .isMutable = false});
             break;
         }
         case EnumDeclarationStatement: {
             auto enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
-            table.declare(Symbol{.name = enumDecl->name,
-                                 .kind = SymbolKind::Enum,
-                                 .type = nullptr,
+            table.declare(enumDecl->name,
+                          Symbol{.type = nullptr,
                                  .node = enumDecl,
-                                 .isMutable = false,
-                                 .visibility = enumDecl->visibility});
+                                 .kind = SymbolKind::Enum,
+                                 .visibility = enumDecl->visibility,
+                                 .isMutable = false});
             break;
         }
         case FunctionDeclarationStatement:  // statements with bodies (which can have type declarations)
@@ -57,32 +59,32 @@ void analyzer::_collectTypesInStatementBody(ast::Statement* stmt) {
     switch (stmt->kind()) {
         case AggregateDeclarationStatement: {
             auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
-            table.declare(Symbol{.name = aggregateStmt->name,
-                                 .kind = SymbolKind::Aggregate,
-                                 .type = nullptr,
+            table.declare(aggregateStmt->name,
+                          Symbol{.type = nullptr,
                                  .node = aggregateStmt,
-                                 .isMutable = false,
-                                 .visibility = aggregateStmt->visibility});
+                                 .kind = SymbolKind::Aggregate,
+                                 .visibility = aggregateStmt->visibility,
+                                 .isMutable = false});
             break;
         }
         case AliasStatement: {
             auto aliasStmt = static_cast<ast::AliasStatement*>(stmt);
-            table.declare(Symbol{.name = aliasStmt->alias,
-                                 .kind = SymbolKind::TypeAlias,
-                                 .type = nullptr,
+            table.declare(aliasStmt->alias,
+                          Symbol{.type = nullptr,
                                  .node = aliasStmt,
-                                 .isMutable = false,
-                                 .visibility = aliasStmt->visibility});
+                                 .kind = SymbolKind::TypeAlias,
+                                 .visibility = aliasStmt->visibility,
+                                 .isMutable = false});
             break;
         }
         case EnumDeclarationStatement: {
             auto enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
-            table.declare(Symbol{.name = enumDecl->name,
-                                 .kind = SymbolKind::Enum,
-                                 .type = nullptr,
+            table.declare(enumDecl->name,
+                          Symbol{.type = nullptr,
                                  .node = enumDecl,
-                                 .isMutable = false,
-                                 .visibility = enumDecl->visibility});
+                                 .kind = SymbolKind::Enum,
+                                 .visibility = enumDecl->visibility,
+                                 .isMutable = false});
             break;
         }
         case FunctionDeclarationStatement: {

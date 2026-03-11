@@ -5,19 +5,21 @@
 
 #include <format>
 #include <frontend/ast.hpp>
+#include <functional>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <utils/result.hpp>
 #include <vector>
 
-#include "utils/result.hpp"
 
 namespace Manganese {
 namespace semantic {
 
-enum class SymbolKind {
+enum class SymbolKind : uint8_t {
     Variable,
     Constant,
     Function,
@@ -29,32 +31,28 @@ enum class SymbolKind {
     Import,
     TypeAlias,
     GenericType,
-    Invalid = -1
+    Invalid
 };
 
 struct Symbol {
-    std::string name;
-    SymbolKind kind;
     ast::TypeSPtr_t type;
-
     ast::ASTNode* node = nullptr;
-
-    // === Semantic Info ===
-    bool isMutable;
     size_t scopeDepth = 0;
+    SymbolKind kind;
     ast::Visibility visibility = ast::Visibility::Private;
-
+    bool isMutable;
     std::string toString() const noexcept;
 };
 
 struct Scope {
-    std::unordered_map<std::string, Symbol> symbols;
-    inline Result insert(Symbol&& symbol) {
-        bool result = symbols.emplace(symbol.name, std::move(symbol)).second;
+    // std::equal_to<> enables heterogenous lookup
+    std::unordered_map<std::string_view, Symbol, std::hash<std::string_view>, std::equal_to<>> symbols;
+    Result insert(std::string_view name, Symbol symbol) {
+        bool result = symbols.emplace(name, std::move(symbol)).second;
         return result ? Result::Success : Result::Failure;
     }
 
-    const Symbol* lookup(const std::string& name) const noexcept {
+    const Symbol* lookup(std::string_view name) const noexcept {
         auto it = symbols.find(name);
         return it == symbols.end() ? nullptr : &(it->second);
     }
@@ -63,11 +61,13 @@ struct Scope {
 class SymbolTable {
    private:
     std::vector<Scope> _scopes;
-    size_t _currentDepth;
+    int64_t _currentDepth;
     bool _hasError;
 
+    constexpr bool noScopeAvailable() const noexcept { return _scopes.empty() || _currentDepth < 0; }
+
    public:
-    SymbolTable() noexcept : _currentDepth(0) { enterScope(); }
+    SymbolTable() noexcept : _scopes(), _currentDepth(0), _hasError(false) { _scopes.emplace_back(); }
     constexpr ~SymbolTable() = default;
 
     constexpr bool hasError() const noexcept { return _hasError; }
@@ -76,35 +76,35 @@ class SymbolTable {
         ++_currentDepth;
         // if we've exceeded the current symbol table depth, create a new scope
         // otherwise, we're just moving our current scope to the next nested one
-        if (_currentDepth >= _scopes.size()) { _scopes.emplace_back(); }
+        if (size_t(_currentDepth) >= _scopes.size()) { _scopes.emplace_back(); }
     }
     void exitScope() noexcept {
-        if (_scopes.empty()) [[unlikely]] {
+        if (noScopeAvailable()) [[unlikely]] {
             logging::logInternal(logging::LogLevel::Warning, "Attempted to exit scope when no scope was available");
             return;
         }
         // since we're doing multiple passes, we want to preserve scope information between passes
         --_currentDepth;
     }
-    Result declare(Symbol symbol) {
-        if (_scopes.empty()) [[unlikely]] {
+    Result declare(std::string_view name, Symbol symbol) {
+        if (noScopeAvailable()) [[unlikely]] {
             logging::logInternal(logging::LogLevel::Error, "No active scope in which to declare a symbol");
             return Result::Failure;
         }
         symbol.scopeDepth = getCurrentDepth();
-        return _scopes[getCurrentDepth()].insert(std::move(symbol));
+        return _scopes[getCurrentDepth()].insert(name, std::move(symbol));
     }
 
-    const Symbol* lookup(const std::string& name) const noexcept {
-        for (auto it = _scopes.rbegin(); it != _scopes.rend(); ++it) {
-            const Symbol* _sym = it->lookup(name);
+    const Symbol* lookup(std::string_view name) const noexcept {
+        for (int64_t i = _currentDepth; i >= 0; --i) {  // prioritize local symbols over globals
+            const Symbol* _sym = _scopes[size_t(i)].lookup(name);
             if (_sym) { return _sym; }
         }
         logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any scope.", name);
         return nullptr;
     }
-    const Symbol* lookupAtCurrentDepth(const std::string& name) const noexcept {
-        if (_scopes.empty()) {
+    const Symbol* lookupAtCurrentDepth(std::string_view name) const noexcept {
+        if (noScopeAvailable()) {
             logging::logInternal(logging::LogLevel::Error, "No active scope in which to look up symbol");
             return nullptr;
         }
@@ -112,16 +112,7 @@ class SymbolTable {
         if (!symbol) { logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any scope", name); }
         return symbol;
     }
-    const Symbol* lookupAtDepth(const std::string& name, int64_t depth) const noexcept {
-        if (depth < 0 || depth >= (int64_t)getCurrentDepth()) [[unlikely]] {
-            logging::logInternal(logging::LogLevel::Warning, "Invalid scope depth {} (valid range: 0-{})", depth,
-                                 getCurrentDepth());
-            return nullptr;
-        }
-        size_t _index = getCurrentDepth() - (size_t)depth;  // go to the appropriate depth
-        return _scopes[_index].lookup(name);
-    }
-    constexpr inline size_t getCurrentDepth() const noexcept { return _currentDepth; }
+    constexpr inline size_t getCurrentDepth() const noexcept { return size_t(_currentDepth); }
 };
 
 }  // namespace semantic
