@@ -25,7 +25,7 @@ class chunk_allocator {
         return (ptr + mask) & ~mask;
     }
 
-    constexpr void add_chunk(size_t size = _chunksize) {
+    void add_chunk(size_t size = _chunksize) {
         _chunks.push_back(
             chunk{.data = std::make_unique_for_overwrite<std::byte[]>(size),  // avoids initialization of values
                   .used = 0,
@@ -54,8 +54,8 @@ class chunk_allocator {
     }
 
    public:
-    constexpr chunk_allocator() { add_chunk(); }
-    constexpr ~chunk_allocator() noexcept = default;
+    chunk_allocator() { add_chunk(); }
+    ~chunk_allocator() noexcept = default;
 
     template <class Node, class... Args>
         requires(std::is_convertible_v<Node*, Manganese::ast::ASTNode*> && std::is_constructible_v<Node, Args...>)
