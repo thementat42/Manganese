@@ -45,7 +45,7 @@ ParsedFile Parser::parse() {
     return ParsedFile{.moduleName = moduleName, .imports = std::move(imports), .program = std::move(program)};
 }
 
-// ===== Helper functions =====
+// Helper functions
 bool Parser::isUnaryContext() const noexcept {
     if (!previousToken) {
         // No previous token (this is the start of an expression), so it's a unary context

@@ -15,7 +15,7 @@ Notes:
         uint specifically means an unsigned integer type
     float is a shorthand for both float32 and float 64
 
-=== Arithmetic Operators ===
+## Arithmetic Operators
 
 +
     int + int -> int
@@ -69,15 +69,13 @@ Notes:
 ++
     ++int -> int
     int++ -> int
-    ++float -> float
-    float++ -> float
 --
     --int -> int
     int-- -> int
     --float -> float
     float-- -> float
 
-=== Comparison Operators ===
+## Comparison Operators
 Here, __op__ stands for any of {<, <=, >, >=, ==, !=}
     int __op__ int -> bool
     int __op__ float -> bool
@@ -89,7 +87,7 @@ Here, __op__ stands for any of {<, <=, >, >=, ==, !=}
     array __op__ array -> bool (compare element by element -- on ties, shorter = smaller)
 
 
-=== Boolean Operators ===
+## Boolean Operators
     bool && bool -> bool
     bool || bool -> bool
     !bool -> bool
@@ -106,6 +104,6 @@ Here, __op__ stands for any of {&, |, ^, <<, >>}
 
 == Miscellaneous Operators ==
 &
-    &{any variable} -> int64 (the address of the variable)
+    &{any variable} -> int64 (the address of the variable) (width depends on the architecture)
 *
     *{any pointer variable} -> {type} (the type the pointer is pointing to)

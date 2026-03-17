@@ -42,7 +42,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
     return left;
 }
 
-// ===== Specific type parsing methods =====
+// Specific type parsing methods
 
 TypeSPtr_t Parser::parseAggregateType() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());  // Consume the 'aggregate' token

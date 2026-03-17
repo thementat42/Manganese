@@ -31,7 +31,7 @@ ast::Statement* Parser::parseStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::ExpressionStatement>(std::move(expr));
 }
 
-// ===== Specific statement parsing methods =====
+// Specific statement parsing methods
 
 ast::Statement* Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE {
     DISCARD(consumeToken());
@@ -512,7 +512,7 @@ ast::Statement* Parser::parseWhileLoopStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::WhileLoopStatement>(parseBlock("while loop body"), std::move(condition));
 }
 
-// ===== Helper Functions =====
+// Helper Functions
 ast::Block Parser::parseBlock(std::string blockName) NOEXCEPT_IF_RELEASE {
     expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
     ast::Block block;

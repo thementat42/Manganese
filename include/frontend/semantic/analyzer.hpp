@@ -54,7 +54,7 @@ class analyzer final : public _analyzer_base_t {
     // overrides for visitor functions
     using _analyzer_base_t::visit;
 
-    // ===== Expression Visiting =====
+    // Expression Visiting
     exprvisit_t visit(ast::AggregateInstantiationExpression*) override;
     exprvisit_t visit(ast::AggregateLiteralExpression*) override;
     exprvisit_t visit(ast::ArrayLiteralExpression*) override;
@@ -74,7 +74,7 @@ class analyzer final : public _analyzer_base_t {
     exprvisit_t visit(ast::StringLiteralExpression*) override;
     exprvisit_t visit(ast::TypeCastExpression*) override;
 
-    // ===== Statement Visiting =====
+    // Statement Visiting
     stmtvisit_t visit(ast::AggregateDeclarationStatement*) override;
     stmtvisit_t visit(ast::AliasStatement*) override;
     stmtvisit_t visit(ast::BreakStatement*) override;
@@ -90,7 +90,7 @@ class analyzer final : public _analyzer_base_t {
     stmtvisit_t visit(ast::VariableDeclarationStatement*) override;
     stmtvisit_t visit(ast::WhileLoopStatement*) override;
 
-    // ===== Type Visiting =====
+    // Type Visiting
     typevisit_t visit(ast::AggregateType*) override;
     typevisit_t visit(ast::ArrayType*) override;
     typevisit_t visit(ast::FunctionType*) override;

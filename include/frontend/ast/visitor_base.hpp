@@ -20,7 +20,7 @@ class Visitor {
     using typevisit_t = TypeResult;
 
    protected:
-    // ===== Expression Visiting =====
+    // Expression Visiting
     virtual exprvisit_t visit(ast::AggregateInstantiationExpression*) = 0;
     virtual exprvisit_t visit(ast::AggregateLiteralExpression*) = 0;
     virtual exprvisit_t visit(ast::ArrayLiteralExpression*) = 0;
@@ -40,7 +40,7 @@ class Visitor {
     virtual exprvisit_t visit(ast::StringLiteralExpression*) = 0;
     virtual exprvisit_t visit(ast::TypeCastExpression*) = 0;
 
-    // ===== Statement Visiting =====
+    // Statement Visiting
     virtual stmtvisit_t visit(ast::AggregateDeclarationStatement*) = 0;
     virtual stmtvisit_t visit(ast::AliasStatement*) = 0;
     virtual stmtvisit_t visit(ast::BreakStatement*) = 0;
@@ -56,7 +56,7 @@ class Visitor {
     virtual stmtvisit_t visit(ast::VariableDeclarationStatement*) = 0;
     virtual stmtvisit_t visit(ast::WhileLoopStatement*) = 0;
 
-    // ===== Type Visiting =====
+    // Type Visiting
     virtual typevisit_t visit(ast::AggregateType*) = 0;
     virtual typevisit_t visit(ast::ArrayType*) = 0;
     virtual typevisit_t visit(ast::FunctionType*) = 0;
@@ -64,14 +64,12 @@ class Visitor {
     virtual typevisit_t visit(ast::PointerType*) = 0;
     virtual typevisit_t visit(ast::SymbolType*) = 0;
 
-    // ===== Dispatch for the different kinds of nodes =====
+    // Dispatch for the different kinds of nodes
 
     exprvisit_t visit(ast::Expression*);
-
     stmtvisit_t visit(ast::Statement*);
-
     typevisit_t visit(ast::Type*);
-    // A wrapper around visit(Type*) to handle a unique pointer
+    // A wrapper around visit(Type*) to handle a shared pointer
     FORCE_INLINE typevisit_t visit(ast::TypeSPtr_t& type) { return visit(type.get()); }
 
 };

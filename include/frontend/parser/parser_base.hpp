@@ -96,7 +96,7 @@ class Parser {
 
     //~ Parsing functions
 
-    // ===== Expression Parsing =====
+    // Expression Parsing
     ast::Expression* parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE;
     ast::Expression* parseAggregateInstantiationExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
     ast::Expression* parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE;
@@ -114,7 +114,7 @@ class Parser {
     ast::Expression* parseScopeResolutionExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
     ast::Expression* parseTypeCastExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
 
-    // ===== Statement Parsing =====
+    // Statement Parsing
     ast::Statement* parseStatement() NOEXCEPT_IF_RELEASE;
     ast::Statement* parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE;
     ast::Statement* parseAliasStatement() NOEXCEPT_IF_RELEASE;
@@ -138,7 +138,7 @@ class Parser {
     ast::Statement* parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE;
     ast::Statement* parseWhileLoopStatement() NOEXCEPT_IF_RELEASE;
 
-    // ===== Type Parsing =====
+    // Type Parsing
 
     TypeSPtr_t parseType(Precedence precedence) NOEXCEPT_IF_RELEASE;
     TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;

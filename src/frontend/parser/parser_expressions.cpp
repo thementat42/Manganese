@@ -116,7 +116,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
     return left;
 }
 
-// === Specific expression parsing methods ===
+// Specific expression parsing methods
 
 ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* left,
                                                                Precedence precedence) NOEXCEPT_IF_RELEASE {
@@ -365,7 +365,7 @@ ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Preceden
     return arena.add_node<ast::TypeCastExpression>(std::move(left), std::move(type));
 }
 
-// ===== Helper Functions =====
+// Helper Functions
 
 constexpr void extractSuffix(std::string& lexeme, std::string& suffix) {
     if (lexeme.ends_with("i8") || lexeme.ends_with("I8") || lexeme.ends_with("u8") || lexeme.ends_with("U8")) {

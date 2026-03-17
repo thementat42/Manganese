@@ -73,7 +73,7 @@ std::string getNumberTypeName(const number_t& value) {
     return std::visit(_number_visitor, value);
 }
 
-// ===== Expressions =====
+// Expressions
 
 void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AggregateInstantiationExpression [" << getLine() << ":" << getColumn() << "] {\n";
@@ -260,7 +260,7 @@ void TypeCastExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-// ===== Statements =====
+// Statements
 
 void AliasStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AliasStatement [" << getLine() << ":" << getColumn() << "] {\n";
@@ -475,7 +475,7 @@ void WhileLoopStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-// ===== Types =====
+// Types
 
 void ArrayType::dump(std::ostream& os, size_t indent) const {
     os << std::string(indent, ' ') << "ArrayType: " << '\n';

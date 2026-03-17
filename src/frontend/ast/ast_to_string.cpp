@@ -20,7 +20,7 @@
 namespace Manganese {
 namespace ast {
 
-// ===== Expressions =====
+// Expressions
 std::string AggregateInstantiationExpression::toString() const {
     std::ostringstream oss;
     oss << name;
@@ -163,7 +163,7 @@ std::string TypeCastExpression::toString() const {
     return std::format("({} as {})", originalValue->toString(), targetType->toString());
 }
 
-// ===== Statements =====
+// Statements
 
 std::string AliasStatement::toString() const { return std::format("alias ({}) as {};", baseType->toString(), alias); }
 
@@ -298,7 +298,7 @@ std::string WhileLoopStatement::toString() const {
     return oss.str();
 }
 
-// ===== Types =====
+// Types
 
 std::string AggregateType::toString() const {
     std::ostringstream oss;

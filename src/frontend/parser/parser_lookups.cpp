@@ -9,7 +9,7 @@
 
 namespace Manganese {
 namespace parser {
-// ===== Lookup Registration Methods =====
+// Lookup Registration Methods
 
 constexpr void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
@@ -46,7 +46,7 @@ constexpr void Parser::registerStmtHandler(TokenType type, statementHandler_t ha
     statementLookup[_index] = handler;
 }
 
-// ===== Type Lookup Registration Methods =====
+// Type Lookup Registration Methods
 
 constexpr void Parser::registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept {
     size_t _index = tokenToIndex(type);
@@ -61,7 +61,7 @@ constexpr void Parser::registerNudHandler_type(TokenType type, nudHandler_types_
     nudLookup_types[_index] = handler;
 }
 
-// ===== Actually register the lookups =====
+// Actually register the lookups
 
 //! Really long stuff
 

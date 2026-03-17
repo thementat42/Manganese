@@ -69,22 +69,22 @@ int main(int argc, char const* argv[]) {
     Manganese::tests::TestRunner runner;
 
     if (lexer) {
-        printf("%s=== Lexer Tests ===%s\n", PINK, RESET);
+        printf("%sLexer Tests%s\n", PINK, RESET);
         Manganese::tests::runLexerTests(runner);
         printf("\n");
     }
     if (parser) {
-        printf("%s=== Parser Tests ===%s\n", PINK, RESET);
+        printf("%sParser Tests%s\n", PINK, RESET);
         Manganese::tests::runParserTests(runner);
         printf("\n");
     }
     if (semantic) {
-        printf("%s=== Semantic Analyzer Tests ===%s\n", PINK, RESET);
+        printf("%sSemantic Analyzer Tests%s\n", PINK, RESET);
         Manganese::tests::runSemanticAnalysisTests(runner);
         printf("\n");
     }
     if (codegen) {
-        printf("%s=== Codegen Tests ===%s\n", PINK, RESET);
+        printf("%sCodegen Tests%s\n", PINK, RESET);
         // TODO: Add once codegen done
         printf("To be implemented.\n");
         printf("\n");
