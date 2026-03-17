@@ -19,8 +19,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
 
     auto nudHandler = nudLookup_types[index];
     if (!nudHandler) {
-        ASSERT_UNREACHABLE("No type null denotation handler for token type: "
-            + lexer::tokenTypeToString(type));
+        ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
     // TypeSPtr_t left = nudIterator->second(this);
     TypeSPtr_t left = (this->*nudHandler)();
@@ -30,14 +29,11 @@ TypeSPtr_t Parser::parseType(Precedence precedence) NOEXCEPT_IF_RELEASE {
         const auto idx = tokenToIndex(type);
 
         const Operator& op = operatorPrecedenceMap_type[idx];
-        if (op.leftBindingPower <= precedence) {
-            break;
-        }
+        if (op.leftBindingPower <= precedence) { break; }
 
         auto handler = ledLookup_types[idx];
         if (!handler) {
-            ASSERT_UNREACHABLE("No type left denotation handler for token type: "
-                + lexer::tokenTypeToString(type));
+            ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
         // left = ledIterator->second(this, std::move(left), operatorPrecedenceMap_type[type].rightBindingPower);
         auto rbp = op.rightBindingPower;
@@ -157,48 +153,48 @@ TypeSPtr_t Parser::parsePointerType() NOEXCEPT_IF_RELEASE {
 }
 
 TypeSPtr_t Parser::parseSymbolType() NOEXCEPT_IF_RELEASE {
-    using prim = ast::PrimitiveType_t;
+    using enum ast::PrimitiveType_t;
     Token token = peekToken();
-    if (token.isPrimitiveType()) {
-        // If the token is a primitive type, we can directly create a SymbolType
-        DISCARD(consumeToken());
-        std::string lex = token.getLexeme();
-        ast::PrimitiveType_t prim_t = prim::not_primitive;
-        if (lex == int8_str) {
-            prim_t = prim::i8;
-        } else if (lex == int16_str) {
-            prim_t = prim::i16;
-        } else if (lex == int32_str) {
-            prim_t = prim::i32;
-        } else if (lex == int64_str) {
-            prim_t = prim::i64;
-        } else if (lex == uint8_str) {
-            prim_t = prim::ui8;
-        } else if (lex == uint16_str) {
-            prim_t = prim::ui16;
-        } else if (lex == uint32_str) {
-            prim_t = prim::ui32;
-        } else if (lex == uint64_str) {
-            prim_t = prim::ui64;
-        } else if (lex == float32_str) {
-            prim_t = prim::f32;
-        } else if (lex == float64_str) {
-            prim_t = prim::f64;
-        } else if (lex == string_str) {
-            prim_t = prim::str;
-        } else if (lex == char_str) {
-            prim_t = prim::character;
-        } else if (lex == bool_str) {
-            prim_t = prim::boolean;
-        } else {
-            ASSERT_UNREACHABLE("Unknown primitive type " + lex);
-        }
-        auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());
-        symbol_type->setPrimitiveType(prim_t);
-        return symbol_type;
+    if (!token.isPrimitiveType()) {
+        // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
+        return std::make_shared<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
     }
-    // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
-    return std::make_shared<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
+    // If the token is a primitive type, we can directly create a SymbolType
+    DISCARD(consumeToken());
+    std::string lex = token.getLexeme();
+    ast::PrimitiveType_t prim_t = not_primitive;
+    if (lex == int8_str) {
+        prim_t = i8;
+    } else if (lex == int16_str) {
+        prim_t = i16;
+    } else if (lex == int32_str) {
+        prim_t = i32;
+    } else if (lex == int64_str) {
+        prim_t = i64;
+    } else if (lex == uint8_str) {
+        prim_t = ui8;
+    } else if (lex == uint16_str) {
+        prim_t = ui16;
+    } else if (lex == uint32_str) {
+        prim_t = ui32;
+    } else if (lex == uint64_str) {
+        prim_t = ui64;
+    } else if (lex == float32_str) {
+        prim_t = f32;
+    } else if (lex == float64_str) {
+        prim_t = f64;
+    } else if (lex == string_str) {
+        prim_t = str;
+    } else if (lex == char_str) {
+        prim_t = character;
+    } else if (lex == bool_str) {
+        prim_t = boolean;
+    } else {
+        ASSERT_UNREACHABLE("Unknown primitive type " + lex);
+    }
+    auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());
+    symbol_type->setPrimitiveType(prim_t);
+    return symbol_type;
 }
 
 }  // namespace parser
