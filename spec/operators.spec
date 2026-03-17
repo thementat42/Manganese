@@ -22,12 +22,6 @@ Notes:
     int + float -> float
     float + int -> float
     float + float -> float
-    string + string -> string
-    string + char -> string
-    char + string -> string
-    array + array -> array
-        arrays must be of the same type and shape
-        output is a new array whose length is the sum of the operand lengths
     
     +int -> int
     +float -> float
@@ -46,10 +40,6 @@ Notes:
     int * float -> float
     float * int -> float
     float * float -> float
-    string * uint -> string
-        negative integers are not supported
-    array * uint -> array
-        negative integers are not supported
 
 /
     int / int -> float
@@ -83,8 +73,6 @@ Here, __op__ stands for any of {<, <=, >, >=, ==, !=}
     float __op__ float -> bool
 
     char __op__ char -> bool (compares ASCII values)
-    string __op__ string -> bool (compare character by character -- on ties, shorter = smaller)
-    array __op__ array -> bool (compare element by element -- on ties, shorter = smaller)
 
 
 ## Boolean Operators
