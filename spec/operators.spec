@@ -1,7 +1,7 @@
 Valid Operator Expressions
 
 Primitive types:
-    int
+    int (unless otherwise specified, also works for uint)
     float
     char
     bool
@@ -18,7 +18,7 @@ Notes:
 ## Arithmetic Operators
 
 +
-    int + int -> int
+    int + int -> int (if at least 1 operand is signed, the result is signed)
     int + float -> float
     float + int -> float
     float + float -> float
@@ -27,7 +27,7 @@ Notes:
     +float -> float
 
 -
-    int - int -> int
+    int - int -> int (if at least 1 operand is signed, the result is signed)
     int - float -> float
     float - int -> float
     float - float -> float
@@ -36,7 +36,7 @@ Notes:
     -float -> float
 
 *
-    int * int -> int
+    int * int -> int (if at least 1 operand is signed, the result is signed)
     int * float -> float
     float * int -> float
     float * float -> float
