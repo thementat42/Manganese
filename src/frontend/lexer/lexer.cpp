@@ -97,8 +97,7 @@ if current char is an operator (after doing the above checks), look at the next 
 #include <string>
 #include <utility>
 
-#include "frontend/lexer/lexer_base.hpp"
-#include "utils/number_utils.hpp"
+#include <mnstl/number.hxx>
 
 namespace Manganese {
 
@@ -256,7 +255,7 @@ Result Lexer::tokenizeNumber() {
                 continue;
             }
             // Reject floating point for octal and binary numbers
-            if (base == Base::Octal || base == Base::Binary) {
+            if (base == mnstl::Base::Octal || base == mnstl::Base::Binary) {
                 logging::logError(getLine(), getCol(),
                                   "Invalid number literal: floating point not allowed for {} numbers",
                                   baseToString(base));
@@ -285,7 +284,7 @@ Result Lexer::tokenizeNumber() {
     if (processNumberSuffix(base, numberLiteral, isFloat) == Result::Failure) {
         result = Result::Failure;
     }
-    if (isFloat && base != Base::Decimal) {
+    if (isFloat && base != mnstl::Base::Decimal) {
         logging::logError(getLine(), getCol(), "Invalid floating-point literal {}. Only decimal floats are supported.",
                           numberLiteral);
         result = Result::Failure;
@@ -588,7 +587,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
     char currentChar = peekChar();
     if (currentChar != '0') {
         // Decimal number
-        return NumberPrefixResult{.base = Base::Decimal,
+        return NumberPrefixResult{.base = mnstl::Base::Decimal,
                                   .isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); },
                                   .prefix = ""};
     }
@@ -598,7 +597,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
         case 'X':
             // Hexadecimal number
             advance(2);
-            return NumberPrefixResult{.base = Base::Hexadecimal,
+            return NumberPrefixResult{.base = mnstl::Base::Hexadecimal,
                                       .isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); },
                                       .prefix = "0x"};
         case 'b':
@@ -606,24 +605,24 @@ NumberPrefixResult Lexer::processNumberPrefix() {
             // Binary number
             advance(2);
             return NumberPrefixResult{
-                .base = Base::Binary, .isValidBaseChar = [](char c) { return c == '0' || c == '1'; }, .prefix = "0b"};
+                .base = mnstl::Base::Binary, .isValidBaseChar = [](char c) { return c == '0' || c == '1'; }, .prefix = "0b"};
         case 'o':
         case 'O':
             // Octal number
             advance(2);
             return NumberPrefixResult{
-                .base = Base::Octal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; }, .prefix = "0o"};
+                .base = mnstl::Base::Octal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; }, .prefix = "0o"};
         default:
             // Not a valid base indicator -- just treat it as a decimal number
             logging::logWarning(
                 getLine(), getCol(),
                 "Leading zeros in numeric literals are treated as decimal numbers. Use a 0o prefix for octal numbers.");
             return NumberPrefixResult{
-                .base = Base::Decimal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '9'; }, .prefix = ""};
+                .base = mnstl::Base::Decimal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '9'; }, .prefix = ""};
     }
 }
 
-Result Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat) {
+Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, bool isFloat) {
     /*
         The valid numeric suffixes are:
         - i8, i16, i32, i64 (signed integers with the corresponding bit width)
@@ -707,12 +706,12 @@ Result Lexer::processNumberSuffix(Base base, std::string& numberLiteral, bool is
         return result;
     };
 
-    if (base == Base::Decimal) {
+    if (base == mnstl::Base::Decimal) {
         if (processScientificNotation('e') == Result::Failure) {
             logging::logError(getLine(), getCol(), "Invalid decimal float: must have 'e' exponent");
             return Result::Failure;
         }
-    } else if (base == Base::Hexadecimal && isFloat) {
+    } else if (base == mnstl::Base::Hexadecimal && isFloat) {
         // if (processScientificNotation('p') == Result::Failure) {
         //     logging::logError(getLine(), getCol(), "Invalid hexadecimal float: must have 'p' exponent");
         //     return Result::Failure;

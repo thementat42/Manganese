@@ -9,13 +9,15 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
+#include <mnstl/number.hxx>
 #include <string>
 #include <utility>
-#include <utils/number_utils.hpp>
 #include <vector>
 
+#include "frontend/ast/ast_expressions.hpp"
 #include "frontend/lexer/token_base.hpp"
 #include "frontend/lexer/token_type.hpp"
+
 
 /**
  * Ambiguous cases:
@@ -313,37 +315,26 @@ ast::Expression* Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
         case TokenType::True: return arena.add_node<ast::BoolLiteralExpression>(true);
         case TokenType::False: return arena.add_node<ast::BoolLiteralExpression>(false);
         case TokenType::FloatLiteral: {
-            // // Check for floating-point suffixes
-            // return arena.add_node<ast::NumberLiteralExpression>(lexeme.ends_with("f32") ? stof(lexeme)
-            //                                                                               : stod(lexeme));
-            std::string suffix;
-            extractSuffix(lexeme, suffix);
-            std::optional<number_t> value = utils::stringToNumber(lexeme, Base::Decimal, true, suffix);
-            if (!value) {
+            mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, true);
+            if (!value.exists) {
                 logError(token.getLine(), token.getColumn(), "Invalid float literal '{}'", lexeme);
                 return arena.add_node<ast::NumberLiteralExpression>(0.0);
-                // Error tolerance: return a default value of 0.0
+            } else if (value.overflowed) {
+                logError(token.getLine(), token.getColumn(), "Float literal {} cannot fit in its assigned type",
+                         lexeme);
             }
-            return arena.add_node<ast::NumberLiteralExpression>(*value);
+            return arena.add_node<ast::NumberLiteralExpression>(value.value);
         }
         case TokenType::IntegerLiteral: {
-            // Extract integer suffix
-            Base base = determineNumberBase(lexeme);
-            if (base != Base::Decimal) {
-                // Strip the base prefix (the first two characters: 0x, 0b, 0o) from the lexeme
-                lexeme.erase(0, 2);
-            }
-            std::string numericPart = lexeme;
-            std::string suffix;
-            extractSuffix(numericPart, suffix);
-
-            std::optional<number_t> value = utils::stringToNumber(numericPart, base, false, suffix);
-            if (!value) {
-                logError(token.getLine(), token.getColumn(), "Invalid integer literal '{}'", lexeme);
+            mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, false);
+            if (!value.exists) {
+                logError(token.getLine(), token.getColumn(), "Invalid float literal '{}'", lexeme);
                 return arena.add_node<ast::NumberLiteralExpression>(0);
-                // Error tolerance: return a default value of 0
+            } else if (value.overflowed) {
+                logError(token.getLine(), token.getColumn(), "Integer literal {} cannot fit in its assigned type",
+                         lexeme);
             }
-            return arena.add_node<ast::NumberLiteralExpression>(*value);
+            return arena.add_node<ast::NumberLiteralExpression>(value.value);
         }
         default:
             ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
@@ -391,26 +382,5 @@ constexpr void extractSuffix(std::string& lexeme, std::string& suffix) {
         lexeme.erase(lexeme.length() - 3);
     }
 }
-
-constexpr Base determineNumberBase(const std::string& lexeme) {
-    if (lexeme.length() <= 2) {
-        return Base::Decimal;  // Prefixed literals are at least 3 characters long (0x/0b/0o + at least one digit)
-    }
-    if (lexeme[0] != '0') {
-        // No base prefix, assume decimal
-        return Base::Decimal;
-    }
-    switch (lexeme[1]) {
-        case 'x':
-        case 'X': return Base::Hexadecimal;
-        case 'b':
-        case 'B': return Base::Binary;
-        case 'o':
-        case 'O': return Base::Octal;
-        default:  // Not a base prefix (just leading zero), assume decimal
-            return Base::Decimal;
-    }
-}
-
 }  // namespace parser
 }  // namespace Manganese

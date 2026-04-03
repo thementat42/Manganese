@@ -12,7 +12,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 
 #include <frontend/ast/ast_base.hpp>
-#include <utils/number_utils.hpp>
+#include <mnstl/number.hxx>
 
 namespace Manganese {
 

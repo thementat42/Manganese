@@ -7,14 +7,12 @@
  * The toString() methods are mainly used for error reporting
  * In the test suite, they are used to ensure the program is parsed correctly
  */
-#include <algorithm>
 #include <format>
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
-#include <iomanip>
 #include <sstream>
 #include <string>
-#include <variant>
+
 #include "frontend/ast/ast_base.hpp"
 
 namespace Manganese {
@@ -50,7 +48,7 @@ std::string AggregateLiteralExpression::toString() const {
     oss << "{";
     for (size_t i = 0; i < elements.size(); ++i) {
         oss << toStringOr(elements[i]);
-        if (i < elements.size() - 1) [[likely]] {oss << ", ";}
+        if (i < elements.size() - 1) [[likely]] { oss << ", "; }
     }
     oss << "}";
     return oss.str();
@@ -109,43 +107,7 @@ std::string IndexExpression::toString() const { return std::format("{}[{}]", var
 
 std::string MemberAccessExpression::toString() const { return std::format("{}.{}", object->toString(), property); }
 
-std::string NumberLiteralExpression::toString() const {
-    std::ostringstream oss;
-
-    auto _number_visitor = [&oss](auto&& arg) {
-        using T = std::decay_t<decltype(arg)>;
-
-        if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
-            // we don't want to interpret int8s as chars so force promote it to an int
-            oss << +arg;
-        }
-        // Special handling for floating point types to show decimal point
-        else if constexpr (std::is_same_v<T, float32_t> || std::is_same_v<T, float64_t>) {
-            std::string s = std::to_string(arg);
-            size_t dotPos = s.find('.');
-            int precision = 1;
-            if (dotPos != std::string::npos) [[likely]] {
-                // Count digits after the decimal point
-                int count = static_cast<int>(s.size()) - static_cast<int>(dotPos) - 1;
-                // Remove trailing zeros
-                while (count > 1 && s[s.size() - 1] == '0') {
-                    --count;
-                    s.pop_back();
-                }
-                // Remove trailing dot if all zeros were removed
-                if (count == 0 && s[s.size() - 1] == '.') { s.pop_back(); }
-                precision = std::max(1, count);
-            }
-            oss << std::fixed << std::setprecision(precision) << arg;
-        } else {
-            oss << arg;
-        }
-    };
-
-    std::visit(_number_visitor, value);
-
-    return oss.str();
-}
+std::string NumberLiteralExpression::toString() const { return value.to_string(true); }
 
 std::string PostfixExpression::toString() const {
     return std::format("({}{})", left->toString(), lexer::tokenTypeToString(op));
@@ -345,7 +307,7 @@ std::string GenericType::toString() const {
 }
 
 std::string PointerType::toString() const {
-    return std::format("ptr {}{}", (isMutable? "mut " : ""), baseType->toString());
+    return std::format("ptr {}{}", (isMutable ? "mut " : ""), baseType->toString());
 }
 
 std::string SymbolType::toString() const { return name; }

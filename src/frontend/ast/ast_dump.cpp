@@ -10,12 +10,12 @@
  */
 
 #include "frontend/ast/ast_base.hpp"
+#include "utils/type_names.hpp"
 #if DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
 #include <string>
-#include <utils/number_utils.hpp>
-#include <variant>
+#include <mnstl/number.hxx>
 
 namespace Manganese {
 namespace ast {
@@ -45,32 +45,24 @@ constexpr std::string primitiveTypeToString(PrimitiveType_t prim) {
 }
 
 // Helper function to get the type of a number variant
-std::string getNumberTypeName(const number_t& value) {
-    auto _number_visitor = [](auto&& arg) -> std::string {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, int8_t>) return int8_str;
-        else if constexpr (std::is_same_v<T, uint8_t>)
-            return uint8_str;
-        else if constexpr (std::is_same_v<T, int16_t>)
-            return int16_str;
-        else if constexpr (std::is_same_v<T, uint16_t>)
-            return uint16_str;
-        else if constexpr (std::is_same_v<T, int32_t>)
-            return int32_str;
-        else if constexpr (std::is_same_v<T, uint32_t>)
-            return uint32_str;
-        else if constexpr (std::is_same_v<T, int64_t>)
-            return int64_str;
-        else if constexpr (std::is_same_v<T, uint64_t>)
-            return uint64_str;
-        else if constexpr (std::is_same_v<T, float32_t>)
-            return float32_str;
-        else if constexpr (std::is_same_v<T, float64_t>)
-            return float64_str;
-        else
-            return "unknown";
-    };
-    return std::visit(_number_visitor, value);
+std::string getNumberTypeName(const mnstl::number_t& value) {
+    switch (value.underlying_type()) {
+        case mnstl::number_t::held_type::int8: return int8_str;
+        case mnstl::number_t::held_type::int16: return int16_str;
+        case mnstl::number_t::held_type::int32: return int32_str;
+        case mnstl::number_t::held_type::int64: return int64_str;
+        case mnstl::number_t::held_type::uint8: return uint8_str;
+        case mnstl::number_t::held_type::uint16: return uint16_str;
+        case mnstl::number_t::held_type::uint32: return uint32_str;
+        case mnstl::number_t::held_type::uint64: return uint64_str;
+        case mnstl::number_t::held_type::int128: return int128_str;
+        case mnstl::number_t::held_type::uint128: return uint128_str;
+        case mnstl::number_t::held_type::float32: return float32_str;
+        case mnstl::number_t::held_type::float64: return float64_str;
+        case mnstl::number_t::held_type::none: ASSERT_UNREACHABLE("Number did not hold a value");
+    }
+    ASSERT_UNREACHABLE("Number did not hold a valid type");
+
 }
 
 // Expressions

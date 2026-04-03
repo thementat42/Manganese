@@ -19,10 +19,8 @@
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
 #include <string>
-#include <utils/number_utils.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_base.hpp"
 #include "operators.hpp"
 
 
@@ -43,7 +41,7 @@ struct ParsedFile {
 };
 
 //~ Helper functions that don't depend on the parser class's methods/variables
-constexpr Base determineNumberBase(const std::string& lexeme);
+constexpr mnstl::Base determineNumberBase(const std::string& lexeme);
 constexpr void extractSuffix(std::string& numericPart, std::string& suffix);
 std::string importToString(const Import& import);
 

@@ -8,7 +8,7 @@
 #include <io/logging.hpp>
 #include <optional>
 #include <string>
-#include <utils/number_utils.hpp>
+#include <mnstl/number.hxx>
 
 #include "frontend/lexer/lexer_base.hpp"
 

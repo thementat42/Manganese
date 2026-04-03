@@ -228,9 +228,9 @@ class MemberAccessExpression final : public Expression {
  */
 class NumberLiteralExpression final : public Expression {
    public:
-    number_t value;
+    mnstl::number_t value;
 
-    constexpr explicit NumberLiteralExpression(number_t value_) : Expression(ExpressionKind::NumberLiteralExpression), value(value_) {};
+    constexpr explicit NumberLiteralExpression(mnstl::number_t value_) : Expression(ExpressionKind::NumberLiteralExpression), value(value_) {};
 
     AST_STANDARD_INTERFACE;
 };

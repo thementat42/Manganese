@@ -22,7 +22,7 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <utils/number_utils.hpp>
+#include <mnstl/number.hxx>
 #include <utils/result.hpp>
 
 namespace Manganese {
@@ -35,7 +35,7 @@ enum class Mode {
 };
 
 struct NumberPrefixResult {
-    Base base;
+    mnstl::Base base;
     std::function<bool(char)> isValidBaseChar;
     std::string prefix;
 };
@@ -177,7 +177,7 @@ class Lexer {
      * @param numberLiteral The lexeme for the number literal (the base prefix will be appended if there is one)
      * @param isFloat Whether the number literal is a float (e.g., 1.23f)
      */
-    Result processNumberSuffix(Base base, std::string& numberLiteral, bool isFloat);
+    Result processNumberSuffix(mnstl::Base base, std::string& numberLiteral, bool isFloat);
 
     /**
      * @brief Replaces raw escape sequences in a string with their corresponding characters (e.g. "\n" (literally)

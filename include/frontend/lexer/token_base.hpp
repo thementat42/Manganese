@@ -18,7 +18,6 @@
 
 #include <global_macros.hpp>
 #include <string>
-#include <utils/number_utils.hpp>
 
 #include "token_type.hpp"
 
