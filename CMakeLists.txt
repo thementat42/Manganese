@@ -84,6 +84,7 @@ set_target_properties(manganese PROPERTIES
 
 target_compile_definitions(manganese PRIVATE
     DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
+    # MNSTL_USE_COMPILER_INT128=1
 )
 
 if(CONTINUOUS_MEMORY_TRACKING AND NOT MEMORY_TRACKING)
