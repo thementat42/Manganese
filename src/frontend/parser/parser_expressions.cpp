@@ -328,7 +328,7 @@ ast::Expression* Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
         case TokenType::IntegerLiteral: {
             mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, false);
             if (!value.exists) {
-                logError(token.getLine(), token.getColumn(), "Invalid float literal '{}'", lexeme);
+                logError(token.getLine(), token.getColumn(), "Invalid integer literal '{}'", lexeme);
                 return arena.add_node<ast::NumberLiteralExpression>(0);
             } else if (value.overflowed) {
                 logError(token.getLine(), token.getColumn(), "Integer literal {} cannot fit in its assigned type",
