@@ -140,10 +140,10 @@ bool testKeywords() {
 }
 
 bool testIntegerLiterals() {
-    auto tokens = tokensFromString("0 123u64 456789i8 0xFFF 0b1001 0o33 0x1.23 1.23e-4");
+    auto tokens = tokensFromString("0 123u64 456789i8 0xFFF 0b1001 0o33 0x1.23 1.23e-4, 1i128");
     printAllTokens(tokens);
-    if (tokens.size() != 8) {
-        std::cout << "Expected 8 tokens, got " << tokens.size() << '\n';
+    if (tokens.size() != 9) {
+        std::cout << "Expected 9 tokens, got " << tokens.size() << '\n';
         return false;
     }
 
@@ -154,7 +154,8 @@ bool testIntegerLiterals() {
         && checkToken(tokens[4], TokenType::IntegerLiteral, "0b1001")
         && checkToken(tokens[5], TokenType::IntegerLiteral, "0o33")
         && checkToken(tokens[6], TokenType::FloatLiteral, "0x1.23")
-        && checkToken(tokens[7], TokenType::FloatLiteral, "1.23e-4");
+        && checkToken(tokens[7], TokenType::FloatLiteral, "1.23e-4")
+        && checkToken(tokens[8], TokenType::IntegerLiteral, "1i128");
 }
 
 bool testFloatLiterals() {

@@ -647,11 +647,11 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
             logging::logError(getLine(), getCol(), "Invalid Numeric Suffix {}", width);
             return Result::Failure;
         }
-        const bool validIntWidth = (width == 8 || width == 16 || width == 32 || width == 64);
+        const bool validIntWidth = (width == 8 || width == 16 || width == 32 || width == 64 || width == 128);
         const bool validFloatWidth = (width == 32 || width == 64);
 
         if ((suffix == 'i' || suffix == 'u') && !validIntWidth) {
-            logging::logError(getLine(), getCol(), "Invalid integer suffix: must be 8, 16, 32, or 64");
+            logging::logError(getLine(), getCol(), "Invalid integer suffix: must be 8, 16, 32, 64 or 128");
             return Result::Failure;
         }
         if (suffix == 'f' && !validFloatWidth) {
