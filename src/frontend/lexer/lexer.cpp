@@ -224,7 +224,7 @@ Result Lexer::tokenizeCharLiteral() {
 Result Lexer::tokenizeKeywordOrIdentifier() {
     std::string lexeme = "";
     while (!done() && (isalnum(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
-    TokenType t = keyword_lookup(lexeme);
+    TokenType t = keywordLookup(lexeme);
 
     // if t is unknown, assume it's an identifier, otherwise use the given keyword type
     tokenStream.emplace_back(t == TokenType::Unknown ? TokenType::Identifier : t, lexeme, tokenStartLine,

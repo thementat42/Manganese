@@ -71,6 +71,8 @@ enum class PrimitiveType_t {
     ui32,
     i64,
     ui64,
+    i128,
+    ui128,
     f32,
     f64,
     character,

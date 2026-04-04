@@ -78,7 +78,7 @@ constexpr std::array keywordTable = {
     keyword_map_entry{"while", TokenType::While},
 };
 
-TokenType keyword_lookup(const std::string_view& s) noexcept {
+TokenType keywordLookup(const std::string_view& s) noexcept {
     for (const auto& p : keywordTable) {
         if (p.str == s) { return p.type; }
     }

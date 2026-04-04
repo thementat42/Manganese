@@ -66,29 +66,31 @@ class Token {
     constexpr size_t getColumn() const noexcept { return column; }
 
     constexpr bool isPrefixOperator() const noexcept {
-        return type == TokenType::Inc || type == TokenType::Dec || type == TokenType::BitAnd || type == TokenType::Mul
-            || type == TokenType::AddressOf || type == TokenType::Dereference;
+        using enum TokenType;
+        return type == Inc || type == Dec || type == BitAnd || type == Mul || type == AddressOf || type == Dereference;
     }
     constexpr bool isLiteral() const noexcept {
-        return type == TokenType::IntegerLiteral || type == TokenType::FloatLiteral || type == TokenType::StrLiteral
-            || type == TokenType::CharLiteral || type == TokenType::True || type == TokenType::False;
+        using enum TokenType;
+        return type == IntegerLiteral || type == FloatLiteral || type == StrLiteral || type == CharLiteral
+            || type == True || type == False;
     }
     constexpr bool isBracket() const noexcept {
-        return type == TokenType::LeftParen || type == TokenType::RightParen || type == TokenType::LeftBrace
-            || type == TokenType::RightBrace || type == TokenType::LeftSquare || type == TokenType::RightSquare;
+        using enum TokenType;
+        return type == LeftParen || type == RightParen || type == LeftBrace || type == RightBrace || type == LeftSquare
+            || type == RightSquare;
     }
     constexpr bool isPrimitiveType() const noexcept {
-        return type == TokenType::Int8 || type == TokenType::Int16 || type == TokenType::Int32
-            || type == TokenType::Int64 || type == TokenType::UInt8 || type == TokenType::UInt16
-            || type == TokenType::UInt32 || type == TokenType::UInt64 || type == TokenType::Float32
-            || type == TokenType::Float64 || type == TokenType::Char || type == TokenType::Bool
-            || type == TokenType::String;
+        using enum TokenType;
+        return type == Int8 || type == Int16 || type == Int32 || type == Int64 || type == UInt8 || type == UInt16
+            || type == UInt32 || type == UInt64 || type == Float32 || type == Float64 || type == Int128
+            || type == UInt128 || type == Char || type == Bool || type == String;
     }
     constexpr bool hasUnaryCounterpart() const noexcept {
-        return type == TokenType::Plus ||  // + can be addition or unary plus
-            type == TokenType::Minus ||  // - can be subtraction or unary minus
-            type == TokenType::BitAnd ||  // & can be bitwise AND or address-of operator
-            type == TokenType::Mul;  // * can be multiplication or dereference operator
+        using enum TokenType;
+        return type == Plus ||  // + can be addition or unary plus
+            type == Minus ||  // - can be subtraction or unary minus
+            type == BitAnd ||  // & can be bitwise AND or address-of operator
+            type == Mul;  // * can be multiplication or dereference operator
     }
 
     /**
@@ -103,7 +105,7 @@ class Token {
 
 //~ Helpers, not tied to the Token class
 constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE;
-TokenType keyword_lookup(const std::string_view& s) noexcept;
+TokenType keywordLookup(const std::string_view& s) noexcept;
 
 }  // namespace lexer
 }  // namespace Manganese

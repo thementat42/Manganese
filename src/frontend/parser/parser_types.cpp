@@ -171,6 +171,8 @@ TypeSPtr_t Parser::parseSymbolType() NOEXCEPT_IF_RELEASE {
         prim_t = i32;
     } else if (lex == int64_str) {
         prim_t = i64;
+    } else if (lex == int128_str) {
+        prim_t = i128;
     } else if (lex == uint8_str) {
         prim_t = ui8;
     } else if (lex == uint16_str) {
@@ -179,6 +181,8 @@ TypeSPtr_t Parser::parseSymbolType() NOEXCEPT_IF_RELEASE {
         prim_t = ui32;
     } else if (lex == uint64_str) {
         prim_t = ui64;
+    } else if (lex == uint128_str) {
+        prim_t = ui128;
     } else if (lex == float32_str) {
         prim_t = f32;
     } else if (lex == float64_str) {
