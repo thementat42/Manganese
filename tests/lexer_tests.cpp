@@ -25,7 +25,7 @@ namespace Manganese {
 namespace tests {
 using lexer::Token, lexer::TokenType;
 
-inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = false) {
+inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true) {
     if (tokens.empty()) {
         std::cout << "No tokens found." << '\n';
         return;
