@@ -4,24 +4,28 @@
  */
 
 #include <frontend/ast.hpp>
-#include <frontend/parser.hpp>
 #include <frontend/lexer/token_type.hpp>
+#include <frontend/parser.hpp>
+
 
 namespace Manganese {
 namespace parser {
 // Lookup Registration Methods
 
-constexpr void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
+constexpr void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower,
+                                                 ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::binary(bindingPower);
     ledLookup[_index] = handler;
 }
-constexpr void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
+constexpr void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower,
+                                                  ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::postfix(bindingPower);
     ledLookup[_index] = handler;
 }
-constexpr void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
+constexpr void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower,
+                                                 ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::prefix(bindingPower);
     ledLookup[_index] = handler;
@@ -48,7 +52,8 @@ constexpr void Parser::registerStmtHandler(TokenType type, statementHandler_t ha
 
 // Type Lookup Registration Methods
 
-constexpr void Parser::registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept {
+constexpr void Parser::registerLedHandler_type(TokenType type, Precedence precedence,
+                                               ledHandler_types_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap_type[_index] = Operator::binary(precedence);
     ledLookup_types[_index] = handler;
@@ -138,8 +143,7 @@ void Parser::initializeLookups() noexcept {
     registerNudHandler_binary(LeftSquare, &Parser::parseArrayInstantiationExpression);
     registerLedHandler_binary(LeftSquare, Precedence::Postfix, &Parser::parseIndexingExpression);
     registerLedHandler_binary(MemberAccess, Precedence::Member, &Parser::parseMemberAccessExpression);
-    registerLedHandler_binary(ScopeResolution, Precedence::ScopeResolution,
-                              &Parser::parseScopeResolutionExpression);
+    registerLedHandler_binary(ScopeResolution, Precedence::ScopeResolution, &Parser::parseScopeResolutionExpression);
 
     //~ Statements
     registerStmtHandler(Alias, &Parser::parseAliasStatement);
@@ -180,6 +184,8 @@ void Parser::initializeTypeLookups() noexcept {
     registerNudHandler_type(UInt64, &Parser::parseSymbolType);
     registerNudHandler_type(Float32, &Parser::parseSymbolType);
     registerNudHandler_type(Float64, &Parser::parseSymbolType);
+    registerNudHandler_type(Int128, &Parser::parseSymbolType);
+    registerNudHandler_type(UInt128, &Parser::parseSymbolType);
     registerNudHandler_type(Char, &Parser::parseSymbolType);
     registerNudHandler_type(Bool, &Parser::parseSymbolType);
     registerNudHandler_type(String, &Parser::parseSymbolType);
