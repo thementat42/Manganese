@@ -270,7 +270,7 @@ bool testBitwiseOperators() {
 
 bool testAggregateDeclarationAndInstantiation() {
     std::string expression = "public aggregate Point {\n"
-                             "    x: int32;\n"
+                             "    x: uint128;\n"
                              "    y: int32;\n"
                              "    some_field: float64;\n"
                              "}\n"
@@ -289,7 +289,7 @@ bool testAggregateDeclarationAndInstantiation() {
 
     // Note: In the final declaration, the numeric value for the colour is the decimal equivalent of 0xFF0000
     std::array<std::string, 5> expected = {
-        "public aggregate Point {\n\tx: int32;\n\ty: int32;\n\tsome_field: float64;\n}",
+        "public aggregate Point {\n\tx: uint128;\n\ty: int32;\n\tsome_field: float64;\n}",
         "private aggregate Rectangle {\n\ttopLeft: Point;\n\tbottomRight: Point;\n\tcolor: uint32;\n}",
         "(let mut p1: private auto = Point {x = 10, y = 20});", "(let mut p2: private Point = Point {x = 30, y = 40});",
         "(let rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};

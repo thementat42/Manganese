@@ -140,7 +140,7 @@ bool testKeywords() {
 }
 
 bool testIntegerLiterals() {
-    auto tokens = tokensFromString("0 123u64 456789i8 0xFFF 0b1001 0o33 0x1.23 1.23e-4, 1i128");
+    auto tokens = tokensFromString("0 123u64 456789i8 0xFFF 0b1001 0o33 0x1.23 1.23e-4 1i128");
     printAllTokens(tokens);
     if (tokens.size() != 9) {
         std::cout << "Expected 9 tokens, got " << tokens.size() << '\n';
