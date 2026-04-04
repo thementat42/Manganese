@@ -99,12 +99,12 @@ class Token {
     void overrideType(TokenType type_, std::string lexeme_ = "");
 
     // These functions are long, so are implemented in a separate header
-    constexpr TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
+    TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
     std::string toString() const noexcept;
 };
 
 //~ Helpers, not tied to the Token class
-constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE;
+std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE;
 TokenType keywordLookup(const std::string_view& s) noexcept;
 
 }  // namespace lexer

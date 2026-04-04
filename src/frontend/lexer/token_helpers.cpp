@@ -1,15 +1,8 @@
-#ifndef MANGANGESE_INCLUDE_FRONTEND_LEXER_TOKEN_CONSTEXPR_IMPL_INL
-#define MANGANGESE_INCLUDE_FRONTEND_LEXER_TOKEN_CONSTEXPR_IMPL_INL
-/**
- * @file token_helpers.hpp
- * @brief Implementation of constexpr functions for the Token class
- */
-
 #include <format>
 #include <frontend/lexer/token_base.hpp>
 #include <utils/type_names.hpp>
 
-#include "token_type.hpp"
+#include <frontend/lexer/token.hpp>
 
 namespace Manganese {
 
@@ -17,11 +10,7 @@ namespace lexer {
 
 //! Most of this is long
 
-inline std::string Token::toString() const noexcept {
-    return std::format("Token: {} ('{}') at line {}, column {}", tokenTypeToString(type), lexeme, line, column);
-}
-
-constexpr TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
+TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
     switch (type) {
         case TokenType::Plus: return TokenType::UnaryPlus;
         case TokenType::Minus: return TokenType::UnaryMinus;
@@ -31,7 +20,7 @@ constexpr TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
     }
 }
 
-constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) NOEXCEPT_IF_RELEASE {
+TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) NOEXCEPT_IF_RELEASE {
     using enum lexer::TokenType;
     switch (assignmentOp) {
         case PlusAssign: return Plus;
@@ -46,13 +35,13 @@ constexpr TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType ass
         case BitLShiftAssign: return BitLShift;
         case BitRShiftAssign: return BitRShift;
         default:
-            ASSERT_UNREACHABLE(std ::format("Cannot convert assignment operator {} to binary operator",
-                                            lexer ::tokenTypeToString(assignmentOp)));
+            ASSERT_UNREACHABLE(std::format("Cannot convert assignment operator {} to binary operator",
+                                           lexer ::tokenTypeToString(assignmentOp)));
             return Unknown;
     }
 }
 
-constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
+std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
     switch (type) {
         // Basic
         case TokenType::Identifier: return "Identifier";
@@ -182,5 +171,3 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
 }  // namespace lexer
 
 }  // namespace Manganese
-
-#endif  // MANGANGESE_INCLUDE_FRONTEND_LEXER_TOKEN_CONSTEXPR_IMPL_INL

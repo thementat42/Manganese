@@ -85,5 +85,9 @@ TokenType keywordLookup(const std::string_view& s) noexcept {
     return TokenType::Unknown;
 }
 
+std::string Token::toString() const noexcept {
+    return std::format("Token: {} (lexeme: '{}') at line {}, column {}", tokenTypeToString(type), lexeme, line, column);
+}
+
 }  // namespace lexer
 }  // namespace Manganese
