@@ -24,7 +24,7 @@ void TestRunner::runTest(const std::string& testName, bool (*testFunction)()) {
     std::cout << "Running test: " << testName << "...\n";
 
     bool result = testFunction();
-    std::cout << (result ? GREEN : RED) << std::format("Test: {}: {}", testName, (result ? "PASSED" : "FAILED"))
+    std::cout << (result ? GREEN : RED) << std::format("Test '{}' {}", testName, (result ? "PASSED" : "FAILED"))
               << RESET << "\n";
 
     if (result) {
