@@ -8,7 +8,6 @@
 
 #include <global_macros.hpp>
 
-#include <functional>
 #include <string>
 
 namespace Manganese {
@@ -21,9 +20,9 @@ class TestRunner {
     std::string failedTests = "";  // Keep track of failed tests for debugging
 
    public:
-    void runTest(const std::string& testName, std::function<bool()> testFunction);
-    void printSummary();
-    bool allTestsPassed();
+    void runTest(const std::string& testName, bool (*testFunction)());
+    void printSummary() noexcept;
+    constexpr bool allTestsPassed() const noexcept {return failed == 0;}
 };
 }  // namespace tests
 }  // namespace Manganese

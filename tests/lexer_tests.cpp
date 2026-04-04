@@ -12,7 +12,6 @@
 #include <cassert>
 #include <filesystem>
 #include <frontend/lexer.hpp>
-#include <functional>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
 #include <iostream>

@@ -496,7 +496,7 @@ static bool miscTests() {
     return true;
 }
 
-int runParserTests(TestRunner& runner) {
+void runParserTests(TestRunner& runner) {
     // Clear the log file before running tests
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();  // Here, we don't really care if the clearing failed
@@ -522,8 +522,6 @@ int runParserTests(TestRunner& runner) {
     runner.runTest("Parsing from file", testParseFromFile);
     runner.runTest("Redundant Semicolons", testRedundantSemicolons);
     runner.runTest("Miscellaneous Tests", miscTests);
-
-    return runner.allTestsPassed() ? 0 : 1;
 }
 }  // namespace tests
 }  // namespace Manganese
