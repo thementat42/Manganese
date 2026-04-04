@@ -30,12 +30,12 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true
         std::cout << "No tokens found." << '\n';
         return;
     }
-    std::cout << "Tokens: " << CYAN;
+    std::cout << "Tokens:\n" << CYAN;
     for (const auto& token : tokens) {
         if (verbose) {
-            std::cout << token.toString();
+            std::cout << token.toString() << "\n";
         } else {
-            std::cout << token.getLexeme() << " ";
+            std::cout << token.getLexeme() << "\n";
         }
     }
     std::cout << RESET << '\n';
