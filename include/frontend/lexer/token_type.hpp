@@ -53,7 +53,7 @@ enum class TokenType : uint8_t {
     _keywordStart,  // Marker for the start of keyword token types -- not to be used as an actual token type
     //* Type Qualifiers
     Let,  // variable declaration
-    Mut, // specify something as mutable
+    Mut,  // specify something as mutable
     Ptr,  // pointer variables
 
     //* Access Levels
@@ -65,10 +65,12 @@ enum class TokenType : uint8_t {
     Int16,  // 16 bit int
     Int32,  // 32 bit int
     Int64,  // 64 bit int
+    Int128,  // 128 bit int
     UInt8,  // unsigned 8 bit int
     UInt16,  // unsigned 16 bit int
     UInt32,  // unsigned 32 bit int
     UInt64,  // unsigned 64 bit int
+    UInt128,  // unsigned 128 bit int
     Float32,  // 32-bit float (single precision)
     Float64,  // 64-bit float (double precision)
     Char,  // single character
