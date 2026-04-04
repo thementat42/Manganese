@@ -163,9 +163,9 @@ class number_t {
         return _underlying == held_type::none ? std::nullopt : std::make_optional<T>(value_as<T>());
     }
 
-    constexpr std::string to_string(bool trim_trailing_decimals = false) const NOEXCEPT_IF_RELEASE {
+    constexpr std::string to_string(bool trim_trailing_decimals = false) const noexcept {
         if (_underlying == held_type::none) { return ""; }
-        std::string result = _visit([](auto v) {
+        std::string result = _visit([](Numeric auto v) -> std::string {
             using U = std::decay_t<decltype(v)>;
             if constexpr (std::is_same_v<U, int8_t> || std::is_same_v<U, uint8_t>) {
                 // since int8 and uint8 are char-based, force a promotion to an integer here to print out a number
