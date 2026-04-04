@@ -104,6 +104,7 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
         case TokenType::Int16: return int16_str;
         case TokenType::Int32: return int32_str;
         case TokenType::Int64: return int64_str;
+        case TokenType::Int128: return int128_str;
         case TokenType::Lambda: return "lambda";
         case TokenType::Let: return "let";
         case TokenType::Module: return "module";
@@ -121,6 +122,7 @@ constexpr std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
         case TokenType::UInt16: return uint16_str;
         case TokenType::UInt32: return uint32_str;
         case TokenType::UInt64: return uint64_str;
+        case TokenType::UInt128: return uint128_str;
         case TokenType::While: return "while";
 
         case TokenType::Plus: return "+";
