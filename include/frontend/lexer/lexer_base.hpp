@@ -20,9 +20,9 @@
 #include <io/reader.hpp>
 #include <io/stringreader.hpp>
 #include <memory>
+#include <mnstl/number.hxx>
 #include <optional>
 #include <string>
-#include <mnstl/number.hxx>
 #include <utils/result.hpp>
 
 namespace Manganese {
@@ -39,39 +39,6 @@ struct NumberPrefixResult {
     std::function<bool(char)> isValidBaseChar;
     std::string prefix;
 };
-
-//~ Static helper functions
-
-/**
- * @brief Map a character to its corresponding escape sequence (e.g. 'n' -> '\n')
- * @param escapeChar The character to map
- * @return An optional character representing the escape sequence, or NONE if the character is not a valid escape
- * sequence
- */
-std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_t col);
-
-/**
- * @brief Convert a wide character to a UTF-8 encoded string
- * @param wideChar The wide character to convert
- * @return A string containing the UTF-8 encoded representation of the wide character
- */
-std::string encodeUTF8String(char32_t wideChar);
-
-/**
- * @brief Resolves escape sequences of the form \xXX
- * @param escDigits The hexadecimal digits following the escape sequence (e.g. "1F")
- * @return An optional character representing the resolved escape sequence, or NONE if the sequence is invalid
- */
-std::optional<char32_t> resolveHexCharacters(const std::string& escDigits);
-
-/**
- * @brief Resolves escape sequences of the form \uXXXX or \UXXXXXXXX
- * @param escDigits The hexadecimal digits following the escape sequence (e.g. "1F4A9" for \u1F4A9)
- * @param isLongUnicode Whether the escape sequence is a long Unicode escape sequence (\UXXXXXXXX)
- * @return An optional character representing the resolved escape sequence, or NONE if the sequence is invalid
- */
-std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, size_t line, size_t col,
-                                                 bool isLongUnicode = false);
 
 /**
  * @brief The lexer is responsible for turning the source code into a non-textual representation that the parser can
@@ -227,6 +194,55 @@ class Lexer {
      */
     inline void advance(size_t n = 1) noexcept { reader->setPosition(reader->getPosition() + n); }
 };
+
+//~ Static helper functions
+
+constexpr inline bool isbdigit(char c) noexcept { return c == '0' || c == '1'; }
+constexpr inline bool isdigit(char c) noexcept { return (c >= '0' && c <= '9'); }
+constexpr inline bool isodigit(char c) { return (c >= '0' && c <= '7'); }
+constexpr inline bool isxdigit(char c) noexcept {
+    return isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+constexpr inline bool isalpha(char c) noexcept { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+constexpr inline bool isspace(char c) noexcept {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' | c == '\f' || c == '\v';
+}
+constexpr inline char tolower(char c) noexcept {
+    if (c >= 'A' && c <= 'Z') { return c - 'A' + 'a'; }
+    return c;
+}
+
+/**
+ * @brief Map a character to its corresponding escape sequence (e.g. 'n' -> '\n')
+ * @param escapeChar The character to map
+ * @return An optional character representing the escape sequence, or NONE if the character is not a valid escape
+ * sequence
+ */
+std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_t col);
+
+/**
+ * @brief Convert a wide character to a UTF-8 encoded string
+ * @param wideChar The wide character to convert
+ * @return A string containing the UTF-8 encoded representation of the wide character
+ */
+std::string encodeUTF8String(char32_t wideChar);
+
+/**
+ * @brief Resolves escape sequences of the form \xXX
+ * @param escDigits The hexadecimal digits following the escape sequence (e.g. "1F")
+ * @return An optional character representing the resolved escape sequence, or NONE if the sequence is invalid
+ */
+std::optional<char32_t> resolveHexCharacters(const std::string& escDigits);
+
+/**
+ * @brief Resolves escape sequences of the form \uXXXX or \UXXXXXXXX
+ * @param escDigits The hexadecimal digits following the escape sequence (e.g. "1F4A9" for \u1F4A9)
+ * @param isLongUnicode Whether the escape sequence is a long Unicode escape sequence (\UXXXXXXXX)
+ * @return An optional character representing the resolved escape sequence, or NONE if the sequence is invalid
+ */
+std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, size_t line, size_t col,
+                                                 bool isLongUnicode = false);
+
 }  // namespace lexer
 }  // namespace Manganese
 

@@ -98,6 +98,7 @@ if current char is an operator (after doing the above checks), look at the next 
 #include <utility>
 
 #include <mnstl/number.hxx>
+#include "frontend/lexer/lexer_base.hpp"
 
 namespace Manganese {
 
@@ -134,7 +135,7 @@ void Lexer::lex(size_t numTokens) {
             advance();  // Skip the newline
         } else if (currentChar == '/' && peekChar(1) == '*') {
             result = skipBlockComment();
-        } else if (std::isspace(currentChar)) [[likely]] {  // lots of whitespace
+        } else if (isspace(currentChar)) [[likely]] {  // lots of whitespace
             advance();  // Skip whitespace
         } else if (isalpha(currentChar) || currentChar == '_') [[likely]] {  // Mostly identifiers and keywords
             result = tokenizeKeywordOrIdentifier();
@@ -147,7 +148,7 @@ void Lexer::lex(size_t numTokens) {
             //? TODO: f-strings? (f"stuff {expression} more stuff")
             result = tokenizeStringLiteral();
             ++numTokensMade;
-        } else if (std::isdigit(currentChar)) {
+        } else if (isdigit(currentChar)) {
             result = tokenizeNumber();
             ++numTokensMade;
         } else {
@@ -264,7 +265,7 @@ Result Lexer::tokenizeNumber() {
                 continue;
             }
             isFloat = true;
-        } else if (!std::isalnum(currentChar)) {
+        } else if (!isalnum(currentChar)) {
             break;
         } else if (!isValidBaseChar(currentChar)) {
             char lower_char = (char)tolower(currentChar);
@@ -588,7 +589,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
     if (currentChar != '0') {
         // Decimal number
         return NumberPrefixResult{.base = mnstl::Base::Decimal,
-                                  .isValidBaseChar = [](char c) { return isdigit(static_cast<unsigned char>(c)); },
+                                  .isValidBaseChar = isdigit,
                                   .prefix = ""};
     }
     // Could be a base indicator (0x, 0b, 0o) -- check next char
@@ -598,27 +599,27 @@ NumberPrefixResult Lexer::processNumberPrefix() {
             // Hexadecimal number
             advance(2);
             return NumberPrefixResult{.base = mnstl::Base::Hexadecimal,
-                                      .isValidBaseChar = [](char c) { return isxdigit(static_cast<unsigned char>(c)); },
+                                      .isValidBaseChar = isxdigit,
                                       .prefix = "0x"};
         case 'b':
         case 'B':
             // Binary number
             advance(2);
             return NumberPrefixResult{
-                .base = mnstl::Base::Binary, .isValidBaseChar = [](char c) { return c == '0' || c == '1'; }, .prefix = "0b"};
+                .base = mnstl::Base::Binary, .isValidBaseChar = isbdigit, .prefix = "0b"};
         case 'o':
         case 'O':
             // Octal number
             advance(2);
             return NumberPrefixResult{
-                .base = mnstl::Base::Octal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '7'; }, .prefix = "0o"};
+                .base = mnstl::Base::Octal, .isValidBaseChar = isodigit, .prefix = "0o"};
         default:
             // Not a valid base indicator -- just treat it as a decimal number
             logging::logWarning(
                 getLine(), getCol(),
                 "Leading zeros in numeric literals are treated as decimal numbers. Use a 0o prefix for octal numbers.");
             return NumberPrefixResult{
-                .base = mnstl::Base::Decimal, .isValidBaseChar = [](char c) { return c >= '0' && c <= '9'; }, .prefix = ""};
+                .base = mnstl::Base::Decimal, .isValidBaseChar = isdigit, .prefix = ""};
     }
 }
 
@@ -633,7 +634,7 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
 
     auto readUint = [this]() -> int {
         int value = 0;
-        while (!done() && std::isdigit(peekChar())) { value = value * 10 + (consumeChar() - '0'); }
+        while (!done() && isdigit(peekChar())) { value = value * 10 + (consumeChar() - '0'); }
         return value;
     };
 
@@ -641,7 +642,7 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
 
     char currentChar = (char)tolower(peekChar());
     if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {
-        char suffix = static_cast<char>(std::tolower(consumeChar()));
+        char suffix = tolower(consumeChar());
         int width = readUint();
         if (width == 0) {
             logging::logError(getLine(), getCol(), "Invalid Numeric Suffix {}", width);
@@ -673,28 +674,28 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
 
     // Scientific Notation
 
-    currentChar = (char)std::tolower(peekChar());
+    currentChar = tolower(peekChar());
 
-    if (!std::isalpha(currentChar)) {  // there's no scientific notation
+    if (!isalpha(currentChar)) {  // there's no scientific notation
         return Result::Success;
     }
 
     auto processScientificNotation = [&](char expected) -> Result {
         if (currentChar != expected) { return Result::Failure; }
 
-        numberLiteral += static_cast<char>(std::tolower(consumeChar()));
+        numberLiteral += tolower(consumeChar());
 
         char next = peekChar();
         if (next == '+' || next == '-') { numberLiteral += consumeChar(); }
 
-        if (!std::isdigit(peekChar())) {
+        if (!isdigit(peekChar())) {
             logging::logError(getLine(), getCol(), "Invalid exponent: must be a number");
             return Result::Failure;
         }
         Result result = Result::Success;
 
-        while (!done() && std::isalnum(peekChar())) {
-            if (!std::isdigit(peekChar())) {
+        while (!done() && isalnum(peekChar())) {
+            if (!isdigit(peekChar())) {
                 logging::logError(getLine(), getCol(), "Invalid character {} in exponent", peekChar());
                 result = Result::Failure;
                 advance();
@@ -717,10 +718,10 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
         //     return Result::Failure;
         // }
     } else {
-        if ((char)std::tolower(peekChar()) == 'e') {  //|| (char)std::tolower(peekChar()) == 'p') {
+        if (tolower(peekChar()) == 'e') {  //|| (char)std::tolower(peekChar()) == 'p') {
             logging::logError(getLine(), getCol(), "{} numbers do not support exponents", baseToString(base));
         }
-        while (std::isalnum(peekChar())) {
+        while (isalnum(peekChar())) {
             logging::logError(getLine(), getCol(), "Invalid character {} in numeric literal", consumeChar());
         }
         return Result::Failure;

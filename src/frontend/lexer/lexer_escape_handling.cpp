@@ -142,7 +142,7 @@ std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
     // Check that the string is exactly 2 characters long
     if (esc.length() != 2) { return NONE; }
     // Check that both characters are hex digits
-    if (!std::isxdigit(esc[0]) || !std::isxdigit(esc[1])) { return NONE; }
+    if (!isxdigit(esc[0]) || !isxdigit(esc[1])) { return NONE; }
     char32_t hexChar = static_cast<char32_t>(hexDigitToInt(esc[0]));
     hexChar <<= 4;  // Make room for the second hex digit
     hexChar |= static_cast<char32_t>(hexDigitToInt(esc[1]));
@@ -154,7 +154,7 @@ std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, size_t 
     if (esc.length() != expectedLength) { return NONE; }
     char32_t unicodeChar = 0;
     for (char c : esc) {
-        if (!std::isxdigit(c)) { return NONE; }
+        if (!isxdigit(c)) { return NONE; }
         unicodeChar <<= 4;
         unicodeChar |= static_cast<char32_t>(hexDigitToInt(c));
     }
