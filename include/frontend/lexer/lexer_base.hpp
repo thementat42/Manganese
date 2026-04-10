@@ -36,7 +36,7 @@ enum class Mode {
 
 struct NumberPrefixResult {
     mnstl::Base base;
-    std::function<bool(char)> isValidBaseChar;
+    bool (*isValidBaseChar)(char);
     std::string prefix;
 };
 
