@@ -87,7 +87,6 @@ if current char is an operator (after doing the above checks), look at the next 
 #include <cctype>
 #include <format>
 #include <frontend/lexer.hpp>
-#include <functional>
 #include <global_macros.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>

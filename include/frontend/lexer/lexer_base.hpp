@@ -14,7 +14,6 @@
 
 #include <deque>
 #include <frontend/lexer/token.hpp>
-#include <functional>
 #include <global_macros.hpp>
 #include <io/filereader.hpp>
 #include <io/reader.hpp>
