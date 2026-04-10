@@ -12,6 +12,8 @@
 
 #include "frontend/lexer/lexer_base.hpp"
 
+// TODO: Rework to properly handle unicode, validation, etc.
+
 namespace Manganese {
 namespace lexer {
 // ~ Constants for UTF-8 encoding
