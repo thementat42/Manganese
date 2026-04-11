@@ -9,6 +9,7 @@
 #include <global_macros.hpp>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace Manganese {
 namespace parser {

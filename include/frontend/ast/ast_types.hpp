@@ -13,6 +13,7 @@
 
 #include <frontend/ast/ast_base.hpp>
 #include <mnstl/number.hxx>
+#include <vector>
 
 namespace Manganese {
 

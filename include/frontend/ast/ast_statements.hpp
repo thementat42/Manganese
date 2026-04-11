@@ -17,6 +17,7 @@
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_types.hpp>
 #include <utility>
+#include <vector>
 
 namespace Manganese {
 
