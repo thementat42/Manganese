@@ -85,8 +85,10 @@ class number_t {
             case float64: return std::forward<F>(f)(_f64);
             case int128: return std::forward<F>(f)(_i128);
             case uint128: return std::forward<F>(f)(_u128);
-            case none: ASSERT_UNREACHABLE("Attempted to read a number_t with no stored value");
+            case none:
+                ASSERT_UNREACHABLE("Attempted to read a number_t with no stored value");
         }
+        ASSERT_UNREACHABLE("");
     }
 
    public:
