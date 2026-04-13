@@ -4,6 +4,7 @@
  * readability and maintainability.
  */
 
+#include <algorithm>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
