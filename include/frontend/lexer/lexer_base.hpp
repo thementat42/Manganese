@@ -204,7 +204,7 @@ constexpr inline bool isxdigit(char c) noexcept {
 }
 constexpr inline bool isalpha(char c) noexcept { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
 constexpr inline bool isspace(char c) noexcept {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' | c == '\f' || c == '\v';
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
 }
 constexpr inline char tolower(char c) noexcept {
     if (c >= 'A' && c <= 'Z') { return c - 'A' + 'a'; }
