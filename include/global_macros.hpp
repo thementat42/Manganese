@@ -7,9 +7,8 @@
 #define MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
 
 #include <stdint.h>
-
-#include <iostream>
-#include <utility>
+#include <stdio.h>
+#include <string>
 
 // Some common includes that are used frequently
 
@@ -63,14 +62,13 @@
 #endif  // __cplusplus >= 202302L
 }
 
-[[noreturn]] inline void panic(const char* message = "", const char* file = "", unsigned line = 0,
+[[noreturn]] inline void panic(const char* message = "", const char* file = "", size_t line = 0,
                                const char* func = "") {
-    std::cerr << "\033[31mUnreachable code reached: " << message << "\n\033[0m";
-    std::cerr << "\033[33m In file: " << file << ", at line " << line << ": when running " << func << "\033[0m\n";
+    fprintf(stderr, "\033[31mUnreachable code reached: %s \nIn file %s at line %zu when running %s\033[0m\n", message, file, line, func);
     throw(message);
 }
 
-[[noreturn]] FORCE_INLINE void panic(const std::string& message, const char* file, unsigned line, const char* func) {
+[[noreturn]] FORCE_INLINE void panic(const std::string& message, const char* file, size_t line, const char* func) {
     panic(message.c_str(), file, line, func);
 }
 

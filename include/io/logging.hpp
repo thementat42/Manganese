@@ -14,6 +14,7 @@
 
 #include <format>  // Include format here so any files that use logging have it included
 #include <global_macros.hpp>
+#include <iostream>
 
 // ANSI color codes for terminal output
 constexpr const char* GREEN = "\033[32m";
