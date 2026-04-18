@@ -46,17 +46,17 @@ typedef double float64_t;
 
 namespace detail {
 template <class T, class... Types>
-constexpr inline bool is_one_of = (std::is_same_v<std::remove_cvref_t<T>, Types> || ...);
+constexpr inline bool is_any_of = (std::is_same_v<std::remove_cvref_t<T>, Types> || ...);
 
 }  // namespace detail
 
 template <class T>
-concept FloatingPoint = detail::is_one_of<T, float32_t, float64_t, long double>;
+concept FloatingPoint = detail::is_any_of<T, float32_t, float64_t, long double>;
 template <class T>
-concept SignedIntegral = detail::is_one_of<T, int8_t, int16_t, int32_t, int64_t, int128_t>;
+concept SignedIntegral = detail::is_any_of<T, int8_t, int16_t, int32_t, int64_t, int128_t>;
 
 template <class T>
-concept UnsignedIntegral = detail::is_one_of<T, uint8_t, uint16_t, uint32_t, uint64_t, uint128_t>;
+concept UnsignedIntegral = detail::is_any_of<T, uint8_t, uint16_t, uint32_t, uint64_t, uint128_t>;
 template <class T>
 concept Integral = SignedIntegral<T> || UnsignedIntegral<T>;
 template <class T>
