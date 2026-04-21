@@ -1,10 +1,10 @@
-#include <cstdint>
 #ifndef MNSTL_EXT_NUMS_I128_HXX
 #define MNSTL_EXT_NUMS_I128_HXX 1
 
 #include <bit>
 #include <cassert>
 #include <compare>
+#include <cstdint>
 #include <format>
 #include <limits>
 #include <ostream>
@@ -12,25 +12,26 @@
 
 #include "ext_num_config.hxx"
 
+
 // macros to make definitions of op= (e.g. +=) more concise
 
-#define MNSTL_I128_SELF_IN_PLACE_OP(op, is_noexcept)                                            \
+#define MNSTL_I128_SELF_IN_PLACE_OP(op, is_noexcept)                                          \
     constexpr _basic_int128& operator op## = (const _basic_int128& r) noexcept(is_noexcept) { \
-        *this = *this op r;                                                                     \
-        return *this;                                                                           \
+        *this = *this op r;                                                                   \
+        return *this;                                                                         \
     }
 
-#define MNSTL_I128_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                                \
+#define MNSTL_I128_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                              \
     constexpr _basic_int128& operator op## = (Integral auto r) noexcept(is_noexcept) { \
-        *this = *this op r;                                                              \
-        return *this;                                                                    \
+        *this = *this op r;                                                            \
+        return *this;                                                                  \
     }
 
-#define MNSTL_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                                          \
-    template <Integral I, bool B>                                                             \
+#define MNSTL_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                                        \
+    template <Integral I, bool B>                                                           \
     constexpr I& operator op## = (I & l, const _basic_int128<B>& r) noexcept(is_noexcept) { \
-        l = l op static_cast<I>(r);                                                           \
-        return l;                                                                             \
+        l = l op static_cast<I>(r);                                                         \
+        return l;                                                                           \
     }
 
 namespace mnstl {
