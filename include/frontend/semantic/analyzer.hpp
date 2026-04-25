@@ -45,7 +45,11 @@ class analyzer final : public _analyzer_base_t {
     inline bool checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
         bool programIsSemanticallyValid = true;
         for (auto& stmt : parsed.program) {
-            programIsSemanticallyValid = programIsSemanticallyValid && this->visit(stmt);
+            // Note: don't do a shortcut with && (e.g. valid && visit) since `&&` short circuits but visit has side
+            // effects. thus, if the program is invalid visit will never run (since false && anything is false so the
+            // right hand side isn't evaluated) which means that once one visit is invalid, all subsequent visits will
+            // never happen (limiting the compiler to 1 error at a time)
+            if (this->visit(stmt) == false) { programIsSemanticallyValid = false; }
         }
         return programIsSemanticallyValid;
     }
