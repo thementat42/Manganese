@@ -17,6 +17,7 @@
 #include <global_macros.hpp>
 #include <memory>
 #include <string>
+#include <vector>
 #include <utils/type_names.hpp>
 
 #if DEBUG
@@ -47,6 +48,7 @@ class Expression;
 class Statement;
 class Type;
 using TypeSPtr_t = std::shared_ptr<Type>;
+typedef std::vector<Statement*> Block;
 
 /*
 TypeSPtr_t is a shared pointer since, in the semantic analysis phase, multiple AST nodes may refer to the same type.

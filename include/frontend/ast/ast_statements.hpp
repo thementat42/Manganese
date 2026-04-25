@@ -13,7 +13,6 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 
 #include <frontend/ast/ast_base.hpp>
-#include <frontend/ast/ast_block.hpp>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_types.hpp>
 #include <utility>
