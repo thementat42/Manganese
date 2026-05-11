@@ -23,24 +23,13 @@ namespace Manganese {
 namespace ast {
 
 enum class ExpressionKind {
-    AggregateInstantiationExpression,
-    AggregateLiteralExpression,
-    ArrayLiteralExpression,
-    AssignmentExpression,
-    BinaryExpression,
-    BoolLiteralExpression,
-    CharLiteralExpression,
-    FunctionCallExpression,
-    GenericExpression,
-    IdentifierExpression,
-    IndexExpression,
-    MemberAccessExpression,
-    NumberLiteralExpression,
-    PostfixExpression,
-    PrefixExpression,
-    ScopeResolutionExpression,
-    StringLiteralExpression,
-    TypeCastExpression
+#define STMT(name, str)
+#define EXPR(name, str) name,
+#define TYPE(name, str)
+#include "ast.def"
+#undef STMT
+#undef EXPR
+#undef TYPE
 };
 
 struct AggregateInstantiationField {

@@ -20,12 +20,13 @@ namespace Manganese {
 namespace ast {
 
 enum class TypeKind {
-    AggregateType,
-    ArrayType,
-    FunctionType,
-    GenericType,
-    PointerType,
-    SymbolType
+#define STMT(name, str)
+#define EXPR(name, str)
+#define TYPE(name, str) name,
+#include "ast.def"
+#undef STMT
+#undef EXPR
+#undef TYPE
 };
 
 /**

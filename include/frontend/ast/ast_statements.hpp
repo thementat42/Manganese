@@ -23,20 +23,13 @@ namespace Manganese {
 namespace ast {
 
 enum class StatementKind {
-    AggregateDeclarationStatement,
-    AliasStatement,
-    BreakStatement,
-    ContinueStatement,
-    EmptyStatement,
-    EnumDeclarationStatement,
-    ExpressionStatement,
-    FunctionDeclarationStatement,
-    IfStatement,
-    RepeatLoopStatement,
-    ReturnStatement,
-    SwitchStatement,
-    VariableDeclarationStatement,
-    WhileLoopStatement
+#define STMT(name, str) name,
+#define EXPR(name, str)
+#define TYPE(name, str)
+#include "ast.def"
+#undef STMT
+#undef EXPR
+#undef TYPE
 };
 
 struct AggregateField {
