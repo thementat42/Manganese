@@ -1,0 +1,46 @@
+// Statements
+
+STMT(AggregateDeclarationStatement, "AggregateDeclarationStatement")
+STMT(AliasStatement, "AliasStatement")
+STMT(BreakStatement, "BreakStatement")
+STMT(ContinueStatement, "ContinueStatement")
+STMT(EmptyStatement, "EmptyStatement")
+STMT(EnumDeclarationStatement, "EnumDeclarationStatement")
+STMT(ExpressionStatement, "ExpressionStatement")
+STMT(FunctionDeclarationStatement, "FunctionDeclarationStatement")
+STMT(IfStatement, "IfStatement")
+STMT(RepeatLoopStatement, "RepeatLoopStatement")
+STMT(ReturnStatement, "ReturnStatement")
+STMT(SwitchStatement, "SwitchStatement")
+STMT(VariableDeclarationStatement, "VariableDeclarationStatement")
+STMT(WhileLoopStatement, "WhileLoopStatement")
+
+// Expressions
+
+EXPR(AggregateInstantiationExpression, "AggregateInstantiationExpression")
+EXPR(AggregateLiteralExpression, "AggregateLiteralExpression")
+EXPR(ArrayLiteralExpression, "ArrayLiteralExpression")
+EXPR(AssignmentExpression, "AssignmentExpression")
+EXPR(BinaryExpression, "BinaryExpression")
+EXPR(BoolLiteralExpression, "BoolLiteralExpression")
+EXPR(CharLiteralExpression, "CharLiteralExpression")
+EXPR(FunctionCallExpression, "FunctionCallExpression")
+EXPR(GenericExpression, "GenericExpression")
+EXPR(IdentifierExpression, "IdentifierExpression")
+EXPR(IndexExpression, "IndexExpression")
+EXPR(MemberAccessExpression, "MemberAccessExpression")
+EXPR(NumberLiteralExpression, "NumberLiteralExpression")
+EXPR(PostfixExpression, "PostfixExpression")
+EXPR(PrefixExpression, "PrefixExpression")
+EXPR(ScopeResolutionExpression, "ScopeResolutionExpression")
+EXPR(StringLiteralExpression, "StringLiteralExpression")
+EXPR(TypeCastExpression, "TypeCastExpression")
+
+// Types
+
+TYPE(AggregateType, "AggregateType")
+TYPE(ArrayType, "ArrayType")
+TYPE(FunctionType, "FunctionType")
+TYPE(GenericType, "GenericType")
+TYPE(PointerType, "PointerType")
+TYPE(SymbolType, "SymbolType")
