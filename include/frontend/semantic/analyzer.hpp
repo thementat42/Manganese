@@ -58,49 +58,15 @@ class analyzer final : public _analyzer_base_t {
     // overrides for visitor functions
     using _analyzer_base_t::visit;
 
-    // Expression Visiting
-    exprvisit_t visit(ast::AggregateInstantiationExpression*) override;
-    exprvisit_t visit(ast::AggregateLiteralExpression*) override;
-    exprvisit_t visit(ast::ArrayLiteralExpression*) override;
-    exprvisit_t visit(ast::AssignmentExpression*) override;
-    exprvisit_t visit(ast::BinaryExpression*) override;
-    exprvisit_t visit(ast::BoolLiteralExpression*) override;
-    exprvisit_t visit(ast::CharLiteralExpression*) override;
-    exprvisit_t visit(ast::FunctionCallExpression*) override;
-    exprvisit_t visit(ast::GenericExpression*) override;
-    exprvisit_t visit(ast::IdentifierExpression*) override;
-    exprvisit_t visit(ast::IndexExpression*) override;
-    exprvisit_t visit(ast::MemberAccessExpression*) override;
-    exprvisit_t visit(ast::NumberLiteralExpression*) override;
-    exprvisit_t visit(ast::PostfixExpression*) override;
-    exprvisit_t visit(ast::PrefixExpression*) override;
-    exprvisit_t visit(ast::ScopeResolutionExpression*) override;
-    exprvisit_t visit(ast::StringLiteralExpression*) override;
-    exprvisit_t visit(ast::TypeCastExpression*) override;
+#define STMT(name, str) stmtvisit_t visit(ast::name*) override;
+#define EXPR(name, str) exprvisit_t visit(ast::name*) override;
+#define TYPE(name, str) typevisit_t visit(ast::name*) override;
 
-    // Statement Visiting
-    stmtvisit_t visit(ast::AggregateDeclarationStatement*) override;
-    stmtvisit_t visit(ast::AliasStatement*) override;
-    stmtvisit_t visit(ast::BreakStatement*) override;
-    stmtvisit_t visit(ast::ContinueStatement*) override;
-    stmtvisit_t visit(ast::EmptyStatement*) override;
-    stmtvisit_t visit(ast::EnumDeclarationStatement*) override;
-    stmtvisit_t visit(ast::ExpressionStatement*) override;
-    stmtvisit_t visit(ast::FunctionDeclarationStatement*) override;
-    stmtvisit_t visit(ast::IfStatement*) override;
-    stmtvisit_t visit(ast::RepeatLoopStatement*) override;
-    stmtvisit_t visit(ast::ReturnStatement*) override;
-    stmtvisit_t visit(ast::SwitchStatement*) override;
-    stmtvisit_t visit(ast::VariableDeclarationStatement*) override;
-    stmtvisit_t visit(ast::WhileLoopStatement*) override;
+#include <frontend/ast/ast.def>
 
-    // Type Visiting
-    typevisit_t visit(ast::AggregateType*) override;
-    typevisit_t visit(ast::ArrayType*) override;
-    typevisit_t visit(ast::FunctionType*) override;
-    typevisit_t visit(ast::GenericType*) override;
-    typevisit_t visit(ast::PointerType*) override;
-    typevisit_t visit(ast::SymbolType*) override;
+#undef STMT
+#undef EXPR
+#undef TYPE
 };
 
 }  // namespace semantic
