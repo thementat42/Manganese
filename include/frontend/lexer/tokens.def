@@ -1,0 +1,151 @@
+// Basic
+TOKEN(Identifier, "identifier")
+TOKEN(StrLiteral, "string literal")
+TOKEN(CharLiteral, "char literal")
+TOKEN(IntegerLiteral, "integer literal")
+TOKEN(FloatLiteral, "float literal")
+
+TOKEN(Keyword, "keyword")
+TOKEN(Operator, "operator")
+
+// Brackets
+TOKEN(LeftParen, "(")
+TOKEN(RightParen, ")")
+TOKEN(LeftBrace, "{")
+TOKEN(RightBrace, "}")
+TOKEN(LeftSquare, "[")
+TOKEN(RightSquare, "]")
+
+// Punctuation
+TOKEN(Semicolon, ";")
+TOKEN(Colon, ":")
+TOKEN(Comma, ",")
+
+// Misc
+TOKEN(EndOfFile, "<eof>")
+
+// Keywords
+TOKEN(_keywordStart, "<keyword-start>")  // meta for keyword info (nothing lexes to this)
+
+KEYWORD(Let, "let")
+KEYWORD(Mut, "mut")
+KEYWORD(Ptr, "ptr")
+
+KEYWORD(Private, "private")
+KEYWORD(Public, "public")
+
+KEYWORD(Int8, "int8")
+KEYWORD(Int16, "int16")
+KEYWORD(Int32, "int32")
+KEYWORD(Int64, "int64")
+KEYWORD(Int128, "int128")
+
+KEYWORD(UInt8, "uint8")
+KEYWORD(UInt16, "uint16")
+KEYWORD(UInt32, "uint32")
+KEYWORD(UInt64, "uint64")
+KEYWORD(UInt128, "uint128")
+
+KEYWORD(Float32, "float32")
+KEYWORD(Float64, "float64")
+
+KEYWORD(Char, "char")
+KEYWORD(Bool, "bool")
+KEYWORD(True, "true")
+KEYWORD(False, "false")
+KEYWORD(String, "string")
+
+KEYWORD(If, "if")
+KEYWORD(Elif, "elif")
+KEYWORD(Else, "else")
+
+KEYWORD(Switch, "switch")
+KEYWORD(Case, "case")
+KEYWORD(Default, "default")
+
+KEYWORD(For, "for")
+KEYWORD(While, "while")
+KEYWORD(Repeat, "repeat")
+KEYWORD(Do, "do")
+KEYWORD(Break, "break")
+KEYWORD(Continue, "continue")
+
+KEYWORD(Func, "func")
+KEYWORD(Lambda, "lambda")
+KEYWORD(Return, "return")
+
+KEYWORD(Import, "import")
+KEYWORD(Module, "module")
+KEYWORD(As, "as")
+
+KEYWORD(Aggregate, "aggregate")
+KEYWORD(Enum, "enum")
+KEYWORD(Blueprint, "blueprint")
+
+KEYWORD(Alias, "alias")
+
+TOKEN(_keywordEnd, "<keyword-end>")  // meta for keyword info (nothing lexes to this)
+
+// Operators
+TOKEN(_operatorStart, "<operator-start>")  // meta for operator info (nothing lexes to this)
+
+OPERATOR(Plus, "+")
+OPERATOR(Minus, "-")
+OPERATOR(Mul, "*")
+OPERATOR(Div, "/")
+OPERATOR(FloorDiv, "//")
+OPERATOR(Mod, "%")
+OPERATOR(Inc, "++")
+OPERATOR(Dec, "--")
+
+OPERATOR(UnaryPlus, "+")
+OPERATOR(UnaryMinus, "-")
+
+OPERATOR(PlusAssign, "+=")
+OPERATOR(MinusAssign, "-=")
+OPERATOR(MulAssign, "*=")
+OPERATOR(DivAssign, "/=")
+OPERATOR(FloorDivAssign, "//=")
+OPERATOR(ModAssign, "%=")
+
+OPERATOR(GreaterThan, ">")
+OPERATOR(GreaterThanOrEqual, ">=")
+OPERATOR(LessThan, "<")
+OPERATOR(LessThanOrEqual, "<=")
+OPERATOR(Equal, "==")
+OPERATOR(NotEqual, "!=")
+
+OPERATOR(And, "&&")
+OPERATOR(Or, "||")
+OPERATOR(Not, "!")
+
+OPERATOR(BitAnd, "&")
+OPERATOR(BitOr, "|")
+OPERATOR(BitNot, "~")
+OPERATOR(BitXor, "^")
+OPERATOR(BitLShift, "<<")
+OPERATOR(BitRShift, ">>")
+
+OPERATOR(BitAndAssign, "&=")
+OPERATOR(BitOrAssign, "|=")
+OPERATOR(BitNotAssign, "~=")
+OPERATOR(BitXorAssign, "^=")
+OPERATOR(BitLShiftAssign, "<<=")
+OPERATOR(BitRShiftAssign, ">>=")
+
+OPERATOR(AddressOf, "&")
+OPERATOR(Dereference, "*")
+
+OPERATOR(MemberAccess, ".")
+OPERATOR(ScopeResolution, "::")
+
+OPERATOR(Assignment, "=")
+OPERATOR(Arrow, "->")
+OPERATOR(Ellipsis, "...")
+OPERATOR(At, "@")
+
+TOKEN(_operatorEnd, "<operator-end>") // meta for operator info (nothing lexes to this)
+
+TOKEN(Unknown, "<unknown>")
+
+TOKEN(_tokenCount, "<count>")  // sentinel value for arrays
