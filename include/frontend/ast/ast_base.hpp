@@ -17,8 +17,9 @@
 #include <global_macros.hpp>
 #include <memory>
 #include <string>
-#include <vector>
 #include <utils/type_names.hpp>
+#include <vector>
+
 
 #if DEBUG
 #define OVERRIDE_DUMP_METHOD_ \
@@ -101,11 +102,6 @@ class ASTNode {
 
     virtual std::string toString() const = 0;
 
-    constexpr inline void set_line(size_t _line) noexcept { line = _line; }
-    constexpr inline size_t get_line() const noexcept { return line; }
-    constexpr inline void set_column(size_t _column) noexcept { column = _column; }
-    constexpr inline size_t get_column() const noexcept { return column; }
-
 #if DEBUG
     /**
      * @brief Dump the AST node to an output stream
@@ -115,7 +111,9 @@ class ASTNode {
     virtual void dump(std::ostream& os, size_t indent = 0) const = 0;
 #endif  // DEBUG
 
+    constexpr inline void setLine(size_t _line) noexcept { line = _line; }
     constexpr inline size_t getLine() const noexcept { return line; }
+    constexpr inline void setColumn(size_t _column) noexcept { column = _column; }
     constexpr inline size_t getColumn() const noexcept { return column; }
     constexpr inline void setLineColumn(size_t line_, size_t column_) noexcept {
         line = line_;
