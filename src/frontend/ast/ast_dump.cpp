@@ -205,7 +205,7 @@ void NumberLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "NumberLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
-    os << getIndent(indent + 1) << "Type from parser: " << getNumberTypeName(value) << "\n";
+    os << getIndent(indent + 1) << "Inferred literal type: " << getNumberTypeName(value) << "\n";
     os << getIndent(indent) << "}\n";
 }
 
