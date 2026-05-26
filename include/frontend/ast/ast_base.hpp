@@ -60,11 +60,11 @@ redundant deep copies cloning types would also require cloning expressions (e.g.
 expensive, so shared_pointer is much more efficient
 */
 
-enum class ExpressionKind;
-enum class StatementKind;
-enum class TypeKind;
+enum class ExpressionKind : uint8_t;
+enum class StatementKind : uint8_t;
+enum class TypeKind : uint8_t;
 
-enum class PrimitiveType_t {
+enum class PrimitiveType_t : uint8_t {
     not_primitive = 0,
     i8,
     ui8,
@@ -83,7 +83,7 @@ enum class PrimitiveType_t {
     boolean
 };
 
-enum class Visibility : char {
+enum class Visibility : uint8_t {
     Public = 0,
     Private = 2,
 };

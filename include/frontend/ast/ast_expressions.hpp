@@ -22,7 +22,7 @@ namespace Manganese {
 
 namespace ast {
 
-enum class ExpressionKind {
+enum class ExpressionKind : uint8_t {
 #define STMT(name, str)
 #define EXPR(name, str) name,
 #define TYPE(name, str)

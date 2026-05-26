@@ -19,7 +19,7 @@ namespace Manganese {
 
 namespace ast {
 
-enum class TypeKind {
+enum class TypeKind : uint8_t {
 #define STMT(name, str)
 #define EXPR(name, str)
 #define TYPE(name, str) name,

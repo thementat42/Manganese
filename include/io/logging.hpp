@@ -29,7 +29,7 @@ constexpr const char* RESET = "\033[0m";
 namespace Manganese {
 namespace logging {
 
-enum class LogLevel {
+enum class LogLevel : uint8_t {
     Info,
     Warning,
     Error,
