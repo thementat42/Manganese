@@ -10,8 +10,10 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <global_macros.hpp>
+#include <io/logging.hpp>
 #include <memory>
 #include <string>
+
 
 namespace Manganese {
 namespace parser {
@@ -61,24 +63,13 @@ bool Parser::isUnaryContext() const noexcept {
 Token Parser::expectToken(TokenType expectedType) { return expectToken(expectedType, "Unexpected token: "); }
 
 Token Parser::expectToken(TokenType expectedType, const std::string& errorMessage) {
-    // TODO: Better error handling
-    // Rather than blindly advancing, we want to continue in such a way that errors don't cascade
-    // e.g., right now, in an if statement, if we expect a closing parenthesis (if (condition)), but
-    // find an open brace (because the programmer forgot the closing parenthesis), everything breaks
-    // -- the expression parsing fails, parsing the actual block fails, then the first statement in the block fails
-    // since the first token in that statement got skipped, etc.
-    // It might be worth designing different expectToken functions for different statements/contexts
-    // e.g., in any block precursor, when a ) is missed, just keep going until we find a {, then parse a block from
-    // there
-    //, skipping any other logic in the conditional
-    TokenType type = peekTokenType();
-    if (type == expectedType) { return consumeToken(); }
-    std::cerr << errorMessage
-              << std::format(" (expected {}, but got {}) ", lexer::tokenTypeToString(expectedType),
-                             lexer::tokenTypeToString(type));
-    hasError = true;
+    Token tok = peekToken();
+    if (tok.getType() == expectedType) { return consumeToken(); }
+    logging::logError(tok.getLine(), tok.getColumn(), "{} (expected '{}' but got '{}')", errorMessage,
+                      lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(tok.getType()));
+    this->hasError = true;
 
-    return consumeToken();
+    return hasError ? lexer::Token{} : consumeToken();
 }
 
 std::string importToString(const Import& import) {
