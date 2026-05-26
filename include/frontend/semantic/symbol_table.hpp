@@ -5,7 +5,6 @@
 
 #include <format>
 #include <frontend/ast.hpp>
-#include <functional>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
 #include <string>
@@ -46,7 +45,7 @@ struct Symbol {
 
 struct Scope {
     // std::equal_to<> enables heterogenous lookup
-    std::unordered_map<std::string_view, Symbol, std::hash<std::string_view>, std::equal_to<>> symbols;
+    std::unordered_map<std::string_view, Symbol> symbols;
     Result insert(std::string_view name, Symbol symbol) {
         bool result = symbols.emplace(name, std::move(symbol)).second;
         return result ? Result::Success : Result::Failure;
