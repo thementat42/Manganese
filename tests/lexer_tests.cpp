@@ -18,7 +18,6 @@
 #include <string>
 #include <vector>
 
-#include "frontend/lexer/token_type.hpp"
 #include "testrunner.hpp"
 
 namespace Manganese {

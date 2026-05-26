@@ -9,13 +9,13 @@
  * @note This file does nothing in release builds.
  */
 
-#include "frontend/ast/ast_base.hpp"
-#include "utils/type_names.hpp"
+#include <utils/type_names.hpp>
 #if DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.hpp>
 #include <global_macros.hpp>
-#include <string>
 #include <mnstl/number.hxx>
+#include <string>
+
 
 namespace Manganese {
 namespace ast {
@@ -40,9 +40,8 @@ constexpr std::string primitiveTypeToString(PrimitiveType_t prim) {
         case PrimitiveType_t::f64: return float64_str;
         case PrimitiveType_t::character: return char_str;
         case PrimitiveType_t::str: return string_str;
-        case PrimitiveType_t::boolean:
-            return bool_str;
-            default: ASSERT_UNREACHABLE("Invalid primitive type");
+        case PrimitiveType_t::boolean: return bool_str;
+        default: ASSERT_UNREACHABLE("Invalid primitive type");
     }
 }
 
@@ -64,7 +63,6 @@ std::string getNumberTypeName(const mnstl::number_t& value) {
         case mnstl::number_t::held_type::none: ASSERT_UNREACHABLE("Number did not hold a value");
     }
     ASSERT_UNREACHABLE("Number did not hold a valid type");
-
 }
 
 // Expressions

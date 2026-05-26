@@ -13,8 +13,6 @@
 #include <sstream>
 #include <string>
 
-#include "frontend/ast/ast_base.hpp"
-
 namespace Manganese {
 namespace ast {
 

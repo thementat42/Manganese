@@ -10,8 +10,6 @@
 #include <string>
 #include <mnstl/number.hxx>
 
-#include "frontend/lexer/lexer_base.hpp"
-
 // TODO: Rework to properly handle unicode, validation, etc.
 
 namespace Manganese {

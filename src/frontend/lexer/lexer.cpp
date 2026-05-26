@@ -97,7 +97,6 @@ if current char is an operator (after doing the above checks), look at the next 
 #include <utility>
 
 #include <mnstl/number.hxx>
-#include "frontend/lexer/lexer_base.hpp"
 
 namespace Manganese {
 

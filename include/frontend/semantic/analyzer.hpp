@@ -8,11 +8,6 @@
 #include <global_macros.hpp>
 #include <memory>
 
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/ast/ast_types.hpp"
-#include "utils/type_names.hpp"
-
-
 namespace Manganese {
 
 namespace semantic {
