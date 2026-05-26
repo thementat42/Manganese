@@ -51,11 +51,10 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
         case LogLevel::Info: std::cerr << BLUE << "[Internal Info] " << message << RESET << "\n"; break;
         case LogLevel::Warning: std::cerr << YELLOW << "[Internal Warning] " << message << RESET << "\n"; break;
         case LogLevel::Error: std::cerr << RED << "[Internal Error] " << message << RESET << "\n"; break;
-        case LogLevel::Critical: std::cerr << RED << "[Internal Critical Error] " << message << RESET << "\n"; break;
-    }
-    if (level == LogLevel::Critical) {
-        std::cerr << ("Critical error encountered");
-        throw std::runtime_error("Critical error");
+        case LogLevel::Critical:
+            std::cerr << RED << "[Internal Critical Error] " << message << RESET << "\n";
+            std::cerr << "Critical error encountered";
+            throw std::runtime_error("Critical error");
     }
 #else  // ^^ DEBUG vv !DEBUG
     DISCARD(level);
