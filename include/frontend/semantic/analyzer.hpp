@@ -4,9 +4,10 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
+#include <frontend/semantic/primitives.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <global_macros.hpp>
-#include <memory>
+
 
 namespace Manganese {
 
@@ -19,45 +20,12 @@ class analyzer final : public _analyzer_base_t {
    private:
     SymbolTable table;
     parser::ParsedFile& parsed;
+    const primitives& primitive_types;
 
     // Cached primitive types
-    struct {
-        ast::TypeSPtr_t int8 = std::make_shared<ast::SymbolType>(int8_str);
-        ast::TypeSPtr_t int16 = std::make_shared<ast::SymbolType>(int16_str);
-        ast::TypeSPtr_t int32 = std::make_shared<ast::SymbolType>(int32_str);
-        ast::TypeSPtr_t int64 = std::make_shared<ast::SymbolType>(int64_str);
-        ast::TypeSPtr_t int128 = std::make_shared<ast::SymbolType>(int128_str);
-        ast::TypeSPtr_t uint8 = std::make_shared<ast::SymbolType>(uint8_str);
-        ast::TypeSPtr_t uint16 = std::make_shared<ast::SymbolType>(uint16_str);
-        ast::TypeSPtr_t uint32 = std::make_shared<ast::SymbolType>(uint32_str);
-        ast::TypeSPtr_t uint64 = std::make_shared<ast::SymbolType>(uint64_str);
-        ast::TypeSPtr_t uint128 = std::make_shared<ast::SymbolType>(uint128_str);
-        ast::TypeSPtr_t float32 = std::make_shared<ast::SymbolType>(float32_str);
-        ast::TypeSPtr_t float64 = std::make_shared<ast::SymbolType>(float64_str);
-        ast::TypeSPtr_t character = std::make_shared<ast::SymbolType>(char_str);
-        ast::TypeSPtr_t boolean = std::make_shared<ast::SymbolType>(bool_str);
-        ast::TypeSPtr_t string = std::make_shared<ast::SymbolType>(string_str);
-   } primitives;
 
-   public :
-       analyzer(parser::ParsedFile& file) :
-       table(), parsed(file) {
-        primitives.int8->setPrimitiveType(ast::PrimitiveType_t::i8);
-        primitives.int16->setPrimitiveType(ast::PrimitiveType_t::i16);
-        primitives.int32->setPrimitiveType(ast::PrimitiveType_t::i32);
-        primitives.int64->setPrimitiveType(ast::PrimitiveType_t::i64);
-        primitives.int128->setPrimitiveType(ast::PrimitiveType_t::i128);
-        primitives.uint8->setPrimitiveType(ast::PrimitiveType_t::ui8);
-        primitives.uint16->setPrimitiveType(ast::PrimitiveType_t::ui16);
-        primitives.uint32->setPrimitiveType(ast::PrimitiveType_t::ui32);
-        primitives.uint64->setPrimitiveType(ast::PrimitiveType_t::ui64);
-        primitives.uint128->setPrimitiveType(ast::PrimitiveType_t::ui128);
-        primitives.float32->setPrimitiveType(ast::PrimitiveType_t::f32);
-        primitives.float64->setPrimitiveType(ast::PrimitiveType_t::f64);
-        primitives.character->setPrimitiveType(ast::PrimitiveType_t::character);
-        primitives.boolean->setPrimitiveType(ast::PrimitiveType_t::boolean);
-        primitives.string->setPrimitiveType(ast::PrimitiveType_t::str);
-    }
+   public:
+    analyzer(parser::ParsedFile& file, const primitives& prims) : table(), parsed(file), primitive_types(prims) {}
 
     bool analyze() {
         collectTypes();

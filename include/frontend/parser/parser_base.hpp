@@ -14,6 +14,7 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
+#include <frontend/semantic/primitives.hpp>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
 #include <memory>
@@ -22,7 +23,6 @@
 #include <vector>
 
 #include "operators.hpp"
-
 
 namespace Manganese {
 namespace parser {
@@ -54,6 +54,7 @@ class Parser {
     std::string moduleName;
     std::vector<Import> imports;
     mnstl::chunk_allocator& arena;
+    const semantic::primitives& primitive_types;
 
     // Some flags
     bool hasParsedFileHeader = false;  // Processing module and import
@@ -62,7 +63,16 @@ class Parser {
     bool isParsingBlockPrecursor = false;  // Used to determine if we are parsing a block precursor (if/for/while, etc.)
 
    public:  // public methods
-    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& arena);
+    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& _arena,
+           const semantic::primitives& prims) :
+        lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(_arena), primitive_types(prims) {
+        if (lexer->hasCriticalError()) {
+            this->hasCriticalError_ = true;
+            return;
+        }
+        initializeLookups();
+        initializeTypeLookups();
+    }
 
     // Avoid file ownership issues
     Parser(const Parser&) = delete;
@@ -96,7 +106,8 @@ class Parser {
 
     // Expression Parsing
     ast::Expression* parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseAggregateInstantiationExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseAggregateInstantiationExpression(ast::Expression* left,
+                                                           Precedence precedence) NOEXCEPT_IF_RELEASE;
     ast::Expression* parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE;
     ast::Expression* parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE;
     ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;

@@ -13,13 +13,13 @@
 #include <array>
 #include <filesystem>
 #include <frontend/parser.hpp>
+#include <frontend/semantic/primitives.hpp>
 #include <fstream>
 #include <global_macros.hpp>
 #include <iostream>
 #include <string>
 
 #include "testrunner.hpp"
-
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
@@ -29,10 +29,11 @@ namespace Manganese {
 namespace tests {
 
 static const char* logFileName = "logs/parser_tests.log";
-mnstl::chunk_allocator alloc;
+mnstl::chunk_allocator allocator;
+semantic::primitives primitives;
 
 ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
-    parser::Parser parser(source, mode, alloc);
+    parser::Parser parser(source, mode, allocator, primitives);
     if (parser.hasCriticalError()) { throw std::runtime_error("Compilation Aborted\n"); }
     parser::ParsedFile file = parser.parse();
 
@@ -472,7 +473,7 @@ bool testImportsAndAliases() {
 bool testParseFromFile() {
     std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
     mnstl::chunk_allocator file_allocator{};
-    parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
+    parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator, primitives);
     auto x = p.parse();
     if (!x.moduleName.empty()) { std::cout << "module " << x.moduleName << ";\n"; }
     for (const auto& element : x.imports) { std::cout << parser::importToString(element) << "\n"; }

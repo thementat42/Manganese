@@ -9,24 +9,13 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
+#include <frontend/semantic/primitives.hpp>
 #include <global_macros.hpp>
 #include <io/logging.hpp>
-#include <memory>
 #include <string>
-
 
 namespace Manganese {
 namespace parser {
-
-Parser::Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& _arena) :
-    lexer(make_unique<lexer::Lexer>(source, mode)), arena(_arena) {
-    if (lexer->hasCriticalError()) {
-        this->hasCriticalError_ = true;
-        return;
-    }
-    initializeLookups();
-    initializeTypeLookups();
-}
 
 ParsedFile Parser::parse() {
     // Parse the header (module declaration and imports)
