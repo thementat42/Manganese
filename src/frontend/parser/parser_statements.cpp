@@ -158,17 +158,21 @@ ast::Statement* Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
 ast::Statement* Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
     Token enumStartToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
-    TypeSPtr_t baseType;
+    TypeSPtr_t baseType = primitive_types.int32;  // default if no type specified or if there's an error
     std::vector<ast::EnumValue> values;
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());
-        if (!peekToken().isPrimitiveType()) {
-            logError(peekToken().getLine(), peekToken().getColumn(),
-                     "Enums can only have primitive types as their underlying type, not {}", peekToken().getLexeme());
+        Token underlyingTok = peekToken();
+        if (const auto* p = primitive_types.fromLexeme(underlyingTok.getLexeme())) {
+            baseType = *p;
+            DISCARD(consumeToken());
+        } else if (underlyingTok.getType() == TokenType::LeftBrace) {
+            logError(underlyingTok.getLine(), underlyingTok.getColumn(), "Expected an underlying type for an enum");
+        } else {
+            logError(underlyingTok.getLine(), underlyingTok.getColumn(),
+                     "Enums can only have primitive types as their underlying type, not {}", underlyingTok.getLexeme());
+            DISCARD(consumeToken());
         }
-        baseType = std::make_shared<ast::SymbolType>(consumeToken().getLexeme());
-    } else {
-        baseType = std::make_shared<ast::SymbolType>("int32");  // Default to int32 if no base type is specified
     }
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
     while (!done() && peekTokenType() != TokenType::RightBrace) {
@@ -261,7 +265,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE 
         returnType = parseType(Precedence::Default);
     }
     return arena.add_node<ast::FunctionDeclarationStatement>(name, std::move(genericTypes), std::move(params),
-                                                               std::move(returnType), parseBlock("function body"));
+                                                             std::move(returnType), parseBlock("function body"));
 }
 
 ast::Statement* Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
@@ -292,7 +296,7 @@ ast::Statement* Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
         elseBody = parseBlock("else body");
     }
     return arena.add_node<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs),
-                                              std::move(elseBody));
+                                            std::move(elseBody));
 }
 
 ast::Statement* Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
@@ -439,8 +443,7 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
             return tempAlias;
         }
         case TokenType::Aggregate: {
-            auto tempAggregate
-                = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
+            auto tempAggregate = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
             tempAggregate->visibility = visibility;
             return tempAggregate;
         }
@@ -450,8 +453,7 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
             return tempEnum;
         }
         case TokenType::Func: {
-            auto tempFunction
-                = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement());
+            auto tempFunction = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement());
             tempFunction->visibility = visibility;
             return tempFunction;
         }
@@ -501,7 +503,7 @@ ast::Statement* Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
     return arena.add_node<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, std::move(value),
-                                                               std::move(explicitType));
+                                                             std::move(explicitType));
 }
 
 ast::Statement* Parser::parseWhileLoopStatement() NOEXCEPT_IF_RELEASE {
