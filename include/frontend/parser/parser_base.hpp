@@ -55,17 +55,19 @@ class Parser {
     const semantic::primitives& primitive_types;
 
     // Some flags
-    bool hasParsedFileHeader = false;  // Processing module and import
-    bool hasError = false;
-    bool hasCriticalError_ = false;
-    bool isParsingBlockPrecursor = false;  // Used to determine if we are parsing a block precursor (if/for/while, etc.)
+    struct {
+        bool hasParsedFileHeader : 1 = false;  // Processing module and import
+        bool hasError : 1 = false;
+        bool _hasCriticalError : 1 = false;
+        bool isParsingBlockPrecursor : 1 = false;  // if/for/while, etc.
+    };
 
    public:  // public methods
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& _arena,
            const semantic::primitives& prims) :
         lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(_arena), primitive_types(prims) {
         if (lexer->hasCriticalError()) {
-            this->hasCriticalError_ = true;
+            this->_hasCriticalError = true;
             return;
         }
         initializeLookups();
@@ -81,7 +83,7 @@ class Parser {
     ~Parser() noexcept = default;
 
     ParsedFile parse();
-    bool hasCriticalError() const noexcept { return hasCriticalError_; }
+    bool hasCriticalError() const noexcept { return _hasCriticalError; }
 
    private:  // private methods
     using statementHandler_t = ast::Statement* (Parser::*)();
@@ -91,14 +93,14 @@ class Parser {
     using ledHandler_types_t = TypeSPtr_t (Parser::*)(TypeSPtr_t, Precedence);
 
     //~ Lookups
-    std::array<statementHandler_t, static_cast<size_t>(TokenType::_tokenCount)> statementLookup{};
-    std::array<nudHandler_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup{};
-    std::array<ledHandler_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup{};
-    std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap{};
+    inline static std::array<statementHandler_t, static_cast<size_t>(TokenType::_tokenCount)> statementLookup{};
+    inline static std::array<nudHandler_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup{};
+    inline static std::array<ledHandler_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup{};
+    inline static std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap{};
 
-    std::array<nudHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup_types{};
-    std::array<ledHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup_types{};
-    std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type{};
+    inline static std::array<nudHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup_types{};
+    inline static std::array<ledHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup_types{};
+    inline static std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type{};
 
     //~ Parsing functions
 
@@ -208,7 +210,7 @@ class Parser {
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    constexpr void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
+    constexpr static void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
 
     /**
      * @brief Register a left denotation handler for `type`
@@ -216,21 +218,21 @@ class Parser {
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    constexpr void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
+    constexpr static void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a prefix operator)
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    constexpr void registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
+    constexpr static void registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a token indicating a type)
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    constexpr void registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept;
+    constexpr static void registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept;
 
     /**
      * @brief Register a null denotation handler for `type`
@@ -238,7 +240,7 @@ class Parser {
      * @param handler The function to call when the token type is encountered
      * @note all lookups registered using this have no binding power
      */
-    constexpr void registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept;
+    constexpr static void registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept;
 
     /**
      * @brief Register a null denotation handler for `type`
@@ -246,7 +248,7 @@ class Parser {
      * @param handler The function to call when the token type is encountered
      * @note all lookups registered using this have a prefix binding power
      */
-    constexpr void registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept;
+    constexpr static void registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept;
 
     /**
      * @brief Register a null denotation handler for `type`
@@ -254,17 +256,17 @@ class Parser {
      * @param handler The function to call when the token type is encountered
      * @note all lookups registered using this have no binding power
      */
-    constexpr void registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept;
+    constexpr static void registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept;
 
     /**
      * @brief Register a handler function for a specific statement token type.
      * @param type The token type for which the handler is to be registered.
      * @param handler The function to handle statements of the specified token type.
      */
-    constexpr void registerStmtHandler(TokenType type, statementHandler_t handler) noexcept;
+    constexpr static void registerStmtHandler(TokenType type, statementHandler_t handler) noexcept;
 
-    void initializeLookups() noexcept;
-    void initializeTypeLookups() noexcept;
+    static void initializeLookups() noexcept;
+    static void initializeTypeLookups() noexcept;
 };
 
 }  // namespace parser
