@@ -70,8 +70,8 @@ class Parser {
             this->_hasCriticalError = true;
             return;
         }
-        initializeLookups();
-        initializeTypeLookups();
+            initializeLookups();
+            initializeTypeLookups();
     }
 
     // Avoid file ownership issues
@@ -210,7 +210,8 @@ class Parser {
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    constexpr static void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
+    static void registerLedHandler_binary(TokenType type, Precedence precedence,
+                                                    ledHandler_t handler) noexcept;
 
     /**
      * @brief Register a left denotation handler for `type`
@@ -218,21 +219,24 @@ class Parser {
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    constexpr static void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
+    static void registerLedHandler_postfix(TokenType type, Precedence precedence,
+                                                     ledHandler_t handler) noexcept;
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a prefix operator)
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    constexpr static void registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
+    static void registerLedHandler_prefix(TokenType type, Precedence precedence,
+                                                    ledHandler_t handler) noexcept;
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a token indicating a type)
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    constexpr static void registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept;
+    static void registerLedHandler_type(TokenType type, Precedence precedence,
+                                                  ledHandler_types_t handler) noexcept;
 
     /**
      * @brief Register a null denotation handler for `type`
@@ -240,7 +244,7 @@ class Parser {
      * @param handler The function to call when the token type is encountered
      * @note all lookups registered using this have no binding power
      */
-    constexpr static void registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept;
+    static void registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept;
 
     /**
      * @brief Register a null denotation handler for `type`
@@ -248,7 +252,7 @@ class Parser {
      * @param handler The function to call when the token type is encountered
      * @note all lookups registered using this have a prefix binding power
      */
-    constexpr static void registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept;
+    static void registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept;
 
     /**
      * @brief Register a null denotation handler for `type`
@@ -256,14 +260,14 @@ class Parser {
      * @param handler The function to call when the token type is encountered
      * @note all lookups registered using this have no binding power
      */
-    constexpr static void registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept;
+    static void registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept;
 
     /**
      * @brief Register a handler function for a specific statement token type.
      * @param type The token type for which the handler is to be registered.
      * @param handler The function to handle statements of the specified token type.
      */
-    constexpr static void registerStmtHandler(TokenType type, statementHandler_t handler) noexcept;
+    static void registerStmtHandler(TokenType type, statementHandler_t handler) noexcept;
 
     static void initializeLookups() noexcept;
     static void initializeTypeLookups() noexcept;

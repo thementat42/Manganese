@@ -12,38 +12,38 @@ namespace Manganese {
 namespace parser {
 // Lookup Registration Methods
 
-constexpr void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower,
+void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower,
                                                  ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::binary(bindingPower);
     ledLookup[_index] = handler;
 }
-constexpr void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower,
+void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower,
                                                   ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::postfix(bindingPower);
     ledLookup[_index] = handler;
 }
-constexpr void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower,
+void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower,
                                                  ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::prefix(bindingPower);
     ledLookup[_index] = handler;
 }
 
-constexpr void Parser::registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept {
+void Parser::registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::binary(Precedence::Default);
     nudLookup[_index] = handler;
 }
 
-constexpr void Parser::registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept {
+void Parser::registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::prefix();
     nudLookup[_index] = handler;
 }
 
-constexpr void Parser::registerStmtHandler(TokenType type, statementHandler_t handler) noexcept {
+void Parser::registerStmtHandler(TokenType type, statementHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index]
         = Operator{.leftBindingPower = Precedence::Default, .rightBindingPower = Precedence::Default};
@@ -52,14 +52,14 @@ constexpr void Parser::registerStmtHandler(TokenType type, statementHandler_t ha
 
 // Type Lookup Registration Methods
 
-constexpr void Parser::registerLedHandler_type(TokenType type, Precedence precedence,
+void Parser::registerLedHandler_type(TokenType type, Precedence precedence,
                                                ledHandler_types_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap_type[_index] = Operator::binary(precedence);
     ledLookup_types[_index] = handler;
 }
 
-constexpr void Parser::registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept {
+void Parser::registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap_type[_index]
         = Operator{.leftBindingPower = Precedence::Primary, .rightBindingPower = Precedence::Default};
