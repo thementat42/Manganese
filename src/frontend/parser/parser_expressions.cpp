@@ -352,32 +352,5 @@ ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Preceden
     TypeSPtr_t type = parseType(precedence);
     return arena.add_node<ast::TypeCastExpression>(std::move(left), std::move(type));
 }
-
-// Helper Functions
-
-constexpr void extractSuffix(std::string& lexeme, std::string& suffix) {
-    if (lexeme.ends_with("i8") || lexeme.ends_with("I8") || lexeme.ends_with("u8") || lexeme.ends_with("U8")) {
-        suffix = lexeme.substr(lexeme.length() - 2);
-        lexeme.erase(lexeme.length() - 2);
-    } else if (lexeme.ends_with("i16") || lexeme.ends_with("I16") || lexeme.ends_with("u16")
-               || lexeme.ends_with("U16")) {
-        suffix = lexeme.substr(lexeme.length() - 3);
-        lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("i32") || lexeme.ends_with("I32") || lexeme.ends_with("u32")
-               || lexeme.ends_with("U32")) {
-        suffix = lexeme.substr(lexeme.length() - 3);
-        lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("i64") || lexeme.ends_with("I64") || lexeme.ends_with("u64")
-               || lexeme.ends_with("U64")) {
-        suffix = lexeme.substr(lexeme.length() - 3);
-        lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
-        suffix = "f32";
-        lexeme.erase(lexeme.length() - 3);
-    } else if (lexeme.ends_with("f64") || lexeme.ends_with("F64")) {
-        suffix = "f64";
-        lexeme.erase(lexeme.length() - 3);
-    }
-}
 }  // namespace parser
 }  // namespace Manganese

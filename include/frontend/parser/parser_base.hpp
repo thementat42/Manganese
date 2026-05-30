@@ -41,8 +41,6 @@ struct ParsedFile {
 };
 
 //~ Helper functions that don't depend on the parser class's methods/variables
-constexpr mnstl::Base determineNumberBase(const std::string& lexeme);
-constexpr void extractSuffix(std::string& numericPart, std::string& suffix);
 std::string importToString(const Import& import);
 
 class Parser {
