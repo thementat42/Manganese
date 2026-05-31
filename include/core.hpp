@@ -62,14 +62,14 @@
 #endif  // __cplusplus >= 202302L
 }
 
-[[noreturn]] inline void panic(const char* message = "", const char* file = "", size_t line = 0,
+inline void panic(const char* message = "", const char* file = "", size_t line = 0,
                                const char* func = "") {
     fprintf(stderr, "\033[31mUnreachable code reached: %s \nIn file %s at line %zu when running %s\033[0m\n", message,
             file, line, func);
     throw(message);
 }
 
-[[noreturn]] FORCE_INLINE void panic(const std::string& message, const char* file, size_t line, const char* func) {
+FORCE_INLINE void panic(const std::string& message, const char* file, size_t line, const char* func) {
     panic(message.c_str(), file, line, func);
 }
 
