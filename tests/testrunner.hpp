@@ -6,7 +6,7 @@
 #ifndef MANGANESE_TESTS_TEST_RUNNER_HPP
 #define MANGANESE_TESTS_TEST_RUNNER_HPP
 
-#include <global_macros.hpp>
+#include <core.hpp>
 
 #include <string>
 

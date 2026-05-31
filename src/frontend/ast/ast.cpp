@@ -5,7 +5,7 @@
  * @note This file is implementations of any AST node methods which are get too complex to be inline
  */
 #include <frontend/ast.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 
 namespace Manganese {
 namespace ast {

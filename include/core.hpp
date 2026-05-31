@@ -1,33 +1,16 @@
 /**
- * @file global_macros.hpp
+ * @file core.hpp
  * @brief Global macros and utility definitions for the project.
  */
 
 #ifndef MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
 #define MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
 
+// Some common includes that are used frequently
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
-
-// Some common includes that are used frequently
-
-/**
- * Indicates that a function will not throw in release builds, to enable more optimizations.
- * This is a no-op in debug builds, where more exceptions are expected.
- * Note: This macro should not be used on functions that will actually never throw (in those cases, use `noexcept`
- * directly).
- */
-
-#if DEBUG
-#define NOEXCEPT_IF_RELEASE  // In debug mode, these functions are more likely to throw -- don't use noexcept
-#else  // ^^ DEBUG vv !DEBUG
-#define NOEXCEPT_IF_RELEASE noexcept  // In release builds, optimize these functions more
-#endif
-
-#ifndef DISCARD
-#define DISCARD(value) (void)(value)  // Explicitly discard a value
-#endif  // DISCARD
 
 //~ Build type
 
@@ -38,6 +21,23 @@
 #define DEBUG 0
 #endif  // NDEBUG
 #endif  // DEBUG
+
+/**
+ * Indicates that a function will not throw in release builds, to enable more optimizations.
+ * This is a no-op in debug builds, where more exceptions are expected.
+ * Note: This macro should not be used on functions that will actually never throw (in those cases, use `noexcept`
+ * directly).
+ */
+
+#if DEBUG
+#define NOEXCEPT_IF_RELEASE  // In debug mode, these can throw (e.g., using ASSERT_UNREACHABLE)
+#else  // ^^ DEBUG vv !DEBUG
+#define NOEXCEPT_IF_RELEASE noexcept  // In release builds, optimize these functions more
+#endif
+
+#ifndef DISCARD
+#define DISCARD(value) (void)(value)  // Explicitly discard a value
+#endif  // DISCARD
 
 //~ Force inline
 #if defined(__clang__) || defined(__GNUC__)
@@ -64,7 +64,8 @@
 
 [[noreturn]] inline void panic(const char* message = "", const char* file = "", size_t line = 0,
                                const char* func = "") {
-    fprintf(stderr, "\033[31mUnreachable code reached: %s \nIn file %s at line %zu when running %s\033[0m\n", message, file, line, func);
+    fprintf(stderr, "\033[31mUnreachable code reached: %s \nIn file %s at line %zu when running %s\033[0m\n", message,
+            file, line, func);
     throw(message);
 }
 
@@ -72,9 +73,9 @@
     panic(message.c_str(), file, line, func);
 }
 
-
 #if DEBUG
-#define ASSERT_UNREACHABLE(message) panic((message), __FILE__, __LINE__, __func__)
+#define ASSERT_UNREACHABLE(message) \
+    panic((message), __FILE__, __LINE__, __func__)
 #else
 #define ASSERT_UNREACHABLE(message) manganese_unreachable()
 #endif  // DEBUG

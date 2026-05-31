@@ -12,7 +12,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
 
 #include <frontend/lexer/token.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 
 namespace Manganese {
 namespace parser {

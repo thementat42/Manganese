@@ -9,7 +9,7 @@
  */
 #include <format>
 #include <frontend/ast.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <sstream>
 #include <string>
 

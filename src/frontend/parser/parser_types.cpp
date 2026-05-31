@@ -6,7 +6,7 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <memory>
 #include <utility>
 #include <vector>

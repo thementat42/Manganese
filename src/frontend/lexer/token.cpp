@@ -4,7 +4,7 @@
  */
 
 #include <frontend/lexer/token.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <io/logging.hpp>
 #include <string>
 #include <utility>

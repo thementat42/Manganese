@@ -9,7 +9,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <memory>
 #include <numeric>
 #include <string>

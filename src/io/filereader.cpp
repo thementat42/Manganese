@@ -3,7 +3,7 @@
  * @brief This file contains the implementation of the FileReader class
  */
 
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 

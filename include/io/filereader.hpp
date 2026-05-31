@@ -16,7 +16,7 @@
 #ifndef MANGANESE_INCLUDE_IO_FILEREADER_HPP
 #define MANGANESE_INCLUDE_IO_FILEREADER_HPP
 
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <memory>
 #include <string>
 

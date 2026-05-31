@@ -8,7 +8,7 @@
 
 #ifndef MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #define MANGANESE_INCLUDE_IO_STRING_READER_HPP
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <string>
 
 #include "reader.hpp"

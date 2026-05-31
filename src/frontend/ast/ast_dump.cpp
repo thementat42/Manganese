@@ -12,7 +12,7 @@
 #include <utils/type_names.hpp>
 #if DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <mnstl/number.hxx>
 #include <string>
 

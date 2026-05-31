@@ -10,7 +10,7 @@
 #define MANGANESE_INCLUDE_IO_READER_HPP
 
 #include <cstddef>
-#include <global_macros.hpp>
+#include <core.hpp>
 
 
 namespace Manganese {

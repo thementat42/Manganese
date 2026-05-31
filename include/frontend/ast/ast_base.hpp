@@ -14,7 +14,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 
 #include <frontend/lexer.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <memory>
 #include <string>
 #include <utils/type_names.hpp>

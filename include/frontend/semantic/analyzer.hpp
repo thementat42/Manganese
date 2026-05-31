@@ -6,7 +6,7 @@
 #include <frontend/parser.hpp>
 #include <frontend/semantic/primitives.hpp>
 #include <frontend/semantic/symbol_table.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 
 
 namespace Manganese {

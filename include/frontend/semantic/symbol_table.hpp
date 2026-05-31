@@ -6,7 +6,7 @@
 #include <format>
 #include <frontend/ast.hpp>
 #include <functional>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <io/logging.hpp>
 #include <string>
 #include <string_view>

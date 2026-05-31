@@ -9,7 +9,7 @@
  */
 #include "testrunner.hpp"
 
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <io/logging.hpp>
 #include <iostream>
 #include <string>

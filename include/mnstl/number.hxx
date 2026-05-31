@@ -2,7 +2,7 @@
 #define MNSTL_NUMBER 1
 
 #include <cmath>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <io/logging.hpp>
 #include <limits>
 #include <mnstl/ext_nums/i128.hxx>

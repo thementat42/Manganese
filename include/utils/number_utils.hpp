@@ -12,7 +12,7 @@
 #define MANGANESE_INCLUDE_UTILS_NUMBER_UTILS_HPP
 
 #include <cstdint>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <optional>
 #include <string_view>
 #include <variant>

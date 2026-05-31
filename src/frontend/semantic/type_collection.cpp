@@ -1,6 +1,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 
 namespace Manganese {
 

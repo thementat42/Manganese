@@ -15,7 +15,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/semantic/primitives.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>

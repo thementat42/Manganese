@@ -15,7 +15,7 @@
 #include <frontend/parser.hpp>
 #include <frontend/semantic/primitives.hpp>
 #include <fstream>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <iostream>
 #include <string>
 

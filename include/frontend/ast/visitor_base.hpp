@@ -5,7 +5,7 @@
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_statements.hpp>
 #include <frontend/ast/ast_types.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 
 namespace Manganese {
 

@@ -8,7 +8,7 @@
  */
 
 #include <frontend/lexer.hpp>
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>

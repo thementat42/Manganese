@@ -16,7 +16,7 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_BASE_HPP
 
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <string>
 
 #include "token_type.hpp"

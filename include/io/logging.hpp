@@ -13,7 +13,7 @@
 #define MANGANESE_INCLUDE_IO_LOGGING_HPP
 
 #include <format>  // Include format here so any files that use logging have it included
-#include <global_macros.hpp>
+#include <core.hpp>
 #include <iostream>
 
 // ANSI color codes for terminal output

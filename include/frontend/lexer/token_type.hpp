@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include <global_macros.hpp>
+#include <core.hpp>
 
 namespace Manganese {
 
