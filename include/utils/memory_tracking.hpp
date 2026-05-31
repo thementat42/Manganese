@@ -5,7 +5,7 @@
  * @brief Provides memory allocation tracking utilities for debugging and profiling.
  *
  * This header overrides global new and delete operators to track memory allocations and deallocations.
- * When MEMORY_TRACKING and DEBUG are enabled (via CMake), the code tracks the total bytes allocated during the
+ * When MEMORY_TRACKING and MN_DEBUG are enabled (via CMake), the code tracks the total bytes allocated during the
  * program's lifetime If CONTINUOUS_MEMORY_TRACKING is defined as well, each allocation is logged to a file
  */
 #ifndef MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_HPP
@@ -16,7 +16,7 @@
 
 // MEMORY_TRACKING is defined in CMakeLists.txt
 
-#if MEMORY_TRACKING && DEBUG
+#if MEMORY_TRACKING && MN_DEBUG
 #include <fstream>
 #include <iostream>
 
@@ -109,15 +109,15 @@ void operator delete[](void* ptr) noexcept {
         free(ptr);
     }
 }
-#endif  // MEMORY_TRACKING && DEBUG
+#endif  // MEMORY_TRACKING && MN_DEBUG
 inline void logTotalAllocatedMemory() {
-#if MEMORY_TRACKING && DEBUG
+#if MEMORY_TRACKING && MN_DEBUG
     std::cout << PINK << "Total memory allocated (over the course of the program): " << lifetimeBytesAllocated
               << " bytes" << RESET << '\n';
 #ifdef CONTINUOUS_MEMORY_TRACKING
     memoryLogFile.close();
 #endif  // CONTINUOUS_MEMORY_TRACKING
-#endif  // MEMORY_TRACKING && DEBUG
+#endif  // MEMORY_TRACKING && MN_DEBUG
 }
 
 #endif  // MANGANESE_INCLUDE_UTILS_MEMORY_TRACKING_HPP

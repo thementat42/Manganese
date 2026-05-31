@@ -4,13 +4,13 @@
  *
  * This file contains the implementation of the `dump` methods for various AST node classes
  *
- * The dump methods are only included in debug builds (guarded by `#if DEBUG`).
+ * The dump methods are only included in debug builds (guarded by `#if MN_DEBUG`).
  * They are useful for visualizing the AST structure.
  * @note This file does nothing in release builds.
  */
 
 #include <utils/type_names.hpp>
-#if DEBUG  // Only include dump methods in debug builds
+#if MN_DEBUG  // Only include dump methods in debug builds
 #include <frontend/ast.hpp>
 #include <core.hpp>
 #include <mnstl/number.hxx>
@@ -545,4 +545,4 @@ void SymbolType::dump(std::ostream& os, size_t indent) const {
 
 }  // namespace ast
 }  // namespace Manganese
-#endif  // DEBUG
+#endif  // MN_DEBUG

@@ -83,7 +83,7 @@ set_target_properties(manganese PROPERTIES
 # `#define` stuff
 
 target_compile_definitions(manganese PRIVATE
-    DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
+    MN_DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
     # MNSTL_USE_COMPILER_INT128=1
 )
 

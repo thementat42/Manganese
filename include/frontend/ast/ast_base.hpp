@@ -21,7 +21,7 @@
 #include <vector>
 
 
-#if DEBUG
+#if MN_DEBUG
 #define OVERRIDE_DUMP_METHOD_ \
     void dump(std::ostream& os, size_t indent = 0) const override;  // Makes overriding dump() less cumbersome to type
 #else
@@ -102,14 +102,14 @@ class ASTNode {
 
     virtual std::string toString() const = 0;
 
-#if DEBUG
+#if MN_DEBUG
     /**
      * @brief Dump the AST node to an output stream
      * @param os The output stream to dump to
      * @param indent The indentation level for pretty-printing
      */
     virtual void dump(std::ostream& os, size_t indent = 0) const = 0;
-#endif  // DEBUG
+#endif  // MN_DEBUG
 
     constexpr inline void setLine(size_t _line) noexcept { line = _line; }
     constexpr inline size_t getLine() const noexcept { return line; }

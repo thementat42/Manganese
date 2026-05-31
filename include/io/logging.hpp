@@ -45,7 +45,7 @@ enum class LogLevel : uint8_t {
 
 template <class... Args>
 void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) NOEXCEPT_IF_RELEASE {
-#if DEBUG
+#if MN_DEBUG
     auto message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
         case LogLevel::Info: std::cerr << BLUE << "[Internal Info] " << message << RESET << "\n"; break;
@@ -56,12 +56,12 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
             std::cerr << "Critical error encountered";
             throw std::runtime_error("Critical error");
     }
-#else  // ^^ DEBUG vv !DEBUG
+#else  // ^^ MN_DEBUG vv !MN_DEBUG
     DISCARD(level);
     DISCARD(fmt);
     (void)((void)args, ...);
     return;  // No internal logging in non-debug builds
-#endif  // DEBUG
+#endif  // MN_DEBUG
 }
 
 template <class... Args>

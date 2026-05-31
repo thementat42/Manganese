@@ -14,13 +14,13 @@
 
 //~ Build type
 
-#ifndef DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a fallback
+#ifndef MN_DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a fallback
 #ifndef NDEBUG
-#define DEBUG 1
+#define MN_DEBUG 1
 #else  //^^ ifndef NDEBUG vv ifdef NDEBUG
-#define DEBUG 0
+#define MN_DEBUG 0
 #endif  // NDEBUG
-#endif  // DEBUG
+#endif  // MN_DEBUG
 
 /**
  * Indicates that a function will not throw in release builds, to enable more optimizations.
@@ -29,9 +29,9 @@
  * directly).
  */
 
-#if DEBUG
+#if MN_DEBUG
 #define NOEXCEPT_IF_RELEASE  // In debug mode, these can throw (e.g., using ASSERT_UNREACHABLE)
-#else  // ^^ DEBUG vv !DEBUG
+#else  // ^^ MN_DEBUG vv !MN_DEBUG
 #define NOEXCEPT_IF_RELEASE noexcept  // In release builds, optimize these functions more
 #endif
 
@@ -73,11 +73,11 @@
     panic(message.c_str(), file, line, func);
 }
 
-#if DEBUG
+#if MN_DEBUG
 #define ASSERT_UNREACHABLE(message) \
     panic((message), __FILE__, __LINE__, __func__)
 #else
 #define ASSERT_UNREACHABLE(message) manganese_unreachable()
-#endif  // DEBUG
+#endif  // MN_DEBUG
 
 #endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
