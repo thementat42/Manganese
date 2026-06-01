@@ -42,7 +42,6 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true
 
 std::vector<Token> tokensFromString(const std::string& source) {
     lexer::Lexer lexer(source, lexer::Mode::String);
-    if (lexer.hasCriticalError()) { throw std::runtime_error("Compilation Aborted\n"); }
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
@@ -58,7 +57,6 @@ std::vector<Token> tokensFromString(const std::string& source) {
 std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
     std::filesystem::path fullPath = std::filesystem::current_path() / filename;
     lexer::Lexer lexer(fullPath.string(), lexer::Mode::File);
-    if (lexer.hasCriticalError()) { throw std::runtime_error("Compilation Aborted\n"); }
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF

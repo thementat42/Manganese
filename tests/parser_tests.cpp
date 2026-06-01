@@ -34,7 +34,6 @@ semantic::primitives primitives;
 
 ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode, allocator, primitives);
-    if (parser.hasCriticalError()) { throw std::runtime_error("Compilation Aborted\n"); }
     parser::ParsedFile file = parser.parse();
 
     if (!file.moduleName.empty()) { std::cout << "module " << file.moduleName << "\n"; }

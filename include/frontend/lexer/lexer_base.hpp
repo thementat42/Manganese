@@ -49,8 +49,7 @@ class Lexer {
     std::unique_ptr<io::Reader> reader;
     size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
     constexpr static const size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
-    bool hasCriticalError_ = false;
-    bool hasError_ = false;
+    bool _hasError = false;
     std::deque<Token> tokenStream;
 
    public:  // public methods
@@ -82,9 +81,7 @@ class Lexer {
      * @return True if the end of the stream has been reached, false otherwise
      */
     bool done() const noexcept { return reader->done(); }
-
-    constexpr bool hasCriticalError() const noexcept { return hasCriticalError_; }
-    constexpr bool hasError() const noexcept { return hasError_; }
+    constexpr bool hasError() const noexcept { return _hasError; }
 
    private:  // private methods
     //~ Main tokenization functions

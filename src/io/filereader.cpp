@@ -10,6 +10,7 @@
 #include <cstring>  // For memmove
 #include <format>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <cstring>
 #include <cstdio>
@@ -22,7 +23,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
     filePtr = std::fopen(filename.c_str(), "r");
     if (!filePtr) {
         logging::logCritical(0, 0, "Could not open file {}", filename);
-        this->hasCriticalError_ = true;
+        throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
         return;
     }
     // FileReader does its own buffering, with extra stuff to support lookaheads
@@ -35,7 +36,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity_) :
 
     if (bufferSize == 0) {
         logging::logError(0, 0, "File {} is empty or could not be read", filename);
-        this->hasCriticalError_ = true;
+        throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
         return;
     }
     buffer[bufferSize] = Reader::EOF_CHAR;  // Null-terminate the buffer since peekChar will rely on this to determine EOF

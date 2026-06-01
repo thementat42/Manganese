@@ -20,8 +20,6 @@ namespace io {
  * @brief An abstract base class for reading characters from a source
  */
 class Reader {
-   protected:
-    bool hasCriticalError_ = false;
 
    public:
     static constexpr char EOF_CHAR = '\0';
@@ -36,8 +34,6 @@ class Reader {
 
     Reader(Reader&&) noexcept = delete;
     Reader& operator=(Reader&&) noexcept = delete;
-
-    constexpr bool hasCriticalError() const noexcept { return hasCriticalError_; }
 
     /**
      * @brief Look at the next character without consuming it

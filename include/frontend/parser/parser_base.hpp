@@ -58,7 +58,6 @@ class Parser {
     struct {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
-        bool _hasCriticalError : 1 = false;
         bool isParsingBlockPrecursor : 1 = false;  // if/for/while, etc.
     };
 
@@ -66,10 +65,6 @@ class Parser {
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& _arena,
            const semantic::primitives& prims) :
         lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(_arena), primitive_types(prims) {
-        if (lexer->hasCriticalError()) {
-            this->_hasCriticalError = true;
-            return;
-        }
             initializeLookups();
             initializeTypeLookups();
     }
@@ -83,7 +78,6 @@ class Parser {
     ~Parser() noexcept = default;
 
     ParsedFile parse();
-    bool hasCriticalError() const noexcept { return _hasCriticalError; }
 
    private:  // private methods
     using statementHandler_t = ast::Statement* (Parser::*)();

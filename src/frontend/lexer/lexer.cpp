@@ -109,10 +109,6 @@ Lexer::Lexer(const std::string& source, const Mode mode) : tokenStartLine(1), to
         case Mode::String: reader = std::make_unique<io::StringReader>(source); break;
         case Mode::File: reader = std::make_unique<io::FileReader>(source); break;
     }
-    if (reader->hasCriticalError()) {
-        this->hasCriticalError_ = true;
-        return;
-    }
 }
 
 void Lexer::lex(size_t numTokens) {
@@ -156,7 +152,7 @@ void Lexer::lex(size_t numTokens) {
         currentChar = peekChar();
         tokenStartLine = getLine();
         tokenStartCol = getCol();
-        hasError_ = hasError_ || (result == Result::Failure);
+        _hasError = _hasError || (result == Result::Failure);
     }
     if (done()) {
         // Just finished tokenizing
