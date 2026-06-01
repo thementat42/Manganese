@@ -5,11 +5,11 @@
  */
 
 #include <algorithm>
+#include <core.hpp>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <core.hpp>
 #include <memory>
 #include <numeric>
 #include <string>
@@ -85,7 +85,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE
         if (duplicate != fields.end()) {
             logError(t.getLine(), t.getColumn(), "Duplicate field '{}' in aggregate '{}'", fieldName, name);
         } else {
-            fields.emplace_back(fieldName, std::move(type), isMutable);
+            fields.push_back({.name = fieldName, .type = std::move(type), .isMutable = isMutable});
         }
     }
 
@@ -190,7 +190,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
             logError(peekToken().getLine(), peekToken().getColumn(),
                      "Enum value '{}' (in enum '{}') was previously declared", valueName, name);
         } else {
-            values.emplace_back(valueName, std::move(valueExpression));
+            values.push_back({.name = std::move(valueName), .value = std::move(valueExpression)});
         }
         if (peekTokenType() != TokenType::RightBrace) {
             expectToken(TokenType::Comma, "Expected ',' to separate enum values");
@@ -253,7 +253,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE 
             isMutable = true;
         }
         TypeSPtr_t param_type = parseType(Precedence::Default);
-        params.emplace_back(param_name, std::move(param_type), isMutable);
+        params.push_back({.name = std::move(param_name), .type = std::move(param_type), .isMutable = isMutable});
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
                         "Expected a ',' to separate function parameters, or a ) to close the parameter list");
@@ -264,8 +264,9 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE 
         DISCARD(consumeToken());
         returnType = parseType(Precedence::Default);
     }
-    return arena.add_node<ast::FunctionDeclarationStatement>(name, std::move(genericTypes), std::move(params),
-                                                             std::move(returnType), parseBlock("function body"));
+    return arena.add_node<ast::FunctionDeclarationStatement>(std::move(name), std::move(genericTypes),
+                                                             std::move(params), std::move(returnType),
+                                                             parseBlock("function body"));
 }
 
 ast::Statement* Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
@@ -338,7 +339,7 @@ ast::Statement* Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
             break;
         }
     }
-    if (!duplicate) { imports.emplace_back(path, alias); }
+    if (!duplicate) { imports.push_back({.path = std::move(path), .alias = std::move(alias)}); }
     // Dummy node since imports are stored separately
     return arena.add_node<ast::EmptyStatement>();
 }
@@ -411,7 +412,7 @@ ast::Statement* Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
                && peekTokenType() != TokenType::RightBrace) {
             caseBody.push_back(parseStatement());
         }
-        cases.emplace_back(std::move(caseValue), std::move(caseBody));
+        cases.push_back({.literalValue = std::move(caseValue), .body = std::move(caseBody)});
     }
     if (peekTokenType() == TokenType::Default) {
         DISCARD(consumeToken());
@@ -516,7 +517,7 @@ ast::Statement* Parser::parseWhileLoopStatement() NOEXCEPT_IF_RELEASE {
 }
 
 // Helper Functions
-ast::Block Parser::parseBlock(std::string blockName) NOEXCEPT_IF_RELEASE {
+ast::Block Parser::parseBlock(const std::string& blockName) NOEXCEPT_IF_RELEASE {
     expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
     ast::Block block;
     while (!done()) {

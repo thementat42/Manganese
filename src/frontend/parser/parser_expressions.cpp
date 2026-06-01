@@ -5,16 +5,15 @@
  */
 
 #include <algorithm>
+#include <core.hpp>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <core.hpp>
 #include <mnstl/number.hxx>
 #include <string>
 #include <utility>
 #include <vector>
-
 
 /**
  * Ambiguous cases:
@@ -134,7 +133,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         } else {
             auto identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier);
             aggregateName = identifierExpr->value;
-            genericTypes = genericExpr->moveTypeParameters();
+            genericTypes = std::move(genericExpr->types);
         }
     } else if (left->kind() == ast::ExpressionKind::IdentifierExpression) {
         auto* underlying = static_cast<ast::IdentifierExpression*>(left);
@@ -155,14 +154,14 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         constexpr auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         auto value = parseExpression(static_cast<Precedence>(precedence_));
 
-        auto duplicate = std::find_if(
-            fields.begin(), fields.end(),
-            [propertyName](const ast::AggregateInstantiationField& field) { return field.name == propertyName; });
-        if (duplicate != fields.end()) {
+        auto is_duplicate
+            = [propertyName](const ast::AggregateInstantiationField& field) { return field.name == propertyName; };
+
+        if (std::find_if(fields.begin(), fields.end(), is_duplicate) != fields.end()) {
             logError(value->getLine(), value->getColumn(), "Duplicate field '{}' in aggregate instantiation of '{}'",
                      propertyName, aggregateName);
         } else {
-            fields.emplace_back(propertyName, std::move(value));
+            fields.push_back({.name = propertyName, .value = std::move(value)});
         }
         if (peekTokenType() != lexer::TokenType::RightBrace) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate aggregate fields");

@@ -36,9 +36,6 @@ struct AggregateField {
     std::string name;
     TypeSPtr_t type;
     bool isMutable;
-
-    AggregateField(std::string name_, TypeSPtr_t type_, bool isMutable_) :
-        name(std::move(name_)), type(std::move(type_)), isMutable(isMutable_) {}
 };
 
 class AggregateDeclarationStatement final : public Statement {
@@ -92,8 +89,6 @@ class EmptyStatement final : public Statement {
 struct EnumValue {
     std::string name;
     Expression* value;
-    explicit EnumValue(std::string name_, Expression* value_ = nullptr) :
-        name(std::move(name_)), value(std::move(value_)) {}
 };
 
 class EnumDeclarationStatement final : public Statement {
@@ -129,9 +124,6 @@ struct FunctionParameter {
     std::string name;
     TypeSPtr_t type;
     bool isMutable;
-
-    FunctionParameter(std::string name_, TypeSPtr_t type_, bool isMutable_) :
-        name(std::move(name_)), type(std::move(type_)), isMutable(isMutable_) {}
 };
 
 class FunctionDeclarationStatement final : public Statement {
@@ -204,9 +196,6 @@ class ReturnStatement final : public Statement {
 struct CaseClause {
     Expression* literalValue;
     Block body;
-
-    CaseClause(Expression* literalValue_, Block body_) :
-        literalValue(std::move(literalValue_)), body(std::move(body_)) {}
 };
 
 class SwitchStatement final : public Statement {

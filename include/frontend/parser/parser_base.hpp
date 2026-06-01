@@ -159,7 +159,7 @@ class Parser {
     TypeSPtr_t parseSymbolType() NOEXCEPT_IF_RELEASE;
 
     // ~ Helpers
-    ast::Block parseBlock(std::string blockName) NOEXCEPT_IF_RELEASE;
+    ast::Block parseBlock(const std::string& blockName) NOEXCEPT_IF_RELEASE;
 
     /**
      * @details The context is considered unary if the previous token was a left parenthesis
