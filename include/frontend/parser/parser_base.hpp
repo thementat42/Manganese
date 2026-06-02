@@ -99,61 +99,61 @@ class Parser {
     //~ Parsing functions
 
     // Expression Parsing
-    ast::Expression* parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE;
+    ast::Expression* parseExpression(Precedence precedence);
     ast::Expression* parseAggregateInstantiationExpression(ast::Expression* left,
-                                                           Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseBinaryExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseFunctionCallExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseGenericExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseIndexingExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseMemberAccessExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseParenthesizedExpression() NOEXCEPT_IF_RELEASE;
-    ast::Expression* parsePostfixExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parsePrefixExpression() NOEXCEPT_IF_RELEASE;
-    ast::Expression* parsePrimaryExpression() NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseScopeResolutionExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    ast::Expression* parseTypeCastExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE;
+                                                           Precedence precedence);
+    ast::Expression* parseAggregateLiteralExpression();
+    ast::Expression* parseArrayInstantiationExpression();
+    ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseBinaryExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseFunctionCallExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseGenericExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseIndexingExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseMemberAccessExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseParenthesizedExpression();
+    ast::Expression* parsePostfixExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parsePrefixExpression();
+    ast::Expression* parsePrimaryExpression();
+    ast::Expression* parseScopeResolutionExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseTypeCastExpression(ast::Expression* left, Precedence precedence);
 
     // Statement Parsing
-    ast::Statement* parseStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseAliasStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseBreakStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseContinueStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseIfStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseImportStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseRedundantSemicolon() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseReturnStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseSwitchStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseStatement();
+    ast::Statement* parseAggregateDeclarationStatement();
+    ast::Statement* parseAliasStatement();
+    ast::Statement* parseBreakStatement();
+    ast::Statement* parseContinueStatement();
+    ast::Statement* parseDoWhileLoopStatement();
+    ast::Statement* parseEnumDeclarationStatement();
+    ast::Statement* parseFunctionDeclarationStatement();
+    ast::Statement* parseIfStatement();
+    ast::Statement* parseImportStatement();
+    ast::Statement* parseModuleDeclarationStatement();
+    ast::Statement* parseRedundantSemicolon();
+    ast::Statement* parseRepeatLoopStatement();
+    ast::Statement* parseReturnStatement();
+    ast::Statement* parseSwitchStatement();
+    ast::Statement* parseVariableDeclarationStatement();
     /**
      * @brief Parses statements that are preceded by a visibility modifier
      * @example (public/private) (function/aggregate/enum declaration)
      */
-    ast::Statement* parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE;
-    ast::Statement* parseWhileLoopStatement() NOEXCEPT_IF_RELEASE;
+    ast::Statement* parseVisibilityAffectedStatement();
+    ast::Statement* parseWhileLoopStatement();
 
     // Type Parsing
 
-    TypeSPtr_t parseType(Precedence precedence) NOEXCEPT_IF_RELEASE;
-    TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    TypeSPtr_t parseAggregateType() NOEXCEPT_IF_RELEASE;
-    TypeSPtr_t parseFunctionType() NOEXCEPT_IF_RELEASE;
-    TypeSPtr_t parseGenericType(TypeSPtr_t left, Precedence precedence) NOEXCEPT_IF_RELEASE;
-    TypeSPtr_t parsePointerType() NOEXCEPT_IF_RELEASE;
-    TypeSPtr_t parseParenthesizedType() NOEXCEPT_IF_RELEASE;
-    TypeSPtr_t parseSymbolType() NOEXCEPT_IF_RELEASE;
+    TypeSPtr_t parseType(Precedence precedence);
+    TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence);
+    TypeSPtr_t parseAggregateType();
+    TypeSPtr_t parseFunctionType();
+    TypeSPtr_t parseGenericType(TypeSPtr_t left, Precedence precedence);
+    TypeSPtr_t parsePointerType();
+    TypeSPtr_t parseParenthesizedType();
+    TypeSPtr_t parseSymbolType();
 
     // ~ Helpers
-    ast::Block parseBlock(const std::string& blockName) NOEXCEPT_IF_RELEASE;
+    ast::Block parseBlock(const std::string& blockName);
 
     /**
      * @details The context is considered unary if the previous token was a left parenthesis

@@ -165,7 +165,7 @@ class Type : public ASTNode {
         kind_(_k), prim_(_p) {}
 };
 
-constexpr std::string visibilityToString(Visibility visibility) NOEXCEPT_IF_RELEASE {
+constexpr const char* visibilityToString(Visibility visibility) noexcept {
     return visibility == Visibility::Public ? "public " : "private ";
 }
 

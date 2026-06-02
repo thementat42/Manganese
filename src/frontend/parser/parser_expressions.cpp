@@ -54,7 +54,7 @@ namespace Manganese {
 
 namespace parser {
 
-ast::Expression* Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseExpression(Precedence precedence) {
     Token token = peekToken();
 
     // Handle operators which have a unary and a binary version
@@ -117,7 +117,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) NOEXCEPT_IF_RELE
 // Specific expression parsing methods
 
 ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* left,
-                                                               Precedence precedence) NOEXCEPT_IF_RELEASE {
+                                                               Precedence precedence) {
     DISCARD(precedence);  // Avoid unused variable warning
     std::string aggregateName;
     std::vector<TypeSPtr_t> genericTypes;
@@ -171,7 +171,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
     return arena.add_node<ast::AggregateInstantiationExpression>(aggregateName, genericTypes, std::move(fields));
 }
 
-ast::Expression* Parser::parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseAggregateLiteralExpression() {
     DISCARD(consumeToken());  // discard the aggregate keyword
 
     expectToken(TokenType::LeftBrace, "Expected '{' to start an aggregate literal");
@@ -188,7 +188,7 @@ ast::Expression* Parser::parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::AggregateLiteralExpression>(std::move(expressions));
 }
 
-ast::Expression* Parser::parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseArrayInstantiationExpression() {
     DISCARD(consumeToken());  // Consume the left square bracket
     std::vector<ast::Expression*> elements;
     while (!done()) {
@@ -207,21 +207,21 @@ ast::Expression* Parser::parseArrayInstantiationExpression() NOEXCEPT_IF_RELEASE
     return arena.add_node<ast::ArrayLiteralExpression>(std::move(elements));
 }
 
-ast::Expression* Parser::parseAssignmentExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseAssignmentExpression(ast::Expression* left, Precedence precedence) {
     TokenType op = consumeToken().getType();
     ast::Expression* right = parseExpression(precedence);
 
     return arena.add_node<ast::AssignmentExpression>(std::move(left), op, std::move(right));
 }
 
-ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence precedence) {
     auto op = consumeToken().getType();
     auto right = parseExpression(precedence);
 
     return arena.add_node<ast::BinaryExpression>(std::move(left), op, std::move(right));
 }
 
-ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());
     DISCARD(precedence);  // Avoid unused variable warning
     std::vector<ast::Expression*> arguments;
@@ -239,7 +239,7 @@ ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Prec
     return arena.add_node<ast::FunctionCallExpression>(std::move(left), std::move(arguments));
 }
 
-ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the '@' token
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
@@ -257,7 +257,7 @@ ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedenc
     return arena.add_node<ast::GenericExpression>(std::move(left), typeParameters);
 }
 
-ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the left square bracket
     DISCARD(precedence);  // Avoid unused variable warning
     constexpr auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
@@ -266,27 +266,27 @@ ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Preceden
     return arena.add_node<ast::IndexExpression>(std::move(left), std::move(index));
 }
 
-ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the member access operator (.)
     DISCARD(precedence);  // Avoid unused variable warning
     return arena.add_node<ast::MemberAccessExpression>(
         std::move(left), expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
 }
 
-ast::Expression* Parser::parseParenthesizedExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseParenthesizedExpression() {
     DISCARD(consumeToken());  // Consume the left parenthesis
     ast::Expression* expr = parseExpression(Precedence::Default);
     expectToken(lexer::TokenType::RightParen, "Expected a right parenthesis to close the expression");
     return expr;
 }
 
-ast::Expression* Parser::parsePostfixExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parsePostfixExpression(ast::Expression* left, Precedence precedence) {
     TokenType op = consumeToken().getType();
     DISCARD(precedence);  // Avoid unused variable warning
     return arena.add_node<ast::PostfixExpression>(std::move(left), op);
 }
 
-ast::Expression* Parser::parsePrefixExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parsePrefixExpression() {
     Token token = peekToken();
     TokenType op = token.getType();
 
@@ -300,7 +300,7 @@ ast::Expression* Parser::parsePrefixExpression() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::PrefixExpression>(op, std::move(right));
 }
 
-ast::Expression* Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parsePrimaryExpression() {
     auto token = consumeToken();
     std::string lexeme = token.getLexeme();
 
@@ -339,14 +339,14 @@ ast::Expression* Parser::parsePrimaryExpression() NOEXCEPT_IF_RELEASE {
 }
 
 ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left,
-                                                        Precedence precedence) NOEXCEPT_IF_RELEASE {
+                                                        Precedence precedence) {
     DISCARD(consumeToken());  // Consume the scope resolution operator (::)
     DISCARD(precedence);  // Avoid unused variable warning
     auto element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
     return arena.add_node<ast::ScopeResolutionExpression>(std::move(left), element);
 }
 
-ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) NOEXCEPT_IF_RELEASE {
+ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the 'as' token
     TypeSPtr_t type = parseType(precedence);
     return arena.add_node<ast::TypeCastExpression>(std::move(left), std::move(type));

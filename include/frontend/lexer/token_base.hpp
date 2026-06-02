@@ -37,7 +37,7 @@ class Token {
    public:
     Token() noexcept = default;
     Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_,
-          bool invalid_ = false) NOEXCEPT_IF_RELEASE :
+          bool invalid_ = false) :
         invalid(invalid_),
         type(type_),
         lexeme(lexeme_),
@@ -104,7 +104,7 @@ class Token {
 };
 
 //~ Helpers, not tied to the Token class
-std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE;
+std::string tokenTypeToString(TokenType type);
 TokenType keywordLookup(const std::string_view& s) noexcept;
 
 }  // namespace lexer

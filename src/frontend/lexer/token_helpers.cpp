@@ -41,7 +41,7 @@ TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp)
     }
 }
 
-std::string tokenTypeToString(TokenType type) NOEXCEPT_IF_RELEASE {
+std::string tokenTypeToString(TokenType type) {
     switch (type) {
 #define TOKEN(name, text) \
     case TokenType::name: return text;

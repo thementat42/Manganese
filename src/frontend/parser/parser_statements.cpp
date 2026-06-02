@@ -19,7 +19,7 @@
 namespace Manganese {
 namespace parser {
 
-ast::Statement* Parser::parseStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseStatement() {
     const TokenType type = peekTokenType();
     const auto index = tokenToIndex(type);
 
@@ -34,7 +34,7 @@ ast::Statement* Parser::parseStatement() NOEXCEPT_IF_RELEASE {
 
 // Specific statement parsing methods
 
-ast::Statement* Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseAggregateDeclarationStatement() {
     DISCARD(consumeToken());
     std::vector<std::string> genericTypes;
     std::vector<ast::AggregateField> fields;
@@ -95,7 +95,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() NOEXCEPT_IF_RELEASE
     return arena.add_node<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
 }
 
-ast::Statement* Parser::parseAliasStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseAliasStatement() {
     DISCARD(consumeToken());
     TypeSPtr_t baseType;
     if (peekToken().isPrimitiveType() || peekTokenType() == TokenType::Func || peekTokenType() == TokenType::Ptr) {
@@ -132,19 +132,19 @@ ast::Statement* Parser::parseAliasStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::AliasStatement>(std::move(baseType), std::move(alias));
 }
 
-ast::Statement* Parser::parseBreakStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseBreakStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::Semicolon);
     return arena.add_node<ast::BreakStatement>();
 }
 
-ast::Statement* Parser::parseContinueStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseContinueStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::Semicolon);
     return arena.add_node<ast::ContinueStatement>();
 }
 
-ast::Statement* Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseDoWhileLoopStatement() {
     DISCARD(consumeToken());
     ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
@@ -155,7 +155,7 @@ ast::Statement* Parser::parseDoWhileLoopStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
 }
 
-ast::Statement* Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseEnumDeclarationStatement() {
     Token enumStartToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
     TypeSPtr_t baseType = primitive_types.int32;  // default if no type specified or if there's an error
@@ -203,7 +203,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
 }
 
-ast::Statement* Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseFunctionDeclarationStatement() {
     // TODO: Handle function attributes
     // TODO: Handle function default parameters
     // TODO: Handle function variadic parameters
@@ -269,7 +269,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() NOEXCEPT_IF_RELEASE 
                                                              parseBlock("function body"));
 }
 
-ast::Statement* Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseIfStatement() {
     this->isParsingBlockPrecursor = true;
     DISCARD(consumeToken());
 
@@ -300,7 +300,7 @@ ast::Statement* Parser::parseIfStatement() NOEXCEPT_IF_RELEASE {
                                             std::move(elseBody));
 }
 
-ast::Statement* Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseImportStatement() {
     size_t startLine = peekToken().getLine();
     size_t startColumn = peekToken().getColumn();
 
@@ -344,7 +344,7 @@ ast::Statement* Parser::parseImportStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::EmptyStatement>();
 }
 
-ast::Statement* Parser::parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseModuleDeclarationStatement() {
     auto temp = consumeToken();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
@@ -364,12 +364,12 @@ ast::Statement* Parser::parseModuleDeclarationStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::EmptyStatement>();
 }
 
-ast::Statement* Parser::parseRedundantSemicolon() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseRedundantSemicolon() {
     DISCARD(consumeToken());
     return arena.add_node<ast::EmptyStatement>();
 }
 
-ast::Statement* Parser::parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseRepeatLoopStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce a number of iterations");
     auto numIterations = parseExpression(Precedence::Default);
@@ -378,7 +378,7 @@ ast::Statement* Parser::parseRepeatLoopStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::RepeatLoopStatement>(std::move(numIterations), parseBlock("repeat loop body"));
 }
 
-ast::Statement* Parser::parseReturnStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseReturnStatement() {
     DISCARD(consumeToken());
     ast::Expression* expression = nullptr;
     if (peekTokenType() != TokenType::Semicolon) {
@@ -390,7 +390,7 @@ ast::Statement* Parser::parseReturnStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::ReturnStatement>(std::move(expression));
 }
 
-ast::Statement* Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseSwitchStatement() {
     Token temp = consumeToken();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
@@ -427,7 +427,7 @@ ast::Statement* Parser::parseSwitchStatement() NOEXCEPT_IF_RELEASE {
     return arena.add_node<ast::SwitchStatement>(std::move(variable), std::move(cases), std::move(defaultBody));
 }
 
-ast::Statement* Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseVisibilityAffectedStatement() {
     ast::Visibility visibility;
     switch (consumeToken().getType()) {
         case TokenType::Private: visibility = ast::Visibility::Private; break;
@@ -466,7 +466,7 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() NOEXCEPT_IF_RELEASE {
     }
 }
 
-ast::Statement* Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseVariableDeclarationStatement() {
     TypeSPtr_t explicitType;
     ast::Expression* value = nullptr;
     ast::Visibility visibility = defaultVisibility;
@@ -507,7 +507,7 @@ ast::Statement* Parser::parseVariableDeclarationStatement() NOEXCEPT_IF_RELEASE 
                                                              std::move(explicitType));
 }
 
-ast::Statement* Parser::parseWhileLoopStatement() NOEXCEPT_IF_RELEASE {
+ast::Statement* Parser::parseWhileLoopStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     auto condition = parseExpression(Precedence::Default);
@@ -517,7 +517,7 @@ ast::Statement* Parser::parseWhileLoopStatement() NOEXCEPT_IF_RELEASE {
 }
 
 // Helper Functions
-ast::Block Parser::parseBlock(const std::string& blockName) NOEXCEPT_IF_RELEASE {
+ast::Block Parser::parseBlock(const std::string& blockName) {
     expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
     ast::Block block;
     while (!done()) {
