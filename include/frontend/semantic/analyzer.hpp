@@ -1,18 +1,17 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_ANALYZER_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_ANALYZER_HPP
 
+#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/primitives.hpp>
 #include <frontend/semantic/symbol_table.hpp>
-#include <core.hpp>
-
 
 namespace Manganese {
 
 namespace semantic {
-using _analyzer_base_t = ast::Visitor<bool, bool, bool>;
+using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
 
 class analyzer final : public _analyzer_base_t {
     // note: with `final`, the compiler can more intelligently detect when analyzer is abstract
@@ -27,11 +26,11 @@ class analyzer final : public _analyzer_base_t {
    public:
     analyzer(parser::ParsedFile& file, const primitives& prims) : table(), parsed(file), primitive_types(prims) {}
 
-    bool analyze() {
+    Result analyze() {
         collectTypes();
         collectGlobals();
         collectAndSpecializeGenerics();
-        bool isSemanticallyValid = checkStatements();
+        Result isSemanticallyValid = checkStatements();
         return isSemanticallyValid;
     }
     ~analyzer() override = default;
@@ -40,6 +39,8 @@ class analyzer final : public _analyzer_base_t {
     inline void collectTypes() {  // first pass -- collect all user-defined types
         for (const auto& stmt : parsed.program) { _collectTypesInStatement(stmt); }
     }
+
+    bool areTypesCompatible(ast::Type*, ast::Type*) { return false; }
     void _collectTypesInStatement(ast::Statement*);
     void _collectTypesInStatementBody(ast::Statement*);
     void collectGlobals();  // second pass -- collect publicly available symbols for modules
@@ -48,14 +49,14 @@ class analyzer final : public _analyzer_base_t {
         // foo@[int] -> create a specialization of foo w/ int)
         // does nothing for now
     }
-    inline bool checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
-        bool programIsSemanticallyValid = true;
+    inline Result checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
+        Result programIsSemanticallyValid = Result::Success;
         for (auto& stmt : parsed.program) {
             // Note: don't do a shortcut with && (e.g. valid && visit) since `&&` short circuits but visit has side
             // effects. thus, if the program is invalid visit will never run (since false && anything is false so the
             // right hand side isn't evaluated) which means that once one visit is invalid, all subsequent visits will
             // never happen (limiting the compiler to 1 error at a time)
-            if (this->visit(stmt) == false) { programIsSemanticallyValid = false; }
+            if (this->visit(stmt) == Result::Failure) { programIsSemanticallyValid = Result::Failure; }
         }
         return programIsSemanticallyValid;
     }
