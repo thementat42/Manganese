@@ -172,7 +172,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
 }
 
 ast::Expression* Parser::parseAggregateLiteralExpression() NOEXCEPT_IF_RELEASE {
-    DISCARD(consumeToken());  // disacrd the aggregate keyword
+    DISCARD(consumeToken());  // discard the aggregate keyword
 
     expectToken(TokenType::LeftBrace, "Expected '{' to start an aggregate literal");
 
