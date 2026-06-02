@@ -62,5 +62,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Type* type) -> typevisit_t {
 #undef TYPE
 }
 
+template class Visitor<Result, Result, Result>;
+
 }  // namespace ast
 }  // namespace Manganese
