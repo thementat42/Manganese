@@ -29,14 +29,14 @@ namespace io {
  */
 class FileReader : public Reader {
    private:
-    size_t position, line, column;
-    std::string source;
+    size_t _position, _line, _column;
+    std::string _source;
     // std::ifstream fileStream;
-    std::FILE* filePtr;
-    size_t bufferSize;  // How much data is currently in the buffer
-    size_t bufferCapacity;  // How much data the buffer can hold
-    static constexpr int DEFAULT_BUFFER_CAPCITY = 64 * 1024;  // 64 KiB buffer size
-    std::unique_ptr<char[]> buffer;  // Buffer for file reading
+    std::FILE* _filePtr;
+    size_t _bufferSize;  // How much data is currently in the buffer
+    size_t _bufferCapacity;  // How much data the buffer can hold
+    constexpr static inline int DEFAULT_BUFFER_CAPCITY = 64 * 1024;  // 64 KiB buffer size
+    std::unique_ptr<char[]> _buffer;  // Buffer for file reading
 
     /**
      * @brief Reads more data from the file (on disc) into the buffer (in memory)
@@ -49,8 +49,8 @@ class FileReader : public Reader {
     FileReader() = default;
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
     ~FileReader() noexcept override {
-        if (filePtr) {
-            std::fclose(filePtr);
+        if (_filePtr) {
+            std::fclose(_filePtr);
         }
     }
 
@@ -58,14 +58,13 @@ class FileReader : public Reader {
     [[nodiscard]] char consumeChar() noexcept override;
 
     constexpr void setPosition(size_t newPosition) noexcept override {
-        position = newPosition >= bufferSize ? bufferSize : newPosition;
+        _position = newPosition >= _bufferSize ? _bufferSize : newPosition;
     }
-    constexpr size_t getPosition() const noexcept override { return position; }
-    constexpr size_t getLine() const noexcept override { return line; }
-    constexpr size_t getColumn() const noexcept override { return column; }
+    constexpr size_t getPosition() const noexcept override { return _position; }
+    constexpr size_t getLine() const noexcept override { return _line; }
+    constexpr size_t getColumn() const noexcept override { return _column; }
 
-    // constexpr bool done() const noexcept override { return position >= bufferSize && filestream.eof(); }
-    constexpr bool done() const noexcept override { return position >= bufferSize && std::feof(filePtr); }
+    constexpr bool done() const noexcept override { return _position >= _bufferSize && std::feof(_filePtr); }
     
 };
 }  // namespace io

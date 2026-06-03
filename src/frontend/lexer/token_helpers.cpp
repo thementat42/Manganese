@@ -11,12 +11,12 @@ namespace lexer {
 //! Most of this is long
 
 TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
-    switch (type) {
+    switch (_type) {
         case TokenType::Plus: return TokenType::UnaryPlus;
         case TokenType::Minus: return TokenType::UnaryMinus;
         case TokenType::BitAnd: return TokenType::AddressOf;
         case TokenType::Mul: return TokenType::Dereference;
-        default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(type));
+        default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(_type));
     }
 }
 

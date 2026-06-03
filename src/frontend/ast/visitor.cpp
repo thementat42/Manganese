@@ -16,7 +16,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Expression* expr) -> exprvisit_t {
 
         default:
             ASSERT_UNREACHABLE(
-                std ::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind())));
+                std::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind())));
     }
 
 #undef STMT
@@ -36,7 +36,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Statement* stmt) -> stmtvisit_t {
 
         default:
             ASSERT_UNREACHABLE(
-                std ::format("No visit() overload for statement kind {}", static_cast<int>(stmt->kind())));
+                std::format("No visit() overload for statement kind {}", static_cast<int>(stmt->kind())));
     }
 #undef STMT
 #undef EXPR

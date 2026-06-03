@@ -29,74 +29,72 @@ namespace lexer {
  */
 class Token {
    private:
-    bool invalid;
-    TokenType type;
-    std::string lexeme;
-    size_t line, column;
+    bool _isInvalid;
+    TokenType _type;
+    std::string _lexeme;
+    size_t line, _column;
+
+    template <class... TokenTypes>
+    constexpr inline bool typeMatchesOneOf(TokenTypes&&... types) const noexcept {
+        return ((_type == types) || ...);
+    }
 
    public:
     Token() noexcept = default;
-    Token(const TokenType type_, const std::string lexeme_, const size_t line_, const size_t column_,
-          bool invalid_ = false) :
-        invalid(invalid_),
-        type(type_),
-        lexeme(lexeme_),
-        line(line_),
-        column(column_) {
+    Token(const TokenType type, const std::string& lexeme, const size_t line, const size_t column,
+          bool isInvalid = false) :
+        _isInvalid(isInvalid), _type(type), _lexeme(lexeme), line(line), _column(column) {
         // Special lexeme override cases
-        if (type == TokenType::Int32) {
-            lexeme = "int32";
-        } else if (type == TokenType::Float32) {
-            lexeme = "float32";
+        if (_type == TokenType::Int32) {
+            _lexeme = "int32";
+        } else if (_type == TokenType::Float32) {
+            _lexeme = "float32";
         }
     };
     ~Token() noexcept = default;
 
     constexpr bool isKeyword() const noexcept {
-        return type >= TokenType::_keywordStart && type <= TokenType::_keywordEnd;
+        return _type >= TokenType::_keywordStart && _type <= TokenType::_keywordEnd;
     }
     constexpr bool isOperator() const noexcept {
-        return type >= TokenType::_operatorStart && type <= TokenType::_operatorEnd;
+        return _type >= TokenType::_operatorStart && _type <= TokenType::_operatorEnd;
     }
 
-    constexpr bool isInvalid() const noexcept { return invalid; }
-    constexpr TokenType getType() const noexcept { return type; }
-    constexpr std::string getLexeme() const noexcept { return lexeme; }
+    constexpr bool isInvalid() const noexcept { return _isInvalid; }
+    constexpr TokenType getType() const noexcept { return _type; }
+    constexpr std::string getLexeme() const noexcept { return _lexeme; }
     constexpr size_t getLine() const noexcept { return line; }
-    constexpr size_t getColumn() const noexcept { return column; }
+    constexpr size_t getColumn() const noexcept { return _column; }
 
     constexpr bool isPrefixOperator() const noexcept {
         using enum TokenType;
-        return type == Inc || type == Dec || type == BitAnd || type == Mul || type == AddressOf || type == Dereference;
+        return typeMatchesOneOf(Inc, Dec, BitAnd, Mul, AddressOf, Dereference);
     }
     constexpr bool isLiteral() const noexcept {
         using enum TokenType;
-        return type == IntegerLiteral || type == FloatLiteral || type == StrLiteral || type == CharLiteral
-            || type == True || type == False;
+        return typeMatchesOneOf(IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True, False);
     }
     constexpr bool isBracket() const noexcept {
         using enum TokenType;
-        return type == LeftParen || type == RightParen || type == LeftBrace || type == RightBrace || type == LeftSquare
-            || type == RightSquare;
+        return typeMatchesOneOf(LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare, RightSquare);
     }
     constexpr bool isPrimitiveType() const noexcept {
         using enum TokenType;
-        return type == Int8 || type == Int16 || type == Int32 || type == Int64 || type == UInt8 || type == UInt16
-            || type == UInt32 || type == UInt64 || type == Float32 || type == Float64 || type == Int128
-            || type == UInt128 || type == Char || type == Bool || type == String;
+        return typeMatchesOneOf(Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32, Float64, Int128,
+                                UInt128, Char, Bool, String);
     }
     constexpr bool hasUnaryCounterpart() const noexcept {
         using enum TokenType;
-        return type == Plus ||  // + can be addition or unary plus
-            type == Minus ||  // - can be subtraction or unary minus
-            type == BitAnd ||  // & can be bitwise AND or address-of operator
-            type == Mul;  // * can be multiplication or dereference operator
+        return typeMatchesOneOf(Plus,  // + can be addition or unary plus
+                                Minus,  // - can be subtraction or unary minus
+                                BitAnd,  // & can be bitwise AND or address-of operator
+                                Mul);  // * can be multiplication or dereference operator
     }
 
     /**
      * @note Parser only: be careful
      */
-    void overrideType(TokenType type_, std::string lexeme_ = "");
+    void overrideType(TokenType, std::string = "");
 
     // These functions are long, so are implemented in a separate header
     TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;

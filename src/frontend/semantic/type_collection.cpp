@@ -15,7 +15,7 @@ void analyzer::_collectTypesInStatement(ast::Statement* stmt) {
     switch (stmt->kind()) {
         case AggregateDeclarationStatement: {
             auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
-            table.declare(aggregateStmt->name,
+            symbolTable.declare(aggregateStmt->name,
                           Symbol{
                               .type = nullptr,
                               .node = aggregateStmt,
@@ -27,7 +27,7 @@ void analyzer::_collectTypesInStatement(ast::Statement* stmt) {
         }
         case AliasStatement: {
             auto aliasStmt = static_cast<ast::AliasStatement*>(stmt);
-            table.declare(aliasStmt->alias,
+            symbolTable.declare(aliasStmt->alias,
                           Symbol{.type = nullptr,
                                  .node = aliasStmt,
                                  .kind = SymbolKind::TypeAlias,
@@ -37,7 +37,7 @@ void analyzer::_collectTypesInStatement(ast::Statement* stmt) {
         }
         case EnumDeclarationStatement: {
             auto enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
-            table.declare(enumDecl->name,
+            symbolTable.declare(enumDecl->name,
                           Symbol{.type = nullptr,
                                  .node = enumDecl,
                                  .kind = SymbolKind::Enum,
@@ -54,12 +54,12 @@ void analyzer::_collectTypesInStatement(ast::Statement* stmt) {
 }
 
 void analyzer::_collectTypesInStatementBody(ast::Statement* stmt) {
-    this->table.enterScope();
+    this->symbolTable.enterScope();
     using enum ast::StatementKind;
     switch (stmt->kind()) {
         case AggregateDeclarationStatement: {
             auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
-            table.declare(aggregateStmt->name,
+            symbolTable.declare(aggregateStmt->name,
                           Symbol{.type = nullptr,
                                  .node = aggregateStmt,
                                  .kind = SymbolKind::Aggregate,
@@ -69,7 +69,7 @@ void analyzer::_collectTypesInStatementBody(ast::Statement* stmt) {
         }
         case AliasStatement: {
             auto aliasStmt = static_cast<ast::AliasStatement*>(stmt);
-            table.declare(aliasStmt->alias,
+            symbolTable.declare(aliasStmt->alias,
                           Symbol{.type = nullptr,
                                  .node = aliasStmt,
                                  .kind = SymbolKind::TypeAlias,
@@ -79,7 +79,7 @@ void analyzer::_collectTypesInStatementBody(ast::Statement* stmt) {
         }
         case EnumDeclarationStatement: {
             auto enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
-            table.declare(enumDecl->name,
+            symbolTable.declare(enumDecl->name,
                           Symbol{.type = nullptr,
                                  .node = enumDecl,
                                  .kind = SymbolKind::Enum,
@@ -109,7 +109,7 @@ void analyzer::_collectTypesInStatementBody(ast::Statement* stmt) {
         }
         default: ASSERT_UNREACHABLE("");
     }
-    this->table.exitScope();
+    this->symbolTable.exitScope();
 }
 
 }  // namespace semantic

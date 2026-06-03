@@ -12,12 +12,12 @@
 namespace Manganese {
 namespace lexer {
 
-void Token::overrideType(TokenType type_, std::string lexeme_) {
+void Token::overrideType(TokenType type, std::string lexeme) {
     logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {} with lexeme '{}'",
-                         tokenTypeToString(type), tokenTypeToString(type_), lexeme_);
+                         tokenTypeToString(_type), tokenTypeToString(type), lexeme);
 
-    type = type_;
-    if (lexeme_ != "") { lexeme = std::move(lexeme_); }
+    _type = type;
+    if (lexeme != "") { _lexeme = std::move(lexeme); }
 }
 
 struct keyword_map_entry {
@@ -54,7 +54,7 @@ TokenType keywordLookup(const std::string_view& s) noexcept {
 }
 
 std::string Token::toString() const noexcept {
-    return std::format("Token: {} (lexeme: '{}') at line {}, column {}", tokenTypeToString(type), lexeme, line, column);
+    return std::format("Token: {} (lexeme: '{}') at line {}, column {}", tokenTypeToString(_type), _lexeme, line, _column);
 }
 
 }  // namespace lexer

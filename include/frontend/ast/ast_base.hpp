@@ -13,13 +13,12 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 
-#include <frontend/lexer.hpp>
 #include <core.hpp>
+#include <frontend/lexer.hpp>
 #include <memory>
 #include <string>
 #include <utils/type_names.hpp>
 #include <vector>
-
 
 #if MN_DEBUG
 #define OVERRIDE_DUMP_METHOD_ \
@@ -111,58 +110,58 @@ class ASTNode {
     virtual void dump(std::ostream& os, size_t indent = 0) const = 0;
 #endif  // MN_DEBUG
 
-    constexpr inline void setLine(size_t _line) noexcept { line = _line; }
+    constexpr inline void setLine(size_t new_line) noexcept { line = new_line; }
     constexpr inline size_t getLine() const noexcept { return line; }
-    constexpr inline void setColumn(size_t _column) noexcept { column = _column; }
+    constexpr inline void setColumn(size_t new_column) noexcept { column = new_column; }
     constexpr inline size_t getColumn() const noexcept { return column; }
-    constexpr inline void setLineColumn(size_t line_, size_t column_) noexcept {
-        line = line_;
-        column = column_;
+    constexpr inline void setLineColumn(size_t new_line, size_t new_column) noexcept {
+        line = new_line;
+        column = new_column;
     }
 };
 
 class Expression : public ASTNode {
    private:
-    TypeSPtr_t computedType;
-    ExpressionKind kind_;
+    TypeSPtr_t _computedType;
+    ExpressionKind _kind;
 
    public:
     virtual ~Expression() noexcept = default;
-    inline Type* getType() const noexcept { return computedType.get(); };
-    inline TypeSPtr_t getTypePtr() const noexcept { return computedType; }
-    void setType(TypeSPtr_t type) noexcept { computedType = type; }
-    constexpr inline ExpressionKind kind() const noexcept { return kind_; }
+    inline Type* getType() const noexcept { return _computedType.get(); };
+    inline TypeSPtr_t getTypePtr() const noexcept { return _computedType; }
+    void setType(TypeSPtr_t type) noexcept { _computedType = type; }
+    constexpr inline ExpressionKind kind() const noexcept { return _kind; }
 
    protected:
-    constexpr explicit Expression(ExpressionKind k_) noexcept : kind_(k_) {}
+    constexpr explicit Expression(ExpressionKind kind) noexcept : _kind(kind) {}
 };
 
 class Statement : public ASTNode {
    private:
-    StatementKind kind_;
+    StatementKind _kind;
 
    public:
     virtual ~Statement() noexcept = default;
-    constexpr inline StatementKind kind() const noexcept { return kind_; }
+    constexpr inline StatementKind kind() const noexcept { return _kind; }
 
    protected:
-    constexpr explicit Statement(StatementKind k_) noexcept : kind_(k_) {}
+    constexpr explicit Statement(StatementKind kind) noexcept : _kind(kind) {}
 };
 
 class Type : public ASTNode {
    private:
-    TypeKind kind_;
-    PrimitiveType_t prim_;
+    TypeKind _kind;
+    PrimitiveType_t _primitiveType;
 
    public:
     virtual ~Type() noexcept = default;
-    constexpr inline TypeKind kind() const noexcept { return kind_; }
-    constexpr inline PrimitiveType_t primitiveType() const noexcept { return prim_; }
-    constexpr inline void setPrimitiveType(PrimitiveType_t prim_type) noexcept { prim_ = prim_type; }
+    constexpr inline TypeKind kind() const noexcept { return _kind; }
+    constexpr inline PrimitiveType_t primitiveType() const noexcept { return _primitiveType; }
+    constexpr inline void setPrimitiveType(PrimitiveType_t primitiveType) noexcept { _primitiveType = primitiveType; }
 
    protected:
-    constexpr explicit Type(TypeKind _k, PrimitiveType_t _p = PrimitiveType_t::not_primitive) noexcept :
-        kind_(_k), prim_(_p) {}
+    constexpr explicit Type(TypeKind kind, PrimitiveType_t primitiveType = PrimitiveType_t::not_primitive) noexcept :
+        _kind(kind), _primitiveType(primitiveType) {}
 };
 
 constexpr const char* visibilityToString(Visibility visibility) noexcept {

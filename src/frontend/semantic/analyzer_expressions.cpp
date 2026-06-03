@@ -27,7 +27,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
 
     */
 
-    const Symbol* aggregateSymbol = table.lookup(expression->name);
+    const Symbol* aggregateSymbol = symbolTable.lookup(expression->name);
     auto line = expression->getLine();
     auto col = expression->getColumn();
     if (!aggregateSymbol) {
@@ -91,11 +91,11 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
 // auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t;
 
 auto analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
-    expression->setType(primitive_types.boolean);
+    expression->setType(primitiveTypes.boolean);
     return Result::Success;  // literals are always semantically correct
 }
 auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
-    expression->setType(primitive_types.character);
+    expression->setType(primitiveTypes.character);
     return Result::Success;  // literals are always semantically correct
 }
 
@@ -108,18 +108,18 @@ auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
 auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     using held_type = mnstl::number_t::held_type;
     switch (expression->value.underlying_type()) {
-        case held_type::int8: expression->setType(primitive_types.int8); break;
-        case held_type::int16: expression->setType(primitive_types.int16); break;
-        case held_type::int32: expression->setType(primitive_types.int32); break;
-        case held_type::int64: expression->setType(primitive_types.int64); break;
-        case held_type::int128: expression->setType(primitive_types.int128); break;
-        case held_type::uint8: expression->setType(primitive_types.uint8); break;
-        case held_type::uint16: expression->setType(primitive_types.uint16); break;
-        case held_type::uint32: expression->setType(primitive_types.uint32); break;
-        case held_type::uint64: expression->setType(primitive_types.uint64); break;
-        case held_type::uint128: expression->setType(primitive_types.uint128); break;
-        case held_type::float32: expression->setType(primitive_types.float32); break;
-        case held_type::float64: expression->setType(primitive_types.float64); break;
+        case held_type::int8: expression->setType(primitiveTypes.int8); break;
+        case held_type::int16: expression->setType(primitiveTypes.int16); break;
+        case held_type::int32: expression->setType(primitiveTypes.int32); break;
+        case held_type::int64: expression->setType(primitiveTypes.int64); break;
+        case held_type::int128: expression->setType(primitiveTypes.int128); break;
+        case held_type::uint8: expression->setType(primitiveTypes.uint8); break;
+        case held_type::uint16: expression->setType(primitiveTypes.uint16); break;
+        case held_type::uint32: expression->setType(primitiveTypes.uint32); break;
+        case held_type::uint64: expression->setType(primitiveTypes.uint64); break;
+        case held_type::uint128: expression->setType(primitiveTypes.uint128); break;
+        case held_type::float32: expression->setType(primitiveTypes.float32); break;
+        case held_type::float64: expression->setType(primitiveTypes.float64); break;
         case held_type::none: [[fallthrough]];
         default: ASSERT_UNREACHABLE("In analyzer: Number literal expression had no parser-deduced type");
     }
@@ -131,7 +131,7 @@ auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
 // auto analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t;
 
 auto analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
-    expression->setType(primitive_types.string);
+    expression->setType(primitiveTypes.string);
     return Result::Success;  // literals are always semantically correct
 }
 

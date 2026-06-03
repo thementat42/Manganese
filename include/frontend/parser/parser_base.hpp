@@ -12,10 +12,10 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 
+#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/semantic/primitives.hpp>
-#include <core.hpp>
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
@@ -52,7 +52,7 @@ class Parser {
     std::string moduleName;
     std::vector<Import> imports;
     mnstl::chunk_allocator& arena;
-    const semantic::primitives& primitive_types;
+    const semantic::primitives& primitiveTypes;
 
     // Some flags
     struct {
@@ -62,11 +62,13 @@ class Parser {
     };
 
    public:  // public methods
-    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& _arena,
-           const semantic::primitives& prims) :
-        lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(_arena), primitive_types(prims) {
-            initializeLookups();
-            initializeTypeLookups();
+    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference,
+           const semantic::primitives& primitivesReference) :
+        lexer(std::make_unique<lexer::Lexer>(source, mode)),
+        arena(allocatorReference),
+        primitiveTypes(primitivesReference) {
+        initializeLookups();
+        initializeTypeLookups();
     }
 
     // Avoid file ownership issues
@@ -87,21 +89,20 @@ class Parser {
     using ledHandler_types_t = TypeSPtr_t (Parser::*)(TypeSPtr_t, Precedence);
 
     //~ Lookups
-    inline static std::array<statementHandler_t, static_cast<size_t>(TokenType::_tokenCount)> statementLookup{};
-    inline static std::array<nudHandler_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup{};
-    inline static std::array<ledHandler_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup{};
-    inline static std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap{};
+    static inline std::array<statementHandler_t, static_cast<size_t>(TokenType::_tokenCount)> statementLookup{};
+    static inline std::array<nudHandler_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup{};
+    static inline std::array<ledHandler_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup{};
+    static inline std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap{};
 
-    inline static std::array<nudHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup_types{};
-    inline static std::array<ledHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup_types{};
-    inline static std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type{};
+    static inline std::array<nudHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup_types{};
+    static inline std::array<ledHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup_types{};
+    static inline std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type{};
 
     //~ Parsing functions
 
     // Expression Parsing
     ast::Expression* parseExpression(Precedence precedence);
-    ast::Expression* parseAggregateInstantiationExpression(ast::Expression* left,
-                                                           Precedence precedence);
+    ast::Expression* parseAggregateInstantiationExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseAggregateLiteralExpression();
     ast::Expression* parseArrayInstantiationExpression();
     ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence);
@@ -204,8 +205,7 @@ class Parser {
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    static void registerLedHandler_binary(TokenType type, Precedence precedence,
-                                                    ledHandler_t handler) noexcept;
+    static void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
 
     /**
      * @brief Register a left denotation handler for `type`
@@ -213,24 +213,21 @@ class Parser {
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    static void registerLedHandler_postfix(TokenType type, Precedence precedence,
-                                                     ledHandler_t handler) noexcept;
+    static void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a prefix operator)
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    static void registerLedHandler_prefix(TokenType type, Precedence precedence,
-                                                    ledHandler_t handler) noexcept;
+    static void registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
     /**
      * @brief Register a left denotation handler for `type`
      * @param type The token type associated with the handler (a token indicating a type)
      * @param precedence How strongly that operator binds to its neighbour(s)
      * @param handler The function to call when the token type is encountered
      */
-    static void registerLedHandler_type(TokenType type, Precedence precedence,
-                                                  ledHandler_types_t handler) noexcept;
+    static void registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept;
 
     /**
      * @brief Register a null denotation handler for `type`

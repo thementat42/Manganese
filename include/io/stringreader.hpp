@@ -21,31 +21,31 @@ namespace io {
  */
 class StringReader : public Reader {
    private:
-    size_t position, line, column;
-    std::string source;
+    size_t _position, _line, _column;
+    std::string _source;
 
    public:
     StringReader() = default;
-    StringReader(const std::string& source_) : position(0), line(1), column(1), source(source_) {}
+    StringReader(const std::string& source) : _position(0), _line(1), _column(1), _source(source) {}
     ~StringReader() noexcept = default;
 
     constexpr void setPosition(size_t newPosition) noexcept override {
-        position = newPosition >= source.length() ? source.length() : newPosition;
+        _position = newPosition >= _source.length() ? _source.length() : newPosition;
     }
-    constexpr size_t getPosition() const noexcept override { return position; }
-    constexpr size_t getLine() const noexcept override { return line; }
-    constexpr size_t getColumn() const noexcept override { return column; }
+    constexpr size_t getPosition() const noexcept override { return _position; }
+    constexpr size_t getLine() const noexcept override { return _line; }
+    constexpr size_t getColumn() const noexcept override { return _column; }
 
-    constexpr bool done() const noexcept override { return position >= source.length(); }
+    constexpr bool done() const noexcept override { return _position >= _source.length(); }
 
     char peekChar(size_t offset = 0) noexcept override {
-        return (position + offset >= source.length()) ? Reader::EOF_CHAR : source[position + offset];
+        return (_position + offset >= _source.length()) ? Reader::EOF_CHAR : _source[_position + offset];
     }
     [[nodiscard]] char consumeChar() noexcept override {
-        if (position >= source.length()) { return Reader::EOF_CHAR; }
-        char c = source[position++];
-        line += (c == '\n') ? 1 : 0;
-        column = (c == '\n') ? 1 : column + 1;
+        if (_position >= _source.length()) { return Reader::EOF_CHAR; }
+        const char c = _source[_position++];
+        _line += (c == '\n') ? 1 : 0;
+        _column = (c == '\n') ? 1 : _column + 1;
         return c;
     }
 };

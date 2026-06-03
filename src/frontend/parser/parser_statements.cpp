@@ -158,12 +158,12 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
 ast::Statement* Parser::parseEnumDeclarationStatement() {
     Token enumStartToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
-    TypeSPtr_t baseType = primitive_types.int32;  // default if no type specified or if there's an error
+    TypeSPtr_t baseType = primitiveTypes.int32;  // default if no type specified or if there's an error
     std::vector<ast::EnumValue> values;
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());
         Token underlyingTok = peekToken();
-        if (const auto* p = primitive_types.fromLexeme(underlyingTok.getLexeme())) {
+        if (const auto* p = primitiveTypes.fromLexeme(underlyingTok.getLexeme())) {
             baseType = *p;
             DISCARD(consumeToken());
         } else if (underlyingTok.getType() == TokenType::LeftBrace) {
