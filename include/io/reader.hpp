@@ -22,13 +22,12 @@ namespace io {
 class Reader {
 
    public:
-    static constexpr char EOF_CHAR = '\0';
+    constexpr static inline char EOF_CHAR = '\0';
     Reader() = default;
     virtual ~Reader() noexcept = default;
 
     // Any reader should be the only thing reading its source
     // This is especially important for reading from a file, to prevent double closing or reading from a closed file
-    // So, disable copying and moving
     Reader(const Reader&) = delete;
     Reader& operator=(const Reader&) = delete;
 
