@@ -29,8 +29,8 @@ class StringReader : public Reader {
     StringReader(const std::string& source) : _position(0), _line(1), _column(1), _source(source) {}
     ~StringReader() noexcept = default;
 
-    constexpr void setPosition(size_t newPosition) noexcept override {
-        _position = newPosition >= _source.length() ? _source.length() : newPosition;
+    void setPosition(size_t newPosition) noexcept override {
+        while (_position < newPosition && !done()) { DISCARD(consumeChar()); }
     }
     constexpr size_t getPosition() const noexcept override { return _position; }
     constexpr size_t getLine() const noexcept override { return _line; }

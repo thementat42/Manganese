@@ -50,7 +50,7 @@ class Reader {
      * @brief Move the reader forward to a new position
      * @param newPosition The new position to move to
      */
-    constexpr virtual void setPosition(size_t newPosition) noexcept = 0;
+    virtual void setPosition(size_t newPosition) noexcept = 0;
 
     /**
      * @brief Get the current position of the reader

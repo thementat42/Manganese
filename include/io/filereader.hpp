@@ -49,23 +49,20 @@ class FileReader : public Reader {
     FileReader() = default;
     FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
     ~FileReader() noexcept override {
-        if (_filePtr) {
-            std::fclose(_filePtr);
-        }
+        if (_filePtr) { std::fclose(_filePtr); }
     }
 
     char peekChar(size_t offset = 0) noexcept override;
     [[nodiscard]] char consumeChar() noexcept override;
 
-    constexpr void setPosition(size_t newPosition) noexcept override {
-        _position = newPosition >= _bufferSize ? _bufferSize : newPosition;
+    void setPosition(size_t newPosition) noexcept override {
+        while (_position < newPosition && !done()) { DISCARD(consumeChar()); }
     }
     constexpr size_t getPosition() const noexcept override { return _position; }
     constexpr size_t getLine() const noexcept override { return _line; }
     constexpr size_t getColumn() const noexcept override { return _column; }
 
     constexpr bool done() const noexcept override { return _position >= _bufferSize && std::feof(_filePtr); }
-    
 };
 }  // namespace io
 }  // namespace Manganese
