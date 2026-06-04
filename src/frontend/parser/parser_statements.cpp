@@ -163,15 +163,17 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());
         Token underlyingTok = peekToken();
-        if (const auto* p = primitiveTypes.fromLexeme(underlyingTok.getLexeme())) {
+        if (!underlyingTok.isInteger()) {
+            logError(underlyingTok.getLine(), underlyingTok.getColumn(),
+                     "Enums can only have integral types as their underlying type, not {}", underlyingTok.getLexeme());
+            DISCARD(consumeToken());
+        } else if (const auto* p = primitiveTypes.fromLexeme(underlyingTok.getLexeme())) {
             baseType = *p;
             DISCARD(consumeToken());
-        } else if (underlyingTok.getType() == TokenType::LeftBrace) {
-            logError(underlyingTok.getLine(), underlyingTok.getColumn(), "Expected an underlying type for an enum");
         } else {
-            logError(underlyingTok.getLine(), underlyingTok.getColumn(),
-                     "Enums can only have primitive types as their underlying type, not {}", underlyingTok.getLexeme());
-            DISCARD(consumeToken());
+            logError(underlyingTok.getLine(), underlyingTok.getColumn(), "Expected an underlying type for an enum");
+            // If underlying type was just missing, don't skip the opening brace since that error will cascade
+            if (underlyingTok.getType() != TokenType::LeftBrace) { DISCARD(consumeToken()); }
         }
     }
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
@@ -188,7 +190,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
 
         if (duplicate != values.end()) {
             logError(peekToken().getLine(), peekToken().getColumn(),
-                     "Enum value '{}' (in enum '{}') was previously declared", valueName, name);
+                     "Duplicate enum value '{}' in enum '{}'", valueName, name);
         } else {
             values.push_back({.name = std::move(valueName), .value = std::move(valueExpression)});
         }

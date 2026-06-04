@@ -11,15 +11,16 @@
  */
 
 #include <array>
+#include <core.hpp>
 #include <filesystem>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/primitives.hpp>
 #include <fstream>
-#include <core.hpp>
 #include <iostream>
 #include <string>
 
 #include "testrunner.hpp"
+
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
@@ -366,7 +367,7 @@ bool testIfElseStatements() {
 }
 
 bool testEnumDeclarationStatement() {
-    std::string expression = "public enum Color {\n"
+    std::string expression = "public enum Color: int8 {\n"
                              "    Red,\n"
                              "    Green,\n"
                              "    Blue,\n"
@@ -375,11 +376,19 @@ bool testEnumDeclarationStatement() {
                              "    Success = 0,\n"
                              "    Error = 1,\n"
                              "    Unknown = -1,\n"
+                             "}"
+                             "enum Letters: uint128 {\n"
+                             "    A = 0,\n"
+                             "    B,\n"
+                             "    C,\n"
+                             "    D,\n"
+                             "    C,\n"
                              "}";
 
-    std::array<std::string, 2> expected
-        = {"public enum Color: int32 {\n\tRed,\n\tGreen,\n\tBlue,\n}",
-           "private enum Status: float64 {\n\tSuccess = 0,\n\tError = 1,\n\tUnknown = (-1),\n}"};
+    std::array<std::string, 3> expected
+        = {"public enum Color: int8 {\n\tRed,\n\tGreen,\n\tBlue,\n}",
+           "private enum Status: int32 {\n\tSuccess = 0,\n\tError = 1,\n\tUnknown = (-1),\n}",
+           "private enum Letters: uint128 {\n\tA = 0,\n\tB,\n\tC,\n\tD,\n}"};
 
     return validateStatements(getParserResults(expression), expected, "Enum Declaration Statement");
 }

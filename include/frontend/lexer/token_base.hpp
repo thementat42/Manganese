@@ -83,6 +83,10 @@ class Token {
         return typeMatchesOneOf(Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32, Float64, Int128,
                                 UInt128, Char, Bool, String);
     }
+    constexpr bool isInteger() const noexcept {
+        using enum TokenType;
+        return typeMatchesOneOf(Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128, UInt128);
+    }
     constexpr bool hasUnaryCounterpart() const noexcept {
         using enum TokenType;
         return typeMatchesOneOf(Plus,  // + can be addition or unary plus
