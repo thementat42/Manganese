@@ -32,7 +32,7 @@ class Token {
     bool _isInvalid;
     TokenType _type;
     std::string _lexeme;
-    size_t line, _column;
+    size_t _line, _column;
 
     template <class... TokenTypes>
     constexpr inline bool typeMatchesOneOf(TokenTypes&&... types) const noexcept {
@@ -43,7 +43,7 @@ class Token {
     Token() noexcept = default;
     Token(const TokenType type, const std::string& lexeme, const size_t line, const size_t column,
           bool isInvalid = false) :
-        _isInvalid(isInvalid), _type(type), _lexeme(lexeme), line(line), _column(column) {
+        _isInvalid(isInvalid), _type(type), _lexeme(lexeme), _line(line), _column(column) {
         // Special lexeme override cases
         if (_type == TokenType::Int32) {
             _lexeme = "int32";
@@ -63,7 +63,7 @@ class Token {
     constexpr bool isInvalid() const noexcept { return _isInvalid; }
     constexpr TokenType getType() const noexcept { return _type; }
     constexpr std::string getLexeme() const noexcept { return _lexeme; }
-    constexpr size_t getLine() const noexcept { return line; }
+    constexpr size_t getLine() const noexcept { return _line; }
     constexpr size_t getColumn() const noexcept { return _column; }
 
     constexpr bool isPrefixOperator() const noexcept {

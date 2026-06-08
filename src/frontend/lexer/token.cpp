@@ -54,7 +54,7 @@ TokenType keywordLookup(const std::string_view& s) noexcept {
 }
 
 std::string Token::toString() const noexcept {
-    return std::format("Token: {} (lexeme: '{}') at line {}, column {}", tokenTypeToString(_type), _lexeme, line, _column);
+    return std::format("Token: {} (lexeme: '{}') at line {}, column {}", tokenTypeToString(_type), _lexeme, _line, _column);
 }
 
 }  // namespace lexer
