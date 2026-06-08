@@ -5,7 +5,7 @@
  * @brief Contains AST node definitions for various statement types in the Manganese frontend.
  *
  * This header declares the core statement node types used in the AST.
- * Each statement type (conditionals, function declarations, etc.) is represented as a class inheriting from Statement.
+ * Each statement type (conditionals, function declarations, etc.) is represented as a struct inheriting from Statement.
  *
  * ! The nodes are listed in alphabetical order.
  */
@@ -38,8 +38,7 @@ struct AggregateField {
     bool isMutable;
 };
 
-class AggregateDeclarationStatement final : public Statement {
-   public:
+struct AggregateDeclarationStatement final : public Statement {
     std::string name;
     std::vector<std::string> genericTypes;
     std::vector<AggregateField> fields;
@@ -54,8 +53,7 @@ class AggregateDeclarationStatement final : public Statement {
     AST_STANDARD_INTERFACE;
 };
 
-class AliasStatement final : public Statement {
-   public:
+struct AliasStatement final : public Statement {
     TypeSPtr_t baseType;  // The type being aliased (x in alias x as foo)
     std::string alias;  // The name of the alias (foo in alias x as foo)
     Visibility visibility = Visibility::Private;
@@ -66,22 +64,19 @@ class AliasStatement final : public Statement {
     AST_STANDARD_INTERFACE
 };
 
-class BreakStatement final : public Statement {
-   public:
+struct BreakStatement final : public Statement {
     constexpr explicit BreakStatement() : Statement(StatementKind::BreakStatement) {}
 
     AST_STANDARD_INTERFACE;
 };
 
-class ContinueStatement final : public Statement {
-   public:
+struct ContinueStatement final : public Statement {
     constexpr explicit ContinueStatement() : Statement(StatementKind::ContinueStatement) {}
 
     AST_STANDARD_INTERFACE;
 };
 
-class EmptyStatement final : public Statement {
-   public:
+struct EmptyStatement final : public Statement {
     constexpr explicit EmptyStatement() : Statement(StatementKind::EmptyStatement) {}
     AST_STANDARD_INTERFACE;
 };
@@ -91,8 +86,7 @@ struct EnumValue {
     Expression* value;
 };
 
-class EnumDeclarationStatement final : public Statement {
-   public:
+struct EnumDeclarationStatement final : public Statement {
     std::string name;
     TypeSPtr_t baseType;
     std::vector<EnumValue> values;
@@ -108,10 +102,9 @@ class EnumDeclarationStatement final : public Statement {
 };
 
 /**
- * @brief Wrapper class to final convert an expression into a statement
+ * @brief Wrapper struct to final convert an expression into a statement
  */
-class ExpressionStatement final : public Statement {
-   public:
+struct ExpressionStatement final : public Statement {
     Expression* expression;
 
     explicit ExpressionStatement(Expression* expression_) :
@@ -126,8 +119,7 @@ struct FunctionParameter {
     bool isMutable;
 };
 
-class FunctionDeclarationStatement final : public Statement {
-   public:
+struct FunctionDeclarationStatement final : public Statement {
     std::string name;
     std::vector<std::string> genericTypes;
     std::vector<FunctionParameter> parameters;
@@ -154,8 +146,7 @@ struct ElifClause {
     ElifClause(Expression* condition_, Block body_) : condition(std::move(condition_)), body(std::move(body_)) {}
 };
 
-class IfStatement final : public Statement {
-   public:
+struct IfStatement final : public Statement {
     Expression* condition;
     Block body, elseBody;  // elseBody might be empty
     std::vector<ElifClause> elifs;
@@ -170,8 +161,7 @@ class IfStatement final : public Statement {
     AST_STANDARD_INTERFACE;
 };
 
-class RepeatLoopStatement final : public Statement {
-   public:
+struct RepeatLoopStatement final : public Statement {
     Expression* numIterations;
     Block body;
 
@@ -183,8 +173,7 @@ class RepeatLoopStatement final : public Statement {
     AST_STANDARD_INTERFACE;
 };
 
-class ReturnStatement final : public Statement {
-   public:
+struct ReturnStatement final : public Statement {
     Expression* value;
 
     explicit ReturnStatement(Expression* value_ = nullptr) :
@@ -198,8 +187,7 @@ struct CaseClause {
     Block body;
 };
 
-class SwitchStatement final : public Statement {
-   public:
+struct SwitchStatement final : public Statement {
     Expression* variable;
     std::vector<CaseClause> cases;
     Block defaultBody;
@@ -213,8 +201,7 @@ class SwitchStatement final : public Statement {
     AST_STANDARD_INTERFACE;
 };
 
-class VariableDeclarationStatement final : public Statement {
-   public:
+struct VariableDeclarationStatement final : public Statement {
     bool isMutable;
     std::string name;
     Visibility visibility;
@@ -233,8 +220,7 @@ class VariableDeclarationStatement final : public Statement {
     AST_STANDARD_INTERFACE;
 };
 
-class WhileLoopStatement final : public Statement {
-   public:
+struct WhileLoopStatement final : public Statement {
     Block body;
     Expression* condition;
     bool isDoWhile;

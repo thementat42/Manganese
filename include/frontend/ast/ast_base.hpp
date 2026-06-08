@@ -3,8 +3,7 @@
  * @brief Defines the base classes and utilities for the Abstract Syntax Tree (AST) in the Manganese frontend.
  *
  * This header provides the foundational ASTNode class and its main derivatives: Type, Expression, and Statement.
- * It also defines common type aliases for AST node pointers and blocks, as well as macros to facilitate
- * overriding methods and declaring parser friendships.
+ * It also defines common type aliases for AST node pointers and blocks
  *
  * @see ast_expressions.hpp
  * @see ast_statements.hpp
@@ -36,17 +35,15 @@
 
 /**
  * Common interface functions for all nodes
- * Combines required methods overrides (toString/dump)
- * and friend declarations (the parser and semantic analyzer) for access to protected members
  */
 #define AST_STANDARD_INTERFACE NODE_OVERRIDES_
 
 namespace Manganese {
 
 namespace ast {
-class Expression;
-class Statement;
-class Type;
+struct Expression;
+struct Statement;
+struct Type;
 using TypeSPtr_t = std::shared_ptr<Type>;
 typedef std::vector<Statement*> Block;
 
@@ -87,8 +84,7 @@ enum class Visibility : uint8_t {
     Private = 2,
 };
 
-class ASTNode {
-   public:
+struct ASTNode {
     size_t line = 0, column = 0;
 
     constexpr ASTNode() noexcept = default;
@@ -120,12 +116,10 @@ class ASTNode {
     }
 };
 
-class Expression : public ASTNode {
-   private:
+struct Expression : public ASTNode {
     TypeSPtr_t _computedType;
     ExpressionKind _kind;
 
-   public:
     virtual ~Expression() noexcept = default;
     inline Type* getType() const noexcept { return _computedType.get(); };
     inline TypeSPtr_t getTypePtr() const noexcept { return _computedType; }
@@ -136,11 +130,9 @@ class Expression : public ASTNode {
     constexpr explicit Expression(ExpressionKind kind) noexcept : _kind(kind) {}
 };
 
-class Statement : public ASTNode {
-   private:
+struct Statement : public ASTNode {
     StatementKind _kind;
 
-   public:
     virtual ~Statement() noexcept = default;
     constexpr inline StatementKind kind() const noexcept { return _kind; }
 
@@ -148,12 +140,10 @@ class Statement : public ASTNode {
     constexpr explicit Statement(StatementKind kind) noexcept : _kind(kind) {}
 };
 
-class Type : public ASTNode {
-   private:
+struct Type : public ASTNode {
     TypeKind _kind;
     PrimitiveType_t _primitiveType;
 
-   public:
     virtual ~Type() noexcept = default;
     constexpr inline TypeKind kind() const noexcept { return _kind; }
     constexpr inline PrimitiveType_t primitiveType() const noexcept { return _primitiveType; }

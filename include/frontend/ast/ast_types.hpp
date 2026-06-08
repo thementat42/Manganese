@@ -32,8 +32,7 @@ enum class TypeKind : uint8_t {
 /**
  * e.g. aggregate {int, float}
  */
-class AggregateType final : public Type {
-   public:
+struct AggregateType final : public Type {
     std::vector<TypeSPtr_t> fieldTypes;
 
     explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) :
@@ -44,8 +43,7 @@ class AggregateType final : public Type {
 /**
  * e.g. int[], float[][], etc.
  */
-class ArrayType final : public Type {
-   public:
+struct ArrayType final : public Type {
     TypeSPtr_t elementType;
     Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
 
@@ -68,8 +66,7 @@ struct FunctionParameterType {
 /**
  * e.g. func(int, int) -> bool
  */
-class FunctionType final : public Type {
-   public:
+struct FunctionType final : public Type {
     std::vector<FunctionParameterType> parameterTypes;
     TypeSPtr_t returnType;
 
@@ -84,8 +81,7 @@ class FunctionType final : public Type {
  * e.g. some_function@[T, U](args)
  * It does not represent the generic type itself
  */
-class GenericType final : public Type {
-   public:
+struct GenericType final : public Type {
     TypeSPtr_t baseType;  // some_function in `some_function@[T,U]`
     std::vector<TypeSPtr_t> typeParameters;  // T and U in `some_function@[T,U]`
     GenericType(TypeSPtr_t baseType_, std::vector<TypeSPtr_t> typeParameters_) :
@@ -97,8 +93,7 @@ class GenericType final : public Type {
 /**
  * ptr + any type
  */
-class PointerType final : public Type {
-   public:
+struct PointerType final : public Type {
     TypeSPtr_t baseType;
     bool isMutable;
 
@@ -111,8 +106,7 @@ class PointerType final : public Type {
 /**
  * e.g. T, int, etc.
  */
-class SymbolType final : public Type {
-   public:
+struct SymbolType final : public Type {
     std::string name;
 
     constexpr explicit SymbolType(std::string name_) : Type(TypeKind::SymbolType), name(std::move(name_)) {}

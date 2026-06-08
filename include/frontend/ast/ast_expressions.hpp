@@ -1,9 +1,9 @@
 /**
  * @file ast_expressions.hpp
- * @brief Defines AST node classes for various expressions
+ * @brief Defines AST node structes for various expressions
  *
  * This header declares the core expression node types used in the AST.
- * Each expression type (literals, binary, assignment, function call, etc.) is represented as a class inheriting from
+ * Each expression type (literals, binary, assignment, function call, etc.) is represented as a struct inheriting from
  * Expression.
  *
  * ! The nodes are listed in alphabetical order
@@ -40,8 +40,7 @@ struct AggregateInstantiationField {
 /**
  * @brief e.g. `Point3D{ x = 1, y = 2, z = 3 }`
  */
-class AggregateInstantiationExpression final : public Expression {
-   public:
+struct AggregateInstantiationExpression final : public Expression {
     std::string name;  // The name of the aggregate type being instantiated
     std::vector<TypeSPtr_t> genericTypes;
     std::vector<AggregateInstantiationField> fields;
@@ -59,8 +58,7 @@ class AggregateInstantiationExpression final : public Expression {
 /**
  * @brief represents a sequence of elements of different types (like Rust's tuple)
  */
-class AggregateLiteralExpression final : public Expression {
-   public:
+struct AggregateLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
     explicit AggregateLiteralExpression(std::vector<Expression*> elements_) :
         Expression(ExpressionKind::AggregateLiteralExpression), elements(std::move(elements_)) {}
@@ -70,8 +68,7 @@ class AggregateLiteralExpression final : public Expression {
 /**
  * @brief e.g. [1, 2, 3]
  */
-class ArrayLiteralExpression final : public Expression {
-   public:
+struct ArrayLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
     TypeSPtr_t elementType;  // Optional, can be inferred from the elements
     Expression* lengthExpression = nullptr;
@@ -87,8 +84,7 @@ class ArrayLiteralExpression final : public Expression {
 /**
  * e.g. `foo = bar`, `baz *= 1`
  */
-class AssignmentExpression final : public Expression {
-   public:
+struct AssignmentExpression final : public Expression {
     Expression* assignee;  // The thing being assigned to (foo in foo = bar)
     Expression* value;  // The value being assigned (bar in foo = bar)
     lexer::TokenType op;
@@ -105,8 +101,7 @@ class AssignmentExpression final : public Expression {
 /**
  * @brief e.g. `a + b`, `x * y`
  */
-class BinaryExpression final : public Expression {
-   public:
+struct BinaryExpression final : public Expression {
     Expression* left;
     Expression* right;
     lexer::TokenType op;
@@ -120,8 +115,7 @@ class BinaryExpression final : public Expression {
 /**
  * @brief e.g. `true`, `false`
  */
-class BoolLiteralExpression final : public Expression {
-   public:
+struct BoolLiteralExpression final : public Expression {
     const bool value;
 
     constexpr explicit BoolLiteralExpression(const bool value_) :
@@ -133,8 +127,7 @@ class BoolLiteralExpression final : public Expression {
 /**
  * @brief e.g. 'a', '\u1234', '\n'
  */
-class CharLiteralExpression final : public Expression {
-   public:
+struct CharLiteralExpression final : public Expression {
     const char32_t value;
 
     /**
@@ -151,8 +144,7 @@ class CharLiteralExpression final : public Expression {
 /**
  * @brief e.g. `foo()`, `bar(1, 2, 3)`
  */
-class FunctionCallExpression final : public Expression {
-   public:
+struct FunctionCallExpression final : public Expression {
     Expression* callee;
     std::vector<Expression*> arguments;
 
@@ -167,8 +159,7 @@ class FunctionCallExpression final : public Expression {
 /**
  * e.g. `foo@[int, string]`
  */
-class GenericExpression final : public Expression {
-   public:
+struct GenericExpression final : public Expression {
     Expression* identifier;
     std::vector<TypeSPtr_t> types;
 
@@ -181,8 +172,7 @@ class GenericExpression final : public Expression {
 /**
  * @brief e.g. `foo`, `bar`
  */
-class IdentifierExpression final : public Expression {
-   public:
+struct IdentifierExpression final : public Expression {
     const std::string value;
 
     constexpr explicit IdentifierExpression(const std::string& value_) :
@@ -194,8 +184,7 @@ class IdentifierExpression final : public Expression {
 /**
  * @brief e.g. `foo[0]`, `bar[1 + 2]`
  */
-class IndexExpression final : public Expression {
-   public:
+struct IndexExpression final : public Expression {
     Expression* variable;
     Expression* index;
 
@@ -208,8 +197,7 @@ class IndexExpression final : public Expression {
 /**
  * @brief e.g. `foo.bar`
  */
-class MemberAccessExpression final : public Expression {
-   public:
+struct MemberAccessExpression final : public Expression {
     Expression* object;
     const std::string property;
 
@@ -224,8 +212,7 @@ class MemberAccessExpression final : public Expression {
 /**
  * @brief e.g. `42`, `3.14`, `-1`
  */
-class NumberLiteralExpression final : public Expression {
-   public:
+struct NumberLiteralExpression final : public Expression {
     const mnstl::number_t value;
 
     constexpr explicit NumberLiteralExpression(mnstl::number_t value_) :
@@ -237,8 +224,7 @@ class NumberLiteralExpression final : public Expression {
 /**
  * @brief e.g. `foo++`, `bar--`
  */
-class PostfixExpression final : public Expression {
-   public:
+struct PostfixExpression final : public Expression {
     Expression* left;
     lexer::TokenType op;
 
@@ -251,8 +237,7 @@ class PostfixExpression final : public Expression {
 /**
  * @brief e.g. `++foo`, `--bar`
  */
-class PrefixExpression final : public Expression {
-   public:
+struct PrefixExpression final : public Expression {
     lexer::TokenType op;
     Expression* right;
 
@@ -265,8 +250,7 @@ class PrefixExpression final : public Expression {
 /**
  * @brief e.g. `Module::Element`
  */
-class ScopeResolutionExpression final : public Expression {
-   public:
+struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
     const std::string element;
 
@@ -279,8 +263,7 @@ class ScopeResolutionExpression final : public Expression {
 /**
  * @brief e.g. `"Hello, World!"`, `"Line 1\nLine 2"`
  */
-class StringLiteralExpression final : public Expression {
-   public:
+struct StringLiteralExpression final : public Expression {
     const std::string value;
 
     constexpr explicit StringLiteralExpression(const std::string& value_) :
@@ -294,8 +277,7 @@ class StringLiteralExpression final : public Expression {
 /**
  * @brief e.g. `foo as Bar`
  */
-class TypeCastExpression final : public Expression {
-   public:
+struct TypeCastExpression final : public Expression {
     Expression* originalValue;
     TypeSPtr_t targetType;
 
