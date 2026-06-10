@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <core.hpp>
-#include <io/logging.hpp>
 #include <limits>
 #include <mnstl/ext_nums/i128.hxx>
 #include <optional>
@@ -15,6 +14,7 @@ namespace mnstl {
 struct zero_init_t {
     constexpr explicit zero_init_t() noexcept = default;
 };
+
 constexpr inline zero_init_t zero_init{};
 
 enum class Base : uint8_t {
@@ -85,10 +85,14 @@ class number_t {
             case float64: return std::forward<F>(f)(_f64);
             case int128: return std::forward<F>(f)(_i128);
             case uint128: return std::forward<F>(f)(_u128);
-            case none:
-                ASSERT_UNREACHABLE("Attempted to read a number_t with no stored value");
+            case none: ASSERT_UNREACHABLE("Attempted to read a number_t with no stored value");
+            default: ASSERT_UNREACHABLE("In number_t::visit: unknown underlying type");
         }
-        ASSERT_UNREACHABLE("");
+    }
+
+    template <class... Types>
+    constexpr bool underlying_matches(const Types&... values) const noexcept {
+        return ((_underlying == values) || ...);
     }
 
    public:
@@ -98,31 +102,36 @@ class number_t {
     constexpr number_t(int32_t i32) noexcept : _i32(i32), _underlying(held_type::int32) {}
     constexpr number_t(int64_t i64) noexcept : _i64(i64), _underlying(held_type::int64) {}
     constexpr number_t(int128_t i128) noexcept : _i128(i128), _underlying(held_type::int128) {}
+
     constexpr number_t(uint8_t u8) noexcept : _u8(u8), _underlying(held_type::uint8) {}
     constexpr number_t(uint16_t u16) noexcept : _u16(u16), _underlying(held_type::uint16) {}
     constexpr number_t(uint32_t u32) noexcept : _u32(u32), _underlying(held_type::uint32) {}
     constexpr number_t(uint64_t u64) noexcept : _u64(u64), _underlying(held_type::uint64) {}
     constexpr number_t(uint128_t u128) noexcept : _u128(u128), _underlying(held_type::uint128) {}
+
     constexpr number_t(float32_t f32) noexcept : _f32(f32), _underlying(held_type::float32) {}
     constexpr number_t(float64_t f64) noexcept : _f64(f64), _underlying(held_type::float64) {}
+
     constexpr number_t(zero_init_t, held_type t) noexcept : _underlying(t) {
+        using enum held_type;
         switch (t) {
-            case held_type::int8: _i8 = 0; break;
-            case held_type::int16: _i16 = 0; break;
-            case held_type::int32: _i32 = 0; break;
-            case held_type::int64: _i64 = 0; break;
-            case held_type::uint8: _u8 = 0; break;
-            case held_type::uint16: _u16 = 0; break;
-            case held_type::uint32: _u32 = 0; break;
-            case held_type::uint64: _u64 = 0; break;
-            case held_type::float32: _f32 = 0; break;
-            case held_type::float64: _f64 = 0; break;
-            case held_type::int128: _i128 = 0; break;
-            case held_type::uint128: _u128 = 0; break;
-            case held_type::none: break;
+            case int8: _i8 = 0; break;
+            case int16: _i16 = 0; break;
+            case int32: _i32 = 0; break;
+            case int64: _i64 = 0; break;
+            case int128: _i128 = 0; break;
+            case uint8: _u8 = 0; break;
+            case uint16: _u16 = 0; break;
+            case uint32: _u32 = 0; break;
+            case uint64: _u64 = 0; break;
+            case uint128: _u128 = 0; break;
+            case float32: _f32 = 0; break;
+            case float64: _f64 = 0; break;
+            case none: break;
         }
     }
 
+    // Union and tag are both trivially copyable and moveable (just bit copies)
     constexpr number_t(const number_t&) noexcept = default;
     constexpr number_t& operator=(const number_t&) noexcept = default;
     constexpr number_t(number_t&&) noexcept = default;
@@ -134,25 +143,21 @@ class number_t {
     constexpr held_type underlying_type() const noexcept { return _underlying; }
     constexpr bool is_integer() const noexcept {
         using enum held_type;
-        return _underlying == int8 || _underlying == int16 || _underlying == int32 || _underlying == int64
-            || _underlying == uint8 || _underlying == uint16 || _underlying == uint32 || _underlying == uint64
-            || _underlying == int128 || _underlying == uint128;
+        return underlying_matches(int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128);
     }
     constexpr bool is_float() const noexcept {
         using enum held_type;
-        return _underlying == float32 || _underlying == float64;
+        return underlying_matches(float32, float64);
     }
 
     constexpr bool is_signed() const noexcept {
         using enum held_type;
-        return _underlying == int8 || _underlying == int16 || _underlying == int32 || _underlying == int64
-            || _underlying == int128 || _underlying == float32 || _underlying == float64;
+        return underlying_matches(int8, int16, int32, int64, int128, float32, float64);
     }
 
     constexpr bool is_unsigned() const noexcept {
         using enum held_type;
-        return _underlying == uint8 || _underlying == uint16 || _underlying == uint32 || _underlying == uint64
-            || _underlying == uint128;
+        return underlying_matches(uint8, uint16, uint32, uint64, uint128);
     }
 
     template <Numeric T>
@@ -168,7 +173,7 @@ class number_t {
     constexpr std::string to_string(bool trim_trailing_decimals = false) const noexcept {
         if (_underlying == held_type::none) { return ""; }
         std::string result = _visit([](Numeric auto v) -> std::string {
-            using U = std::decay_t<decltype(v)>;
+            using U = std::remove_cvref_t<decltype(v)>;
             if constexpr (std::is_same_v<U, int8_t> || std::is_same_v<U, uint8_t>) {
                 // since int8 and uint8 are char-based, force a promotion to an integer here to print out a number
                 // without the promotion this results in an ASCII character
@@ -192,7 +197,6 @@ class number_t {
                 if (!result.empty() && result.back() == '.') { result += '0'; }
             }
         }
-
         return result;
     }
 };
@@ -202,9 +206,9 @@ constexpr FORCE_INLINE std::string to_string(const number_t& x) noexcept { retur
 template <class T>
     requires(std::is_constructible_v<number_t, T>)
 struct string_conversion_result_t {
-    T value{0};
-    bool exists{false};
-    bool overflowed{false};
+    T value = 0;
+    bool exists = false;
+    bool overflowed = false;
 };
 
 namespace detail {
@@ -310,7 +314,7 @@ template <FloatingPoint T>
             result.value = 0;
             return result;
         }
-        value *= static_cast<T>(pow10<T>(exponent));
+        value *= static_cast<T>(pow10<double>(exponent));
     }
 
     if (is_negative) { value = -value; }
@@ -323,27 +327,9 @@ template <FloatingPoint T>
 }
 
 template <Integral T>
-struct mn_make_unsigned {
-    typedef std::make_unsigned_t<T> type;
-};
-
-template <>
-struct mn_make_unsigned<int128_t> {
-    typedef uint128_t type;
-};
-
-template <>
-struct mn_make_unsigned<uint128_t> {
-    typedef uint128_t type;
-};
-
-template <class T>
-using mn_make_unsigned_t = typename mn_make_unsigned<T>::type;
-
-template <Integral T>
 constexpr string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b, bool is_negative) noexcept {
     string_conversion_result_t<T> result;
-    typedef mn_make_unsigned_t<T> U;
+    using U = mnstl::mnstl_make_unsigned_t<T>;
 
     if (ptr >= end) [[unlikely]] {
         result.exists = false;
@@ -413,21 +399,24 @@ constexpr string_conversion_result_t<number_t> str_to_num(std::string_view str, 
     if (*parsing_start == '+' || *parsing_start == '-') { is_negative = *(parsing_start++) == '-'; }
     if (parsing_start + 1 < parsing_end && *parsing_start == '0') {
         switch (*(parsing_start + 1)) {
-            case 'x':
+            case 'x': [[fallthrough]];
             case 'X': base = Base::Hexadecimal; break;
-            case 'b':
+            case 'b': [[fallthrough]];
             case 'B': base = Base::Binary; break;
-            case 'o':
+            case 'o': [[fallthrough]];
             case 'O': base = Base::Octal; break;
             default:  // Not a base prefix (just leading zero), assume decimal
                 base = Base::Decimal;
                 break;
         }
+        // Don't want to parse the prefix so move the start to after it
         if (base != Base::Decimal) { parsing_start += 2; }
     } else {
-        base = Base::Decimal;
+        base = Base::Decimal;  // no prefix means decimal
     }
 
+    // Check for a suffix (which indicates the type).
+    // If there is one, we don't want to parse it so move the end to before it
     number_t::held_type t;
     if (str.ends_with("i8") || str.ends_with("I8")) {
         parsing_end -= 2;
@@ -476,10 +465,11 @@ constexpr string_conversion_result_t<number_t> str_to_num(std::string_view str, 
             return wrap_result(detail::_stox<float32_t>(parsing_start, parsing_end, base, is_negative));
         } else if (t == number_t::held_type::none) {
             auto result32 = detail::_stox<float32_t>(parsing_start, parsing_end, base, is_negative);
-            return result32.overflowed
-                ? wrap_result(detail::_stox<float64_t>(parsing_start, parsing_end, base, is_negative))
-                : wrap_result(result32);
+            if (!result32.overflowed) { return wrap_result(result32); }
+            // if float32 fails do float64
+            return wrap_result(detail::_stox<float64_t>(parsing_start, parsing_end, base, is_negative));
         }
+        // default to 64-bit float
         return wrap_result(detail::_stox<float64_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::int8) {
         return wrap_result(detail::_stox<int8_t>(parsing_start, parsing_end, base, is_negative));
@@ -504,13 +494,13 @@ constexpr string_conversion_result_t<number_t> str_to_num(std::string_view str, 
     } else {
         auto result32 = detail::_stox<int32_t>(parsing_start, parsing_end, base, is_negative);
         if (!result32.overflowed) { return wrap_result(result32); }
-        // if i32 fails try i64
+        // if int32 fails try int64
         auto result64 = detail::_stox<int64_t>(parsing_start, parsing_end, base, is_negative);
         if (!result64.overflowed) { return wrap_result(result64); }
-        // if i64 fails try i128
+        // if int64 fails try int128
         auto result128 = detail::_stox<int128_t>(parsing_start, parsing_end, base, is_negative);
         if (!result128.overflowed) { return wrap_result(result128); }
-        // if i128 fails do u128
+        // if int128 fails do uint128
         return wrap_result(detail::_stox<uint128_t>(parsing_start, parsing_end, base, is_negative));
     }
 }

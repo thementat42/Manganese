@@ -3,41 +3,38 @@
 
 #include <bit>
 #include <cassert>
+#include <cmath>
 #include <compare>
-#include <cstdint>
 #include <format>
 #include <limits>
+#include <mnstl/ext_nums/ext_num_config.hxx>
 #include <ostream>
 #include <type_traits>
 
-#include "ext_num_config.hxx"
-
-
 // macros to make definitions of op= (e.g. +=) more concise
-
-#define MNSTL_I128_SELF_IN_PLACE_OP(op, is_noexcept)                                          \
-    constexpr _basic_int128& operator op## = (const _basic_int128& r) noexcept(is_noexcept) { \
-        *this = *this op r;                                                                   \
-        return *this;                                                                         \
-    }
-
-#define MNSTL_I128_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                              \
-    constexpr _basic_int128& operator op## = (Integral auto r) noexcept(is_noexcept) { \
-        *this = *this op r;                                                            \
-        return *this;                                                                  \
-    }
-
-#define MNSTL_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                                        \
-    template <Integral I, bool B>                                                           \
-    constexpr I& operator op## = (I & l, const _basic_int128<B>& r) noexcept(is_noexcept) { \
-        l = l op static_cast<I>(r);                                                         \
-        return l;                                                                           \
-    }
-
 namespace mnstl {
-
 #if !MNSTL_NATIVE_I128
-#define TWO_POW_64 18446744073709551616.0L  // for float conversions
+#define TWO_POW_64 18'446'744'073'709'551'616.0  // for float conversions
+
+#define MNSTL_I128_SELF_IN_PLACE_OP(op, is_noexcept)                                              \
+    constexpr _basic_int128& operator op## = (const _basic_int128& value) noexcept(is_noexcept) { \
+        *this = *this op value;                                                                   \
+        return *this;                                                                             \
+    }
+
+#define MNSTL_I128_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                      \
+    template <Numeric T>                                                       \
+    constexpr _basic_int128& operator op## = (T value) noexcept(is_noexcept) { \
+        *this = *this op value;                                                \
+        return *this;                                                          \
+    }
+
+#define MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(op, is_noexcept)                                  \
+    template <Numeric T, bool B>                                                                \
+    constexpr T& operator op## = (T & l, const _basic_int128<B>& value) noexcept(is_noexcept) { \
+        l = l op static_cast<T>(value);                                                         \
+        return l;                                                                               \
+    }
 
 // Some helpers
 
@@ -74,7 +71,7 @@ constexpr uint128_t _mul_u128(uint128_t, uint128_t) noexcept;
 /**
  * Multiplication of two 64-bit ints to make a 128-bit int
  */
-constexpr uint128_t _mul_64(uint64_t, uint64_t) noexcept;
+constexpr uint128_t _mul_64(std::uint64_t, std::uint64_t) noexcept;
 
 /**
  * Absolute values for 128-bit ints
@@ -83,69 +80,80 @@ constexpr uint128_t _abs_i128(int128_t) noexcept;
 
 }  // namespace i128_detail
 
-template <bool is_signed>
+template <bool IsSigned>
 struct _basic_int128 {
     // the upper 64 bits encode sign information
-    typedef std::conditional_t<is_signed, int64_t, uint64_t> upper_t;
+    using upper_t = std::conditional_t<IsSigned, std::int64_t, std::uint64_t>;
 
     upper_t _upper;
-    uint64_t _lower;
+    std::uint64_t _lower;
 
-    constexpr _basic_int128() noexcept {};  // purposely leave members uninitialized
+    constexpr _basic_int128() noexcept = default;
     constexpr _basic_int128(const _basic_int128&) noexcept = default;
     constexpr _basic_int128& operator=(const _basic_int128&) noexcept = default;
     constexpr _basic_int128(_basic_int128&&) noexcept = default;
     constexpr _basic_int128& operator=(_basic_int128&&) noexcept = default;
 
-    constexpr _basic_int128(upper_t upper64, uint64_t lower64) : _upper(upper64), _lower(lower64) {}
+    constexpr _basic_int128(upper_t upper64, std::uint64_t lower64) : _upper(upper64), _lower(lower64) {}
 
-    template <Integral T>
-        requires(sizeof(T) < 16)
-    constexpr _basic_int128(T value) {
-        _assign_from_primitive(value);
+    constexpr _basic_int128(bool value) noexcept : _upper(0), _lower(value) {}
+
+    template <Integral I>
+        requires(sizeof(I) < 16)  // avoid ambiguity on overload resolution
+    constexpr _basic_int128(I value) noexcept : _lower(static_cast<std::uint64_t>(value)) {
+        if constexpr (std::is_signed_v<I>) {
+            _upper = value < 0 ? static_cast<upper_t>(-1) : 0;
+        } else {
+            _upper = 0;
+        }
     }
 
-    template <Integral T>
-        requires(sizeof(T) < 16)
-    constexpr _basic_int128& operator=(T value) {
-        _assign_from_primitive(value);
-        return *this;
+    template <Integral I>
+        requires(sizeof(I) < 16)  // avoid ambiguity on overload resolution
+    constexpr operator I() const noexcept {
+        return static_cast<I>(_lower);
     }
 
-    template <FloatingPoint T>
-        requires(sizeof(T) < 16)
-    constexpr _basic_int128(T value) {
-        _assign_from_primitive(value);
+    template <FloatingPoint F>
+    constexpr _basic_int128(F value) noexcept {
+        if (!std::isfinite(value)) {
+            // arbitrarily, infinity and NaN become 0
+            _upper = 0;
+            _lower = 0;
+            return;
+        }
+
+        if constexpr (IsSigned) {
+            if (value < 0) {
+                *this = _basic_int128(-value);
+                *this = -(*this);
+                return;
+            }
+        }
+
+        // std::floor is ok here since this is restricted to primitive float types
+        constexpr F _two_pow_64 = static_cast<F>(TWO_POW_64);
+        const F upper_fp = std::floor(value / _two_pow_64);
+        const F lower_fp = value - upper_fp * _two_pow_64;
+
+        _upper = static_cast<upper_t>(upper_fp);
+        _lower = static_cast<std::uint64_t>(lower_fp);
     }
 
-    template <FloatingPoint T>
-        requires(sizeof(T) < 16)
-    constexpr _basic_int128& operator=(T value) {
-        _assign_from_primitive(value);
+    template <FloatingPoint F>
+    constexpr operator F() const noexcept {
+        return static_cast<F>(_upper) * static_cast<F>(TWO_POW_64) + static_cast<F>(_lower);
+    }
+    template <Numeric T>
+        requires(!detail::is_any_of<T, int128_t, uint128_t>)  // avoid ambiguity with the copy/move assignment operators
+    constexpr _basic_int128& operator=(T value) noexcept {
+        *this = _basic_int128(value);  // assign from temporary for simplicity
         return *this;
     }
 
     constexpr operator bool() const noexcept { return !(_upper == 0 && _lower == 0); }
 
-    template <Integral I>
-        requires(sizeof(I) < 16)  // exclude construction from 128-bit (16 byte) values
-    constexpr operator I() const noexcept {
-        if constexpr (std::is_signed_v<I>) {
-            return static_cast<I>(static_cast<int64_t>(_lower));
-        } else {
-            return static_cast<I>(_lower);
-        }
-    }
-
-    template <FloatingPoint T>
-        requires(sizeof(T) < 16)  // exclude construction from 128-bit (16 byte) values
-    constexpr operator T() const noexcept {
-        T result = static_cast<T>(_upper) * T(TWO_POW_64);
-        result += static_cast<T>(_lower);
-        return result;
-    }
-
-    // Casts
+    // Casts between the two versions of _basic_int128
     constexpr operator int128_t() const noexcept;
     constexpr operator uint128_t() const noexcept;
 
@@ -159,7 +167,7 @@ struct _basic_int128 {
     MNSTL_I128_SELF_IN_PLACE_OP(^, true)
 
     constexpr _basic_int128& operator<<=(const _basic_int128& r) noexcept {
-        if constexpr (is_signed) {
+        if constexpr (IsSigned) {
             *this = i128_detail::_shl_i128(*this, r);
         } else {
             *this = i128_detail::_shl_u128(*this, r);
@@ -168,7 +176,7 @@ struct _basic_int128 {
     }
 
     constexpr _basic_int128& operator>>=(const _basic_int128& r) noexcept {
-        if constexpr (is_signed) {
+        if constexpr (IsSigned) {
             *this = i128_detail::_shr_i128(*this, r);
         } else {
             *this = i128_detail::_shr_u128(*this, r);
@@ -186,7 +194,7 @@ struct _basic_int128 {
     MNSTL_I128_PRIMITIVE_IN_PLACE_OP(^, true)
 
     constexpr _basic_int128& operator<<=(Integral auto r) noexcept {
-        if constexpr (is_signed) {
+        if constexpr (IsSigned) {
             *this = i128_detail::_shl_i128(*this, static_cast<unsigned>(r));
         } else {
             *this = i128_detail::_shl_u128(*this, static_cast<unsigned>(r));
@@ -195,61 +203,35 @@ struct _basic_int128 {
     }
 
     constexpr _basic_int128& operator>>=(Integral auto r) noexcept {
-        if constexpr (is_signed) {
+        if constexpr (IsSigned) {
             *this = i128_detail::_shr_i128(*this, static_cast<unsigned>(r));
         } else {
             *this = i128_detail::_shr_u128(*this, static_cast<unsigned>(r));
         }
         return *this;
     }
-
-   private:
-    template <Integral T>
-        requires(sizeof(T) < 16)
-    constexpr void _assign_from_primitive(T value) noexcept {
-        if constexpr (std::is_signed_v<T>) {
-            _upper = value < 0 ? static_cast<upper_t>(-1) : 0;
-        } else {
-            _upper = 0;
-        }
-        _lower = static_cast<uint64_t>(value);
-    }
-
-    template <FloatingPoint T>
-        requires(sizeof(T) < 16)
-    constexpr void _assign_from_primitive(T value) noexcept {
-        if (value < 0) {
-            _assign_from_primitive(-value);
-            *this = -(*this);
-            return;
-        }
-        uint64_t _upper_part = static_cast<uint64_t>(value / TWO_POW_64);
-        T remainder = value - static_cast<T>(_upper_part) * TWO_POW_64;
-        _upper = static_cast<upper_t>(_upper_part);
-        _lower = static_cast<uint64_t>(remainder);
-    }
 };
 
-MNSTL_PRIMITIVE_IN_PLACE_OP(+, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP(-, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP(*, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP(/, false)
-MNSTL_PRIMITIVE_IN_PLACE_OP(%, false)
-MNSTL_PRIMITIVE_IN_PLACE_OP(&, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP(|, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP(^, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP(>>, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP(<<, true)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(+, true)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(-, true)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(*, true)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(/, false)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(%, false)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(&, true)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(|, true)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(^, true)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(>>, true)
+MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(<<, true)
 
 // Division Helpers (forward declarations)
 
 namespace i128_detail {
 
 struct divmod_u128_result {
-    uint128_t quotient, remainder;
+    const uint128_t quotient, remainder;
 };
 struct divmod_i128_result {
-    int128_t quotient, remainder;
+    const int128_t quotient, remainder;
 };
 constexpr divmod_u128_result _divmod_u128(uint128_t, uint128_t);
 constexpr divmod_i128_result _divmod_i128(int128_t, int128_t);
@@ -258,11 +240,11 @@ constexpr divmod_i128_result _divmod_i128(int128_t, int128_t);
 // Casts
 template <>
 constexpr int128_t::operator uint128_t() const noexcept {
-    return uint128_t{static_cast<uint64_t>(_upper), _lower};
+    return uint128_t{static_cast<std::uint64_t>(_upper), _lower};
 }
 template <>
 constexpr uint128_t::operator int128_t() const noexcept {
-    return int128_t{static_cast<int64_t>(_upper), _lower};
+    return int128_t{static_cast<std::int64_t>(_upper), _lower};
 }
 
 // Comparison operators for uint128_t
@@ -295,8 +277,8 @@ constexpr uint128_t operator>>(uint128_t l, uint128_t r) noexcept {
 // Unary operators for uint128_t
 constexpr uint128_t operator+(uint128_t i) noexcept { return i; }
 constexpr uint128_t operator-(uint128_t i) noexcept {
-    uint64_t result_lower = ~i._lower + 1;
-    uint64_t result_higher = ~i._upper + (result_lower == 0);
+    const std::uint64_t result_lower = ~i._lower + 1;
+    const std::uint64_t result_higher = ~i._upper + (result_lower == 0);
     return uint128_t{result_higher, result_lower};
 }
 
@@ -305,19 +287,22 @@ constexpr uint128_t& operator++(uint128_t& i) noexcept {
     if (i._lower == 0) { ++i._upper; }
     return i;
 }
+
 constexpr uint128_t operator++(uint128_t& i, int) noexcept {
-    uint128_t tmp = i;
+    const uint128_t tmp = i;
     ++i;
     return tmp;
 }
+
 constexpr uint128_t& operator--(uint128_t& i) noexcept {
     --i._lower;
     // underflow, need to subtract from upper bits
-    if (i._lower == std::numeric_limits<uint64_t>::max()) { --i._upper; }
+    if (i._lower == std::numeric_limits<std::uint64_t>::max()) { --i._upper; }
     return i;
 }
+
 constexpr uint128_t operator--(uint128_t& i, int) noexcept {
-    uint128_t tmp = i;
+    const uint128_t tmp = i;
     --i;
     return tmp;
 }
@@ -368,10 +353,11 @@ constexpr int128_t operator>>(int128_t l, int128_t r) noexcept {
 // Unary operators for int128_t
 constexpr int128_t operator+(int128_t i) noexcept { return i; }
 constexpr int128_t operator-(int128_t i) noexcept {
-    uint64_t result_lower = ~i._lower + 1;
-    int64_t result_upper = ~i._upper + (result_lower == 0);  // if result low is 0, overflow occured, carry
+    std::uint64_t result_lower = ~i._lower + 1;
+    std::int64_t result_upper = ~i._upper + (result_lower == 0);  // if result low is 0, overflow occured, carry
     return int128_t{result_upper, result_lower};
 }
+
 constexpr int128_t& operator++(int128_t& i) noexcept {
     ++i._lower;
     if (i._lower == 0) { ++i._upper; }  // overflow
@@ -385,7 +371,7 @@ constexpr int128_t operator++(int128_t& i, int) noexcept {
 constexpr int128_t& operator--(int128_t& i) noexcept {
     --i._lower;
     // underflow, need to subtract from upper bits
-    if (i._lower == std::numeric_limits<uint64_t>::max()) { --i._upper; }
+    if (i._lower == std::numeric_limits<std::uint64_t>::max()) { --i._upper; }
     return i;
 }
 constexpr int128_t operator--(int128_t& i, int) noexcept {
@@ -409,8 +395,8 @@ constexpr int128_t operator-(int128_t l, int128_t r) noexcept {
 }
 
 constexpr int128_t operator*(int128_t l, int128_t r) noexcept {
-    bool result_negative = (l._upper < 0) ^ (r._upper < 0);
-    uint128_t result = i128_detail::_mul_u128(i128_detail::_abs_i128(l), i128_detail::_abs_i128(r));
+    const bool result_negative = (l._upper < 0) ^ (r._upper < 0);
+    const uint128_t result = i128_detail::_mul_u128(i128_detail::_abs_i128(l), i128_detail::_abs_i128(r));
     return result_negative ? -static_cast<int128_t>(result) : static_cast<int128_t>(result);
 }
 
@@ -420,17 +406,18 @@ constexpr int128_t operator%(int128_t l, int128_t r) { return i128_detail::_divm
 // Comparison operators between int128_t and uint128_t
 constexpr bool operator==(int128_t l, uint128_t r) noexcept {
     if (l._upper < 0) { return false; }  // a negative value can never equal an unsigned value
-    return (static_cast<uint64_t>(l._upper) == r._upper) && (l._lower == r._lower);
+    return (static_cast<std::uint64_t>(l._upper) == r._upper) && (l._lower == r._lower);
 }
+
 constexpr std::strong_ordering operator<=>(int128_t l, uint128_t r) noexcept {
     if (l._upper < 0) { return std::strong_ordering::less; }  // a negative value is always less than an unsigned value
-    uint64_t l_upper_unsigned = static_cast<uint64_t>(l._upper);
+    const std::uint64_t l_upper_unsigned = static_cast<std::uint64_t>(l._upper);
     if (l_upper_unsigned != r._upper) { return l_upper_unsigned <=> r._upper; }
     return l._lower <=> r._lower;
 }
 constexpr bool operator==(uint128_t l, int128_t r) noexcept { return r == l; }
 constexpr std::strong_ordering operator<=>(uint128_t l, int128_t r) noexcept {
-    std::strong_ordering cmp_result = r <=> l;  // need to reverse the result of this
+    const std::strong_ordering cmp_result = r <=> l;  // need to reverse the result of this
     if (cmp_result == std::strong_ordering::less) { return std::strong_ordering::greater; }
     if (cmp_result == std::strong_ordering::greater) { return std::strong_ordering::less; }
     return cmp_result;
@@ -439,15 +426,15 @@ constexpr std::strong_ordering operator<=>(uint128_t l, int128_t r) noexcept {
 // Bitwise operators between int128_t and uint128_t
 
 constexpr int128_t operator&(int128_t l, uint128_t r) noexcept {
-    int64_t result_upper = static_cast<int64_t>(static_cast<uint64_t>(l._upper) & r._upper);
+    const std::int64_t result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) & r._upper);
     return int128_t{result_upper, l._lower & r._lower};
 }
 constexpr int128_t operator|(int128_t l, uint128_t r) noexcept {
-    int64_t result_upper = static_cast<int64_t>(static_cast<uint64_t>(l._upper) | r._upper);
+    const std::int64_t result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) | r._upper);
     return int128_t{result_upper, l._lower | r._lower};
 }
 constexpr int128_t operator^(int128_t l, uint128_t r) noexcept {
-    int64_t result_upper = static_cast<int64_t>(static_cast<uint64_t>(l._upper) ^ r._upper);
+    const std::int64_t result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) ^ r._upper);
     return int128_t{result_upper, l._lower ^ r._lower};
 }
 constexpr int128_t operator<<(int128_t l, uint128_t r) noexcept {
@@ -458,40 +445,36 @@ constexpr int128_t operator>>(int128_t l, uint128_t r) noexcept {
 }
 
 constexpr uint128_t operator&(uint128_t l, int128_t r) noexcept {
-    uint128_t r_uint = static_cast<uint128_t>(r);
+    const uint128_t r_uint{r};
     return uint128_t{l._upper & r_uint._upper, l._lower & r_uint._lower};
 }
 constexpr uint128_t operator|(uint128_t l, int128_t r) noexcept {
-    uint128_t r_uint = static_cast<uint128_t>(r);
+    const uint128_t r_uint{r};
     return uint128_t{l._upper | r_uint._upper, l._lower | r_uint._lower};
 }
 constexpr uint128_t operator^(uint128_t l, int128_t r) noexcept {
-    uint128_t r_uint = static_cast<uint128_t>(r);
+    const uint128_t r_uint{r};
     return uint128_t{l._upper ^ r_uint._upper, l._lower ^ r_uint._lower};
 }
-constexpr uint128_t operator<<(uint128_t l, int128_t r) noexcept {
-    return i128_detail::_shl_u128(l, static_cast<uint128_t>(r));
-}
-constexpr uint128_t operator>>(uint128_t l, int128_t r) noexcept {
-    return i128_detail::_shr_u128(l, static_cast<uint128_t>(r));
-}
+constexpr uint128_t operator<<(uint128_t l, int128_t r) noexcept { return i128_detail::_shl_u128(l, uint128_t{r}); }
+constexpr uint128_t operator>>(uint128_t l, int128_t r) noexcept { return i128_detail::_shr_u128(l, uint128_t{r}); }
 
 // Arithmetic operators between int128_t and uint128_t
 
-constexpr uint128_t operator+(int128_t l, uint128_t r) noexcept { return static_cast<uint128_t>(l) + r; }
-constexpr uint128_t operator-(int128_t l, uint128_t r) noexcept { return static_cast<uint128_t>(l) - r; }
+constexpr uint128_t operator+(int128_t l, uint128_t r) noexcept { return uint128_t{l} + r; }
+constexpr uint128_t operator-(int128_t l, uint128_t r) noexcept { return uint128_t{l} - r; }
 constexpr uint128_t operator*(int128_t l, uint128_t r) noexcept {
     if (l._upper < 0) { return -i128_detail::_mul_u128(i128_detail::_abs_i128(l), r); }
     return i128_detail::_mul_u128(i128_detail::_abs_i128(l), r);
 }
-constexpr uint128_t operator/(int128_t l, uint128_t r) { return static_cast<uint128_t>(l) / r; }
-constexpr uint128_t operator%(int128_t l, uint128_t r) { return static_cast<uint128_t>(l) % r; }
+constexpr uint128_t operator/(int128_t l, uint128_t r) { return uint128_t{l} / r; }
+constexpr uint128_t operator%(int128_t l, uint128_t r) { return uint128_t{l} % r; }
 
-constexpr uint128_t operator+(uint128_t l, int128_t r) noexcept { return l + static_cast<uint128_t>(r); }
-constexpr uint128_t operator-(uint128_t l, int128_t r) noexcept { return l - static_cast<uint128_t>(r); }
+constexpr uint128_t operator+(uint128_t l, int128_t r) noexcept { return l + uint128_t{r}; }
+constexpr uint128_t operator-(uint128_t l, int128_t r) noexcept { return l - uint128_t{r}; }
 constexpr uint128_t operator*(uint128_t l, int128_t r) noexcept { return r * l; }
-constexpr uint128_t operator/(uint128_t l, int128_t r) { return l / static_cast<uint128_t>(r); }
-constexpr uint128_t operator%(uint128_t l, int128_t r) { return l % static_cast<uint128_t>(r); }
+constexpr uint128_t operator/(uint128_t l, int128_t r) { return l / uint128_t{r}; }
+constexpr uint128_t operator%(uint128_t l, int128_t r) { return l % uint128_t{r}; }
 
 // Comparison operators between int128_t and primitives
 constexpr bool operator==(int128_t l, Integral auto r) noexcept { return l == int128_t{r}; }
@@ -523,81 +506,81 @@ constexpr int128_t operator>>(Integral auto l, int128_t r) noexcept {
 
 // Arithmetic operators between int128_t and primitives
 
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator+(int128_t l, T r) noexcept {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator+(int128_t l, I r) noexcept {
+    if constexpr (std::is_signed_v<I>) {
         return l + int128_t{r};
     } else {
-        return static_cast<uint128_t>(l) + uint128_t{r};
+        return uint128_t{l} + uint128_t{r};
     }
 }
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator-(int128_t l, T r) noexcept {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator-(int128_t l, I r) noexcept {
+    if constexpr (std::is_signed_v<I>) {
         return l - int128_t{r};
     } else {
-        return static_cast<uint128_t>(l) - uint128_t{r};
+        return uint128_t{l} - uint128_t{r};
     }
 }
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator*(int128_t l, T r) noexcept {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator*(int128_t l, I r) noexcept {
+    if constexpr (std::is_signed_v<I>) {
         return l * int128_t(r);
     } else {
         return l * uint128_t(r);
     }
 }
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator/(int128_t l, T r) {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator/(int128_t l, I r) {
+    if constexpr (std::is_signed_v<I>) {
         return l / int128_t{r};
     } else {
-        return static_cast<uint128_t>(l) / uint128_t{r};
+        return uint128_t{l} / uint128_t{r};
     }
 }
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator%(int128_t l, T r) {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator%(int128_t l, I r) {
+    if constexpr (std::is_signed_v<I>) {
         return l % int128_t{r};
     } else {
-        return static_cast<uint128_t>(l) % uint128_t{r};
+        return uint128_t{l} % uint128_t{r};
     }
 }
 
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator+(T l, int128_t r) noexcept {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator+(I l, int128_t r) noexcept {
+    if constexpr (std::is_signed_v<I>) {
         return int128_t{l} + r;
     } else {
-        return uint128_t{l} + static_cast<uint128_t>(r);
+        return uint128_t{l} + uint128_t{r};
     }
 }
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator-(T l, int128_t r) noexcept {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator-(I l, int128_t r) noexcept {
+    if constexpr (std::is_signed_v<I>) {
         return int128_t{l} - r;
     } else {
-        return uint128_t{l} - static_cast<uint128_t>(r);
+        return uint128_t{l} - uint128_t{r};
     }
 }
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator*(T l, int128_t r) noexcept {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator*(I l, int128_t r) noexcept {
     return r * l;
 }
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator/(T l, int128_t r) {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator/(I l, int128_t r) {
+    if constexpr (std::is_signed_v<I>) {
         return int128_t{l} / r;
     } else {
-        return uint128_t{l} / static_cast<uint128_t>(r);
+        return uint128_t{l} / uint128_t{r};
     }
 }
-template <Integral T>
-constexpr i128_detail::i128_arithmetic_result_t<T> operator%(T l, int128_t r) {
-    if constexpr (std::is_signed_v<T>) {
+template <Integral I>
+constexpr i128_detail::i128_arithmetic_result_t<I> operator%(I l, int128_t r) {
+    if constexpr (std::is_signed_v<I>) {
         return int128_t{l} % r;
     } else {
-        return uint128_t{l} % static_cast<uint128_t>(r);
+        return uint128_t{l} % uint128_t{r};
     }
 }
 
@@ -652,25 +635,27 @@ constexpr int128_t _shl_i128(int128_t value, unsigned shift) noexcept {
     // shifts larger than width are usually UB, but for the sake of performance, just return 0 instead
     if (shift >= 128) { return int128_t{0}; }
     if (shift < 64) {
-        uint64_t new_upper = (static_cast<uint64_t>(value._upper) << shift) | (value._lower >> (64 - shift));
+        std::uint64_t new_upper
+            = (static_cast<std::uint64_t>(value._upper) << shift) | (value._lower >> (64 - shift));
 
-        return int128_t{static_cast<int64_t>(new_upper), value._lower << shift};
+        return int128_t{static_cast<std::int64_t>(new_upper), value._lower << shift};
     }
-    return int128_t{static_cast<int64_t>(value._lower << (shift - 64)), 0};
+    return int128_t{static_cast<std::int64_t>(value._lower << (shift - 64)), 0};
 }
+
 constexpr int128_t _shr_i128(int128_t value, unsigned shift) noexcept {
     if (shift == 0) { return value; }
     // shifts larger than the width are usually UB but for the sake of performance return a constant value
     // for negative values, sign extension should keep it negative
     // for positive values, this is just 0
-    if (shift >= 128) { return value._upper < 0 ? int128_t{-1, static_cast<uint64_t>(~0)} : int128_t{0}; }
+    if (shift >= 128) { return value._upper < 0 ? int128_t{-1, static_cast<std::uint64_t>(~0)} : int128_t{0}; }
     if (shift < 64) {
         return int128_t{value._upper >> shift,  // propagates sign
                                                 // account for upper bits being shifted in: keep any bits that are 1
-                        (value._lower >> shift) | (static_cast<uint64_t>(value._upper) << (64 - shift))};
+                        (value._lower >> shift) | (static_cast<std::uint64_t>(value._upper) << (64 - shift))};
     }
     return {value._upper < 0 ? -1 : 0,  // replicate sign
-            static_cast<uint64_t>(value._upper >> (shift - 64))};
+            static_cast<std::uint64_t>(value._upper >> (shift - 64))};
 }
 
 constexpr uint128_t _shl_u128(uint128_t value, unsigned shift) noexcept {
@@ -690,39 +675,46 @@ constexpr uint128_t _shr_u128(uint128_t value, unsigned shift) noexcept {
     return uint128_t{0, value._upper >> (shift - 64)};
 }
 
-constexpr unsigned _ctz_u128(uint128_t x) noexcept {
+constexpr int _ctz_u128(uint128_t x) noexcept {
     if (x == 0) { return 128; }
-    // since the number of trailing 0s >= 0, casting to unsigned is ok
-    if (x._lower != 0) { return static_cast<unsigned>(std::countr_zero(x._lower)); }
-    return 64 + static_cast<unsigned>(std::countr_zero(x._upper));
+    // there's a 1 somewhere in the lower 64 bits
+    if (x._lower != 0) { return static_cast<int>(std::countr_zero(x._lower)); }
+    // the lower 64 bits are all 0
+    return 64 + static_cast<int>(std::countr_zero(x._upper));
 }
 
-constexpr unsigned _clz_u128(uint128_t x) noexcept {
+constexpr int _clz_u128(uint128_t x) noexcept {
     if (x == 0) { return 128; }
-    if (x._upper != 0) { return static_cast<unsigned>(std::countl_zero(x._upper)); }
-    return 64 + static_cast<unsigned>(std::countl_zero(x._lower));
+    if (x._upper != 0) { return static_cast<int>(std::countl_zero(x._upper)); }
+    return 64 + static_cast<int>(std::countl_zero(x._lower));
 }
 
-constexpr uint128_t _mul_64(uint64_t a, uint64_t b) noexcept {
-    uint64_t a_low = static_cast<uint32_t>(a);
-    uint64_t b_low = static_cast<uint32_t>(b);
-    uint64_t a_high = a >> 32;
-    uint64_t b_high = b >> 32;
+constexpr uint128_t _mul_64(std::uint64_t a, std::uint64_t b) noexcept {
+#if defined(_MSC_VER)
+    unsigned long long high;
+    std::uint64_t low = _umul128(a, b, &high);
+    return uint128_t{static_cast<std::uint64_t>(high), low};
+#else
+    std::uint64_t a_low = static_cast<std::uint32_t>(a);
+    std::uint64_t b_low = static_cast<std::uint32_t>(b);
+    std::uint64_t a_high = a >> 32;
+    std::uint64_t b_high = b >> 32;
 
     // effectively FOIL-ing (a_high, a_low)*(b_high, b_low)
-    uint64_t p0 = a_low * b_low;
-    uint64_t p1 = a_low * b_high;
-    uint64_t p2 = a_high * b_low;
-    uint64_t p3 = a_high * b_high;
+    std::uint64_t p0 = a_low * b_low;
+    std::uint64_t p1 = a_low * b_high;
+    std::uint64_t p2 = a_high * b_low;
+    std::uint64_t p3 = a_high * b_high;
 
     // p1 and p2 are both effectively shifted left by 32 bits in the end product (i.e. the middle 64 bits, with 32 bits
     // on either side)
     // add the upper 32 bits of the low*low term (carry) + the lower 32 bits of the cross terms to get this middle term
-    uint64_t mid = (p0 >> 32) + static_cast<uint32_t>(p1) + static_cast<uint32_t>(p2);
+    std::uint64_t mid = (p0 >> 32) + static_cast<std::uint32_t>(p1) + static_cast<std::uint32_t>(p2);
 
     // the lower 64 bits are the lower 32 bits of mid and the lower 32 bits of p0.
     // the upper 64 bits are p3 and the upper 32 bits of p1 and p2
-    return uint128_t{p3 + (p1 >> 32) + (p2 >> 32) + (mid >> 32), (mid << 32) | static_cast<uint32_t>(p0)};
+    return uint128_t{p3 + (p1 >> 32) + (p2 >> 32) + (mid >> 32), (mid << 32) | static_cast<std::uint32_t>(p0)};
+#endif
 }
 
 constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
@@ -739,19 +731,33 @@ constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
     // 4 & 3 is then 0
 
     if ((b & (b - 1)) == 0) {
-        unsigned shift = _ctz_u128(b);
+        unsigned shift = static_cast<unsigned>(_ctz_u128(b));
         return _shl_u128(a, shift);
     }
-    if ((a & (a - 1)) == 0) {
-        unsigned shift = _ctz_u128(a);
 
+    if ((a & (a - 1)) == 0) {
+        unsigned shift = static_cast<unsigned>(_ctz_u128(a));
         return _shl_u128(b, shift);
     }
 
-    uint64_t a_low = a._lower;
-    uint64_t a_high = a._upper;
-    uint64_t b_low = b._lower;
-    uint64_t b_high = b._upper;
+    // Fast path for when at least one operand fits in 64 bits
+    if (a._upper == 0 && b._upper == 0) { return _mul_64(a._lower, b._lower); }
+
+    if (a._upper == 0 || b._upper == 0) {
+        std::uint64_t small_operand = a._upper == 0 ? a._lower : b._lower;
+        mnstl::uint128_t other = a._upper == 0 ? b : a;
+        uint128_t ll = _mul_64(small_operand, other._lower);
+        uint128_t lh = _mul_64(small_operand, other._upper);
+
+        std::uint64_t low = ll._lower;
+        std::uint64_t upper_low = lh._lower + ll._upper;
+        return uint128_t{upper_low, low};
+    }
+
+    std::uint64_t a_low = a._lower;
+    std::uint64_t a_high = a._upper;
+    std::uint64_t b_low = b._lower;
+    std::uint64_t b_high = b._upper;
 
     // effectively FOIL on (upper,lower)*(upper,lower)
     uint128_t ll = _mul_64(a_low, b_low);
@@ -759,15 +765,15 @@ constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
     uint128_t hl = _mul_64(a_high, b_low);
     // high*high term goes like 2^128 and can't fit so ignore it
 
-    uint64_t low = ll._lower;
-    uint64_t carry = ll._upper;
+    std::uint64_t low = ll._lower;
+    std::uint64_t carry = ll._upper;
 
-    uint64_t mid_low = lh._lower + hl._lower;
-    uint64_t mid_carry = mid_low < lh._lower;
+    std::uint64_t mid_low = lh._lower + hl._lower;
+    std::uint64_t mid_carry = mid_low < lh._lower;
     carry += mid_low;
 
     if (carry < mid_low) { ++mid_carry; }
-    uint64_t high = lh._upper + hl._upper + mid_carry;
+    std::uint64_t high = lh._upper + hl._upper + mid_carry;
     return uint128_t{high, low};
 }
 
@@ -776,7 +782,7 @@ constexpr divmod_u128_result _divmod_u128(uint128_t numerator, uint128_t denomin
         if (std::is_constant_evaluated()) {
             throw "Division by zero error";
         } else {
-#if defined(__GNUC__) || defined(__clang__) || (defined(__has_builtin) && __has_builtin(__builtin_trap))
+#if defined(__has_builtin) && __has_builtin(__builtin_trap)
             __builtin_trap();
 #else
             std::abort();
@@ -791,18 +797,20 @@ constexpr divmod_u128_result _divmod_u128(uint128_t numerator, uint128_t denomin
     if (numerator < denominator) { return divmod_u128_result{.quotient = 0, .remainder = numerator}; }
 
     if (numerator._upper == 0 && denominator._upper == 0) {
-        // these are really 64-bit ints, do division normally
+        // both integers are 64-bit so just do primitive division
+        // don't need a special case here since division always make the number smaller so the result will also
+        // fit in 64 bits
         // this should also be easy to optimize since most hardware dividers automatically compute the remainder
         // so it's one instruction + 2 moves
-        uint64_t quotient = numerator._lower / denominator._lower;
-        uint64_t remainder = numerator._lower % denominator._lower;
+        std::uint64_t quotient = numerator._lower / denominator._lower;
+        std::uint64_t remainder = numerator._lower % denominator._lower;
         return divmod_u128_result{.quotient = quotient, .remainder = remainder};
     }
 
     // shortcut for powers of two
     // division by 2^N is the same as a right shift
     if ((denominator & (denominator - 1)) == 0) {
-        unsigned shift = static_cast<uint128_t>(_ctz_u128(denominator));
+        unsigned shift = uint128_t(_ctz_u128(denominator));
         return divmod_u128_result{.quotient = numerator >> shift, .remainder = numerator & (denominator - 1)};
     }
 
@@ -810,17 +818,16 @@ constexpr divmod_u128_result _divmod_u128(uint128_t numerator, uint128_t denomin
     uint128_t quotient = 0;
     uint128_t remainder = 0;
 
-    int msb_divisor = static_cast<int>(127 - _clz_u128(denominator));
-    int msb_dividend = static_cast<int>(127 - _clz_u128(numerator));
-    int shift = msb_dividend - msb_divisor;
-    denominator <<= shift;
+    const int msb = 127 - _clz_u128(numerator);
 
-    for (; shift >= 0; --shift) {
+    for (int bit = msb; bit >= 0; --bit) {
         remainder <<= 1;
-        remainder |= (numerator >> shift) & 1;  // bring in next bit
+        remainder |= (numerator >> bit) & 1;  // bring in next bit
+
         if (remainder >= denominator) {
+            // this specific power of 2 fits so set that bit in the quotient
             remainder -= denominator;
-            quotient |= uint128_t{1} << shift;
+            quotient |= uint128_t{1} << bit;
         }
     }
     return divmod_u128_result{.quotient = quotient, .remainder = remainder};
@@ -875,14 +882,16 @@ constexpr std::string _tostr_u128(const uint128_t& i) {
         const auto remainder = divmod.remainder;
 #endif
         --ptr;
-        *ptr = static_cast<char>('0' + uint8_t(remainder));  // 0 <= remainder <= 9
+        *ptr = static_cast<char>('0' + std::uint8_t(remainder));  // 0 <= remainder <= 9
         temp = quotient;
     }
     return std::string(ptr);
 }
 
 constexpr std::string _tostr_i128(const int128_t& i) {
+    if (i == 0) { return "0"; }
     if (i < 0) { return "-" + _tostr_u128(_abs_i128(i)); }
+    // This needs to be a static cast in case we're using __int128
     return _tostr_u128(static_cast<uint128_t>(i));
 }
 }  // namespace i128_detail
@@ -901,9 +910,8 @@ inline std::ostream& operator<<(std::ostream& os, const mnstl::int128_t& i) {
 
 // STL specializations
 
-#if !MNSTL_NATIVE_I128
+#if !MNSTL_NATIVE_I128  // only specialize for custom int128
 namespace std {
-// only specialize for custom int128
 template <>
 struct formatter<mnstl::uint128_t> : public std::formatter<std::string> {
     template <class FormatContext>
@@ -925,85 +933,86 @@ struct formatter<mnstl::int128_t> : public std::formatter<std::string> {
 template <>
 class numeric_limits<mnstl::int128_t> {
    public:
-    constexpr static bool is_specialized = true;
-    constexpr static bool is_signed = true;
-    constexpr static bool is_integer = true;
-    constexpr static bool is_exact = true;
-    constexpr static bool has_infinity = false;
-    constexpr static bool has_quiet_NaN = false;
-    constexpr static bool has_signaling_NaN = false;
-    constexpr static float_denorm_style has_denorm = denorm_absent;
-    constexpr static bool has_denorm_loss = false;
-    constexpr static float_round_style round_style = round_toward_zero;
-    constexpr static bool is_iec559 = false;
-    constexpr static bool is_bounded = true;
-    constexpr static bool is_modulo = false;
-    constexpr static int digits = 127;
-    constexpr static int digits10 = 38;
-    constexpr static int max_digits10 = 0;
-    constexpr static int radix = 2;
-    constexpr static int min_exponent = 0;
-    constexpr static int min_exponent10 = 0;
-    constexpr static int max_exponent = 0;
-    constexpr static int max_exponent10 = 0;
-    constexpr static bool traps = false;
-    constexpr static bool tinyness_before = false;
+    constexpr static inline bool is_specialized = true;
+    constexpr static inline bool is_signed = true;
+    constexpr static inline bool is_integer = true;
+    constexpr static inline bool is_exact = true;
+    constexpr static inline bool has_infinity = false;
+    constexpr static inline bool has_quiet_NaN = false;
+    constexpr static inline bool has_signaling_NaN = false;
+    constexpr static inline float_denorm_style has_denorm = denorm_absent;
+    constexpr static inline bool has_denorm_loss = false;
+    constexpr static inline float_round_style round_style = round_toward_zero;
+    constexpr static inline bool is_iec559 = false;
+    constexpr static inline bool is_bounded = true;
+    constexpr static inline bool is_modulo = false;
+    constexpr static inline int digits = 127;
+    constexpr static inline int digits10 = 38;
+    constexpr static inline int max_digits10 = 0;
+    constexpr static inline int radix = 2;
+    constexpr static inline int min_exponent = 0;
+    constexpr static inline int min_exponent10 = 0;
+    constexpr static inline int max_exponent = 0;
+    constexpr static inline int max_exponent10 = 0;
+    constexpr static inline bool traps = false;
+    constexpr static inline bool tinyness_before = false;
 
-    constexpr static mnstl::int128_t min() noexcept { return -(mnstl::int128_t{1} << 127); }
-    constexpr static mnstl::int128_t lowest() noexcept { return min(); }
-    constexpr static mnstl::int128_t max() noexcept {
-        return mnstl::int128_t{std::numeric_limits<int64_t>::max(), std::numeric_limits<uint64_t>::max()};
+    constexpr static inline mnstl::int128_t min() noexcept { return -(mnstl::int128_t{1} << 127); }
+    constexpr static inline mnstl::int128_t lowest() noexcept { return min(); }
+    constexpr static inline mnstl::int128_t max() noexcept {
+        return mnstl::int128_t{std::numeric_limits<std::int64_t>::max(), std::numeric_limits<std::uint64_t>::max()};
     }
-    constexpr static mnstl::int128_t epsilon() noexcept { return 0; }
-    constexpr static mnstl::int128_t round_error() noexcept { return 0; }
-    constexpr static mnstl::int128_t infinity() noexcept { return 0; }
-    constexpr static mnstl::int128_t quiet_NaN() noexcept { return 0; }
-    constexpr static mnstl::int128_t signaling_NaN() noexcept { return 0; }
-    constexpr static mnstl::int128_t denorm_min() noexcept { return 0; }
+    constexpr static inline mnstl::int128_t epsilon() noexcept { return 0; }
+    constexpr static inline mnstl::int128_t round_error() noexcept { return 0; }
+    constexpr static inline mnstl::int128_t infinity() noexcept { return 0; }
+    constexpr static inline mnstl::int128_t quiet_NaN() noexcept { return 0; }
+    constexpr static inline mnstl::int128_t signaling_NaN() noexcept { return 0; }
+    constexpr static inline mnstl::int128_t denorm_min() noexcept { return 0; }
 };
 
 template <>
 class numeric_limits<mnstl::uint128_t> {
    public:
-    constexpr static bool is_specialized = true;
-    constexpr static bool is_signed = false;
-    constexpr static bool is_integer = true;
-    constexpr static bool is_exact = true;
-    constexpr static bool has_infinity = false;
-    constexpr static bool has_quiet_NaN = false;
-    constexpr static bool has_signaling_NaN = false;
-    constexpr static float_denorm_style has_denorm = denorm_absent;
-    constexpr static bool has_denorm_loss = false;
-    constexpr static float_round_style round_style = round_toward_zero;
-    constexpr static bool is_iec559 = false;
-    constexpr static bool is_bounded = true;
-    constexpr static bool is_modulo = true;
-    constexpr static int digits = 128;
-    constexpr static int digits10 = 38;
-    constexpr static int max_digits10 = 0;
-    constexpr static int radix = 2;
-    constexpr static int min_exponent = 0;
-    constexpr static int min_exponent10 = 0;
-    constexpr static int max_exponent = 0;
-    constexpr static int max_exponent10 = 0;
-    constexpr static bool traps = false;
-    constexpr static bool tinyness_before = false;
+    constexpr static inline bool is_specialized = true;
+    constexpr static inline bool is_signed = false;
+    constexpr static inline bool is_integer = true;
+    constexpr static inline bool is_exact = true;
+    constexpr static inline bool has_infinity = false;
+    constexpr static inline bool has_quiet_NaN = false;
+    constexpr static inline bool has_signaling_NaN = false;
+    constexpr static inline float_denorm_style has_denorm = denorm_absent;
+    constexpr static inline bool has_denorm_loss = false;
+    constexpr static inline float_round_style round_style = round_toward_zero;
+    constexpr static inline bool is_iec559 = false;
+    constexpr static inline bool is_bounded = true;
+    constexpr static inline bool is_modulo = true;
+    constexpr static inline int digits = 128;
+    constexpr static inline int digits10 = 38;
+    constexpr static inline int max_digits10 = 0;
+    constexpr static inline int radix = 2;
+    constexpr static inline int min_exponent = 0;
+    constexpr static inline int min_exponent10 = 0;
+    constexpr static inline int max_exponent = 0;
+    constexpr static inline int max_exponent10 = 0;
+    constexpr static inline bool traps = false;
+    constexpr static inline bool tinyness_before = false;
 
-    constexpr static mnstl::uint128_t min() noexcept { return 0; }
-    constexpr static mnstl::uint128_t lowest() noexcept { return min(); }
-    constexpr static mnstl::uint128_t max() noexcept {
-        return mnstl::uint128_t{std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()};
+    constexpr static inline mnstl::uint128_t min() noexcept { return 0; }
+    constexpr static inline mnstl::uint128_t lowest() noexcept { return min(); }
+    constexpr static inline mnstl::uint128_t max() noexcept {
+        return mnstl::uint128_t{std::numeric_limits<std::uint64_t>::max(),
+                                std::numeric_limits<std::uint64_t>::max()};
     }
-    constexpr static mnstl::uint128_t epsilon() noexcept { return 0; }
-    constexpr static mnstl::uint128_t round_error() noexcept { return 0; }
-    constexpr static mnstl::uint128_t infinity() noexcept { return 0; }
-    constexpr static mnstl::uint128_t quiet_NaN() noexcept { return 0; }
-    constexpr static mnstl::uint128_t signaling_NaN() noexcept { return 0; }
-    constexpr static mnstl::uint128_t denorm_min() noexcept { return 0; }
+    constexpr static inline mnstl::uint128_t epsilon() noexcept { return 0; }
+    constexpr static inline mnstl::uint128_t round_error() noexcept { return 0; }
+    constexpr static inline mnstl::uint128_t infinity() noexcept { return 0; }
+    constexpr static inline mnstl::uint128_t quiet_NaN() noexcept { return 0; }
+    constexpr static inline mnstl::uint128_t signaling_NaN() noexcept { return 0; }
+    constexpr static inline mnstl::uint128_t denorm_min() noexcept { return 0; }
 };
 }  // namespace std
 #endif  // !MNSTL_NATIVE_I128
-
+#undef TWO_POW_64
 #undef MNSTL_I128_SELF_IN_PLACE_OP
 #undef MNSTL_I128_PRIMITIVE_IN_PLACE_OP
 
