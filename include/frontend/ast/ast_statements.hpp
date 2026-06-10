@@ -36,6 +36,7 @@ struct AggregateField {
     std::string name;
     TypeSPtr_t type;
     bool isMutable;
+    size_t line, column;
 };
 
 struct AggregateDeclarationStatement final : public Statement {
@@ -84,6 +85,7 @@ struct EmptyStatement final : public Statement {
 struct EnumValue {
     std::string name;
     Expression* value;
+    size_t line, column;
 };
 
 struct EnumDeclarationStatement final : public Statement {

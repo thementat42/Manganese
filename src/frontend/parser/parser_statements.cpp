@@ -15,6 +15,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "frontend/ast/ast_statements.hpp"
 
 namespace Manganese {
 namespace parser {
@@ -83,9 +84,15 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
             return field.name == fieldName;
         });
         if (duplicate != fields.end()) {
-            logError(t.getLine(), t.getColumn(), "Duplicate field '{}' in aggregate '{}'", fieldName, name);
+            logError(t.getLine(), t.getColumn(),
+                     "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})", fieldName,
+                     name, duplicate->line, duplicate->column);
         } else {
-            fields.push_back({.name = fieldName, .type = std::move(type), .isMutable = isMutable});
+            fields.push_back(ast::AggregateField{.name = fieldName,
+                              .type = std::move(type),
+                              .isMutable = isMutable,
+                              .line = t.getLine(),
+                              .column = t.getColumn()});
         }
     }
 
@@ -190,9 +197,13 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
 
         if (duplicate != values.end()) {
             logError(peekToken().getLine(), peekToken().getColumn(),
-                     "Duplicate enum value '{}' in enum '{}'", valueName, name);
+                     "Duplicate enum value '{}' in enum '{}' (previously declared at line {}, column {})", valueName,
+                     name, duplicate->line, duplicate->column);
         } else {
-            values.push_back({.name = std::move(valueName), .value = std::move(valueExpression)});
+            values.push_back(ast::EnumValue{.name = std::move(valueName),
+                                            .value = std::move(valueExpression),
+                                            .line = peekToken().getLine(),
+                                            .column = peekToken().getColumn()});
         }
         if (peekTokenType() != TokenType::RightBrace) {
             expectToken(TokenType::Comma, "Expected ',' to separate enum values");
