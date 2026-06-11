@@ -635,8 +635,7 @@ constexpr int128_t _shl_i128(int128_t value, unsigned shift) noexcept {
     // shifts larger than width are usually UB, but for the sake of performance, just return 0 instead
     if (shift >= 128) { return int128_t{0}; }
     if (shift < 64) {
-        std::uint64_t new_upper
-            = (static_cast<std::uint64_t>(value._upper) << shift) | (value._lower >> (64 - shift));
+        std::uint64_t new_upper = (static_cast<std::uint64_t>(value._upper) << shift) | (value._lower >> (64 - shift));
 
         return int128_t{static_cast<std::int64_t>(new_upper), value._lower << shift};
     }
@@ -902,10 +901,12 @@ constexpr inline std::string to_string_uint128(const uint128_t& i) { return i128
 }  // namespace mnstl
 
 inline std::ostream& operator<<(std::ostream& os, const mnstl::uint128_t& i) {
-    return os << mnstl::i128_detail::_tostr_u128(i);
+    os << mnstl::i128_detail::_tostr_u128(i);
+    return os;
 }
 inline std::ostream& operator<<(std::ostream& os, const mnstl::int128_t& i) {
-    return os << mnstl::i128_detail::_tostr_i128(i);
+    os << mnstl::i128_detail::_tostr_i128(i);
+    return os;
 }
 
 // STL specializations
@@ -916,8 +917,7 @@ template <>
 struct formatter<mnstl::uint128_t> : public std::formatter<std::string> {
     template <class FormatContext>
     auto format(const mnstl::uint128_t& value, FormatContext& ctx) {
-        std::string str = mnstl::to_string_uint128(value);
-        return std::formatter<std::string>::format(str, ctx);
+        return std::formatter<std::string>::format(mnstl::to_string_uint128(value), ctx);
     }
 };
 
@@ -925,8 +925,7 @@ template <>
 struct formatter<mnstl::int128_t> : public std::formatter<std::string> {
     template <class FormatContext>
     auto format(const mnstl::int128_t& value, FormatContext& ctx) {
-        std::string str = mnstl::to_string_int128(value);
-        return std::formatter<std::string>::format(str, ctx);
+        return std::formatter<std::string>::format(mnstl::to_string_int128(value), ctx);
     }
 };
 
@@ -1000,8 +999,7 @@ class numeric_limits<mnstl::uint128_t> {
     constexpr static inline mnstl::uint128_t min() noexcept { return 0; }
     constexpr static inline mnstl::uint128_t lowest() noexcept { return min(); }
     constexpr static inline mnstl::uint128_t max() noexcept {
-        return mnstl::uint128_t{std::numeric_limits<std::uint64_t>::max(),
-                                std::numeric_limits<std::uint64_t>::max()};
+        return mnstl::uint128_t{std::numeric_limits<std::uint64_t>::max(), std::numeric_limits<std::uint64_t>::max()};
     }
     constexpr static inline mnstl::uint128_t epsilon() noexcept { return 0; }
     constexpr static inline mnstl::uint128_t round_error() noexcept { return 0; }
