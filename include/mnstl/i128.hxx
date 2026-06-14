@@ -7,7 +7,7 @@
 #include <compare>
 #include <format>
 #include <limits>
-#include <mnstl/ext_nums/ext_num_config.hxx>
+#include <mnstl/ext_num_config.hxx>
 #include <ostream>
 #include <type_traits>
 

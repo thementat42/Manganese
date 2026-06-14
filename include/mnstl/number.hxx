@@ -4,7 +4,7 @@
 #include <cmath>
 #include <core.hpp>
 #include <limits>
-#include <mnstl/ext_nums/i128.hxx>
+#include <mnstl/i128.hxx>
 #include <optional>
 #include <string>
 #include <string_view>
