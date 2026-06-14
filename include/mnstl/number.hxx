@@ -5,17 +5,16 @@
 #include <core.hpp>
 #include <limits>
 #include <mnstl/i128.hxx>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
 
 namespace mnstl {
-struct zero_init_t {
-    constexpr explicit zero_init_t() noexcept = default;
-};
+// struct zero_init_t {
+//     constexpr explicit zero_init_t() noexcept = default;
+// };
 
-constexpr inline zero_init_t zero_init{};
+// constexpr inline zero_init_t zero_init{};
 
 enum class Base : uint8_t {
     Binary = 2,  // 0b prefix
@@ -112,24 +111,24 @@ class number_t {
     constexpr number_t(float32_t f32) noexcept : _f32(f32), _underlying(held_type::float32) {}
     constexpr number_t(float64_t f64) noexcept : _f64(f64), _underlying(held_type::float64) {}
 
-    constexpr number_t(zero_init_t, held_type t) noexcept : _underlying(t) {
-        using enum held_type;
-        switch (t) {
-            case int8: _i8 = 0; break;
-            case int16: _i16 = 0; break;
-            case int32: _i32 = 0; break;
-            case int64: _i64 = 0; break;
-            case int128: _i128 = 0; break;
-            case uint8: _u8 = 0; break;
-            case uint16: _u16 = 0; break;
-            case uint32: _u32 = 0; break;
-            case uint64: _u64 = 0; break;
-            case uint128: _u128 = 0; break;
-            case float32: _f32 = 0; break;
-            case float64: _f64 = 0; break;
-            case none: break;
-        }
-    }
+    // constexpr number_t(zero_init_t, held_type t) noexcept : _underlying(t) {
+    //     using enum held_type;
+    //     switch (t) {
+    //         case int8: _i8 = 0; break;
+    //         case int16: _i16 = 0; break;
+    //         case int32: _i32 = 0; break;
+    //         case int64: _i64 = 0; break;
+    //         case int128: _i128 = 0; break;
+    //         case uint8: _u8 = 0; break;
+    //         case uint16: _u16 = 0; break;
+    //         case uint32: _u32 = 0; break;
+    //         case uint64: _u64 = 0; break;
+    //         case uint128: _u128 = 0; break;
+    //         case float32: _f32 = 0; break;
+    //         case float64: _f64 = 0; break;
+    //         case none: break;
+    //     }
+    // }
 
     // Union and tag are both trivially copyable and moveable (just bit copies)
     constexpr number_t(const number_t&) noexcept = default;
@@ -138,37 +137,38 @@ class number_t {
     constexpr number_t& operator=(number_t&&) noexcept = default;
     constexpr ~number_t() noexcept = default;
 
-    constexpr bool has_value() const noexcept { return _underlying != held_type::none; }
+    // constexpr bool has_value() const noexcept { return _underlying != held_type::none; }
 
     constexpr held_type underlying_type() const noexcept { return _underlying; }
-    constexpr bool is_integer() const noexcept {
-        using enum held_type;
-        return underlying_matches(int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128);
-    }
+    // constexpr bool is_integer() const noexcept {
+    //     using enum held_type;
+    //     return underlying_matches(int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128);
+    // }
+
     constexpr bool is_float() const noexcept {
         using enum held_type;
         return underlying_matches(float32, float64);
     }
 
-    constexpr bool is_signed() const noexcept {
-        using enum held_type;
-        return underlying_matches(int8, int16, int32, int64, int128, float32, float64);
-    }
+    // constexpr bool is_signed() const noexcept {
+    //     using enum held_type;
+    //     return underlying_matches(int8, int16, int32, int64, int128, float32, float64);
+    // }
 
-    constexpr bool is_unsigned() const noexcept {
-        using enum held_type;
-        return underlying_matches(uint8, uint16, uint32, uint64, uint128);
-    }
+    // constexpr bool is_unsigned() const noexcept {
+    //     using enum held_type;
+    //     return underlying_matches(uint8, uint16, uint32, uint64, uint128);
+    // }
 
-    template <Numeric T>
-    constexpr inline T value_as() const NOEXCEPT_IF_RELEASE {
-        return _visit([&]<class U>(U v) -> T { return static_cast<T>(v); });
-    }
+    // template <Numeric T>
+    // constexpr inline T value_as() const NOEXCEPT_IF_RELEASE {
+    //     return _visit([&]<class U>(U v) -> T { return static_cast<T>(v); });
+    // }
 
-    template <Numeric T>
-    constexpr std::optional<T> value() const noexcept {
-        return _underlying == held_type::none ? std::nullopt : std::make_optional<T>(value_as<T>());
-    }
+    // template <Numeric T>
+    // constexpr std::optional<T> value() const noexcept {
+    //     return _underlying == held_type::none ? std::nullopt : std::make_optional<T>(value_as<T>());
+    // }
 
     constexpr std::string to_string(bool trim_trailing_decimals = false) const noexcept {
         if (_underlying == held_type::none) { return ""; }
@@ -222,15 +222,18 @@ namespace detail {
 
 [[nodiscard]] constexpr bool isdigit(char c) noexcept { return c >= '0' && c <= '9'; }
 
-template <Numeric T>
-[[nodiscard]] constexpr T pow10(int exp) noexcept {
-    T result = 1;
-    if (exp > 0) {
-        while (exp--) { result *= 10; }
+[[nodiscard]] constexpr double pow10(int exp) noexcept {
+    if (std::is_constant_evaluated()) {
+        double result = 1.0;
+        if (exp > 0) {
+            while (exp--) { result *= 10; }
+        } else {
+            while (exp++) { result /= 10; }
+        }
+        return result;
     } else {
-        while (exp++) { result /= 10; }
+        return static_cast<double>(std::pow(1, exp));
     }
-    return result;
 }
 
 template <FloatingPoint T>
@@ -314,7 +317,7 @@ template <FloatingPoint T>
             result.value = 0;
             return result;
         }
-        value *= static_cast<T>(pow10<double>(exponent));
+        value *= static_cast<T>(pow10(exponent));
     }
 
     if (is_negative) { value = -value; }
