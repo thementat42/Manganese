@@ -21,10 +21,19 @@ class analyzer final : public _analyzer_base_t {
     parser::ParsedFile& parsedFile;
     const primitives& primitiveTypes;
 
+    struct {
+        bool inFunction : 1 = false;
+        bool inIfStatement : 1 = false;
+        bool inSwitchStatement : 1 = false;
+        bool inForLoop : 1 = false;
+        bool inWhileLoop : 1 = false;
+    } contextFlags;
+
     // Cached primitive types
 
    public:
-    analyzer(parser::ParsedFile& file, const primitives& primitiveTypesReference) : symbolTable(), parsedFile(file), primitiveTypes(primitiveTypesReference) {}
+    analyzer(parser::ParsedFile& file, const primitives& primitiveTypesReference) :
+        symbolTable(), parsedFile(file), primitiveTypes(primitiveTypesReference) {}
 
     Result analyze() {
         collectTypes();
