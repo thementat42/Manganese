@@ -115,6 +115,22 @@ struct ExpressionStatement final : public Statement {
     AST_STANDARD_INTERFACE;
 };
 
+struct ForLoopStatement final : public Statement {
+    Statement* initializationStep;
+    Expression* stopCondition;
+    Expression* postExpression;
+    Block body;
+
+    ForLoopStatement(Statement* initializationStep_, Expression* stopCondition_, Expression* postExpression_, Block body_) :
+        Statement(StatementKind::ForLoopStatement),
+        initializationStep(std::move(initializationStep_)),
+        stopCondition(std::move(stopCondition_)),
+        postExpression(std::move(postExpression_)),
+        body(std::move(body_)) {}
+
+    AST_STANDARD_INTERFACE;
+};
+
 struct FunctionParameter {
     std::string name;
     TypeSPtr_t type;

@@ -330,11 +330,23 @@ bool testLoops() {
                              "    if (j == 5) {continue;}"
                              "    print(j--);"
                              "    if (j <= 0) { break; }"
-                             "}";
+                             "}"
+                             "for(let k = 0; k < 10; ++k) {print(k);}"
+                             "for (;;) {print(3);}"
+                             "for (i = 10;;) {print(3);}"
+                             "for (;i<4;) {print(3);}"
+                             "for (;;++i) {print(3);}";
 
-    std::array<std::string, 4> expected = {
-        "(let i: private auto = 0);", "do {\n\t(++i);\n\tprint(i);\n} while ((i < 5));", "(let j: private int32 = 10);",
-        "while (true) {\n\tif ((j == 5)) {\n\tcontinue;\n}\n\tprint((j--));\n\tif ((j <= 0)) {\n\tbreak;\n}\n}"};
+    std::array<std::string, 9> expected
+        = {"(let i: private auto = 0);",
+           "do {\n\t(++i);\n\tprint(i);\n} while ((i < 5));",
+           "(let j: private int32 = 10);",
+           "while (true) {\n\tif ((j == 5)) {\n\tcontinue;\n}\n\tprint((j--));\n\tif ((j <= 0)) {\n\tbreak;\n}\n}",
+           "for ((let k: private auto = 0); (k < 10); (++k)) {\n\tprint(k);\n}",
+           "for (;;) {\n\tprint(3);\n}",
+           "for ((i = 10); ;) {\n\tprint(3);\n}",
+           "for (;(i < 4); ) {\n\tprint(3);\n}",
+           "for (;;(++i)) {\n\tprint(3);\n}"};
 
     return validateStatements(getParserResults(expression), expected, "Loops");
 }

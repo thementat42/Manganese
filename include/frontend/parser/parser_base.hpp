@@ -126,6 +126,7 @@ class Parser {
     ast::Statement* parseContinueStatement();
     ast::Statement* parseDoWhileLoopStatement();
     ast::Statement* parseEnumDeclarationStatement();
+    ast::Statement* parseForLoopStatement();
     ast::Statement* parseFunctionDeclarationStatement();
     ast::Statement* parseIfStatement();
     ast::Statement* parseImportStatement();

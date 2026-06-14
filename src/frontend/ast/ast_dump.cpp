@@ -10,12 +10,14 @@
  */
 
 #include <utils/type_names.hpp>
+
+#include "frontend/ast/ast_statements.hpp"
+
 #if MN_DEBUG  // Only include dump methods in debug builds
-#include <frontend/ast.hpp>
 #include <core.hpp>
+#include <frontend/ast.hpp>
 #include <mnstl/number.hxx>
 #include <string>
-
 
 namespace Manganese {
 namespace ast {
@@ -312,6 +314,37 @@ void EnumDeclarationStatement::dump(std::ostream& os, size_t indent) const {
 void ExpressionStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ExpressionStatement [" << getLine() << ":" << getColumn() << "] {\n";
     expression->dump(os, indent + 1);
+    os << getIndent(indent) << "}\n";
+}
+
+void ForLoopStatement::dump(std::ostream& os, size_t indent) const {
+    os << getIndent(indent) << "ForLoopStatement [" << getLine() << ":" << getColumn() << "] {\n";
+
+    os << getIndent(indent + 1) << "initializationStep: \n";
+    if (initializationStep) {
+        initializationStep->dump(os, indent + 2);
+    } else {
+        os << getIndent(indent + 2) << "null\n";
+    }
+
+    os << getIndent(indent + 1) << "stopCondition: \n";
+    if (stopCondition) {
+        stopCondition->dump(os, indent + 2);
+    } else {
+        os << getIndent(indent + 2) << "null\n";
+    }
+
+    os << getIndent(indent + 1) << "postExpression: \n";
+    if (postExpression) {
+        postExpression->dump(os, indent + 2);
+    } else {
+        os << getIndent(indent + 2) << "null\n";
+    }
+
+    os << getIndent(indent + 1) << "body: [\n";
+    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
+    os << getIndent(indent + 1) << "]\n";
+
     os << getIndent(indent) << "}\n";
 }
 

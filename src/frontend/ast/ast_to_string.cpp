@@ -7,9 +7,9 @@
  * The toString() methods are mainly used for error reporting
  * In the test suite, they are used to ensure the program is parsed correctly
  */
+#include <core.hpp>
 #include <format>
 #include <frontend/ast.hpp>
-#include <core.hpp>
 #include <sstream>
 #include <string>
 
@@ -163,6 +163,30 @@ std::string EnumDeclarationStatement::toString() const {
 }
 
 std::string ExpressionStatement::toString() const { return expression->toString() + ";"; }
+
+std::string ForLoopStatement::toString() const {
+    std::ostringstream oss;
+    oss << "for (";
+
+    // since the initialization step is a statement it will already have a semicolon
+    if (initializationStep) {
+        oss << initializationStep->toString() << " ";
+    } else {
+        oss << ";";
+    }
+    if (stopCondition) {
+        oss << stopCondition->toString() << "; ";
+    } else {
+        oss << ";";
+    }
+
+    if (postExpression) { oss << postExpression->toString(); }
+
+    oss << ") {\n";
+    for (const auto& stmt : body) { oss << "\t" << stmt->toString() << "\n"; }
+    oss << "}";
+    return oss.str();
+}
 
 std::string FunctionDeclarationStatement::toString() const {
     std::ostringstream oss;

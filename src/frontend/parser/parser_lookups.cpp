@@ -152,6 +152,7 @@ void Parser::initializeLookups() noexcept {
     registerStmtHandler(Continue, &Parser::parseContinueStatement);
     registerStmtHandler(Do, &Parser::parseDoWhileLoopStatement);
     registerStmtHandler(Enum, &Parser::parseEnumDeclarationStatement);
+    registerStmtHandler(For, &Parser::parseForLoopStatement);
     registerStmtHandler(Func, &Parser::parseFunctionDeclarationStatement);
     registerStmtHandler(If, &Parser::parseIfStatement);
     registerStmtHandler(Import, &Parser::parseImportStatement);

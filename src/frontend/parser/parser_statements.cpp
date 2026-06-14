@@ -15,6 +15,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "frontend/ast/ast_statements.hpp"
 
 namespace Manganese {
@@ -89,10 +90,10 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
                      name, duplicate->line, duplicate->column);
         } else {
             fields.push_back(ast::AggregateField{.name = fieldName,
-                              .type = std::move(type),
-                              .isMutable = isMutable,
-                              .line = t.getLine(),
-                              .column = t.getColumn()});
+                                                 .type = std::move(type),
+                                                 .isMutable = isMutable,
+                                                 .line = t.getLine(),
+                                                 .column = t.getColumn()});
         }
     }
 
@@ -214,6 +215,41 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
         logError(enumStartToken.getLine(), enumStartToken.getColumn(), "Enum '{}' has no values", name);
     }
     return arena.add_node<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
+}
+
+ast::Statement* Parser::parseForLoopStatement() {
+    DISCARD(consumeToken());  // consume 'for'
+
+    expectToken(TokenType::LeftParen, "Expected '(' to introduce for loop");
+
+    // Initialization Clause
+    ast::Statement* init = nullptr;
+    if (peekTokenType() != TokenType::Semicolon) {
+        if (peekTokenType() == TokenType::Let) {
+            init = parseVariableDeclarationStatement();
+        } else {
+            ast::Expression* initExpr = parseExpression(Precedence::Default);
+            init = arena.add_node<ast::ExpressionStatement>(std::move(initExpr));
+            expectToken(TokenType::Semicolon, "Expected ';' after for-loop initializer");
+        }
+    } else {
+        expectToken(TokenType::Semicolon, "Expected ';' after for-loop initializer");
+    }
+
+    // Stop condition
+    ast::Expression* condition = nullptr;
+    if (peekTokenType() != TokenType::Semicolon) { condition = parseExpression(Precedence::Default); }
+    expectToken(TokenType::Semicolon, "Expected ';' after for-loop condition");
+
+    // Post clause (what runs after each loop)
+    ast::Expression* post = nullptr;
+    if (peekTokenType() != TokenType::RightParen) { post = parseExpression(Precedence::Default); }
+    expectToken(TokenType::RightParen, "Expected ')' to end for loop header");
+
+    ast::Block body = parseBlock("for loop body");
+
+    return arena.add_node<ast::ForLoopStatement>(std::move(init), std::move(condition), std::move(post),
+                                                 std::move(body));
 }
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
