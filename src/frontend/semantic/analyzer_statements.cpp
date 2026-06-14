@@ -32,7 +32,7 @@ auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
 
 // auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t;
 auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { return visit(statement->expression); }
-
+// auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t;
 // auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t;
 // auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t;
 // auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t;
