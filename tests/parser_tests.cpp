@@ -21,7 +21,6 @@
 
 #include "testrunner.hpp"
 
-
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
 // So testing for a correct type resolution is outside the scope of these tests
@@ -331,13 +330,11 @@ bool testLoops() {
                              "    if (j == 5) {continue;}"
                              "    print(j--);"
                              "    if (j <= 0) { break; }"
-                             "}"
-                             "repeat ((5 + 30 - 2 * 3) << 2) {print(\"Hello\");}";
+                             "}";
 
-    std::array<std::string, 5> expected = {
+    std::array<std::string, 4> expected = {
         "(let i: private auto = 0);", "do {\n\t(++i);\n\tprint(i);\n} while ((i < 5));", "(let j: private int32 = 10);",
-        "while (true) {\n\tif ((j == 5)) {\n\tcontinue;\n}\n\tprint((j--));\n\tif ((j <= 0)) {\n\tbreak;\n}\n}",
-        "repeat ((((5 + 30) - (2 * 3)) << 2)) {\n\tprint(\"Hello\");\n}"};
+        "while (true) {\n\tif ((j == 5)) {\n\tcontinue;\n}\n\tprint((j--));\n\tif ((j <= 0)) {\n\tbreak;\n}\n}"};
 
     return validateStatements(getParserResults(expression), expected, "Loops");
 }

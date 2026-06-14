@@ -47,7 +47,6 @@ void analyzer::_collectTypesInStatement(ast::Statement* stmt) {
         }
         case FunctionDeclarationStatement:  // statements with bodies (which can have type declarations)
         case IfStatement:
-        case RepeatLoopStatement:
         case WhileLoopStatement: _collectTypesInStatementBody(stmt); break;
         default: return;  // not a type that requires collection
     }
@@ -94,11 +93,6 @@ void analyzer::_collectTypesInStatementBody(ast::Statement* stmt) {
         }
         case IfStatement: {
             auto _stmtWithBody = static_cast<ast::IfStatement*>(stmt);
-            for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement); }
-            break;
-        }
-        case RepeatLoopStatement: {
-            auto _stmtWithBody = static_cast<ast::RepeatLoopStatement*>(stmt);
             for (const auto& subStatement : _stmtWithBody->body) { _collectTypesInStatementBody(subStatement); }
             break;
         }

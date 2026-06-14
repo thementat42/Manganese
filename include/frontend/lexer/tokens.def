@@ -65,7 +65,6 @@ KEYWORD(Default, "default")
 
 KEYWORD(For, "for")
 KEYWORD(While, "while")
-KEYWORD(Repeat, "repeat")
 KEYWORD(Do, "do")
 KEYWORD(Break, "break")
 KEYWORD(Continue, "continue")

@@ -159,7 +159,6 @@ void Parser::initializeLookups() noexcept {
     registerStmtHandler(Module, &Parser::parseModuleDeclarationStatement);
     registerStmtHandler(Private, &Parser::parseVisibilityAffectedStatement);
     registerStmtHandler(Public, &Parser::parseVisibilityAffectedStatement);
-    registerStmtHandler(Repeat, &Parser::parseRepeatLoopStatement);
     registerStmtHandler(Return, &Parser::parseReturnStatement);
     registerStmtHandler(Switch, &Parser::parseSwitchStatement);
     registerStmtHandler(While, &Parser::parseWhileLoopStatement);

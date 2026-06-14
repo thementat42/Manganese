@@ -211,14 +211,6 @@ std::string IfStatement::toString() const {
     return oss.str();
 }
 
-std::string RepeatLoopStatement::toString() const {
-    std::ostringstream oss;
-    oss << "repeat (" << numIterations->toString() << ") {\n";
-    for (const auto& stmt : body) { oss << "\t" << stmt->toString() << "\n"; }
-    oss << "}";
-    return oss.str();
-}
-
 std::string SwitchStatement::toString() const {
     std::ostringstream oss;
     oss << "switch (" << variable->toString() << ") {\n";

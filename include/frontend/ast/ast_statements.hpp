@@ -163,18 +163,6 @@ struct IfStatement final : public Statement {
     AST_STANDARD_INTERFACE;
 };
 
-struct RepeatLoopStatement final : public Statement {
-    Expression* numIterations;
-    Block body;
-
-    RepeatLoopStatement(Expression* numIterations_, Block body_) :
-        Statement(StatementKind::RepeatLoopStatement),
-        numIterations(std::move(numIterations_)),
-        body(std::move(body_)) {}
-
-    AST_STANDARD_INTERFACE;
-};
-
 struct ReturnStatement final : public Statement {
     Expression* value;
 

@@ -382,15 +382,6 @@ ast::Statement* Parser::parseRedundantSemicolon() {
     return arena.add_node<ast::EmptyStatement>();
 }
 
-ast::Statement* Parser::parseRepeatLoopStatement() {
-    DISCARD(consumeToken());
-    expectToken(TokenType::LeftParen, "Expected '(' to introduce a number of iterations");
-    auto numIterations = parseExpression(Precedence::Default);
-    expectToken(TokenType::RightParen, "Expected ')' to end the number of iterations");
-    // Don't need to std::move because of return value optimization
-    return arena.add_node<ast::RepeatLoopStatement>(std::move(numIterations), parseBlock("repeat loop body"));
-}
-
 ast::Statement* Parser::parseReturnStatement() {
     DISCARD(consumeToken());
     ast::Expression* expression = nullptr;

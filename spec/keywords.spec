@@ -31,7 +31,6 @@ module
 private
 ptr
 public
-repeat
 return
 switch
 true

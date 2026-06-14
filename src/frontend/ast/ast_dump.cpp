@@ -387,16 +387,6 @@ void IfStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "}\n";
 }
 
-void RepeatLoopStatement::dump(std::ostream& os, size_t indent) const {
-    os << getIndent(indent) << "RepeatLoopStatement [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "numIterations: \n";
-    numIterations->dump(os, indent + 2);
-    os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
-    os << getIndent(indent + 1) << "]\n";
-    os << getIndent(indent) << "}\n";
-}
-
 void ReturnStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ReturnStatement [" << getLine() << ":" << getColumn() << "] {\n";
     if (value) {

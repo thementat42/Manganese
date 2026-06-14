@@ -126,15 +126,13 @@ switch_statement = "switch" "(" expression ")"
 
 return_statement = "return" expression ";";
 
-loop_statement = for_loop | repeat_loop | while_loop | do_while_loop | "break;" | "continue;";
+loop_statement = for_loop | while_loop | do_while_loop | "break;" | "continue;";
 
 for_loop = "for" "(" (variable_decl | expression)* ";" expression? ";" expression* ")" "{" block "}";
 
 while_loop = "while" "(" expression ")" "{" block "}";
 
 do_while_loop = "do" "{" block "}" "while" "(" expression ")" ";";
-
-repeat_loop = "repeat" "(" expression ")" "{" statement* "}";
 
 import_statement = "import" identifier("::"identifier)* ("as" identifier)? ";";
 module_statement = "module" identifier ";";
