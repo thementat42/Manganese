@@ -64,7 +64,7 @@
 
 [[noreturn]] inline void panic(const char* message = "", const char* file = "", size_t line = 0,
                                const char* func = "") {
-    fprintf(stderr, "\033[31mUnreachable code reached: %s \nIn file %s at line %zu when running %s\033[0m\n", message,
+    fprintf(stderr, "\033[31mPanic invoked: %s \nIn file %s at line %zu when running %s\033[0m\n", message,
             file, line, func);
     throw(message);
 }
