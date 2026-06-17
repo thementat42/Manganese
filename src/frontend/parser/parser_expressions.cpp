@@ -120,7 +120,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
                                                                Precedence precedence) {
     DISCARD(precedence);  // Avoid unused variable warning
     std::string aggregateName;
-    std::vector<TypeSPtr_t> genericTypes;
+    std::vector<ast::Type*> genericTypes;
     // Parse out an aggregate instantiation even if there's an error
     expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start aggregate instantiation");
     std::vector<ast::AggregateInstantiationField> fields;
@@ -243,7 +243,7 @@ ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedenc
     DISCARD(consumeToken());  // Consume the '@' token
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
-    std::vector<TypeSPtr_t> typeParameters;
+    std::vector<ast::Type*> typeParameters;
     while (!done()) {
         if (peekTokenType() == lexer::TokenType::RightSquare) {
             break;  // Done with type parameters
@@ -348,7 +348,7 @@ ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left,
 
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the 'as' token
-    TypeSPtr_t type = parseType(precedence);
+    ast::Type* type = parseType(precedence);
     return arena.add_node<ast::TypeCastExpression>(std::move(left), std::move(type));
 }
 }  // namespace parser

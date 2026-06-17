@@ -34,7 +34,7 @@ enum class SymbolKind : uint8_t {
 };
 
 struct Symbol {
-    ast::TypeSPtr_t type;
+    ast::Type* type = nullptr;
     ast::ASTNode* node = nullptr;
     size_t scopeDepth = 0;
     SymbolKind kind;

@@ -33,8 +33,6 @@ class Visitor {
     exprvisit_t visit(ast::Expression*);
     stmtvisit_t visit(ast::Statement*);
     typevisit_t visit(ast::Type*);
-    // A wrapper around visit(Type*) to handle a shared pointer
-    FORCE_INLINE typevisit_t visit(ast::TypeSPtr_t& type) { return visit(type.get()); }
 };
 
 }  // namespace ast

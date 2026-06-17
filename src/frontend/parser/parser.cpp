@@ -9,7 +9,6 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <frontend/semantic/primitives.hpp>
 #include <core.hpp>
 #include <io/logging.hpp>
 #include <string>

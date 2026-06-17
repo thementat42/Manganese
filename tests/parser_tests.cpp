@@ -14,7 +14,6 @@
 #include <core.hpp>
 #include <filesystem>
 #include <frontend/parser.hpp>
-#include <frontend/semantic/primitives.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -30,10 +29,9 @@ namespace tests {
 
 static const char* logFileName = "logs/parser_tests.log";
 mnstl::chunk_allocator allocator;
-semantic::primitives primitives;
 
 ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
-    parser::Parser parser(source, mode, allocator, primitives);
+    parser::Parser parser(source, mode, allocator);
     parser::ParsedFile file = parser.parse();
 
     if (!file.moduleName.empty()) { std::cout << "module " << file.moduleName << "\n"; }
@@ -490,7 +488,7 @@ bool testImportsAndAliases() {
 bool testParseFromFile() {
     std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
     mnstl::chunk_allocator file_allocator{};
-    parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator, primitives);
+    parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
     auto x = p.parse();
     if (!x.moduleName.empty()) { std::cout << "module " << x.moduleName << ";\n"; }
     for (const auto& element : x.imports) { std::cout << parser::importToString(element) << "\n"; }

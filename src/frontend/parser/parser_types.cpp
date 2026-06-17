@@ -7,14 +7,13 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <core.hpp>
-#include <memory>
 #include <utility>
 #include <vector>
 
 namespace Manganese {
 namespace parser {
 
-TypeSPtr_t Parser::parseType(Precedence precedence) {
+ast::Type* Parser::parseType(Precedence precedence) {
     TokenType type = peekTokenType();
     const auto index = tokenToIndex(type);
 
@@ -22,8 +21,8 @@ TypeSPtr_t Parser::parseType(Precedence precedence) {
     if (!nudHandler) {
         ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
-    // TypeSPtr_t left = nudIterator->second(this);
-    TypeSPtr_t left = (this->*nudHandler)();
+    // ast::Type* left = nudIterator->second(this);
+    ast::Type* left = (this->*nudHandler)();
 
     while (!done()) {
         type = peekTokenType();
@@ -45,7 +44,7 @@ TypeSPtr_t Parser::parseType(Precedence precedence) {
 
 // Specific type parsing methods
 
-TypeSPtr_t Parser::parseAggregateType() {
+ast::Type* Parser::parseAggregateType() {
     DISCARD(consumeToken());  // Consume the 'aggregate' token
     if (peekTokenType() == TokenType::Identifier) {
         logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
@@ -54,7 +53,7 @@ TypeSPtr_t Parser::parseAggregateType() {
     }
 
     expectToken(TokenType::LeftBrace, "Expected a '{' to start aggregate type declaration");
-    std::vector<ast::TypeSPtr_t> fieldTypes;
+    std::vector<ast::Type*> fieldTypes;
 
     while (peekTokenType() != TokenType::RightBrace) {
         if (peekTokenType() == TokenType::Identifier) {
@@ -71,10 +70,10 @@ TypeSPtr_t Parser::parseAggregateType() {
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end aggregate type declaration");
-    return std::make_shared<ast::AggregateType>(std::move(fieldTypes));
+    return arena.add_node<ast::AggregateType>(std::move(fieldTypes));
 }
 
-TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) {
+ast::Type* Parser::parseArrayType(ast::Type* left, Precedence precedence) {
     ast::Expression* lengthExpression = nullptr;
     DISCARD(precedence);  // Avoid unused variable warning
     DISCARD(consumeToken());  // Consume the left square bracket '['
@@ -83,10 +82,10 @@ TypeSPtr_t Parser::parseArrayType(TypeSPtr_t left, Precedence precedence) {
         lengthExpression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
-    return std::make_shared<ast::ArrayType>(std::move(left), std::move(lengthExpression));
+    return arena.add_node<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
-TypeSPtr_t Parser::parseFunctionType() {
+ast::Type* Parser::parseFunctionType() {
     DISCARD(consumeToken());  // consume the 'func' token
 
     expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
@@ -108,20 +107,20 @@ TypeSPtr_t Parser::parseFunctionType() {
     }
     expectToken(TokenType::RightParen, "Expected ')' to end parameter type list");
 
-    TypeSPtr_t returnType = nullptr;
+    ast::Type* returnType = nullptr;
     if (peekTokenType() == TokenType::Arrow) {
         DISCARD(consumeToken());  // Consume the '->' token
         returnType = parseType(Precedence::Default);
     }
 
-    return std::make_shared<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
+    return arena.add_node<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
 }
 
-TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) {
+ast::Type* Parser::parseGenericType(ast::Type* left, Precedence precedence) {
     DISCARD(consumeToken());
     DISCARD(precedence);  // Avoid unused variable warning
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
-    std::vector<TypeSPtr_t> typeParameters;
+    std::vector<ast::Type*> typeParameters;
     while (!done()) {
         if (peekTokenType() == TokenType::RightSquare) {
             break;  // Done with type parameters
@@ -133,32 +132,32 @@ TypeSPtr_t Parser::parseGenericType(TypeSPtr_t left, Precedence precedence) {
         }
     }
     expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return std::make_shared<ast::GenericType>(std::move(left), std::move(typeParameters));
+    return arena.add_node<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 
-TypeSPtr_t Parser::parseParenthesizedType() {
+ast::Type* Parser::parseParenthesizedType() {
     DISCARD(consumeToken());  // Skip the '('
-    TypeSPtr_t innerType = parseType(Precedence::Default);
+    ast::Type* innerType = parseType(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
     return innerType;
 }
 
-TypeSPtr_t Parser::parsePointerType() {
+ast::Type* Parser::parsePointerType() {
     DISCARD(consumeToken());  // Consume `ptr`
     bool isMutable = false;
     if (peekTokenType() == TokenType::Mut) {
         isMutable = true;
         DISCARD(consumeToken());  // Consume `mut`
     }
-    return std::make_shared<ast::PointerType>(parseType(Precedence::Default), isMutable);
+    return arena.add_node<ast::PointerType>(parseType(Precedence::Default), isMutable);
 }
 
-TypeSPtr_t Parser::parseSymbolType() {
+ast::Type* Parser::parseSymbolType() {
     using enum ast::PrimitiveType_t;
     Token token = peekToken();
     if (!token.isPrimitiveType()) {
         // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
-        return std::make_shared<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
+        return arena.add_node<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
     }
     // If the token is a primitive type, we can directly create a SymbolType
     DISCARD(consumeToken());
@@ -197,7 +196,7 @@ TypeSPtr_t Parser::parseSymbolType() {
     } else {
         ASSERT_UNREACHABLE("Unknown primitive type " + lex);
     }
-    auto symbol_type = std::make_shared<ast::SymbolType>(token.getLexeme());
+    auto symbol_type = arena.add_node<ast::SymbolType>(token.getLexeme());
     symbol_type->setPrimitiveType(prim_t);
     return symbol_type;
 }

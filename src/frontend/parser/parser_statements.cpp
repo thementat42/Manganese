@@ -10,13 +10,13 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <memory>
 #include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "frontend/ast/ast_statements.hpp"
+#include "frontend/ast/ast_types.hpp"
 
 namespace Manganese {
 namespace parser {
@@ -78,7 +78,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
             isMutable = true;
             DISCARD(consumeToken());
         }
-        TypeSPtr_t type = parseType(Precedence::Default);
+        ast::Type* type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
         auto duplicate = std::find_if(fields.begin(), fields.end(), [fieldName](const ast::AggregateField& field) {
@@ -105,7 +105,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
 
 ast::Statement* Parser::parseAliasStatement() {
     DISCARD(consumeToken());
-    TypeSPtr_t baseType;
+    ast::Type* baseType;
     if (peekToken().isPrimitiveType() || peekTokenType() == TokenType::Func || peekTokenType() == TokenType::Ptr) {
         // Primitive types are easy to alias -- just parse a regular type
         baseType = parseType(Precedence::Default);
@@ -125,13 +125,13 @@ ast::Statement* Parser::parseAliasStatement() {
 
         if (peekTokenType() == TokenType::At) {
             // Generic Type
-            baseType = parseGenericType(std::make_shared<ast::SymbolType>(path), Precedence::Default);
+            baseType = parseGenericType(arena.add_node<ast::SymbolType>(path), Precedence::Default);
         } else if (peekTokenType() == TokenType::LeftSquare) {
             // Array type
-            baseType = parseArrayType(std::make_shared<ast::SymbolType>(path), Precedence::Default);
+            baseType = parseArrayType(arena.add_node<ast::SymbolType>(path), Precedence::Default);
         } else {
             // Regular (identifier) type
-            baseType = std::make_shared<ast::SymbolType>(path);
+            baseType = arena.add_node<ast::SymbolType>(path);
         }
     }
     expectToken(TokenType::As, "Expected 'as' to introduce the type alias");
@@ -166,7 +166,7 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
 ast::Statement* Parser::parseEnumDeclarationStatement() {
     Token enumStartToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
-    TypeSPtr_t baseType = primitiveTypes.int32;  // default if no type specified or if there's an error
+    ast::Type* baseType = nullptr;  // default if no type specified or if there's an error
     std::vector<ast::EnumValue> values;
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());
@@ -175,8 +175,8 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
             logError(underlyingTok.getLine(), underlyingTok.getColumn(),
                      "Enums can only have integral types as their underlying type, not {}", underlyingTok.getLexeme());
             DISCARD(consumeToken());
-        } else if (const auto* p = primitiveTypes.fromLexeme(underlyingTok.getLexeme())) {
-            baseType = *p;
+        } else if (underlyingTok.isPrimitiveType()) {
+            baseType = arena.add_node<ast::SymbolType>(underlyingTok.getLexeme());
             DISCARD(consumeToken());
         } else {
             logError(underlyingTok.getLine(), underlyingTok.getColumn(), "Expected an underlying type for an enum");
@@ -184,6 +184,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
             if (underlyingTok.getType() != TokenType::LeftBrace) { DISCARD(consumeToken()); }
         }
     }
+    if (!baseType) { baseType = arena.add_node<ast::SymbolType>("int32"); }
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
     while (!done() && peekTokenType() != TokenType::RightBrace) {
         std::string valueName = expectToken(TokenType::Identifier, "Expected enum value name").getLexeme();
@@ -261,7 +262,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
     std::vector<ast::FunctionParameter> params;
     std::vector<std::string> genericTypes;
-    TypeSPtr_t returnType = nullptr;
+    ast::Type* returnType = nullptr;
     ast::Block body;
 
     if (peekTokenType() == TokenType::LeftSquare) {
@@ -301,7 +302,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
             DISCARD(consumeToken());
             isMutable = true;
         }
-        TypeSPtr_t param_type = parseType(Precedence::Default);
+        ast::Type* param_type = parseType(Precedence::Default);
         params.push_back({.name = std::move(param_name), .type = std::move(param_type), .isMutable = isMutable});
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
@@ -507,7 +508,7 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
 }
 
 ast::Statement* Parser::parseVariableDeclarationStatement() {
-    TypeSPtr_t explicitType;
+    ast::Type* explicitType = nullptr;
     ast::Expression* value = nullptr;
     ast::Visibility visibility = defaultVisibility;
 

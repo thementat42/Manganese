@@ -34,7 +34,7 @@ enum class StatementKind : uint8_t {
 
 struct AggregateField {
     std::string name;
-    TypeSPtr_t type;
+    Type* type;
     bool isMutable;
     size_t line, column;
 };
@@ -55,11 +55,11 @@ struct AggregateDeclarationStatement final : public Statement {
 };
 
 struct AliasStatement final : public Statement {
-    TypeSPtr_t baseType;  // The type being aliased (x in alias x as foo)
+    Type* baseType;  // The type being aliased (x in alias x as foo)
     std::string alias;  // The name of the alias (foo in alias x as foo)
     Visibility visibility = Visibility::Private;
 
-    AliasStatement(TypeSPtr_t baseType_, std::string alias_) :
+    AliasStatement(Type* baseType_, std::string alias_) :
         Statement(StatementKind::AliasStatement), baseType(std::move(baseType_)), alias(std::move(alias_)) {}
 
     AST_STANDARD_INTERFACE
@@ -90,11 +90,11 @@ struct EnumValue {
 
 struct EnumDeclarationStatement final : public Statement {
     std::string name;
-    TypeSPtr_t baseType;
+    Type* baseType;
     std::vector<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
-    EnumDeclarationStatement(std::string name_, TypeSPtr_t baseType_, std::vector<EnumValue> values_) :
+    EnumDeclarationStatement(std::string name_, Type* baseType_, std::vector<EnumValue> values_) :
         Statement(StatementKind::EnumDeclarationStatement),
         name(name_),
         baseType(std::move(baseType_)),
@@ -133,7 +133,7 @@ struct ForLoopStatement final : public Statement {
 
 struct FunctionParameter {
     std::string name;
-    TypeSPtr_t type;
+    Type* type;
     bool isMutable;
 };
 
@@ -141,12 +141,12 @@ struct FunctionDeclarationStatement final : public Statement {
     std::string name;
     std::vector<std::string> genericTypes;
     std::vector<FunctionParameter> parameters;
-    TypeSPtr_t returnType;
+    Type* returnType;
     Block body;
     Visibility visibility = Visibility::Private;
 
     FunctionDeclarationStatement(std::string name_, std::vector<std::string> genericTypes_,
-                                 std::vector<FunctionParameter> parameters_, TypeSPtr_t returnType_, Block body_) :
+                                 std::vector<FunctionParameter> parameters_, Type* returnType_, Block body_) :
         Statement(StatementKind::FunctionDeclarationStatement),
         name(std::move(name_)),
         genericTypes(std::move(genericTypes_)),
@@ -212,10 +212,10 @@ struct VariableDeclarationStatement final : public Statement {
     std::string name;
     Visibility visibility;
     Expression* value;
-    TypeSPtr_t type;
+    Type* type;
 
     VariableDeclarationStatement(bool isMutable_, std::string name_, Visibility visibility_, Expression* _value,
-                                 TypeSPtr_t _type) :
+                                 Type* _type) :
         Statement(StatementKind::VariableDeclarationStatement),
         isMutable(isMutable_),
         name(std::move(name_)),

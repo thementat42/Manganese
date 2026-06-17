@@ -5,7 +5,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <frontend/semantic/primitives.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 
 namespace Manganese {
@@ -19,7 +18,6 @@ class analyzer final : public _analyzer_base_t {
    private:
     SymbolTable symbolTable;
     parser::ParsedFile& parsedFile;
-    const primitives& primitiveTypes;
 
     struct {
         bool inFunction : 1 = false;
@@ -32,8 +30,8 @@ class analyzer final : public _analyzer_base_t {
     // Cached primitive types
 
    public:
-    analyzer(parser::ParsedFile& file, const primitives& primitiveTypesReference) :
-        symbolTable(), parsedFile(file), primitiveTypes(primitiveTypesReference) {}
+    analyzer(parser::ParsedFile& file) :
+        symbolTable(), parsedFile(file) {}
 
     Result analyze() {
         collectTypes();

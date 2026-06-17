@@ -15,7 +15,6 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
-#include <frontend/semantic/primitives.hpp>
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
@@ -26,7 +25,6 @@
 
 namespace Manganese {
 namespace parser {
-using ast::TypeSPtr_t;
 using lexer::TokenType, lexer::Token;
 
 struct Import {
@@ -52,7 +50,6 @@ class Parser {
     std::string moduleName;
     std::vector<Import> imports;
     mnstl::chunk_allocator& arena;
-    const semantic::primitives& primitiveTypes;
 
     // Some flags
     struct {
@@ -62,11 +59,9 @@ class Parser {
     };
 
    public:  // public methods
-    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference,
-           const semantic::primitives& primitivesReference) :
+    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
         lexer(std::make_unique<lexer::Lexer>(source, mode)),
-        arena(allocatorReference),
-        primitiveTypes(primitivesReference) {
+        arena(allocatorReference) {
         initializeLookups();
         initializeTypeLookups();
     }
@@ -84,9 +79,9 @@ class Parser {
    private:  // private methods
     using statementHandler_t = ast::Statement* (Parser::*)();
     using nudHandler_t = ast::Expression* (Parser::*)();
-    using nudHandler_types_t = TypeSPtr_t (Parser::*)();
+    using nudHandler_types_t = ast::Type* (Parser::*)();
     using ledHandler_t = ast::Expression* (Parser::*)(ast::Expression*, Precedence);
-    using ledHandler_types_t = TypeSPtr_t (Parser::*)(TypeSPtr_t, Precedence);
+    using ledHandler_types_t = ast::Type* (Parser::*)(ast::Type*, Precedence);
 
     //~ Lookups
     static inline std::array<statementHandler_t, static_cast<size_t>(TokenType::_tokenCount)> statementLookup{};
@@ -144,14 +139,14 @@ class Parser {
 
     // Type Parsing
 
-    TypeSPtr_t parseType(Precedence precedence);
-    TypeSPtr_t parseArrayType(TypeSPtr_t left, Precedence precedence);
-    TypeSPtr_t parseAggregateType();
-    TypeSPtr_t parseFunctionType();
-    TypeSPtr_t parseGenericType(TypeSPtr_t left, Precedence precedence);
-    TypeSPtr_t parsePointerType();
-    TypeSPtr_t parseParenthesizedType();
-    TypeSPtr_t parseSymbolType();
+    ast::Type* parseType(Precedence precedence);
+    ast::Type* parseArrayType(ast::Type* left, Precedence precedence);
+    ast::Type* parseAggregateType();
+    ast::Type* parseFunctionType();
+    ast::Type* parseGenericType(ast::Type* left, Precedence precedence);
+    ast::Type* parsePointerType();
+    ast::Type* parseParenthesizedType();
+    ast::Type* parseSymbolType();
 
     // ~ Helpers
     ast::Block parseBlock(const std::string& blockName);

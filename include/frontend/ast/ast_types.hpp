@@ -33,9 +33,9 @@ enum class TypeKind : uint8_t {
  * e.g. aggregate {int, float}
  */
 struct AggregateType final : public Type {
-    std::vector<TypeSPtr_t> fieldTypes;
+    std::vector<Type*> fieldTypes;
 
-    explicit AggregateType(std::vector<TypeSPtr_t> fieldTypes_) :
+    explicit AggregateType(std::vector<Type*> fieldTypes_) :
         Type(TypeKind::AggregateType), fieldTypes(std::move(fieldTypes_)) {}
     AST_STANDARD_INTERFACE;
 };
@@ -44,13 +44,13 @@ struct AggregateType final : public Type {
  * e.g. int[], float[][], etc.
  */
 struct ArrayType final : public Type {
-    TypeSPtr_t elementType;
+    Type* elementType;
     Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
 
     /**
      * @param elementType_ The type of the elements in the array
      */
-    explicit ArrayType(TypeSPtr_t elementType_, Expression* lengthExpr_ = nullptr) :
+    explicit ArrayType(Type* elementType_, Expression* lengthExpr_ = nullptr) :
         Type(TypeKind::ArrayType), elementType(std::move(elementType_)), lengthExpression(std::move(lengthExpr_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -58,9 +58,9 @@ struct ArrayType final : public Type {
 
 struct FunctionParameterType {
     bool isMutable;
-    TypeSPtr_t type;
+    Type* type;
 
-    FunctionParameterType(bool isMutable_, TypeSPtr_t type_) : isMutable(isMutable_), type(std::move(type_)) {}
+    FunctionParameterType(bool isMutable_, Type* type_) : isMutable(isMutable_), type(std::move(type_)) {}
 };
 
 /**
@@ -68,9 +68,9 @@ struct FunctionParameterType {
  */
 struct FunctionType final : public Type {
     std::vector<FunctionParameterType> parameterTypes;
-    TypeSPtr_t returnType;
+    Type* returnType;
 
-    FunctionType(std::vector<FunctionParameterType> parameterTypes_, TypeSPtr_t returnType_) :
+    FunctionType(std::vector<FunctionParameterType> parameterTypes_, Type* returnType_) :
         Type(TypeKind::FunctionType), parameterTypes(std::move(parameterTypes_)), returnType(std::move(returnType_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -82,9 +82,9 @@ struct FunctionType final : public Type {
  * It does not represent the generic type itself
  */
 struct GenericType final : public Type {
-    TypeSPtr_t baseType;  // some_function in `some_function@[T,U]`
-    std::vector<TypeSPtr_t> typeParameters;  // T and U in `some_function@[T,U]`
-    GenericType(TypeSPtr_t baseType_, std::vector<TypeSPtr_t> typeParameters_) :
+    Type* baseType;  // some_function in `some_function@[T,U]`
+    std::vector<Type*> typeParameters;  // T and U in `some_function@[T,U]`
+    GenericType(Type* baseType_, std::vector<Type*> typeParameters_) :
         Type(TypeKind::GenericType), baseType(std::move(baseType_)), typeParameters(std::move(typeParameters_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -94,10 +94,10 @@ struct GenericType final : public Type {
  * ptr + any type
  */
 struct PointerType final : public Type {
-    TypeSPtr_t baseType;
+    Type* baseType;
     bool isMutable;
 
-    PointerType(TypeSPtr_t baseType_, bool isMutable_) :
+    PointerType(Type* baseType_, bool isMutable_) :
         Type(TypeKind::PointerType), baseType(std::move(baseType_)), isMutable(isMutable_) {}
 
     AST_STANDARD_INTERFACE;

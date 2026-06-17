@@ -14,7 +14,6 @@
 
 #include <core.hpp>
 #include <frontend/lexer.hpp>
-#include <memory>
 #include <string>
 #include <utils/type_names.hpp>
 #include <vector>
@@ -44,17 +43,7 @@ namespace ast {
 struct Expression;
 struct Statement;
 struct Type;
-using TypeSPtr_t = std::shared_ptr<Type>;
 typedef std::vector<Statement*> Block;
-
-/*
-TypeSPtr_t is a shared pointer since, in the semantic analysis phase, multiple AST nodes may refer to the same type.
-e.g. in a variable declaration (let x = 1 + 2), both the variable and the assignment expression will have the same type
-rather than constantly cloning types, it's easier to just have a shared pointer so that multiple nodes can refer to the
-same type object. this reduces memory usage since the actual type is only allocated and stored once instead of multiple
-redundant deep copies cloning types would also require cloning expressions (e.g. array types), which is even more
-expensive, so shared_pointer is much more efficient
-*/
 
 enum class ExpressionKind : uint8_t;
 enum class StatementKind : uint8_t;
@@ -117,13 +106,12 @@ struct ASTNode {
 };
 
 struct Expression : public ASTNode {
-    TypeSPtr_t _computedType;
+    Type* _computedType = nullptr;
     ExpressionKind _kind;
 
     virtual ~Expression() noexcept = default;
-    inline Type* getType() const noexcept { return _computedType.get(); };
-    inline TypeSPtr_t getTypePtr() const noexcept { return _computedType; }
-    void setType(TypeSPtr_t type) noexcept { _computedType = type; }
+    inline Type* getTypePtr() const noexcept { return _computedType; }
+    void setType(Type* type) noexcept { _computedType = type; }
     constexpr inline ExpressionKind kind() const noexcept { return _kind; }
 
    protected:
@@ -179,14 +167,6 @@ inline std::string toStringOr(const Statement* statement, const char* fallback =
  * @param fallback The fallback string representation if the type is a nullptr
  */
 inline std::string toStringOr(const Type* type, const char* fallback = "no type") {
-    return type ? type->toString() : fallback;
-}
-
-/**
- * @brief A wrapper around Type::toString which handles nullptrs with a fallback
- * @param fallback The fallback string representation if the type is a nullptr
- */
-inline std::string toStringOr(const TypeSPtr_t& type, const char* fallback = "no type") {
     return type ? type->toString() : fallback;
 }
 

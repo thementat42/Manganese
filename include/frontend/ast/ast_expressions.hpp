@@ -42,10 +42,10 @@ struct AggregateInstantiationField {
  */
 struct AggregateInstantiationExpression final : public Expression {
     std::string name;  // The name of the aggregate type being instantiated
-    std::vector<TypeSPtr_t> genericTypes;
+    std::vector<Type*> genericTypes;
     std::vector<AggregateInstantiationField> fields;
 
-    constexpr AggregateInstantiationExpression(std::string name_, std::vector<TypeSPtr_t> genericTypes_,
+    constexpr AggregateInstantiationExpression(std::string name_, std::vector<Type*> genericTypes_,
                                                std::vector<AggregateInstantiationField> fields_) :
         Expression(ExpressionKind::AggregateInstantiationExpression),
         name(std::move(name_)),
@@ -70,10 +70,10 @@ struct AggregateLiteralExpression final : public Expression {
  */
 struct ArrayLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
-    TypeSPtr_t elementType;  // Optional, can be inferred from the elements
+    Type* elementType;  // Optional, can be inferred from the elements
     Expression* lengthExpression = nullptr;
 
-    ArrayLiteralExpression(std::vector<Expression*> elements_, TypeSPtr_t elementType_ = nullptr) :
+    ArrayLiteralExpression(std::vector<Expression*> elements_, Type* elementType_ = nullptr) :
         Expression(ExpressionKind::ArrayLiteralExpression),
         elements(std::move(elements_)),
         elementType(std::move(elementType_)) {}
@@ -161,9 +161,9 @@ struct FunctionCallExpression final : public Expression {
  */
 struct GenericExpression final : public Expression {
     Expression* identifier;
-    std::vector<TypeSPtr_t> types;
+    std::vector<Type*> types;
 
-    GenericExpression(Expression* identifier_, std::vector<TypeSPtr_t> types_) :
+    GenericExpression(Expression* identifier_, std::vector<Type*> types_) :
         Expression(ExpressionKind::GenericExpression), identifier(std::move(identifier_)), types(std::move(types_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -279,9 +279,9 @@ struct StringLiteralExpression final : public Expression {
  */
 struct TypeCastExpression final : public Expression {
     Expression* originalValue;
-    TypeSPtr_t targetType;
+    Type* targetType;
 
-    TypeCastExpression(Expression* originalValue_, TypeSPtr_t targetType_) :
+    TypeCastExpression(Expression* originalValue_, Type* targetType_) :
         Expression(ExpressionKind::TypeCastExpression),
         originalValue(std::move(originalValue_)),
         targetType(std::move(targetType_)) {}
