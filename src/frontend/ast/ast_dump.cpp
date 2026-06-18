@@ -25,7 +25,7 @@ namespace ast {
 
 inline std::string getIndent(size_t indent) { return std::string(indent * 2, ' '); }
 
-constexpr std::string primitiveTypeToString(PrimitiveType_t prim) {
+constexpr std::string_view primitiveTypeToString(PrimitiveType_t prim) {
     switch (prim) {
         case PrimitiveType_t::not_primitive: return "not primitive";
         case PrimitiveType_t::i8: return int8_str;
@@ -48,7 +48,7 @@ constexpr std::string primitiveTypeToString(PrimitiveType_t prim) {
 }
 
 // Helper function to get the type of a number variant
-std::string getNumberTypeName(const mnstl::number_t& value) {
+std::string_view getNumberTypeName(const mnstl::number_t& value) {
     switch (value.underlying_type()) {
         case mnstl::number_t::held_type::int8: return int8_str;
         case mnstl::number_t::held_type::int16: return int16_str;
