@@ -12,7 +12,7 @@ namespace semantic {
 // auto analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t;
 
 auto analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
-    if (!contextFlags.inWhileLoop && !contextFlags.inForLoop) {
+    if (!context.inWhileLoop && !context.inForLoop) {
         logging::logError(statement->getLine(), statement->getColumn(),
                           "'break' can only be used in loops or switch statements");
         return Result::Failure;
@@ -20,7 +20,7 @@ auto analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
     return Result::Success;
 }
 auto analyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
-    if (!contextFlags.inWhileLoop && !contextFlags.inForLoop) {
+    if (!context.inWhileLoop && !context.inForLoop) {
         logging::logError(statement->getLine(), statement->getColumn(), "'continue' can only be used in loops");
         return Result::Failure;
     }

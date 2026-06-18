@@ -13,8 +13,6 @@ namespace semantic {
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
 
 class analyzer final : public _analyzer_base_t {
-    // note: with `final`, the compiler can more intelligently detect when analyzer is abstract
-    // (i.e., a particular visit() override hasn't been declared), instead of failing at an analyzer instantiation
    private:
     SymbolTable symbolTable;
     parser::ParsedFile& parsedFile;
@@ -25,7 +23,7 @@ class analyzer final : public _analyzer_base_t {
         bool inSwitchStatement : 1 = false;
         bool inForLoop : 1 = false;
         bool inWhileLoop : 1 = false;
-    } contextFlags;
+    } context;
 
     // Cached primitive types
 
