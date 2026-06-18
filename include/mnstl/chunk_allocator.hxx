@@ -2,7 +2,6 @@
 #define MNSTL_CHUNK_ALLOCATOR 1
 
 #include <cstddef>
-#include <frontend/ast.hpp>
 #include <core.hpp>
 #include <memory>
 #include <utility>
@@ -57,11 +56,11 @@ class chunk_allocator {
     chunk_allocator() { add_chunk(); }
     ~chunk_allocator() noexcept = default;
 
-    template <class Node, class... Args>
-        requires(std::is_convertible_v<Node*, Manganese::ast::ASTNode*> && std::is_constructible_v<Node, Args...>)
-    Node* add_node(Args&&... args) {
-        void* mem = allocate(sizeof(Node), alignof(Node));
-        return new (mem) Node(std::forward<Args>(args)...);
+    template <class T, class... Args>
+        requires(std::is_constructible_v<T, Args...>)
+    T* emplace(Args&&... args) {
+        void* mem = allocate(sizeof(T), alignof(T));
+        return new (mem) T(std::forward<Args>(args)...);
     }
 };
 

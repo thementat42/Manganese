@@ -168,7 +168,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         }
     }
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end aggregate instantiation");
-    return arena.add_node<ast::AggregateInstantiationExpression>(aggregateName, genericTypes, std::move(fields));
+    return arena.emplace<ast::AggregateInstantiationExpression>(aggregateName, genericTypes, std::move(fields));
 }
 
 ast::Expression* Parser::parseAggregateLiteralExpression() {
@@ -185,7 +185,7 @@ ast::Expression* Parser::parseAggregateLiteralExpression() {
         }
     }
     expectToken(TokenType::RightBrace, "Expected a '}' to end an aggreagate literal");
-    return arena.add_node<ast::AggregateLiteralExpression>(std::move(expressions));
+    return arena.emplace<ast::AggregateLiteralExpression>(std::move(expressions));
 }
 
 ast::Expression* Parser::parseArrayInstantiationExpression() {
@@ -204,21 +204,21 @@ ast::Expression* Parser::parseArrayInstantiationExpression() {
     }
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end array instantiation");
 
-    return arena.add_node<ast::ArrayLiteralExpression>(std::move(elements));
+    return arena.emplace<ast::ArrayLiteralExpression>(std::move(elements));
 }
 
 ast::Expression* Parser::parseAssignmentExpression(ast::Expression* left, Precedence precedence) {
     TokenType op = consumeToken().getType();
     ast::Expression* right = parseExpression(precedence);
 
-    return arena.add_node<ast::AssignmentExpression>(std::move(left), op, std::move(right));
+    return arena.emplace<ast::AssignmentExpression>(std::move(left), op, std::move(right));
 }
 
 ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence precedence) {
     auto op = consumeToken().getType();
     auto right = parseExpression(precedence);
 
-    return arena.add_node<ast::BinaryExpression>(std::move(left), op, std::move(right));
+    return arena.emplace<ast::BinaryExpression>(std::move(left), op, std::move(right));
 }
 
 ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Precedence precedence) {
@@ -236,7 +236,7 @@ ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Prec
         }
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to end function call");
-    return arena.add_node<ast::FunctionCallExpression>(std::move(left), std::move(arguments));
+    return arena.emplace<ast::FunctionCallExpression>(std::move(left), std::move(arguments));
 }
 
 ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedence precedence) {
@@ -254,7 +254,7 @@ ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedenc
         }
     }
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return arena.add_node<ast::GenericExpression>(std::move(left), typeParameters);
+    return arena.emplace<ast::GenericExpression>(std::move(left), typeParameters);
 }
 
 ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence precedence) {
@@ -263,13 +263,13 @@ ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Preceden
     constexpr auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
     ast::Expression* index = parseExpression(static_cast<Precedence>(precedence_));
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
-    return arena.add_node<ast::IndexExpression>(std::move(left), std::move(index));
+    return arena.emplace<ast::IndexExpression>(std::move(left), std::move(index));
 }
 
 ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the member access operator (.)
     DISCARD(precedence);  // Avoid unused variable warning
-    return arena.add_node<ast::MemberAccessExpression>(
+    return arena.emplace<ast::MemberAccessExpression>(
         std::move(left), expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
 }
 
@@ -283,7 +283,7 @@ ast::Expression* Parser::parseParenthesizedExpression() {
 ast::Expression* Parser::parsePostfixExpression(ast::Expression* left, Precedence precedence) {
     TokenType op = consumeToken().getType();
     DISCARD(precedence);  // Avoid unused variable warning
-    return arena.add_node<ast::PostfixExpression>(std::move(left), op);
+    return arena.emplace<ast::PostfixExpression>(std::move(left), op);
 }
 
 ast::Expression* Parser::parsePrefixExpression() {
@@ -297,7 +297,7 @@ ast::Expression* Parser::parsePrefixExpression() {
     DISCARD(consumeToken());
 
     auto right = parseExpression(Precedence::Unary);
-    return arena.add_node<ast::PrefixExpression>(op, std::move(right));
+    return arena.emplace<ast::PrefixExpression>(op, std::move(right));
 }
 
 ast::Expression* Parser::parsePrimaryExpression() {
@@ -305,32 +305,32 @@ ast::Expression* Parser::parsePrimaryExpression() {
     std::string lexeme = token.getLexeme();
 
     switch (token.getType()) {
-        case TokenType::CharLiteral: return arena.add_node<ast::CharLiteralExpression>(lexeme[0]);  // Single character
-        case TokenType::StrLiteral: return arena.add_node<ast::StringLiteralExpression>(lexeme);
-        case TokenType::Identifier: return arena.add_node<ast::IdentifierExpression>(lexeme);
-        case TokenType::True: return arena.add_node<ast::BoolLiteralExpression>(true);
-        case TokenType::False: return arena.add_node<ast::BoolLiteralExpression>(false);
+        case TokenType::CharLiteral: return arena.emplace<ast::CharLiteralExpression>(lexeme[0]);  // Single character
+        case TokenType::StrLiteral: return arena.emplace<ast::StringLiteralExpression>(lexeme);
+        case TokenType::Identifier: return arena.emplace<ast::IdentifierExpression>(lexeme);
+        case TokenType::True: return arena.emplace<ast::BoolLiteralExpression>(true);
+        case TokenType::False: return arena.emplace<ast::BoolLiteralExpression>(false);
         case TokenType::FloatLiteral: {
             mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, true);
             if (!value.exists) {
                 logError(token.getLine(), token.getColumn(), "Invalid float literal '{}'", lexeme);
-                return arena.add_node<ast::NumberLiteralExpression>(0.0);
+                return arena.emplace<ast::NumberLiteralExpression>(0.0);
             } else if (value.overflowed) {
                 logError(token.getLine(), token.getColumn(), "Float literal {} cannot fit in its assigned type",
                          lexeme);
             }
-            return arena.add_node<ast::NumberLiteralExpression>(value.value);
+            return arena.emplace<ast::NumberLiteralExpression>(value.value);
         }
         case TokenType::IntegerLiteral: {
             mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, false);
             if (!value.exists) {
                 logError(token.getLine(), token.getColumn(), "Invalid integer literal '{}'", lexeme);
-                return arena.add_node<ast::NumberLiteralExpression>(0);
+                return arena.emplace<ast::NumberLiteralExpression>(0);
             } else if (value.overflowed) {
                 logError(token.getLine(), token.getColumn(), "Integer literal {} cannot fit in its assigned type",
                          lexeme);
             }
-            return arena.add_node<ast::NumberLiteralExpression>(value.value);
+            return arena.emplace<ast::NumberLiteralExpression>(value.value);
         }
         default:
             ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
@@ -343,13 +343,13 @@ ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left,
     DISCARD(consumeToken());  // Consume the scope resolution operator (::)
     DISCARD(precedence);  // Avoid unused variable warning
     auto element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
-    return arena.add_node<ast::ScopeResolutionExpression>(std::move(left), element);
+    return arena.emplace<ast::ScopeResolutionExpression>(std::move(left), element);
 }
 
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the 'as' token
     ast::Type* type = parseType(precedence);
-    return arena.add_node<ast::TypeCastExpression>(std::move(left), std::move(type));
+    return arena.emplace<ast::TypeCastExpression>(std::move(left), std::move(type));
 }
 }  // namespace parser
 }  // namespace Manganese

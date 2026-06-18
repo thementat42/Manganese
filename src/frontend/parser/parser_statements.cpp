@@ -31,7 +31,7 @@ ast::Statement* Parser::parseStatement() {
     // Parse out an expression then convert it to a statement
     ast::Expression* expr = parseExpression(Precedence::Default);
     if (!isParsingBlockPrecursor) { expectToken(TokenType::Semicolon, "Expected semicolon after expression"); }
-    return arena.add_node<ast::ExpressionStatement>(std::move(expr));
+    return arena.emplace<ast::ExpressionStatement>(std::move(expr));
 }
 
 // Specific statement parsing methods
@@ -100,7 +100,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
     expectToken(TokenType::RightBrace);
 
     // Move since AggregateField contains a unique_ptr which is not copyable
-    return arena.add_node<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
+    return arena.emplace<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
 }
 
 ast::Statement* Parser::parseAliasStatement() {
@@ -125,31 +125,31 @@ ast::Statement* Parser::parseAliasStatement() {
 
         if (peekTokenType() == TokenType::At) {
             // Generic Type
-            baseType = parseGenericType(arena.add_node<ast::SymbolType>(path), Precedence::Default);
+            baseType = parseGenericType(arena.emplace<ast::SymbolType>(path), Precedence::Default);
         } else if (peekTokenType() == TokenType::LeftSquare) {
             // Array type
-            baseType = parseArrayType(arena.add_node<ast::SymbolType>(path), Precedence::Default);
+            baseType = parseArrayType(arena.emplace<ast::SymbolType>(path), Precedence::Default);
         } else {
             // Regular (identifier) type
-            baseType = arena.add_node<ast::SymbolType>(path);
+            baseType = arena.emplace<ast::SymbolType>(path);
         }
     }
     expectToken(TokenType::As, "Expected 'as' to introduce the type alias");
     std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
-    return arena.add_node<ast::AliasStatement>(std::move(baseType), std::move(alias));
+    return arena.emplace<ast::AliasStatement>(std::move(baseType), std::move(alias));
 }
 
 ast::Statement* Parser::parseBreakStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::Semicolon);
-    return arena.add_node<ast::BreakStatement>();
+    return arena.emplace<ast::BreakStatement>();
 }
 
 ast::Statement* Parser::parseContinueStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::Semicolon);
-    return arena.add_node<ast::ContinueStatement>();
+    return arena.emplace<ast::ContinueStatement>();
 }
 
 ast::Statement* Parser::parseDoWhileLoopStatement() {
@@ -160,7 +160,7 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
     auto condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
     expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
-    return arena.add_node<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
+    return arena.emplace<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
 }
 
 ast::Statement* Parser::parseEnumDeclarationStatement() {
@@ -176,7 +176,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
                      "Enums can only have integral types as their underlying type, not {}", underlyingTok.getLexeme());
             DISCARD(consumeToken());
         } else if (underlyingTok.isPrimitiveType()) {
-            baseType = arena.add_node<ast::SymbolType>(underlyingTok.getLexeme());
+            baseType = arena.emplace<ast::SymbolType>(underlyingTok.getLexeme());
             DISCARD(consumeToken());
         } else {
             logError(underlyingTok.getLine(), underlyingTok.getColumn(), "Expected an underlying type for an enum");
@@ -184,7 +184,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
             if (underlyingTok.getType() != TokenType::LeftBrace) { DISCARD(consumeToken()); }
         }
     }
-    if (!baseType) { baseType = arena.add_node<ast::SymbolType>("int32"); }
+    if (!baseType) { baseType = arena.emplace<ast::SymbolType>("int32"); }
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
     while (!done() && peekTokenType() != TokenType::RightBrace) {
         std::string valueName = expectToken(TokenType::Identifier, "Expected enum value name").getLexeme();
@@ -215,7 +215,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     if (values.empty()) {
         logError(enumStartToken.getLine(), enumStartToken.getColumn(), "Enum '{}' has no values", name);
     }
-    return arena.add_node<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
+    return arena.emplace<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
@@ -230,7 +230,7 @@ ast::Statement* Parser::parseForLoopStatement() {
             init = parseVariableDeclarationStatement();
         } else {
             ast::Expression* initExpr = parseExpression(Precedence::Default);
-            init = arena.add_node<ast::ExpressionStatement>(std::move(initExpr));
+            init = arena.emplace<ast::ExpressionStatement>(std::move(initExpr));
             expectToken(TokenType::Semicolon, "Expected ';' after for-loop initializer");
         }
     } else {
@@ -249,7 +249,7 @@ ast::Statement* Parser::parseForLoopStatement() {
 
     ast::Block body = parseBlock("for loop body");
 
-    return arena.add_node<ast::ForLoopStatement>(std::move(init), std::move(condition), std::move(post),
+    return arena.emplace<ast::ForLoopStatement>(std::move(init), std::move(condition), std::move(post),
                                                  std::move(body));
 }
 
@@ -314,7 +314,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         DISCARD(consumeToken());
         returnType = parseType(Precedence::Default);
     }
-    return arena.add_node<ast::FunctionDeclarationStatement>(std::move(name), std::move(genericTypes),
+    return arena.emplace<ast::FunctionDeclarationStatement>(std::move(name), std::move(genericTypes),
                                                              std::move(params), std::move(returnType),
                                                              parseBlock("function body"));
 }
@@ -346,7 +346,7 @@ ast::Statement* Parser::parseIfStatement() {
         DISCARD(consumeToken());
         elseBody = parseBlock("else body");
     }
-    return arena.add_node<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs),
+    return arena.emplace<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs),
                                             std::move(elseBody));
 }
 
@@ -391,7 +391,7 @@ ast::Statement* Parser::parseImportStatement() {
     }
     if (!duplicate) { imports.push_back({.path = std::move(path), .alias = std::move(alias)}); }
     // Dummy node since imports are stored separately
-    return arena.add_node<ast::EmptyStatement>();
+    return arena.emplace<ast::EmptyStatement>();
 }
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
@@ -411,12 +411,12 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
     }
 
     // Dummy node since there's no need to semantically analyze module declarations (that happens here)
-    return arena.add_node<ast::EmptyStatement>();
+    return arena.emplace<ast::EmptyStatement>();
 }
 
 ast::Statement* Parser::parseRedundantSemicolon() {
     DISCARD(consumeToken());
-    return arena.add_node<ast::EmptyStatement>();
+    return arena.emplace<ast::EmptyStatement>();
 }
 
 ast::Statement* Parser::parseReturnStatement() {
@@ -428,7 +428,7 @@ ast::Statement* Parser::parseReturnStatement() {
         expression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::Semicolon, "Expected semicolon after return statement");
-    return arena.add_node<ast::ReturnStatement>(std::move(expression));
+    return arena.emplace<ast::ReturnStatement>(std::move(expression));
 }
 
 ast::Statement* Parser::parseSwitchStatement() {
@@ -465,7 +465,7 @@ ast::Statement* Parser::parseSwitchStatement() {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
-    return arena.add_node<ast::SwitchStatement>(std::move(variable), std::move(cases), std::move(defaultBody));
+    return arena.emplace<ast::SwitchStatement>(std::move(variable), std::move(cases), std::move(defaultBody));
 }
 
 ast::Statement* Parser::parseVisibilityAffectedStatement() {
@@ -544,7 +544,7 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
-    return arena.add_node<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, std::move(value),
+    return arena.emplace<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, std::move(value),
                                                              std::move(explicitType));
 }
 
@@ -554,7 +554,7 @@ ast::Statement* Parser::parseWhileLoopStatement() {
     auto condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end while condition");
     // Don't need to std::move because of return value optimization
-    return arena.add_node<ast::WhileLoopStatement>(parseBlock("while loop body"), std::move(condition));
+    return arena.emplace<ast::WhileLoopStatement>(parseBlock("while loop body"), std::move(condition));
 }
 
 // Helper Functions

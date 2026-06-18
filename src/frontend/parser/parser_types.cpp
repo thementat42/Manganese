@@ -70,7 +70,7 @@ ast::Type* Parser::parseAggregateType() {
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end aggregate type declaration");
-    return arena.add_node<ast::AggregateType>(std::move(fieldTypes));
+    return arena.emplace<ast::AggregateType>(std::move(fieldTypes));
 }
 
 ast::Type* Parser::parseArrayType(ast::Type* left, Precedence precedence) {
@@ -82,7 +82,7 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence precedence) {
         lengthExpression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
-    return arena.add_node<ast::ArrayType>(std::move(left), std::move(lengthExpression));
+    return arena.emplace<ast::ArrayType>(std::move(left), std::move(lengthExpression));
 }
 
 ast::Type* Parser::parseFunctionType() {
@@ -113,7 +113,7 @@ ast::Type* Parser::parseFunctionType() {
         returnType = parseType(Precedence::Default);
     }
 
-    return arena.add_node<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
+    return arena.emplace<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
 }
 
 ast::Type* Parser::parseGenericType(ast::Type* left, Precedence precedence) {
@@ -132,7 +132,7 @@ ast::Type* Parser::parseGenericType(ast::Type* left, Precedence precedence) {
         }
     }
     expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return arena.add_node<ast::GenericType>(std::move(left), std::move(typeParameters));
+    return arena.emplace<ast::GenericType>(std::move(left), std::move(typeParameters));
 }
 
 ast::Type* Parser::parseParenthesizedType() {
@@ -149,7 +149,7 @@ ast::Type* Parser::parsePointerType() {
         isMutable = true;
         DISCARD(consumeToken());  // Consume `mut`
     }
-    return arena.add_node<ast::PointerType>(parseType(Precedence::Default), isMutable);
+    return arena.emplace<ast::PointerType>(parseType(Precedence::Default), isMutable);
 }
 
 ast::Type* Parser::parseSymbolType() {
@@ -157,7 +157,7 @@ ast::Type* Parser::parseSymbolType() {
     Token token = peekToken();
     if (!token.isPrimitiveType()) {
         // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
-        return arena.add_node<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
+        return arena.emplace<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
     }
     // If the token is a primitive type, we can directly create a SymbolType
     DISCARD(consumeToken());
@@ -196,7 +196,7 @@ ast::Type* Parser::parseSymbolType() {
     } else {
         ASSERT_UNREACHABLE("Unknown primitive type " + lex);
     }
-    auto symbol_type = arena.add_node<ast::SymbolType>(token.getLexeme());
+    auto symbol_type = arena.emplace<ast::SymbolType>(token.getLexeme());
     symbol_type->setPrimitiveType(prim_t);
     return symbol_type;
 }
