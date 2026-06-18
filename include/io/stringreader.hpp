@@ -22,7 +22,7 @@ namespace io {
 class StringReader : public Reader {
    private:
     size_t _position, _line, _column;
-    std::string _source;
+    std::string_view _source;
 
    public:
     StringReader() = default;
