@@ -174,15 +174,15 @@ ast::Type* Parser::parseSymbolType() {
     } else if (lex == int128_str) {
         prim_t = i128;
     } else if (lex == uint8_str) {
-        prim_t = ui8;
+        prim_t = u8;
     } else if (lex == uint16_str) {
-        prim_t = ui16;
+        prim_t = u16;
     } else if (lex == uint32_str) {
-        prim_t = ui32;
+        prim_t = u32;
     } else if (lex == uint64_str) {
-        prim_t = ui64;
+        prim_t = u64;
     } else if (lex == uint128_str) {
-        prim_t = ui128;
+        prim_t = u128;
     } else if (lex == float32_str) {
         prim_t = f32;
     } else if (lex == float64_str) {
