@@ -50,7 +50,6 @@ enum class StatementKind : uint8_t;
 enum class TypeKind : uint8_t;
 
 enum class PrimitiveType_t : uint8_t {
-    not_primitive = 0,
     i8,
     u8,
     i16,
@@ -65,7 +64,8 @@ enum class PrimitiveType_t : uint8_t {
     f64,
     character,
     str,
-    boolean
+    boolean,
+    not_primitive = 0xFF,
 };
 
 enum class Visibility : uint8_t {
