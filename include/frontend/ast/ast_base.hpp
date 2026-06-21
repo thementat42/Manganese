@@ -80,9 +80,13 @@ struct ASTNode {
     public:
     constexpr ASTNode() noexcept = default;
     constexpr virtual ~ASTNode() noexcept = default;
+
+    // Avoid accidental shallow copies (most nodes have pointers to other nodes which would lead to weird aliasing)
+    // and likely to subtle bugs
     ASTNode(const ASTNode&) = delete;
     ASTNode& operator=(const ASTNode&) = delete;
 
+    // Moving is fine since this suggests a new node is going to handle all the pointers
     ASTNode(ASTNode&&) = default;
     ASTNode& operator=(ASTNode&&) = default;
 
@@ -102,7 +106,7 @@ struct ASTNode {
 };
 
 struct Expression : public ASTNode {
-    ExpressionKind kind;
+    const ExpressionKind kind;
 
     virtual ~Expression() noexcept = default;
 
@@ -111,7 +115,7 @@ struct Expression : public ASTNode {
 };
 
 struct Statement : public ASTNode {
-    StatementKind kind;
+    const StatementKind kind;
 
     virtual ~Statement() noexcept = default;
 
@@ -120,8 +124,8 @@ struct Statement : public ASTNode {
 };
 
 struct Type : public ASTNode {
-    TypeKind kind;
-    PrimitiveType_t primitiveType;
+    const TypeKind kind;
+    const PrimitiveType_t primitiveType;
 
     virtual ~Type() noexcept = default;
 

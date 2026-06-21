@@ -52,6 +52,7 @@ struct AggregateDeclarationStatement final : public Statement {
         genericTypes(std::move(genericTypes_)),
         fields(std::move(fields_)) {}
     AST_STANDARD_INTERFACE;
+
 };
 
 struct AliasStatement final : public Statement {

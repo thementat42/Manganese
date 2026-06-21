@@ -109,7 +109,8 @@ struct PointerType final : public Type {
 struct SymbolType final : public Type {
     std::string name;
 
-    constexpr explicit SymbolType(std::string name_) : Type(TypeKind::SymbolType), name(std::move(name_)) {}
+    constexpr explicit SymbolType(std::string name_, PrimitiveType_t prim = PrimitiveType_t::not_primitive) :
+        Type(TypeKind::SymbolType, prim), name(std::move(name_)) {}
     AST_STANDARD_INTERFACE;
     std::string getName() const noexcept { return name; }
 };
