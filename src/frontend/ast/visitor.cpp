@@ -6,7 +6,7 @@ namespace ast {
 
 template <class Expr, class Stmt, class Type>
 auto Visitor<Expr, Stmt, Type>::visit(ast::Expression* expr) -> exprvisit_t {
-    switch (expr->kind()) {
+    switch (expr->kind) {
 #define STMT(name, str)
 #define EXPR(name, str) \
     case ast::ExpressionKind::name: return visit(static_cast<ast::name*>(expr));
@@ -16,7 +16,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Expression* expr) -> exprvisit_t {
 
         default:
             ASSERT_UNREACHABLE(
-                std::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind())));
+                std::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind)));
     }
 
 #undef STMT
@@ -25,7 +25,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Expression* expr) -> exprvisit_t {
 }
 template <class Expr, class Stmt, class Type>
 auto Visitor<Expr, Stmt, Type>::visit(ast::Statement* stmt) -> stmtvisit_t {
-    switch (stmt->kind()) {
+    switch (stmt->kind) {
 #define STMT(name, str) \
     case ast::StatementKind::name: return visit(static_cast<ast::name*>(stmt));
 
@@ -36,7 +36,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Statement* stmt) -> stmtvisit_t {
 
         default:
             ASSERT_UNREACHABLE(
-                std::format("No visit() overload for statement kind {}", static_cast<int>(stmt->kind())));
+                std::format("No visit() overload for statement kind {}", static_cast<int>(stmt->kind)));
     }
 #undef STMT
 #undef EXPR
@@ -44,7 +44,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Statement* stmt) -> stmtvisit_t {
 }
 template <class Expr, class Stmt, class Type>
 auto Visitor<Expr, Stmt, Type>::visit(ast::Type* type) -> typevisit_t {
-    switch (type->kind()) {
+    switch (type->kind) {
 #define STMT(name, str)
 #define EXPR(name, str)
 
@@ -54,7 +54,7 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Type* type) -> typevisit_t {
 #include <frontend/ast/ast.def>
 
         default:
-            ASSERT_UNREACHABLE(std ::format("No visit() overload for type kind {}", static_cast<int>(type->kind())));
+            ASSERT_UNREACHABLE(std ::format("No visit() overload for type kind {}", static_cast<int>(type->kind)));
     }
 
 #undef STMT

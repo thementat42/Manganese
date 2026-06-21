@@ -12,7 +12,7 @@ namespace semantic {
 void analyzer::_collectTypesInStatement(ast::Statement* stmt) {
     using enum ast::StatementKind;
 
-    switch (stmt->kind()) {
+    switch (stmt->kind) {
         case AggregateDeclarationStatement: {
             auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
             symbolTable.declare(aggregateStmt->name,
@@ -55,7 +55,7 @@ void analyzer::_collectTypesInStatement(ast::Statement* stmt) {
 void analyzer::_collectTypesInStatementBody(ast::Statement* stmt) {
     this->symbolTable.enterScope();
     using enum ast::StatementKind;
-    switch (stmt->kind()) {
+    switch (stmt->kind) {
         case AggregateDeclarationStatement: {
             auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
             symbolTable.declare(aggregateStmt->name,

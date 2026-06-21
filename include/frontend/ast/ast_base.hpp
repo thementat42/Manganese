@@ -74,8 +74,10 @@ enum class Visibility : uint8_t {
 };
 
 struct ASTNode {
+    protected:
     size_t line = 0, column = 0;
 
+    public:
     constexpr ASTNode() noexcept = default;
     constexpr virtual ~ASTNode() noexcept = default;
     ASTNode(const ASTNode&) = delete;
@@ -95,51 +97,37 @@ struct ASTNode {
     virtual void dump(std::ostream& os, size_t indent = 0) const = 0;
 #endif  // MN_DEBUG
 
-    constexpr inline void setLine(size_t new_line) noexcept { line = new_line; }
     constexpr inline size_t getLine() const noexcept { return line; }
-    constexpr inline void setColumn(size_t new_column) noexcept { column = new_column; }
     constexpr inline size_t getColumn() const noexcept { return column; }
-    constexpr inline void setLineColumn(size_t new_line, size_t new_column) noexcept {
-        line = new_line;
-        column = new_column;
-    }
 };
 
 struct Expression : public ASTNode {
-    Type* _computedType = nullptr;
-    ExpressionKind _kind;
+    ExpressionKind kind;
 
     virtual ~Expression() noexcept = default;
-    inline Type* getTypePtr() const noexcept { return _computedType; }
-    void setType(Type* type) noexcept { _computedType = type; }
-    constexpr inline ExpressionKind kind() const noexcept { return _kind; }
 
    protected:
-    constexpr explicit Expression(ExpressionKind kind) noexcept : _kind(kind) {}
+    constexpr explicit Expression(ExpressionKind kind_) noexcept : kind(kind_) {}
 };
 
 struct Statement : public ASTNode {
-    StatementKind _kind;
+    StatementKind kind;
 
     virtual ~Statement() noexcept = default;
-    constexpr inline StatementKind kind() const noexcept { return _kind; }
 
    protected:
-    constexpr explicit Statement(StatementKind kind) noexcept : _kind(kind) {}
+    constexpr explicit Statement(StatementKind kind_) noexcept : kind(kind_) {}
 };
 
 struct Type : public ASTNode {
-    TypeKind _kind;
-    PrimitiveType_t _primitiveType;
+    TypeKind kind;
+    PrimitiveType_t primitiveType;
 
     virtual ~Type() noexcept = default;
-    constexpr inline TypeKind kind() const noexcept { return _kind; }
-    constexpr inline PrimitiveType_t primitiveType() const noexcept { return _primitiveType; }
-    constexpr inline void setPrimitiveType(PrimitiveType_t primitiveType) noexcept { _primitiveType = primitiveType; }
 
    protected:
-    constexpr explicit Type(TypeKind kind, PrimitiveType_t primitiveType = PrimitiveType_t::not_primitive) noexcept :
-        _kind(kind), _primitiveType(primitiveType) {}
+    constexpr explicit Type(TypeKind kind_, PrimitiveType_t primitiveType_ = PrimitiveType_t::not_primitive) noexcept :
+        kind(kind_), primitiveType(primitiveType_) {}
 };
 
 constexpr const char* visibilityToString(Visibility visibility) noexcept {

@@ -197,7 +197,7 @@ ast::Type* Parser::parseSymbolType() {
         ASSERT_UNREACHABLE("Unknown primitive type " + lex);
     }
     auto symbol_type = arena.emplace<ast::SymbolType>(token.getLexeme());
-    symbol_type->setPrimitiveType(prim_t);
+    symbol_type->primitiveType = prim_t;
     return symbol_type;
 }
 

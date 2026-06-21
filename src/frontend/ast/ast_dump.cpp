@@ -71,7 +71,6 @@ std::string_view getNumberTypeName(const mnstl::number_t& value) {
 
 void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AggregateInstantiationExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "Name: " << name << "\n";
     os << getIndent(indent + 1) << "fields: [\n";
 
@@ -96,7 +95,6 @@ void AggregateLiteralExpression::dump(std::ostream& os, size_t indent) const {
 
 void ArrayLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ArrayLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "elements: [\n";
 
     for (const auto& element : elements) {
@@ -111,7 +109,6 @@ void ArrayLiteralExpression::dump(std::ostream& os, size_t indent) const {
 
 void AssignmentExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AssignmentExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << getIndent(indent + 1) << "assignee: \n";
     assignee->dump(os, indent + 2);
@@ -122,7 +119,6 @@ void AssignmentExpression::dump(std::ostream& os, size_t indent) const {
 
 void BinaryExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "BinaryExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << getIndent(indent + 1) << "left: \n";
     left->dump(os, indent + 2);
@@ -133,14 +129,12 @@ void BinaryExpression::dump(std::ostream& os, size_t indent) const {
 
 void BoolLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "BoolExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
     os << getIndent(indent) << "}\n";
 }
 
 void CharLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "CharLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: '" << static_cast<char>(value) << "'\n";
     os << getIndent(indent + 1) << "code point: " << static_cast<int>(value) << "\n";
     os << getIndent(indent) << "}\n";
@@ -148,7 +142,6 @@ void CharLiteralExpression::dump(std::ostream& os, size_t indent) const {
 
 void FunctionCallExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "FunctionCallExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "callee: \n";
     callee->dump(os, indent + 2);
     os << getIndent(indent + 1) << "arguments: [\n";
@@ -165,7 +158,6 @@ void FunctionCallExpression::dump(std::ostream& os, size_t indent) const {
 
 void GenericExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "GenericExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "identifier: " << toStringOr(identifier) << "\n";
     os << getIndent(indent + 1) << "generic types: [\n";
 
@@ -177,14 +169,12 @@ void GenericExpression::dump(std::ostream& os, size_t indent) const {
 
 void IdentifierExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "IdentifierExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "name: " << value << "\n";
     os << getIndent(indent) << "}\n";
 }
 
 void IndexExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "IndexExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "variable: \n";
     variable->dump(os, indent + 2);
     os << getIndent(indent + 1) << "index: \n";
@@ -194,7 +184,6 @@ void IndexExpression::dump(std::ostream& os, size_t indent) const {
 
 void MemberAccessExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "MemberAccessExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "object: \n";
     object->dump(os, indent + 2);
     os << getIndent(indent + 1) << "property: " << property << "\n";
@@ -203,7 +192,6 @@ void MemberAccessExpression::dump(std::ostream& os, size_t indent) const {
 
 void NumberLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "NumberLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
     os << getIndent(indent + 1) << "Inferred literal type: " << getNumberTypeName(value) << "\n";
     os << getIndent(indent) << "}\n";
@@ -211,7 +199,6 @@ void NumberLiteralExpression::dump(std::ostream& os, size_t indent) const {
 
 void PostfixExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "PostfixExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << getIndent(indent + 1) << "operand: \n";
     left->dump(os, indent + 2);
@@ -220,7 +207,6 @@ void PostfixExpression::dump(std::ostream& os, size_t indent) const {
 
 void PrefixExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "PrefixExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << getIndent(indent + 1) << "operand: \n";
     right->dump(os, indent + 2);
@@ -229,7 +215,6 @@ void PrefixExpression::dump(std::ostream& os, size_t indent) const {
 
 void ScopeResolutionExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ScopeResolutionExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "scope: \n";
     scope->dump(os, indent + 2);
     os << getIndent(indent + 1) << "element: " << element << "\n";
@@ -238,7 +223,6 @@ void ScopeResolutionExpression::dump(std::ostream& os, size_t indent) const {
 
 void StringLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "StringLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "value: " << toString() << "\n";
     os << getIndent(indent + 1) << "length: " << value.length() << "\n";
     os << getIndent(indent) << "}\n";
@@ -246,7 +230,6 @@ void StringLiteralExpression::dump(std::ostream& os, size_t indent) const {
 
 void TypeCastExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "TypeCastExpression [" << getLine() << ":" << getColumn() << "] {\n";
-    os << getIndent(indent + 1) << "type: " << toStringOr(getTypePtr(), "auto") << "\n";
     os << getIndent(indent + 1) << "expression: \n";
     originalValue->dump(os, indent + 2);
     os << getIndent(indent + 1) << "target type: \n";
@@ -562,7 +545,7 @@ void PointerType::dump(std::ostream& os, size_t indent) const {
 void SymbolType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "SymbolType [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
-    os << getIndent(indent + 1) << "primitive type: " << primitiveTypeToString(primitiveType()) << "\n";
+    os << getIndent(indent + 1) << "primitive type: " << primitiveTypeToString(primitiveType) << "\n";
     os << getIndent(indent) << "}\n";
 }
 

@@ -95,8 +95,8 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
             ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
 
-        if (type == TokenType::LeftBrace && left->kind() != ast::ExpressionKind::IdentifierExpression
-            && left->kind() != ast::ExpressionKind::GenericExpression) [[unlikely]] {
+        if (type == TokenType::LeftBrace && left->kind != ast::ExpressionKind::IdentifierExpression
+            && left->kind != ast::ExpressionKind::GenericExpression) [[unlikely]] {
             if (isParsingBlockPrecursor) {
                 // Left braces after an expression can either start a block or an aggregate instantiation
                 // If we're parsing a block precursor (if/for/while, etc.) AND the previous expression is not an
@@ -125,9 +125,9 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
     expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start aggregate instantiation");
     std::vector<ast::AggregateInstantiationField> fields;
 
-    if (left->kind() == ast::ExpressionKind::GenericExpression) {
+    if (left->kind == ast::ExpressionKind::GenericExpression) {
         auto* genericExpr = static_cast<ast::GenericExpression*>(left);
-        if (genericExpr->identifier->kind() != ast::ExpressionKind::IdentifierExpression) {
+        if (genericExpr->identifier->kind != ast::ExpressionKind::IdentifierExpression) {
             logError(left->getLine(), left->getColumn(),
                      "Generic aggregate instantiation must start with an aggregate name");
         } else {
@@ -135,7 +135,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
             aggregateName = identifierExpr->value;
             genericTypes = std::move(genericExpr->types);
         }
-    } else if (left->kind() == ast::ExpressionKind::IdentifierExpression) {
+    } else if (left->kind == ast::ExpressionKind::IdentifierExpression) {
         auto* underlying = static_cast<ast::IdentifierExpression*>(left);
         aggregateName = underlying->value;
     } else {
