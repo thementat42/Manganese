@@ -113,7 +113,7 @@ struct ASTNode {
 
 struct Expression : public ASTNode {
     const ExpressionKind kind;
-    const semantic::SemanticType* semanticType;
+    const semantic::SemanticType* semanticType = nullptr;
 
     virtual ~Expression() noexcept = default;
 
