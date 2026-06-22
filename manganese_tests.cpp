@@ -1,10 +1,6 @@
 /**
  * @file manganese_tests.cpp
- * @brief Entry point for the test suit
- *
- * This file is responsible for calling all the test functions
- *
- * @note Run CMake with -DBUILD_TESTS=ON
+ * @brief Entry point for the test suite
  */
 
 #include <stdio.h>

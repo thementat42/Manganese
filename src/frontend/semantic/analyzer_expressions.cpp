@@ -5,8 +5,6 @@
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
 
-#include "frontend/ast/ast_base.hpp"
-
 namespace Manganese {
 namespace semantic {
 
