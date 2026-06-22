@@ -6,15 +6,16 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/symbol_table.hpp>
+#include <frontend/semantic/type_context.hpp>
 
 namespace Manganese {
-
 namespace semantic {
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
 
 class analyzer final : public _analyzer_base_t {
    private:
     SymbolTable symbolTable;
+    TypeContext typeContext;
     parser::ParsedFile& parsedFile;
 
     struct {
@@ -25,11 +26,8 @@ class analyzer final : public _analyzer_base_t {
         bool inWhileLoop : 1 = false;
     } context;
 
-    // Cached primitive types
-
    public:
-    analyzer(parser::ParsedFile& file) :
-        symbolTable(), parsedFile(file) {}
+    analyzer(parser::ParsedFile& file) : symbolTable(), typeContext(), parsedFile(file) {}
 
     Result analyze() {
         collectTypes();
@@ -82,7 +80,6 @@ class analyzer final : public _analyzer_base_t {
 };
 
 }  // namespace semantic
-
 }  // namespace Manganese
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_SEMANTIC_ANALYZER_HPP

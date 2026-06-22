@@ -39,6 +39,12 @@
 
 namespace Manganese {
 
+namespace semantic {
+
+struct SemanticType;
+
+}  // namespace semantic
+
 namespace ast {
 struct Expression;
 struct Statement;
@@ -74,10 +80,10 @@ enum class Visibility : uint8_t {
 };
 
 struct ASTNode {
-    protected:
+   protected:
     size_t line = 0, column = 0;
 
-    public:
+   public:
     constexpr ASTNode() noexcept = default;
     constexpr virtual ~ASTNode() noexcept = default;
 
@@ -107,6 +113,7 @@ struct ASTNode {
 
 struct Expression : public ASTNode {
     const ExpressionKind kind;
+    const semantic::SemanticType* semanticType;
 
     virtual ~Expression() noexcept = default;
 
