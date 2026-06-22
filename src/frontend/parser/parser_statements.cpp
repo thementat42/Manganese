@@ -257,7 +257,6 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     // TODO: Handle function attributes
     // TODO: Handle function default parameters
     // TODO: Handle function variadic parameters
-    // TODO: Handle function overloading (mangled names)
     DISCARD(consumeToken());
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
     std::vector<ast::FunctionParameter> params;

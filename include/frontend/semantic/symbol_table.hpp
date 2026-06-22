@@ -46,7 +46,6 @@ struct Symbol {
 struct Scope {
     // std::equal_to<> enables heterogenous lookup (e.g. looking up with std::string or const char*)
     // so explicit conversions are not required
-    // TODO: Consider a third-party hash map (e.g. ankerl::unordered_dense or absl::flat_hash_map)
     std::unordered_map<std::string_view, Symbol, std::hash<std::string_view>, std::equal_to<>> symbols;
     inline Result insert(std::string_view name, Symbol symbol) {
         bool emplace_succeeded = symbols.emplace(name, std::move(symbol)).second;

@@ -117,9 +117,6 @@ void Lexer::lex(size_t numTokens) {
     char currentChar = peekChar();
     while (!done() && numTokensMade < numTokens) {
         Result result = Result::Success;
-        // ? TODO: Output comments as tokens (or to a separate stream?)
-        // ? Multiline probably, single line probably not
-        // ? TODO: Update parser to skip past comment tokens
         if (currentChar == '#') {
             // Single line comment
             do {
@@ -139,7 +136,6 @@ void Lexer::lex(size_t numTokens) {
             ++numTokensMade;
         } else if (currentChar == '"') {
             // TODO: Add raw string literals (r"stuff" -- maybe r""text"")
-            //? TODO: f-strings? (f"stuff {expression} more stuff")
             result = tokenizeStringLiteral();
             ++numTokensMade;
         } else if (isdigit(currentChar)) {
