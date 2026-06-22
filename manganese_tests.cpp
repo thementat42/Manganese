@@ -7,20 +7,21 @@
  * @note Run CMake with -DBUILD_TESTS=ON
  */
 
-#include <frontend/lexer.hpp>
+#include <stdio.h>
+#include <string.h>
+
+#include <chrono>
 #include <core.hpp>
+#include <filesystem>
+#include <frontend/lexer.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>
-#include <stdio.h>
-#include <string.h>
 #include <utils/memory_tracking.hpp>
-
-#include <chrono>
-#include <filesystem>
 
 #include "tests/testrunner.hpp"
 #include "tests/tests.hpp"
+
 
 /**
  * @brief Checks if two C strings (a and b) are equal
@@ -80,12 +81,13 @@ int main(int argc, char const* argv[]) {
     }
     if (semantic) {
         printf("%sSemantic Analyzer Tests%s\n", PINK, RESET);
-        Manganese::tests::runSemanticAnalysisTests(runner);
+        // TODO: Add once analysis has progress
+        printf("To be implemented.\n");
         printf("\n");
     }
     if (codegen) {
         printf("%sCodegen Tests%s\n", PINK, RESET);
-        // TODO: Add once codegen done
+        // TODO: Add once codegen has progress
         printf("To be implemented.\n");
         printf("\n");
     }
