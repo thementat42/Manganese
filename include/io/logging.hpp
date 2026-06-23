@@ -25,13 +25,6 @@ enum class LogLevel : uint8_t {
     Critical
 };
 
-/**
- * @brief Internal logging function for the compiler (e.g., debug messages, critical bugs)
- * @param message The message to log
- * @param level The log level (default is Info)
- *
- */
-
 template <class... Args>
 void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) NOEXCEPT_IF_RELEASE {
 #if MN_DEBUG

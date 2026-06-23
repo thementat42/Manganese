@@ -119,10 +119,6 @@ class Parser {
     ast::Statement* parseReturnStatement();
     ast::Statement* parseSwitchStatement();
     ast::Statement* parseVariableDeclarationStatement();
-    /**
-     * @brief Parses statements that are preceded by a visibility modifier
-     * @example (public/private) (function/aggregate/enum declaration)
-     */
     ast::Statement* parseVisibilityAffectedStatement();
     ast::Statement* parseWhileLoopStatement();
 
@@ -140,21 +136,11 @@ class Parser {
     // ~ Helpers
     ast::Block parseBlock(const std::string& blockName);
 
-    /**
-     * @details The context is considered unary if the previous token was a left parenthesis
-     * @details another operator (except ++, -- or ] (for indexing)) or nothing
-     */
     bool isUnaryContext() const noexcept;
 
-    /**
-     * @details Get the current token, without consuming it
-     */
     [[nodiscard]] inline Token peekToken() const noexcept { return lexer->peekToken(); }
     [[nodiscard]] inline TokenType peekTokenType() noexcept { return lexer->peekToken().getType(); }
 
-    /**
-     * @details Consume the current token
-     */
     [[nodiscard]] inline Token consumeToken() noexcept {
         previousToken = peekToken();
         return lexer->consumeToken();
@@ -163,9 +149,6 @@ class Parser {
     Token expectToken(TokenType expectedType);
     Token expectToken(TokenType expectedType, const std::string& errorMessage);
 
-    /**
-     * @brief A wrapper around logging::logError that sets the parser's hasError flag to true.
-     */
     template <class... Args>
     inline void logError(size_t line, size_t col, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logError(line, col, message, std::forward<Args>(args)...);
@@ -175,73 +158,17 @@ class Parser {
     inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
 
     // ~ Helpers for lookups
-
-    /**
-     * @brief Convert a TokenType to an index for the lookup tables
-     * @param t The token type to convert
-     * @return The token type as an index
-     */
     constexpr static size_t tokenToIndex(TokenType t) noexcept { return static_cast<size_t>(t); }
-
-    /**
-     * @brief Register a left denotation handler for `type`
-     * @param type The token type associated with the handler (a binary operator)
-     * @param precedence How strongly that operator binds to its neighbour(s)
-     * @param handler The function to call when the token type is encountered
-     */
+    
     static void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
-
-    /**
-     * @brief Register a left denotation handler for `type`
-     * @param type The token type associated with the handler (a postfix operator)
-     * @param precedence How strongly that operator binds to its neighbour(s)
-     * @param handler The function to call when the token type is encountered
-     */
     static void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
-    /**
-     * @brief Register a left denotation handler for `type`
-     * @param type The token type associated with the handler (a prefix operator)
-     * @param precedence How strongly that operator binds to its neighbour(s)
-     * @param handler The function to call when the token type is encountered
-     */
     static void registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
-    /**
-     * @brief Register a left denotation handler for `type`
-     * @param type The token type associated with the handler (a token indicating a type)
-     * @param precedence How strongly that operator binds to its neighbour(s)
-     * @param handler The function to call when the token type is encountered
-     */
     static void registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept;
 
-    /**
-     * @brief Register a null denotation handler for `type`
-     * @param type The token type associated with the handler (a binary operator)
-     * @param handler The function to call when the token type is encountered
-     * @note all lookups registered using this have no binding power
-     */
     static void registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept;
-
-    /**
-     * @brief Register a null denotation handler for `type`
-     * @param type The token type associated with the handler (a prefix operator)
-     * @param handler The function to call when the token type is encountered
-     * @note all lookups registered using this have a prefix binding power
-     */
     static void registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept;
-
-    /**
-     * @brief Register a null denotation handler for `type`
-     * @param type The token type associated with the handler (a token indicating a type)
-     * @param handler The function to call when the token type is encountered
-     * @note all lookups registered using this have no binding power
-     */
     static void registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept;
 
-    /**
-     * @brief Register a handler function for a specific statement token type.
-     * @param type The token type for which the handler is to be registered.
-     * @param handler The function to handle statements of the specified token type.
-     */
     static void registerStmtHandler(TokenType type, statementHandler_t handler) noexcept;
 
     static void initializeLookups() noexcept;

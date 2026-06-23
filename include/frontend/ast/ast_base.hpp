@@ -79,10 +79,7 @@ struct ASTNode {
     constexpr inline size_t getColumn() const noexcept { return column; }
 
 #if MN_DEBUG
-    /**
-     * @param indent The indentation level for pretty-printing
-     */
-    virtual void dump(std::ostream& os, size_t indent = 0) const = 0;
+    virtual void dump(std::ostream& os, size_t indentDepth = 0) const = 0;
 #endif  // MN_DEBUG
 };
 

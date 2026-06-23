@@ -9,9 +9,6 @@
 namespace Manganese {
 namespace lexer {
 
-/**
- * @brief Representation of a token
- */
 class Token {
    private:
     bool _isInvalid;

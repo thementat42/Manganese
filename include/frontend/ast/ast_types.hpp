@@ -37,9 +37,7 @@ struct ArrayType final : public Type {
     Type* elementType;
     Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
 
-    /**
-     * @param elementType_ The type of the elements in the array
-     */
+
     explicit ArrayType(Type* elementType_, Expression* lengthExpr_ = nullptr) :
         Type(TypeKind::ArrayType), elementType(elementType_), lengthExpression(lengthExpr_) {}
 

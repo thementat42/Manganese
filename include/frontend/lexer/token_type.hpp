@@ -9,12 +9,6 @@ namespace Manganese {
 
 namespace lexer {
 
-/**
- * @brief Defines all supported token types in Manganese
- *
- * This enum represents all tokens recognized by the compiler,
- * categorized by their functional purpose (keywords, identifiers, etc.).
- */
 enum class TokenType : uint8_t {
     #define TOKEN(name, text) name,
     #define KEYWORD(name, text) name,
