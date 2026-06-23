@@ -31,7 +31,7 @@ struct ParsedFile {
 std::string importToString(const Import& import);
 
 class Parser {
-   private:  // private variables
+   private:
     std::unique_ptr<lexer::Lexer> lexer;
     constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
     std::optional<Token> previousToken;
@@ -47,7 +47,7 @@ class Parser {
         bool isParsingBlockPrecursor : 1 = false;  // if/for/while, etc.
     };
 
-   public:  // public methods
+   public:
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
         lexer(std::make_unique<lexer::Lexer>(source, mode)),
         arena(allocatorReference) {

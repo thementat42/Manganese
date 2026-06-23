@@ -74,8 +74,6 @@ class SymbolTable {
 
     constexpr void enterScope() {
         ++_currentDepth;
-        // if we've exceeded the current symbol table depth, create a new scope (this is on the initial pass)
-        // otherwise, we're just moving our current scope to the next nested one (this is on subsequent passes)
         if (getCurrentDepth() >= _scopes.size()) { _scopes.emplace_back(); }
     }
 
@@ -84,8 +82,7 @@ class SymbolTable {
             logging::logInternal(logging::LogLevel::Warning, "Attempted to exit scope when no scope was available");
             return;
         }
-        // since we're doing multiple passes, we want to preserve scope information between passes
-        // so don't use pop_back, since that would destroy the scope and all stored information
+        // don't pop since we want to preserve info between passes
         --_currentDepth;
     }
 

@@ -28,7 +28,7 @@ struct AggregateInstantiationField {
  * @brief e.g. `Point3D{ x = 1, y = 2, z = 3 }`
  */
 struct AggregateInstantiationExpression final : public Expression {
-    std::string name;  // The name of the aggregate type being instantiated
+    std::string name;
     std::vector<Type*> genericTypes;
     std::vector<AggregateInstantiationField> fields;
 
