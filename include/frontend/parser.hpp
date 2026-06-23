@@ -1,9 +1,3 @@
-
-/**
- * @file parser.hpp
- * @brief Central header for the parser components
- */
-
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_HPP
 

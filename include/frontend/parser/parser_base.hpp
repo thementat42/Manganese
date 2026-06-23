@@ -1,14 +1,3 @@
-/**
- * @file parser_base.hpp
- * @brief Base definitions and declarations for the parser.
- *
- * This header defines the core Parser class and related structures for parsing
- * source code into an AST, using Pratt parsing, via lookup tables.
- *
- * This file defines the various methods for parsing different sequences of tokens, grouped into the same categories as
- * the AST nodes (statements, expressions and types)
- */
-
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 

@@ -1,18 +1,3 @@
-/**
- * @file token.hpp
- * @brief This file contains the definition of token functionality for the Manganese compiler.
- *
- * Defines the TokenType enumeration, Token class, and related helper functions for the Manganese language lexer.
- *
- * - TokenType: Enumerates all possible token types recognized by the lexer, including keywords, operators, literals,
- * brackets, punctuation, and special markers.
- * - Token: Represents a single token, storing its type, lexeme, position (line and column), and validity.
- * - Helper functions and maps: Provide utilities for mapping strings to token types, converting token types to strings,
- * and identifying keywords/operators.
- *
- * The design separates token type definitions from their usage in the Token class for clarity and maintainability.
- */
-
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_BASE_HPP
 

@@ -1,10 +1,3 @@
-/**
- * @file manganese.cpp
- * @brief Entry point for the compiler.
- *
- * This file is responsible for calling the various components to compile source code
- */
-
 #include <stdio.h>
 
 // This is a placeholder

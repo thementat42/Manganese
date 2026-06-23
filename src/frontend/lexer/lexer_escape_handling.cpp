@@ -1,8 +1,3 @@
-/**
- * @file lexer_escape_handling.cpp
- * @brief Helper file for processing string/char literals with escape sequences
- */
-
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/logging.hpp>

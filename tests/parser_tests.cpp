@@ -1,15 +1,3 @@
-/**
- * @file parser_tests.cpp
- * @brief Unit tests for the parser.
- *
- * Each test uses helper functions to parse some source code into an AST
- * the resulting string representation for correctness. The tests are registered and run
- * via a TestRunner instance.
- *
- * @see include/frontend/parser.hpp
- * @see testrunner.hpp
- */
-
 #include <array>
 #include <core.hpp>
 #include <filesystem>

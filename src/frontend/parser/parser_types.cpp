@@ -1,9 +1,3 @@
-/**
- * @file parser_types.cpp
- * @brief This file contains the implementation of type parsing in the parser. It is split into its own file for
- * readability and maintainability.
- */
-
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <core.hpp>

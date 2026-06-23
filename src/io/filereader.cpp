@@ -1,11 +1,6 @@
-/**
- * @file filereader.cpp
- * @brief This file contains the implementation of the FileReader class
- */
-
 #include <core.hpp>
 #include <cstdio>
-#include <cstring>  // For memmove
+#include <cstring>
 #include <cstring>
 #include <format>
 #include <io/filereader.hpp>
@@ -25,7 +20,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity) :
         throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
         return;
     }
-    // Disable fread's buffering since FileReader does its own buffering, with extra stuff to support lookaheads
+    // Disable fread's buffering since FileReader does its own buffering
     setvbuf(_filePtr, nullptr, _IONBF, 0);
 
     _buffer = std::make_unique<char[]>(bufferCapacity + 1);  // +1 for a null terminator

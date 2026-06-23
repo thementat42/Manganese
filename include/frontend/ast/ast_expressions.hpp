@@ -1,14 +1,3 @@
-/**
- * @file ast_expressions.hpp
- * @brief Defines AST node structes for various expressions
- *
- * This header declares the core expression node types used in the AST.
- * Each expression type (literals, binary, assignment, function call, etc.) is represented as a struct inheriting from
- * Expression.
- *
- * ! The nodes are listed in alphabetical order
- */
-
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
 
@@ -54,7 +43,7 @@ struct AggregateInstantiationExpression final : public Expression {
 };
 
 /**
- * @brief represents a sequence of elements of different types (like Rust's tuple)
+ * @brief represents a sequence of elements of different types
  */
 struct AggregateLiteralExpression final : public Expression {
     std::vector<Expression*> elements;

@@ -1,14 +1,3 @@
-/**
- * @file ast_base.hpp
- * @brief Defines the base classes and utilities for the Abstract Syntax Tree (AST) in the Manganese frontend.
- *
- * This header provides the foundational ASTNode class and its main derivatives: Type, Expression, and Statement.
- * It also defines common type aliases for AST node pointers and blocks
- *
- * @see ast_expressions.hpp
- * @see ast_statements.hpp
- * @see ast_types.hpp
- */
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 
@@ -132,7 +121,6 @@ constexpr const char* visibilityToString(Visibility visibility) noexcept {
 }
 
 /**
- * @brief A wrapper around Expression::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the expression is a nullptr
  */
 inline std::string toStringOr(const Expression* expression, const char* fallback = "unknown expression") {
@@ -140,7 +128,6 @@ inline std::string toStringOr(const Expression* expression, const char* fallback
 }
 
 /**
- * @brief A wrapper around Statement::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the statement is a nullptr
  */
 inline std::string toStringOr(const Statement* statement, const char* fallback = "unknown statement") {
@@ -148,7 +135,6 @@ inline std::string toStringOr(const Statement* statement, const char* fallback =
 }
 
 /**
- * @brief A wrapper around Type::toString which handles nullptrs with a fallback
  * @param fallback The fallback string representation if the type is a nullptr
  */
 inline std::string toStringOr(const Type* type, const char* fallback = "no type") {

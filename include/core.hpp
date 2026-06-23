@@ -1,8 +1,3 @@
-/**
- * @file core.hpp
- * @brief Global macros and utility definitions for the project.
- */
-
 #ifndef MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
 #define MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
 

@@ -1,11 +1,3 @@
-/**
- * @file stringreader.hpp
- * @brief This file contains the definition of the StringReader class
- */
-
-//! Note: This is a temporary file, mainly for testing purposes.
-//! Once the compiler is complete, this will be removed, and only the FileReader will be used.
-
 #ifndef MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #define MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #include <core.hpp>

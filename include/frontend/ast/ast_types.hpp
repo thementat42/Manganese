@@ -1,13 +1,3 @@
-/**
- * @file ast_statements.hpp
- * @brief Contains AST node definitions for various types annotations in the Manganese frontend.
- *
- * This header declares the core type node types used in the AST.
- * Each type (Symbols, Arrays, etc.) is represented as a class inheriting from Statement.
- *
- * ! The nodes are listed in alphabetical order.
- */
-
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 

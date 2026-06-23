@@ -1,8 +1,3 @@
-/**
- * @file ast.hpp
- * @brief Central header for the AST components
- */
-
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_HPP
 

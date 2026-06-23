@@ -1,14 +1,3 @@
-/**
- * @file lexer_tests.cpp
- * @brief Unit tests for the lexer.
- *
- * Each test uses helper functions to tokenize input from strings or files, and checks
- * the resulting tokens for correct type and lexeme. The tests are registered and run
- * via a TestRunner instance.
- *
- * @see include/frontend/lexer.h
- * @see testrunner.h
- */
 #include <cassert>
 #include <filesystem>
 #include <frontend/lexer.hpp>

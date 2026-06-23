@@ -1,8 +1,3 @@
-/**
- * @file tests.h
- * @brief Declaration of the available test functions for the compiler
- */
-
 #ifndef MANGANESE_TESTS_TESTS_HPP
 #define MANGANESE_TESTS_TESTS_HPP
 #include <core.hpp>

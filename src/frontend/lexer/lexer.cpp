@@ -1,89 +1,3 @@
-/**
- * @file lexer.cpp
- * @brief This file contains the implementation of the lexer for the Manganese compiler.
- *
- * The lexer takes the source code and splits it into tokens (see token.h)
- * These tokens are then passed on to the parser to build the AST.
- *
- *
- * @note: The lexer strips out comments and whitespace; the parser never sees this
- *
- * @note: The main loop does not advance the reader position, it just peeks the current character.
- * Each specific tokenization function should advance the reader position once its token has been generated.
- * E.g. the string tokenizing function will advance the reader past the quotes
- */
-
-/*
-~ Some ambiguous cases to consider  -- cases where a character could map to more than one operator
-~ If any of these occur while inside a string literal or in a char, obviously don't do anything
-* Ambiguous case 1: angle brackets (`<` and `>`)
-`<` and `>` use cases:
-- comparisons (<, >)
-- comparisons with equality (<=, >=)
-- bitwise shifts (<<, >>)
-
-when < or > is seen, check next char:
-if it's an =, push that as one operator
-otherwise, push it as a comparison op
-
-
-* Ambiguous case 2: Logical/bitwise and and or (&&/&, ||/|)
-If the current char is a bitwise operator, look at the next char
-- if it's a the same character, push that as a logical operator
-- if it's an equals sign, push it as a bitwise assignment operator
-- otherwise push it as a regular bitwise operator
-
-* Ambiguous case 3: `+`
-`+` use cases:
-- unary plus
-- addition (or whatever that's overloaded to for the type)
-- increment (++)
-
-- if the next token is a `+`, it's an increment, push that as one operator
-
-* Ambiguous case 4: `-`
-`-` use cases:
-- unary minus
-- subtraction (or whatever that's overloaded to for the type)
-- decrement
-- arrow (->)
-
-- if the next token is a >, it's ->, push that as one operator
-- if the next token is a -, it's a decrement, push that as one operator
-
-When a * is seen, look at the next char. If it's also a *, it's exponentiation, push that as one operator.
-Otherwise, it's multiplication, push that as one operator.
-
-* Ambiguous case 5: `/`
-`/` use cases
-- division operator
-- multiline/block comments
-- floor division operator //
-
-if the current char is an initial /, look at the next char
-- if it's another /, it's the floor division operator -- push it as one thing
-- if it's a *, it's a multiline comment -– keep going until * / is found (no space)
-- otherwise, it's a division operator -- push that
-
-* Ambiguous case 6: `=`
-`=` use cases:
-- assignment
-- equality (or inequality)
-(note, cases like <= and >= are handled in the angle brackets parsing since in both cases, the angle bracket appears
-first so it's the first thing the lexer sees)
-
-look at next char
-- if it's an equals, push that as one comparison operator
-- otherwise, push it as an assignment operator
-
-* Ambiguous case 7: any arithmetic/bitwise operator
-if followed by an equals sign, it's an assignment operator
-
-if current char is an operator (after doing the above checks), look at the next char
-- if it's an equals sign, it's an assignment operator, push that as one operator
-- otherwise, push it as a regular operator
-*/
-
 #include <cctype>
 #include <core.hpp>
 #include <format>
@@ -713,3 +627,74 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
 
 }  // namespace lexer
 }  // namespace Manganese
+
+/*
+~ Some ambiguous cases to consider  -- cases where a character could map to more than one operator
+~ If any of these occur while inside a string literal or in a char, obviously don't do anything
+* Ambiguous case 1: angle brackets (`<` and `>`)
+`<` and `>` use cases:
+- comparisons (<, >)
+- comparisons with equality (<=, >=)
+- bitwise shifts (<<, >>)
+
+when < or > is seen, check next char:
+if it's an =, push that as one operator
+otherwise, push it as a comparison op
+
+
+* Ambiguous case 2: Logical/bitwise and and or (&&/&, ||/|)
+If the current char is a bitwise operator, look at the next char
+- if it's a the same character, push that as a logical operator
+- if it's an equals sign, push it as a bitwise assignment operator
+- otherwise push it as a regular bitwise operator
+
+* Ambiguous case 3: `+`
+`+` use cases:
+- unary plus
+- addition (or whatever that's overloaded to for the type)
+- increment (++)
+
+- if the next token is a `+`, it's an increment, push that as one operator
+
+* Ambiguous case 4: `-`
+`-` use cases:
+- unary minus
+- subtraction (or whatever that's overloaded to for the type)
+- decrement
+- arrow (->)
+
+- if the next token is a >, it's ->, push that as one operator
+- if the next token is a -, it's a decrement, push that as one operator
+
+When a * is seen, look at the next char. If it's also a *, it's exponentiation, push that as one operator.
+Otherwise, it's multiplication, push that as one operator.
+
+* Ambiguous case 5: `/`
+`/` use cases
+- division operator
+- multiline/block comments
+- floor division operator //
+
+if the current char is an initial /, look at the next char
+- if it's another /, it's the floor division operator -- push it as one thing
+- if it's a *, it's a multiline comment -– keep going until * / is found (no space)
+- otherwise, it's a division operator -- push that
+
+* Ambiguous case 6: `=`
+`=` use cases:
+- assignment
+- equality (or inequality)
+(note, cases like <= and >= are handled in the angle brackets parsing since in both cases, the angle bracket appears
+first so it's the first thing the lexer sees)
+
+look at next char
+- if it's an equals, push that as one comparison operator
+- otherwise, push it as an assignment operator
+
+* Ambiguous case 7: any arithmetic/bitwise operator
+if followed by an equals sign, it's an assignment operator
+
+if current char is an operator (after doing the above checks), look at the next char
+- if it's an equals sign, it's an assignment operator, push that as one operator
+- otherwise, push it as a regular operator
+*/

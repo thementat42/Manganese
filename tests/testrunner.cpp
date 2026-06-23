@@ -1,12 +1,3 @@
-/**
- * @file testrunner.cpp
- * @brief Implementation of the TestRunner class for running and summarizing unit tests.
- *
- * This file provides the implementation for the TestRunner class, which is responsible for:
- * - Running individual tests and reporting their results.
- * - Keeping track of the number of passed and failed tests.
- * - Printing a summary of all test results, including percentages and a list of failed tests.
- */
 #include "testrunner.hpp"
 
 #include <core.hpp>

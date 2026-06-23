@@ -1,12 +1,3 @@
-/**
- * @file parser.cpp
- * Contains the implementation of some basic parser methods
- * @see parser_expressions.cpp
- * @see parser_lookups.cpp
- * @see parser_statements.cpp
- * @see parser_types.cpp
- */
-
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <core.hpp>

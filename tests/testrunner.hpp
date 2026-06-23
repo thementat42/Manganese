@@ -1,8 +1,3 @@
-/**
- * @file testrunner.h
- * @brief Defines the TestRunner class for running and summarizing unit tests
- */
-
 #ifndef MANGANESE_TESTS_TEST_RUNNER_HPP
 #define MANGANESE_TESTS_TEST_RUNNER_HPP
 

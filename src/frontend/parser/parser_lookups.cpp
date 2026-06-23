@@ -1,8 +1,3 @@
-/**
- * @file Initializes the lookups for the pratt parser
- * @note This file is mostly boilerplate
- */
-
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/parser.hpp>

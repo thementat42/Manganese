@@ -1,14 +1,3 @@
-
-
-/**
- * @file ast_statements.hpp
- * @brief Contains AST node definitions for various statement types in the Manganese frontend.
- *
- * This header declares the core statement node types used in the AST.
- * Each statement type (conditionals, function declarations, etc.) is represented as a struct inheriting from Statement.
- *
- * ! The nodes are listed in alphabetical order.
- */
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 

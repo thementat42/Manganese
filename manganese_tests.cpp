@@ -1,8 +1,3 @@
-/**
- * @file manganese_tests.cpp
- * @brief Entry point for the test suite
- */
-
 #include <stdio.h>
 #include <string.h>
 
@@ -18,11 +13,6 @@
 #include "tests/testrunner.hpp"
 #include "tests/tests.hpp"
 
-
-/**
- * @brief Checks if two C strings (a and b) are equal
- * @brief up to max_count characters and are the same length
- */
 bool strneq(const char* a, const char* b, size_t max_count) {
     return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
 }

@@ -1,8 +1,3 @@
-/**
- * @file token.cpp
- * @brief This file contains the implementation of the Token struct for the Manganese compiler.
- */
-
 #include <frontend/lexer/token.hpp>
 #include <core.hpp>
 #include <io/logging.hpp>
