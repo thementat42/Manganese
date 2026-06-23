@@ -31,18 +31,12 @@ class FileReader : public Reader {
    private:
     size_t _position, _line, _column;
     std::string _source;
-    // std::ifstream fileStream;
     std::FILE* _filePtr;
     size_t _bufferSize;  // How much data is currently in the buffer
     size_t _bufferCapacity;  // How much data the buffer can hold
     constexpr static inline int DEFAULT_BUFFER_CAPCITY = 64 * 1024;  // 64 KiB buffer size
     std::unique_ptr<char[]> _buffer;  // Buffer for file reading
 
-    /**
-     * @brief Reads more data from the file (on disc) into the buffer (in memory)
-     * @details Handles cases where a lexeme is split across two buffer reads (mainly for lookaheads via peekChar)
-     *
-     */
     void refillBuffer();
 
    public:

@@ -14,7 +14,6 @@
 #include <stdexcept>
 #include <string>
 
-
 namespace Manganese {
 namespace io {
 
@@ -26,9 +25,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity) :
         throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
         return;
     }
-    // FileReader does its own buffering, with extra stuff to support lookaheads
-    // fread buffers by default, which is redundant and wastes memory (since the same data is stored in two places)
-    // So, disable fread's buffering
+    // Disable fread's buffering since FileReader does its own buffering, with extra stuff to support lookaheads
     setvbuf(_filePtr, nullptr, _IONBF, 0);
 
     _buffer = std::make_unique<char[]>(bufferCapacity + 1);  // +1 for a null terminator
@@ -39,8 +36,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity) :
         throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
         return;
     }
-    _buffer[_bufferSize]
-        = Reader::EOF_CHAR;  // Null-terminate the buffer since peekChar will rely on this to determine EOF
+    _buffer[_bufferSize] = '\0';
 }
 
 void FileReader::refillBuffer() {
@@ -57,20 +53,20 @@ void FileReader::refillBuffer() {
     _bufferSize = unreadBytes + bytesRead;
     _position = 0;  // We moved any remaining data to the front, so reset position to 0
     // Always null-terminate since peeking/consuming determines EOF based on null terminator
-    _buffer[_bufferSize] = Reader::EOF_CHAR;
+    _buffer[_bufferSize] = '\0';
 }
 
 char FileReader::peekChar(size_t offset) noexcept {
     if (_position + offset >= _bufferSize) { refillBuffer(); }
     // If still out of bounds after refill, we're done reading the file
-    return (_position + offset >= _bufferSize) ? Reader::EOF_CHAR : _buffer[_position + offset];
+    return (_position + offset >= _bufferSize) ? '\0' : _buffer[_position + offset];
 }
 
 char FileReader::consumeChar() noexcept {
-    // Ensure buffer has data to consume
     if (_position >= _bufferSize) {
         refillBuffer();
-        if (_position >= _bufferSize) { return Reader::EOF_CHAR; }
+        // still out of bounds; done reading
+        if (_position >= _bufferSize) { return '\0'; }
     }
 
     const char c = _buffer[_position++];

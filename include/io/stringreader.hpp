@@ -39,10 +39,10 @@ class StringReader : public Reader {
     constexpr bool done() const noexcept override { return _position >= _source.length(); }
 
     char peekChar(size_t offset = 0) noexcept override {
-        return (_position + offset >= _source.length()) ? Reader::EOF_CHAR : _source[_position + offset];
+        return (_position + offset >= _source.length()) ? '\0' : _source[_position + offset];
     }
     [[nodiscard]] char consumeChar() noexcept override {
-        if (_position >= _source.length()) { return Reader::EOF_CHAR; }
+        if (_position >= _source.length()) { return '\0'; }
         const char c = _source[_position++];
         _line += (c == '\n') ? 1 : 0;
         _column = (c == '\n') ? 1 : _column + 1;

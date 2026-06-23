@@ -22,7 +22,6 @@ namespace io {
 class Reader {
 
    public:
-    constexpr static inline char EOF_CHAR = '\0';
     Reader() = default;
     virtual ~Reader() noexcept = default;
 
