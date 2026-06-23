@@ -35,9 +35,8 @@ ast::Type* Parser::parseType(Precedence precedence) {
         if (!handler) {
             ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
-        // left = ledIterator->second(this, std::move(left), operatorPrecedenceMap_type[type].rightBindingPower);
         auto rbp = op.rightBindingPower;
-        left = (this->*handler)(std::move(left), rbp);
+        left = (this->*handler)(left, rbp);
     }
     return left;
 }
@@ -82,7 +81,7 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence precedence) {
         lengthExpression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
-    return arena.emplace<ast::ArrayType>(std::move(left), std::move(lengthExpression));
+    return arena.emplace<ast::ArrayType>(left, lengthExpression);
 }
 
 ast::Type* Parser::parseFunctionType() {
@@ -113,7 +112,7 @@ ast::Type* Parser::parseFunctionType() {
         returnType = parseType(Precedence::Default);
     }
 
-    return arena.emplace<ast::FunctionType>(std::move(parameterTypes), std::move(returnType));
+    return arena.emplace<ast::FunctionType>(std::move(parameterTypes), returnType);
 }
 
 ast::Type* Parser::parseGenericType(ast::Type* left, Precedence precedence) {
@@ -132,7 +131,7 @@ ast::Type* Parser::parseGenericType(ast::Type* left, Precedence precedence) {
         }
     }
     expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return arena.emplace<ast::GenericType>(std::move(left), std::move(typeParameters));
+    return arena.emplace<ast::GenericType>(left, std::move(typeParameters));
 }
 
 ast::Type* Parser::parseParenthesizedType() {

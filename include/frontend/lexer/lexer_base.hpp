@@ -53,7 +53,7 @@ class Lexer {
     std::deque<Token> tokenStream;
 
    public:  // public methods
-    explicit Lexer(const std::string& source, const Mode mode = Mode::File);
+    explicit Lexer(const std::string& source, Mode mode = Mode::File);
     ~Lexer() noexcept = default;
 
     // Avoid file ownership issues

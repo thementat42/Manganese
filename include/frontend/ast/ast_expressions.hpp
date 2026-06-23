@@ -43,8 +43,8 @@ struct AggregateInstantiationExpression final : public Expression {
     std::vector<Type*> genericTypes;
     std::vector<AggregateInstantiationField> fields;
 
-    constexpr AggregateInstantiationExpression(std::string name_, std::vector<Type*> genericTypes_,
-                                               std::vector<AggregateInstantiationField> fields_) :
+    AggregateInstantiationExpression(std::string&& name_, std::vector<Type*>&& genericTypes_,
+                                     std::vector<AggregateInstantiationField>&& fields_) :
         Expression(ExpressionKind::AggregateInstantiationExpression),
         name(std::move(name_)),
         genericTypes(std::move(genericTypes_)),
@@ -58,8 +58,10 @@ struct AggregateInstantiationExpression final : public Expression {
  */
 struct AggregateLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
-    explicit AggregateLiteralExpression(std::vector<Expression*> elements_) :
+
+    explicit AggregateLiteralExpression(std::vector<Expression*>&& elements_) :
         Expression(ExpressionKind::AggregateLiteralExpression), elements(std::move(elements_)) {}
+
     AST_STANDARD_INTERFACE;
 };
 
@@ -71,10 +73,8 @@ struct ArrayLiteralExpression final : public Expression {
     Type* elementType;  // Optional, can be inferred from the elements
     Expression* lengthExpression = nullptr;
 
-    ArrayLiteralExpression(std::vector<Expression*> elements_, Type* elementType_ = nullptr) :
-        Expression(ExpressionKind::ArrayLiteralExpression),
-        elements(std::move(elements_)),
-        elementType(std::move(elementType_)) {}
+    ArrayLiteralExpression(std::vector<Expression*>&& elements_, Type* elementType_ = nullptr) :
+        Expression(ExpressionKind::ArrayLiteralExpression), elements(std::move(elements_)), elementType(elementType_) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -88,10 +88,7 @@ struct AssignmentExpression final : public Expression {
     lexer::TokenType op;
 
     AssignmentExpression(Expression* assignee_, lexer::TokenType op_, Expression* value_) :
-        Expression(ExpressionKind::AssignmentExpression),
-        assignee(std::move(assignee_)),
-        value(std::move(value_)),
-        op(op_) {}
+        Expression(ExpressionKind::AssignmentExpression), assignee(assignee_), value(value_), op(op_) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -105,7 +102,7 @@ struct BinaryExpression final : public Expression {
     lexer::TokenType op;
 
     BinaryExpression(Expression* left_, lexer::TokenType op_, Expression* right_) :
-        Expression(ExpressionKind::BinaryExpression), left(std::move(left_)), right(std::move(right_)), op(op_) {};
+        Expression(ExpressionKind::BinaryExpression), left(left_), right(right_), op(op_) {};
 
     AST_STANDARD_INTERFACE;
 };
@@ -116,7 +113,7 @@ struct BinaryExpression final : public Expression {
 struct BoolLiteralExpression final : public Expression {
     const bool value;
 
-    constexpr explicit BoolLiteralExpression(const bool value_) :
+    constexpr explicit BoolLiteralExpression(bool value_) :
         Expression(ExpressionKind::BoolLiteralExpression), value(value_) {};
 
     AST_STANDARD_INTERFACE;
@@ -128,9 +125,6 @@ struct BoolLiteralExpression final : public Expression {
 struct CharLiteralExpression final : public Expression {
     const char32_t value;
 
-    /**
-     * @param value_ The character value of the expression (char32_t)
-     */
     constexpr explicit CharLiteralExpression(char32_t value_) :
         Expression(ExpressionKind::CharLiteralExpression), value(value_) {};
     constexpr explicit CharLiteralExpression(char value_) :
@@ -146,10 +140,8 @@ struct FunctionCallExpression final : public Expression {
     Expression* callee;
     std::vector<Expression*> arguments;
 
-    FunctionCallExpression(Expression* callee_, std::vector<Expression*> arguments_) :
-        Expression(ExpressionKind::FunctionCallExpression),
-        callee(std::move(callee_)),
-        arguments(std::move(arguments_)) {}
+    FunctionCallExpression(Expression* callee_, std::vector<Expression*>&& arguments_) :
+        Expression(ExpressionKind::FunctionCallExpression), callee(callee_), arguments(std::move(arguments_)) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -161,8 +153,8 @@ struct GenericExpression final : public Expression {
     Expression* identifier;
     std::vector<Type*> types;
 
-    GenericExpression(Expression* identifier_, std::vector<Type*> types_) :
-        Expression(ExpressionKind::GenericExpression), identifier(std::move(identifier_)), types(std::move(types_)) {}
+    GenericExpression(Expression* identifier_, std::vector<Type*>&& types_) :
+        Expression(ExpressionKind::GenericExpression), identifier(identifier_), types(std::move(types_)) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -173,7 +165,7 @@ struct GenericExpression final : public Expression {
 struct IdentifierExpression final : public Expression {
     const std::string value;
 
-    constexpr explicit IdentifierExpression(const std::string& value_) :
+    constexpr explicit IdentifierExpression(std::string&& value_) :
         Expression(ExpressionKind::IdentifierExpression), value(std::move(value_)) {}
 
     AST_STANDARD_INTERFACE;
@@ -187,7 +179,7 @@ struct IndexExpression final : public Expression {
     Expression* index;
 
     IndexExpression(Expression* variable_, Expression* index_) :
-        Expression(ExpressionKind::IndexExpression), variable(std::move(variable_)), index(std::move(index_)) {}
+        Expression(ExpressionKind::IndexExpression), variable(variable_), index(index_) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -199,10 +191,8 @@ struct MemberAccessExpression final : public Expression {
     Expression* object;
     const std::string property;
 
-    MemberAccessExpression(Expression* object_, std::string property_) :
-        Expression(ExpressionKind::MemberAccessExpression),
-        object(std::move(object_)),
-        property(std::move(property_)) {}
+    MemberAccessExpression(Expression* object_, std::string&& property_) :
+        Expression(ExpressionKind::MemberAccessExpression), object(object_), property(std::move(property_)) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -227,7 +217,7 @@ struct PostfixExpression final : public Expression {
     lexer::TokenType op;
 
     PostfixExpression(Expression* left_, lexer::TokenType op_) :
-        Expression(ExpressionKind::PostfixExpression), left(std::move(left_)), op(op_) {}
+        Expression(ExpressionKind::PostfixExpression), left(left_), op(op_) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -240,7 +230,7 @@ struct PrefixExpression final : public Expression {
     Expression* right;
 
     PrefixExpression(lexer::TokenType op_, Expression* right_) :
-        Expression(ExpressionKind::PrefixExpression), op(op_), right(std::move(right_)) {}
+        Expression(ExpressionKind::PrefixExpression), op(op_), right(right_) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -252,8 +242,8 @@ struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
     const std::string element;
 
-    ScopeResolutionExpression(Expression* scope_, std::string element_) :
-        Expression(ExpressionKind::ScopeResolutionExpression), scope(std::move(scope_)), element(std::move(element_)) {}
+    ScopeResolutionExpression(Expression* scope_, std::string&& element_) :
+        Expression(ExpressionKind::ScopeResolutionExpression), scope(scope_), element(std::move(element_)) {}
 
     AST_STANDARD_INTERFACE;
 };
@@ -264,8 +254,9 @@ struct ScopeResolutionExpression final : public Expression {
 struct StringLiteralExpression final : public Expression {
     const std::string value;
 
-    constexpr explicit StringLiteralExpression(const std::string& value_) :
+    constexpr explicit StringLiteralExpression(std::string&& value_) :
         Expression(ExpressionKind::StringLiteralExpression), value(std::move(value_)) {};
+
     constexpr explicit StringLiteralExpression(const char* value_) :
         Expression(ExpressionKind::StringLiteralExpression), value(value_) {};
 
@@ -280,9 +271,7 @@ struct TypeCastExpression final : public Expression {
     Type* targetType;
 
     TypeCastExpression(Expression* originalValue_, Type* targetType_) :
-        Expression(ExpressionKind::TypeCastExpression),
-        originalValue(std::move(originalValue_)),
-        targetType(std::move(targetType_)) {}
+        Expression(ExpressionKind::TypeCastExpression), originalValue(originalValue_), targetType(targetType_) {}
 
     AST_STANDARD_INTERFACE;
 };

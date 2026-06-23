@@ -31,7 +31,7 @@ ast::Statement* Parser::parseStatement() {
     // Parse out an expression then convert it to a statement
     ast::Expression* expr = parseExpression(Precedence::Default);
     if (!isParsingBlockPrecursor) { expectToken(TokenType::Semicolon, "Expected semicolon after expression"); }
-    return arena.emplace<ast::ExpressionStatement>(std::move(expr));
+    return arena.emplace<ast::ExpressionStatement>(expr);
 }
 
 // Specific statement parsing methods
@@ -89,18 +89,16 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
                      "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})", fieldName,
                      name, duplicate->line, duplicate->column);
         } else {
-            fields.push_back(ast::AggregateField{.name = fieldName,
-                                                 .type = std::move(type),
-                                                 .isMutable = isMutable,
-                                                 .line = t.getLine(),
-                                                 .column = t.getColumn()});
+            fields.push_back(ast::AggregateField{
+                .name = fieldName, .type = type, .isMutable = isMutable, .line = t.getLine(), .column = t.getColumn()});
         }
     }
 
     expectToken(TokenType::RightBrace);
 
     // Move since AggregateField contains a unique_ptr which is not copyable
-    return arena.emplace<ast::AggregateDeclarationStatement>(name, std::move(genericTypes), std::move(fields));
+    return arena.emplace<ast::AggregateDeclarationStatement>(std::move(name), std::move(genericTypes),
+                                                             std::move(fields));
 }
 
 ast::Statement* Parser::parseAliasStatement() {
@@ -125,19 +123,19 @@ ast::Statement* Parser::parseAliasStatement() {
 
         if (peekTokenType() == TokenType::At) {
             // Generic Type
-            baseType = parseGenericType(arena.emplace<ast::SymbolType>(path), Precedence::Default);
+            baseType = parseGenericType(arena.emplace<ast::SymbolType>(std::move(path)), Precedence::Default);
         } else if (peekTokenType() == TokenType::LeftSquare) {
             // Array type
-            baseType = parseArrayType(arena.emplace<ast::SymbolType>(path), Precedence::Default);
+            baseType = parseArrayType(arena.emplace<ast::SymbolType>(std::move(path)), Precedence::Default);
         } else {
             // Regular (identifier) type
-            baseType = arena.emplace<ast::SymbolType>(path);
+            baseType = arena.emplace<ast::SymbolType>(std::move(path));
         }
     }
     expectToken(TokenType::As, "Expected 'as' to introduce the type alias");
     std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
-    return arena.emplace<ast::AliasStatement>(std::move(baseType), std::move(alias));
+    return arena.emplace<ast::AliasStatement>(baseType, std::move(alias));
 }
 
 ast::Statement* Parser::parseBreakStatement() {
@@ -203,7 +201,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
                      name, duplicate->line, duplicate->column);
         } else {
             values.push_back(ast::EnumValue{.name = std::move(valueName),
-                                            .value = std::move(valueExpression),
+                                            .value = valueExpression,
                                             .line = peekToken().getLine(),
                                             .column = peekToken().getColumn()});
         }
@@ -215,7 +213,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     if (values.empty()) {
         logError(enumStartToken.getLine(), enumStartToken.getColumn(), "Enum '{}' has no values", name);
     }
-    return arena.emplace<ast::EnumDeclarationStatement>(std::move(name), std::move(baseType), std::move(values));
+    return arena.emplace<ast::EnumDeclarationStatement>(std::move(name), baseType, std::move(values));
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
@@ -230,7 +228,7 @@ ast::Statement* Parser::parseForLoopStatement() {
             init = parseVariableDeclarationStatement();
         } else {
             ast::Expression* initExpr = parseExpression(Precedence::Default);
-            init = arena.emplace<ast::ExpressionStatement>(std::move(initExpr));
+            init = arena.emplace<ast::ExpressionStatement>(initExpr);
             expectToken(TokenType::Semicolon, "Expected ';' after for-loop initializer");
         }
     } else {
@@ -249,8 +247,7 @@ ast::Statement* Parser::parseForLoopStatement() {
 
     ast::Block body = parseBlock("for loop body");
 
-    return arena.emplace<ast::ForLoopStatement>(std::move(init), std::move(condition), std::move(post),
-                                                 std::move(body));
+    return arena.emplace<ast::ForLoopStatement>(init, condition, post, std::move(body));
 }
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
@@ -302,7 +299,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
             isMutable = true;
         }
         ast::Type* param_type = parseType(Precedence::Default);
-        params.push_back({.name = std::move(param_name), .type = std::move(param_type), .isMutable = isMutable});
+        params.push_back({.name = param_name, .type = param_type, .isMutable = isMutable});
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
                         "Expected a ',' to separate function parameters, or a ) to close the parameter list");
@@ -313,9 +310,8 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         DISCARD(consumeToken());
         returnType = parseType(Precedence::Default);
     }
-    return arena.emplace<ast::FunctionDeclarationStatement>(std::move(name), std::move(genericTypes),
-                                                             std::move(params), std::move(returnType),
-                                                             parseBlock("function body"));
+    return arena.emplace<ast::FunctionDeclarationStatement>(std::move(name), std::move(genericTypes), std::move(params),
+                                                            returnType, parseBlock("function body"));
 }
 
 ast::Statement* Parser::parseIfStatement() {
@@ -338,15 +334,14 @@ ast::Statement* Parser::parseIfStatement() {
         this->isParsingBlockPrecursor = false;
         expectToken(TokenType::RightParen, "Expected ')' to end elif condition");
 
-        elifs.emplace_back(std::move(elifCondition), parseBlock("elif body"));
+        elifs.emplace_back(elifCondition, parseBlock("elif body"));
     }
     ast::Block elseBody;
     if (peekTokenType() == TokenType::Else) {
         DISCARD(consumeToken());
         elseBody = parseBlock("else body");
     }
-    return arena.emplace<ast::IfStatement>(std::move(condition), std::move(body), std::move(elifs),
-                                            std::move(elseBody));
+    return arena.emplace<ast::IfStatement>(condition, std::move(body), std::move(elifs), std::move(elseBody));
 }
 
 ast::Statement* Parser::parseImportStatement() {
@@ -427,7 +422,7 @@ ast::Statement* Parser::parseReturnStatement() {
         expression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::Semicolon, "Expected semicolon after return statement");
-    return arena.emplace<ast::ReturnStatement>(std::move(expression));
+    return arena.emplace<ast::ReturnStatement>(expression);
 }
 
 ast::Statement* Parser::parseSwitchStatement() {
@@ -452,7 +447,7 @@ ast::Statement* Parser::parseSwitchStatement() {
                && peekTokenType() != TokenType::RightBrace) {
             caseBody.push_back(parseStatement());
         }
-        cases.push_back({.literalValue = std::move(caseValue), .body = std::move(caseBody)});
+        cases.push_back({.literalValue = caseValue, .body = std::move(caseBody)});
     }
     if (peekTokenType() == TokenType::Default) {
         DISCARD(consumeToken());
@@ -464,7 +459,7 @@ ast::Statement* Parser::parseSwitchStatement() {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
-    return arena.emplace<ast::SwitchStatement>(std::move(variable), std::move(cases), std::move(defaultBody));
+    return arena.emplace<ast::SwitchStatement>(variable, std::move(cases), std::move(defaultBody));
 }
 
 ast::Statement* Parser::parseVisibilityAffectedStatement() {
@@ -543,8 +538,8 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
-    return arena.emplace<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, std::move(value),
-                                                             std::move(explicitType));
+    return arena.emplace<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, value,
+                                                            explicitType);
 }
 
 ast::Statement* Parser::parseWhileLoopStatement() {
@@ -552,8 +547,8 @@ ast::Statement* Parser::parseWhileLoopStatement() {
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     auto condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end while condition");
-    // Don't need to std::move because of return value optimization
-    return arena.emplace<ast::WhileLoopStatement>(parseBlock("while loop body"), std::move(condition));
+
+    return arena.emplace<ast::WhileLoopStatement>(parseBlock("while loop body"), condition);
 }
 
 // Helper Functions
