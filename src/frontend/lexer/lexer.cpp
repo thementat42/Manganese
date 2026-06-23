@@ -85,18 +85,17 @@ if current char is an operator (after doing the above checks), look at the next 
 */
 
 #include <cctype>
+#include <core.hpp>
 #include <format>
 #include <frontend/lexer.hpp>
-#include <core.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 #include <io/reader.hpp>
 #include <io/stringreader.hpp>
 #include <memory>
+#include <mnstl/number.hxx>
 #include <string>
 #include <utility>
-
-#include <mnstl/number.hxx>
 
 namespace Manganese {
 
@@ -104,7 +103,7 @@ namespace lexer {
 
 //~ Core Lexer Functions
 
-Lexer::Lexer(const std::string& source, const Mode mode) : tokenStartLine(1), tokenStartCol(1) {
+Lexer::Lexer(const std::string& source, Mode mode) : tokenStartLine(1), tokenStartCol(1) {
     switch (mode) {
         case Mode::String: reader = std::make_unique<io::StringReader>(source); break;
         case Mode::File: reader = std::make_unique<io::FileReader>(source); break;
@@ -258,7 +257,7 @@ Result Lexer::tokenizeNumber() {
         } else if (!isalnum(currentChar)) {
             break;
         } else if (!isValidBaseChar(currentChar)) {
-            char lower_char = (char)tolower(currentChar);
+            char lower_char = tolower(currentChar);
             if (lower_char == 'i' || lower_char == 'f' || lower_char == 'u' || lower_char == 'e' || lower_char == 'p') {
                 // suffix starts
                 break;
@@ -272,9 +271,7 @@ Result Lexer::tokenizeNumber() {
     }
 
     // Handle scientific notation (e.g., 1.23e4), size suffixes (e.g., 1.23f), etc.
-    if (processNumberSuffix(base, numberLiteral, isFloat) == Result::Failure) {
-        result = Result::Failure;
-    }
+    if (processNumberSuffix(base, numberLiteral, isFloat) == Result::Failure) { result = Result::Failure; }
     if (isFloat && base != mnstl::Base::Decimal) {
         logging::logError(getLine(), getCol(), "Invalid floating-point literal {}. Only decimal floats are supported.",
                           numberLiteral);
@@ -578,9 +575,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
     char currentChar = peekChar();
     if (currentChar != '0') {
         // Decimal number
-        return NumberPrefixResult{.base = mnstl::Base::Decimal,
-                                  .isValidBaseChar = isdigit,
-                                  .prefix = ""};
+        return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = isdigit, .prefix = ""};
     }
     // Could be a base indicator (0x, 0b, 0o) -- check next char
     switch (peekChar(1)) {
@@ -588,36 +583,31 @@ NumberPrefixResult Lexer::processNumberPrefix() {
         case 'X':
             // Hexadecimal number
             advance(2);
-            return NumberPrefixResult{.base = mnstl::Base::Hexadecimal,
-                                      .isValidBaseChar = isxdigit,
-                                      .prefix = "0x"};
+            return NumberPrefixResult{.base = mnstl::Base::Hexadecimal, .isValidBaseChar = isxdigit, .prefix = "0x"};
         case 'b':
         case 'B':
             // Binary number
             advance(2);
-            return NumberPrefixResult{
-                .base = mnstl::Base::Binary, .isValidBaseChar = isbdigit, .prefix = "0b"};
+            return NumberPrefixResult{.base = mnstl::Base::Binary, .isValidBaseChar = isbdigit, .prefix = "0b"};
         case 'o':
         case 'O':
             // Octal number
             advance(2);
-            return NumberPrefixResult{
-                .base = mnstl::Base::Octal, .isValidBaseChar = isodigit, .prefix = "0o"};
+            return NumberPrefixResult{.base = mnstl::Base::Octal, .isValidBaseChar = isodigit, .prefix = "0o"};
         default:
             // Not a valid base indicator -- just treat it as a decimal number
-            logging::logWarning(
-                getLine(), getCol(),
-                "Leading zeros in numeric literals are treated as decimal numbers. Use a 0o prefix for octal numbers.");
-            return NumberPrefixResult{
-                .base = mnstl::Base::Decimal, .isValidBaseChar = isdigit, .prefix = ""};
+            logging::logWarning(getLine(), getCol(),
+                                "Leading zeros in numeric literals are treated as decimal numbers."
+                                "Use a 0o prefix for octal numbers.");
+            return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = isdigit, .prefix = ""};
     }
 }
 
 Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, bool isFloat) {
     /*
         The valid numeric suffixes are:
-        - i8, i16, i32, i64 (signed integers with the corresponding bit width)
-        - u8, u16, u32, u64 (unsigned integers with the corresponding bit width)
+        - i8, i16, i32, i64, i128 (signed integers with the corresponding bit width)
+        - u8, u16, u32, u64, u128 (unsigned integers with the corresponding bit width)
         - f32, f64 (floating-point numbers with the corresponding bit width)
         NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
         */
@@ -630,7 +620,7 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
 
     // Suffix Handling
 
-    char currentChar = (char)tolower(peekChar());
+    char currentChar = tolower(peekChar());
     if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {
         char suffix = tolower(consumeChar());
         int width = readUint();
@@ -642,20 +632,22 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
         const bool validFloatWidth = (width == 32 || width == 64);
 
         if ((suffix == 'i' || suffix == 'u') && !validIntWidth) {
-            logging::logError(getLine(), getCol(), "Invalid integer suffix: must be 8, 16, 32, 64 or 128");
+            logging::logError(getLine(), getCol(), "Invalid integer suffix '{}': must be 8, 16, 32, 64 or 128", suffix);
             return Result::Failure;
         }
         if (suffix == 'f' && !validFloatWidth) {
-            logging::logError(getLine(), getCol(), "Invalid float suffix: must be 32 or 64");
+            logging::logError(getLine(), getCol(), "Invalid float suffix '{}': must be 32 or 64", suffix);
             return Result::Failure;
         }
         if (suffix == 'f' && !isFloat) {
-            logging::logError(getLine(), getCol(), "Float suffix can only be used with floating-point literals");
+            logging::logError(getLine(), getCol(), "Float suffix '{}' can only be used with floating-point literals",
+                              suffix);
             return Result::Failure;
         }
 
         if ((suffix == 'i' || suffix == 'u') && isFloat) {
-            logging::logError(getLine(), getCol(), "Integer suffix cannot be used with floating-point literals");
+            logging::logError(getLine(), getCol(), "Integer suffix '{}' cannot be used with floating-point literals",
+                              suffix);
             return Result::Failure;
         }
         numberLiteral += suffix;
