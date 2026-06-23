@@ -19,23 +19,14 @@
 #include <vector>
 
 #if MN_DEBUG
-#define OVERRIDE_DUMP_METHOD_ \
-    void dump(std::ostream& os, size_t indent = 0) const override;  // Makes overriding dump() less cumbersome to type
+#define MN_AST_DUMP void dump(std::ostream& os, size_t indent = 0) const override;
 #else
-#define OVERRIDE_DUMP_METHOD_  // Don't dump in non-debug builds
+#define MN_AST_DUMP
 #endif
 
-#define OVERRIDE_TO_STRING_ \
-    std::string toString() const override;  // Makes overriding toString() less cumbersome to type
-
-#define NODE_OVERRIDES_ \
-    OVERRIDE_TO_STRING_ \
-    OVERRIDE_DUMP_METHOD_
-
-/**
- * Common interface functions for all nodes
- */
-#define AST_STANDARD_INTERFACE NODE_OVERRIDES_
+#define AST_STANDARD_INTERFACE             \
+    std::string toString() const override; \
+    MN_AST_DUMP
 
 namespace Manganese {
 
@@ -85,30 +76,25 @@ struct ASTNode {
 
    public:
     constexpr ASTNode() noexcept = default;
-    constexpr virtual ~ASTNode() noexcept = default;
 
-    // Avoid accidental shallow copies (most nodes have pointers to other nodes which would lead to weird aliasing)
-    // and likely to subtle bugs
     ASTNode(const ASTNode&) = delete;
     ASTNode& operator=(const ASTNode&) = delete;
+    ASTNode(ASTNode&&) = delete;
+    ASTNode& operator=(ASTNode&&) = delete;
 
-    // Moving is fine since this suggests a new node is going to handle all the pointers
-    ASTNode(ASTNode&&) = default;
-    ASTNode& operator=(ASTNode&&) = default;
+    virtual ~ASTNode() noexcept = default;
 
     virtual std::string toString() const = 0;
 
+    constexpr inline size_t getLine() const noexcept { return line; }
+    constexpr inline size_t getColumn() const noexcept { return column; }
+
 #if MN_DEBUG
     /**
-     * @brief Dump the AST node to an output stream
-     * @param os The output stream to dump to
      * @param indent The indentation level for pretty-printing
      */
     virtual void dump(std::ostream& os, size_t indent = 0) const = 0;
 #endif  // MN_DEBUG
-
-    constexpr inline size_t getLine() const noexcept { return line; }
-    constexpr inline size_t getColumn() const noexcept { return column; }
 };
 
 struct Expression : public ASTNode {
@@ -142,7 +128,7 @@ struct Type : public ASTNode {
 };
 
 constexpr const char* visibilityToString(Visibility visibility) noexcept {
-    return visibility == Visibility::Public ? "public " : "private ";
+    return visibility == Visibility::Public ? "public" : "private";
 }
 
 /**

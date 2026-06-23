@@ -254,7 +254,7 @@ void BreakStatement::dump(std::ostream& os, size_t indent) const {
 void AggregateDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AggregateDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
-    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
+    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << " \n";
     os << getIndent(indent + 1) << "fields: [\n";
 
     for (const auto& field : fields) {
@@ -280,7 +280,7 @@ void EmptyStatement::dump(std::ostream& os, size_t indent) const {
 void EnumDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "EnumDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
-    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
+    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << " \n";
     os << getIndent(indent + 1) << "values: [\n";
 
     for (const auto& value : values) {
@@ -334,7 +334,7 @@ void ForLoopStatement::dump(std::ostream& os, size_t indent) const {
 void FunctionDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "FunctionDeclarationStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "name: " << name << "\n";
-    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << "\n";
+    os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << " \n";
 
     if (!genericTypes.empty()) {
         os << getIndent(indent + 1) << "generic types: [";

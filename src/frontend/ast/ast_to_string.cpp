@@ -131,7 +131,7 @@ std::string BreakStatement::toString() const { return "break;"; }
 
 std::string AggregateDeclarationStatement::toString() const {
     std::ostringstream oss;
-    oss << visibilityToString(visibility) << "aggregate " << name;
+    oss << visibilityToString(visibility) << " aggregate " << name;
     if (!genericTypes.empty()) {
         oss << "[";
         for (size_t i = 0; i < genericTypes.size(); ++i) {
@@ -152,7 +152,7 @@ std::string EmptyStatement::toString() const { return ""; }
 
 std::string EnumDeclarationStatement::toString() const {
     std::ostringstream oss;
-    oss << visibilityToString(visibility) << "enum " << name << ": " << baseType->toString() << " {\n";
+    oss << visibilityToString(visibility) << " enum " << name << ": " << baseType->toString() << " {\n";
     for (const auto& value : values) {
         oss << "\t" << value.name;
         if (value.value) { oss << " = " << value.value->toString(); }
@@ -190,7 +190,7 @@ std::string ForLoopStatement::toString() const {
 
 std::string FunctionDeclarationStatement::toString() const {
     std::ostringstream oss;
-    oss << visibilityToString(visibility) << "func " << name;
+    oss << visibilityToString(visibility) << " func " << name;
     if (!genericTypes.empty()) {
         oss << "[";
         for (size_t i = 0; i < genericTypes.size(); ++i) {
@@ -252,7 +252,8 @@ std::string SwitchStatement::toString() const {
 
 std::string VariableDeclarationStatement::toString() const {
     // Convert visibility to string
-    std::string typeStr = visibilityToString(visibility) + toStringOr(type, "auto");
+    std::string typeStr = visibilityToString(visibility);
+    typeStr += " " + toStringOr(type, "auto");
     std::string valueStr = value ? " = " + value->toString() : "";
     return std::format("({} {}: {}{});", isMutable ? "let mut" : "let", name, typeStr, valueStr);
 }
