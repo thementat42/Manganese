@@ -1,5 +1,5 @@
-#ifndef MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
-#define MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
+#ifndef MANGANESE_INCLUDE_CORE_HPP
+#define MANGANESE_INCLUDE_CORE_HPP
 
 // Some common includes that are used frequently
 
@@ -75,4 +75,4 @@
 #define ASSERT_UNREACHABLE(message) manganese_unreachable()
 #endif  // MN_DEBUG
 
-#endif  // MANGANESE_INCLUDE_GLOBAL_MACROS_HPP
+#endif  // MANGANESE_INCLUDE_CORE_HPP
