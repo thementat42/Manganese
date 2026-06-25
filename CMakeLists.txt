@@ -123,11 +123,11 @@ function(enable_debug_flags target)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(${target} PRIVATE
             -O0 -g3 -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fcheck-new --save-temps
-            -DGLIBCXX_DEBUG
+            -DGLIBCXX_DEBUG -fno-rtti
         )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         target_compile_options(${target} PRIVATE
-            -O0 -g3 -fno-omit-frame-pointer  -fno-inline -fno-inline-functions
+            -O0 -g3 -fno-omit-frame-pointer  -fno-inline -fno-inline-functions -fno-rtti
         )
     else()
             message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic debug flags.")
@@ -145,12 +145,12 @@ function(enable_release_flags target)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(${target} PRIVATE
             -O2 -finline-functions -funroll-loops -fomit-frame-pointer
-            -fstack-protector-strong -march=native -g0
+            -fstack-protector-strong -march=native -g0 -fno-rtti
         )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         target_compile_options(${target} PRIVATE
             -O2 -finline-functions -funroll-loops -fomit-frame-pointer
-            -fstack-protector-strong -march=native -g0
+            -fstack-protector-strong -march=native -g0 -fno-rtti
         )
     else()
             message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic debug flags.")
