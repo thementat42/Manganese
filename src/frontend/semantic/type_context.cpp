@@ -89,7 +89,7 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             auto* left = static_cast<const Aggregate*>(lhs);
             auto* right = static_cast<const Aggregate*>(rhs);
 
-            return (left->name != right->name) && (left->fieldTypes == right->fieldTypes);
+            return (left->name == right->name) && (left->fieldTypes == right->fieldTypes);
         }
         case Kind::Function: {
             auto* left = static_cast<const Function*>(lhs);
