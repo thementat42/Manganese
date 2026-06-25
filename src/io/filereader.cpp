@@ -23,7 +23,7 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity) :
     // Disable fread's buffering since FileReader does its own buffering
     setvbuf(_filePtr, nullptr, _IONBF, 0);
 
-    _buffer = std::make_unique<char[]>(bufferCapacity + 1);  // +1 for a null terminator
+    _buffer = std::make_unique_for_overwrite<char[]>(bufferCapacity + 1);  // +1 for a null terminator
     _bufferSize = std::fread(_buffer.get(), sizeof(char), bufferCapacity, _filePtr);  // initial read
 
     if (_bufferSize == 0) {
