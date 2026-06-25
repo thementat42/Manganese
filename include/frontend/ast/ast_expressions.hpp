@@ -62,7 +62,7 @@ struct ArrayLiteralExpression final : public Expression {
     Type* elementType;  // Optional, can be inferred from the elements
     Expression* lengthExpression = nullptr;
 
-    ArrayLiteralExpression(std::vector<Expression*>&& elements_, Type* elementType_ = nullptr) :
+    explicit ArrayLiteralExpression(std::vector<Expression*>&& elements_, Type* elementType_ = nullptr) :
         Expression(ExpressionKind::ArrayLiteralExpression), elements(std::move(elements_)), elementType(elementType_) {}
 
     AST_STANDARD_INTERFACE;
