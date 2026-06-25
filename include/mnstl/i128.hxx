@@ -778,15 +778,12 @@ constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
 
 constexpr divmod_u128_result _divmod_u128(uint128_t numerator, uint128_t denominator) {
     if (denominator == 0) {  // trap on division by 0
-        if (std::is_constant_evaluated()) {
-            throw "Division by zero error";
-        } else {
+
 #if defined(__has_builtin) && __has_builtin(__builtin_trap)
-            __builtin_trap();
+        __builtin_trap();
 #else
-            std::abort();
+        std::abort();
 #endif
-        }
     }
 
     // shortcuts for easy values (0/x = 0 and x/1 = x)
