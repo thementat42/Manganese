@@ -94,6 +94,8 @@ struct BinaryExpression final : public Expression {
         Expression(ExpressionKind::BinaryExpression), left(left_), right(right_), op(op_) {};
 
     AST_STANDARD_INTERFACE;
+
+    virtual mnstl::fold_result_t fold() const noexcept override;
 };
 
 /**
@@ -106,6 +108,8 @@ struct BoolLiteralExpression final : public Expression {
         Expression(ExpressionKind::BoolLiteralExpression), value(value_) {};
 
     AST_STANDARD_INTERFACE;
+
+    virtual mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
 };
 
 /**
@@ -120,6 +124,8 @@ struct CharLiteralExpression final : public Expression {
         Expression(ExpressionKind::CharLiteralExpression), value(static_cast<char32_t>(value_)) {};
 
     AST_STANDARD_INTERFACE;
+
+    virtual mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
 };
 
 /**
@@ -196,6 +202,8 @@ struct NumberLiteralExpression final : public Expression {
         Expression(ExpressionKind::NumberLiteralExpression), value(value_) {};
 
     AST_STANDARD_INTERFACE;
+
+    virtual mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
 };
 
 /**
@@ -222,6 +230,8 @@ struct PrefixExpression final : public Expression {
         Expression(ExpressionKind::PrefixExpression), op(op_), right(right_) {}
 
     AST_STANDARD_INTERFACE;
+
+    virtual mnstl::fold_result_t fold() const noexcept override;
 };
 
 /**
@@ -235,6 +245,8 @@ struct ScopeResolutionExpression final : public Expression {
         Expression(ExpressionKind::ScopeResolutionExpression), scope(scope_), element(std::move(element_)) {}
 
     AST_STANDARD_INTERFACE;
+
+    virtual mnstl::fold_result_t fold() const noexcept override;
 };
 
 /**
@@ -250,6 +262,7 @@ struct StringLiteralExpression final : public Expression {
         Expression(ExpressionKind::StringLiteralExpression), value(value_) {};
 
     AST_STANDARD_INTERFACE;
+    virtual mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
 };
 
 /**
