@@ -3,9 +3,11 @@
 
 #include <core.hpp>
 #include <frontend/lexer.hpp>
+#include <mnstl/fold_result.hxx>
 #include <string>
 #include <utils/type_names.hpp>
 #include <vector>
+
 
 #if MN_DEBUG
 #define MN_AST_DUMP void dump(std::ostream& os, size_t indent = 0) const override;
@@ -88,6 +90,9 @@ struct Expression : public ASTNode {
     const semantic::SemanticType* semanticType = nullptr;
 
     virtual ~Expression() noexcept = default;
+    virtual mnstl::fold_result_t fold() const noexcept {
+        return mnstl::fold_result_t{};
+    }
 
    protected:
     constexpr explicit Expression(ExpressionKind kind_) noexcept : kind(kind_) {}
