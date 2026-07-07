@@ -35,13 +35,12 @@ struct AggregateDeclarationStatement final : public Statement {
     Visibility visibility = Visibility::Private;
 
     constexpr AggregateDeclarationStatement(std::string&& name_, std::vector<std::string>&& genericTypes_,
-                                            std::vector<AggregateField>&& fields_) :
+                                            std::vector<AggregateField>&& fields_) noexcept :
         Statement(StatementKind::AggregateDeclarationStatement),
         name(std::move(name_)),
         genericTypes(std::move(genericTypes_)),
         fields(std::move(fields_)) {}
     AST_STANDARD_INTERFACE;
-
 };
 
 struct AliasStatement final : public Statement {
@@ -49,26 +48,26 @@ struct AliasStatement final : public Statement {
     std::string alias;  // The name of the alias (foo in alias x as foo)
     Visibility visibility = Visibility::Private;
 
-    AliasStatement(Type* baseType_, std::string&& alias_) :
+    AliasStatement(Type* baseType_, std::string&& alias_) noexcept :
         Statement(StatementKind::AliasStatement), baseType(baseType_), alias(std::move(alias_)) {}
 
     AST_STANDARD_INTERFACE
 };
 
 struct BreakStatement final : public Statement {
-    constexpr explicit BreakStatement() : Statement(StatementKind::BreakStatement) {}
+    constexpr explicit BreakStatement() noexcept : Statement(StatementKind::BreakStatement) {}
 
     AST_STANDARD_INTERFACE;
 };
 
 struct ContinueStatement final : public Statement {
-    constexpr explicit ContinueStatement() : Statement(StatementKind::ContinueStatement) {}
+    constexpr explicit ContinueStatement() noexcept : Statement(StatementKind::ContinueStatement) {}
 
     AST_STANDARD_INTERFACE;
 };
 
 struct EmptyStatement final : public Statement {
-    constexpr explicit EmptyStatement() : Statement(StatementKind::EmptyStatement) {}
+    constexpr explicit EmptyStatement() noexcept : Statement(StatementKind::EmptyStatement) {}
     AST_STANDARD_INTERFACE;
 };
 
@@ -84,7 +83,7 @@ struct EnumDeclarationStatement final : public Statement {
     std::vector<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
-    EnumDeclarationStatement(std::string&& name_, Type* baseType_, std::vector<EnumValue> values_) :
+    EnumDeclarationStatement(std::string&& name_, Type* baseType_, std::vector<EnumValue> values_) noexcept :
         Statement(StatementKind::EnumDeclarationStatement),
         name(name_),
         baseType(baseType_),
@@ -99,7 +98,7 @@ struct EnumDeclarationStatement final : public Statement {
 struct ExpressionStatement final : public Statement {
     Expression* expression;
 
-    explicit ExpressionStatement(Expression* expression_) :
+    explicit ExpressionStatement(Expression* expression_) noexcept :
         Statement(StatementKind::ExpressionStatement), expression(expression_) {};
 
     AST_STANDARD_INTERFACE;
@@ -111,7 +110,8 @@ struct ForLoopStatement final : public Statement {
     Expression* postExpression;
     Block body;
 
-    ForLoopStatement(Statement* initializationStep_, Expression* stopCondition_, Expression* postExpression_, Block&& body_) :
+    ForLoopStatement(Statement* initializationStep_, Expression* stopCondition_, Expression* postExpression_,
+                     Block&& body_) noexcept :
         Statement(StatementKind::ForLoopStatement),
         initializationStep(initializationStep_),
         stopCondition(stopCondition_),
@@ -136,7 +136,8 @@ struct FunctionDeclarationStatement final : public Statement {
     Visibility visibility = Visibility::Private;
 
     FunctionDeclarationStatement(std::string&& name_, std::vector<std::string>&& genericTypes_,
-                                 std::vector<FunctionParameter>&& parameters_, Type* returnType_, Block&& body_) :
+                                 std::vector<FunctionParameter>&& parameters_, Type* returnType_,
+                                 Block&& body_) noexcept :
         Statement(StatementKind::FunctionDeclarationStatement),
         name(std::move(name_)),
         genericTypes(std::move(genericTypes_)),
@@ -151,7 +152,7 @@ struct ElifClause {
     Expression* condition;
     Block body;
 
-    ElifClause(Expression* condition_, Block&& body_) : condition(condition_), body(std::move(body_)) {}
+    ElifClause(Expression* condition_, Block&& body_) noexcept : condition(condition_), body(std::move(body_)) {}
 };
 
 struct IfStatement final : public Statement {
@@ -159,7 +160,8 @@ struct IfStatement final : public Statement {
     Block body, elseBody;  // elseBody might be empty
     std::vector<ElifClause> elifs;
 
-    IfStatement(Expression* condition_, Block&& body_, std::vector<ElifClause>&& elifs_, Block&& elseBody_ = {}) :
+    IfStatement(Expression* condition_, Block&& body_, std::vector<ElifClause>&& elifs_,
+                Block&& elseBody_ = {}) noexcept :
         Statement(StatementKind::IfStatement),
         condition(condition_),
         body(std::move(body_)),
@@ -172,7 +174,7 @@ struct IfStatement final : public Statement {
 struct ReturnStatement final : public Statement {
     Expression* value;
 
-    explicit ReturnStatement(Expression* value_ = nullptr) :
+    explicit ReturnStatement(Expression* value_ = nullptr) noexcept :
         Statement(StatementKind::ReturnStatement), value(value_) {}
 
     AST_STANDARD_INTERFACE;
@@ -188,7 +190,7 @@ struct SwitchStatement final : public Statement {
     std::vector<CaseClause> cases;
     Block defaultBody;
 
-    SwitchStatement(Expression* variable_, std::vector<CaseClause>&& cases_, Block&& defaultBody_ = {}) :
+    SwitchStatement(Expression* variable_, std::vector<CaseClause>&& cases_, Block&& defaultBody_ = {}) noexcept :
         Statement(StatementKind::SwitchStatement),
         variable(variable_),
         cases(std::move(cases_)),
@@ -205,7 +207,7 @@ struct VariableDeclarationStatement final : public Statement {
     Type* type;
 
     VariableDeclarationStatement(bool isMutable_, std::string&& name_, Visibility visibility_, Expression* _value,
-                                 Type* _type) :
+                                 Type* _type) noexcept :
         Statement(StatementKind::VariableDeclarationStatement),
         isMutable(isMutable_),
         name(std::move(name_)),
@@ -221,7 +223,7 @@ struct WhileLoopStatement final : public Statement {
     Expression* condition;
     bool isDoWhile;
 
-    WhileLoopStatement(Block&& body_, Expression* condition_, bool isDoWhile_ = false) :
+    WhileLoopStatement(Block&& body_, Expression* condition_, bool isDoWhile_ = false) noexcept :
         Statement(StatementKind::WhileLoopStatement),
         body(std::move(body_)),
         condition(condition_),
