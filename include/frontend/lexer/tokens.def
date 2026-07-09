@@ -82,6 +82,9 @@ KEYWORD(Enum, "enum")
 KEYWORD(Blueprint, "blueprint")
 
 KEYWORD(Alias, "alias")
+KEYWORD(Alignof, "alignof")
+KEYWORD(Sizeof, "sizeof")
+KEYWORD(Typeof, "typeof")
 
 TOKEN(_keywordEnd, "<keyword-end>")  // meta for keyword info (nothing lexes to this)
 
