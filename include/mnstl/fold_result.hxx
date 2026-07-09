@@ -8,17 +8,16 @@
 #include <optional>
 #include <string_view>
 
-
 namespace mnstl {
 
 class fold_result_t {
    public:
     enum class held_type : std::uint8_t {
-        Boolean,
-        Character,
-        Number,
-        String,
-        Void = 0xFF
+        Boolean = 'b',
+        Character = 'c',
+        Number = 'n',
+        String = 's',
+        Void = 'v'
     };
 
    private:
@@ -54,7 +53,12 @@ class fold_result_t {
 
     constexpr ~fold_result_t() noexcept = default;
 
-    constexpr held_type underlying_type() const noexcept { return _held; }
+    constexpr held_type held_type() const noexcept { return _held; }
+    constexpr bool has_value() const noexcept { return _held != held_type::Void; }
+    constexpr bool is_bool() const noexcept {return _held == held_type::Boolean;}
+    constexpr bool is_char() const noexcept {return _held == held_type::Character;}
+    constexpr bool is_number() const noexcept {return _held == held_type::Number;}
+    constexpr bool is_string() const noexcept {return _held == held_type::String;}
 
     constexpr std::optional<bool> boolean() const noexcept {
         return _held == held_type::Boolean ? std::make_optional<bool>(_bool) : std::nullopt;
@@ -71,8 +75,6 @@ class fold_result_t {
     constexpr std::optional<std::string_view> string() const noexcept {
         return _held == held_type::String ? std::make_optional<std::string_view>(_string) : std::nullopt;
     }
-
-    constexpr bool has_value() const noexcept { return _held != held_type::Void; }
 
     template <class T>
         requires(std::same_as<T, bool> || std::same_as<T, char32_t> || std::same_as<T, number_t>
