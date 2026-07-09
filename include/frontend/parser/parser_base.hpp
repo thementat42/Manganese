@@ -88,6 +88,7 @@ class Parser {
     ast::Expression* parseExpression(Precedence precedence);
     ast::Expression* parseAggregateInstantiationExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseAggregateLiteralExpression();
+    ast::Expression* parseAlignofExpression();
     ast::Expression* parseArrayInstantiationExpression();
     ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseBinaryExpression(ast::Expression* left, Precedence precedence);
@@ -100,6 +101,7 @@ class Parser {
     ast::Expression* parsePrefixExpression();
     ast::Expression* parsePrimaryExpression();
     ast::Expression* parseScopeResolutionExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseSizeofExpression();
     ast::Expression* parseTypeCastExpression(ast::Expression* left, Precedence precedence);
 
     // Statement Parsing
@@ -132,6 +134,7 @@ class Parser {
     ast::Type* parsePointerType();
     ast::Type* parseParenthesizedType();
     ast::Type* parseSymbolType();
+    ast::Type* parseTypeofType();
 
     // ~ Helpers
     ast::Block parseBlock(const std::string& blockName);

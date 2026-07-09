@@ -163,6 +163,8 @@ void Parser::initializeLookups() noexcept {
     registerLedHandler_binary(As, Precedence::TypeCast, &Parser::parseTypeCastExpression);
     registerStmtHandler(Semicolon, &Parser::parseRedundantSemicolon);
     registerNudHandler_binary(Aggregate, &Parser::parseAggregateLiteralExpression);
+    registerNudHandler_binary(Sizeof, &Parser::parseSizeofExpression);
+    registerNudHandler_binary(Alignof, &Parser::parseAlignofExpression);
 }
 
 void Parser::initializeTypeLookups() noexcept {
@@ -192,6 +194,8 @@ void Parser::initializeTypeLookups() noexcept {
     registerNudHandler_type(Func, &Parser::parseFunctionType);
     registerLedHandler_type(LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
     registerNudHandler_type(LeftParen, &Parser::parseParenthesizedType);
+    registerNudHandler_type(Typeof, &Parser::parseTypeofType);
+
 }
 
 }  // namespace parser
