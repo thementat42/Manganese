@@ -43,6 +43,8 @@ std::string AggregateLiteralExpression::toString() const {
     return oss.str();
 }
 
+std::string AlignofExpression::toString() const { return std::format("(alignof({}))", type->toString()); }
+
 std::string ArrayLiteralExpression::toString() const {
     std::ostringstream oss;
     oss << "[";
@@ -107,6 +109,8 @@ std::string PrefixExpression::toString() const {
 }
 
 std::string ScopeResolutionExpression::toString() const { return std::format("{}::{}", scope->toString(), element); }
+
+std::string SizeofExpression::toString() const { return std::format("(sizeof({}))", type->toString()); }
 
 std::string StringLiteralExpression::toString() const { return std::format("\"{}\"", value); }
 
@@ -317,6 +321,8 @@ std::string PointerType::toString() const {
 }
 
 std::string SymbolType::toString() const { return name; }
+
+std::string TypeofType::toString() const { return std::format("typeof({})", expression->toString()); }
 
 }  // namespace ast
 }  // namespace Manganese

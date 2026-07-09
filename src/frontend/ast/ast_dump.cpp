@@ -81,6 +81,13 @@ void AggregateLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "}\n";
 }
 
+void AlignofExpression::dump(std::ostream& os, size_t indent) const {
+    os << getIndent(indent) << "AlignofExpression [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "type: \n";
+    type->dump(os, indent + 2);
+    os << getIndent(indent) << "}\n";
+}
+
 void ArrayLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ArrayLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "elements: [\n";
@@ -206,6 +213,13 @@ void ScopeResolutionExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "scope: \n";
     scope->dump(os, indent + 2);
     os << getIndent(indent + 1) << "element: " << element << "\n";
+    os << getIndent(indent) << "}\n";
+}
+
+void SizeofExpression::dump(std::ostream& os, size_t indent) const {
+    os << getIndent(indent) << "SizeofExpression [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "type: \n";
+    type->dump(os, indent + 2);
     os << getIndent(indent) << "}\n";
 }
 
@@ -535,6 +549,14 @@ void SymbolType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "name: " << name << "\n";
     os << getIndent(indent + 1) << "primitive type: " << primitiveTypeToString(primitiveType) << "\n";
     os << getIndent(indent) << "}\n";
+}
+
+void TypeofType::dump(std::ostream& os, size_t indent) const {
+    os << getIndent(indent) << "TypeofType [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "expression: ";
+    expression->dump(os, indent + 1);
+    os << getIndent(indent) << "}\n";
+
 }
 
 }  // namespace ast
