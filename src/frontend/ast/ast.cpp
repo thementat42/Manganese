@@ -42,13 +42,30 @@ mnstl::fold_result_t BinaryExpression::fold() const noexcept {
 
 mnstl::fold_result_t PrefixExpression::fold() const noexcept {
     mnstl::fold_result_t result = right->fold();
-    if (result.has_value()) { return mnstl::fold_result_t{}; }
-    return mnstl::fold_result_t{};
+    if (!result.has_value()) { return mnstl::fold_result_t{}; }
+
+    using enum lexer::TokenType;
+    switch (op) {
+        case AddressOf:
+        case Dereference:
+        case Inc:
+        case Dec:
+        case UnaryPlus:
+        case UnaryMinus:
+        case BitNot:
+        default: ASSERT_UNREACHABLE(std::format("Unknown prefix operator {}", lexer::tokenTypeToString(op)));
+    }
 };
 mnstl::fold_result_t PostfixExpression::fold() const noexcept {
     mnstl::fold_result_t result = left->fold();
-    if (result.has_value()) { return mnstl::fold_result_t{}; }
-    return mnstl::fold_result_t{};
+    if (!result.has_value()) { return mnstl::fold_result_t{}; }
+
+    using enum lexer::TokenType;
+    switch (op) {
+        case Inc:
+        case Dec:
+        default: ASSERT_UNREACHABLE(std::format("Unknown postfix operator {}", lexer::tokenTypeToString(op)));
+    }
 };
 
 }  // namespace ast
