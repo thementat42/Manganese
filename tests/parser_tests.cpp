@@ -492,6 +492,23 @@ bool testRedundantSemicolons() {
     return validateStatements(getParserResults(expression), expected, "Redundant Semicolons");
 }
 
+bool testSizeofTypeofAlignof() {
+    std::string expression = "sizeof(int);\n"
+                             "sizeof(x+1);\n"
+                             "alignof(char);\n"
+                             "alignof(x+1);\n"
+                             "let x: typeof(x+1) = 3;\n"
+                             "let y : typeof(foo@[int,char]((p as int32)) + (bar as typeof(3u128)));";
+    std::array<std::string, 6> expected
+        = {"(sizeof(int32));",
+           "(sizeof(dummy));",
+           "(alignof(char));",
+           "(alignof(dummy));",
+           "(let x: private typeof((x + 1)) = 3);",
+           "(let y: private typeof((foo@[int32, char]((p as int32)) + (bar as typeof(3)))));"};
+    return validateStatements(getParserResults(expression), expected, "Sizeof, Typeof & Alignof");
+}
+
 static bool miscTests() {
     std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
     auto x = getParserResults(expression);
@@ -524,6 +541,7 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Imports and Type Aliases", testImportsAndAliases);
     runner.runTest("Parsing from file", testParseFromFile);
     runner.runTest("Redundant Semicolons", testRedundantSemicolons);
+    runner.runTest("Sizeof, Typeof & Alignof", testSizeofTypeofAlignof);
     runner.runTest("Miscellaneous Tests", miscTests);
 }
 }  // namespace tests
