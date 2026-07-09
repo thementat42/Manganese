@@ -100,7 +100,15 @@ struct SymbolType final : public Type {
     constexpr explicit SymbolType(std::string&& name_, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
         Type(TypeKind::SymbolType, prim), name(std::move(name_)) {}
     AST_STANDARD_INTERFACE;
-    std::string getName() const noexcept { return name; }
+};
+
+struct TypeofType final : public Type {
+    Expression* expression;
+
+    explicit TypeofType(Expression* expr) noexcept :
+        Type(TypeKind::TypeofType, PrimitiveType_t::not_primitive), expression(expr) {}
+
+    AST_STANDARD_INTERFACE;
 };
 
 }  // namespace ast

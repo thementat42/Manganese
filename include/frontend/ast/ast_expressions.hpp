@@ -54,6 +54,14 @@ struct AggregateLiteralExpression final : public Expression {
     AST_STANDARD_INTERFACE;
 };
 
+struct AlignofExpression final : public Expression {
+    Type* type;
+
+    AlignofExpression(Type* t) noexcept : Expression(ExpressionKind::AlignofExpression), type(t) {}
+
+    AST_STANDARD_INTERFACE
+};
+
 /**
  * @brief e.g. [1, 2, 3]
  */
@@ -246,6 +254,14 @@ struct ScopeResolutionExpression final : public Expression {
         Expression(ExpressionKind::ScopeResolutionExpression), scope(scope_), element(std::move(element_)) {}
 
     AST_STANDARD_INTERFACE;
+};
+
+struct SizeofExpression final : public Expression {
+    Type* type;
+
+    SizeofExpression(Type* t) noexcept : Expression(ExpressionKind::SizeofExpression), type(t) {}
+
+    AST_STANDARD_INTERFACE
 };
 
 /**
