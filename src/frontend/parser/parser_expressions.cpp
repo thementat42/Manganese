@@ -9,6 +9,11 @@
 #include <utility>
 #include <vector>
 
+#include "frontend/ast/ast_expressions.hpp"
+#include "frontend/ast/ast_types.hpp"
+#include "frontend/lexer/token_type.hpp"
+#include "frontend/parser/operators.hpp"
+
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`
@@ -181,6 +186,30 @@ ast::Expression* Parser::parseAggregateLiteralExpression() {
     return arena.emplace<ast::AggregateLiteralExpression>(std::move(expressions));
 }
 
+ast::Expression* Parser::parseAlignofExpression() {
+    DISCARD(consumeToken());  // discard alignof
+    expectToken(lexer::TokenType::LeftParen, "Expected '(' after alignof");
+    ast::Type* type = parseType(Precedence::Default);
+    if (peekTokenType() != lexer::TokenType::RightParen) {
+        logError(
+            peekToken().getLine(), peekToken().getColumn(),
+            "alignof expects a type as its argument. If you are trying to take the type of an expression, use alignof(typeof(...))");
+
+        
+        while (peekTokenType() != lexer::TokenType::RightParen && peekTokenType() != lexer::TokenType::Semicolon
+               && peekTokenType() != lexer::TokenType::EndOfFile) {
+            DISCARD(consumeToken());
+        }
+
+        // If we successfully skipped to the closing parenthesis, consume it
+        if (peekTokenType() == lexer::TokenType::RightParen) { DISCARD(consumeToken()); }
+
+        return arena.emplace<ast::AlignofExpression>(arena.emplace<ast::SymbolType>("dummy"));
+    }
+    expectToken(lexer::TokenType::RightParen, "Expected ')' to enclose alignof");
+    return arena.emplace<ast::AlignofExpression>(type);
+}
+
 ast::Expression* Parser::parseArrayInstantiationExpression() {
     DISCARD(consumeToken());  // Consume the left square bracket
     std::vector<ast::Expression*> elements;
@@ -336,6 +365,29 @@ ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left, P
     DISCARD(precedence);  // Avoid unused variable warning
     auto element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
     return arena.emplace<ast::ScopeResolutionExpression>(left, std::move(element));
+}
+
+ast::Expression* Parser::parseSizeofExpression() {
+    DISCARD(consumeToken());  // discard sizeof
+    expectToken(lexer::TokenType::LeftParen, "Expected '(' after sizeof");
+    ast::Type* type = parseType(Precedence::Default);
+    if (peekTokenType() != lexer::TokenType::RightParen) {
+        logError(
+            peekToken().getLine(), peekToken().getColumn(),
+            "sizeof expects a type as its argument. If you are trying to take the type of an expression, use sizeof(typeof(...))");
+
+        while (peekTokenType() != lexer::TokenType::RightParen && peekTokenType() != lexer::TokenType::Semicolon
+               && peekTokenType() != lexer::TokenType::EndOfFile) {
+            DISCARD(consumeToken());
+        }
+
+        // If we successfully skipped to the closing parenthesis, consume it
+        if (peekTokenType() == lexer::TokenType::RightParen) { DISCARD(consumeToken()); }
+
+        return arena.emplace<ast::SizeofExpression>(arena.emplace<ast::SymbolType>("dummy"));
+    }
+    expectToken(lexer::TokenType::RightParen, "Expected ')' to enclose sizeof");
+    return arena.emplace<ast::SizeofExpression>(type);
 }
 
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {

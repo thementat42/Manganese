@@ -1,8 +1,11 @@
+#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <core.hpp>
 #include <utility>
 #include <vector>
+
+#include "frontend/ast/ast_expressions.hpp"
+#include "mnstl/number.hxx"
 
 namespace Manganese {
 namespace parser {
@@ -191,6 +194,19 @@ ast::Type* Parser::parseSymbolType() {
     }
     auto symbol_type = arena.emplace<ast::SymbolType>(token.getLexeme(), prim_t);
     return symbol_type;
+}
+
+ast::Type* Parser::parseTypeofType() {
+    DISCARD(consumeToken());  // skip typeof
+    expectToken(lexer::TokenType::LeftParen, "Expected '(' after typeof");
+    ast::Expression* innerExpression = parseExpression(Precedence::Default);
+    if (!innerExpression) {
+        logError(peekToken().getLine(), peekToken().getColumn(), "Expected a valid expression inside 'typeof(...)'.");
+        // Error recovery: give it a safe dummy fallback expression
+        innerExpression = arena.emplace<ast::NumberLiteralExpression>(mnstl::number_t{int32_t{0}});
+    }
+    expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
+    return arena.emplace<ast::TypeofType>(innerExpression);
 }
 
 }  // namespace parser
