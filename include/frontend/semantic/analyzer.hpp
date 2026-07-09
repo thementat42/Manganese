@@ -8,6 +8,9 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 
+#include "io/logging.hpp"
+
+
 namespace Manganese {
 namespace semantic {
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
@@ -73,6 +76,11 @@ class analyzer final : public _analyzer_base_t {
 #undef STMT
 #undef EXPR
 #undef TYPE
+
+    Result visit(decltype(nullptr)) const noexcept {
+        logging::logInternal(logging::LogLevel::Warning, "visit() called on nullptr in analyzer");
+        return Result::Failure;
+    }
 };
 
 }  // namespace semantic
