@@ -2,14 +2,14 @@
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_ANALYZER_HPP
 
 #include <core.hpp>
+#include <cstddef>
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
-
-#include "io/logging.hpp"
-
+#include <utility>
 
 namespace Manganese {
 namespace semantic {
@@ -47,6 +47,7 @@ class analyzer final : public _analyzer_base_t {
     }
 
     bool areTypesCompatible(ast::Type*, ast::Type*) { return false; }
+
     void _collectTypesInStatement(ast::Statement*);
     void _collectTypesInStatementBody(ast::Statement*);
     void collectGlobals();  // second pass -- collect publicly available symbols for modules
@@ -63,6 +64,22 @@ class analyzer final : public _analyzer_base_t {
         return programIsSemanticallyValid;
     }
 
+    constexpr static bool isInteger(ast::PrimitiveType_t t) noexcept {
+        using enum ast::PrimitiveType_t;
+        return (t == i8) || (t == i16) || (t == i32) || (t == i64) || (t == i128) || (t == u8) || (t == u16)
+            || (t == u32) || (t == u64) || (t == u128);
+    }
+    constexpr static bool isFloat(ast::PrimitiveType_t t) noexcept {
+        using enum ast::PrimitiveType_t;
+        return (t == f32) || (t == f64);
+    }
+    constexpr static bool isNumeric(ast::PrimitiveType_t t) noexcept { return isInteger(t) || isFloat(t); }
+
+    template <class... Args>
+    static void logError(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
+        logging::logError(node->getLine(), node->getColumn(), message, std::forward<Args>(args)...);
+    }
+
    protected:
     // overrides for visitor functions
     using _analyzer_base_t::visit;
@@ -77,7 +94,7 @@ class analyzer final : public _analyzer_base_t {
 #undef EXPR
 #undef TYPE
 
-    Result visit(decltype(nullptr)) const noexcept {
+    Result visit(std::nullptr_t) const noexcept {
         logging::logInternal(logging::LogLevel::Warning, "visit() called on nullptr in analyzer");
         return Result::Failure;
     }
