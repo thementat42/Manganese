@@ -5,11 +5,14 @@
 
 #include <stdint.h>
 #include <stdio.h>
+
 #include <string>
+
 
 //~ Build type
 
-#ifndef MN_DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a fallback
+#ifndef MN_DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a
+                  // fallback
 #ifndef NDEBUG
 #define MN_DEBUG 1
 #else  //^^ ifndef NDEBUG vv ifdef NDEBUG
@@ -59,8 +62,8 @@
 
 [[noreturn]] inline void panic(const char* message = "", const char* file = "", size_t line = 0,
                                const char* func = "") {
-    fprintf(stderr, "\033[31mPanic invoked: %s \nIn file %s at line %zu when running %s\033[0m\n", message,
-            file, line, func);
+    fprintf(stderr, "\033[31mPanic invoked: %s \nIn file %s at line %zu when running %s\033[0m\n", message, file, line,
+            func);
     throw(message);
 }
 
@@ -69,8 +72,7 @@
 }
 
 #if MN_DEBUG
-#define ASSERT_UNREACHABLE(message) \
-    panic((message), __FILE__, __LINE__, __func__)
+#define ASSERT_UNREACHABLE(message) panic((message), __FILE__, __LINE__, __func__)
 #else
 #define ASSERT_UNREACHABLE(message) manganese_unreachable()
 #endif  // MN_DEBUG
