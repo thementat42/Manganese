@@ -73,6 +73,11 @@ class analyzer final : public _analyzer_base_t {
         using enum ast::PrimitiveType_t;
         return (t == f32) || (t == f64);
     }
+
+    constexpr static bool isUnsignedInteger(ast::PrimitiveType_t t) noexcept {
+        using enum ast::PrimitiveType_t;
+        return (t == u8) || (t == u16) || (t == u32) || (t == u64) || (t == u128);
+    }
     constexpr static bool isNumeric(ast::PrimitiveType_t t) noexcept { return isInteger(t) || isFloat(t); }
 
     template <class... Args>
