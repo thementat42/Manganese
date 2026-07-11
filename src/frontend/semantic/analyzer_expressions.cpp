@@ -58,7 +58,11 @@ auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
         return Result::Failure;
     }
-    auto primitiveType = expression->left->semanticType->primitiveType;
+    const ast::PrimitiveType_t primitiveType = expression->left->semanticType->primitiveType;
+
+    // set the type here even if the expression is invalid so we don't have a bunch of propagating nulls
+    //? should this implicitly promote? (probably not)
+    expression->semanticType = typeContext.getPrimitive(primitiveType);
 
     if (!isInteger(primitiveType)) {
         logError(expression, "operator {} can only be applied to integer types",
@@ -67,8 +71,6 @@ auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     }
     // TODO: check that the value has an address to store the inc/dec result
 
-    //? should this implicitly promote? (probably not)
-    expression->semanticType = typeContext.getPrimitive(primitiveType);  // just copy the type
     return Result::Success;
 }
 
@@ -80,19 +82,57 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         return Result::Failure;
     }
 
+    const ast::PrimitiveType_t primitiveType = expression->right->semanticType->primitiveType;
+
     using enum lexer::TokenType;
     switch (expression->op) {
         case Inc:
         case Dec: {
+            expression->semanticType = typeContext.getPrimitive(primitiveType);
+            if (!isInteger(primitiveType)) {
+                logError(expression, "operator {} can only be applied to integer types",
+                         lexer::tokenTypeToString(expression->op));
+                return Result::Failure;
+            }
+            // TODO: check that the value has an address to store the inc/dec result
         } break;
+
         case BitNot: {
+            expression->semanticType = typeContext.getPrimitive(primitiveType);
+            if (!isInteger(primitiveType)) {
+                logError(expression, "operator {} can only be applied to integer types",
+                         lexer::tokenTypeToString(expression->op));
+                return Result::Failure;
+            }
         } break;
+
         case UnaryPlus:
         case UnaryMinus: {
+            expression->semanticType = typeContext.getPrimitive(primitiveType);
+            if (!isNumeric(primitiveType)) {
+                logError(expression, "operator {} can only be applied to integer or floating point types",
+                         lexer::tokenTypeToString(expression->op));
+                return Result::Failure;
+            }
+            if (isUnsignedInteger(primitiveType) && expression->op == UnaryMinus) {
+                // TODO: warn or convert to signed integer type?
+            }
         } break;
+
         case AddressOf: {
+            // TODO: Check that the expression has an address that can be taken
+            // TODO: is there some way to determine mutability of pointer?
+            expression->semanticType = typeContext.getPointer(expression->right->semanticType, true);
         } break;
+
         case Dereference: {
+            if (!expression->right->semanticType->isPointer()) {
+                logError(expression, "Dereferencing cannot be applied to a non-pointer type");
+                // dummy (figure out a better option later)
+                expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::u8);
+                return Result::Failure;
+            }
+            expression->semanticType = static_cast<const Pointer*>(expression->right->semanticType)->baseType;
         } break;
 
         default:
