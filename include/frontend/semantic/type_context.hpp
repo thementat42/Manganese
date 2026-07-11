@@ -32,6 +32,13 @@ struct SemanticType {
 
     virtual ~SemanticType() noexcept = default;
 
+    constexpr bool isAggregate() const noexcept { return kind == Kind::Aggregate; }
+    constexpr bool isArray() const noexcept { return kind == Kind::Array; }
+    constexpr bool isFunction() const noexcept { return kind == Kind::Function; }
+    constexpr bool isGeneric() const noexcept { return kind == Kind::Generic; }
+    constexpr bool isPointer() const noexcept { return kind == Kind::Pointer; }
+    constexpr bool isPrimitive() const noexcept { return kind == Kind::Primitive; }
+
    private:
     constexpr SemanticType() noexcept : kind(Kind::Primitive), primitiveType(ast::PrimitiveType_t::not_primitive) {}
 
@@ -119,19 +126,19 @@ class TypeContext {
     TypeContext(const TypeContext&) = delete;
     TypeContext& operator=(const TypeContext&) = delete;
 
-    const SemanticType* getPrimitive(ast::PrimitiveType_t) const noexcept;
+    const SemanticType* getPrimitive(ast::PrimitiveType_t primitive) const noexcept;
 
-    const SemanticType* getPointer(const SemanticType*, bool);
+    const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
 
-    const SemanticType* getArray(const SemanticType*, size_t);
+    const SemanticType* getArray(const SemanticType* baseType, size_t length);
 
-    const SemanticType* getAnonymousAggregate(std::vector<const SemanticType*>&&);
+    const SemanticType* getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes);
 
-    const SemanticType* getNamedAggregate(std::string_view, std::vector<const SemanticType*>&&);
+    const SemanticType* getNamedAggregate(std::string_view name, std::vector<const SemanticType*>&& fieldTypes);
 
-    const SemanticType* getFunction(std::vector<Parameter>&&, const SemanticType*);
+    const SemanticType* getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType);
 
-    const SemanticType* getGenericInstance(const SemanticType*, std::vector<const SemanticType*>&&);
+    const SemanticType* getGenericInstance(const SemanticType* baseType, std::vector<const SemanticType*>&& typeArguments);
 };
 
 }  // namespace semantic
