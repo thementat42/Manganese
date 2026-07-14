@@ -8,14 +8,13 @@
 #include <utils/type_names.hpp>
 #include <vector>
 
-
 #if MN_DEBUG
 #define MN_AST_DUMP void dump(std::ostream& os, size_t indent = 0) const override;
 #else
 #define MN_AST_DUMP
 #endif
 
-#define MN_AST_STANDARD_INTERFACE             \
+#define MN_AST_STANDARD_INTERFACE          \
     std::string toString() const override; \
     MN_AST_DUMP
 
@@ -31,7 +30,8 @@ namespace ast {
 struct Expression;
 struct Statement;
 struct Type;
-typedef std::vector<Statement*> Block;
+
+using Block = std::vector<Statement*>;
 
 enum class ExpressionKind : uint8_t;
 enum class StatementKind : uint8_t;
@@ -90,9 +90,7 @@ struct Expression : public ASTNode {
     const semantic::SemanticType* semanticType = nullptr;
 
     virtual ~Expression() noexcept = default;
-    virtual mnstl::fold_result_t fold() const noexcept {
-        return mnstl::fold_result_t{};
-    }
+    virtual mnstl::fold_result_t fold() const noexcept { return mnstl::fold_result_t{}; }
 
    protected:
     constexpr explicit Expression(ExpressionKind kind_) noexcept : kind(kind_) {}
@@ -142,7 +140,6 @@ inline std::string toStringOr(const Statement* statement, const char* fallback =
 inline std::string toStringOr(const Type* type, const char* fallback = "no type") {
     return type ? type->toString() : fallback;
 }
-
 
 constexpr std::string_view primitiveTypeToString(PrimitiveType_t prim) {
     switch (prim) {
