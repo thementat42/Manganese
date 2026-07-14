@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include <core.hpp>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic.hpp>
@@ -6,8 +8,47 @@
 namespace Manganese {
 namespace semantic {
 
+std::string Aggregate::toString() const {
+    std::string result = name.empty() ? "aggregate" : std::string(name);
+    result += '{';
+    for (size_t i = 0; i < fieldTypes.size(); ++i) {
+        result += fieldTypes[i]->toString();
+        if (i != fieldTypes.size() - 1) [[likely]] { result += ", "; }
+    }
+    result += "}";
+    return result;
+}
+
+std::string Array::toString() const { return std::format("{}[{}]", elementType->toString(), length); }
+
+std::string Function::toString() const {
+    std::string result = "func(";
+    for (size_t i = 0; i < parameterTypes.size(); ++i) {
+        const auto& param = parameterTypes[i];
+        if (param.isMutable) { result += "mut "; }
+        result += param.type->toString();
+        if (i != parameterTypes.size() - 1) [[likely]] { result += ", "; }
+    }
+    result += ")";
+    return result;
+}
+
+std::string GenericInstance::toString() const {
+    std::string result = baseType->toString() + "@[";
+    for (std::size_t i = 0; i < typeArguments.size(); ++i) {
+        result += typeArguments[i]->toString();
+        if (i != typeArguments.size() - 1) [[likely]] { result += ", "; }
+    }
+    result += ']';
+    return result;
+}
+
+std::string Pointer::toString() const {
+    return std::format("{}ptr {}", (isMutable ? "mut " : ""), baseType->toString());
+}
+
 constexpr inline size_t GOLDEN_RATIO = (sizeof(size_t) == 8) ? 0x9E3779B97F4A7C15ULL  // 64-bit fraction
-                                                      : 0x9E3779B9U;  // 32-bit fraction
+                                                             : 0x9E3779B9U;  // 32-bit fraction
 
 size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
     // start by hashing the type kind (isolates primitives, pointers, etc)

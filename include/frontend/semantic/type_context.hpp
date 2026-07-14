@@ -39,6 +39,10 @@ struct SemanticType {
     constexpr bool isPointer() const noexcept { return kind == Kind::Pointer; }
     constexpr bool isPrimitive() const noexcept { return kind == Kind::Primitive; }
 
+    virtual std::string toString() const {
+        return std::string(ast::primitiveTypeToString(primitiveType));
+    }
+
    private:
     constexpr SemanticType() noexcept : kind(Kind::Primitive), primitiveType(ast::PrimitiveType_t::not_primitive) {}
 
@@ -53,6 +57,7 @@ struct Aggregate final : public SemanticType {
         SemanticType(Kind::Aggregate), fieldTypes(std::move(types)), name(aggregateName) {}
 
     ~Aggregate() override = default;
+    std::string toString() const override;
 };
 
 struct Array final : public SemanticType {
@@ -62,6 +67,8 @@ struct Array final : public SemanticType {
     Array(const SemanticType* baseType, size_t len) noexcept :
         SemanticType(Kind::Array), elementType(baseType), length(len) {}
     ~Array() override = default;
+    std::string toString() const override;
+
 };
 
 struct Parameter {
@@ -81,6 +88,8 @@ struct Function final : public SemanticType {
         parameterTypes(std::move(params)) {}
 
     ~Function() override = default;
+    std::string toString() const override;
+
 };
 
 struct GenericInstance final : public SemanticType {
@@ -91,6 +100,8 @@ struct GenericInstance final : public SemanticType {
         SemanticType(Kind::Generic), baseType(base), typeArguments(std::move(args)) {}
 
     ~GenericInstance() override = default;
+    std::string toString() const override;
+
 };
 
 struct Pointer final : public SemanticType {
@@ -100,6 +111,7 @@ struct Pointer final : public SemanticType {
     Pointer(const SemanticType* base, bool isMut) noexcept :
         SemanticType(Kind::Pointer), baseType(base), isMutable(isMut) {}
     ~Pointer() override = default;
+    std::string toString() const override;
 };
 
 struct TypeLookup {
