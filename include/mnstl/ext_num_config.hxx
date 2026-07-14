@@ -13,7 +13,6 @@
 #define MNSTL_HAS_STDFLOAT 0
 #endif
 
-
 // This should be set by a build system (e.g. CMake)
 #ifndef MNSTL_USE_COMPILER_EXTENDED_TYPES
 #define MNSTL_USE_COMPILER_EXTENDED_TYPES 0
@@ -158,5 +157,71 @@ template <class T>
 using mnstl_make_unsigned_t = typename mnstl_make_unsigned<std::remove_reference_t<T>>::type;
 
 }  // namespace mnstl
+
+#if !MNSTL_USE_COMPILER_EXTENDED_TYPES
+namespace std {
+// Native integer + (u)int128
+template <class T>
+    requires(mnstl::Integral<T> && !std::is_same_v<std::remove_cvref_t<T>, mnstl::int128_t>)
+struct common_type<mnstl::int128_t, T> {
+    using type = mnstl::int128_t;
+};
+template <class T>
+    requires(mnstl::Integral<T> && !std::is_same_v<std::remove_cvref_t<T>, mnstl::int128_t>)
+struct common_type<T, mnstl::int128_t> {
+    using type = mnstl::int128_t;
+};
+
+template <class T>
+    requires(mnstl::Integral<T> && (!std::is_same_v<std::remove_cvref_t<T>, mnstl::uint128_t>))
+struct common_type<mnstl::uint128_t, T> {
+    // If mixed with a signed integer type, promote to signed int128_t to preserve sign correctness.
+    // Otherwise, keep it as an unsigned uint128_t.
+    using type = std::conditional_t<mnstl::SignedIntegral<T>, mnstl::int128_t, mnstl::uint128_t>;
+};
+
+template <class T>
+    requires(mnstl::Integral<T> && (!std::is_same_v<std::remove_cvref_t<T>, mnstl::uint128_t>))
+struct common_type<T, mnstl::uint128_t> {
+    using type = std::conditional_t<mnstl::SignedIntegral<T>, mnstl::int128_t, mnstl::uint128_t>;
+};
+
+// Native float + (u)int128
+template <class T>
+    requires(mnstl::FloatingPoint<T>)
+struct common_type<T, mnstl::int128_t> {
+    using type = mnstl::float64_t;
+};
+template <class T>
+    requires(mnstl::FloatingPoint<T>)
+struct common_type<mnstl::int128_t, T> {
+    using type = mnstl::float64_t;
+};
+
+template <class T>
+    requires(mnstl::FloatingPoint<T>)
+struct common_type<T, mnstl::uint128_t> {
+    using type = mnstl::float64_t;
+};
+template <class T>
+    requires(mnstl::FloatingPoint<T>)
+struct common_type<mnstl::uint128_t, T> {
+    using type = mnstl::float64_t;
+};
+
+template <>
+struct common_type<mnstl::int128_t, mnstl::uint128_t> {
+    using type = mnstl::int128_t;
+};
+
+template <>
+struct common_type<mnstl::uint128_t, mnstl::int128_t> {
+    using type = mnstl::int128_t;
+};
+
+// int128 and uint128
+
+}  // namespace std
+#endif  // !MNSTL_USE_COMPILER_EXTENDED_TYPES
 
 #endif  // MNSTL_EXT_NUM_CONFIG
