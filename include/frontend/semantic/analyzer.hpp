@@ -22,11 +22,12 @@ class analyzer final : public _analyzer_base_t {
     parser::ParsedFile& parsedFile;
 
     struct {
-        bool inFunction : 1 = false;
-        bool inIfStatement : 1 = false;
-        bool inSwitchStatement : 1 = false;
-        bool inForLoop : 1 = false;
-        bool inWhileLoop : 1 = false;
+        bool inFunction: 1 = false;
+        uint8_t ifStatementDepth = 0;
+        uint8_t switchStatementDepth = 0;
+        uint8_t forLoopDepth = 0;
+        uint8_t whileLoopDepth = 0;
+        SemanticType* currentFunctionReturnType = nullptr;
     } context;
 
    public:
@@ -46,7 +47,8 @@ class analyzer final : public _analyzer_base_t {
         for (const auto& stmt : parsedFile.program) { _collectTypesInStatement(stmt); }
     }
 
-    bool areTypesCompatible(ast::Type*, ast::Type*) { return false; }
+    bool areTypesCompatible(const ast::Type*, const ast::Type*) { return false; }
+    bool areTypesCompatible(const SemanticType*, const SemanticType*) { return false; }
 
     void _collectTypesInStatement(ast::Statement*);
     void _collectTypesInStatementBody(ast::Statement*);
@@ -102,6 +104,15 @@ class analyzer final : public _analyzer_base_t {
     Result visit(std::nullptr_t) const noexcept {
         logging::logInternal(logging::LogLevel::Warning, "visit() called on nullptr in analyzer");
         return Result::Failure;
+    }
+
+    Result visit(ast::Block& block) {
+        Result result = Result::Success;
+        for (auto statement : block) {
+            auto stmtResult = visit(statement);
+            result = (result == Result::Success && stmtResult == Result::Success) ? Result::Success : Result::Failure;
+        }
+        return result;
     }
 };
 
