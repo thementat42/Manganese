@@ -79,7 +79,7 @@ KEYWORD(As, "as")
 
 KEYWORD(Aggregate, "aggregate")
 KEYWORD(Enum, "enum")
-KEYWORD(Blueprint, "blueprint")
+// KEYWORD(Blueprint, "blueprint")
 
 KEYWORD(Alias, "alias")
 KEYWORD(Alignof, "alignof")

@@ -56,6 +56,7 @@ mnstl::fold_result_t PrefixExpression::fold() const noexcept {
         default: ASSERT_UNREACHABLE(std::format("Unknown prefix operator {}", lexer::tokenTypeToString(op)));
     }
 };
+
 mnstl::fold_result_t PostfixExpression::fold() const noexcept {
     mnstl::fold_result_t result = left->fold();
     if (!result.has_value()) { return mnstl::fold_result_t{}; }
