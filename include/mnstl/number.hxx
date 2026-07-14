@@ -5,9 +5,42 @@
 #include <core.hpp>
 #include <limits>
 #include <mnstl/i128.hxx>
+#include <mnstl/safe_cmp.hxx>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
+
+#define MNSTL_NUMBER_BINARY_OP(op)                                                                            \
+    return _visit([&](auto l) {                                                                               \
+        return other._visit([&](auto r) {                                                                     \
+            if constexpr (std::is_same_v<decltype(l), const char*>) {                                         \
+                return number_t{l};                                                                           \
+            } else if constexpr (std::is_same_v<decltype(r), const char*>) {                                  \
+                return number_t{r};                                                                           \
+            } else {                                                                                          \
+                using common_t = std::common_type_t<decltype(l), decltype(r)>;                                \
+                return number_t{static_cast<common_t>(static_cast<common_t>(l) op static_cast<common_t>(r))}; \
+            }                                                                                                 \
+        });                                                                                                   \
+    });
+
+#define MNSTL_NUMBER_INTEGRAL_BINARY_OP(op)                                                                   \
+    return _visit([&](auto l) {                                                                               \
+        return other._visit([&](auto r) {                                                                     \
+            if constexpr (std::is_same_v<decltype(l), const char*>) {                                         \
+                return number_t{l};                                                                           \
+            } else if constexpr (std::is_same_v<decltype(r), const char*>) {                                  \
+                return number_t{r};                                                                           \
+            } else if constexpr (Integral<decltype(l)> && Integral<decltype(r)>) {                            \
+                /*Specialized for custom 128-bit*/                                                            \
+                using common_t = std::common_type_t<decltype(l), decltype(r)>;                                \
+                return number_t{static_cast<common_t>(static_cast<common_t>(l) op static_cast<common_t>(r))}; \
+            } else {                                                                                          \
+                return number_t{"Cannot apply operator " #op " to floating point values"};                    \
+            }                                                                                                 \
+        });                                                                                                   \
+    });
 
 namespace mnstl {
 // struct zero_init_t {
@@ -48,11 +81,13 @@ class number_t {
         uint128,
         float32,
         float64,
+        error,
         none
     };
 
    private:
     union {
+        const char* _err;
         int128_t _i128;
         uint128_t _u128;
         float64_t _f64;
@@ -84,6 +119,7 @@ class number_t {
             case float64: return std::forward<F>(f)(_f64);
             case int128: return std::forward<F>(f)(_i128);
             case uint128: return std::forward<F>(f)(_u128);
+            case error: return std::forward<F>(f)(_err);
             case none: ASSERT_UNREACHABLE("Attempted to read a number_t with no stored value");
             default: ASSERT_UNREACHABLE("In number_t::visit: unknown underlying type");
         }
@@ -110,6 +146,7 @@ class number_t {
 
     constexpr number_t(float32_t f32) noexcept : _f32(f32), _underlying(held_type::float32) {}
     constexpr number_t(float64_t f64) noexcept : _f64(f64), _underlying(held_type::float64) {}
+    constexpr number_t(const char* error_message) noexcept : _err(error_message), _underlying(held_type::error) {}
 
     // constexpr number_t(zero_init_t, held_type t) noexcept : _underlying(t) {
     //     using enum held_type;
@@ -138,6 +175,7 @@ class number_t {
     constexpr ~number_t() noexcept = default;
 
     // constexpr bool has_value() const noexcept { return _underlying != held_type::none; }
+    constexpr bool is_error() const noexcept { return _underlying == held_type::error; }
 
     constexpr held_type underlying_type() const noexcept { return _underlying; }
     // constexpr bool is_integer() const noexcept {
@@ -172,9 +210,11 @@ class number_t {
 
     constexpr std::string to_string(bool trim_trailing_decimals = false) const noexcept {
         if (_underlying == held_type::none) { return ""; }
-        std::string result = _visit([](Numeric auto v) -> std::string {
+        std::string result = _visit([&](auto v) -> std::string {
             using U = std::remove_cvref_t<decltype(v)>;
-            if constexpr (std::is_same_v<U, int8_t> || std::is_same_v<U, uint8_t>) {
+            if constexpr (std::is_same_v<decltype(v), const char*>) {
+                return _err;
+            } else if constexpr (std::is_same_v<U, int8_t> || std::is_same_v<U, uint8_t>) {
                 // since int8 and uint8 are char-based, force a promotion to an integer here to print out a number
                 // without the promotion this results in an ASCII character
                 return std::to_string(+v);
@@ -199,7 +239,145 @@ class number_t {
         }
         return result;
     }
-};
+
+    // Operators
+    constexpr number_t operator-() const noexcept {
+        return _visit([](auto val) {
+            if constexpr (std::is_same_v<decltype(val), const char*>) {
+                return number_t{val};
+            }
+            // by default -(an unsigned type) wraps around; we want to make it signed
+            else if constexpr (UnsignedIntegral<decltype(val)>) {
+                return number_t{-static_cast<mnstl_make_signed_t<decltype(val)>>(val)};
+            } else {
+                return number_t{-val};
+            }
+        });
+    }
+
+    constexpr number_t operator+() const noexcept {
+        return _visit([](auto val) { return number_t{val}; });
+    }
+
+    constexpr number_t operator~() const noexcept {
+        return _visit([](auto val) {
+            if constexpr (std::is_same_v<decltype(val), const char*>) {
+                return number_t{val};
+            } else if constexpr (FloatingPoint<decltype(val)>) {
+                return number_t{};
+            } else {
+                return number_t{~val};
+            }
+        });
+    }
+
+    constexpr number_t operator+(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(+); }
+    constexpr number_t operator-(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(-); }
+    constexpr number_t operator*(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(*); }
+    constexpr number_t operator%(const number_t& other) const noexcept {
+        return _visit([&](auto l) {
+            return other._visit([&](auto r) {
+                if constexpr (std ::is_same_v<decltype(l), const char*>) {
+                    return number_t{l};
+                } else if constexpr (std ::is_same_v<decltype(r), const char*>) {
+                    return number_t{r};
+                } else if constexpr (Integral<decltype(l)> && Integral<decltype(r)>) {
+                    using common_t = std ::common_type_t<decltype(l), decltype(r)>;
+                    auto val_l = static_cast<common_t>(l);
+                    auto val_r = static_cast<common_t>(r);
+                    if (val_r == 0) { return number_t{"Cannot modulo by 0"}; }
+                    return number_t{static_cast<common_t>(val_l % val_r)};
+                } else {
+                    return number_t{};
+                }
+            });
+        });
+        ;
+    }
+
+    constexpr number_t true_div(const number_t& other) const noexcept {
+        return _visit([&](auto l) {
+            return other._visit([&](auto r) {
+                if constexpr (std::is_same_v<decltype(l), const char*>) {
+                    return number_t{l};
+                } else if constexpr (std::is_same_v<decltype(r), const char*>) {
+                    return number_t{r};
+                } else {
+                    // division by 0 is ok (+/- inf)
+                    return number_t{static_cast<float64_t>(l) / static_cast<float64_t>(r)};
+                }
+            });
+        });
+    }
+    constexpr number_t floor_div(const number_t& other) const noexcept {
+        return _visit([&](auto l) {
+            return other._visit([&](auto r) {
+                if constexpr (std::is_same_v<decltype(l), const char*>) {
+                    return number_t{l};
+                } else if constexpr (std::is_same_v<decltype(r), const char*>) {
+                    return number_t{r};
+                } else if (r == 0) {
+                    return number_t{"Cannot floor divide by 0"};
+                } else {
+                    using common_t = std::common_type_t<decltype(l), decltype(r)>;
+                    auto val_l = static_cast<common_t>(l);
+                    auto val_r = static_cast<common_t>(r);
+
+                    if constexpr (FloatingPoint<common_t>) {
+                        return number_t(std::floor(val_l / val_r));
+                    } else {
+                        auto res = val_l / val_r;
+                        auto rem = val_l % val_r;
+                        if ((val_l < 0 ^ val_r < 0) && rem != 0) { --res; }
+                        return number_t{res};
+                    }
+                }
+            });
+        });
+    }
+
+    constexpr number_t operator&(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(&); }
+    constexpr number_t operator|(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(|); }
+    constexpr number_t operator^(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(^); }
+    constexpr number_t operator<<(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(<<); }
+    constexpr number_t operator>>(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(>>); }
+
+    constexpr bool operator==(const number_t& other) const noexcept {
+        return _visit([&](auto l) {
+            return other._visit([&](auto r) {
+                if constexpr (std ::is_same_v<decltype(l), const char*>) {
+                    return false;
+                } else if constexpr (std ::is_same_v<decltype(r), const char*>) {
+                    return false;
+                } else if constexpr (Integral<decltype(l)> && Integral<decltype(r)>) {
+                    return safe_equal(l, r);
+                } else {
+                    using common_t = std ::common_type_t<decltype(l), decltype(r)>;
+                    return static_cast<common_t>(l) == static_cast<common_t>(r);
+                }
+            });
+        });
+    }
+    constexpr std::partial_ordering operator<=>(const number_t& other) const noexcept {
+        return _visit([&](auto l) {
+            return other._visit([&](auto r) {
+                if constexpr (std ::is_same_v<decltype(l), const char*>) {
+                    return std::partial_ordering::unordered;
+                } else if constexpr (std ::is_same_v<decltype(r), const char*>) {
+                    return std::partial_ordering::unordered;
+                } else if constexpr (Integral<decltype(l)> && Integral<decltype(r)>) {
+                    return safe_less(l, r)
+                        ? std::partial_ordering::less
+                        : (safe_greater(l, r) ? std::partial_ordering::greater : std::partial_ordering::equivalent);
+                } else {
+                    // Floating point, so conversion is fine
+                    using common_t = std ::common_type_t<decltype(l), decltype(r)>;
+                    return static_cast<common_t>(l) <=> static_cast<common_t>(r);
+                }
+            });
+        });
+    }
+};  // class number_t
 
 constexpr FORCE_INLINE std::string to_string(const number_t& x) noexcept { return x.to_string(); }
 
@@ -509,5 +687,7 @@ constexpr string_conversion_result_t<number_t> str_to_num(std::string_view str, 
 }
 
 }  // namespace mnstl
-
+#undef MNSTL_NUMBER_BINARY_OP
+#undef MNSTL_NUMBER_INTEGRAL_BINARY_OP
+#undef MNSTL_NUMBER_COMPARISON_OP
 #endif  // MNSTL_NUMBER
