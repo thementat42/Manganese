@@ -50,6 +50,7 @@ std::string_view getNumberTypeName(const mnstl::number_t& value) {
         case mnstl::number_t::held_type::uint128: return uint128_str;
         case mnstl::number_t::held_type::float32: return float32_str;
         case mnstl::number_t::held_type::float64: return float64_str;
+        case mnstl::number_t::held_type::error: return "error";
         case mnstl::number_t::held_type::none: ASSERT_UNREACHABLE("Number did not hold a value");
     }
     ASSERT_UNREACHABLE("Number did not hold a valid type");
