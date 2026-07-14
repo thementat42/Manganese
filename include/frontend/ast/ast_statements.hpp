@@ -40,7 +40,7 @@ struct AggregateDeclarationStatement final : public Statement {
         name(std::move(name_)),
         genericTypes(std::move(genericTypes_)),
         fields(std::move(fields_)) {}
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct AliasStatement final : public Statement {
@@ -51,24 +51,24 @@ struct AliasStatement final : public Statement {
     AliasStatement(Type* baseType_, std::string&& alias_) noexcept :
         Statement(StatementKind::AliasStatement), baseType(baseType_), alias(std::move(alias_)) {}
 
-    AST_STANDARD_INTERFACE
+    MN_AST_STANDARD_INTERFACE
 };
 
 struct BreakStatement final : public Statement {
     constexpr explicit BreakStatement() noexcept : Statement(StatementKind::BreakStatement) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct ContinueStatement final : public Statement {
     constexpr explicit ContinueStatement() noexcept : Statement(StatementKind::ContinueStatement) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct EmptyStatement final : public Statement {
     constexpr explicit EmptyStatement() noexcept : Statement(StatementKind::EmptyStatement) {}
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct EnumValue {
@@ -89,7 +89,7 @@ struct EnumDeclarationStatement final : public Statement {
         baseType(baseType_),
         values(std::move(values_)) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 /**
@@ -101,7 +101,7 @@ struct ExpressionStatement final : public Statement {
     explicit ExpressionStatement(Expression* expression_) noexcept :
         Statement(StatementKind::ExpressionStatement), expression(expression_) {};
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct ForLoopStatement final : public Statement {
@@ -118,7 +118,7 @@ struct ForLoopStatement final : public Statement {
         postExpression(postExpression_),
         body(std::move(body_)) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct FunctionParameter {
@@ -145,7 +145,7 @@ struct FunctionDeclarationStatement final : public Statement {
         returnType(returnType_),
         body(std::move(body_)) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct ElifClause {
@@ -168,7 +168,7 @@ struct IfStatement final : public Statement {
         elseBody(std::move(elseBody_)),
         elifs(std::move(elifs_)) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct ReturnStatement final : public Statement {
@@ -177,7 +177,7 @@ struct ReturnStatement final : public Statement {
     explicit ReturnStatement(Expression* value_ = nullptr) noexcept :
         Statement(StatementKind::ReturnStatement), value(value_) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct CaseClause {
@@ -196,7 +196,7 @@ struct SwitchStatement final : public Statement {
         cases(std::move(cases_)),
         defaultBody(std::move(defaultBody_)) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct VariableDeclarationStatement final : public Statement {
@@ -215,7 +215,7 @@ struct VariableDeclarationStatement final : public Statement {
         value(_value),
         type(_type) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct WhileLoopStatement final : public Statement {
@@ -229,7 +229,7 @@ struct WhileLoopStatement final : public Statement {
         condition(condition_),
         isDoWhile(isDoWhile_) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 }  // namespace ast

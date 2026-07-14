@@ -27,7 +27,7 @@ struct AggregateType final : public Type {
 
     explicit AggregateType(std::vector<Type*>&& fieldTypes_) noexcept :
         Type(TypeKind::AggregateType), fieldTypes(std::move(fieldTypes_)) {}
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 /**
@@ -41,7 +41,7 @@ struct ArrayType final : public Type {
     explicit ArrayType(Type* elementType_, Expression* lengthExpr_ = nullptr) noexcept :
         Type(TypeKind::ArrayType), elementType(elementType_), lengthExpression(lengthExpr_) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct FunctionParameterType {
@@ -61,7 +61,7 @@ struct FunctionType final : public Type {
     FunctionType(std::vector<FunctionParameterType>&& parameterTypes_, Type* returnType_) noexcept :
         Type(TypeKind::FunctionType), parameterTypes(std::move(parameterTypes_)), returnType(returnType_) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 /**
@@ -75,7 +75,7 @@ struct GenericType final : public Type {
     GenericType(Type* baseType_, std::vector<Type*>&& typeParameters_) noexcept :
         Type(TypeKind::GenericType), baseType(baseType_), typeParameters(std::move(typeParameters_)) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 /**
@@ -88,7 +88,7 @@ struct PointerType final : public Type {
     PointerType(Type* baseType_, bool isMutable_) noexcept :
         Type(TypeKind::PointerType), baseType(baseType_), isMutable(isMutable_) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 /**
@@ -99,7 +99,7 @@ struct SymbolType final : public Type {
 
     constexpr explicit SymbolType(std::string&& name_, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
         Type(TypeKind::SymbolType, prim), name(std::move(name_)) {}
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct TypeofType final : public Type {
@@ -108,7 +108,7 @@ struct TypeofType final : public Type {
     explicit TypeofType(Expression* expr) noexcept :
         Type(TypeKind::TypeofType, PrimitiveType_t::not_primitive), expression(expr) {}
 
-    AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE;
 };
 
 }  // namespace ast
