@@ -498,14 +498,14 @@ bool testSizeofTypeofAlignof() {
                              "alignof(char);\n"
                              "alignof(x+1);\n"
                              "let x: typeof(x+1) = 3;\n"
-                             "let y : typeof(foo@[int,char]((p as int32)) + (bar as typeof(3u128)));";
+                             "let y : typeof(foo@[int,char]((p as int32)) + (bar + baz as typeof(3u128)));";
     std::array<std::string, 6> expected
         = {"(sizeof(int32));",
            "(sizeof(dummy));",
            "(alignof(char));",
            "(alignof(dummy));",
            "(let x: private typeof((x + 1)) = 3);",
-           "(let y: private typeof((foo@[int32, char]((p as int32)) + (bar as typeof(3)))));"};
+           "(let y: private typeof((foo@[int32, char]((p as int32)) + ((bar + baz) as typeof(3)))));"};
     return validateStatements(getParserResults(expression), expected, "Sizeof, Typeof & Alignof");
 }
 
