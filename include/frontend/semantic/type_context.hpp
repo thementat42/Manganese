@@ -74,6 +74,12 @@ struct Parameter {
     const SemanticType* type;
 
     bool operator==(const Parameter&) const noexcept = default;
+
+    inline std::string toString() const {
+        std::string result = "";
+        if (isMutable) { result = "mut "; }
+        return result + type->toString();
+    }
 };
 
 struct Function final : public SemanticType {
