@@ -11,6 +11,9 @@
 #include <frontend/semantic/type_context.hpp>
 #include <utility>
 
+#include "mnstl/chunk_allocator.hxx"
+
+
 namespace Manganese {
 namespace semantic {
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
@@ -42,12 +45,17 @@ class analyzer final : public _analyzer_base_t {
     };
 
    public:
-    analyzer(parser::ParsedFile& file) : symbolTable(), typeContext(), parsedFile(file) {}
+    analyzer(parser::ParsedFile& file, mnstl::chunk_allocator& arena) :
+        symbolTable(arena), typeContext(), parsedFile(file) {}
 
     Result analyze() {
         collectTypes();
         collectGlobals();
         collectAndSpecializeGenerics();
+        // Don't want errors cascading because of conflicting redeclarations
+        if (symbolTable.hasError()) { return Result::Failure; }
+
+        symbolTable.switchToCheckingMode();
         Result isSemanticallyValid = checkStatements();
         return isSemanticallyValid;
     }

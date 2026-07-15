@@ -3,17 +3,19 @@
 
 #include <stdint.h>
 
+#include <core.hpp>
 #include <format>
 #include <frontend/ast.hpp>
 #include <functional>
-#include <core.hpp>
 #include <io/logging.hpp>
+#include <mnstl/chunk_allocator.hxx>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
+
 
 namespace Manganese {
 namespace semantic {
@@ -36,7 +38,6 @@ enum class SymbolKind : uint8_t {
 struct Symbol {
     ast::Type* type = nullptr;
     ast::ASTNode* node = nullptr;
-    size_t scopeDepth = 0;
     SymbolKind kind;
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
@@ -47,6 +48,10 @@ struct Scope {
     // std::equal_to<> enables heterogenous lookup (e.g. looking up with std::string or const char*)
     // so explicit conversions are not required
     std::unordered_map<std::string_view, Symbol, std::hash<std::string_view>, std::equal_to<>> symbols;
+    Scope* parent = nullptr;
+    std::vector<Scope*> children;
+    size_t currentChildIndex = 0;
+
     inline Result insert(std::string_view name, Symbol symbol) {
         bool emplace_succeeded = symbols.emplace(name, std::move(symbol)).second;
         return emplace_succeeded ? Result::Success : Result::Failure;
@@ -60,30 +65,61 @@ struct Scope {
 
 class SymbolTable {
    private:
-    std::vector<Scope> _scopes;
-    int64_t _currentDepth;
-    bool _hasError;
+    mnstl::chunk_allocator& _arena;
+    Scope* _root;
+    Scope* _currentScope;
+    struct {
+        bool _hasError : 1 = false;
+        bool _isFirstPass : 1 = true;  // Toggles table from allocation mode to tree-tracking mode
+    } _flags;
 
-    constexpr bool noScopeAvailable() const noexcept { return _scopes.empty() || _currentDepth < 0; }
+    inline bool noScopeAvailable() const noexcept { return _currentScope == nullptr; }
 
    public:
-    SymbolTable() noexcept : _scopes(), _currentDepth(0), _hasError(false) { _scopes.emplace_back(); }
-    constexpr ~SymbolTable() noexcept = default;
+    SymbolTable(mnstl::chunk_allocator& arena) noexcept :
+        _arena(arena), _root(_arena.emplace<Scope>()), _currentScope(_root) {}
 
-    constexpr bool hasError() const noexcept { return _hasError; }
+    ~SymbolTable() noexcept = default;
 
-    constexpr void enterScope() {
-        ++_currentDepth;
-        if (getCurrentDepth() >= _scopes.size()) { _scopes.emplace_back(); }
+    constexpr bool hasError() const noexcept { return _flags._hasError; }
+
+    // Call before beginning pass 2
+    void switchToCheckingMode() noexcept {
+        _flags._isFirstPass = false;
+
+        auto resetIndices = [](auto& self, Scope* scope) -> void {
+            scope->currentChildIndex = 0;
+            for (Scope* child : scope->children) { self(self, child); }
+        };
+
+        resetIndices(resetIndices, _root);
+        _currentScope = _root;
+    }
+
+    void enterScope() {
+        if (_flags._isFirstPass) {
+            // Allocate memory at lightning speeds via pointer bumping
+            Scope* newScope = _arena.emplace<Scope>();
+            newScope->parent = _currentScope;
+
+            _currentScope->children.push_back(newScope);
+            _currentScope = newScope;
+        } else {
+            if (_currentScope->currentChildIndex >= _currentScope->children.size()) [[unlikely]] {
+                logging::logInternal(logging::LogLevel::Error, "Mismatched scope structural traversal");
+                return;
+            }
+            _currentScope = _currentScope->children[_currentScope->currentChildIndex++];
+        }
     }
 
     void exitScope() noexcept {
-        if (noScopeAvailable()) [[unlikely]] {
-            logging::logInternal(logging::LogLevel::Warning, "Attempted to exit scope when no scope was available");
+        if (noScopeAvailable() || !_currentScope->parent) [[unlikely]] {
+            logging::logInternal(logging::LogLevel::Warning,
+                                 "Attempted to exit scope when no parent scope was available");
             return;
         }
-        // don't pop since we want to preserve info between passes
-        --_currentDepth;
+        _currentScope = _currentScope->parent;
     }
 
     Result declare(std::string_view name, Symbol symbol) {
@@ -91,19 +127,19 @@ class SymbolTable {
             logging::logInternal(logging::LogLevel::Error, "No active scope in which to declare a symbol");
             return Result::Failure;
         }
-        symbol.scopeDepth = getCurrentDepth();
-        return _scopes[getCurrentDepth()].insert(name, std::move(symbol));
+        return _currentScope->insert(name, std::move(symbol));
     }
 
     const Symbol* lookup(std::string_view name) const noexcept {
-        // want to prioritize local symbols over globals so iterate backwards
-        // (i.e. from more nested to less nested scopes)
-
-        for (int64_t i = _currentDepth; i >= 0; --i) {
-            const Symbol* _symbol = _scopes[static_cast<size_t>(i)].lookup(name);
-            if (_symbol) { return _symbol; }
+        // Safe, upward lexical lookup through parent scopes without index array tracking
+        const Scope* probe = _currentScope;
+        while (probe) {
+            const Symbol* symbol = probe->lookup(name);
+            if (symbol) { return symbol; }
+            probe = probe->parent;
         }
-        logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any scope.", name);
+
+        logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", name);
         return nullptr;
     }
 
@@ -112,15 +148,12 @@ class SymbolTable {
             logging::logInternal(logging::LogLevel::Error, "No active scope in which to look up symbol");
             return nullptr;
         }
-        const Symbol* symbol = _scopes[getCurrentDepth()].lookup(name);
+        const Symbol* symbol = _currentScope->lookup(name);
         if (!symbol) {
-            logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found at depth {}", name,
-                                 getCurrentDepth());
+            logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found at current local depth", name);
         }
         return symbol;
     }
-
-    constexpr inline size_t getCurrentDepth() const noexcept { return static_cast<size_t>(_currentDepth); }
 };
 
 }  // namespace semantic
