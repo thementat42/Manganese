@@ -146,20 +146,14 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
     }
 }
 
-TypeContext::TypeContext() noexcept {
-    for (int i = 0; i < static_cast<int>(ast::PrimitiveType_t::boolean); ++i) {
-        _primitives[i] = SemanticType(Kind::Primitive, static_cast<ast::PrimitiveType_t>(i));
-    }
-}
-
 const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) const noexcept {
-    return &_primitives[static_cast<int>(primitive)];
+    return &_primitives[static_cast<unsigned>(primitive)];
 }
 
 const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool isMutable) {
     Pointer tmp(baseType, isMutable);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Pointer>(std::move(tmp));
+    auto* heapAlloc = _allocator.emplace<Pointer>(baseType, isMutable);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -167,7 +161,7 @@ const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool i
 const SemanticType* TypeContext::getArray(const SemanticType* elementType, size_t length) {
     Array tmp(elementType, length);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Array>(std::move(tmp));
+    auto* heapAlloc = _allocator.emplace<Array>(elementType, length);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -175,7 +169,7 @@ const SemanticType* TypeContext::getArray(const SemanticType* elementType, size_
 const SemanticType* TypeContext::getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes) {
     Aggregate tmp(std::move(fieldTypes));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp));
+    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fieldTypes));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -185,7 +179,7 @@ const SemanticType* TypeContext::getNamedAggregate(std::string_view name,
     // Named types are nominal: they are unique by their declaration name.
     Aggregate tmp(std::move(fieldTypes), name);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp));
+    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fieldTypes), name);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -193,7 +187,7 @@ const SemanticType* TypeContext::getNamedAggregate(std::string_view name,
 const SemanticType* TypeContext::getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType) {
     Function tmp(std::move(parameterTypes), returnType);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Function>(std::move(tmp));
+    auto* heapAlloc = _allocator.emplace<Function>(std::move(tmp.parameterTypes), returnType);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -202,7 +196,7 @@ const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType
                                                     std::vector<const SemanticType*>&& typeArguments) {
     GenericInstance tmp(baseType, std::move(typeArguments));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<GenericInstance>(std::move(tmp));
+    auto* heapAlloc = _allocator.emplace<GenericInstance>(baseType, std::move(tmp.typeArguments));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }

@@ -1,3 +1,4 @@
+#include <cstddef>
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_TYPE_CONTEXT_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_TYPE_CONTEXT_HPP 1
 
@@ -24,8 +25,8 @@ enum class Kind : uint8_t {
 };
 
 struct SemanticType {
-    Kind kind;
-    ast::PrimitiveType_t primitiveType;
+    const Kind kind;
+    const ast::PrimitiveType_t primitiveType;
 
     constexpr SemanticType(Kind kind_, ast::PrimitiveType_t primitive = ast::PrimitiveType_t::not_primitive) noexcept :
         kind(kind_), primitiveType(primitive) {}
@@ -39,9 +40,7 @@ struct SemanticType {
     constexpr bool isPointer() const noexcept { return kind == Kind::Pointer; }
     constexpr bool isPrimitive() const noexcept { return kind == Kind::Primitive; }
 
-    virtual std::string toString() const {
-        return std::string(ast::primitiveTypeToString(primitiveType));
-    }
+    virtual std::string toString() const { return std::string(ast::primitiveTypeToString(primitiveType)); }
 
    private:
     constexpr SemanticType() noexcept : kind(Kind::Primitive), primitiveType(ast::PrimitiveType_t::not_primitive) {}
@@ -51,7 +50,7 @@ struct SemanticType {
 
 struct Aggregate final : public SemanticType {
     std::vector<const SemanticType*> fieldTypes;
-    std::string_view name;
+    const std::string_view name;
 
     Aggregate(std::vector<const SemanticType*>&& types, std::string_view aggregateName = "") noexcept :
         SemanticType(Kind::Aggregate), fieldTypes(std::move(types)), name(aggregateName) {}
@@ -68,7 +67,6 @@ struct Array final : public SemanticType {
         SemanticType(Kind::Array), elementType(baseType), length(len) {}
     ~Array() override = default;
     std::string toString() const override;
-
 };
 
 struct Parameter {
@@ -89,7 +87,6 @@ struct Function final : public SemanticType {
 
     ~Function() override = default;
     std::string toString() const override;
-
 };
 
 struct GenericInstance final : public SemanticType {
@@ -101,7 +98,6 @@ struct GenericInstance final : public SemanticType {
 
     ~GenericInstance() override = default;
     std::string toString() const override;
-
 };
 
 struct Pointer final : public SemanticType {
@@ -127,12 +123,18 @@ struct TypeLookup {
 class TypeContext {
    private:
     mnstl::chunk_allocator _allocator;
+    constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType_t::boolean) + 1;
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
-    SemanticType _primitives[static_cast<int>(ast::PrimitiveType_t::boolean) + 1];
+    std::array<SemanticType, NUM_PRIMITIVES> _primitives;
+
+    template <std::size_t... Is>
+    constexpr static std::array<SemanticType, sizeof...(Is)> _makePrimitives(std::index_sequence<Is...>) noexcept {
+        return {SemanticType(Kind::Primitive, static_cast<ast::PrimitiveType_t>(Is))...};
+    }
 
    public:
-    TypeContext() noexcept;
+    TypeContext() noexcept : _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {};
     ~TypeContext() = default;
 
     TypeContext(const TypeContext&) = delete;
@@ -150,7 +152,8 @@ class TypeContext {
 
     const SemanticType* getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType);
 
-    const SemanticType* getGenericInstance(const SemanticType* baseType, std::vector<const SemanticType*>&& typeArguments);
+    const SemanticType* getGenericInstance(const SemanticType* baseType,
+                                           std::vector<const SemanticType*>&& typeArguments);
 };
 
 }  // namespace semantic
