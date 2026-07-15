@@ -22,13 +22,24 @@ class analyzer final : public _analyzer_base_t {
     parser::ParsedFile& parsedFile;
 
     struct {
-        bool inFunction: 1 = false;
+        bool inFunction : 1 = false;
         uint8_t ifStatementDepth = 0;
         uint8_t switchStatementDepth = 0;
         uint8_t forLoopDepth = 0;
         uint8_t whileLoopDepth = 0;
         SemanticType* currentFunctionReturnType = nullptr;
     } context;
+
+    struct typeCompatibilityResult {
+        enum result_t {
+            Error,
+            Warning,
+            Valid
+        };
+        result_t result;
+        std::string errorMessage = "";
+        operator bool() { return result != Error; }
+    };
 
    public:
     analyzer(parser::ParsedFile& file) : symbolTable(), typeContext(), parsedFile(file) {}
@@ -47,7 +58,7 @@ class analyzer final : public _analyzer_base_t {
         for (const auto& stmt : parsedFile.program) { _collectTypesInStatement(stmt); }
     }
 
-    bool areTypesCompatible(const SemanticType*, const SemanticType*) const;
+    typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
 
     void _collectTypesInStatement(ast::Statement*);
     void _collectTypesInStatementBody(ast::Statement*);
