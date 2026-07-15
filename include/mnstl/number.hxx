@@ -379,7 +379,7 @@ class number_t {
     }
 };  // class number_t
 
-constexpr FORCE_INLINE std::string to_string(const number_t& x) noexcept { return x.to_string(); }
+constexpr std::string to_string(const number_t& x) noexcept { return x.to_string(); }
 
 template <class T>
     requires(std::is_constructible_v<number_t, T>)

@@ -10,26 +10,26 @@
 namespace Manganese {
 namespace lexer {
 // ~ Constants for UTF-8 encoding
-constexpr uint32_t UTF8_1B_MAX = 0x7F;
-constexpr uint32_t UTF8_2B_MAX = 0x7FF;
-constexpr uint32_t UTF8_3B_MAX = 0xFFFF;
-constexpr uint32_t UTF8_4B_MAX = 0x10FFFF;
-constexpr uint32_t UTF16_SURROGATE_MIN = 0xD800;
-constexpr uint32_t UTF16_SURROGATE_MAX = 0xDFFF;
+constexpr inline uint32_t UTF8_1B_MAX = 0x7F;
+constexpr inline uint32_t UTF8_2B_MAX = 0x7FF;
+constexpr inline uint32_t UTF8_3B_MAX = 0xFFFF;
+constexpr inline uint32_t UTF8_4B_MAX = 0x10FFFF;
+constexpr inline uint32_t UTF16_SURROGATE_MIN = 0xD800;
+constexpr inline uint32_t UTF16_SURROGATE_MAX = 0xDFFF;
 
-constexpr uint8_t UTF8_2B_PRE = 0xC0;
-constexpr uint8_t UTF8_3B_PRE = 0xE0;
-constexpr uint8_t UTF8_4B_PRE = 0xF0;
-constexpr uint8_t UTF8_CONT_PRE = 0x80;
+constexpr inline uint8_t UTF8_2B_PRE = 0xC0;
+constexpr inline uint8_t UTF8_3B_PRE = 0xE0;
+constexpr inline uint8_t UTF8_4B_PRE = 0xF0;
+constexpr inline uint8_t UTF8_CONT_PRE = 0x80;
 
-constexpr uint8_t UTF8_2B_MASK = 0x1F;
-constexpr uint8_t UTF8_3B_MASK = 0x0F;
-constexpr uint8_t UTF8_4B_MASK = 0x07;
-constexpr uint8_t UTF8_CONT_MASK = 0x3F;
+constexpr inline uint8_t UTF8_2B_MASK = 0x1F;
+constexpr inline uint8_t UTF8_3B_MASK = 0x0F;
+constexpr inline uint8_t UTF8_4B_MASK = 0x07;
+constexpr inline uint8_t UTF8_CONT_MASK = 0x3F;
 
-constexpr uint8_t UTF8_CONT_SHIFT = 6;
-constexpr uint8_t UTF8_2B_SHIFT = 12;
-constexpr uint8_t UTF8_3B_SHIFT = 18;
+constexpr inline uint8_t UTF8_CONT_SHIFT = 6;
+constexpr inline uint8_t UTF8_2B_SHIFT = 12;
+constexpr inline uint8_t UTF8_3B_SHIFT = 18;
 
 std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& escapeString) {
     std::string processed;

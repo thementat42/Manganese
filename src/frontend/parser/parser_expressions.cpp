@@ -148,7 +148,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
             = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation").getLexeme();
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
         // want precedence to be 1 higher than assignment (e.g. field = x = 10 is invalid)
-        constexpr auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
+        const auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         auto value = parseExpression(static_cast<Precedence>(precedence_));
 
         auto is_duplicate
@@ -217,7 +217,7 @@ ast::Expression* Parser::parseArrayInstantiationExpression() {
         if (peekTokenType() == lexer::TokenType::RightSquare) {
             break;  // Done instantiation
         }
-        constexpr auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
+        const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         auto element = parseExpression(static_cast<Precedence>(precedence));
         elements.push_back(element);
         if (peekTokenType() != lexer::TokenType::RightSquare) {
@@ -282,7 +282,7 @@ ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedenc
 ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the left square bracket
     DISCARD(precedence);  // Avoid unused variable warning
-    constexpr auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
+    const auto precedence_ = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
     ast::Expression* index = parseExpression(static_cast<Precedence>(precedence_));
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
     return arena.emplace<ast::IndexExpression>(left, index);
