@@ -47,8 +47,7 @@ class analyzer final : public _analyzer_base_t {
         for (const auto& stmt : parsedFile.program) { _collectTypesInStatement(stmt); }
     }
 
-    bool areTypesCompatible(const ast::Type*, const ast::Type*) { return false; }
-    bool areTypesCompatible(const SemanticType*, const SemanticType*) { return false; }
+    bool areTypesCompatible(const SemanticType*, const SemanticType*) const;
 
     void _collectTypesInStatement(ast::Statement*);
     void _collectTypesInStatementBody(ast::Statement*);
@@ -58,6 +57,7 @@ class analyzer final : public _analyzer_base_t {
         // foo@[int] -> create a specialization of foo w/ int)
         // does nothing for now
     }
+
     inline Result checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
         Result programIsSemanticallyValid = Result::Success;
         for (auto& stmt : parsedFile.program) {
@@ -71,6 +71,7 @@ class analyzer final : public _analyzer_base_t {
         return (t == i8) || (t == i16) || (t == i32) || (t == i64) || (t == i128) || (t == u8) || (t == u16)
             || (t == u32) || (t == u64) || (t == u128);
     }
+
     constexpr static bool isFloat(ast::PrimitiveType_t t) noexcept {
         using enum ast::PrimitiveType_t;
         return (t == f32) || (t == f64);
@@ -80,6 +81,7 @@ class analyzer final : public _analyzer_base_t {
         using enum ast::PrimitiveType_t;
         return (t == u8) || (t == u16) || (t == u32) || (t == u64) || (t == u128);
     }
+
     constexpr static bool isNumeric(ast::PrimitiveType_t t) noexcept { return isInteger(t) || isFloat(t); }
 
     template <class... Args>
