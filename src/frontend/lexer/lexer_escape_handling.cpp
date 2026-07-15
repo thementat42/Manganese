@@ -43,7 +43,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
         ++i;  // skip the backslash
         if (i >= escapeString.length()) {
             logging::logError(getLine(), getCol(), "Incomplete escape sequence at end of string");
-            return NONE;
+            return std::nullopt;
         }
         std::optional<char32_t> escapeChar;
         uint8_t skipLength = 1;
@@ -68,7 +68,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
             } else if (escapeString[i] == 'u') {
                 logging::logError(getLine(), getCol(), "Invalid unicode escape sequence (expected \\uXXXX)");
             }
-            return NONE;
+            return std::nullopt;
         }
         i += skipLength;
         processed += encodeUTF8String(*escapeChar);
@@ -122,7 +122,7 @@ std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_
                 line, col,
                 "\\{} is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ",
                 escapeChar);
-            return NONE;
+            return std::nullopt;
     }
 }
 
@@ -135,9 +135,9 @@ inline int hexDigitToInt(char c) {
 
 std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
     // Check that the string is exactly 2 characters long
-    if (esc.length() != 2) { return NONE; }
+    if (esc.length() != 2) { return std::nullopt; }
     // Check that both characters are hex digits
-    if (!isxdigit(esc[0]) || !isxdigit(esc[1])) { return NONE; }
+    if (!isxdigit(esc[0]) || !isxdigit(esc[1])) { return std::nullopt; }
     char32_t hexChar = static_cast<char32_t>(hexDigitToInt(esc[0]));
     hexChar <<= 4;  // Make room for the second hex digit
     hexChar |= static_cast<char32_t>(hexDigitToInt(esc[1]));
@@ -146,22 +146,22 @@ std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
 
 std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, size_t line, size_t col, bool isLongUnicode) {
     size_t expectedLength = isLongUnicode ? 8 : 4;  // 8 for \UXXXXXXXX, 4 for \uXXXX
-    if (esc.length() != expectedLength) { return NONE; }
+    if (esc.length() != expectedLength) { return std::nullopt; }
     char32_t unicodeChar = 0;
     for (char c : esc) {
-        if (!isxdigit(c)) { return NONE; }
+        if (!isxdigit(c)) { return std::nullopt; }
         unicodeChar <<= 4;
         unicodeChar |= static_cast<char32_t>(hexDigitToInt(c));
     }
     if (unicodeChar >= UTF16_SURROGATE_MIN && unicodeChar <= UTF16_SURROGATE_MAX) {
         // Invalid Unicode character in the surrogate range
         logging::logError(line, col, "Error: Invalid Unicode character in the surrogate range");
-        return NONE;
+        return std::nullopt;
     }
     if (unicodeChar > UTF8_4B_MAX) {
         // Unicode character is outside the valid range for UTF-8
         logging::logError(line, col, "Error: Unicode character is outside the valid range for UTF-8");
-        return NONE;
+        return std::nullopt;
     }
     return unicodeChar;
 }

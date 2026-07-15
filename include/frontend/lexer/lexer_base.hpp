@@ -15,7 +15,6 @@
 
 namespace Manganese {
 namespace lexer {
-constexpr auto NONE = std::nullopt;
 
 enum class Mode : uint8_t {
     String = 's',  // Source code passed in as a string
