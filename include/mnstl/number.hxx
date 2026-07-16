@@ -177,7 +177,7 @@ class number_t {
     constexpr held_type underlying_type() const noexcept { return _underlying; }
     // constexpr bool is_integer() const noexcept {
     //     using enum held_type;
-    //     return enumMatches<held_type>(int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128);
+    //     return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128);
     // }
 
     constexpr bool is_float() const noexcept {
@@ -187,12 +187,12 @@ class number_t {
 
     // constexpr bool is_signed() const noexcept {
     //     using enum held_type;
-    //     return enumMatches<held_type>(int8, int16, int32, int64, int128, float32, float64);
+    //     return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, float32, float64);
     // }
 
     // constexpr bool is_unsigned() const noexcept {
     //     using enum held_type;
-    //     return enumMatches<held_type>(uint8, uint16, uint32, uint64, uint128);
+    //     return enum_matches<held_type>(_underlying, uint8, uint16, uint32, uint64, uint128);
     // }
 
     // template <Numeric T>
