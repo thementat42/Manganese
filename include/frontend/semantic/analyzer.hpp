@@ -33,15 +33,15 @@ class analyzer final : public _analyzer_base_t {
     } context;
 
     struct typeCompatibilityResult {
-        enum result_t : std::int8_t {
+        enum class result_t : std::int8_t {
             Error = -1,
             Warning = 0,
             Valid = 1
         };
-        result_t result;
-        std::string errorMessage = "";
+        const result_t result;
+        const std::string message = "";
 
-        operator bool() const noexcept { return result != Error; }
+        operator bool() const noexcept { return result != result_t::Error; }
     };
 
    public:
