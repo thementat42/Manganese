@@ -182,7 +182,7 @@ class number_t {
 
     constexpr bool is_float() const noexcept {
         using enum held_type;
-        return enum_matches<held_type>(float32, float64);
+        return enum_matches<held_type>(_underlying, float32, float64);
     }
 
     // constexpr bool is_signed() const noexcept {
