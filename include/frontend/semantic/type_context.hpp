@@ -86,7 +86,7 @@ struct Function final : public SemanticType {
     const SemanticType* returnType;
     std::vector<Parameter> parameterTypes;
 
-    Function(std::vector<Parameter> params, const SemanticType* ret) noexcept :
+    Function(std::vector<Parameter>&& params, const SemanticType* ret) noexcept :
         SemanticType(Kind::Function, static_cast<ast::PrimitiveType_t>(0)),
         returnType(ret),
         parameterTypes(std::move(params)) {}
@@ -99,7 +99,7 @@ struct GenericInstance final : public SemanticType {
     const SemanticType* baseType;
     std::vector<const SemanticType*> typeArguments;
 
-    GenericInstance(const SemanticType* base, std::vector<const SemanticType*> args) noexcept :
+    GenericInstance(const SemanticType* base, std::vector<const SemanticType*>&& args) noexcept :
         SemanticType(Kind::Generic), baseType(base), typeArguments(std::move(args)) {}
 
     ~GenericInstance() override = default;
