@@ -40,11 +40,23 @@ auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { retur
 // auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t;
 
 auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
-    visit(statement->value);
     if (!context.inFunction) {
         logError(statement, "'return' can only be used in a function");
         return Result::Failure;
     }
+
+    // void return
+    if (!statement->value) {
+        if (context.currentFunctionReturnType != nullptr) {
+            logError(statement, "Non-void function must return a value");
+            return Result::Failure;
+        }
+        return Result::Success;
+    }
+
+    if (visit(statement->value) == Result::Failure) { return Result::Failure; }
+    if (!statement->value->semanticType) { logError(statement->value, "Could not deduce type of return expression"); }
+
     if (!areTypesCompatible(statement->value->semanticType, context.currentFunctionReturnType)) {
         logError(statement, "Function returns '{}' but expression in return statement has type '{}'",
                  (context.currentFunctionReturnType ? context.currentFunctionReturnType->toString() : "void"),
@@ -63,10 +75,13 @@ auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
         return Result::Failure;
     }
+
     if (statement->condition->semanticType->primitiveType != ast::PrimitiveType_t::boolean) {
-        logError(statement, "While loop condition must be a boolean value");
+        logError(statement, "While loop condition must be a boolean value (found {})",
+                 statement->condition->semanticType->toString());
         return Result::Failure;
     }
+
     ++context.whileLoopDepth;
     auto bodyResult = visit(statement->body);
     --context.whileLoopDepth;
