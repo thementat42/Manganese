@@ -18,6 +18,10 @@ Result analyzer::analyze() {
     return isSemanticallyValid;
 }
 
+// Placeholders to satisfy the linker
+Result collectGlobals() { return Result::Success; };
+Result collectAndSpecializeGenerics() { return Result::Success; };
+
 Result analyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
     Result programIsSemanticallyValid = Result::Success;
     for (auto& stmt : parsedFile.program) {
