@@ -119,12 +119,12 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
         case Kind::Pointer: {
             auto* left = static_cast<const Pointer*>(lhs);
             auto* right = static_cast<const Pointer*>(rhs);
-            return left->baseType == right->baseType && left->isMutable == right->isMutable;
+            return (left->baseType == right->baseType) && (left->isMutable == right->isMutable);
         }
         case Kind::Array: {
             auto* left = static_cast<const Array*>(lhs);
             auto* right = static_cast<const Array*>(rhs);
-            return left->elementType == right->elementType && left->length == right->length;
+            return (left->elementType == right->elementType) && (left->length == right->length);
         }
         case Kind::Aggregate: {
             auto* left = static_cast<const Aggregate*>(lhs);
@@ -140,7 +140,7 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
         case Kind::Generic: {
             auto* left = static_cast<const GenericInstance*>(lhs);
             auto* right = static_cast<const GenericInstance*>(rhs);
-            return left->baseType == right->baseType && left->typeArguments == right->typeArguments;
+            return (left->baseType == right->baseType) && (left->typeArguments == right->typeArguments);
         }
         default: ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
     }
