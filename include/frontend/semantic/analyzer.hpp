@@ -11,7 +11,9 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/chunk_allocator.hxx>
+#include <mnstl/enum_matches.hxx>
 #include <utility>
+
 
 namespace Manganese {
 namespace semantic {
@@ -48,58 +50,35 @@ class analyzer final : public _analyzer_base_t {
     analyzer(parser::ParsedFile& file, mnstl::chunk_allocator& arena) :
         symbolTable(arena), typeContext(), parsedFile(file) {}
 
-    Result analyze() {
-        collectTypes();
-        collectGlobals();
-        collectAndSpecializeGenerics();
-        // Don't want errors cascading because of conflicting redeclarations
-        if (symbolTable.hasError()) { return Result::Failure; }
-
-        symbolTable.switchToCheckingMode();
-        Result isSemanticallyValid = checkStatements();
-        return isSemanticallyValid;
-    }
+    Result analyze();
 
     ~analyzer() override = default;
 
    private:
-    inline void collectTypes() {  // first pass -- collect all user-defined types
-        for (const auto& stmt : parsedFile.program) { _collectTypesInStatement(stmt); }
-    }
+    Result collectTypes();
 
+    void _reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) const;
+    Result _collectTypesInStatement(ast::Statement*);
+    Result _collectTypesInStatementBody(const ast::Block&);
+    Result collectGlobals();
+    Result collectAndSpecializeGenerics();
+
+    Result checkStatements();
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
-
-    void _collectTypesInStatement(ast::Statement*);
-    void _collectTypesInStatementBody(ast::Statement*);
-    void collectGlobals();  // second pass -- collect publicly available symbols for modules
-    void collectAndSpecializeGenerics() {
-        // third pass -- look at specific generic instantiations and specialize them (e.g.
-        // foo@[int] -> create a specialization of foo w/ int)
-        // does nothing for now
-    }
-
-    inline Result checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
-        Result programIsSemanticallyValid = Result::Success;
-        for (auto& stmt : parsedFile.program) {
-            if (this->visit(stmt) == Result::Failure) { programIsSemanticallyValid = Result::Failure; }
-        }
-        return programIsSemanticallyValid;
-    }
 
     constexpr static bool isInteger(ast::PrimitiveType_t t) noexcept {
         using enum ast::PrimitiveType_t;
-        return (t == i8) || (t == i16) || (t == i32) || (t == i64) || (t == i128) || (t == u8) || (t == u16)
-            || (t == u32) || (t == u64) || (t == u128);
+        return mnstl::enum_matches<ast::PrimitiveType_t>(t, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
     }
 
     constexpr static bool isFloat(ast::PrimitiveType_t t) noexcept {
         using enum ast::PrimitiveType_t;
-        return (t == f32) || (t == f64);
+        return mnstl::enum_matches<ast::PrimitiveType_t>(t, f32, f64);
     }
 
     constexpr static bool isUnsignedInteger(ast::PrimitiveType_t t) noexcept {
         using enum ast::PrimitiveType_t;
-        return (t == u8) || (t == u16) || (t == u32) || (t == u64) || (t == u128);
+        return mnstl::enum_matches<ast::PrimitiveType_t>(t, u8, u16, u32, u64, u128);
     }
 
     constexpr static bool isNumeric(ast::PrimitiveType_t t) noexcept { return isInteger(t) || isFloat(t); }
