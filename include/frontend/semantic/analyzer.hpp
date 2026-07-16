@@ -3,16 +3,15 @@
 
 #include <core.hpp>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <mnstl/chunk_allocator.hxx>
 #include <utility>
-
-#include "mnstl/chunk_allocator.hxx"
-
 
 namespace Manganese {
 namespace semantic {
@@ -34,14 +33,15 @@ class analyzer final : public _analyzer_base_t {
     } context;
 
     struct typeCompatibilityResult {
-        enum result_t {
-            Error,
-            Warning,
-            Valid
+        enum result_t : std::int8_t {
+            Error = -1,
+            Warning = 0,
+            Valid = 1
         };
         result_t result;
         std::string errorMessage = "";
-        operator bool() { return result != Error; }
+
+        operator bool() const noexcept { return result != Error; }
     };
 
    public:
@@ -59,6 +59,7 @@ class analyzer final : public _analyzer_base_t {
         Result isSemanticallyValid = checkStatements();
         return isSemanticallyValid;
     }
+
     ~analyzer() override = default;
 
    private:
