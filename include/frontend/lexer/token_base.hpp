@@ -46,28 +46,28 @@ class Token {
 
     constexpr bool isPrefixOperator() const noexcept {
         using enum TokenType;
-        return mnstl::enumMatches<TokenType>(Inc, Dec, BitAnd, Mul, AddressOf, Dereference);
+        return mnstl::enum_matches<TokenType>(Inc, Dec, BitAnd, Mul, AddressOf, Dereference);
     }
     constexpr bool isLiteral() const noexcept {
         using enum TokenType;
-        return mnstl::enumMatches<TokenType>(IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True, False);
+        return mnstl::enum_matches<TokenType>(IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True, False);
     }
     constexpr bool isBracket() const noexcept {
         using enum TokenType;
-        return mnstl::enumMatches<TokenType>(LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare, RightSquare);
+        return mnstl::enum_matches<TokenType>(LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare, RightSquare);
     }
     constexpr bool isPrimitiveType() const noexcept {
         using enum TokenType;
-        return mnstl::enumMatches<TokenType>(Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32, Float64, Int128,
+        return mnstl::enum_matches<TokenType>(Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32, Float64, Int128,
                                 UInt128, Char, Bool, String);
     }
     constexpr bool isInteger() const noexcept {
         using enum TokenType;
-        return mnstl::enumMatches<TokenType>(Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128, UInt128);
+        return mnstl::enum_matches<TokenType>(Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128, UInt128);
     }
     constexpr bool hasUnaryCounterpart() const noexcept {
         using enum TokenType;
-        return mnstl::enumMatches<TokenType>(Plus,  // + can be addition or unary plus
+        return mnstl::enum_matches<TokenType>(Plus,  // + can be addition or unary plus
                                 Minus,  // - can be subtraction or unary minus
                                 BitAnd,  // & can be bitwise AND or address-of operator
                                 Mul);  // * can be multiplication or dereference operator
