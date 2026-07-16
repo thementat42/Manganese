@@ -36,7 +36,7 @@ enum class SymbolKind : uint8_t {
 };
 
 struct Symbol {
-    ast::Type* type = nullptr;
+    SemanticType* type = nullptr;
     ast::ASTNode* node = nullptr;
     SymbolKind kind;
     ast::Visibility visibility = ast::Visibility::Private;
@@ -69,7 +69,6 @@ class SymbolTable {
     Scope* _root;
     Scope* _currentScope;
     struct {
-        bool _hasError : 1 = false;
         bool _isFirstPass : 1 = true;  // Toggles table from allocation mode to tree-tracking mode
     } _flags;
 
@@ -80,8 +79,6 @@ class SymbolTable {
         _arena(arena), _root(_arena.emplace<Scope>()), _currentScope(_root) {}
 
     ~SymbolTable() noexcept = default;
-
-    constexpr bool hasError() const noexcept { return _flags._hasError; }
 
     // Call before beginning pass 2
     void switchToCheckingMode() noexcept {
