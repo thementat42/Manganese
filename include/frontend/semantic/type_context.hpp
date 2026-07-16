@@ -76,9 +76,9 @@ struct Parameter {
     bool operator==(const Parameter&) const noexcept = default;
 
     inline std::string toString() const {
-        std::string result = "";
-        if (isMutable) { result = "mut "; }
-        return result + type->toString();
+        std::string result = type->toString();
+        if (isMutable) { result = "mut " + result; }
+        return result;
     }
 };
 
