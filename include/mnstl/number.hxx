@@ -4,12 +4,14 @@
 #include <cmath>
 #include <core.hpp>
 #include <limits>
+#include <mnstl/enum_matches.hxx>
 #include <mnstl/i128.hxx>
 #include <mnstl/safe_cmp.hxx>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+
 
 #define MNSTL_NUMBER_BINARY_OP(op)                                                                            \
     return _visit([&](auto l) {                                                                               \
@@ -125,11 +127,6 @@ class number_t {
         }
     }
 
-    template <class... Types>
-    constexpr bool underlying_matches(const Types&... values) const noexcept {
-        return ((_underlying == values) || ...);
-    }
-
    public:
     constexpr number_t() noexcept : _underlying(held_type::none) {}
     constexpr number_t(int8_t i8) noexcept : _i8(i8), _underlying(held_type::int8) {}
@@ -180,22 +177,22 @@ class number_t {
     constexpr held_type underlying_type() const noexcept { return _underlying; }
     // constexpr bool is_integer() const noexcept {
     //     using enum held_type;
-    //     return underlying_matches(int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128);
+    //     return enumMatches<held_type>(int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128);
     // }
 
     constexpr bool is_float() const noexcept {
         using enum held_type;
-        return underlying_matches(float32, float64);
+        return enumMatches<held_type>(float32, float64);
     }
 
     // constexpr bool is_signed() const noexcept {
     //     using enum held_type;
-    //     return underlying_matches(int8, int16, int32, int64, int128, float32, float64);
+    //     return enumMatches<held_type>(int8, int16, int32, int64, int128, float32, float64);
     // }
 
     // constexpr bool is_unsigned() const noexcept {
     //     using enum held_type;
-    //     return underlying_matches(uint8, uint16, uint32, uint64, uint128);
+    //     return enumMatches<held_type>(uint8, uint16, uint32, uint64, uint128);
     // }
 
     // template <Numeric T>
