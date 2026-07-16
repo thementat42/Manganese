@@ -325,7 +325,7 @@ class number_t {
                     } else {
                         auto res = val_l / val_r;
                         auto rem = val_l % val_r;
-                        if ((val_l < 0 ^ val_r < 0) && rem != 0) { --res; }
+                        if (((val_l < 0) ^ (val_r < 0)) && rem != 0) { --res; }
                         return number_t{res};
                     }
                 }
