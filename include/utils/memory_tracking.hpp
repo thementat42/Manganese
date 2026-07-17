@@ -9,6 +9,7 @@
 #if MEMORY_TRACKING && MN_DEBUG
 #include <fstream>
 #include <iostream>
+#include <stdlib.h>
 
 size_t lifetimeBytesAllocated = 0;  // How much memory has been allocated in total (ignores deallocations)
 #ifdef CONTINUOUS_MEMORY_TRACKING
