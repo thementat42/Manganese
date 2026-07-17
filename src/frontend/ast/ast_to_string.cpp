@@ -210,6 +210,13 @@ std::string FunctionDeclarationStatement::toString() const {
     return oss.str();
 }
 
+std::string NestedBlockStatement::toString() const {
+    std::string result = "{";
+    for (const auto stmt : block) { result += "\t" + stmt->toString(); }
+    result += "}";
+    return result;
+}
+
 std::string IfStatement::toString() const {
     std::ostringstream oss;
     oss << "if (" << condition->toString() << ") {\n";
