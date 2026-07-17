@@ -204,10 +204,17 @@ std::string FunctionDeclarationStatement::toString() const {
     if (returnType) { oss << " -> " << returnType->toString(); }
     oss << " {\n";
     if (!body.empty()) {
-        for (size_t i = 0; i < body.size(); ++i) { oss << toStringOr(body[i]) << "\n"; }
+        for (size_t i = 0; i < body.size(); ++i) { oss << "\t" << toStringOr(body[i]) << "\n"; }
     }
     oss << "}";
     return oss.str();
+}
+
+std::string NestedBlockStatement::toString() const {
+    std::string result = "{\n";
+    for (const auto stmt : block) { result += "\t" + stmt->toString(); }
+    result += "\n\t}";
+    return result;
 }
 
 std::string IfStatement::toString() const {

@@ -171,6 +171,13 @@ struct IfStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE;
 };
 
+struct NestedBlockStatement final : public Statement {
+    Block block;
+
+    NestedBlockStatement(Block&& _block) : Statement(StatementKind::NestedBlockStatement), block(std::move(_block)) {}
+    MN_AST_STANDARD_INTERFACE;
+};
+
 struct ReturnStatement final : public Statement {
     Expression* value;
 

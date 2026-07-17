@@ -384,6 +384,14 @@ void IfStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "}\n";
 }
 
+void NestedBlockStatement::dump(std::ostream& os, size_t indent) const {
+    os << getIndent(indent) << "NestedBlockStatement [" << getLine() << ":" << getColumn() << "] {\n";
+    os << getIndent(indent + 1) << "body: [\n";
+    for (const auto& stmt : block) { stmt->dump(os, indent + 2); }
+    os << getIndent(indent + 1) << "]\n";
+    os << getIndent(indent) << "}\n";
+}
+
 void ReturnStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ReturnStatement [" << getLine() << ":" << getColumn() << "] {\n";
     if (value) {

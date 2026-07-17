@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <frontend/parser/operators.hpp>
+#include "frontend/ast/ast_base.hpp"
 
 namespace Manganese {
 namespace parser {
