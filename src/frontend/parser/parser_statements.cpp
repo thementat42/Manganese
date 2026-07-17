@@ -9,13 +9,16 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
-
 namespace Manganese {
 namespace parser {
 
 ast::Statement* Parser::parseStatement() {
     const TokenType type = peekTokenType();
+
+    if (type == TokenType::LeftBrace) {
+        // don't need to move thanks to copy elision
+        return arena.emplace<ast::NestedBlockStatement>(parseBlock("nested block"));
+    }
     const auto index = tokenToIndex(type);
 
     auto handler = statementLookup[index];
@@ -335,11 +338,6 @@ ast::Statement* Parser::parseIfStatement() {
         elseBody = parseBlock("else body");
     }
     return arena.emplace<ast::IfStatement>(condition, std::move(body), std::move(elifs), std::move(elseBody));
-}
-
-ast::Statement* Parser::parseNestedBlock() {
-    // don't need to move thanks to copy elision
-    return arena.emplace<ast::NestedBlockStatement>(parseBlock("nested block"));
 }
 
 ast::Statement* Parser::parseImportStatement() {
