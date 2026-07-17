@@ -112,9 +112,8 @@ ast::Type* Parser::parseFunctionType() {
     return arena.emplace<ast::FunctionType>(std::move(parameterTypes), returnType);
 }
 
-ast::Type* Parser::parseGenericType(ast::Type* left, Precedence precedence) {
+ast::Type* Parser::parseGenericType(ast::Type* left, Precedence) {
     DISCARD(consumeToken());
-    DISCARD(precedence);  // Avoid unused variable warning
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
     std::vector<ast::Type*> typeParameters;
     while (!done()) {

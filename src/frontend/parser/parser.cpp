@@ -9,8 +9,8 @@ namespace parser {
 
 ParsedFile Parser::parse() {
     // Parse the header (module declaration and imports)
-    if (peekTokenType() == TokenType::Module) { DISCARD(parseModuleDeclarationStatement()); }
-    while (peekTokenType() == TokenType::Import) { DISCARD(parseImportStatement()); }
+    if (peekTokenType() == TokenType::Module) { parseModuleDeclarationStatement(); }
+    while (peekTokenType() == TokenType::Import) { parseImportStatement(); }
 
     this->hasParsedFileHeader = true;  // Now, setting a module or import name should be a warning
 
