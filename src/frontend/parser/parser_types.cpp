@@ -1,11 +1,10 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
+#include <mnstl/number.hxx>
 #include <utility>
 #include <vector>
 
-#include "frontend/ast/ast_expressions.hpp"
-#include "mnstl/number.hxx"
 
 namespace Manganese {
 namespace parser {

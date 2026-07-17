@@ -1,9 +1,8 @@
 #ifndef MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #define MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #include <core.hpp>
+#include <io/reader.hpp>
 #include <string>
-
-#include "reader.hpp"
 
 namespace Manganese {
 namespace io {

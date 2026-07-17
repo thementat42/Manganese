@@ -3,7 +3,6 @@
 #include <frontend/lexer/token_base.hpp>
 #include <utils/type_names.hpp>
 
-
 namespace Manganese {
 
 namespace lexer {

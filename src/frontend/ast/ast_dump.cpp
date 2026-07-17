@@ -535,7 +535,6 @@ void TypeofType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "expression: ";
     expression->dump(os, indent + 1);
     os << getIndent(indent) << "}\n";
-
 }
 
 }  // namespace ast

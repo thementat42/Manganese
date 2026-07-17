@@ -1,9 +1,8 @@
 #ifndef MANGANESE_INCLUDE_IO_READER_HPP
 #define MANGANESE_INCLUDE_IO_READER_HPP
 
-#include <cstddef>
 #include <core.hpp>
-
+#include <cstddef>
 
 namespace Manganese {
 namespace io {
@@ -12,7 +11,6 @@ namespace io {
  * @brief An abstract base class for reading characters from a source
  */
 class Reader {
-
    public:
     Reader() = default;
     virtual ~Reader() noexcept = default;

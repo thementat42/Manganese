@@ -2,7 +2,6 @@
 #define MNSTL_SAFE_CMP 1
 #include <mnstl/ext_num_config.hxx>
 
-
 namespace mnstl {
 
 template <Integral T, Integral U>
@@ -49,7 +48,6 @@ constexpr bool safe_greater_equal(T t, U u) noexcept {
     return !safe_less(t, u);
 }
 
-} // namespace mnstl
+}  // namespace mnstl
 
-
-#endif // MNSTL_SAFE_CMP
+#endif  // MNSTL_SAFE_CMP

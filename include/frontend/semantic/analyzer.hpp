@@ -14,7 +14,6 @@
 #include <mnstl/enum_matches.hxx>
 #include <utility>
 
-
 namespace Manganese {
 namespace semantic {
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;

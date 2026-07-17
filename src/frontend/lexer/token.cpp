@@ -1,5 +1,5 @@
-#include <frontend/lexer/token.hpp>
 #include <core.hpp>
+#include <frontend/lexer/token.hpp>
 #include <io/logging.hpp>
 #include <string>
 #include <utility>
@@ -49,7 +49,8 @@ TokenType keywordLookup(const std::string_view& s) noexcept {
 }
 
 std::string Token::toString() const noexcept {
-    return std::format("Token: {} (lexeme: '{}') at line {}, column {}", tokenTypeToString(_type), _lexeme, _line, _column);
+    return std::format("Token: {} (lexeme: '{}') at line {}, column {}", tokenTypeToString(_type), _lexeme, _line,
+                       _column);
 }
 
 }  // namespace lexer

@@ -2,25 +2,21 @@
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/parser.hpp>
 
-
 namespace Manganese {
 namespace parser {
 // Lookup Registration Methods
 
-void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower,
-                                                 ledHandler_t handler) noexcept {
+void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::binary(bindingPower);
     ledLookup[_index] = handler;
 }
-void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower,
-                                                  ledHandler_t handler) noexcept {
+void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::postfix(bindingPower);
     ledLookup[_index] = handler;
 }
-void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower,
-                                                 ledHandler_t handler) noexcept {
+void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap[_index] = Operator::prefix(bindingPower);
     ledLookup[_index] = handler;
@@ -47,8 +43,7 @@ void Parser::registerStmtHandler(TokenType type, statementHandler_t handler) noe
 
 // Type Lookup Registration Methods
 
-void Parser::registerLedHandler_type(TokenType type, Precedence precedence,
-                                               ledHandler_types_t handler) noexcept {
+void Parser::registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept {
     size_t _index = tokenToIndex(type);
     operatorPrecedenceMap_type[_index] = Operator::binary(precedence);
     ledLookup_types[_index] = handler;
@@ -195,7 +190,6 @@ void Parser::initializeTypeLookups() noexcept {
     registerLedHandler_type(LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
     registerNudHandler_type(LeftParen, &Parser::parseParenthesizedType);
     registerNudHandler_type(Typeof, &Parser::parseTypeofType);
-
 }
 
 }  // namespace parser

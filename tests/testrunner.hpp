@@ -4,7 +4,6 @@
 #include <core.hpp>
 #include <string>
 
-
 namespace Manganese {
 namespace tests {
 

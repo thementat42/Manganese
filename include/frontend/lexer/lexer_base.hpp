@@ -1,9 +1,9 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 
+#include <core.hpp>
 #include <deque>
 #include <frontend/lexer/token.hpp>
-#include <core.hpp>
 #include <io/filereader.hpp>
 #include <io/reader.hpp>
 #include <io/stringreader.hpp>

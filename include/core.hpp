@@ -8,7 +8,6 @@
 
 #include <string>
 
-
 //~ Build type
 
 #ifndef MN_DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a

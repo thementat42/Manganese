@@ -9,9 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
-#include "frontend/ast/ast_types.hpp"
-
 namespace Manganese {
 namespace parser {
 

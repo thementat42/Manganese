@@ -7,9 +7,10 @@
 // MEMORY_TRACKING is defined in CMakeLists.txt
 
 #if MEMORY_TRACKING && MN_DEBUG
+#include <stdlib.h>
+
 #include <fstream>
 #include <iostream>
-#include <stdlib.h>
 
 size_t lifetimeBytesAllocated = 0;  // How much memory has been allocated in total (ignores deallocations)
 #ifdef CONTINUOUS_MEMORY_TRACKING

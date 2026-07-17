@@ -1,6 +1,6 @@
+#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <core.hpp>
 #include <io/logging.hpp>
 #include <string>
 

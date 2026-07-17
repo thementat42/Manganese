@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#include "reader.hpp"
+#include <io/reader.hpp>
 
 namespace Manganese {
 namespace io {

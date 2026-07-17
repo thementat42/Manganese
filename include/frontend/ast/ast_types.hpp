@@ -13,7 +13,7 @@ enum class TypeKind : uint8_t {
 #define STMT(name, str)
 #define EXPR(name, str)
 #define TYPE(name, str) name,
-#include "ast.def"
+#include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR
 #undef TYPE
@@ -36,7 +36,6 @@ struct AggregateType final : public Type {
 struct ArrayType final : public Type {
     Type* elementType;
     Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
-
 
     explicit ArrayType(Type* _elementType, Expression* _lengthExpr = nullptr) noexcept :
         Type(TypeKind::ArrayType), elementType(_elementType), lengthExpression(_lengthExpr) {}

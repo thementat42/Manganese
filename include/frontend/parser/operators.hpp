@@ -1,8 +1,8 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
 
-#include <frontend/lexer/token.hpp>
 #include <core.hpp>
+#include <frontend/lexer/token.hpp>
 
 namespace Manganese {
 namespace parser {

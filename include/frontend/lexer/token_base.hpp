@@ -2,10 +2,10 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_BASE_HPP
 
 #include <core.hpp>
-#include <string>
 #include <mnstl/enum_matches.hxx>
+#include <string>
 
-#include "token_type.hpp"
+#include <frontend/lexer/token_type.hpp>
 
 namespace Manganese {
 namespace lexer {
@@ -50,27 +50,30 @@ class Token {
     }
     constexpr bool isLiteral() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True, False);
+        return mnstl::enum_matches<TokenType>(_type, IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True,
+                                              False);
     }
     constexpr bool isBracket() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare, RightSquare);
+        return mnstl::enum_matches<TokenType>(_type, LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare,
+                                              RightSquare);
     }
     constexpr bool isPrimitiveType() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32, Float64, Int128,
-                                UInt128, Char, Bool, String);
+        return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32,
+                                              Float64, Int128, UInt128, Char, Bool, String);
     }
     constexpr bool isInteger() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128, UInt128);
+        return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128,
+                                              UInt128);
     }
     constexpr bool hasUnaryCounterpart() const noexcept {
         using enum TokenType;
         return mnstl::enum_matches<TokenType>(_type, Plus,  // + can be addition or unary plus
-                                Minus,  // - can be subtraction or unary minus
-                                BitAnd,  // & can be bitwise AND or address-of operator
-                                Mul);  // * can be multiplication or dereference operator
+                                              Minus,  // - can be subtraction or unary minus
+                                              BitAnd,  // & can be bitwise AND or address-of operator
+                                              Mul);  // * can be multiplication or dereference operator
     }
 
     /**

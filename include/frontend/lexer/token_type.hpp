@@ -10,15 +10,15 @@ namespace Manganese {
 namespace lexer {
 
 enum class TokenType : uint8_t {
-    #define TOKEN(name, text) name,
-    #define KEYWORD(name, text) name,
-    #define OPERATOR(name, text) name,
+#define TOKEN(name, text)    name,
+#define KEYWORD(name, text)  name,
+#define OPERATOR(name, text) name,
 
-    #include "tokens.def"
+#include <frontend/lexer/tokens.def>
 
-    #undef TOKEN
-    #undef KEYWORD
-    #undef OPERATOR
+#undef TOKEN
+#undef KEYWORD
+#undef OPERATOR
 };
 
 }  // namespace lexer

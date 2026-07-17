@@ -1,9 +1,9 @@
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/logging.hpp>
+#include <mnstl/number.hxx>
 #include <optional>
 #include <string>
-#include <mnstl/number.hxx>
 
 // TODO: Rework to properly handle unicode, validation, etc.
 

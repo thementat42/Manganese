@@ -13,7 +13,7 @@ enum class ExpressionKind : uint8_t {
 #define STMT(name, str)
 #define EXPR(name, str) name,
 #define TYPE(name, str)
-#include "ast.def"
+#include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR
 #undef TYPE

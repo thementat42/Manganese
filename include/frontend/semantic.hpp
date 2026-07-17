@@ -2,7 +2,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_HPP
 
 #include <frontend/semantic/analyzer.hpp>
-#include <frontend/semantic/type_context.hpp>
 #include <frontend/semantic/symbol_table.hpp>
+#include <frontend/semantic/type_context.hpp>
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_SEMANTIC_HPP

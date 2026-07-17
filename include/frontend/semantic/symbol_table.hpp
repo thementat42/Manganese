@@ -16,7 +16,6 @@
 #include <utils/result.hpp>
 #include <vector>
 
-
 namespace Manganese {
 namespace semantic {
 

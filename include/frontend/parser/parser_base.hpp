@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "operators.hpp"
+#include <frontend/parser/operators.hpp>
 
 namespace Manganese {
 namespace parser {
@@ -49,8 +49,7 @@ class Parser {
 
    public:
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
-        lexer(std::make_unique<lexer::Lexer>(source, mode)),
-        arena(allocatorReference) {
+        lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(allocatorReference) {
         initializeLookups();
         initializeTypeLookups();
     }
@@ -162,7 +161,7 @@ class Parser {
 
     // ~ Helpers for lookups
     constexpr static size_t tokenToIndex(TokenType t) noexcept { return static_cast<size_t>(t); }
-    
+
     static void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
     static void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
     static void registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;

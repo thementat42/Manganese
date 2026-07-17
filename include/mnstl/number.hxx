@@ -12,7 +12,6 @@
 #include <type_traits>
 #include <utility>
 
-
 #define MNSTL_NUMBER_BINARY_OP(op)                                                                            \
     return _visit([&](auto l) {                                                                               \
         return other._visit([&](auto r) {                                                                     \
@@ -177,7 +176,8 @@ class number_t {
     constexpr held_type underlying_type() const noexcept { return _underlying; }
     // constexpr bool is_integer() const noexcept {
     //     using enum held_type;
-    //     return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128);
+    //     return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64,
+    //     uint128);
     // }
 
     constexpr bool is_float() const noexcept {

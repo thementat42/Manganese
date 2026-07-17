@@ -15,7 +15,7 @@ enum class StatementKind : uint8_t {
 #define STMT(name, str) name,
 #define EXPR(name, str)
 #define TYPE(name, str)
-#include "ast.def"
+#include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR
 #undef TYPE

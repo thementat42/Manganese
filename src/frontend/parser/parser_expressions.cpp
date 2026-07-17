@@ -9,11 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/ast/ast_expressions.hpp"
-#include "frontend/ast/ast_types.hpp"
-#include "frontend/lexer/token_type.hpp"
-#include "frontend/parser/operators.hpp"
-
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`
@@ -194,7 +189,6 @@ ast::Expression* Parser::parseAlignofExpression() {
             peekToken().getLine(), peekToken().getColumn(),
             "alignof expects a type as its argument. If you are trying to take the type of an expression, use alignof(typeof(...))");
 
-        
         while (peekTokenType() != lexer::TokenType::RightParen && peekTokenType() != lexer::TokenType::Semicolon
                && peekTokenType() != lexer::TokenType::EndOfFile) {
             DISCARD(consumeToken());

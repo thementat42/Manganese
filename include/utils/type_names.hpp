@@ -21,7 +21,6 @@ constexpr inline std::string bool_str = "bool";
 constexpr inline std::string string_str = "string";
 constexpr inline std::string char_str = "char";
 
-} // namespace Manganese
+}  // namespace Manganese
 
-
-#endif // TYPE_NAMES_HPP
+#endif  // TYPE_NAMES_HPP

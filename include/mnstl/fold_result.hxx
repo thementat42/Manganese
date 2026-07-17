@@ -55,10 +55,10 @@ class fold_result_t {
 
     constexpr held_type held_type() const noexcept { return _held; }
     constexpr bool has_value() const noexcept { return _held != held_type::Void; }
-    constexpr bool is_bool() const noexcept {return _held == held_type::Boolean;}
-    constexpr bool is_char() const noexcept {return _held == held_type::Character;}
-    constexpr bool is_number() const noexcept {return _held == held_type::Number;}
-    constexpr bool is_string() const noexcept {return _held == held_type::String;}
+    constexpr bool is_bool() const noexcept { return _held == held_type::Boolean; }
+    constexpr bool is_char() const noexcept { return _held == held_type::Character; }
+    constexpr bool is_number() const noexcept { return _held == held_type::Number; }
+    constexpr bool is_string() const noexcept { return _held == held_type::String; }
 
     constexpr std::optional<bool> boolean() const noexcept {
         return _held == held_type::Boolean ? std::make_optional<bool>(_bool) : std::nullopt;
