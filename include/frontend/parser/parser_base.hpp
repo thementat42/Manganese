@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <frontend/parser/operators.hpp>
+#include "frontend/ast/ast_base.hpp"
 
 namespace Manganese {
 namespace parser {
@@ -116,6 +117,7 @@ class Parser {
     ast::Statement* parseIfStatement();
     ast::Statement* parseImportStatement();
     ast::Statement* parseModuleDeclarationStatement();
+    ast::Statement* parseNestedBlock();
     ast::Statement* parseRedundantSemicolon();
     ast::Statement* parseReturnStatement();
     ast::Statement* parseSwitchStatement();

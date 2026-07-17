@@ -9,6 +9,8 @@
 #include <utility>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+
 namespace Manganese {
 namespace parser {
 
@@ -333,6 +335,11 @@ ast::Statement* Parser::parseIfStatement() {
         elseBody = parseBlock("else body");
     }
     return arena.emplace<ast::IfStatement>(condition, std::move(body), std::move(elifs), std::move(elseBody));
+}
+
+ast::Statement* Parser::parseNestedBlock() {
+    // don't need to move thanks to copy elision
+    return arena.emplace<ast::NestedBlockStatement>(parseBlock("nested block"));
 }
 
 ast::Statement* Parser::parseImportStatement() {
