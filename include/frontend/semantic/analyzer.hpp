@@ -108,10 +108,12 @@ class analyzer final : public _analyzer_base_t {
 
     Result visit(ast::Block& block) {
         Result result = Result::Success;
+        symbolTable.enterScope();
         for (auto statement : block) {
             auto stmtResult = visit(statement);
             result = (result == Result::Success && stmtResult == Result::Success) ? Result::Success : Result::Failure;
         }
+        symbolTable.exitScope();
         return result;
     }
 };
