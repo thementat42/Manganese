@@ -38,14 +38,14 @@ struct Operator {
     Precedence leftBindingPower, rightBindingPower;
     bool isValid = false;
 
-    constexpr static Operator prefix(Precedence rightBindingPower_ = Precedence::Default) noexcept {
+    constexpr static Operator prefix(Precedence _rightBindingPower = Precedence::Default) noexcept {
         return Operator{
-            .leftBindingPower = Precedence::Unary, .rightBindingPower = rightBindingPower_, .isValid = true};
+            .leftBindingPower = Precedence::Unary, .rightBindingPower = _rightBindingPower, .isValid = true};
     }
 
-    constexpr static Operator postfix(Precedence leftBindingPower_ = Precedence::Default) noexcept {
+    constexpr static Operator postfix(Precedence _leftBindingPower = Precedence::Default) noexcept {
         return Operator{
-            .leftBindingPower = leftBindingPower_, .rightBindingPower = Precedence::Postfix, .isValid = true};
+            .leftBindingPower = _leftBindingPower, .rightBindingPower = Precedence::Postfix, .isValid = true};
     }
 
     constexpr static Operator binary(Precedence bindingPower) noexcept {

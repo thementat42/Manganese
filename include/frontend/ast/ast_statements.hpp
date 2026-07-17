@@ -34,12 +34,12 @@ struct AggregateDeclarationStatement final : public Statement {
     std::vector<AggregateField> fields;
     Visibility visibility = Visibility::Private;
 
-    constexpr AggregateDeclarationStatement(std::string&& name_, std::vector<std::string>&& genericTypes_,
-                                            std::vector<AggregateField>&& fields_) noexcept :
+    constexpr AggregateDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
+                                            std::vector<AggregateField>&& _fields) noexcept :
         Statement(StatementKind::AggregateDeclarationStatement),
-        name(std::move(name_)),
-        genericTypes(std::move(genericTypes_)),
-        fields(std::move(fields_)) {}
+        name(std::move(_name)),
+        genericTypes(std::move(_genericTypes)),
+        fields(std::move(_fields)) {}
     MN_AST_STANDARD_INTERFACE;
 };
 
@@ -48,8 +48,8 @@ struct AliasStatement final : public Statement {
     std::string alias;  // The name of the alias (foo in alias x as foo)
     Visibility visibility = Visibility::Private;
 
-    AliasStatement(Type* baseType_, std::string&& alias_) noexcept :
-        Statement(StatementKind::AliasStatement), baseType(baseType_), alias(std::move(alias_)) {}
+    AliasStatement(Type* _baseType, std::string&& _alias) noexcept :
+        Statement(StatementKind::AliasStatement), baseType(_baseType), alias(std::move(_alias)) {}
 
     MN_AST_STANDARD_INTERFACE
 };
@@ -83,11 +83,11 @@ struct EnumDeclarationStatement final : public Statement {
     std::vector<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
-    EnumDeclarationStatement(std::string&& name_, Type* baseType_, std::vector<EnumValue> values_) noexcept :
+    EnumDeclarationStatement(std::string&& _name, Type* _baseType, std::vector<EnumValue> _values) noexcept :
         Statement(StatementKind::EnumDeclarationStatement),
-        name(name_),
-        baseType(baseType_),
-        values(std::move(values_)) {}
+        name(_name),
+        baseType(_baseType),
+        values(std::move(_values)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -98,8 +98,8 @@ struct EnumDeclarationStatement final : public Statement {
 struct ExpressionStatement final : public Statement {
     Expression* expression;
 
-    explicit ExpressionStatement(Expression* expression_) noexcept :
-        Statement(StatementKind::ExpressionStatement), expression(expression_) {};
+    explicit ExpressionStatement(Expression* _expression) noexcept :
+        Statement(StatementKind::ExpressionStatement), expression(_expression) {};
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -110,13 +110,13 @@ struct ForLoopStatement final : public Statement {
     Expression* postExpression;
     Block body;
 
-    ForLoopStatement(Statement* initializationStep_, Expression* stopCondition_, Expression* postExpression_,
-                     Block&& body_) noexcept :
+    ForLoopStatement(Statement* _initializationStep, Expression* _stopCondition, Expression* _postExpression,
+                     Block&& _body) noexcept :
         Statement(StatementKind::ForLoopStatement),
-        initializationStep(initializationStep_),
-        stopCondition(stopCondition_),
-        postExpression(postExpression_),
-        body(std::move(body_)) {}
+        initializationStep(_initializationStep),
+        stopCondition(_stopCondition),
+        postExpression(_postExpression),
+        body(std::move(_body)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -135,15 +135,15 @@ struct FunctionDeclarationStatement final : public Statement {
     Block body;
     Visibility visibility = Visibility::Private;
 
-    FunctionDeclarationStatement(std::string&& name_, std::vector<std::string>&& genericTypes_,
-                                 std::vector<FunctionParameter>&& parameters_, Type* returnType_,
-                                 Block&& body_) noexcept :
+    FunctionDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
+                                 std::vector<FunctionParameter>&& _parameters, Type* _returnType,
+                                 Block&& _body) noexcept :
         Statement(StatementKind::FunctionDeclarationStatement),
-        name(std::move(name_)),
-        genericTypes(std::move(genericTypes_)),
-        parameters(std::move(parameters_)),
-        returnType(returnType_),
-        body(std::move(body_)) {}
+        name(std::move(_name)),
+        genericTypes(std::move(_genericTypes)),
+        parameters(std::move(_parameters)),
+        returnType(_returnType),
+        body(std::move(_body)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -152,7 +152,7 @@ struct ElifClause {
     Expression* condition;
     Block body;
 
-    ElifClause(Expression* condition_, Block&& body_) noexcept : condition(condition_), body(std::move(body_)) {}
+    ElifClause(Expression* _condition, Block&& _body) noexcept : condition(_condition), body(std::move(_body)) {}
 };
 
 struct IfStatement final : public Statement {
@@ -160,13 +160,13 @@ struct IfStatement final : public Statement {
     Block body, elseBody;  // elseBody might be empty
     std::vector<ElifClause> elifs;
 
-    IfStatement(Expression* condition_, Block&& body_, std::vector<ElifClause>&& elifs_,
-                Block&& elseBody_ = {}) noexcept :
+    IfStatement(Expression* _condition, Block&& _body, std::vector<ElifClause>&& _elifs,
+                Block&& _elseBody = {}) noexcept :
         Statement(StatementKind::IfStatement),
-        condition(condition_),
-        body(std::move(body_)),
-        elseBody(std::move(elseBody_)),
-        elifs(std::move(elifs_)) {}
+        condition(_condition),
+        body(std::move(_body)),
+        elseBody(std::move(_elseBody)),
+        elifs(std::move(_elifs)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -174,8 +174,8 @@ struct IfStatement final : public Statement {
 struct ReturnStatement final : public Statement {
     Expression* value;
 
-    explicit ReturnStatement(Expression* value_ = nullptr) noexcept :
-        Statement(StatementKind::ReturnStatement), value(value_) {}
+    explicit ReturnStatement(Expression* _value = nullptr) noexcept :
+        Statement(StatementKind::ReturnStatement), value(_value) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -190,11 +190,11 @@ struct SwitchStatement final : public Statement {
     std::vector<CaseClause> cases;
     Block defaultBody;
 
-    SwitchStatement(Expression* variable_, std::vector<CaseClause>&& cases_, Block&& defaultBody_ = {}) noexcept :
+    SwitchStatement(Expression* _variable, std::vector<CaseClause>&& _cases, Block&& _defaultBody = {}) noexcept :
         Statement(StatementKind::SwitchStatement),
-        variable(variable_),
-        cases(std::move(cases_)),
-        defaultBody(std::move(defaultBody_)) {}
+        variable(_variable),
+        cases(std::move(_cases)),
+        defaultBody(std::move(_defaultBody)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -206,12 +206,12 @@ struct VariableDeclarationStatement final : public Statement {
     Expression* value;
     Type* type;
 
-    VariableDeclarationStatement(bool isMutable_, std::string&& name_, Visibility visibility_, Expression* _value,
+    VariableDeclarationStatement(bool _isMutable, std::string&& _name, Visibility _visibility, Expression* _value,
                                  Type* _type) noexcept :
         Statement(StatementKind::VariableDeclarationStatement),
-        isMutable(isMutable_),
-        name(std::move(name_)),
-        visibility(visibility_),
+        isMutable(_isMutable),
+        name(std::move(_name)),
+        visibility(_visibility),
         value(_value),
         type(_type) {}
 
@@ -223,11 +223,11 @@ struct WhileLoopStatement final : public Statement {
     Expression* condition;
     bool isDoWhile;
 
-    WhileLoopStatement(Block&& body_, Expression* condition_, bool isDoWhile_ = false) noexcept :
+    WhileLoopStatement(Block&& _body, Expression* _condition, bool _isDoWhile = false) noexcept :
         Statement(StatementKind::WhileLoopStatement),
-        body(std::move(body_)),
-        condition(condition_),
-        isDoWhile(isDoWhile_) {}
+        body(std::move(_body)),
+        condition(_condition),
+        isDoWhile(_isDoWhile) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

@@ -401,12 +401,12 @@ void SwitchStatement::dump(std::ostream& os, size_t indent) const {
     variable->dump(os, indent + 2);
     os << getIndent(indent + 1) << "cases: [\n";
 
-    for (const auto& case_ : cases) {
+    for (const auto& _case : cases) {
         os << getIndent(indent + 2) << "{\n";
         os << getIndent(indent + 3) << "literalValue: \n";
-        case_.literalValue->dump(os, indent + 4);
+        _case.literalValue->dump(os, indent + 4);
         os << getIndent(indent + 3) << "body: [\n";
-        for (const auto& stmt : case_.body) { stmt->dump(os, indent + 4); }
+        for (const auto& stmt : _case.body) { stmt->dump(os, indent + 4); }
         os << getIndent(indent + 3) << "]\n";
         os << getIndent(indent + 2) << "}\n";
     }

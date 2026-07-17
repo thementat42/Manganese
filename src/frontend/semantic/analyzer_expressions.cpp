@@ -13,6 +13,7 @@ namespace semantic {
 // auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t;
 // auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t;
 // auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t;
+
 auto analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
     return Result::Success;

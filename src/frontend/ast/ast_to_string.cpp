@@ -233,9 +233,9 @@ std::string IfStatement::toString() const {
 std::string SwitchStatement::toString() const {
     std::ostringstream oss;
     oss << "switch (" << variable->toString() << ") {\n";
-    for (const auto& case_ : cases) {
-        oss << "\tcase " << case_.literalValue->toString() << ":\n";
-        for (const auto& stmt : case_.body) { oss << "\t\t" << stmt->toString() << "\n"; }
+    for (const auto& _case : cases) {
+        oss << "\tcase " << _case.literalValue->toString() << ":\n";
+        for (const auto& stmt : _case.body) { oss << "\t\t" << stmt->toString() << "\n"; }
     }
     if (!defaultBody.empty()) {
         oss << "\tdefault:\n";

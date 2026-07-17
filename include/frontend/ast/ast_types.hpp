@@ -25,8 +25,8 @@ enum class TypeKind : uint8_t {
 struct AggregateType final : public Type {
     std::vector<Type*> fieldTypes;
 
-    explicit AggregateType(std::vector<Type*>&& fieldTypes_) noexcept :
-        Type(TypeKind::AggregateType), fieldTypes(std::move(fieldTypes_)) {}
+    explicit AggregateType(std::vector<Type*>&& _fieldTypes) noexcept :
+        Type(TypeKind::AggregateType), fieldTypes(std::move(_fieldTypes)) {}
     MN_AST_STANDARD_INTERFACE;
 };
 
@@ -38,8 +38,8 @@ struct ArrayType final : public Type {
     Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
 
 
-    explicit ArrayType(Type* elementType_, Expression* lengthExpr_ = nullptr) noexcept :
-        Type(TypeKind::ArrayType), elementType(elementType_), lengthExpression(lengthExpr_) {}
+    explicit ArrayType(Type* _elementType, Expression* _lengthExpr = nullptr) noexcept :
+        Type(TypeKind::ArrayType), elementType(_elementType), lengthExpression(_lengthExpr) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -48,7 +48,7 @@ struct FunctionParameterType {
     bool isMutable;
     Type* type;
 
-    FunctionParameterType(bool isMutable_, Type* type_) noexcept : isMutable(isMutable_), type(type_) {}
+    FunctionParameterType(bool _isMutable, Type* _type) noexcept : isMutable(_isMutable), type(_type) {}
 };
 
 /**
@@ -58,8 +58,8 @@ struct FunctionType final : public Type {
     std::vector<FunctionParameterType> parameterTypes;
     Type* returnType;
 
-    FunctionType(std::vector<FunctionParameterType>&& parameterTypes_, Type* returnType_) noexcept :
-        Type(TypeKind::FunctionType), parameterTypes(std::move(parameterTypes_)), returnType(returnType_) {}
+    FunctionType(std::vector<FunctionParameterType>&& _parameterTypes, Type* _returnType) noexcept :
+        Type(TypeKind::FunctionType), parameterTypes(std::move(_parameterTypes)), returnType(_returnType) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -72,8 +72,8 @@ struct FunctionType final : public Type {
 struct GenericType final : public Type {
     Type* baseType;  // some_function in `some_function@[T,U]`
     std::vector<Type*> typeParameters;  // T and U in `some_function@[T,U]`
-    GenericType(Type* baseType_, std::vector<Type*>&& typeParameters_) noexcept :
-        Type(TypeKind::GenericType), baseType(baseType_), typeParameters(std::move(typeParameters_)) {}
+    GenericType(Type* _baseType, std::vector<Type*>&& _typeParameters) noexcept :
+        Type(TypeKind::GenericType), baseType(_baseType), typeParameters(std::move(_typeParameters)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -85,8 +85,8 @@ struct PointerType final : public Type {
     Type* baseType;
     bool isMutable;
 
-    PointerType(Type* baseType_, bool isMutable_) noexcept :
-        Type(TypeKind::PointerType), baseType(baseType_), isMutable(isMutable_) {}
+    PointerType(Type* _baseType, bool _isMutable) noexcept :
+        Type(TypeKind::PointerType), baseType(_baseType), isMutable(_isMutable) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -97,8 +97,8 @@ struct PointerType final : public Type {
 struct SymbolType final : public Type {
     std::string name;
 
-    constexpr explicit SymbolType(std::string&& name_, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
-        Type(TypeKind::SymbolType, prim), name(std::move(name_)) {}
+    constexpr explicit SymbolType(std::string&& _name, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
+        Type(TypeKind::SymbolType, prim), name(std::move(_name)) {}
     MN_AST_STANDARD_INTERFACE;
 };
 

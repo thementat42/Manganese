@@ -93,7 +93,7 @@ struct Expression : public ASTNode {
     virtual mnstl::fold_result_t fold() const noexcept { return mnstl::fold_result_t{}; }
 
    protected:
-    constexpr explicit Expression(ExpressionKind kind_) noexcept : kind(kind_) {}
+    constexpr explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}
 };
 
 struct Statement : public ASTNode {
@@ -102,7 +102,7 @@ struct Statement : public ASTNode {
     virtual ~Statement() noexcept = default;
 
    protected:
-    constexpr explicit Statement(StatementKind kind_) noexcept : kind(kind_) {}
+    constexpr explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}
 };
 
 struct Type : public ASTNode {
@@ -112,8 +112,8 @@ struct Type : public ASTNode {
     virtual ~Type() noexcept = default;
 
    protected:
-    constexpr explicit Type(TypeKind kind_, PrimitiveType_t primitiveType_ = PrimitiveType_t::not_primitive) noexcept :
-        kind(kind_), primitiveType(primitiveType_) {}
+    constexpr explicit Type(TypeKind _kind, PrimitiveType_t _primitiveType = PrimitiveType_t::not_primitive) noexcept :
+        kind(_kind), primitiveType(_primitiveType) {}
 };
 
 constexpr const char* visibilityToString(Visibility visibility) noexcept {

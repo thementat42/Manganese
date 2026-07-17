@@ -28,8 +28,8 @@ struct SemanticType {
     const Kind kind;
     const ast::PrimitiveType_t primitiveType;
 
-    constexpr SemanticType(Kind kind_, ast::PrimitiveType_t primitive = ast::PrimitiveType_t::not_primitive) noexcept :
-        kind(kind_), primitiveType(primitive) {}
+    constexpr SemanticType(Kind _kind, ast::PrimitiveType_t primitive = ast::PrimitiveType_t::not_primitive) noexcept :
+        kind(_kind), primitiveType(primitive) {}
 
     virtual ~SemanticType() noexcept = default;
 
