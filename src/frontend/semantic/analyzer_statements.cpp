@@ -37,7 +37,19 @@ auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { retur
 
 // auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t;
 // auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t;
-// auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t;
+auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
+    visit(statement->condition);
+    visit(statement->body);
+    for (auto& elif : statement->elifs) {
+        visit(elif.condition);
+        visit(elif.body);
+    }
+    if (statement->elseBody.size() != 0) {
+        // there is an else body
+        visit(statement->elseBody);
+    }
+    return Result::Success;
+}
 
 auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     if (!context.inFunction) {
