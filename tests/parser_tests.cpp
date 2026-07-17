@@ -59,8 +59,8 @@ bool validateStatements(const ast::Block& block, const std::array<std::string, N
         std::string actual = block[i]->toString();
         if (actual != expected[i]) {
             std::cerr << "ERROR: Statement " << (i + 1) << " does not match expected in test: " << testName << '\n';
-            std::cerr << "Expected: " << expected[i] << '\n';
-            std::cerr << "Actual:   " << actual << '\n';
+            std::cerr << "Expected: " << "\n" << expected[i] << '\n';
+            std::cerr << "Actual:   " << "\n" << actual << '\n';
             return false;
         }
     }
@@ -94,8 +94,8 @@ bool validateStatement(const ast::Block& block, const std::string& expected, con
     std::string actual = block[0]->toString();
     if (actual != expected) {
         std::cerr << "ERROR: Statement does not match expected in test: " << testName << '\n';
-        std::cerr << "Expected: " << expected << '\n';
-        std::cerr << "Actual:   " << actual << '\n';
+        std::cerr << "Expected: " << "\n" << expected << '\n';
+        std::cerr << "Actual:   " << "\n" << actual << '\n';
         return false;
     }
 
@@ -298,9 +298,9 @@ bool testFunctionDeclarationAndCall() {
                              "let product = calculate(2.5f64, 3.01);\n";
 
     std::array<std::string, 6> expected = {
-        "public func add(a: int32, b: int32) -> int32 {\nreturn (a + b);\n}",
-        "private func greet(name: string) {\nprint((\"Hello, \" + name));\n}",
-        "private func calculate(x: float64, y: mut float64) -> float64 {\n(let result: private auto = (x * y));\nreturn result;\n}",
+        "public func add(a: int32, b: int32) -> int32 {\n\treturn (a + b);\n}",
+        "private func greet(name: string) {\n\tprint((\"Hello, \" + name));\n}",
+        "private func calculate(x: float64, y: mut float64) -> float64 {\n\t(let result: private auto = (x * y));\n\treturn result;\n}",
         "(let sum: private auto = add(5, 3));",
         "greet(\"World\");",
         "(let product: private auto = calculate(2.5, 3.01));"};
@@ -444,7 +444,7 @@ bool testGenerics() {
                              "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n"
                              "let foo_array: private Foo@[int32, float64][];";
     std::array<std::string, 5> expected = {
-        "private func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\nreturn ((3 + valueT) + (valueU * valueV));\n}",
+        "private func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\n\treturn ((3 + valueT) + (valueU * valueV));\n}",
         "(let result: private auto = genericFunction@[int32, float64, char](5, 2.5, (65 as char)));",
         "private aggregate Foo[T, U] {\n\tx: T;\n\ty: U;\n}",
         "(let foo: private auto = Foo@[int32, float64] {x = 3, y = 4.5});",
@@ -509,6 +509,27 @@ bool testSizeofTypeofAlignof() {
     return validateStatements(getParserResults(expression), expected, "Sizeof, Typeof & Alignof");
 }
 
+bool testNestedBlocks() {
+    std::string expression = "func foo() {let x = 10; {let x = 20;} if (x == 10) {{let x = 10;}} else {{let x = 20;}}}";
+    std::string expected = "private func foo() {\n"
+                           "\t(let x: private auto = 10);\n"
+                           "\t{\n"
+                           "\t(let x: private auto = 20);\n"
+                           "\t}\n"
+                           "\tif ((x == 10)) {\n"
+                           "\t{\n"
+                           "\t(let x: private auto = 10);\n"
+                           "\t}\n"
+                           "} else {\n"
+                           "\t{\n"
+                           "\t(let x: private auto = 20);\n"
+                           "\t}\n"
+                           "}\n"
+                           "}";
+
+    return validateStatement(getParserResults(expression), expected, "Nested Blocks");
+}
+
 static bool miscTests() {
     std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
     auto x = getParserResults(expression);
@@ -542,6 +563,7 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Parsing from file", testParseFromFile);
     runner.runTest("Redundant Semicolons", testRedundantSemicolons);
     runner.runTest("Sizeof, Typeof & Alignof", testSizeofTypeofAlignof);
+    runner.runTest("Nested Blocks", testNestedBlocks);
     runner.runTest("Miscellaneous Tests", miscTests);
 }
 }  // namespace tests
