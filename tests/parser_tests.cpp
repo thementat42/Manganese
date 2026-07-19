@@ -381,9 +381,9 @@ bool testEnumDeclarationStatement() {
                              "}";
 
     std::array<std::string, 3> expected
-        = {"public enum Color: int8 {\n\tRed,\n\tGreen,\n\tBlue,\n}",
-           "private enum Status: int32 {\n\tSuccess = 0,\n\tError = 1,\n\tUnknown = (-1),\n}",
-           "private enum Letters: uint128 {\n\tA = 0,\n\tB,\n\tC,\n\tD,\n}"};
+        = {"public enum Color: int8 {\n\tRed,\n\tGreen,\n\tBlue\n}",
+           "private enum Status: int32 {\n\tSuccess = 0,\n\tError = 1,\n\tUnknown = (-1)\n}",
+           "private enum Letters: uint128 {\n\tA = 0,\n\tB,\n\tC,\n\tD\n}"};
 
     return validateStatements(getParserResults(expression), expected, "Enum Declaration Statement");
 }
@@ -513,17 +513,17 @@ bool testNestedBlocks() {
     std::string expression = "func foo() {let x = 10; {let x = 20;} if (x == 10) {{let x = 10;}} else {{let x = 20;}}}";
     std::string expected = "private func foo() {\n"
                            "\t(let x: private auto = 10);\n"
-                           "\t{\n"
+                           "\t {\n"
                            "\t(let x: private auto = 20);\n"
-                           "\t}\n"
+                           "}\n"
                            "\tif ((x == 10)) {\n"
-                           "\t{\n"
+                           "\t {\n"
                            "\t(let x: private auto = 10);\n"
-                           "\t}\n"
+                           "}\n"
                            "} else {\n"
-                           "\t{\n"
+                           "\t {\n"
                            "\t(let x: private auto = 20);\n"
-                           "\t}\n"
+                           "}\n"
                            "}\n"
                            "}";
 
