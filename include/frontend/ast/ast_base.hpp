@@ -15,7 +15,7 @@
 #endif
 
 #define MN_AST_STANDARD_INTERFACE          \
-    std::string toString() const override; \
+    std::string toString(size_t indent = 0) const override; \
     MN_AST_DUMP
 
 namespace Manganese {
@@ -75,7 +75,7 @@ struct ASTNode {
 
     virtual ~ASTNode() noexcept = default;
 
-    virtual std::string toString() const = 0;
+    virtual std::string toString(size_t indent = 0) const = 0;
 
     constexpr inline size_t getLine() const noexcept { return line; }
     constexpr inline size_t getColumn() const noexcept { return column; }
