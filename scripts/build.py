@@ -50,9 +50,8 @@ def check_cmake_installation():
     """Check that cmake is installed before running
     This script just runs cmake <args>, so it needs cmake in the path
     """
-    try:
-        subprocess.run(["cmake", "--version"], check = True, stdout = subprocess.PIPE)
-    except FileNotFoundError:
+    cmake = shutil.which("cmake")
+    if cmake is None:
         print("\033[31mCMake is either not installed or not in the system PATH.\033[0m")
         sys.exit(1)
 
