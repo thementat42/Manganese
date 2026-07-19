@@ -103,7 +103,7 @@ struct BinaryExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    virtual mnstl::fold_result_t fold() const noexcept override;
+    mnstl::fold_result_t fold() const noexcept override;
 };
 
 /**
@@ -117,7 +117,7 @@ struct BoolLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    virtual mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
 };
 
 /**
@@ -133,7 +133,7 @@ struct CharLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    virtual mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
 };
 
 /**
