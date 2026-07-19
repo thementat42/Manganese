@@ -11,7 +11,7 @@ namespace Manganese {
 namespace ast {
 // There are lots of implicit conversions between integer types -- for convenience, ignore those warnings
 
-inline std::string getIndent(size_t indent) { return std::string(indent * 2, ' '); }
+static inline std::string getIndent(size_t indent) { return std::string(indent * 2, ' '); }
 
 // Helper function to get the type of a number variant
 std::string_view getNumberTypeName(const mnstl::number_t& value) {
