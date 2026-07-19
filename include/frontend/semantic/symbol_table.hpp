@@ -101,7 +101,7 @@ class SymbolTable {
             _currentScope->children.push_back(newScope);
             _currentScope = newScope;
         } else {
-            // Retrieve the next child scope in the same order it was recorded in in pass 1 
+            // Retrieve the next child scope in the same order it was recorded in in pass 1
             if (_currentScope->currentChildIndex >= _currentScope->children.size()) [[unlikely]] {
                 logging::logInternal(logging::LogLevel::Error, "Mismatched scope structural traversal");
                 return;

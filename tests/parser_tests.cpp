@@ -117,12 +117,10 @@ bool testVariableDeclaration() {
                              "let baz : public uint32 = foo + 10 * 2 * bar + foo % 7 + foo*2;"
                              "let boolean = true;";
 
-    std::array<std::string, 4> expected = {
-        "(let mut foo: private auto = 45.5);", 
-        "(let mut bar: private auto = (foo * 10));",
-        "(let baz: public uint32 = (((foo + ((10 * 2) * bar)) + (foo % 7)) + (foo * 2)));",
-        "(let boolean: private auto = true);"
-    };
+    std::array<std::string, 4> expected
+        = {"(let mut foo: private auto = 45.5);", "(let mut bar: private auto = (foo * 10));",
+           "(let baz: public uint32 = (((foo + ((10 * 2) * bar)) + (foo % 7)) + (foo * 2)));",
+           "(let boolean: private auto = true);"};
 
     return validateStatements(getParserResults(expression), expected, "Variable Declaration");
 }
@@ -146,14 +144,13 @@ bool testAssignmentExpressions() {
                              "m |= n & p;\n"
                              "x ^= ~y;\n";
 
-    std::array<std::string, 17> expected = {
-        "(a = 5);",          "(b += 3);",       "(c -= (2 * b));",
-        "(d = (-(c + 3)));", "(e *= (f + 1));", "(g /= (h - (-2)));",
-        "(i %= 4);",         "(k //= 3);",      "(l = (((3 + 4) * 2) - ((1 + 1) * 5)));",
-        "(a &= b);",         "(c |= d);",       "(e ^= f);",
-        "(g <<= 2);",        "(h >>= 3);",      "(i &= (j | k));",
-        "(m |= (n & p));",   "(x ^= (~y));"
-    };
+    std::array<std::string, 17> expected
+        = {"(a = 5);",          "(b += 3);",       "(c -= (2 * b));",
+           "(d = (-(c + 3)));", "(e *= (f + 1));", "(g /= (h - (-2)));",
+           "(i %= 4);",         "(k //= 3);",      "(l = (((3 + 4) * 2) - ((1 + 1) * 5)));",
+           "(a &= b);",         "(c |= d);",       "(e ^= f);",
+           "(g <<= 2);",        "(h >>= 3);",      "(i &= (j | k));",
+           "(m |= (n & p));",   "(x ^= (~y));"};
 
     return validateStatements(getParserResults(expression), expected, "Assignment Expressions");
 }
@@ -167,9 +164,8 @@ bool testPrefixOperators() {
                              "-(d + 3);"
                              "++c * 2;\n";
 
-    std::array<std::string, 7> expected = {
-        "(++x);", "(--y);", "(-z);", "(+a);", "(!b);", "(-(d + 3));", "((++c) * 2);"
-    };
+    std::array<std::string, 7> expected
+        = {"(++x);", "(--y);", "(-z);", "(+a);", "(!b);", "(-(d + 3));", "((++c) * 2);"};
 
     return validateStatements(getParserResults(expression), expected, "Prefix Operators");
 }
@@ -181,10 +177,8 @@ bool testParenthesizedExpressions() {
                              "1 + (2 * (3 + 1));\n"
                              "((2 + 3) * 4) - (6 / (1 + 1));";
 
-    std::array<std::string, 5> expected = {
-        "((2 + 3) * 4);", "(2 * (3 + 4));", "(((5 + 2) * (8 - 3)) / 2);",
-        "(1 + (2 * (3 + 1)));", "(((2 + 3) * 4) - (6 / (1 + 1)));"
-    };
+    std::array<std::string, 5> expected = {"((2 + 3) * 4);", "(2 * (3 + 4));", "(((5 + 2) * (8 - 3)) / 2);",
+                                           "(1 + (2 * (3 + 1)));", "(((2 + 3) * 4) - (6 / (1 + 1)));"};
 
     return validateStatements(getParserResults(expression), expected, "Parenthesized Expressions");
 }
@@ -196,9 +190,8 @@ bool testPointerOperators() {
                              "&(x + y);\n"
                              "*p + 5;\n";
 
-    std::array<std::string, 5> expected = {
-        "(&variable);", "(*pointer);", "(*(*doublePointer));", "(&(x + y));", "((*p) + 5);"
-    };
+    std::array<std::string, 5> expected
+        = {"(&variable);", "(*pointer);", "(*(*doublePointer));", "(&(x + y));", "((*p) + 5);"};
 
     return validateStatements(getParserResults(expression), expected, "Pointer Operators");
 }
@@ -211,12 +204,8 @@ bool testTypedVariableDeclaration() {
                              "let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
     std::array<std::string, 5> expected = {
-        "(let mut x: private int32 = 42);", 
-        "(let y: public float64 = 3.14159);", 
-        "(let mut z: private char = 'A');",
-        "(let mut numbers: private int32[(3 * 2)]);", 
-        "(let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"
-    };
+        "(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);", "(let mut z: private char = 'A');",
+        "(let mut numbers: private int32[(3 * 2)]);", "(let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     return validateStatements(getParserResults(expression), expected, "Typed Variable Declarations");
 }
@@ -229,9 +218,8 @@ bool testPostfixOperators() {
                              "++x--;\n"
                              "x++ + y--;\n";
 
-    std::array<std::string, 6> expected = {
-        "(x++);", "(y--);", "((a + b)++);", "(arr[i]--);", "(++(x--));", "((x++) + (y--));"
-    };
+    std::array<std::string, 6> expected
+        = {"(x++);", "(y--);", "((a + b)++);", "(arr[i]--);", "(++(x--));", "((x++) + (y--));"};
 
     return validateStatements(getParserResults(expression), expected, "Postfix Operators");
 }
@@ -248,10 +236,16 @@ bool testBitwiseOperators() {
                              "~(a & b) | c;\n"
                              "a & b & c | d ^ e;\n";
 
-    std::array<std::string, 10> expected = {
-        "(a & b);", "(c | d);", "(e ^ f);", "(~g);", "(h << 2);", "(i >> 3);",
-        "((a & b) | (c ^ d));", "(a & (b | c));", "((~(a & b)) | c);", "(((a & b) & c) | (d ^ e));"
-    };
+    std::array<std::string, 10> expected = {"(a & b);",
+                                            "(c | d);",
+                                            "(e ^ f);",
+                                            "(~g);",
+                                            "(h << 2);",
+                                            "(i >> 3);",
+                                            "((a & b) | (c ^ d));",
+                                            "(a & (b | c));",
+                                            "((~(a & b)) | c);",
+                                            "(((a & b) & c) | (d ^ e));"};
 
     return validateStatements(getParserResults(expression), expected, "Bitwise Operators");
 }
@@ -286,10 +280,8 @@ bool testAggregateDeclarationAndInstantiation() {
     bottomRight: Point;
     color: uint32;
 })",
-        "(let mut p1: private auto = Point {x = 10, y = 20});", 
-        "(let mut p2: private Point = Point {x = 30, y = 40});",
-        "(let rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"
-    };
+        "(let mut p1: private auto = Point {x = 10, y = 20});", "(let mut p2: private Point = Point {x = 30, y = 40});",
+        "(let rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
 
     return validateStatements(getParserResults(expression), expected, "Aggregate Declaration and Instantiation");
 }
@@ -322,8 +314,7 @@ bool testFunctionDeclarationAndCall() {
 })",
         "(let sum: private auto = add(5, 3));",
         "greet(\"World\");",
-        "(let product: private auto = calculate(2.5, 3.01));"
-    };
+        "(let product: private auto = calculate(2.5, 3.01));"};
 
     return validateStatements(getParserResults(expression), expected, "Function Declaration and Call");
 }
@@ -343,14 +334,13 @@ bool testLoops() {
                              "for (;i<4;) {print(3);}"
                              "for (;;++i) {print(3);}";
 
-    std::array<std::string, 9> expected = {
-        "(let i: private auto = 0);",
-        R"(do {
+    std::array<std::string, 9> expected = {"(let i: private auto = 0);",
+                                           R"(do {
     (++i);
     print(i);
 } while ((i < 5));)",
-        "(let j: private int32 = 10);",
-        R"(while (true) {
+                                           "(let j: private int32 = 10);",
+                                           R"(while (true) {
     if ((j == 5)) {
         continue;
     }
@@ -359,22 +349,21 @@ bool testLoops() {
         break;
     }
 })",
-        R"(for ((let k: private auto = 0); (k < 10); (++k)) {
+                                           R"(for ((let k: private auto = 0); (k < 10); (++k)) {
     print(k);
 })",
-        R"(for (;;) {
+                                           R"(for (;;) {
     print(3);
 })",
-        R"(for ((i = 10); ;) {
+                                           R"(for ((i = 10); ;) {
     print(3);
 })",
-        R"(for (;(i < 4); ) {
+                                           R"(for (;(i < 4); ) {
     print(3);
 })",
-        R"(for (;;(++i)) {
+                                           R"(for (;;(++i)) {
     print(3);
-})"
-    };
+})"};
 
     return validateStatements(getParserResults(expression), expected, "Loops");
 }
@@ -438,8 +427,7 @@ bool testEnumDeclarationStatement() {
     B,
     C,
     D
-})"
-    };
+})"};
 
     return validateStatements(getParserResults(expression), expected, "Enum Declaration Statement");
 }
@@ -477,15 +465,13 @@ bool testAccessExpressions() {
                              "let firstElement = array[0];\n"
                              "let foo = lib::module_::function(a, b, c);\n";
 
-    std::array<std::string, 7> expected = {
-        "(let mut point: private auto = Point {x = 10, y = 20});",
-        "(let mut xCoord: private auto = point.x);",
-        "(let mut yCoord: private auto = point.y);",
-        "(let mut color: private auto = rect.color);",
-        "(let array: private auto = [1, 2, 3]);",
-        "(let firstElement: private auto = array[0]);",
-        "(let foo: private auto = lib::module_::function(a, b, c));"
-    };
+    std::array<std::string, 7> expected = {"(let mut point: private auto = Point {x = 10, y = 20});",
+                                           "(let mut xCoord: private auto = point.x);",
+                                           "(let mut yCoord: private auto = point.y);",
+                                           "(let mut color: private auto = rect.color);",
+                                           "(let array: private auto = [1, 2, 3]);",
+                                           "(let firstElement: private auto = array[0]);",
+                                           "(let foo: private auto = lib::module_::function(a, b, c));"};
 
     return validateStatements(getParserResults(expression), expected, "Member Access Expression");
 }
@@ -511,8 +497,7 @@ bool testGenerics() {
     y: U;
 })",
         "(let foo: private auto = Foo@[int32, float64] {x = 3, y = 4.5});",
-        "(let foo_array: private Foo@[int32, float64][]);"
-    };
+        "(let foo_array: private Foo@[int32, float64][]);"};
     return validateStatements(getParserResults(expression), expected, "Generic Function Declaration");
 }
 
@@ -527,14 +512,12 @@ bool testImportsAndAliases() {
                              "alias std::HashMap@[string, Integer] as StringIntMap;\n"
                              "let value: Integer = 42;\n";
 
-    std::array<std::string, 6> expected = {
-        "",
-        "alias (int32) as Integer;",
-        "alias (ptr float64) as pf64;",
-        "alias (func(mut Integer, pf64, func(int64) -> int64) -> bool) as blah;",
-        "alias (std::HashMap@[string, Integer]) as StringIntMap;",
-        "(let value: private Integer = 42);"
-    };
+    std::array<std::string, 6> expected = {"",
+                                           "alias (int32) as Integer;",
+                                           "alias (ptr float64) as pf64;",
+                                           "alias (func(mut Integer, pf64, func(int64) -> int64) -> bool) as blah;",
+                                           "alias (std::HashMap@[string, Integer]) as StringIntMap;",
+                                           "(let value: private Integer = 42);"};
 
     return validateStatements(getParserResults(expression), expected, "Import Statements and Type Aliases");
 }
@@ -564,14 +547,13 @@ bool testSizeofTypeofAlignof() {
                              "alignof(x+1);\n"
                              "let x: typeof(x+1) = 3;\n"
                              "let y : typeof(foo@[int,char]((p as int32)) + (bar + baz as typeof(3u128)));";
-    std::array<std::string, 6> expected = {
-        "(sizeof(int32));",
-        "(sizeof(dummy));",
-        "(alignof(char));",
-        "(alignof(dummy));",
-        "(let x: private typeof((x + 1)) = 3);",
-        "(let y: private typeof((foo@[int32, char]((p as int32)) + ((bar + baz) as typeof(3)))));"
-    };
+    std::array<std::string, 6> expected
+        = {"(sizeof(int32));",
+           "(sizeof(dummy));",
+           "(alignof(char));",
+           "(alignof(dummy));",
+           "(let x: private typeof((x + 1)) = 3);",
+           "(let y: private typeof((foo@[int32, char]((p as int32)) + ((bar + baz) as typeof(3)))));"};
     return validateStatements(getParserResults(expression), expected, "Sizeof, Typeof & Alignof");
 }
 

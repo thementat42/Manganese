@@ -2,10 +2,9 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_BASE_HPP
 
 #include <core.hpp>
+#include <frontend/lexer/token_type.hpp>
 #include <mnstl/enum_matches.hxx>
 #include <string>
-
-#include <frontend/lexer/token_type.hpp>
 
 namespace Manganese {
 namespace lexer {

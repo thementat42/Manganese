@@ -4,14 +4,12 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
+#include <frontend/parser/operators.hpp>
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
 #include <string>
 #include <vector>
-
-#include <frontend/parser/operators.hpp>
-#include "frontend/ast/ast_base.hpp"
 
 namespace Manganese {
 namespace parser {

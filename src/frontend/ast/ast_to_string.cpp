@@ -18,9 +18,7 @@ static inline std::string getIndent(size_t indent) { return std::string(indent *
 // Helpers
 std::string blockToString(const Block& block, size_t indent) {
     std::string result = "{\n";
-    for (const auto stmt : block) { 
-        result += stmt->toString(indent + 1) + "\n"; 
-    }
+    for (const auto stmt : block) { result += stmt->toString(indent + 1) + "\n"; }
     result += getIndent(indent) + "}";
     return result;
 }
@@ -63,8 +61,8 @@ std::string AggregateDeclarationStatement::toString(size_t indent) const {
     std::string result = getIndent(indent) + std::format("{} aggregate {}", visibilityToString(visibility), name);
     if (!genericTypes.empty()) { result += std::format("[{}]", commaSeparatedList(genericTypes)); }
     result += " {\n";
-    for (const auto& field : fields) { 
-        result += getIndent(indent + 1) + field.name + ": " + field.type->toString(indent + 1) + ";\n"; 
+    for (const auto& field : fields) {
+        result += getIndent(indent + 1) + field.name + ": " + field.type->toString(indent + 1) + ";\n";
     }
     result += getIndent(indent) + "}";
     return result;
@@ -81,7 +79,8 @@ std::string ContinueStatement::toString(size_t indent) const { return getIndent(
 std::string EmptyStatement::toString(size_t) const { return ""; }
 
 std::string EnumDeclarationStatement::toString(size_t indent) const {
-    std::string result = getIndent(indent) + std::format("{} enum {}: {}", visibilityToString(visibility), name, baseType->toString(indent));
+    std::string result = getIndent(indent)
+        + std::format("{} enum {}: {}", visibilityToString(visibility), name, baseType->toString(indent));
     result += " {\n";
     for (std::size_t i = 0; i < values.size(); ++i) {
         const auto& value = values[i];
@@ -94,8 +93,8 @@ std::string EnumDeclarationStatement::toString(size_t indent) const {
     return result;
 }
 
-std::string ExpressionStatement::toString(size_t indent) const { 
-    return getIndent(indent) + std::format("{};", expression->toString(indent)); 
+std::string ExpressionStatement::toString(size_t indent) const {
+    return getIndent(indent) + std::format("{};", expression->toString(indent));
 }
 
 std::string ForLoopStatement::toString(size_t indent) const {
@@ -121,9 +120,7 @@ std::string ForLoopStatement::toString(size_t indent) const {
 std::string FunctionDeclarationStatement::toString(size_t indent) const {
     std::string result = getIndent(indent) + std::format("{} func {}", visibilityToString(visibility), name);
 
-    if (!genericTypes.empty()) {
-        result += std::format("[{}]", commaSeparatedList(genericTypes));
-    }
+    if (!genericTypes.empty()) { result += std::format("[{}]", commaSeparatedList(genericTypes)); }
 
     result += '(';
     for (size_t i = 0; i < parameters.size(); ++i) {
@@ -139,7 +136,8 @@ std::string FunctionDeclarationStatement::toString(size_t indent) const {
 }
 
 std::string IfStatement::toString(size_t indent) const {
-    std::string result = getIndent(indent) + std::format("if ({}) ", condition->toString(indent)) + blockToString(body, indent);
+    std::string result
+        = getIndent(indent) + std::format("if ({}) ", condition->toString(indent)) + blockToString(body, indent);
     for (const auto& elif : elifs) {
         result += std::format(" elif ({}) ", elif.condition->toString(indent)) + blockToString(elif.body, indent);
     }
@@ -147,39 +145,35 @@ std::string IfStatement::toString(size_t indent) const {
     return result;
 }
 
-std::string NestedBlockStatement::toString(size_t indent) const { 
-    return getIndent(indent) + blockToString(block, indent); 
+std::string NestedBlockStatement::toString(size_t indent) const {
+    return getIndent(indent) + blockToString(block, indent);
 }
 
-std::string ReturnStatement::toString(size_t indent) const { 
+std::string ReturnStatement::toString(size_t indent) const {
     std::string valStr = value ? value->toString(indent) : "";
-    return getIndent(indent) + std::format("return {};", valStr); 
+    return getIndent(indent) + std::format("return {};", valStr);
 }
 
 std::string SwitchStatement::toString(size_t indent) const {
     std::string result = getIndent(indent) + std::format("switch ({})", variable->toString(indent)) + " {\n";
     for (const auto& _case : cases) {
         result += getIndent(indent + 1) + std::format("case {}:\n", _case.literalValue->toString(indent + 1));
-        for (const auto stmt : _case.body) { 
-            result += stmt->toString(indent + 2) + "\n"; 
-        }
+        for (const auto stmt : _case.body) { result += stmt->toString(indent + 2) + "\n"; }
     }
     if (!defaultBody.empty()) {
         result += getIndent(indent + 1) + "default:\n";
-        for (const auto stmt : defaultBody) { 
-            result += stmt->toString(indent + 2) + "\n"; 
-        }
+        for (const auto stmt : defaultBody) { result += stmt->toString(indent + 2) + "\n"; }
     }
     result += getIndent(indent) + "}";
     return result;
 }
 
 std::string VariableDeclarationStatement::toString(size_t indent) const {
-    // Types/expressions inline usually don't need local layout spacing passed down, 
+    // Types/expressions inline usually don't need local layout spacing passed down,
     // but we supply 0 or current indent context to prevent formatting overflows.
     std::string typeStr = std::format("{} {}", visibilityToString(visibility), type ? type->toString(0) : "auto");
     std::string valueStr = value ? " = " + value->toString(0) : "";
-    
+
     return getIndent(indent) + std::format("({} {}: {}{});", isMutable ? "let mut" : "let", name, typeStr, valueStr);
 }
 
@@ -220,7 +214,9 @@ std::string AggregateLiteralExpression::toString(size_t indent) const {
     return result;
 }
 
-std::string AlignofExpression::toString(size_t indent) const { return std::format(WRAP("alignof({})"), type->toString(indent)); }
+std::string AlignofExpression::toString(size_t indent) const {
+    return std::format(WRAP("alignof({})"), type->toString(indent));
+}
 
 std::string ArrayLiteralExpression::toString(size_t indent) const {
     std::string result = "[";
@@ -233,7 +229,8 @@ std::string ArrayLiteralExpression::toString(size_t indent) const {
 }
 
 std::string AssignmentExpression::toString(size_t indent) const {
-    return std::format(WRAP("{} {} {}"), assignee->toString(indent), lexer::tokenTypeToString(op), value->toString(indent));
+    return std::format(WRAP("{} {} {}"), assignee->toString(indent), lexer::tokenTypeToString(op),
+                       value->toString(indent));
 }
 std::string BinaryExpression::toString(size_t indent) const {
     return std::format(WRAP("{} {} {}"), left->toString(indent), lexer::tokenTypeToString(op), right->toString(indent));
@@ -253,13 +250,19 @@ std::string FunctionCallExpression::toString(size_t indent) const {
     return result;
 }
 
-std::string GenericExpression::toString(size_t indent) const { return identifier->toString(indent) + genericsToString(types, indent); }
+std::string GenericExpression::toString(size_t indent) const {
+    return identifier->toString(indent) + genericsToString(types, indent);
+}
 
 std::string IdentifierExpression::toString(size_t) const { return value; }
 
-std::string IndexExpression::toString(size_t indent) const { return std::format("{}[{}]", variable->toString(indent), index->toString(indent)); }
+std::string IndexExpression::toString(size_t indent) const {
+    return std::format("{}[{}]", variable->toString(indent), index->toString(indent));
+}
 
-std::string MemberAccessExpression::toString(size_t indent) const { return std::format("{}.{}", object->toString(indent), property); }
+std::string MemberAccessExpression::toString(size_t indent) const {
+    return std::format("{}.{}", object->toString(indent), property);
+}
 
 std::string NumberLiteralExpression::toString(size_t) const { return value.to_string(true); }
 
@@ -271,9 +274,13 @@ std::string PrefixExpression::toString(size_t indent) const {
     return std::format(WRAP("{}{}"), lexer::tokenTypeToString(op), right->toString(indent));
 }
 
-std::string ScopeResolutionExpression::toString(size_t indent) const { return std::format("{}::{}", scope->toString(indent), element); }
+std::string ScopeResolutionExpression::toString(size_t indent) const {
+    return std::format("{}::{}", scope->toString(indent), element);
+}
 
-std::string SizeofExpression::toString(size_t indent) const { return std::format(WRAP("sizeof({})"), type->toString(indent)); }
+std::string SizeofExpression::toString(size_t indent) const {
+    return std::format(WRAP("sizeof({})"), type->toString(indent));
+}
 
 std::string StringLiteralExpression::toString(size_t) const { return std::format("\"{}\"", value); }
 
@@ -294,7 +301,8 @@ std::string AggregateType::toString(size_t indent) const {
 }
 
 std::string ArrayType::toString(size_t indent) const {
-    return std::format("{}[{}]", elementType->toString(indent), lengthExpression ? lengthExpression->toString(indent) : "");
+    return std::format("{}[{}]", elementType->toString(indent),
+                       lengthExpression ? lengthExpression->toString(indent) : "");
 }
 
 std::string FunctionType::toString(size_t indent) const {
@@ -302,14 +310,16 @@ std::string FunctionType::toString(size_t indent) const {
     for (std::size_t i = 0; i < parameterTypes.size(); ++i) {
         const auto& param = parameterTypes[i];
         result += std::format("{}{}", (param.isMutable ? "mut " : ""), param.type->toString(indent));
-        if (i != parameterTypes.size() - 1) {result += ", ";}
+        if (i != parameterTypes.size() - 1) { result += ", "; }
     }
     result += ")";
     if (returnType) { result += std::format(" -> {}", returnType->toString(indent)); }
     return result;
 }
 
-std::string GenericType::toString(size_t indent) const { return baseType->toString(indent) + genericsToString(typeParameters, indent); }
+std::string GenericType::toString(size_t indent) const {
+    return baseType->toString(indent) + genericsToString(typeParameters, indent);
+}
 
 std::string PointerType::toString(size_t indent) const {
     return std::format("ptr {}{}", (isMutable ? "mut " : ""), baseType->toString(indent));
@@ -317,7 +327,9 @@ std::string PointerType::toString(size_t indent) const {
 
 std::string SymbolType::toString(size_t) const { return name; }
 
-std::string TypeofType::toString(size_t indent) const { return std::format("typeof({})", expression->toString(indent)); }
+std::string TypeofType::toString(size_t indent) const {
+    return std::format("typeof({})", expression->toString(indent));
+}
 
 }  // namespace ast
 }  // namespace Manganese

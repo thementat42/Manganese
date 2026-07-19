@@ -14,7 +14,7 @@
 #define MN_AST_DUMP
 #endif
 
-#define MN_AST_STANDARD_INTERFACE          \
+#define MN_AST_STANDARD_INTERFACE                           \
     std::string toString(size_t indent = 0) const override; \
     MN_AST_DUMP
 

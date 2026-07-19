@@ -2,10 +2,9 @@
 #define MANGANESE_INCLUDE_IO_FILEREADER_HPP
 
 #include <core.hpp>
+#include <io/reader.hpp>
 #include <memory>
 #include <string>
-
-#include <io/reader.hpp>
 
 namespace Manganese {
 namespace io {
