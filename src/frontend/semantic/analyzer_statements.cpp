@@ -4,6 +4,8 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
+#include "frontend/ast/ast_base.hpp"
+
 namespace Manganese {
 namespace semantic {
 
@@ -36,19 +38,53 @@ auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
 auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { return visit(statement->expression); }
 
 // auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t;
+
 // auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t;
+
 auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
+    auto result = Result::Success;
+    ++context.ifStatementDepth;
     visit(statement->condition);
-    visit(statement->body);
+
+    if (!statement->condition->semanticType) {
+        logError(statement, "Could not deduce type of condition {}", statement->condition->toString());
+
+        --context.ifStatementDepth;
+        return Result::Failure;
+    }
+
+    if (statement->condition->semanticType != typeContext.getPrimitive(ast::PrimitiveType_t::boolean)) {
+        logError(statement, "Condition in if statement must be a boolean type, not {}",
+                 statement->condition->semanticType->toString());
+        result = Result::Failure;
+    }
+
+    if (visit(statement->body) == Result::Failure) { result = Result::Failure; }
+
     for (auto& elif : statement->elifs) {
         visit(elif.condition);
-        visit(elif.body);
+        if (!elif.condition->semanticType) {
+            logError(statement, "Could not deduce type of condition {}", elif.condition->toString());
+
+            --context.ifStatementDepth;
+            return Result::Failure;
+        }
+    
+        if (elif.condition->semanticType != typeContext.getPrimitive(ast::PrimitiveType_t::boolean)) {
+            logError(statement, "Condition in elif statement must be a boolean type, not {}",
+                     elif.condition->semanticType->toString());
+            result = Result::Failure;
+        }
+
+        if (visit(elif.body) == Result::Failure) { result = Result::Failure; }
     }
+
     if (statement->elseBody.size() != 0) {
         // there is an else body
-        visit(statement->elseBody);
+        if (visit(statement->elseBody) == Result::Failure) { result = Result::Failure; }
     }
-    return Result::Success;
+    --context.ifStatementDepth;
+    return result;
 }
 
 auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
