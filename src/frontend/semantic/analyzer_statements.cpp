@@ -46,17 +46,22 @@ auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     auto result = Result::Success;
     ContextGuard guard(context.ifStatementDepth, static_cast<uint8_t>(context.ifStatementDepth + 1));
 
-    visit(statement->condition);
+    if (visit(statement->condition) == Result::Failure) { result = Result::Failure; }
 
     if (!statement->condition->semanticType) {
         logError(statement, "Could not deduce type of condition {}", statement->condition->toString());
-        return Result::Failure;
-    }
-
-    if (statement->condition->semanticType != typeContext.getPrimitive(ast::PrimitiveType_t::boolean)) {
-        logError(statement, "Condition in if statement must be a boolean type, not {}",
-                 statement->condition->semanticType->toString());
         result = Result::Failure;
+    } else {
+        const auto conditionCanBeBool = areTypesCompatible(statement->condition->semanticType,
+                                                           typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+        if (!conditionCanBeBool) {
+            logError(statement,
+                     "Condition in if statement must be a boolean type or implicitly convertible to it, not {}",
+                     statement->condition->semanticType->toString());
+            result = Result::Failure;
+        } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+            logWarning(statement, "{}", conditionCanBeBool.message);
+        }
     }
 
     if (visit(statement->body) == Result::Failure) { result = Result::Failure; }
@@ -65,13 +70,18 @@ auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         visit(elif.condition);
         if (!elif.condition->semanticType) {
             logError(statement, "Could not deduce type of condition {}", elif.condition->toString());
-            return Result::Failure;
-        }
-    
-        if (elif.condition->semanticType != typeContext.getPrimitive(ast::PrimitiveType_t::boolean)) {
-            logError(statement, "Condition in elif statement must be a boolean type, not {}",
-                     elif.condition->semanticType->toString());
             result = Result::Failure;
+        } else {
+            const auto conditionCanBeBool = areTypesCompatible(elif.condition->semanticType,
+                                                               typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+            if (!conditionCanBeBool) {
+                logError(statement,
+                         "Condition in elif statement must be a boolean type or implicitly convertible to it, not {}",
+                         elif.condition->semanticType->toString());
+                result = Result::Failure;
+            } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+                logWarning(statement, "{}", conditionCanBeBool.message);
+            }
         }
 
         if (visit(elif.body) == Result::Failure) { result = Result::Failure; }
@@ -116,20 +126,26 @@ auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
 
 auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
     ContextGuard guard(context.whileLoopDepth, static_cast<uint8_t>(context.whileLoopDepth + 1));
-    auto conditionResult = visit(statement->condition);
+    auto result = Result::Success;
+
+    if (visit(statement->condition) == Result::Failure) { result = Result::Failure; }
     if (!statement->condition->semanticType) {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
         return Result::Failure;
+    } else {
+        const auto conditionCanBeBool = areTypesCompatible(statement->condition->semanticType,
+                                                           typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+        if (!conditionCanBeBool) {
+            logError(statement, "While loop condition must be a boolean value or implicitly convertible to it, not {}",
+                     statement->condition->semanticType->toString());
+        } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+            logWarning(statement, "{}", conditionCanBeBool.message);
+        }
     }
 
-    if (statement->condition->semanticType->primitiveType != ast::PrimitiveType_t::boolean) {
-        logError(statement, "While loop condition must be a boolean value (found {})",
-                 statement->condition->semanticType->toString());
-        return Result::Failure;
-    }
+    if (visit(statement->body) == Result::Failure) { result = Result::Failure; }
 
-    auto bodyResult = visit(statement->body);
-    return (conditionResult == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
+    return result;
 }
 
 }  // namespace semantic
