@@ -6,6 +6,7 @@
 #include <utils/result.hpp>
 
 #include "frontend/ast/ast_base.hpp"
+#include "frontend/semantic/analyzer.hpp"
 
 namespace Manganese {
 namespace semantic {
@@ -38,7 +39,40 @@ auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
 
 auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { return visit(statement->expression); }
 
-// auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t;
+auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
+    auto result = Result::Success;
+    ContextGuard guard(context.forLoopDepth, static_cast<uint8_t>(context.forLoopDepth + 1));
+    if (statement->initializationStep) {
+        // there is an initialization step, check it
+        if (visit(statement->initializationStep) == Result::Failure) { result = Result::Failure; }
+    }
+    if (statement->stopCondition) {
+        // there is a stop condition, check it
+        if (visit(statement->stopCondition) == Result::Failure) { result = Result::Failure; }
+        if (!statement->stopCondition->semanticType) {
+            logError(statement->stopCondition, "Could not deduce type of for loop stop condition {}",
+                     statement->stopCondition->toString());
+            result = Result::Failure;
+        } else {
+            const auto conditionCanBeBool = areTypesCompatible(statement->stopCondition->semanticType,
+                                                               typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+            if (!conditionCanBeBool) {
+                logError(statement,
+                         "Stop condition in for loop must be a boolean type or implicitly convertible to it, not {}",
+                         statement->stopCondition->semanticType->toString());
+                result = Result::Failure;
+            } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+                logWarning(statement, "{}", conditionCanBeBool.message);
+            }
+        }
+    }
+    if (statement->postExpression) {
+        // there is a post expression, check it
+        if (visit(statement->postExpression) == Result::Failure) { result = Result::Failure; }
+    }
+    if (visit(statement->body) == Result::Failure) { result = Result::Failure; }
+    return result;
+}
 
 // auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t;
 
