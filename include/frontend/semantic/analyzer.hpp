@@ -26,6 +26,7 @@ class analyzer final : public _analyzer_base_t {
 
     struct {
         bool inFunction : 1 = false;
+        uint8_t inTypeCast = true;
         uint8_t ifStatementDepth = 0;
         uint8_t switchStatementDepth = 0;
         uint8_t forLoopDepth = 0;
@@ -64,6 +65,7 @@ class analyzer final : public _analyzer_base_t {
 
     Result checkStatements();
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
+    typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
 
     constexpr static bool isInteger(ast::PrimitiveType_t t) noexcept {
         using enum ast::PrimitiveType_t;

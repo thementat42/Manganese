@@ -1,9 +1,14 @@
 #include <core.hpp>
+#include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <utils/type_names.hpp>
 
 namespace Manganese {
 namespace semantic {
+
+constexpr static inline uint8_t f32MantissaWidth = 24;
+constexpr static inline uint8_t f64MantissaWidth = 53;
 
 Result analyzer::analyze() {
     Result isSemanticallyValid = Result::Success;
@@ -28,6 +33,117 @@ Result analyzer::checkStatements() {  // semantic analysis pass (this can also c
         if (this->visit(stmt) == Result::Failure) { programIsSemanticallyValid = Result::Failure; }
     }
     return programIsSemanticallyValid;
+}
+
+// Type compatibility
+
+struct PrimitiveInfo {
+    enum class Category {
+        Int,
+        UInt,
+        Float,
+        Char,
+        Bool,
+        String
+    };
+    Category category;
+    int bit_width = 0;
+};
+
+inline PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
+    using enum ast::PrimitiveType_t;
+    using Cat = PrimitiveInfo::Category;
+
+    switch (type) {
+        case i8: return {Cat::Int, 8};
+        case i16: return {Cat::Int, 16};
+        case i32: return {Cat::Int, 32};
+        case i64: return {Cat::Int, 64};
+        case i128: return {Cat::Int, 128};
+
+        case u8: return {Cat::UInt, 8};
+        case u16: return {Cat::UInt, 16};
+        case u32: return {Cat::UInt, 32};
+        case u64: return {Cat::UInt, 64};
+        case u128: return {Cat::UInt, 128};
+
+        case f32: return {Cat::Float, 32};
+        case f64: return {Cat::Float, 64};
+
+        case character: return {Cat::Char, 8};
+        case boolean: return {Cat::Bool, 1};
+        case str: return {Cat::String, 0};
+        default: break;
+    }
+    return {Cat::Int, 0};
+}
+
+auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
+    -> typeCompatibilityResult {
+    using result_t = typeCompatibilityResult::result_t;
+    using Cat = PrimitiveInfo::Category;
+    if (from->primitiveType == to->primitiveType) { return {.result = result_t::Valid}; }
+
+    auto src = getPrimitiveInfo(from->primitiveType);
+    auto dest = getPrimitiveInfo(to->primitiveType);
+    const bool is_conditional_context = context.ifStatementDepth || context.forLoopDepth || context.whileLoopDepth;
+
+    if (dest.category == Cat::Bool && is_conditional_context) { return {.result = result_t::Valid}; }
+
+    auto yield_warning = [&](std::string msg) -> typeCompatibilityResult {
+        if (context.inTypeCast) { return {.result = result_t::Valid}; }
+        return {.result = result_t::Warning, .message = std::move(msg)};
+    };
+
+    // String conversions
+    if (src.category == Cat::String) {
+        if (dest.category == Cat::Bool) {
+            return yield_warning(std::format("Implicit conversion from '{}' to '{}'", string_str, bool_str));
+        }
+        return {.result = result_t::Error,
+                .message = std::format("Cannot convert '{}' to non-boolean type", string_str)};
+    }
+
+    if (dest.category == Cat::String) {
+        if (src.category == Cat::Char) {
+            return {.result = result_t::Valid};  // char -> string is fine
+        }
+        return {.result = result_t::Error, .message = std::format("Cannot convert non-char type to '{}'", string_str)};
+    }
+
+    // Bool and char to nunmeric
+    if (src.category == Cat::Bool || dest.category == Cat::Bool) {
+        // Non-conditional conversions involving bool warrant a warning
+        return yield_warning(
+            std::format("Conversion between '{}' and '{}' can alter semantics", from->toString(), to->toString()));
+    }
+
+    // Float <-> integer
+    if ((src.category == Cat::Int || src.category == Cat::UInt) && dest.category == Cat::Float) {
+        // Int to float can lose precision if the int width >= float mantissa width
+        if (src.bit_width >= (dest.bit_width == 32 ? f32MantissaWidth : f64MantissaWidth)) {
+            return yield_warning(std::format("Conversion from '{}' to '{}' may lose precision digits", from->toString(),
+                                             to->toString()));
+        }
+        return {.result = result_t::Valid};  // e.g. i16 -> f32 is completely safe
+    }
+
+    if (src.category == Cat::Float && (dest.category == Cat::Int || dest.category == Cat::UInt)) {
+        return yield_warning(
+            std::format("Conversion from '{}' to '{}' truncates decimal components", from->toString(), to->toString()));
+    }
+
+    // Integer <-> Integer or Float <-> Float
+    if (src.category != dest.category && src.category != Cat::Float && dest.category != Cat::Float) {
+        return yield_warning(
+            std::format("Sign mismatch: conversion between '{}' and '{}' may cause data loss or sign-flipping",
+                        from->toString(), to->toString()));
+    }
+    if (src.bit_width > dest.bit_width) {
+        return yield_warning(std::format("Narrowing conversion: potential data loss converting from '{}' to '{}'",
+                                         from->toString(), to->toString()));
+    }
+    return {.result = result_t::Valid};
 }
 
 auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
@@ -127,7 +243,8 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         }; break;
 
         case Kind::Primitive: {
-            return {.result = result_t::Error};
+            return arePrimitivesCompatible(from, to);  // Widening conversion is fine
+
         }; break;
         default: ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
     }
