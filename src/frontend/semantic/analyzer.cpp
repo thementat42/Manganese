@@ -90,7 +90,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
     if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
 
     auto yield_warning = [&](std::string msg) -> typeCompatibilityResult {
-        if (context.inTypeCast) { return {.result = Compatible_t::Valid}; }
+        if (context.typeCastDepth) { return {.result = Compatible_t::Valid}; }
         return {.result = Compatible_t::Warning, .message = std::move(msg)};
     };
 

@@ -172,6 +172,7 @@ class number_t {
 
     // constexpr bool has_value() const noexcept { return _underlying != held_type::none; }
     constexpr bool is_error() const noexcept { return _underlying == held_type::error; }
+    constexpr const char* error_unchecked() const noexcept { return _err; }
 
     constexpr held_type underlying_type() const noexcept { return _underlying; }
     // constexpr bool is_integer() const noexcept {

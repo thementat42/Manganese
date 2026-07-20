@@ -44,7 +44,7 @@ class analyzer final : public _analyzer_base_t {
 
     struct {
         bool inFunction : 1 = false;
-        uint8_t inTypeCast = true;
+        uint8_t typeCastDepth = true;
         uint8_t ifStatementDepth = 0;
         uint8_t switchStatementDepth = 0;
         uint8_t forLoopDepth = 0;

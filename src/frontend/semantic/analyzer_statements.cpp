@@ -1,12 +1,8 @@
 #include <core.hpp>
-#include <cstdint>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
 #include <utils/result.hpp>
-
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/semantic/analyzer.hpp"
 
 namespace Manganese {
 namespace semantic {
@@ -41,7 +37,8 @@ auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { retur
 
 auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = Result::Success;
-    ContextGuard guard(context.forLoopDepth, static_cast<uint8_t>(context.forLoopDepth + 1));
+    ContextGuard guard(context.forLoopDepth, static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1));
+
     if (statement->initializationStep) {
         // there is an initialization step, check it
         if (visit(statement->initializationStep) == Result::Failure) { result = Result::Failure; }
@@ -78,7 +75,8 @@ auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
 
 auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     auto result = Result::Success;
-    ContextGuard guard(context.ifStatementDepth, static_cast<uint8_t>(context.ifStatementDepth + 1));
+    ContextGuard guard(context.ifStatementDepth,
+                       static_cast<decltype(context.ifStatementDepth)>(context.ifStatementDepth + 1));
 
     if (visit(statement->condition) == Result::Failure) { result = Result::Failure; }
 
@@ -160,7 +158,9 @@ auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
 // auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t;
 
 auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
-    ContextGuard guard(context.whileLoopDepth, static_cast<uint8_t>(context.whileLoopDepth + 1));
+    ContextGuard guard(context.whileLoopDepth,
+                       static_cast<decltype(context.whileLoopDepth)>(context.whileLoopDepth + 1));
+
     auto result = Result::Success;
 
     if (visit(statement->condition) == Result::Failure) { result = Result::Failure; }
