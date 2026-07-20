@@ -80,19 +80,18 @@ inline PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
 
 auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
     -> typeCompatibilityResult {
-    using result_t = typeCompatibilityResult::result_t;
     using Cat = PrimitiveInfo::Category;
-    if (from->primitiveType == to->primitiveType) { return {.result = result_t::Valid}; }
+    if (from->primitiveType == to->primitiveType) { return {.result = Compatible_t::Valid}; }
 
     auto src = getPrimitiveInfo(from->primitiveType);
     auto dest = getPrimitiveInfo(to->primitiveType);
     const bool is_conditional_context = context.ifStatementDepth || context.forLoopDepth || context.whileLoopDepth;
 
-    if (dest.category == Cat::Bool && is_conditional_context) { return {.result = result_t::Valid}; }
+    if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
 
     auto yield_warning = [&](std::string msg) -> typeCompatibilityResult {
-        if (context.inTypeCast) { return {.result = result_t::Valid}; }
-        return {.result = result_t::Warning, .message = std::move(msg)};
+        if (context.inTypeCast) { return {.result = Compatible_t::Valid}; }
+        return {.result = Compatible_t::Warning, .message = std::move(msg)};
     };
 
     // String conversions
@@ -100,15 +99,15 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
         if (dest.category == Cat::Bool) {
             return yield_warning(std::format("Implicit conversion from '{}' to '{}'", string_str, bool_str));
         }
-        return {.result = result_t::Error,
+        return {.result = Compatible_t::Error,
                 .message = std::format("Cannot convert '{}' to non-boolean type", string_str)};
     }
 
     if (dest.category == Cat::String) {
         if (src.category == Cat::Char) {
-            return {.result = result_t::Valid};  // char -> string is fine
+            return {.result = Compatible_t::Valid};  // char -> string is fine
         }
-        return {.result = result_t::Error, .message = std::format("Cannot convert non-char type to '{}'", string_str)};
+        return {.result = Compatible_t::Error, .message = std::format("Cannot convert non-char type to '{}'", string_str)};
     }
 
     // Bool and char to nunmeric
@@ -125,7 +124,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
             return yield_warning(std::format("Conversion from '{}' to '{}' may lose precision digits", from->toString(),
                                              to->toString()));
         }
-        return {.result = result_t::Valid};  // e.g. i16 -> f32 is completely safe
+        return {.result = Compatible_t::Valid};  // e.g. i16 -> f32 is completely safe
     }
 
     if (src.category == Cat::Float && (dest.category == Cat::Int || dest.category == Cat::UInt)) {
@@ -143,37 +142,36 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
         return yield_warning(std::format("Narrowing conversion: potential data loss converting from '{}' to '{}'",
                                          from->toString(), to->toString()));
     }
-    return {.result = result_t::Valid};
+    return {.result = Compatible_t::Valid};
 }
 
 auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
-    using result_t = typeCompatibilityResult::result_t;
     // Null pointer means something went wrong in type deduction
-    if (!from || !to) { return {.result = result_t::Error, .message = "Could not deduce types"}; }
+    if (!from || !to) { return {.result = Compatible_t::Error, .message = "Could not deduce types"}; }
 
     // Duplicated types point to the same underlying value so we can just do a fast pointer comparison
-    if (from == to) { return {.result = result_t::Valid}; }
+    if (from == to) { return {.result = Compatible_t::Valid}; }
 
     const std::string conversionError = std::format("Cannot convert {} to {}", from->toString(), to->toString());
 
     // Totally distinct types are not interconvertible
-    if (from->kind != to->kind) { return {.result = result_t::Error, .message = conversionError}; }
+    if (from->kind != to->kind) { return {.result = Compatible_t::Error, .message = conversionError}; }
 
     // Same structure but different instances (e.g. pointers to different types)
     switch (from->kind) {
         case Kind::Aggregate:
-            return {.result = result_t::Error,
+            return {.result = Compatible_t::Error,
                     .message = conversionError + " (aggregates cannot be converted to other types)."};
         case Kind::Array: {
             auto* arrFrom = static_cast<const Array*>(from);
             auto* arrTo = static_cast<const Array*>(to);
             if (arrFrom->length != arrTo->length) {
-                return {.result = result_t::Error,
+                return {.result = Compatible_t::Error,
                         .message = conversionError + " (cannot convert between arrays of different lengths)."};
             }
             auto baseCompatible = areTypesCompatible(arrFrom->elementType, arrTo->elementType);
             if (!baseCompatible) {
-                return {.result = result_t::Error,
+                return {.result = Compatible_t::Error,
                         .message = conversionError
                             + std::format(" (cannot convert an array of {} to an array of {})",
                                           arrFrom->elementType->toString(), arrTo->elementType->toString())};
@@ -185,7 +183,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
             auto* funcFrom = static_cast<const Function*>(from);
             auto* funcTo = static_cast<const Function*>(to);
             if (funcFrom->parameterTypes.size() != funcTo->parameterTypes.size()) {
-                return {.result = result_t::Error, .message = conversionError + " (different number of parameters)."};
+                return {.result = Compatible_t::Error, .message = conversionError + " (different number of parameters)."};
             }
             for (std::size_t i = 0; i < funcFrom->parameterTypes.size(); ++i) {
                 const Parameter& funcFromParam = funcFrom->parameterTypes[i];
@@ -195,7 +193,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                         " (mismatch in position {}: parameter type {} is cannot be converted to parameter type {}).", i,
                         funcFromParam.toString(), funcToParam.toString());
 
-                    return {.result = result_t::Error, .message = conversionError + error};
+                    return {.result = Compatible_t::Error, .message = conversionError + error};
                 };
                 if (funcFromParam.isMutable != funcToParam.isMutable) {
                     std::string error
@@ -203,7 +201,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                                       funcFrom->toString(), (funcFromParam.isMutable ? "mutable" : "immutable"),
                                       (funcToParam.isMutable ? "mutable" : "immutable"), funcToParam.toString());
 
-                    return {.result = result_t::Error, .message = conversionError + error};
+                    return {.result = Compatible_t::Error, .message = conversionError + error};
                 }
             }
             return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
@@ -212,22 +210,22 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         case Kind::Generic: {
             auto* genericFrom = static_cast<const GenericInstance*>(from);
             auto* genericTo = static_cast<const GenericInstance*>(to);
-            if (genericFrom->baseType != genericTo->baseType) { return {.result = result_t::Error}; }
+            if (genericFrom->baseType != genericTo->baseType) { return {.result = Compatible_t::Error}; }
             if (genericFrom->typeArguments.size() != genericTo->typeArguments.size()) {
-                return {.result = result_t::Error,
+                return {.result = Compatible_t::Error,
                         .message = conversionError + " (different number of type parameters)."};
             }
             for (size_t i = 0; i < genericFrom->typeArguments.size(); ++i) {
                 const SemanticType* fromArgument = genericFrom->typeArguments[i];
                 const SemanticType* toArgument = genericTo->typeArguments[i];
                 if (!areTypesCompatible(fromArgument, toArgument)) {
-                    return {.result = result_t::Error,
+                    return {.result = Compatible_t::Error,
                             .message = conversionError
                                 + std::format(" (mismatch in position {}: {} cannot convert to {})", i,
                                               fromArgument->toString(), toArgument->toString())};
                 }
             }
-            return {.result = result_t::Valid};
+            return {.result = Compatible_t::Valid};
         };
 
         case Kind::Pointer: {
@@ -236,7 +234,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
             // making an immutable pointer (ptr int) mutable (ptr mut int) is not allowed
             // but making a mutable pointer (ptr mut int) mutable (ptr int) is fine
             if (!ptrFrom->isMutable && ptrTo->isMutable) {
-                return {.result = result_t::Error,
+                return {.result = Compatible_t::Error,
                         .message = conversionError + " (cannot convert an immutable pointer to a mutable pointer)."};
             }
             return areTypesCompatible(ptrFrom->baseType, ptrTo->baseType);

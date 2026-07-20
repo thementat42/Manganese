@@ -18,10 +18,10 @@ namespace Manganese {
 namespace semantic {
 
 /**
-* Makes updating context flags easier
-* the destructor handles resetting a value rather than having to manually reset it everywhere
-* useful on branches that exit early
-*/
+ * Makes updating context flags easier
+ * the destructor handles resetting a value rather than having to manually reset it everywhere
+ * useful on branches that exit early
+ */
 template <class T>
 struct [[nodiscard]] ContextGuard {
     T& ref;
@@ -52,16 +52,17 @@ class analyzer final : public _analyzer_base_t {
         SemanticType* currentFunctionReturnType = nullptr;
     } context;
 
+    enum class Compatible_t : std::int8_t {
+        Error = -1,
+        Warning = 0,
+        Valid = 1
+    };
+
     struct typeCompatibilityResult {
-        enum class result_t : std::int8_t {
-            Error = -1,
-            Warning = 0,
-            Valid = 1
-        };
-        const result_t result;
+        const Compatible_t result;
         const std::string message = "";
 
-        operator bool() const noexcept { return result != result_t::Error; }
+        operator bool() const noexcept { return result != Compatible_t::Error; }
     };
 
    public:
@@ -105,6 +106,11 @@ class analyzer final : public _analyzer_base_t {
     template <class... Args>
     static void logError(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logError(node->getLine(), node->getColumn(), message, std::forward<Args>(args)...);
+    }
+
+    template <class... Args>
+    static void logWarning(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
+        logging::logWarning(node->getLine(), node->getColumn(), message, std::forward<Args>(args)...);
     }
 
    protected:
