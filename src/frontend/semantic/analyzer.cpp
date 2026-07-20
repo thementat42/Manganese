@@ -107,7 +107,8 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
         if (src.category == Cat::Char) {
             return {.result = Compatible_t::Valid};  // char -> string is fine
         }
-        return {.result = Compatible_t::Error, .message = std::format("Cannot convert non-char type to '{}'", string_str)};
+        return {.result = Compatible_t::Error,
+                .message = std::format("Cannot convert non-char type to '{}'", string_str)};
     }
 
     // Bool and char to nunmeric
@@ -183,7 +184,8 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
             auto* funcFrom = static_cast<const Function*>(from);
             auto* funcTo = static_cast<const Function*>(to);
             if (funcFrom->parameterTypes.size() != funcTo->parameterTypes.size()) {
-                return {.result = Compatible_t::Error, .message = conversionError + " (different number of parameters)."};
+                return {.result = Compatible_t::Error,
+                        .message = conversionError + " (different number of parameters)."};
             }
             for (std::size_t i = 0; i < funcFrom->parameterTypes.size(); ++i) {
                 const Parameter& funcFromParam = funcFrom->parameterTypes[i];
