@@ -1,4 +1,5 @@
 #include <core.hpp>
+#include <cstdint>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
@@ -43,13 +44,12 @@ auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { retur
 
 auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     auto result = Result::Success;
-    ++context.ifStatementDepth;
+    ContextGuard guard(context.ifStatementDepth, static_cast<uint8_t>(context.ifStatementDepth + 1));
+
     visit(statement->condition);
 
     if (!statement->condition->semanticType) {
         logError(statement, "Could not deduce type of condition {}", statement->condition->toString());
-
-        --context.ifStatementDepth;
         return Result::Failure;
     }
 
@@ -65,8 +65,6 @@ auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         visit(elif.condition);
         if (!elif.condition->semanticType) {
             logError(statement, "Could not deduce type of condition {}", elif.condition->toString());
-
-            --context.ifStatementDepth;
             return Result::Failure;
         }
     
@@ -83,7 +81,6 @@ auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         // there is an else body
         if (visit(statement->elseBody) == Result::Failure) { result = Result::Failure; }
     }
-    --context.ifStatementDepth;
     return result;
 }
 
@@ -118,6 +115,7 @@ auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
 // auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t;
 
 auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
+    ContextGuard guard(context.whileLoopDepth, static_cast<uint8_t>(context.whileLoopDepth + 1));
     auto conditionResult = visit(statement->condition);
     if (!statement->condition->semanticType) {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
@@ -130,9 +128,7 @@ auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
         return Result::Failure;
     }
 
-    ++context.whileLoopDepth;
     auto bodyResult = visit(statement->body);
-    --context.whileLoopDepth;
     return (conditionResult == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
 }
 

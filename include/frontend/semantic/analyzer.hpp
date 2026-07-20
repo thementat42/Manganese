@@ -16,6 +16,24 @@
 
 namespace Manganese {
 namespace semantic {
+
+/**
+* Makes updating context flags easier
+* the destructor handles resetting a value rather than having to manually reset it everywhere
+* useful on branches that exit early
+*/
+template <class T>
+struct [[nodiscard]] ContextGuard {
+    T& ref;
+    T old_val;
+
+    ContextGuard(T& target, T new_val) : ref(target), old_val(target) { ref = new_val; }
+    ~ContextGuard() { ref = old_val; }
+
+    ContextGuard(const ContextGuard&) = delete;
+    ContextGuard& operator=(const ContextGuard&) = delete;
+};
+
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
 
 class analyzer final : public _analyzer_base_t {
