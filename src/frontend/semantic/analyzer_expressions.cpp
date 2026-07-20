@@ -5,6 +5,8 @@
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
 
+#include "frontend/semantic/analyzer.hpp"
+
 namespace Manganese {
 namespace semantic {
 
@@ -45,6 +47,11 @@ auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
         case held_t::uint128: expression->semanticType = typeContext.getPrimitive(prim_t::u128); break;
         case held_t::float32: expression->semanticType = typeContext.getPrimitive(prim_t::f32); break;
         case held_t::float64: expression->semanticType = typeContext.getPrimitive(prim_t::f64); break;
+        case held_t::error: {
+            logError(expression, "{}", expression->value.error_unchecked());
+            expression->semanticType = nullptr;
+            return Result::Failure;
+        }
         case held_t::none: [[fallthrough]];
         default: ASSERT_UNREACHABLE("In analyzer: Number literal expression had no parser-deduced type");
     }
@@ -148,7 +155,18 @@ auto analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
     return Result::Success;
 }
-// auto analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t;
+auto analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
+    auto result = Result::Success;
+    ContextGuard guard(context.typeCastDepth, static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
+    if (visit(expression->originalValue) == Result::Failure) { result = Result::Failure; }
+    if (!expression->originalValue->semanticType) {
+        logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString());
+        return Result::Failure;
+    }
+    if (visit(expression->targetType) == Result::Failure) { result = Result::Failure; }
+
+    return result;
+}
 
 }  // namespace semantic
 }  // namespace Manganese
