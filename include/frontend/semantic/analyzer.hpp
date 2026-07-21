@@ -7,6 +7,7 @@
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
+#include <frontend/lexer/token_type.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
@@ -62,7 +63,7 @@ class analyzer final : public _analyzer_base_t {
         const Compatible_t result;
         const std::string message = "";
 
-        operator bool() const noexcept { return result != Compatible_t::Error; }
+        constexpr operator bool() const noexcept { return result != Compatible_t::Error; }
     };
 
    public:
@@ -81,27 +82,13 @@ class analyzer final : public _analyzer_base_t {
     Result _collectTypesInStatementBody(const ast::Block&);
     Result collectGlobals();
     Result collectAndSpecializeGenerics();
-
     Result checkStatements();
+
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
-
-    constexpr static bool isInteger(ast::PrimitiveType_t t) noexcept {
-        using enum ast::PrimitiveType_t;
-        return mnstl::enum_matches<ast::PrimitiveType_t>(t, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
-    }
-
-    constexpr static bool isFloat(ast::PrimitiveType_t t) noexcept {
-        using enum ast::PrimitiveType_t;
-        return mnstl::enum_matches<ast::PrimitiveType_t>(t, f32, f64);
-    }
-
-    constexpr static bool isUnsignedInteger(ast::PrimitiveType_t t) noexcept {
-        using enum ast::PrimitiveType_t;
-        return mnstl::enum_matches<ast::PrimitiveType_t>(t, u8, u16, u32, u64, u128);
-    }
-
-    constexpr static bool isNumeric(ast::PrimitiveType_t t) noexcept { return isInteger(t) || isFloat(t); }
+    typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
+    const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
+    Result analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const;
 
     template <class... Args>
     static void logError(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
@@ -143,6 +130,44 @@ class analyzer final : public _analyzer_base_t {
         return result;
     }
 };
+
+constexpr bool isInteger(ast::PrimitiveType_t t) noexcept {
+    using enum ast::PrimitiveType_t;
+    return mnstl::enum_matches<ast::PrimitiveType_t>(t, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
+}
+
+constexpr bool isFloat(ast::PrimitiveType_t t) noexcept {
+    using enum ast::PrimitiveType_t;
+    return mnstl::enum_matches<ast::PrimitiveType_t>(t, f32, f64);
+}
+
+constexpr bool isUnsignedInteger(ast::PrimitiveType_t t) noexcept {
+    using enum ast::PrimitiveType_t;
+    return mnstl::enum_matches<ast::PrimitiveType_t>(t, u8, u16, u32, u64, u128);
+}
+
+constexpr bool isNumeric(ast::PrimitiveType_t t) noexcept { return isInteger(t) || isFloat(t); }
+
+constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
+    using enum lexer::TokenType;
+    return mnstl::enum_matches<lexer::TokenType>(t, And, Or, Not);
+}
+
+constexpr bool isArithmeticOp(lexer::TokenType t) noexcept {
+    using enum lexer::TokenType;
+    return mnstl::enum_matches<lexer::TokenType>(t, Plus, Minus, Mul, Div, FloorDiv, Mod);
+}
+
+constexpr bool isRelationalOp(lexer::TokenType t) {
+    using enum lexer::TokenType;
+    return mnstl::enum_matches<lexer::TokenType>(t, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal,
+                                                 NotEqual);
+}
+
+constexpr bool isBitwiseOp(lexer::TokenType t) noexcept {
+    using enum lexer::TokenType;
+    return mnstl::enum_matches<lexer::TokenType>(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
+}
 
 }  // namespace semantic
 }  // namespace Manganese
