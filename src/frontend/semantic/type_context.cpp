@@ -50,7 +50,12 @@ std::string Pointer::toString() const {
 constexpr inline size_t GOLDEN_RATIO = (sizeof(size_t) == 8) ? 0x9E3779B97F4A7C15ULL  // 64-bit fraction
                                                              : 0x9E3779B9U;  // 32-bit fraction
 
+inline size_t hash_combine(size_t seed, size_t value) noexcept {
+    return seed ^= value + GOLDEN_RATIO + (seed << 6) + (seed >> 2);
+}
+
 size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
+    if (!t) { return 0; }
     // start by hashing the type kind (isolates primitives, pointers, etc)
     size_t hash = std::hash<kind_int_t>{}(static_cast<kind_int_t>(t->kind));
     switch (t->kind) {
@@ -61,57 +66,58 @@ size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             if (aggregate->name.empty()) {
                 for (const auto* fieldType : aggregate->fieldTypes) {
                     // the bitwise shifts scramble the bits of previous fields
-                    // since order matteres (e.g. aggregate{int, bool} should hash differently to aggregate{bool, int})
-                    hash ^= std::hash<const SemanticType*>{}(fieldType) + GOLDEN_RATIO + (hash << 6) + (hash >> 2);
+                    // since order matters (e.g. aggregate{int, bool} should hash differently to aggregate{bool, int})
+                    hash = hash_combine(hash, std::hash<const SemanticType*>{}(fieldType));
                 }
             } else {
                 // Since named aggregates must be unique we can just hash their names
-                hash ^= std::hash<std::string_view>{}(aggregate->name) << 1;
+                hash = hash_combine(hash, std::hash<std::string_view>{}(aggregate->name));
             }
             return hash;
         }
         case Kind::Array: {
             // Since array types have a fixed structure we can just hash the member types
             auto* array = static_cast<const Array*>(t);
-            return hash ^ (std::hash<const SemanticType*>{}(array->elementType) << 1)
-                ^ (std::hash<size_t>{}(array->length) << 2);
+            hash = hash_combine(hash, std::hash<const SemanticType*>{}(array->elementType));
+            return hash_combine(hash, std::hash<size_t>{}(array->length));
         }
         case Kind::Function: {
             auto* function = static_cast<const Function*>(t);
             // Mix the return type first to establish the base function signature
-            hash ^= std::hash<const SemanticType*>{}(function->returnType) << 1;
+            hash = hash_combine(hash, std::hash<const SemanticType*>{}(function->returnType));
             // Hash in each parameter sequentially
             // Include the type and the mutability flag (e.g., func(int) and func(mut int) are different signatures)
             for (const auto& param : function->parameterTypes) {
-                hash ^= std::hash<const SemanticType*>{}(param.type) ^ (std::hash<bool>{}(param.isMutable) << 1);
+                hash = hash_combine(hash, std::hash<const SemanticType*>{}(param.type));
+                hash = hash_combine(hash, std::hash<bool>{}(param.isMutable));
             }
             return hash;
         }
         case Kind::Generic: {
             auto* generic = static_cast<const GenericInstance*>(t);
             // Mix the base generic template type (e.g., the List in List@[int])
-            hash ^= std::hash<const SemanticType*>{}(generic->baseType) << 1;
-            // Mix the specific type arguments injected into this instantiation instance.
-            // re-use the bit shifting trick from aggregates since generics can have variable numbers of type parameters
+            hash = hash_combine(hash, std::hash<const SemanticType*>{}(generic->baseType));
             for (const auto* arg : generic->typeArguments) {
-                hash ^= std::hash<const SemanticType*>{}(arg) + GOLDEN_RATIO + (hash << 6) + (hash >> 2);
+                hash = hash_combine(hash, std::hash<const SemanticType*>{}(arg));
             }
             return hash;
         }
         case Kind::Pointer: {
             // like arrays, just hash the fields
             auto* pointer = static_cast<const Pointer*>(t);
-            return hash ^ (std::hash<const SemanticType*>{}(pointer->baseType) << 1)
-                ^ (std::hash<bool>{}(pointer->isMutable) << 2);
+            hash = hash_combine(hash, std::hash<const SemanticType*>{}(pointer->baseType));
+            return hash_combine(hash, std::hash<bool>{}(pointer->isMutable));
         }
         case Kind::Primitive:
             // Since each primitive value is unique we can just hash the enum type
-            return hash ^ (std::hash<prim_int_t>{}(static_cast<prim_int_t>(t->primitiveType)));
+            return hash_combine(hash, std::hash<prim_int_t>{}(static_cast<prim_int_t>(t->primitiveType)));
         default: ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup hash");
     }
 }
 
 bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) const noexcept {
+    if (lhs == rhs) { return true; }
+    if (!lhs || !rhs) { return false; }  // no deduced type; can't be equal
     if (lhs->kind != rhs->kind) { return false; }
 
     switch (lhs->kind) {
