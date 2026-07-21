@@ -1,11 +1,9 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
-#include <frontend/semantic.hpp>
+#include <frontend/semantic/analyzer.hpp>
 #include <io/logging.hpp>
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
-
-#include "frontend/semantic/analyzer.hpp"
 
 namespace Manganese {
 namespace semantic {
@@ -14,7 +12,23 @@ namespace semantic {
 // auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t;
 // auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t;
 // auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t;
-// auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t;
+
+auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
+    auto result = Result::Success;
+
+    if (visit(expression->left) == Result::Failure) { result = Result::Failure; }
+    if (visit(expression->right) == Result::Failure) { result = Result::Failure; }
+    if (!expression->left->semanticType) {
+        logError(expression, "Could not deduce type of expression {}", expression->left->toString());
+        return Result::Failure;
+    }
+    if (!expression->right->semanticType) {
+        logError(expression, "Could not deduce type of expression {}", expression->right->toString());
+        return Result::Failure;
+    }
+
+    return result;
+};
 
 auto analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
@@ -27,8 +41,52 @@ auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
 
 // auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t;
 // auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t;
-// auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t;
-// auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t;
+
+auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
+    const Symbol* symbol = symbolTable.lookup(expression->value);
+    if (!symbol) {
+        logError(expression, "Identifier '{}' was not found in the current scope", expression->value);
+        return Result::Failure;
+    }
+    if (!symbol->type) [[unlikely]] {
+        logError(expression, "Identifier '{}' used before its type could be determined", expression->value);
+        return Result::Failure;
+    }
+    expression->semanticType = symbol->type;
+    return Result::Success;
+}
+
+auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
+    auto result = Result::Success;
+    if (visit(expression->variable) == Result::Failure) {result = Result::Failure;}
+    if (visit(expression->index) == Result::Failure) { result = Result::Failure; }
+
+    if (!expression->variable->semanticType) {
+        logError(expression->variable, "Could not deduce type of expression {}", expression->variable->toString());
+        return Result::Failure;
+    }
+    if (!expression->index->semanticType) {
+        logError(expression->index, "Could not deduce type of expression {}", expression->index->toString());
+        return Result::Failure;
+    }
+
+    if (!expression->variable->semanticType->isArray()) {
+        logError(expression->variable, "Cannot index into non array type {}",
+                 expression->variable->semanticType->toString());
+        return Result::Failure;
+    }
+
+    if (!isInteger(expression->index->semanticType->primitiveType)) {
+        logError(expression, "Index value should be an integer, not {}",
+                 expression->index->semanticType->toString());
+        result = Result::Failure;
+    }
+
+    expression->semanticType = static_cast<const Array*>(expression->variable->semanticType)->elementType;
+
+    return result;
+}
+
 // auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t;
 
 auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
