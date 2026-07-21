@@ -1,7 +1,7 @@
-#include <cstddef>
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_TYPE_CONTEXT_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_TYPE_CONTEXT_HPP 1
 
+#include <cstddef>
 #include <cstdint>
 #include <frontend/ast.hpp>
 #include <mnstl/chunk_allocator.hxx>
@@ -39,6 +39,9 @@ struct SemanticType {
     constexpr bool isGeneric() const noexcept { return kind == Kind::Generic; }
     constexpr bool isPointer() const noexcept { return kind == Kind::Pointer; }
     constexpr bool isPrimitive() const noexcept { return kind == Kind::Primitive; }
+    constexpr bool isBoolean() const noexcept {
+        return isPrimitive() && primitiveType == ast::PrimitiveType_t::boolean;
+    }
 
     virtual std::string toString() const { return std::string(ast::primitiveTypeToString(primitiveType)); }
 
