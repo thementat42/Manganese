@@ -1,9 +1,11 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
+#include <frontend/lexer/token_type.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <io/logging.hpp>
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
+#include <frontend/lexer/token_base.hpp>
 
 namespace Manganese {
 namespace semantic {
@@ -27,7 +29,48 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         return Result::Failure;
     }
 
-    return result;
+    const auto* lhsType = expression->left->semanticType;
+    const auto* rhsType = expression->right->semanticType;
+    const lexer::TokenType op = expression->op;
+
+    if (isLogicalOp(op)) {
+        if (!lhsType->isBoolean() || !rhsType->isBoolean()) {
+            logError(expression, "Operator '{}' requires boolean operands, got {} and {}", lexer::tokenTypeToString(op),
+                     lhsType->toString(), rhsType->toString());
+            result = Result::Failure;
+        }
+        expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
+        return result;
+    } else if (isBitwiseOp(op)) {
+        if (!isInteger(lhsType->primitiveType) || !isInteger(lhsType->primitiveType)) {
+            logError(expression, "Bitwise operators require integer operands, got {} and {}", lhsType->toString(),
+                     rhsType->toString());
+            result = Result::Failure;
+        }
+        expression->semanticType = promoteNumericTypes(lhsType, rhsType);
+        return result;
+    } else if (isRelationalOp(op)) {
+        if (!areTypesComparable(lhsType, rhsType)) {
+            logError(expression, "Cannot compare incompatible types {} and {}", lhsType->toString(),
+                     rhsType->toString());
+            result = Result::Failure;
+        }
+        expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
+        return result;
+    } else if (isArithmeticOp(op)) {
+        if (lhsType->isPointer() || rhsType->isPointer()) { return analyzePointerArithmetic(lhsType, rhsType); }
+        const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
+        if (!commonType) {
+            logError(expression, "Invalid operands for arithmetic operator '{}': {} and {}",
+                     lexer::tokenTypeToString(op), lhsType->toString(), rhsType->toString());
+            return Result::Failure;
+        }
+
+        expression->semanticType = commonType;
+        return result;
+    }
+    ASSERT_UNREACHABLE(
+        std::format("Unhandled binary operator {} in visit(BinaryExpression)", lexer::tokenTypeToString(op)));
 };
 
 auto analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
@@ -58,7 +101,7 @@ auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
 
 auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     auto result = Result::Success;
-    if (visit(expression->variable) == Result::Failure) {result = Result::Failure;}
+    if (visit(expression->variable) == Result::Failure) { result = Result::Failure; }
     if (visit(expression->index) == Result::Failure) { result = Result::Failure; }
 
     if (!expression->variable->semanticType) {
@@ -77,8 +120,7 @@ auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     }
 
     if (!isInteger(expression->index->semanticType->primitiveType)) {
-        logError(expression, "Index value should be an integer, not {}",
-                 expression->index->semanticType->toString());
+        logError(expression, "Index value should be an integer, not {}", expression->index->semanticType->toString());
         result = Result::Failure;
     }
 
