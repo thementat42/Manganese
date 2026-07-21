@@ -67,7 +67,7 @@ class analyzer final : public _analyzer_base_t {
 
    public:
     analyzer(parser::ParsedFile& file, mnstl::chunk_allocator& arena) :
-        symbolTable(arena), typeContext(), parsedFile(file) {}
+        symbolTable(arena), typeContext(arena), parsedFile(file) {}
 
     Result analyze();
 

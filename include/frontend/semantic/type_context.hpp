@@ -121,14 +121,16 @@ struct TypeLookup {
     using kind_int_t = std::underlying_type_t<Kind>;
     using prim_int_t = std::underlying_type_t<ast::PrimitiveType_t>;
 
+    // Hashing
     size_t operator()(const SemanticType* t) const noexcept;
 
+    // Lookup
     bool operator()(const SemanticType* lhs, const SemanticType* rhs) const noexcept;
 };
 
 class TypeContext {
    private:
-    mnstl::chunk_allocator _allocator;
+    mnstl::chunk_allocator& _allocator;
     constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType_t::boolean) + 1;
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
@@ -140,7 +142,8 @@ class TypeContext {
     }
 
    public:
-    TypeContext() noexcept : _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {};
+    TypeContext(mnstl::chunk_allocator& allocator) noexcept :
+        _allocator(allocator), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {};
     ~TypeContext() = default;
 
     TypeContext(const TypeContext&) = delete;
