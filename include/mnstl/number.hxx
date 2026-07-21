@@ -48,7 +48,7 @@ namespace mnstl {
 //     constexpr explicit zero_init_t() noexcept = default;
 // };
 
-// constexpr inline zero_init_t zero_init{};
+// constexpr zero_init_t zero_init{};
 
 enum class Base : uint8_t {
     Binary = 2,  // 0b prefix
@@ -197,7 +197,7 @@ class number_t {
     // }
 
     // template <Numeric T>
-    // constexpr inline T value_as() const NOEXCEPT_IF_RELEASE {
+    // constexpr T value_as() const NOEXCEPT_IF_RELEASE {
     //     return _visit([&]<class U>(U v) -> T { return static_cast<T>(v); });
     // }
 

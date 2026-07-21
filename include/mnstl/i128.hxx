@@ -892,8 +892,8 @@ constexpr std::string _tostr_i128(const int128_t& i) {
 }
 }  // namespace i128_detail
 
-constexpr inline std::string to_string_int128(const int128_t& i) { return i128_detail::_tostr_i128(i); }
-constexpr inline std::string to_string_uint128(const uint128_t& i) { return i128_detail::_tostr_u128(i); }
+constexpr std::string to_string_int128(const int128_t& i) { return i128_detail::_tostr_i128(i); }
+constexpr std::string to_string_uint128(const uint128_t& i) { return i128_detail::_tostr_u128(i); }
 
 }  // namespace mnstl
 

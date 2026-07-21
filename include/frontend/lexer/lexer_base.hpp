@@ -81,17 +81,17 @@ class Lexer {
 
 //~ Static helper functions
 
-constexpr inline bool isbdigit(char c) noexcept { return c == '0' || c == '1'; }
-constexpr inline bool isdigit(char c) noexcept { return (c >= '0' && c <= '9'); }
-constexpr inline bool isodigit(char c) { return (c >= '0' && c <= '7'); }
-constexpr inline bool isxdigit(char c) noexcept {
+constexpr bool isbdigit(char c) noexcept { return c == '0' || c == '1'; }
+constexpr bool isdigit(char c) noexcept { return (c >= '0' && c <= '9'); }
+constexpr bool isodigit(char c) { return (c >= '0' && c <= '7'); }
+constexpr bool isxdigit(char c) noexcept {
     return isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
-constexpr inline bool isalpha(char c) noexcept { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
-constexpr inline bool isspace(char c) noexcept {
+constexpr bool isalpha(char c) noexcept { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+constexpr bool isspace(char c) noexcept {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
 }
-constexpr inline char tolower(char c) noexcept {
+constexpr char tolower(char c) noexcept {
     if (c >= 'A' && c <= 'Z') { return c - 'A' + 'a'; }
     return c;
 }

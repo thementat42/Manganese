@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-constexpr inline float percentage(const int part, const int total) {
+constexpr float percentage(const int part, const int total) {
     return static_cast<float>(part) / static_cast<float>(total) * 100.0f;
 }
 

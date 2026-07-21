@@ -77,8 +77,8 @@ struct ASTNode {
 
     virtual std::string toString(size_t indent = 0) const = 0;
 
-    constexpr inline size_t getLine() const noexcept { return line; }
-    constexpr inline size_t getColumn() const noexcept { return column; }
+    constexpr size_t getLine() const noexcept { return line; }
+    constexpr size_t getColumn() const noexcept { return column; }
 
 #if MN_DEBUG
     virtual void dump(std::ostream& os, size_t indentDepth = 0) const = 0;
