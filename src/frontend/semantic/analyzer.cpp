@@ -2,6 +2,8 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <string>
+#include <utility>
 #include <utils/type_names.hpp>
 
 namespace Manganese {
@@ -12,8 +14,8 @@ constexpr static inline uint8_t f64MantissaWidth = 53;
 
 Result analyzer::analyze() {
     Result isSemanticallyValid = Result::Success;
-    if (collectTypes() == Result::Failure) { isSemanticallyValid = Result::Failure; };
-    if (collectGlobals() == Result::Failure) { isSemanticallyValid = Result::Failure; };
+    if (collectTypes() == Result::Failure) { isSemanticallyValid = Result::Failure; }
+    if (collectGlobals() == Result::Failure) { isSemanticallyValid = Result::Failure; }
     if (collectAndSpecializeGenerics() == Result::Failure) { isSemanticallyValid = Result::Failure; }
     // Don't want errors cascading because of conflicting redeclarations
     if (isSemanticallyValid == Result::Failure) { return isSemanticallyValid; }
@@ -24,8 +26,8 @@ Result analyzer::analyze() {
 }
 
 // Placeholders to satisfy the linker
-Result analyzer::collectGlobals() { return Result::Success; };
-Result analyzer::collectAndSpecializeGenerics() { return Result::Success; };
+Result analyzer::collectGlobals() { return Result::Success; }
+Result analyzer::collectAndSpecializeGenerics() { return Result::Success; }
 
 Result analyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
     Result programIsSemanticallyValid = Result::Success;
@@ -89,7 +91,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
 
     if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
 
-    auto yield_warning = [&](std::string msg) -> typeCompatibilityResult {
+    auto yield_warning = [this](std::string msg) -> typeCompatibilityResult {
         if (context.typeCastDepth) { return {.result = Compatible_t::Valid}; }
         return {.result = Compatible_t::Warning, .message = std::move(msg)};
     };
@@ -143,7 +145,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
         return yield_warning(std::format("Narrowing conversion: potential data loss converting from '{}' to '{}'",
                                          from->toString(), to->toString()));
     }
-    return {.result = Compatible_t::Valid};
+    return {.result = Compatible_t::Valid};  // Widening conversion is fine
 }
 
 auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
@@ -196,7 +198,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                         funcFromParam.toString(), funcToParam.toString());
 
                     return {.result = Compatible_t::Error, .message = conversionError + error};
-                };
+                }
                 if (funcFromParam.isMutable != funcToParam.isMutable) {
                     std::string error
                         = std::format(" (parameter in position {} in {} is {} but is {} in {})", i,
@@ -243,8 +245,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         }; break;
 
         case Kind::Primitive: {
-            return arePrimitivesCompatible(from, to);  // Widening conversion is fine
-
+            return arePrimitivesCompatible(from, to);
         }; break;
         default: ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
     }
