@@ -1,3 +1,5 @@
+# Quickly run clang-format on all headers and source files
+
 import os
 import shutil
 import subprocess

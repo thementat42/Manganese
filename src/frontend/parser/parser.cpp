@@ -3,6 +3,7 @@
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
 #include <string>
+#include <utility>
 
 namespace Manganese {
 namespace parser {

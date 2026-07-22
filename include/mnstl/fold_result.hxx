@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <mnstl/number.hxx>
 #include <optional>
+#include <string>
 #include <string_view>
 
 namespace mnstl {
@@ -31,10 +32,10 @@ class fold_result_t {
 
    public:
     constexpr fold_result_t() noexcept : _held(held_type::Void) {};
-    constexpr fold_result_t(bool boolean) noexcept : _held(held_type::Boolean), _bool(boolean) {};
-    constexpr fold_result_t(char32_t character) noexcept : _held(held_type::Character), _char(character) {};
-    constexpr fold_result_t(number_t number) noexcept : _held(held_type::Number), _number(number) {};
-    constexpr fold_result_t(std::string_view string) noexcept : _held(held_type::String), _string(string) {};
+    constexpr explicit fold_result_t(bool boolean) noexcept : _held(held_type::Boolean), _bool(boolean) {}
+    constexpr explicit fold_result_t(char32_t character) noexcept : _held(held_type::Character), _char(character) {}
+    constexpr explicit fold_result_t(number_t number) noexcept : _held(held_type::Number), _number(number) {}
+    constexpr explicit fold_result_t(std::string_view string) noexcept : _held(held_type::String), _string(string) {}
 
     constexpr fold_result_t& operator=(bool boolean) noexcept { return *this = fold_result_t(boolean); }
     constexpr fold_result_t& operator=(char32_t character) noexcept { return *this = fold_result_t(character); }

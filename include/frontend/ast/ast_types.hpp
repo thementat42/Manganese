@@ -3,6 +3,8 @@
 
 #include <frontend/ast/ast_base.hpp>
 #include <mnstl/number.hxx>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace Manganese {

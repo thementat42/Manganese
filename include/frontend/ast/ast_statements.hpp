@@ -4,6 +4,7 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_types.hpp>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -99,7 +100,7 @@ struct ExpressionStatement final : public Statement {
     Expression* expression;
 
     explicit ExpressionStatement(Expression* _expression) noexcept :
-        Statement(StatementKind::ExpressionStatement), expression(_expression) {};
+        Statement(StatementKind::ExpressionStatement), expression(_expression) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

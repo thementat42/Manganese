@@ -84,9 +84,7 @@ class Lexer {
 constexpr bool isbdigit(char c) noexcept { return c == '0' || c == '1'; }
 constexpr bool isdigit(char c) noexcept { return (c >= '0' && c <= '9'); }
 constexpr bool isodigit(char c) { return (c >= '0' && c <= '7'); }
-constexpr bool isxdigit(char c) noexcept {
-    return isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-}
+constexpr bool isxdigit(char c) noexcept { return isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); }
 constexpr bool isalpha(char c) noexcept { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
 constexpr bool isspace(char c) noexcept {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';

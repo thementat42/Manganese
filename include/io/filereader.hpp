@@ -2,6 +2,7 @@
 #define MANGANESE_INCLUDE_IO_FILEREADER_HPP
 
 #include <core.hpp>
+#include <cstdio>
 #include <io/reader.hpp>
 #include <memory>
 #include <string>
@@ -25,7 +26,7 @@ class FileReader : public Reader {
 
    public:
     FileReader() = default;
-    FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
+    explicit FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
     ~FileReader() noexcept override {
         if (_filePtr) { std::fclose(_filePtr); }
     }

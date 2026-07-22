@@ -3,6 +3,8 @@
 
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/ast/ast_types.hpp>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace Manganese {
@@ -99,7 +101,7 @@ struct BinaryExpression final : public Expression {
     lexer::TokenType op;
 
     BinaryExpression(Expression* _left, lexer::TokenType _op, Expression* _right) noexcept :
-        Expression(ExpressionKind::BinaryExpression), left(_left), right(_right), op(_op) {};
+        Expression(ExpressionKind::BinaryExpression), left(_left), right(_right), op(_op) {}
 
     MN_AST_STANDARD_INTERFACE;
 
@@ -113,7 +115,7 @@ struct BoolLiteralExpression final : public Expression {
     const bool value;
 
     constexpr explicit BoolLiteralExpression(bool _value) noexcept :
-        Expression(ExpressionKind::BoolLiteralExpression), value(_value) {};
+        Expression(ExpressionKind::BoolLiteralExpression), value(_value) {}
 
     MN_AST_STANDARD_INTERFACE;
 
@@ -127,9 +129,9 @@ struct CharLiteralExpression final : public Expression {
     const char32_t value;
 
     constexpr explicit CharLiteralExpression(char32_t _value) noexcept :
-        Expression(ExpressionKind::CharLiteralExpression), value(_value) {};
+        Expression(ExpressionKind::CharLiteralExpression), value(_value) {}
     constexpr explicit CharLiteralExpression(char _value) noexcept :
-        Expression(ExpressionKind::CharLiteralExpression), value(static_cast<char32_t>(_value)) {};
+        Expression(ExpressionKind::CharLiteralExpression), value(static_cast<char32_t>(_value)) {}
 
     MN_AST_STANDARD_INTERFACE;
 
@@ -207,11 +209,11 @@ struct NumberLiteralExpression final : public Expression {
     const mnstl::number_t value;
 
     constexpr explicit NumberLiteralExpression(mnstl::number_t _value) noexcept :
-        Expression(ExpressionKind::NumberLiteralExpression), value(_value) {};
+        Expression(ExpressionKind::NumberLiteralExpression), value(_value) {}
 
     MN_AST_STANDARD_INTERFACE;
 
-    virtual mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
 };
 
 /**
@@ -225,7 +227,7 @@ struct PostfixExpression final : public Expression {
         Expression(ExpressionKind::PostfixExpression), left(_left), op(_op) {}
 
     MN_AST_STANDARD_INTERFACE;
-    virtual mnstl::fold_result_t fold() const noexcept override;
+    mnstl::fold_result_t fold() const noexcept override;
 };
 
 /**
@@ -240,7 +242,7 @@ struct PrefixExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    virtual mnstl::fold_result_t fold() const noexcept override;
+    mnstl::fold_result_t fold() const noexcept override;
 };
 
 /**
@@ -271,7 +273,7 @@ struct StringLiteralExpression final : public Expression {
     const std::string value;
 
     constexpr explicit StringLiteralExpression(std::string&& _value) noexcept :
-        Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {};
+        Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
 
     // constexpr explicit StringLiteralExpression(const char* _value) noexcept :
     //     Expression(ExpressionKind::StringLiteralExpression), value(_value) {};

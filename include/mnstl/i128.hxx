@@ -9,7 +9,9 @@
 #include <limits>
 #include <mnstl/ext_num_config.hxx>
 #include <ostream>
+#include <string>
 #include <type_traits>
+#include <utility>
 
 // macros to make definitions of op= (e.g. +=) more concise
 namespace mnstl {
@@ -778,7 +780,6 @@ constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
 
 constexpr divmod_u128_result _divmod_u128(uint128_t numerator, uint128_t denominator) {
     if (denominator == 0) {  // trap on division by 0
-
 #if defined(__has_builtin) && __has_builtin(__builtin_trap)
         __builtin_trap();
 #else

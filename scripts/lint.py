@@ -1,3 +1,5 @@
+# Quickly run clang-tidy on all headers and source files
+
 import os
 import shutil
 import subprocess

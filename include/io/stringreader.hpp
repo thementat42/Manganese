@@ -17,7 +17,7 @@ class StringReader : public Reader {
 
    public:
     StringReader() = default;
-    StringReader(const std::string& source) : _position(0), _line(1), _column(1), _source(source) {}
+    explicit StringReader(const std::string& source) : _position(0), _line(1), _column(1), _source(source) {}
     ~StringReader() noexcept = default;
 
     void setPosition(size_t newPosition) noexcept override {

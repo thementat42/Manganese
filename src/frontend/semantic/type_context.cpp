@@ -4,6 +4,9 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic.hpp>
 #include <functional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Manganese {
 namespace semantic {

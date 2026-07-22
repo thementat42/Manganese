@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <frontend/ast.hpp>
 #include <mnstl/chunk_allocator.hxx>
+#include <string>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -28,7 +29,8 @@ struct SemanticType {
     const Kind kind;
     const ast::PrimitiveType_t primitiveType;
 
-    constexpr SemanticType(Kind _kind, ast::PrimitiveType_t primitive = ast::PrimitiveType_t::not_primitive) noexcept :
+    constexpr explicit SemanticType(Kind _kind,
+                                    ast::PrimitiveType_t primitive = ast::PrimitiveType_t::not_primitive) noexcept :
         kind(_kind), primitiveType(primitive) {}
 
     virtual ~SemanticType() noexcept = default;
@@ -145,8 +147,8 @@ class TypeContext {
     }
 
    public:
-    TypeContext(mnstl::chunk_allocator& allocator) noexcept :
-        _allocator(allocator), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {};
+    explicit TypeContext(mnstl::chunk_allocator& allocator) noexcept :
+        _allocator(allocator), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
     ~TypeContext() = default;
 
     TypeContext(const TypeContext&) = delete;

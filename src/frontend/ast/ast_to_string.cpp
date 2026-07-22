@@ -3,6 +3,7 @@
 #include <format>
 #include <frontend/ast.hpp>
 #include <string>
+#include <vector>
 
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"

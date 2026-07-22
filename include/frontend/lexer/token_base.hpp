@@ -27,7 +27,7 @@ class Token {
         } else if (_type == TokenType::Float32) {
             _lexeme = "float32";
         }
-    };
+    }
     ~Token() noexcept = default;
 
     constexpr bool isKeyword() const noexcept {

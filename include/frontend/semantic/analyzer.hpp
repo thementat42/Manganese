@@ -13,6 +13,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
+#include <string>
 #include <utility>
 
 namespace Manganese {

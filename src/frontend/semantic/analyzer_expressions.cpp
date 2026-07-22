@@ -1,11 +1,11 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
+#include <frontend/lexer/token_base.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <io/logging.hpp>
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
-#include <frontend/lexer/token_base.hpp>
 
 namespace Manganese {
 namespace semantic {

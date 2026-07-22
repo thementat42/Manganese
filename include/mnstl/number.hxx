@@ -216,8 +216,8 @@ class number_t {
                 // since int8 and uint8 are char-based, force a promotion to an integer here to print out a number
                 // without the promotion this results in an ASCII character
                 return std::to_string(+v);
-            }  // custom handling for 128-bit ints
-            else if constexpr (std::is_same_v<U, int128_t>) {
+            } else if constexpr (std::is_same_v<U, int128_t>) {
+                // custom handling for 128-bit ints
                 return to_string_int128(v);
             } else if constexpr (std::is_same_v<U, uint128_t>) {
                 return to_string_uint128(v);
@@ -290,7 +290,6 @@ class number_t {
                 }
             });
         });
-        ;
     }
 
     constexpr number_t true_div(const number_t& other) const noexcept {
