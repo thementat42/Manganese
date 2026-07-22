@@ -74,9 +74,9 @@ def main():
             for file in find_files(base):
                 print(f"Checking {file}")
 
-                report.write("=" * 80 + "\n")
+                report.write("X" * 80 + "\n")
                 report.write(f"{file}\n")
-                report.write("=" * 80 + "\n")
+                report.write("X" * 80 + "\n")
 
                 result = subprocess.run(
                     [
