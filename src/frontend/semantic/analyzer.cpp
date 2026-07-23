@@ -26,8 +26,28 @@ Result analyzer::analyze() {
 }
 
 // Placeholders to satisfy the linker
+// TODO: implement these
 Result analyzer::collectGlobals() { return Result::Success; }
 Result analyzer::collectAndSpecializeGenerics() { return Result::Success; }
+const SemanticType* analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
+    DISCARD(lhs);
+    DISCARD(rhs);
+    return nullptr;
+}
+const SemanticType* analyzer::resolveType(const ast::Type* astType) {
+    DISCARD(astType);
+    return nullptr;
+}
+Result analyzer::analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const {
+    DISCARD(lhs);
+    DISCARD(rhs);
+    return Result::Success;
+}
+auto analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const -> typeCompatibilityResult {
+    DISCARD(lhs);
+    DISCARD(rhs);
+    return {.result = Compatible_t::Valid};
+}
 
 Result analyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
     Result programIsSemanticallyValid = Result::Success;
