@@ -46,12 +46,13 @@ class analyzer final : public _analyzer_base_t {
 
     struct {
         bool inFunction : 1 = false;
-        uint8_t typeCastDepth = true;
+        uint8_t typeCastDepth = 0;
         uint8_t ifStatementDepth = 0;
         uint8_t switchStatementDepth = 0;
         uint8_t forLoopDepth = 0;
         uint8_t whileLoopDepth = 0;
-        SemanticType* currentFunctionReturnType = nullptr;
+        const SemanticType* currentFunctionReturnType = nullptr;
+        const SemanticType* currentVariableDeclarationType = nullptr;
     } context;
 
     enum class Compatible_t : std::int8_t {
@@ -93,7 +94,7 @@ class analyzer final : public _analyzer_base_t {
     Result analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const;
 
     template <class... Args>
-    static void logError(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
+    static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logError(node->getLine(), node->getColumn(), message, std::forward<Args>(args)...);
     }
 
