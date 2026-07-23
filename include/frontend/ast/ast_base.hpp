@@ -108,6 +108,7 @@ struct Statement : public ASTNode {
 struct Type : public ASTNode {
     const TypeKind kind;
     const PrimitiveType_t primitiveType;
+    const semantic::SemanticType* semanticType = nullptr;
 
     virtual ~Type() noexcept = default;
 
