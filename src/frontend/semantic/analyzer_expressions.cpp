@@ -3,17 +3,146 @@
 #include <frontend/lexer/token_base.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/semantic/analyzer.hpp>
+#include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
+#include <vector>
+
+#include <frontend/semantic/symbol_table.hpp>
 
 namespace Manganese {
 namespace semantic {
 
-// auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t;
-// auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t;
+auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+    auto result = Result::Success;
+    const Symbol* symbol = symbolTable.lookup(expression->name);
+    if (!symbol) {
+        logError(expression, "Type '{}' was not found in the current scope.", expression->name);
+        return Result::Failure;
+    }
+
+    if (!symbol->type || symbol->kind != SymbolKind::Aggregate) {
+        logError(expression, "Type '{}' is not an aggregate type", expression->name);
+        return Result::Failure;
+    }
+
+    const auto* targetType = static_cast<const Aggregate*>(symbol->type);
+
+    if (!expression->genericTypes.empty()) {
+        std::vector<const SemanticType*> resolvedGenerics;
+        resolvedGenerics.reserve(expression->genericTypes.size());
+
+        for (auto* genericAstType : expression->genericTypes) {
+            const SemanticType* resolved = resolveType(genericAstType);
+            if (!resolved) {
+                result = Result::Failure;
+            } else {
+                resolvedGenerics.push_back(resolved);
+            }
+        }
+        if (result == Result::Failure) { return result; }
+        targetType
+            = static_cast<const Aggregate*>(typeContext.getGenericInstance(targetType, std::move(resolvedGenerics)));
+    }
+
+    expression->semanticType = targetType;
+
+    for (auto& field : expression->fields) {
+        if (visit(field.value) == Result::Failure) { result = Result::Failure; }
+        if (!field.value->semanticType) { result = Result::Failure; }
+    }
+
+    if (result == Result::Failure) { return result; }
+
+    std::unordered_set<std::string_view> initializedFields;
+    initializedFields.reserve(expression->fields.size());
+
+    for (const auto& field : expression->fields) {
+        // e.g., Point { x = 1, x = 2 }
+        if (!initializedFields.insert(field.name).second) {
+            logError(field.value, "Duplicate initialization for field '{}' in '{}'", field.name, expression->name);
+            result = Result::Failure;
+            continue;
+        }
+
+        // Can't instantiate an undeclared field
+        const SemanticType* expectedFieldType = targetType->getFieldType(field.name);
+        if (!expectedFieldType) {
+            logError(field.value, "Type '{}' has no field named '{}'", expression->name, field.name);
+            result = Result::Failure;
+            continue;
+        }
+
+        // Check that that field can be instantiated
+        const auto compatibility = areTypesCompatible(expectedFieldType, field.value->semanticType);
+        if (!compatibility) {
+            logError(field.value, "Cannot initialize field '{}' of type {} with value of type {}", field.name,
+                     expectedFieldType->toString(), field.value->semanticType->toString());
+            result = Result::Failure;
+        } else if (compatibility.result == Compatible_t::Warning) {
+            logWarning(field.value, "{}", compatibility.message);
+        }
+    }
+
+    if (initializedFields.size() < targetType->fields.size()) {
+        for (const auto& declaredField : targetType->fields) {
+            if (!initializedFields.contains(declaredField.name)) {
+                logError(expression, "Missing field '{}' in instantiation of '{}'", declaredField.name,
+                         expression->name);
+                result = Result::Failure;
+            }
+        }
+    }
+
+    return result;
+}
+
+auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
+    auto result = Result::Success;
+    std::vector<const SemanticType*> elementTypes;
+    elementTypes.reserve(expression->elements.size());
+
+    for (auto& element : expression->elements) {
+        if (visit(element) == Result::Failure) { result = Result::Failure; }
+        if (!element->semanticType) {
+            result = Result::Failure;
+        } else {
+            elementTypes.push_back(element->semanticType);
+        }
+    }
+
+    // If sub expressions failed, bail early so getting a type doesn't fail
+    if (result == Result::Failure) { return Result::Failure; }
+
+    expression->semanticType = typeContext.getAnonymousAggregate(std::move(elementTypes));
+
+    return result;
+}
+
 // auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t;
-// auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t;
+
+auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
+    auto result = Result::Success;
+    if (visit(expression->assignee) == Result::Failure) { result = Result::Failure; }
+    if (visit(expression->value) == Result::Failure) { result = Result::Failure; }
+
+    if (!expression->assignee->semanticType || !expression->value->semanticType) { return Result::Failure; }
+
+    // TODO: Check that the LHS can actually be assigned to
+
+    const auto isAssignmentValid
+        = areTypesCompatible(expression->assignee->semanticType, expression->value->semanticType);
+    if (!isAssignmentValid) {
+        logError(expression, "Cannot assign a value of type {} to a value of type {}",
+                 expression->value->semanticType->toString(), expression->assignee->semanticType->toString());
+        result = Result::Failure;
+    } else if (isAssignmentValid.result == Compatible_t::Warning) {
+        logWarning(expression, "{}", isAssignmentValid.message);
+    }
+    expression->semanticType = expression->assignee->semanticType;
+    return result;
+}
 
 auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     auto result = Result::Success;

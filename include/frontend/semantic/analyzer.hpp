@@ -90,6 +90,7 @@ class analyzer final : public _analyzer_base_t {
     typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
     Result analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const;
+    const SemanticType* resolveType(const ast::Type* astType);
 
     template <class... Args>
     static void logError(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
