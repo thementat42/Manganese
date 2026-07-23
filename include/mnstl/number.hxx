@@ -175,11 +175,12 @@ class number_t {
     constexpr const char* error_unchecked() const noexcept { return _err; }
 
     constexpr held_type underlying_type() const noexcept { return _underlying; }
-    // constexpr bool is_integer() const noexcept {
-    //     using enum held_type;
-    //     return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64,
-    //     uint128);
-    // }
+
+    constexpr bool is_integer() const noexcept {
+        using enum held_type;
+        return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64,
+        uint128);
+    }
 
     constexpr bool is_float() const noexcept {
         using enum held_type;
@@ -196,10 +197,16 @@ class number_t {
     //     return enum_matches<held_type>(_underlying, uint8, uint16, uint32, uint64, uint128);
     // }
 
-    // template <Numeric T>
-    // constexpr inline T value_as() const NOEXCEPT_IF_RELEASE {
-    //     return _visit([&]<class U>(U v) -> T { return static_cast<T>(v); });
-    // }
+    template <Numeric T>
+    constexpr inline T value_as() const NOEXCEPT_IF_RELEASE {
+        return _visit([&](auto v) -> T {
+            if constexpr (std::is_same_v<decltype(v), const char*>) {
+                ASSERT_UNREACHABLE("Cannot cast a number_t holding an error to another type");
+            } else {
+                return static_cast<T>(v);
+            }
+         });
+    }
 
     // template <Numeric T>
     // constexpr std::optional<T> value() const noexcept {
