@@ -1,7 +1,8 @@
 #include <core.hpp>
-#include <frontend/ast/ast_base.hpp>
+#include <frontend/ast.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <mnstl/fold_result.hxx>
 #include <string>
 #include <utility>
 #include <utils/type_names.hpp>
@@ -29,15 +30,139 @@ Result analyzer::analyze() {
 // TODO: implement these
 Result analyzer::collectGlobals() { return Result::Success; }
 Result analyzer::collectAndSpecializeGenerics() { return Result::Success; }
+
 const SemanticType* analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
     DISCARD(lhs);
     DISCARD(rhs);
     return nullptr;
 }
+
 const SemanticType* analyzer::resolveType(const ast::Type* astType) {
-    DISCARD(astType);
+    switch (astType->kind) {
+        case ast::TypeKind::AggregateType: {
+            const ast::AggregateType* aggregateType = static_cast<const ast::AggregateType*>(astType);
+            std::vector<const SemanticType*> resolvedFields;
+            resolvedFields.reserve(aggregateType->fieldTypes.size());
+
+            for (const ast::Type* fieldType : aggregateType->fieldTypes) {
+                const SemanticType* resolvedFieldType = resolveType(fieldType);
+                if (!resolvedFieldType) { return nullptr; }
+                resolvedFields.push_back(resolvedFieldType);
+            }
+            return typeContext.getAnonymousAggregate(std::move(resolvedFields));
+        }
+
+        case ast::TypeKind::ArrayType: {
+            const ast::ArrayType* arrayType = static_cast<const ast::ArrayType*>(astType);
+            const SemanticType* elementType = resolveType(arrayType->elementType);
+            if (!elementType) {
+                logError(astType, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
+                return nullptr;
+            }
+            size_t length;
+            if (arrayType->lengthExpression) {
+                if (visit(arrayType->lengthExpression) == Result::Failure) { return nullptr; }
+                mnstl::fold_result_t fold = arrayType->lengthExpression->fold();
+                if (!fold.is_number()) {
+                    logError(arrayType->lengthExpression, "Array length ({}) must be a constant expression",
+                             arrayType->lengthExpression->toString());
+                    return nullptr;
+                }
+                const mnstl::number_t lengthValue = fold.number_unchecked();
+                if (lengthValue.is_error()) {
+                    logError(arrayType->lengthExpression, "{}", lengthValue.error_unchecked());
+                    return nullptr;
+                }
+                if (!lengthValue.is_integer()) {
+                    logError(arrayType->lengthExpression, "Array length must be an integer value");
+                    return nullptr;
+                }
+                if (lengthValue <= 0) {
+                    logError(arrayType->lengthExpression, "Array length must be greater than 0 (got {})",
+                             lengthValue.to_string());
+                    return nullptr;
+                }
+                length = lengthValue.value_as<size_t>();
+            } else if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
+                length = static_cast<const Array*>(context.currentVariableDeclarationType)->length;
+            } else [[unlikely]] {
+                logError(astType, "Cannot infer array length; explicitly specify length or provide an initializer");
+                return nullptr;
+            }
+
+            return typeContext.getArray(elementType, length);
+        }
+
+        case ast::TypeKind::FunctionType: {
+            const ast::FunctionType* functionType = static_cast<const ast::FunctionType*>(astType);
+            std::vector<Parameter> resolvedParameterTypes;
+            for (const ast::FunctionParameterType& parameterType : functionType->parameterTypes) {
+                const SemanticType* resolvedParameterType = resolveType(parameterType.type);
+                if (!resolvedParameterType) { return nullptr; }
+
+                resolvedParameterTypes.push_back({.isMutable = parameterType.isMutable, .type = resolvedParameterType});
+            }
+            const SemanticType* returnType = nullptr;
+            if (functionType->returnType) {
+                // function is not returning void
+                returnType = resolveType(functionType->returnType);
+                if (!returnType) { return nullptr; }
+            }
+            return typeContext.getFunction(std::move(resolvedParameterTypes), returnType);
+        }
+
+        case ast::TypeKind::GenericType: {
+            const ast::GenericType* genericType = static_cast<const ast::GenericType*>(astType);
+            const SemanticType* baseType = resolveType(genericType->baseType);
+            if (!baseType) { return nullptr; }
+            std::vector<const SemanticType*> resolvedTypeParameters;
+            resolvedTypeParameters.reserve(genericType->typeParameters.size());
+
+            for (const ast::Type* typeParameter : genericType->typeParameters) {
+                const SemanticType* resolvedTypeParameter = resolveType(typeParameter);
+                if (!resolvedTypeParameter) { return nullptr; }
+                resolvedTypeParameters.push_back(resolvedTypeParameter);
+            }
+            return typeContext.getGenericInstance(baseType, std::move(resolvedTypeParameters));
+        }
+
+        case ast::TypeKind::PointerType: {
+            const ast::PointerType* pointerType = static_cast<const ast::PointerType*>(astType);
+            const SemanticType* baseType = resolveType(pointerType->baseType);
+            if (!baseType) {
+                logError(astType, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString());
+                return nullptr;
+            }
+            return typeContext.getPointer(baseType, pointerType->isMutable);
+        }
+
+        case ast::TypeKind::SymbolType: {
+            const ast::SymbolType* symbolType = static_cast<const ast::SymbolType*>(astType);
+            if (symbolType->primitiveType != ast::PrimitiveType_t::not_primitive) {
+                return typeContext.getPrimitive(symbolType->primitiveType);
+            }
+            const Symbol* symbol = symbolTable.lookup(symbolType->name);
+            if (!symbol) {
+                logError(astType, "Unknown type '{}'", symbolType->name);
+                return nullptr;
+            }
+            if (!symbol->type) {
+                logError(astType, "'{}' is not a valid type", symbolType->name);
+                return nullptr;
+            }
+            return symbol->type;
+        }
+
+        case ast::TypeKind::TypeofType: {
+            const ast::TypeofType* typeofType = static_cast<const ast::TypeofType*>(astType);
+            if (visit(typeofType->expression) == Result::Failure) { return nullptr; }
+            return typeofType->expression->semanticType;
+        }
+        default: ASSERT_UNREACHABLE("Unknown ast type kind in resolveType");
+    }
     return nullptr;
 }
+
 Result analyzer::analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const {
     DISCARD(lhs);
     DISCARD(rhs);
