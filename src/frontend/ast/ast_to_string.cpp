@@ -2,8 +2,10 @@
 #include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
+#include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <vector>
+
 
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
@@ -170,9 +172,15 @@ std::string SwitchStatement::toString(size_t indent) const {
 }
 
 std::string VariableDeclarationStatement::toString(size_t indent) const {
-    // Types/expressions inline usually don't need local layout spacing passed down,
-    // but we supply 0 or current indent context to prevent formatting overflows.
-    std::string typeStr = std::format("{} {}", visibilityToString(visibility), type ? type->toString(0) : "auto");
+    std::string typeName;
+    if (type) {
+        typeName = type->toString();
+    } else if (value && value->semanticType) {
+        typeName = value->semanticType->toString();
+    } else {
+        typeName = "auto";
+    }
+    std::string typeStr = std::format("{} {}", visibilityToString(visibility), typeName);
     std::string valueStr = value ? " = " + value->toString(0) : "";
 
     return getIndent(indent) + std::format("({} {}: {}{});", isMutable ? "let mut" : "let", name, typeStr, valueStr);
@@ -302,8 +310,13 @@ std::string AggregateType::toString(size_t indent) const {
 }
 
 std::string ArrayType::toString(size_t indent) const {
-    return std::format("{}[{}]", elementType->toString(indent),
-                       lengthExpression ? lengthExpression->toString(indent) : "");
+    std::string lengthStr;
+    if (lengthExpression) {
+        lengthStr = lengthExpression->toString();
+    } else if (semanticType && semanticType->isArray()) {
+        lengthStr = std::to_string(static_cast<const semantic::Array*>(semanticType)->length);
+    }
+    return std::format("{}[{}]", elementType->toString(indent), lengthStr);
 }
 
 std::string FunctionType::toString(size_t indent) const {
