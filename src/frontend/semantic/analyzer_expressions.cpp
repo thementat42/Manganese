@@ -3,13 +3,12 @@
 #include <frontend/lexer/token_base.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/semantic/analyzer.hpp>
+#include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
 #include <vector>
-
-#include <frontend/semantic/symbol_table.hpp>
 
 namespace Manganese {
 namespace semantic {
