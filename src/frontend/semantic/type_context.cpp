@@ -12,11 +12,11 @@ namespace Manganese {
 namespace semantic {
 
 std::string Aggregate::toString() const {
-    std::string result = name.empty() ? "aggregate" : std::string(name);
-    result += '{';
-    for (size_t i = 0; i < fieldTypes.size(); ++i) {
-        result += fieldTypes[i]->toString();
-        if (i != fieldTypes.size() - 1) [[likely]] { result += ", "; }
+    std::string result = name.empty() ? "aggregate{" : (std::string(name) + " { ");
+    for (size_t i = 0; i < fields.size(); ++i) {
+        if (!fields[i].name.empty()) { result += std::string(fields[i].name) + ": "; }
+        result += fields[i].type->toString();
+        if (i != fields.size() - 1) [[likely]] { result += ", "; }
     }
     result += "}";
     return result;
@@ -67,10 +67,11 @@ size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             // For an anonymous aggregate, hash the fields
             // Use the Boost Hash Combine algorithm
             if (aggregate->name.empty()) {
-                for (const auto* fieldType : aggregate->fieldTypes) {
+                for (const auto& field : aggregate->fields) {
                     // the bitwise shifts scramble the bits of previous fields
                     // since order matters (e.g. aggregate{int, bool} should hash differently to aggregate{bool, int})
-                    hash = hash_combine(hash, std::hash<const SemanticType*>{}(fieldType));
+                    hash = hash_combine(hash, std::hash<std::string_view>{}(field.name));
+                    hash = hash_combine(hash, std::hash<const SemanticType*>{}(field.type));
                 }
             } else {
                 // Since named aggregates must be unique we can just hash their names
@@ -139,7 +140,7 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             auto* left = static_cast<const Aggregate*>(lhs);
             auto* right = static_cast<const Aggregate*>(rhs);
 
-            return (left->name == right->name) && (left->fieldTypes == right->fieldTypes);
+            return (left->name == right->name) && (left->fields == right->fields);
         }
         case Kind::Function: {
             auto* left = static_cast<const Function*>(lhs);
@@ -178,17 +179,17 @@ const SemanticType* TypeContext::getArray(const SemanticType* elementType, size_
 const SemanticType* TypeContext::getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes) {
     Aggregate tmp(std::move(fieldTypes));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fieldTypes));
+    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
 
 const SemanticType* TypeContext::getNamedAggregate(std::string_view name,
-                                                   std::vector<const SemanticType*>&& fieldTypes) {
+                                                   std::vector<AggregateField>&& fieldTypes) {
     // Named types are nominal: they are unique by their declaration name.
     Aggregate tmp(std::move(fieldTypes), name);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fieldTypes), name);
+    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields), name);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }

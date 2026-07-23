@@ -53,14 +53,39 @@ struct SemanticType {
     friend class TypeContext;
 };
 
+struct AggregateField {
+    std::string_view name;  // empty for anonymous aggregates
+    const SemanticType* type;
+
+    bool operator==(const AggregateField& other) const noexcept = default;
+};
+
 struct Aggregate final : public SemanticType {
-    std::vector<const SemanticType*> fieldTypes;
+    std::vector<AggregateField> fields;
     const std::string_view name;
 
-    Aggregate(std::vector<const SemanticType*>&& types, std::string_view aggregateName = "") noexcept :
-        SemanticType(Kind::Aggregate), fieldTypes(std::move(types)), name(aggregateName) {}
+    Aggregate(std::vector<AggregateField>&& fields, std::string_view aggregateName = "") noexcept :
+        SemanticType(Kind::Aggregate), fields(std::move(fields)), name(aggregateName) {}
+
+    Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name("") {
+        fields.reserve(rawTypes.size());
+        for (const auto* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
+    }
+
+    const SemanticType* getFieldType(const std::string_view& fieldName) const noexcept {
+        for (const auto& field : fields) {
+            if (field.name == fieldName) { return field.type; }
+        }
+        return nullptr;
+    }
+
+    const SemanticType* getFieldType(size_t index) const noexcept {
+        if (index < fields.size()) [[likely]] { return fields[index].type; }
+        return nullptr;
+    }
 
     ~Aggregate() override = default;
+
     std::string toString() const override;
 };
 
@@ -162,7 +187,7 @@ class TypeContext {
 
     const SemanticType* getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes);
 
-    const SemanticType* getNamedAggregate(std::string_view name, std::vector<const SemanticType*>&& fieldTypes);
+    const SemanticType* getNamedAggregate(std::string_view name, std::vector<AggregateField>&& fieldTypes);
 
     const SemanticType* getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType);
 
