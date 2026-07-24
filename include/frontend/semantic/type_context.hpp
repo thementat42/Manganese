@@ -64,16 +64,17 @@ struct Aggregate final : public SemanticType {
     std::vector<AggregateField> fields;
     const std::string_view name;
 
-    Aggregate(std::vector<AggregateField>&& fields, std::string_view aggregateName = "") noexcept :
-        SemanticType(Kind::Aggregate), fields(std::move(fields)), name(aggregateName) {}
+    Aggregate(std::vector<AggregateField>&& fieldTypes, std::string_view aggregateName = "") noexcept :
+        SemanticType(Kind::Aggregate), fields(std::move(fieldTypes)), name(aggregateName) {}
 
+    // For anonymous aggregates
     Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name("") {
         fields.reserve(rawTypes.size());
-        for (const auto* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
+        for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
     }
 
     const SemanticType* getFieldType(const std::string_view& fieldName) const noexcept {
-        for (const auto& field : fields) {
+        for (const AggregateField& field : fields) {
             if (field.name == fieldName) { return field.type; }
         }
         return nullptr;
