@@ -19,10 +19,18 @@ auto analyzer::visit(ast::AggregateType* type) -> typevisit_t {
     type->semanticType = typeContext.getAnonymousAggregate(std::move(resolvedFields));
     return Result::Success;
 }
+
 auto analyzer::visit(ast::ArrayType* type) -> typevisit_t {
     const ast::ArrayType* arrayType = static_cast<const ast::ArrayType*>(type);
+
+    // for nested arrays
+    const SemanticType* outerVarType = context.currentVariableDeclarationType;
+    context.currentVariableDeclarationType = nullptr;
     visit(arrayType->elementType);
+    context.currentVariableDeclarationType = outerVarType;
+
     const SemanticType* elementType = arrayType->elementType->semanticType;
+
     if (!elementType) {
         logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
         return Result::Failure;
