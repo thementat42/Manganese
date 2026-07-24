@@ -69,11 +69,9 @@ struct AlignofExpression final : public Expression {
  */
 struct ArrayLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
-    Type* elementType;  // Optional, can be inferred from the elements
-    Expression* lengthExpression = nullptr;
 
-    explicit ArrayLiteralExpression(std::vector<Expression*>&& _elements, Type* _elementType = nullptr) noexcept :
-        Expression(ExpressionKind::ArrayLiteralExpression), elements(std::move(_elements)), elementType(_elementType) {}
+    explicit ArrayLiteralExpression(std::vector<Expression*>&& _elements) noexcept :
+        Expression(ExpressionKind::ArrayLiteralExpression), elements(std::move(_elements)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
