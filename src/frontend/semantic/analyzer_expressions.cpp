@@ -432,15 +432,18 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
 
         case UnaryPlus:
         case UnaryMinus: {
-            expression->semanticType = typeContext.getPrimitive(primitiveType);
-            if (!isNumeric(primitiveType)) {
-                logError(expression, "operator {} can only be applied to integer or floating point types",
-                         lexer::tokenTypeToString(expression->op));
+            if (visit(expression->right) == Result::Failure) { return Result::Failure; }
+            const SemanticType* opType = expression->right->semanticType;
+            if (!opType) { return Result::Failure; }
+            if (!isNumeric(opType->primitiveType)) {
+                logError(expression, "Operator '{}' can only be applied to numeric types (got '{}')",
+                         lexer::tokenTypeToString(expression->op), opType->toString());
                 return Result::Failure;
             }
-            if (isUnsignedInteger(primitiveType) && expression->op == UnaryMinus) {
-                // TODO: warn or convert to signed integer type?
+            if (expression->op == UnaryMinus && isUnsignedInteger(opType->primitiveType)) {
+                logWarning(expression, "Applying a '-' to an unsigned integer type  ('{}') causes wrapping", opType->toString());
             }
+            expression->semanticType = opType;
         } break;
 
         case AddressOf: {
