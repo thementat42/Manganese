@@ -33,7 +33,8 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         resolvedGenerics.reserve(expression->genericTypes.size());
 
         for (auto* genericAstType : expression->genericTypes) {
-            const SemanticType* resolved = resolveType(genericAstType);
+            visit(genericAstType);
+            const SemanticType* resolved = genericAstType->semanticType;
             if (!resolved) {
                 result = Result::Failure;
             } else {
@@ -41,6 +42,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
             }
         }
         if (result == Result::Failure) { return result; }
+
         targetType
             = static_cast<const Aggregate*>(typeContext.getGenericInstance(targetType, std::move(resolvedGenerics)));
     }
