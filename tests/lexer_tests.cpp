@@ -19,7 +19,7 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true
         return;
     }
     std::cout << "Tokens:\n" << CYAN;
-    for (const auto& token : tokens) {
+    for (const Token& token : tokens) {
         if (verbose) {
             std::cout << token.toString() << "\n";
         } else {
@@ -72,19 +72,19 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
 }
 
 bool testEmptyString() {
-    auto tokens = tokensFromString("");
+    std::vector<Token> tokens = tokensFromString("");
     printAllTokens(tokens);
     return tokens.empty();
 }
 
 bool testWhitespace() {
-    auto tokens = tokensFromString("  \t\n\r  ");
+    std::vector<Token> tokens = tokensFromString("  \t\n\r  ");
     printAllTokens(tokens);
     return tokens.empty();
 }
 
 bool testComments() {
-    auto tokens = tokensFromString("# This is a comment\nint x; /*This is\n a\n multiline comment!*/");
+    std::vector<Token> tokens = tokensFromString("# This is a comment\nint x; /*This is\n a\n multiline comment!*/");
     printAllTokens(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 tokens, got " << tokens.size() << '\n';
@@ -96,7 +96,7 @@ bool testComments() {
 }
 
 bool testIdentifiers() {
-    auto tokens = tokensFromString("foo bar baz _var var123");
+    std::vector<Token> tokens = tokensFromString("foo bar baz _var var123");
     printAllTokens(tokens);
     if (tokens.size() != 5) {
         std::cout << "Expected 5 tokens, got " << tokens.size() << '\n';
@@ -109,7 +109,9 @@ bool testIdentifiers() {
 }
 
 bool testKeywords() {
-    auto tokens = tokensFromString("alias as uint128 bool break aggregate case char mut foo while string");
+    std::vector<Token> tokens
+        = tokensFromString("alias as uint128 bool break aggregate case char mut foo while string");
+
     printAllTokens(tokens);
     if (tokens.size() != 12) {
         std::cout << "Expected 12 tokens, got " << tokens.size() << '\n';
@@ -125,7 +127,7 @@ bool testKeywords() {
 }
 
 bool testIntegerLiterals() {
-    auto tokens = tokensFromString("0 123u64 456789i8 0xFFF 0b1001 0o33 0x1.23 1.23e-4 1i128");
+    std::vector<Token> tokens = tokensFromString("0 123u64 456789i8 0xFFF 0b1001 0o33 0x1.23 1.23e-4 1i128");
     printAllTokens(tokens);
     if (tokens.size() != 9) {
         std::cout << "Expected 9 tokens, got " << tokens.size() << '\n';
@@ -144,7 +146,7 @@ bool testIntegerLiterals() {
 }
 
 bool testFloatLiterals() {
-    auto tokens = tokensFromString("0.0f32 1.23f64 456.789 1.44e3q 0b100104e5qq3");
+    std::vector<Token> tokens = tokensFromString("0.0f32 1.23f64 456.789 1.44e3q 0b100104e5qq3");
     printAllTokens(tokens);
     if (tokens.size() != 5) {
         std::cout << "Expected 5 tokens, got " << tokens.size() << '\n';
@@ -159,7 +161,7 @@ bool testFloatLiterals() {
 }
 
 bool testCharLiterals() {
-    auto tokens = tokensFromString("'a' '\\n' '\\'' '\\\\' '\\t' '\\u1234'");
+    std::vector<Token> tokens = tokensFromString("'a' '\\n' '\\'' '\\\\' '\\t' '\\u1234'");
     printAllTokens(tokens);
     if (tokens.size() != 6) {
         std::cout << "Expected 6 tokens, got " << tokens.size() << '\n';
@@ -173,7 +175,7 @@ bool testCharLiterals() {
 }
 
 bool testStringLiterals() {
-    auto tokens = tokensFromString("\"hello\" \"world\" \"escaped \\\"quote\\\"\"");
+    std::vector<Token> tokens = tokensFromString("\"hello\" \"world\" \"escaped \\\"quote\\\"\"");
     printAllTokens(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 tokens, got " << tokens.size() << '\n';
@@ -186,8 +188,9 @@ bool testStringLiterals() {
 }
 
 bool testOperators() {
-    auto tokens = tokensFromString(
+    std::vector<Token> tokens = tokensFromString(
         "+ - * / // % ++ -- += -= *= /= //= %= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
+
     printAllTokens(tokens);
     if (tokens.size() != 42) {
         std::cout << "Expected 44 tokens, got " << tokens.size() << '\n';
@@ -221,7 +224,7 @@ bool testOperators() {
 }
 
 bool testBrackets() {
-    auto tokens = tokensFromString("( ) { } [ ]");
+    std::vector<Token> tokens = tokensFromString("( ) { } [ ]");
     printAllTokens(tokens);
     if (tokens.size() != 6) {
         std::cout << "Expected 6 tokens, got " << tokens.size() << '\n';
@@ -234,7 +237,7 @@ bool testBrackets() {
 }
 
 bool testPunctuation() {
-    auto tokens = tokensFromString("; , . : ::");
+    std::vector<Token> tokens = tokensFromString("; , . : ::");
     printAllTokens(tokens);
     if (tokens.size() != 5) {
         std::cout << "Expected 5 tokens, got " << tokens.size() << '\n';
@@ -247,7 +250,7 @@ bool testPunctuation() {
 }
 
 bool testCompleteProgram() {
-    auto tokens = tokensFromFile("tests/lexer_tests.mn");
+    std::vector<Token> tokens = tokensFromFile("tests/lexer_tests.mn");
     printAllTokens(tokens);
     if (tokens.empty()) {
         std::cout << "Expected non-empty tokens" << '\n';
@@ -270,7 +273,7 @@ bool testCompleteProgram() {
 }
 
 bool testNestedBrackets() {
-    auto tokens = tokensFromString("arr@[arr@[int16]] foo");
+    std::vector<Token> tokens = tokensFromString("arr@[arr@[int16]] foo");
     printAllTokens(tokens);
     if (tokens.size() != 10) {
         std::cout << "Expected 10 tokens, got " << tokens.size() << '\n';
@@ -285,7 +288,7 @@ bool testNestedBrackets() {
 }
 
 bool testInvalidChar() {
-    auto tokens = tokensFromString("'too long' '\\z' '\\u9Z99' ");
+    std::vector<Token> tokens = tokensFromString("'too long' '\\z' '\\u9Z99' ");
     printAllTokens(tokens);
     if (tokens.size() != 3) {
         std::cout << "Expected 3 token, got " << tokens.size() << '\n';
@@ -298,7 +301,7 @@ bool testInvalidChar() {
 }
 
 bool testInvalidEscapeSequence() {
-    auto tokens = tokensFromString("'\\z'");
+    std::vector<Token> tokens = tokensFromString("'\\z'");
     printAllTokens(tokens);
     if (tokens.size() != 1) {
         std::cout << "Expected 1 token, got " << tokens.size() << '\n';

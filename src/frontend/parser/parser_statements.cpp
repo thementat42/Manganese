@@ -19,9 +19,9 @@ ast::Statement* Parser::parseStatement() {
         // don't need to move thanks to copy elision
         return arena.emplace<ast::NestedBlockStatement>(parseBlock("nested block"));
     }
-    const auto index = tokenToIndex(type);
+    const std::size_t index = tokenToIndex(type);
 
-    auto handler = statementLookup[index];
+    statementHandler_t handler = statementLookup[index];
     if (handler) { return (this->*handler)(); }
 
     // Parse out an expression then convert it to a statement
@@ -77,7 +77,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
         ast::Type* type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
-        auto duplicate = std::find_if(fields.begin(), fields.end(), [fieldName](const ast::AggregateField& field) {
+        auto duplicate = std::find_if(fields.begin(), fields.end(), [fieldName](const ast::AggregateField& field) -> bool {
             return field.name == fieldName;
         });
         if (duplicate != fields.end()) {
@@ -151,7 +151,7 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
     ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
-    auto condition = parseExpression(Precedence::Default);
+    ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
     expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
     return arena.emplace<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
@@ -385,7 +385,7 @@ ast::Statement* Parser::parseImportStatement() {
 }
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
-    auto temp = consumeToken();
+    lexer::Token temp = consumeToken();
     size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
         logging::logWarning(startLine, startColumn, "Module declarations should go at the top of the file");
@@ -436,7 +436,7 @@ ast::Statement* Parser::parseSwitchStatement() {
 
     while (peekTokenType() == TokenType::Case) {
         DISCARD(consumeToken());
-        auto caseValue = parseExpression(Precedence::Default);
+        ast::Expression* caseValue = parseExpression(Precedence::Default);
         ast::Block caseBody;
         expectToken(TokenType::Colon, "Expected ':' after case value");
         while (peekTokenType() != TokenType::Case && peekTokenType() != TokenType::Default
@@ -541,7 +541,7 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
 ast::Statement* Parser::parseWhileLoopStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
-    auto condition = parseExpression(Precedence::Default);
+    ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end while condition");
 
     return arena.emplace<ast::WhileLoopStatement>(parseBlock("while loop body"), condition);

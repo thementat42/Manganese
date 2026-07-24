@@ -1,4 +1,3 @@
-
 #if MN_DEBUG  // Only include dump methods in debug builds
 
 #include <core.hpp>
@@ -41,7 +40,7 @@ void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) con
     os << getIndent(indent + 1) << "Name: " << name << "\n";
     os << getIndent(indent + 1) << "fields: [\n";
 
-    for (const auto& field : fields) {
+    for (const AggregateInstantiationField& field : fields) {
         os << getIndent(indent + 2) << "{\n";
         os << getIndent(indent + 3) << "name: " << field.name << "\n";
         os << getIndent(indent + 3) << "value: \n";
@@ -56,7 +55,7 @@ void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) con
 void AggregateLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "AggregateLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "Elements {\n";
-    for (const auto& element : elements) { element->dump(os, indent + 2); }
+    for (const Expression* element : elements) { element->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "}\n";
 }
 
@@ -71,7 +70,7 @@ void ArrayLiteralExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "ArrayLiteralExpression [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "elements: [\n";
 
-    for (const auto& element : elements) {
+    for (const Expression* element : elements) {
         os << getIndent(indent + 2) << "{\n";
         element->dump(os, indent + 3);
         os << getIndent(indent + 2) << "}\n";
@@ -120,7 +119,7 @@ void FunctionCallExpression::dump(std::ostream& os, size_t indent) const {
     callee->dump(os, indent + 2);
     os << getIndent(indent + 1) << "arguments: [\n";
 
-    for (const auto& arg : arguments) {
+    for (const Expression* arg : arguments) {
         os << getIndent(indent + 2) << "{\n";
         arg->dump(os, indent + 3);
         os << getIndent(indent + 2) << "}\n";
@@ -135,7 +134,7 @@ void GenericExpression::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "identifier: " << toStringOr(identifier) << "\n";
     os << getIndent(indent + 1) << "generic types: [\n";
 
-    for (const auto& type : types) { os << getIndent(indent + 2) << toStringOr(type) << "\n"; }
+    for (const Type* type : types) { os << getIndent(indent + 2) << toStringOr(type) << "\n"; }
 
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent) << "}\n";
@@ -238,7 +237,7 @@ void AggregateDeclarationStatement::dump(std::ostream& os, size_t indent) const 
     os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << " \n";
     os << getIndent(indent + 1) << "fields: [\n";
 
-    for (const auto& field : fields) {
+    for (const AggregateField& field : fields) {
         os << getIndent(indent + 2) << "{\n";
         os << getIndent(indent + 3) << "name: " << field.name << "\n";
         os << getIndent(indent + 3) << "type: \n";
@@ -264,7 +263,7 @@ void EnumDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "visibility: " << visibilityToString(visibility) << " \n";
     os << getIndent(indent + 1) << "values: [\n";
 
-    for (const auto& value : values) {
+    for (const EnumValue& value : values) {
         os << getIndent(indent + 2) << "{\n";
         os << getIndent(indent + 3) << "name: " << value.name << "\n";
         os << getIndent(indent + 3) << "value: " << value.value << "\n";
@@ -306,7 +305,7 @@ void ForLoopStatement::dump(std::ostream& os, size_t indent) const {
     }
 
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
+    for (const Statement* stmt : body) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
 
     os << getIndent(indent) << "}\n";
@@ -329,7 +328,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     }
 
     os << getIndent(indent + 1) << "parameters: [\n";
-    for (const auto& param : parameters) {
+    for (const FunctionParameter& param : parameters) {
         os << getIndent(indent + 2) << "{\n";
         os << getIndent(indent + 3) << "name: " << param.name << "\n";
         os << getIndent(indent + 3) << "isMutable: " << (param.isMutable ? "true" : "false") << "\n";
@@ -350,7 +349,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, size_t indent) const {
 
     // Body
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
+    for (const Statement* stmt : body) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
 
     os << getIndent(indent) << "}\n";
@@ -361,16 +360,16 @@ void IfStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent + 1) << "condition: \n";
     condition->dump(os, indent + 2);
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
+    for (const Statement* stmt : body) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
     if (!elifs.empty()) {
         os << getIndent(indent + 1) << "elif clauses: [\n";
-        for (const auto& elif : elifs) {
+        for (const ElifClause& elif : elifs) {
             os << getIndent(indent + 2) << "{\n";
             os << getIndent(indent + 3) << "condition: \n";
             elif.condition->dump(os, indent + 4);
             os << getIndent(indent + 3) << "body: [\n";
-            for (const auto& stmt : elif.body) { stmt->dump(os, indent + 4); }
+            for (const Statement* stmt : elif.body) { stmt->dump(os, indent + 4); }
             os << getIndent(indent + 3) << "]\n";
             os << getIndent(indent + 2) << "}\n";
         }
@@ -378,7 +377,7 @@ void IfStatement::dump(std::ostream& os, size_t indent) const {
     }
     if (!elseBody.empty()) {
         os << getIndent(indent + 1) << "else body: [\n";
-        for (const auto& stmt : elseBody) { stmt->dump(os, indent + 2); }
+        for (Statement* stmt : elseBody) { stmt->dump(os, indent + 2); }
         os << getIndent(indent + 1) << "]\n";
     }
     os << getIndent(indent) << "}\n";
@@ -387,7 +386,7 @@ void IfStatement::dump(std::ostream& os, size_t indent) const {
 void NestedBlockStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "NestedBlockStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : block) { stmt->dump(os, indent + 2); }
+    for (const Statement* stmt : block) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent) << "}\n";
 }
@@ -409,19 +408,19 @@ void SwitchStatement::dump(std::ostream& os, size_t indent) const {
     variable->dump(os, indent + 2);
     os << getIndent(indent + 1) << "cases: [\n";
 
-    for (const auto& _case : cases) {
+    for (const CaseClause& _case : cases) {
         os << getIndent(indent + 2) << "{\n";
         os << getIndent(indent + 3) << "literalValue: \n";
         _case.literalValue->dump(os, indent + 4);
         os << getIndent(indent + 3) << "body: [\n";
-        for (const auto& stmt : _case.body) { stmt->dump(os, indent + 4); }
+        for (const Statement* stmt : _case.body) { stmt->dump(os, indent + 4); }
         os << getIndent(indent + 3) << "]\n";
         os << getIndent(indent + 2) << "}\n";
     }
 
     if (!defaultBody.empty()) {
         os << getIndent(indent + 1) << "default body: [\n";
-        for (const auto& stmt : defaultBody) { stmt->dump(os, indent + 2); }
+        for (const Statement* stmt : defaultBody) { stmt->dump(os, indent + 2); }
         os << getIndent(indent + 1) << "]\n";
     }
 
@@ -455,7 +454,7 @@ void VariableDeclarationStatement::dump(std::ostream& os, size_t indent) const {
 void WhileLoopStatement::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "WhileLoopStatement [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "body: [\n";
-    for (const auto& stmt : body) { stmt->dump(os, indent + 2); }
+    for (const Statement* stmt : body) { stmt->dump(os, indent + 2); }
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent + 1) << "condition: \n";
     condition->dump(os, indent + 2);
@@ -479,7 +478,7 @@ void AggregateType::dump(std::ostream& os, size_t indent) const {
     os << getIndent(indent) << "Type [" << getLine() << ":" << getColumn() << "] {\n";
     os << getIndent(indent + 1) << "fields: [\n";
 
-    for (const auto& field : fieldTypes) {
+    for (const Type* field : fieldTypes) {
         os << getIndent(indent + 2) << "{\n";
         field->dump(os, indent + 3);
         os << getIndent(indent + 2) << "}\n";
@@ -493,7 +492,7 @@ void FunctionType::dump(std::ostream& os, size_t indent) const {
 
     // Parameter types
     os << getIndent(indent + 1) << "parameter types: [\n";
-    for (const auto& paramType : parameterTypes) {
+    for (const FunctionParameterType& paramType : parameterTypes) {
         os << getIndent(indent + 2) << (paramType.isMutable ? "mut " : "") << "\n";
         paramType.type->dump(os, indent + 2);
     }
@@ -518,7 +517,7 @@ void GenericType::dump(std::ostream& os, size_t indent) const {
     os << "\n";
     os << getIndent(indent + 1) << "generic types: [\n";
 
-    for (const auto& type : typeParameters) { type->dump(os, indent + 2); }
+    for (const Type* type : typeParameters) { type->dump(os, indent + 2); }
 
     os << getIndent(indent + 1) << "]\n";
     os << getIndent(indent) << "}\n";

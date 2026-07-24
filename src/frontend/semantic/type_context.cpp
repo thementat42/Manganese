@@ -27,7 +27,7 @@ std::string Array::toString() const { return std::format("{}[{}]", elementType->
 std::string Function::toString() const {
     std::string result = "func(";
     for (size_t i = 0; i < parameterTypes.size(); ++i) {
-        const auto& param = parameterTypes[i];
+        const Parameter& param = parameterTypes[i];
         if (param.isMutable) { result += "mut "; }
         result += param.type->toString();
         if (i != parameterTypes.size() - 1) [[likely]] { result += ", "; }
@@ -67,7 +67,7 @@ size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             // For an anonymous aggregate, hash the fields
             // Use the Boost Hash Combine algorithm
             if (aggregate->name.empty()) {
-                for (const auto& field : aggregate->fields) {
+                for (const AggregateField& field : aggregate->fields) {
                     // the bitwise shifts scramble the bits of previous fields
                     // since order matters (e.g. aggregate{int, bool} should hash differently to aggregate{bool, int})
                     hash = hash_combine(hash, std::hash<std::string_view>{}(field.name));
@@ -91,7 +91,7 @@ size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(function->returnType));
             // Hash in each parameter sequentially
             // Include the type and the mutability flag (e.g., func(int) and func(mut int) are different signatures)
-            for (const auto& param : function->parameterTypes) {
+            for (const Parameter& param : function->parameterTypes) {
                 hash = hash_combine(hash, std::hash<const SemanticType*>{}(param.type));
                 hash = hash_combine(hash, std::hash<bool>{}(param.isMutable));
             }
@@ -101,7 +101,7 @@ size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             auto* generic = static_cast<const GenericInstance*>(t);
             // Mix the base generic template type (e.g., the List in List@[int])
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(generic->baseType));
-            for (const auto* arg : generic->typeArguments) {
+            for (const SemanticType* arg : generic->typeArguments) {
                 hash = hash_combine(hash, std::hash<const SemanticType*>{}(arg));
             }
             return hash;
@@ -163,7 +163,7 @@ const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) co
 const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool isMutable) {
     Pointer tmp(baseType, isMutable);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Pointer>(baseType, isMutable);
+    Pointer* heapAlloc = _allocator.emplace<Pointer>(baseType, isMutable);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -171,7 +171,7 @@ const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool i
 const SemanticType* TypeContext::getArray(const SemanticType* elementType, size_t length) {
     Array tmp(elementType, length);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Array>(elementType, length);
+    Array* heapAlloc = _allocator.emplace<Array>(elementType, length);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -179,7 +179,7 @@ const SemanticType* TypeContext::getArray(const SemanticType* elementType, size_
 const SemanticType* TypeContext::getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes) {
     Aggregate tmp(std::move(fieldTypes));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields));
+    Aggregate* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -188,7 +188,7 @@ const SemanticType* TypeContext::getNamedAggregate(std::string_view name, std::v
     // Named types are nominal: they are unique by their declaration name.
     Aggregate tmp(std::move(fieldTypes), name);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields), name);
+    Aggregate* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields), name);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -196,7 +196,7 @@ const SemanticType* TypeContext::getNamedAggregate(std::string_view name, std::v
 const SemanticType* TypeContext::getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType) {
     Function tmp(std::move(parameterTypes), returnType);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Function>(std::move(tmp.parameterTypes), returnType);
+    Function* heapAlloc = _allocator.emplace<Function>(std::move(tmp.parameterTypes), returnType);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -205,7 +205,7 @@ const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType
                                                     std::vector<const SemanticType*>&& typeArguments) {
     GenericInstance tmp(baseType, std::move(typeArguments));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<GenericInstance>(baseType, std::move(tmp.typeArguments));
+    GenericInstance* heapAlloc = _allocator.emplace<GenericInstance>(baseType, std::move(tmp.typeArguments));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }

@@ -42,7 +42,7 @@ constexpr std::array keywordTable = {
 };
 
 TokenType keywordLookup(const std::string_view& s) noexcept {
-    for (const auto& p : keywordTable) {
+    for (const keyword_map_entry& p : keywordTable) {
         if (p.str == s) { return p.type; }
     }
     return TokenType::Unknown;

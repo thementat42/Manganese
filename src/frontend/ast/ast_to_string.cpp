@@ -21,7 +21,7 @@ static inline std::string getIndent(size_t indent) { return std::string(indent *
 // Helpers
 std::string blockToString(const Block& block, size_t indent) {
     std::string result = "{\n";
-    for (const auto stmt : block) { result += stmt->toString(indent + 1) + "\n"; }
+    for (const Statement* stmt : block) { result += stmt->toString(indent + 1) + "\n"; }
     result += getIndent(indent) + "}";
     return result;
 }
@@ -64,7 +64,7 @@ std::string AggregateDeclarationStatement::toString(size_t indent) const {
     std::string result = getIndent(indent) + std::format("{} aggregate {}", visibilityToString(visibility), name);
     if (!genericTypes.empty()) { result += std::format("[{}]", commaSeparatedList(genericTypes)); }
     result += " {\n";
-    for (const auto& field : fields) {
+    for (const AggregateField& field : fields) {
         result += getIndent(indent + 1) + field.name + ": " + field.type->toString(indent + 1) + ";\n";
     }
     result += getIndent(indent) + "}";
@@ -86,7 +86,7 @@ std::string EnumDeclarationStatement::toString(size_t indent) const {
         + std::format("{} enum {}: {}", visibilityToString(visibility), name, baseType->toString(indent));
     result += " {\n";
     for (std::size_t i = 0; i < values.size(); ++i) {
-        const auto& value = values[i];
+        const EnumValue& value = values[i];
         result += getIndent(indent + 1) + value.name;
         if (value.value) { result += std::format(" = {}", value.value->toString(indent + 1)); }
         if (i != values.size() - 1) { result += ","; }
@@ -127,7 +127,7 @@ std::string FunctionDeclarationStatement::toString(size_t indent) const {
 
     result += '(';
     for (size_t i = 0; i < parameters.size(); ++i) {
-        const auto& param = parameters[i];
+        const FunctionParameter& param = parameters[i];
         result += std::format("{}: {}{}", param.name, (param.isMutable ? "mut " : ""), param.type->toString(indent));
         if (i < parameters.size() - 1) { result += ", "; }
     }
@@ -141,7 +141,7 @@ std::string FunctionDeclarationStatement::toString(size_t indent) const {
 std::string IfStatement::toString(size_t indent) const {
     std::string result
         = getIndent(indent) + std::format("if ({}) ", condition->toString(indent)) + blockToString(body, indent);
-    for (const auto& elif : elifs) {
+    for (const ElifClause& elif : elifs) {
         result += std::format(" elif ({}) ", elif.condition->toString(indent)) + blockToString(elif.body, indent);
     }
     if (!elseBody.empty()) { result += " else " + blockToString(elseBody, indent); }
@@ -159,13 +159,13 @@ std::string ReturnStatement::toString(size_t indent) const {
 
 std::string SwitchStatement::toString(size_t indent) const {
     std::string result = getIndent(indent) + std::format("switch ({})", variable->toString(indent)) + " {\n";
-    for (const auto& _case : cases) {
+    for (const CaseClause& _case : cases) {
         result += getIndent(indent + 1) + std::format("case {}:\n", _case.literalValue->toString(indent + 1));
-        for (const auto stmt : _case.body) { result += stmt->toString(indent + 2) + "\n"; }
+        for (const Statement* stmt : _case.body) { result += stmt->toString(indent + 2) + "\n"; }
     }
     if (!defaultBody.empty()) {
         result += getIndent(indent + 1) + "default:\n";
-        for (const auto stmt : defaultBody) { result += stmt->toString(indent + 2) + "\n"; }
+        for (const Statement* stmt : defaultBody) { result += stmt->toString(indent + 2) + "\n"; }
     }
     result += getIndent(indent) + "}";
     return result;
@@ -188,7 +188,7 @@ std::string VariableDeclarationStatement::toString(size_t indent) const {
 
 std::string WhileLoopStatement::toString(size_t indent) const {
     std::string result = getIndent(indent);
-    const auto whileCond = std::format("while ({})", condition->toString(indent));
+    const std::string whileCond = std::format("while ({})", condition->toString(indent));
     if (isDoWhile) {
         result += "do ";
     } else {
@@ -205,7 +205,7 @@ std::string WhileLoopStatement::toString(size_t indent) const {
 std::string AggregateInstantiationExpression::toString(size_t indent) const {
     std::string result = std::format("{}{} ", name, genericsToString(genericTypes, indent)) + "{";
     for (std::size_t i = 0; i < fields.size(); ++i) {
-        const auto& field = fields[i];
+        const AggregateInstantiationField& field = fields[i];
         result += std::format("{} = {}", field.name, field.value->toString(indent));
         if (i != fields.size() - 1) { result += ", "; }
     }
@@ -322,7 +322,7 @@ std::string ArrayType::toString(size_t indent) const {
 std::string FunctionType::toString(size_t indent) const {
     std::string result = "func(";
     for (std::size_t i = 0; i < parameterTypes.size(); ++i) {
-        const auto& param = parameterTypes[i];
+        const FunctionParameterType& param = parameterTypes[i];
         result += std::format("{}{}", (param.isMutable ? "mut " : ""), param.type->toString(indent));
         if (i != parameterTypes.size() - 1) { result += ", "; }
     }

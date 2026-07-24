@@ -14,7 +14,7 @@ namespace semantic {
 Result analyzer::collectTypes() {
     // first pass -- collect all user-defined types
     Result result = Result::Success;
-    for (const auto& stmt : parsedFile.program) {
+    for (ast::Statement* stmt : parsedFile.program) {
         if (_collectTypesInStatement(stmt) == Result::Failure) { result = Result::Failure; }
     }
     return result;
@@ -31,7 +31,8 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
     switch (stmt->kind) {
         case AggregateDeclarationStatement: {
             auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
-            auto result = symbolTable.declare(aggregateStmt->name,
+
+            Result result = symbolTable.declare(aggregateStmt->name,
                                               Symbol{
                                                   .type = nullptr,
                                                   .node = aggregateStmt,
@@ -44,7 +45,8 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
         }
         case AliasStatement: {
             auto aliasStmt = static_cast<ast::AliasStatement*>(stmt);
-            auto result = symbolTable.declare(aliasStmt->alias,
+
+            Result result = symbolTable.declare(aliasStmt->alias,
                                               Symbol{
                                                   .type = nullptr,
                                                   .node = aliasStmt,
@@ -57,7 +59,8 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
         }
         case EnumDeclarationStatement: {
             auto enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
-            auto result = symbolTable.declare(enumDecl->name,
+
+            Result result = symbolTable.declare(enumDecl->name,
                                               Symbol{
                                                   .type = nullptr,
                                                   .node = enumDecl,
@@ -83,14 +86,14 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             if (result == Result::Failure) { _reportRedeclaration(funcStmt->name, funcStmt); }
 
             // Process the internal block statements
-            auto bodyResult = _collectTypesInStatementBody(funcStmt->body);
+            Result bodyResult = _collectTypesInStatementBody(funcStmt->body);
             return (result == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
         }
         case IfStatement: {
             auto ifStmt = static_cast<ast::IfStatement*>(stmt);
             Result result = Result::Success;
             if (_collectTypesInStatementBody(ifStmt->body) == Result::Failure) { result = Result::Failure; }
-            for (const auto& elif : ifStmt->elifs) {
+            for (const ast::ElifClause& elif : ifStmt->elifs) {
                 if (_collectTypesInStatementBody(elif.body) == Result::Failure) { result = Result::Failure; }
             }
             if (!ifStmt->elseBody.empty() && _collectTypesInStatementBody(ifStmt->elseBody) == Result::Failure) {
@@ -111,7 +114,7 @@ Result analyzer::_collectTypesInStatementBody(const ast::Block& body) {
     symbolTable.enterScope();
     Result result = Result::Success;
 
-    for (const auto& subStatement : body) {
+    for (ast::Statement* subStatement : body) {
         if (_collectTypesInStatement(subStatement) == Result::Failure) { result = Result::Failure; }
     }
 

@@ -10,27 +10,26 @@ namespace parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
     TokenType type = peekTokenType();
-    const auto index = tokenToIndex(type);
+    const std::size_t index = tokenToIndex(type);
 
-    auto nudHandler = nudLookup_types[index];
+    nudHandler_types_t nudHandler = nudLookup_types[index];
     if (!nudHandler) {
         ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
-    // ast::Type* left = nudIterator->second(this);
     ast::Type* left = (this->*nudHandler)();
 
     while (!done()) {
         type = peekTokenType();
-        const auto idx = tokenToIndex(type);
+        const std::size_t idx = tokenToIndex(type);
 
         const Operator& op = operatorPrecedenceMap_type[idx];
         if (op.leftBindingPower <= precedence) { break; }
 
-        auto handler = ledLookup_types[idx];
+        ledHandler_types_t handler = ledLookup_types[idx];
         if (!handler) {
             ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
-        auto rbp = op.rightBindingPower;
+        Precedence rbp = op.rightBindingPower;
         left = (this->*handler)(left, rbp);
     }
     return left;
@@ -189,7 +188,7 @@ ast::Type* Parser::parseSymbolType() {
     } else {
         ASSERT_UNREACHABLE("Unknown primitive type " + lex);
     }
-    auto symbol_type = arena.emplace<ast::SymbolType>(token.getLexeme(), prim_t);
+    ast::SymbolType* symbol_type = arena.emplace<ast::SymbolType>(token.getLexeme(), prim_t);
     return symbol_type;
 }
 

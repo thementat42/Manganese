@@ -29,7 +29,7 @@ enum class LogLevel : uint8_t {
 template <class... Args>
 void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) NOEXCEPT_IF_RELEASE {
 #if MN_DEBUG
-    auto message = std::format(fmt, std::forward<Args>(args)...);
+    std::string message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
         case LogLevel::Info: std::cerr << BLUE << "[Internal Info] " << message << RESET << "\n"; break;
         case LogLevel::Warning: std::cerr << YELLOW << "[Internal Warning] " << message << RESET << "\n"; break;
@@ -49,7 +49,7 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
 
 template <class... Args>
 void log(LogLevel level, size_t line, size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
-    auto message = std::format(fmt, std::forward<Args>(args)...);
+    std::string message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
         case LogLevel::Info: return;  // No user info
         case LogLevel::Warning: std::cerr << YELLOW << "Warning: " << message << RESET; break;

@@ -51,8 +51,9 @@ auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
                      statement->stopCondition->toString());
             result = Result::Failure;
         } else {
-            const auto conditionCanBeBool = areTypesCompatible(statement->stopCondition->semanticType,
-                                                               typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+            const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
+                statement->stopCondition->semanticType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+
             if (!conditionCanBeBool) {
                 logError(statement,
                          "Stop condition in for loop must be a boolean type or implicitly convertible to it, not {}",
@@ -84,8 +85,9 @@ auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         logError(statement, "Could not deduce type of condition {}", statement->condition->toString());
         result = Result::Failure;
     } else {
-        const auto conditionCanBeBool = areTypesCompatible(statement->condition->semanticType,
-                                                           typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+        const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
+            statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+
         if (!conditionCanBeBool) {
             logError(statement,
                      "Condition in if statement must be a boolean type or implicitly convertible to it, not {}",
@@ -98,15 +100,16 @@ auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
 
     if (visit(statement->body) == Result::Failure) { result = Result::Failure; }
 
-    for (auto& elif : statement->elifs) {
+    for (ast::ElifClause& elif : statement->elifs) {
         visit(elif.condition);
 
         if (!elif.condition->semanticType) {
             logError(statement, "Could not deduce type of condition {}", elif.condition->toString());
             result = Result::Failure;
         } else {
-            const auto conditionCanBeBool = areTypesCompatible(elif.condition->semanticType,
-                                                               typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+            const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
+                elif.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+
             if (!conditionCanBeBool) {
                 logError(statement,
                          "Condition in elif statement must be a boolean type or implicitly convertible to it, not {}",
@@ -168,8 +171,8 @@ auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
         return Result::Failure;
     } else {
-        const auto conditionCanBeBool = areTypesCompatible(statement->condition->semanticType,
-                                                           typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+        const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
+            statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
 
         if (!conditionCanBeBool) {
             logError(statement, "While loop condition must be a boolean value or implicitly convertible to it, not {}",

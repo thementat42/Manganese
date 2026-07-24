@@ -581,7 +581,7 @@ bool testNestedBlocks() {
 
 static bool miscTests() {
     std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
-    auto x = getParserResults(expression);
+    ast::Block x = getParserResults(expression);
     std::cout << x[0]->toString(0) << "\n";
     return true;
 }

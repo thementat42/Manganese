@@ -32,7 +32,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         std::vector<const SemanticType*> resolvedGenerics;
         resolvedGenerics.reserve(expression->genericTypes.size());
 
-        for (auto* genericAstType : expression->genericTypes) {
+        for (ast::Type* genericAstType : expression->genericTypes) {
             visit(genericAstType);
             const SemanticType* resolved = genericAstType->semanticType;
             if (!resolved) {
@@ -49,7 +49,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
 
     expression->semanticType = targetType;
 
-    for (auto& field : expression->fields) {
+    for (ast::AggregateInstantiationField& field : expression->fields) {
         if (visit(field.value) == Result::Failure) { result = Result::Failure; }
         if (!field.value->semanticType) { result = Result::Failure; }
     }
@@ -59,7 +59,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
     std::unordered_set<std::string_view> initializedFields;
     initializedFields.reserve(expression->fields.size());
 
-    for (const auto& field : expression->fields) {
+    for (const ast::AggregateInstantiationField& field : expression->fields) {
         // e.g., Point { x = 1, x = 2 }
         if (!initializedFields.insert(field.name).second) {
             logError(field.value, "Duplicate initialization for field '{}' in '{}'", field.name, expression->name);
@@ -76,7 +76,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         }
 
         // Check that that field can be instantiated
-        const auto compatibility = areTypesCompatible(expectedFieldType, field.value->semanticType);
+        const typeCompatibilityResult compatibility = areTypesCompatible(expectedFieldType, field.value->semanticType);
         if (!compatibility) {
             logError(field.value, "Cannot initialize field '{}' of type {} with value of type {}", field.name,
                      expectedFieldType->toString(), field.value->semanticType->toString());
@@ -87,7 +87,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
     }
 
     if (initializedFields.size() < targetType->fields.size()) {
-        for (const auto& declaredField : targetType->fields) {
+        for (const AggregateField& declaredField : targetType->fields) {
             if (!initializedFields.contains(declaredField.name)) {
                 logError(expression, "Missing field '{}' in instantiation of '{}'", declaredField.name,
                          expression->name);
@@ -104,7 +104,7 @@ auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
     std::vector<const SemanticType*> elementTypes;
     elementTypes.reserve(expression->elements.size());
 
-    for (auto& element : expression->elements) {
+    for (ast::Expression* element : expression->elements) {
         if (visit(element) == Result::Failure) { result = Result::Failure; }
         if (!element->semanticType) {
             result = Result::Failure;
@@ -132,7 +132,7 @@ auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
 
     // TODO: Check that the LHS can actually be assigned to
 
-    const auto isAssignmentValid
+    const typeCompatibilityResult isAssignmentValid
         = areTypesCompatible(expression->assignee->semanticType, expression->value->semanticType);
     if (!isAssignmentValid) {
         logError(expression, "Cannot assign a value of type {} to a value of type {}",
@@ -159,8 +159,8 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         return Result::Failure;
     }
 
-    const auto* lhsType = expression->left->semanticType;
-    const auto* rhsType = expression->right->semanticType;
+    const SemanticType* lhsType = expression->left->semanticType;
+    const SemanticType* rhsType = expression->right->semanticType;
     const lexer::TokenType op = expression->op;
 
     if (isLogicalOp(op)) {

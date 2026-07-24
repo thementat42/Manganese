@@ -50,7 +50,7 @@ auto analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* r
 
 Result analyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
     Result programIsSemanticallyValid = Result::Success;
-    for (auto& stmt : parsedFile.program) {
+    for (ast::Statement* stmt : parsedFile.program) {
         if (this->visit(stmt) == Result::Failure) { programIsSemanticallyValid = Result::Failure; }
     }
     return programIsSemanticallyValid;
@@ -104,8 +104,8 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
     using Cat = PrimitiveInfo::Category;
     if (from->primitiveType == to->primitiveType) { return {.result = Compatible_t::Valid}; }
 
-    auto src = getPrimitiveInfo(from->primitiveType);
-    auto dest = getPrimitiveInfo(to->primitiveType);
+    PrimitiveInfo src = getPrimitiveInfo(from->primitiveType);
+    PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType);
     const bool is_conditional_context = context.ifStatementDepth || context.forLoopDepth || context.whileLoopDepth;
 
     if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
@@ -191,7 +191,8 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                 return {.result = Compatible_t::Error,
                         .message = conversionError + " (cannot convert between arrays of different lengths)."};
             }
-            auto baseCompatible = areTypesCompatible(arrFrom->elementType, arrTo->elementType);
+            typeCompatibilityResult baseCompatible = areTypesCompatible(arrFrom->elementType, arrTo->elementType);
+
             if (!baseCompatible) {
                 return {.result = Compatible_t::Error,
                         .message = conversionError
@@ -204,6 +205,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         case Kind::Function: {
             auto* funcFrom = static_cast<const Function*>(from);
             auto* funcTo = static_cast<const Function*>(to);
+
             if (funcFrom->parameterTypes.size() != funcTo->parameterTypes.size()) {
                 return {.result = Compatible_t::Error,
                         .message = conversionError + " (different number of parameters)."};
@@ -233,6 +235,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         case Kind::Generic: {
             auto* genericFrom = static_cast<const GenericInstance*>(from);
             auto* genericTo = static_cast<const GenericInstance*>(to);
+
             if (genericFrom->baseType != genericTo->baseType) { return {.result = Compatible_t::Error}; }
             if (genericFrom->typeArguments.size() != genericTo->typeArguments.size()) {
                 return {.result = Compatible_t::Error,
@@ -254,6 +257,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         case Kind::Pointer: {
             auto* ptrFrom = static_cast<const Pointer*>(from);
             auto* ptrTo = static_cast<const Pointer*>(to);
+
             // making an immutable pointer (ptr int) mutable (ptr mut int) is not allowed
             // but making a mutable pointer (ptr mut int) mutable (ptr int) is fine
             if (!ptrFrom->isMutable && ptrTo->isMutable) {
