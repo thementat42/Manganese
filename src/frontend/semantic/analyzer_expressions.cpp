@@ -121,7 +121,64 @@ auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
     return result;
 }
 
-// auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t;
+auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
+    if (expression->elements.empty()) {
+        if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
+            expression->semanticType = context.currentVariableDeclarationType;
+            return Result::Success;
+        }
+        logError(expression, "Cannot infer element type for empty array literal without type annotation");
+    }
+
+    auto result = Result::Success;
+    const SemanticType* expectedElementType = nullptr;
+    if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
+        expectedElementType = static_cast<const Array*>(context.currentVariableDeclarationType)->elementType;
+    }
+
+    const SemanticType* synthesizedElementType = nullptr;
+
+    for (ast::Expression* element : expression->elements) {
+        if (visit(element) == Result::Failure) {
+            result = Result::Failure;
+            continue;
+        }
+        if (!element->semanticType) {
+            result = Result::Failure;
+            continue;
+        }
+        // top-down type deduction
+        if (expectedElementType) {
+            const auto canConvertElementType = areTypesCompatible(expectedElementType, element->semanticType);
+            if (!canConvertElementType) {
+                logError(element, "Array element of type '{}' is not compatible with expected array element type '{}'",
+                         element->semanticType->toString(), expectedElementType->toString());
+                result = Result::Failure;
+            } else if (canConvertElementType.result == Compatible_t::Warning) {
+                logWarning(element, "{}", canConvertElementType.message);
+            }
+            continue;
+        }
+        // use the first element to set the type
+        if (!synthesizedElementType) {
+            synthesizedElementType = element->semanticType;
+            continue;
+        }
+        const auto canConvertElementType = areTypesCompatible(synthesizedElementType, element->semanticType);
+        if (!canConvertElementType) {
+            logError(element, "Mismatched element types in array literal: expected '{}', got '{}'",
+                     synthesizedElementType->toString(), element->semanticType->toString());
+            result = Result::Failure;
+        } else if (canConvertElementType.result == Compatible_t::Warning) {
+            logWarning(element, "{}", canConvertElementType.message);
+        }
+    }
+    if (result == Result::Failure) { return Result::Failure; }
+
+    const SemanticType* elementType = expectedElementType ? expectedElementType : synthesizedElementType;
+    expression->semanticType = typeContext.getArray(elementType, expression->elements.size());
+    return Result::Success;
+}
 
 auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     auto result = Result::Success;
