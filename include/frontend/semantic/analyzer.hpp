@@ -90,7 +90,6 @@ class analyzer final : public _analyzer_base_t {
     typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
-    const SemanticType* resolveType(const ast::Type* astType);
     Result analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const;
 
     template <class... Args>
