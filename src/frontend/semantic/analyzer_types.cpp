@@ -125,7 +125,7 @@ auto analyzer::visit(ast::SymbolType* type) -> typevisit_t {
         return Result::Failure;
     }
     type->semanticType = symbol->type;
-    return Result::Failure;
+    return Result::Success;
 }
 
 auto analyzer::visit(ast::TypeofType* type) -> typevisit_t {
