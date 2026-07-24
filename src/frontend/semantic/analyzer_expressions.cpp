@@ -316,7 +316,36 @@ auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     return result;
 }
 
-// auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t;
+auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
+    visit(expression->object);
+    const SemanticType* objectType = expression->object->semanticType;
+    if (!objectType) {
+        logError(expression->object, "Could not deduce type of expression {}", expression->object->toString());
+        return Result::Failure;
+    }
+    // accessing a mamber from a pointer to an aggregate is also done using x.y so auto-dereference if that's the case
+    if (objectType->isPointer()) { objectType = static_cast<const Pointer*>(objectType)->baseType; }
+
+    if (!objectType->isAggregate()) {
+        logError(expression->object,
+                 "Element access can only be performed on an aggregate type (ora  pointer to an aggregate) not '{}'",
+                 objectType->toString());
+        return Result::Failure;
+    }
+
+    auto* aggregateType = static_cast<const Aggregate*>(objectType);
+
+    for (const AggregateField& field : aggregateType->fields) {
+        if (field.name == expression->property) {
+            expression->semanticType = field.type;
+            return Result::Success;
+        }
+    }
+    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(),
+             expression->property);
+
+    return Result::Failure;
+}
 
 auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     using held_t = mnstl::number_t::held_type;
