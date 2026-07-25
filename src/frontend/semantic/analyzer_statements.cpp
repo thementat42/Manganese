@@ -38,10 +38,14 @@ auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { retur
 auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = Result::Success;
     ContextGuard guard(context.forLoopDepth, static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1));
+    bool blockNeedsToEnterScope = true;
 
     if (statement->initializationStep) {
-        // there is an initialization step, check it
-        if (visit(statement->initializationStep) == Result::Failure) { result = Result::Failure; }
+        // We want the variable to be declared inside the scope of the for loop
+        // since we enter a scope here, we need to the body visitor know it's already in the appropriate scope
+        blockNeedsToEnterScope = false;
+        symbolTable.enterScope();
+        if (visit(statement->initializationStep) == Result::Failure) { result = Result::Failure;}
     }
     if (statement->stopCondition) {
         // there is a stop condition, check it
@@ -68,7 +72,7 @@ auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
         // there is a post expression, check it
         if (visit(statement->postExpression) == Result::Failure) { result = Result::Failure; }
     }
-    if (visit(statement->body) == Result::Failure) { result = Result::Failure; }
+    if (visit(statement->body, blockNeedsToEnterScope) == Result::Failure) { result = Result::Failure; }
     return result;
 }
 

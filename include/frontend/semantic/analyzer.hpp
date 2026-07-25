@@ -16,7 +16,6 @@
 #include <string>
 #include <utility>
 
-
 namespace Manganese {
 namespace semantic {
 
@@ -122,9 +121,9 @@ class analyzer final : public _analyzer_base_t {
         return Result::Failure;
     }
 
-    Result visit(ast::Block& block) {
+    Result visit(ast::Block& block, bool enterNewScope = true) {
         Result result = Result::Success;
-        symbolTable.enterScope();
+        if (enterNewScope) { symbolTable.enterScope(); }
         for (ast::Statement* statement : block) {
             auto stmtResult = visit(statement);
             if (stmtResult == Result::Failure) { result = Result::Failure; }
