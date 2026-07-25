@@ -84,7 +84,7 @@ struct EnumDeclarationStatement final : public Statement {
     std::vector<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
-    EnumDeclarationStatement(std::string&& _name, Type* _baseType, std::vector<EnumValue> _values) noexcept :
+    EnumDeclarationStatement(std::string&& _name, Type* _baseType, std::vector<EnumValue>&& _values) noexcept :
         Statement(StatementKind::EnumDeclarationStatement),
         name(_name),
         baseType(_baseType),

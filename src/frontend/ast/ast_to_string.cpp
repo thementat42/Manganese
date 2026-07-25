@@ -48,12 +48,12 @@ std::string commaSeparatedList(const std::vector<T>& values) {
     return result;
 }
 
-std::string genericsToString(const std::vector<Type*> params, size_t indent = 0) {
+std::string genericsToString(const std::vector<Type*>& params, size_t indent = 0) {
     if (params.empty()) { return ""; }
     return std::format("@[{}]", commaSeparatedList(params, indent));
 }
 
-std::string genericsToString(const std::vector<std::string> params) {
+std::string genericsToString(const std::vector<std::string>& params) {
     if (params.empty()) { return ""; }
     return std::format("@[{}]", commaSeparatedList(params));
 }
