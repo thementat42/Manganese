@@ -110,7 +110,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
 
     if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
 
-    auto yield_warning = [this](std::string msg) -> typeCompatibilityResult {
+    auto yield_warning = [this](std::string&& msg) -> typeCompatibilityResult {
         if (context.typeCastDepth) { return {.result = Compatible_t::Valid}; }
         return {.result = Compatible_t::Warning, .message = std::move(msg)};
     };
@@ -132,7 +132,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
                 .message = std::format("Cannot convert non-char type to '{}'", string_str)};
     }
 
-    // Bool and char to nunmeric
+    // Bool and char to numeric
     if (src.category == Cat::Bool || dest.category == Cat::Bool) {
         // Non-conditional conversions involving bool warrant a warning
         return yield_warning(
