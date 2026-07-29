@@ -185,8 +185,8 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
             return {.result = Compatible_t::Error,
                     .message = conversionError + " (aggregates cannot be converted to other types)."};
         case Kind::Array: {
-            auto* arrFrom = static_cast<const Array*>(from);
-            auto* arrTo = static_cast<const Array*>(to);
+            const auto* arrFrom = static_cast<const Array*>(from);
+            const auto* arrTo = static_cast<const Array*>(to);
             if (arrFrom->length != arrTo->length) {
                 return {.result = Compatible_t::Error,
                         .message = conversionError + " (cannot convert between arrays of different lengths)."};
@@ -203,8 +203,8 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         } break;
 
         case Kind::Function: {
-            auto* funcFrom = static_cast<const Function*>(from);
-            auto* funcTo = static_cast<const Function*>(to);
+            const auto* funcFrom = static_cast<const Function*>(from);
+            const auto* funcTo = static_cast<const Function*>(to);
 
             if (funcFrom->parameterTypes.size() != funcTo->parameterTypes.size()) {
                 return {.result = Compatible_t::Error,
@@ -233,8 +233,8 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         } break;
 
         case Kind::Generic: {
-            auto* genericFrom = static_cast<const GenericInstance*>(from);
-            auto* genericTo = static_cast<const GenericInstance*>(to);
+            const auto* genericFrom = static_cast<const GenericInstance*>(from);
+            const auto* genericTo = static_cast<const GenericInstance*>(to);
 
             if (genericFrom->baseType != genericTo->baseType) { return {.result = Compatible_t::Error}; }
             if (genericFrom->typeArguments.size() != genericTo->typeArguments.size()) {
@@ -255,8 +255,8 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         };
 
         case Kind::Pointer: {
-            auto* ptrFrom = static_cast<const Pointer*>(from);
-            auto* ptrTo = static_cast<const Pointer*>(to);
+            const auto* ptrFrom = static_cast<const Pointer*>(from);
+            const auto* ptrTo = static_cast<const Pointer*>(to);
 
             // making an immutable pointer (ptr int) mutable (ptr mut int) is not allowed
             // but making a mutable pointer (ptr mut int) mutable (ptr int) is fine

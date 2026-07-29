@@ -18,9 +18,9 @@ class Token {
 
    public:
     Token() noexcept = default;
-    Token(const TokenType type, const std::string& lexeme, const size_t line, const size_t column,
+    Token(const TokenType type, std::string&& lexeme, const size_t line, const size_t column,
           bool isInvalid = false) :
-        _isInvalid(isInvalid), _type(type), _lexeme(lexeme), _line(line), _column(column) {
+        _isInvalid(isInvalid), _type(type), _lexeme(std::move(lexeme)), _line(line), _column(column) {
         // Special lexeme override cases
         if (_type == TokenType::Int32) {
             _lexeme = "int32";

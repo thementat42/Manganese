@@ -234,7 +234,7 @@ class number_t {
         });
 
         if (is_float() && trim_trailing_decimals) {
-            size_t dotPos = result.find('.');
+            const size_t dotPos = result.find('.');
             if (dotPos != std::string::npos) [[likely]] {
                 while (!result.empty() && result.back() == '0') { result.pop_back(); }
 

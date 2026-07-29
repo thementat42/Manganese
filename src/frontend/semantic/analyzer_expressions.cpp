@@ -334,7 +334,7 @@ auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
         return Result::Failure;
     }
 
-    auto* aggregateType = static_cast<const Aggregate*>(objectType);
+    const auto* aggregateType = static_cast<const Aggregate*>(objectType);
 
     for (const AggregateField& field : aggregateType->fields) {
         if (field.name == expression->property) {

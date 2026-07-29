@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "frontend/ast/ast_base.hpp"
 
 namespace Manganese {
 namespace parser {
@@ -315,7 +316,7 @@ ast::Statement* Parser::parseIfStatement() {
     DISCARD(consumeToken());
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
-    auto condition = parseExpression(Precedence::Default);
+    ast::Expression* condition = parseExpression(Precedence::Default);
     this->isParsingBlockPrecursor = false;
     expectToken(TokenType::RightParen, "Expected ')' to end if condition");
     ast::Block body = parseBlock("if body");
@@ -326,7 +327,7 @@ ast::Statement* Parser::parseIfStatement() {
 
         this->isParsingBlockPrecursor = true;
         expectToken(TokenType::LeftParen, "Expected '(' to introduce elif condition");
-        auto elifCondition = parseExpression(Precedence::Default);
+        ast::Expression* elifCondition = parseExpression(Precedence::Default);
         this->isParsingBlockPrecursor = false;
         expectToken(TokenType::RightParen, "Expected ')' to end elif condition");
 
@@ -490,22 +491,22 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
     size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
     switch (peekTokenType()) {
         case TokenType::Alias: {
-            auto tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement());
+            auto* tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement());
             tempAlias->visibility = visibility;
             return tempAlias;
         }
         case TokenType::Aggregate: {
-            auto tempAggregate = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
+            auto* tempAggregate = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
             tempAggregate->visibility = visibility;
             return tempAggregate;
         }
         case TokenType::Enum: {
-            auto tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement());
+            auto* tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement());
             tempEnum->visibility = visibility;
             return tempEnum;
         }
         case TokenType::Func: {
-            auto tempFunction = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement());
+            auto* tempFunction = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement());
             tempFunction->visibility = visibility;
             return tempFunction;
         }
