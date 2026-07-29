@@ -31,8 +31,8 @@ enum class Precedence : char {
 };
 
 struct Operator {
-    const Precedence leftBindingPower, rightBindingPower;
-    const bool isValid = false;
+    Precedence leftBindingPower, rightBindingPower;
+    bool isValid = false;
 
     constexpr static Operator prefix(Precedence _rightBindingPower = Precedence::Default) noexcept {
         return Operator{
