@@ -9,6 +9,9 @@
 #include <utility>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+
+
 namespace Manganese {
 namespace parser {
 
@@ -336,6 +339,15 @@ ast::Statement* Parser::parseIfStatement() {
     if (peekTokenType() == TokenType::Else) {
         DISCARD(consumeToken());
         elseBody = parseBlock("else body");
+        if (elseBody.empty()) {
+            // If the body was empty, this means there's a dangling else
+            // We still want this printed out, but the toString method determines the presence of an else block
+            // by checking the the body is empty
+            // in this edge case, there is a body but it's empty, which makes the printing logic think there isn't one
+            // to get around this, add a dummy statement (doesn't print anything) so the empty else block is still
+            // printed
+            elseBody.push_back(arena.emplace<ast::EmptyStatement>());
+        }
     }
     return arena.emplace<ast::IfStatement>(condition, std::move(body), std::move(elifs), std::move(elseBody));
 }
@@ -433,6 +445,7 @@ ast::Statement* Parser::parseSwitchStatement() {
 
     std::vector<ast::CaseClause> cases;
     ast::Block defaultBody;
+    bool hasDefault = false;
 
     while (peekTokenType() == TokenType::Case) {
         DISCARD(consumeToken());
@@ -443,15 +456,25 @@ ast::Statement* Parser::parseSwitchStatement() {
                && peekTokenType() != TokenType::RightBrace) {
             caseBody.push_back(parseStatement());
         }
-        cases.push_back({.literalValue = caseValue, .body = std::move(caseBody)});
+        cases.push_back(ast::CaseClause{.literalValue = caseValue, .body = std::move(caseBody)});
     }
     if (peekTokenType() == TokenType::Default) {
+        hasDefault = true;
         DISCARD(consumeToken());
         expectToken(TokenType::Colon, "Expected ':' after default case");
         while (peekTokenType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
     }
     if (cases.empty() && defaultBody.empty()) {
         logging::logWarning(startLine, startColumn, "Switch statement has no cases or default body");
+    }
+    if (hasDefault && defaultBody.empty()) {
+        // This means there's a dangling default (i.e. nothing should happen in the default case)
+        // The printing logic determines the presence of a default statement by checking if the body is empty
+        // However in this edge case, there is a default statement with no body which makes the printing logic think
+        // there's no default statement (leading to a confusing printout)
+        // To get around this, push a dummy statement (doesn't print anything) so the printing logic recognizes
+        // there's a body but still prints nothing after it
+        defaultBody.push_back(arena.emplace<ast::EmptyStatement>());
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
