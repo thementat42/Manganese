@@ -87,10 +87,6 @@ target_compile_definitions(manganese PRIVATE
     MNSTL_USE_COMPILER_EXTENDED_TYPES=0
 )
 
-if(CONTINUOUS_MEMORY_TRACKING AND NOT MEMORY_TRACKING)
-    message(WARNING "CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING")
-endif()
-
 # Flags
 function(enable_strict_warnings target)
     if(MSVC)
