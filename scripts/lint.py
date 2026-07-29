@@ -34,7 +34,7 @@ CHECKS = ",".join([
     "-readability-magic-numbers",
     "-readability-identifier-length",
     "-modernize-use-trailing-return-type",
-    "-misc-non-private-member-variables-in-classes"
+    "-misc-non-private-member-variables-in-classes",
     "-misc-confusable-identifiers",
     "-misc-non-private-member-variables-in-classes",
     "-modernize-use-nodiscard",
@@ -89,6 +89,7 @@ def main():
                         str(file),
                         f"-p={BUILD_DIR}",
                         f"-checks={CHECKS}",
+                        "-header-filter=^$"  # don't report diagnostics from included headers
                     ],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
