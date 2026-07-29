@@ -104,7 +104,7 @@ Result Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     return result;
 }
 
-std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_t col) {
+std::optional<char> getEscapeCharacter(char escapeChar, size_t line, size_t col) {
     switch (escapeChar) {
         case '\\': return '\\';
         case '\'': return '\'';

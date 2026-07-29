@@ -48,37 +48,37 @@ using i128_arithmetic_result_t = std::conditional_t<std::is_signed_v<T>, int128_
 /**
  * helper for bitwise left shift of a 128-bit int
  */
-constexpr int128_t _shl_i128(int128_t, unsigned) noexcept;
+constexpr int128_t _shl_i128(int128_t value, unsigned shift) noexcept;
 
 /**
  * helper for bitwise right shift of a 128-bit int
  */
-constexpr int128_t _shr_i128(int128_t, unsigned) noexcept;
+constexpr int128_t _shr_i128(int128_t value, unsigned shift) noexcept;
 
 /**
  * helper for bitwise left shift of unsigned 128-bit ints
  */
-constexpr uint128_t _shl_u128(uint128_t, unsigned) noexcept;
+constexpr uint128_t _shl_u128(uint128_t value, unsigned shift) noexcept;
 
 /**
  * helper for bitwise right shift of unsigned 128-bit ints
  */
-constexpr uint128_t _shr_u128(uint128_t, unsigned) noexcept;
+constexpr uint128_t _shr_u128(uint128_t value, unsigned shift) noexcept;
 
 /**
  * helper for multiplications of two unsigned 128-bit ints
  */
-constexpr uint128_t _mul_u128(uint128_t, uint128_t) noexcept;
+constexpr uint128_t _mul_u128(uint128_t a, uint128_t bar) noexcept;
 
 /**
  * Multiplication of two 64-bit ints to make a 128-bit int
  */
-constexpr uint128_t _mul_64(std::uint64_t, std::uint64_t) noexcept;
+constexpr uint128_t _mul_64(std::uint64_t a, std::uint64_t b) noexcept;
 
 /**
  * Absolute values for 128-bit ints
  */
-constexpr uint128_t _abs_i128(int128_t) noexcept;
+constexpr uint128_t _abs_i128(int128_t i) noexcept;
 
 }  // namespace i128_detail
 

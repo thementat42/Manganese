@@ -53,7 +53,7 @@ enum class PrimitiveType_t : uint8_t {
     character,
     str,
     boolean,
-    not_primitive = 0xFF,
+    not_primitive,
 };
 
 enum class Visibility : uint8_t {

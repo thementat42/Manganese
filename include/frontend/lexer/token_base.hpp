@@ -6,8 +6,7 @@
 #include <mnstl/enum_matches.hxx>
 #include <string>
 
-namespace Manganese {
-namespace lexer {
+namespace Manganese::lexer {
 
 class Token {
    private:
@@ -18,8 +17,7 @@ class Token {
 
    public:
     Token() noexcept = default;
-    Token(const TokenType type, std::string&& lexeme, const size_t line, const size_t column,
-          bool isInvalid = false) :
+    Token(const TokenType type, std::string&& lexeme, const size_t line, const size_t column, bool isInvalid = false) :
         _isInvalid(isInvalid), _type(type), _lexeme(std::move(lexeme)), _line(line), _column(column) {
         // Special lexeme override cases
         if (_type == TokenType::Int32) {
@@ -89,6 +87,5 @@ class Token {
 std::string tokenTypeToString(TokenType type);
 TokenType keywordLookup(const std::string_view& s) noexcept;
 
-}  // namespace lexer
-}  // namespace Manganese
+}  // namespace Manganese::lexer
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_BASE_HPP

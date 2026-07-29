@@ -13,8 +13,7 @@
 #include <string>
 #include <utils/result.hpp>
 
-namespace Manganese {
-namespace lexer {
+namespace Manganese::lexer {
 
 enum class Mode : uint8_t {
     String = 's',  // Source code passed in as a string
@@ -94,13 +93,12 @@ constexpr char tolower(char c) noexcept {
     return c;
 }
 
-std::optional<char> getEscapeCharacter(const char escapeChar, size_t line, size_t col);
+std::optional<char> getEscapeCharacter(char escapeChar, size_t line, size_t col);
 std::string encodeUTF8String(char32_t wideChar);
 std::optional<char32_t> resolveHexCharacters(const std::string& escDigits);
 std::optional<char32_t> resolveUnicodeCharacters(const std::string& escDigits, size_t line, size_t col,
                                                  bool isLongUnicode = false);
 
-}  // namespace lexer
-}  // namespace Manganese
+}  // namespace Manganese::lexer
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP

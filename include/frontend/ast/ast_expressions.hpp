@@ -7,9 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace Manganese {
-
-namespace ast {
+namespace Manganese::ast {
 
 enum class ExpressionKind : uint8_t {
 #define STMT(name, str)
@@ -293,8 +291,6 @@ struct TypeCastExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
-}  // namespace ast
-
-}  // namespace Manganese
+}  // namespace Manganese::ast
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP

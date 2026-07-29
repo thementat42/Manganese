@@ -7,8 +7,7 @@
 #include <memory>
 #include <string>
 
-namespace Manganese {
-namespace io {
+namespace Manganese::io {
 /**
  * @brief A reader that extracts characters from a file, stored in memory, with built-in buffering behaviour
  */
@@ -28,7 +27,7 @@ class FileReader : public Reader {
     FileReader() = default;
     explicit FileReader(const std::string& filename, size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
     ~FileReader() noexcept override {
-        if (_filePtr) { std::fclose(_filePtr); }
+        if (_filePtr != nullptr) { std::fclose(_filePtr); }
     }
 
     char peekChar(size_t offset = 0) noexcept override;
@@ -41,8 +40,7 @@ class FileReader : public Reader {
     constexpr size_t getLine() const noexcept override { return _line; }
     constexpr size_t getColumn() const noexcept override { return _column; }
 
-    constexpr bool done() const noexcept override { return _position >= _bufferSize && std::feof(_filePtr); }
+    constexpr bool done() const noexcept override { return (_position >= _bufferSize) && std::feof(_filePtr); }
 };
-}  // namespace io
-}  // namespace Manganese
+}  // namespace Manganese::io
 #endif  // MANGANESE_INCLUDE_IO_FILEREADER_HPP

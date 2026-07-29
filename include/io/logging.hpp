@@ -4,8 +4,9 @@
 #include <core.hpp>
 #include <format>  // Include format here so any files that use logging have it included
 #include <iostream>
-#include <utility>
 #include <string>
+#include <utility>
+
 
 // ANSI color codes for terminal output
 constexpr inline const char* GREEN = "\033[32m";
@@ -17,8 +18,7 @@ constexpr inline const char* CYAN = "\033[36m";
 constexpr inline const char* CRITICAL = "\033[91;1m";
 constexpr inline const char* RESET = "\033[0m";
 
-namespace Manganese {
-namespace logging {
+namespace Manganese::logging {
 
 enum class LogLevel : uint8_t {
     Info,
@@ -77,7 +77,6 @@ FORCE_INLINE void logCritical(size_t line, size_t col, std::format_string<Args..
     log(LogLevel::Critical, line, col, fmt, std::forward<Args>(args)...);
 }
 
-}  // namespace logging
-}  // namespace Manganese
+}  // namespace Manganese::logging
 
 #endif  // MANGANESE_INCLUDE_IO_LOGGING_HPP

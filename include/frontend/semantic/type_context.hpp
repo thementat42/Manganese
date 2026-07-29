@@ -11,8 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace Manganese {
-namespace semantic {
+namespace Manganese::semantic {
 
 class TypeContext;
 
@@ -196,7 +195,6 @@ class TypeContext {
                                            std::vector<const SemanticType*>&& typeArguments);
 };
 
-}  // namespace semantic
-}  // namespace Manganese
+}  // namespace Manganese::semantic
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_SEMANTIC_TYPE_CONTEXT_HPP

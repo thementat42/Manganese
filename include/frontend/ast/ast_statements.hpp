@@ -8,9 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace Manganese {
-
-namespace ast {
+namespace Manganese::ast {
 
 enum class StatementKind : uint8_t {
 #define STMT(name, str) name,
@@ -240,8 +238,6 @@ struct WhileLoopStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE;
 };
 
-}  // namespace ast
-
-}  // namespace Manganese
+}  // namespace Manganese::ast
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP

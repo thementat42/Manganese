@@ -5,9 +5,7 @@
 
 #include <core.hpp>
 
-namespace Manganese {
-
-namespace lexer {
+namespace Manganese::lexer {
 
 enum class TokenType : uint8_t {
 #define TOKEN(name, text)    name,
@@ -21,8 +19,6 @@ enum class TokenType : uint8_t {
 #undef OPERATOR
 };
 
-}  // namespace lexer
-
-}  // namespace Manganese
+}  // namespace Manganese::lexer
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_TYPE_HPP

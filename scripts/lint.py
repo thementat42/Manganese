@@ -35,7 +35,10 @@ CHECKS = ",".join([
     "-readability-identifier-length",
     "-modernize-use-trailing-return-type",
     "-misc-non-private-member-variables-in-classes"
-    "-misc-confusable-identifiers"
+    "-misc-confusable-identifiers",
+    "-misc-non-private-member-variables-in-classes",
+    "-modernize-use-nodiscard",
+    "-readability-redundant-inline-specifier"
 ])
 
 

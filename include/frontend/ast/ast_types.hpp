@@ -7,9 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace Manganese {
-
-namespace ast {
+namespace Manganese::ast {
 
 enum class TypeKind : uint8_t {
 #define STMT(name, str)
@@ -112,8 +110,6 @@ struct TypeofType final : public Type {
     MN_AST_STANDARD_INTERFACE;
 };
 
-}  // namespace ast
-
-}  // namespace Manganese
+}  // namespace Manganese::ast
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP

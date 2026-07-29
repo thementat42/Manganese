@@ -1,11 +1,12 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
 
-#include <core.hpp>
+#include <stdint.h>
+
 #include <frontend/lexer/token.hpp>
 
-namespace Manganese {
-namespace parser {
+
+namespace Manganese::parser {
 
 /**
  * @brief Enumeration of operator precedence levels (bigger = higher precedence)
@@ -52,7 +53,6 @@ struct Operator {
         return Operator{.leftBindingPower = bindingPower, .rightBindingPower = bindingPower, .isValid = true};
     }
 };
-}  // namespace parser
-}  // namespace Manganese
+}  // namespace Manganese::parser
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP

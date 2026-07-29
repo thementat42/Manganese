@@ -16,8 +16,7 @@
 #include <string>
 #include <utility>
 
-namespace Manganese {
-namespace semantic {
+namespace Manganese::semantic {
 
 /**
  * Makes updating context flags easier
@@ -171,7 +170,6 @@ constexpr bool isBitwiseOp(lexer::TokenType t) noexcept {
     return mnstl::enum_matches<lexer::TokenType>(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
 }
 
-}  // namespace semantic
-}  // namespace Manganese
+}  // namespace Manganese::semantic
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_SEMANTIC_ANALYZER_HPP

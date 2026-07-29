@@ -4,8 +4,7 @@
 #include <core.hpp>
 #include <cstddef>
 
-namespace Manganese {
-namespace io {
+namespace Manganese::io {
 
 /**
  * @brief An abstract base class for reading characters from a source
@@ -31,7 +30,6 @@ class Reader {
     constexpr virtual size_t getColumn() const noexcept = 0;
     constexpr virtual bool done() const noexcept = 0;
 };
-}  // namespace io
-}  // namespace Manganese
+}  // namespace Manganese::io
 
 #endif  // MANGANESE_INCLUDE_IO_READER_HPP

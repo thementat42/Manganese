@@ -16,8 +16,7 @@
 #include <utils/result.hpp>
 #include <vector>
 
-namespace Manganese {
-namespace semantic {
+namespace Manganese::semantic {
 
 enum class SymbolKind : uint8_t {
     Variable,
@@ -153,7 +152,6 @@ class SymbolTable {
     }
 };
 
-}  // namespace semantic
-}  // namespace Manganese
+}  // namespace Manganese::semantic
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SYMBOL_TABLE_HPP

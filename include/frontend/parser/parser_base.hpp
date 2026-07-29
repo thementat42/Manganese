@@ -12,8 +12,7 @@
 #include <utility>
 #include <vector>
 
-namespace Manganese {
-namespace parser {
+namespace Manganese::parser {
 using lexer::TokenType, lexer::Token;
 
 struct Import {
@@ -177,7 +176,6 @@ class Parser {
     static void initializeTypeLookups() noexcept;
 };
 
-}  // namespace parser
-}  // namespace Manganese
+}  // namespace Manganese::parser
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP

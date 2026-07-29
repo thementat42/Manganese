@@ -7,9 +7,7 @@
 #include <frontend/ast/ast_statements.hpp>
 #include <frontend/ast/ast_types.hpp>
 
-namespace Manganese {
-
-namespace ast {
+namespace Manganese::ast {
 
 template <class ExpressionResult, class StatementResult, class TypeResult>
 class Visitor {
@@ -35,8 +33,6 @@ class Visitor {
     typevisit_t visit(ast::Type*);
 };
 
-}  // namespace ast
-
-}  // namespace Manganese
+}  // namespace Manganese::ast
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_VISITOR_VISITOR_BASE_HPP

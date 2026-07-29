@@ -4,12 +4,8 @@
 #include <io/reader.hpp>
 #include <string>
 
-namespace Manganese {
-namespace io {
+namespace Manganese::io {
 
-/**
- * @brief A simple reader that extracts characters from a string, stored entirely in memory
- */
 class StringReader : public Reader {
    private:
     size_t _position, _line, _column;
@@ -18,7 +14,7 @@ class StringReader : public Reader {
    public:
     StringReader() = default;
     explicit StringReader(const std::string& source) : _position(0), _line(1), _column(1), _source(source) {}
-    ~StringReader() noexcept = default;
+    ~StringReader() noexcept override = default;
 
     void setPosition(size_t newPosition) noexcept override {
         while (_position < newPosition && !done()) { DISCARD(consumeChar()); }
@@ -40,7 +36,6 @@ class StringReader : public Reader {
         return c;
     }
 };
-}  // namespace io
-}  // namespace Manganese
+}  // namespace Manganese::io
 
 #endif  // MANGANESE_INCLUDE_IO_STRING_READER_HPP
