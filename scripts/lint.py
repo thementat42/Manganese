@@ -39,7 +39,6 @@ CHECKS = ",".join([
     "-readability-magic-numbers",
     "-readability-identifier-length",
     "-modernize-use-trailing-return-type",
-    "-misc-non-private-member-variables-in-classes",
     "-misc-confusable-identifiers",
     "-misc-non-private-member-variables-in-classes",
     "-modernize-use-nodiscard",
@@ -77,6 +76,8 @@ def run_clang_tidy(clang_tidy, file: Path, report):
 
     report.write(result.stdout)
     report.write("\n\n")
+    if result.returncode != 0:
+            print(f"clang-tidy returned {result.returncode} for {file}")
 
 
 def main():
