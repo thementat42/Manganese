@@ -116,9 +116,9 @@ static bool testArithmeticOperatorsAndCasting() {
 
 static bool testVariableDeclaration() {
     const std::string expression = "let mut foo = 45.5a;"
-                             "let mut bar = foo * 10;"
-                             "let baz : public uint32 = foo + 10 * 2 * bar + foo % 7 + foo*2;"
-                             "let boolean = true;";
+                                   "let mut bar = foo * 10;"
+                                   "let baz : public uint32 = foo + 10 * 2 * bar + foo % 7 + foo*2;"
+                                   "let boolean = true;";
 
     const std::array<std::string, 4> expected
         = {"(let mut foo: private auto = 45.5);", "(let mut bar: private auto = (foo * 10));",
@@ -130,22 +130,22 @@ static bool testVariableDeclaration() {
 
 static bool testAssignmentExpressions() {
     const std::string expression = "a = 5;\n"
-                             "b += 3;\n"
-                             "c -= 2 * b;\n"
-                             "d = -(c + 3);\n"
-                             "e *= f + 1;\n"
-                             "g /= h - -2;\n"
-                             "i %= 4;\n"
-                             "k //= 3;"
-                             "l = (3 + 4) * 2 - (1 + 1) * 5;"
-                             "a &= b;\n"
-                             "c |= d;\n"
-                             "e ^= f;\n"
-                             "g <<= 2;\n"
-                             "h >>= 3;\n"
-                             "i &= j | k;\n"
-                             "m |= n & p;\n"
-                             "x ^= ~y;\n";
+                                   "b += 3;\n"
+                                   "c -= 2 * b;\n"
+                                   "d = -(c + 3);\n"
+                                   "e *= f + 1;\n"
+                                   "g /= h - -2;\n"
+                                   "i %= 4;\n"
+                                   "k //= 3;"
+                                   "l = (3 + 4) * 2 - (1 + 1) * 5;"
+                                   "a &= b;\n"
+                                   "c |= d;\n"
+                                   "e ^= f;\n"
+                                   "g <<= 2;\n"
+                                   "h >>= 3;\n"
+                                   "i &= j | k;\n"
+                                   "m |= n & p;\n"
+                                   "x ^= ~y;\n";
 
     const std::array<std::string, 17> expected
         = {"(a = 5);",          "(b += 3);",       "(c -= (2 * b));",
@@ -160,12 +160,12 @@ static bool testAssignmentExpressions() {
 
 static bool testPrefixOperators() {
     const std::string expression = "++x;\n"
-                             "--y;\n"
-                             "-z;\n"
-                             "+a;\n"
-                             "!b;\n"
-                             "-(d + 3);"
-                             "++c * 2;\n";
+                                   "--y;\n"
+                                   "-z;\n"
+                                   "+a;\n"
+                                   "!b;\n"
+                                   "-(d + 3);"
+                                   "++c * 2;\n";
 
     const std::array<std::string, 7> expected
         = {"(++x);", "(--y);", "(-z);", "(+a);", "(!b);", "(-(d + 3));", "((++c) * 2);"};
@@ -175,23 +175,23 @@ static bool testPrefixOperators() {
 
 static bool testParenthesizedExpressions() {
     const std::string expression = "(2 + 3) * 4;\n"
-                             "2 * (3 + 4);\n"
-                             "((5 + 2) * (8 - 3)) / 2;\n"
-                             "1 + (2 * (3 + 1));\n"
-                             "((2 + 3) * 4) - (6 / (1 + 1));";
+                                   "2 * (3 + 4);\n"
+                                   "((5 + 2) * (8 - 3)) / 2;\n"
+                                   "1 + (2 * (3 + 1));\n"
+                                   "((2 + 3) * 4) - (6 / (1 + 1));";
 
     const std::array<std::string, 5> expected = {"((2 + 3) * 4);", "(2 * (3 + 4));", "(((5 + 2) * (8 - 3)) / 2);",
-                                           "(1 + (2 * (3 + 1)));", "(((2 + 3) * 4) - (6 / (1 + 1)));"};
+                                                 "(1 + (2 * (3 + 1)));", "(((2 + 3) * 4) - (6 / (1 + 1)));"};
 
     return validateStatements(getParserResults(expression), expected, "Parenthesized Expressions");
 }
 
 static bool testPointerOperators() {
     const std::string expression = "&variable;\n"
-                             "*pointer;\n"
-                             "**doublePointer;\n"
-                             "&(x + y);\n"
-                             "*p + 5;\n";
+                                   "*pointer;\n"
+                                   "**doublePointer;\n"
+                                   "&(x + y);\n"
+                                   "*p + 5;\n";
 
     const std::array<std::string, 5> expected
         = {"(&variable);", "(*pointer);", "(*(*doublePointer));", "(&(x + y));", "((*p) + 5);"};
@@ -201,10 +201,10 @@ static bool testPointerOperators() {
 
 static bool testTypedVariableDeclaration() {
     const std::string expression = "let mut x: int32 = 42;\n"
-                             "let y: public float64 = 3.14159;\n"
-                             "let mut z: char = 'A';\n"
-                             "let mut numbers: int32[3*2];\n"
-                             "let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
+                                   "let y: public float64 = 3.14159;\n"
+                                   "let mut z: char = 'A';\n"
+                                   "let mut numbers: int32[3*2];\n"
+                                   "let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
     const std::array<std::string, 5> expected = {
         "(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);", "(let mut z: private char = 'A');",
@@ -215,11 +215,11 @@ static bool testTypedVariableDeclaration() {
 
 static bool testPostfixOperators() {
     const std::string expression = "x++;\n"
-                             "y--;\n"
-                             "(a + b)++;\n"
-                             "arr[i]--;\n"
-                             "++x--;\n"
-                             "x++ + y--;\n";
+                                   "y--;\n"
+                                   "(a + b)++;\n"
+                                   "arr[i]--;\n"
+                                   "++x--;\n"
+                                   "x++ + y--;\n";
 
     const std::array<std::string, 6> expected
         = {"(x++);", "(y--);", "((a + b)++);", "(arr[i]--);", "(++(x--));", "((x++) + (y--));"};
@@ -229,48 +229,48 @@ static bool testPostfixOperators() {
 
 static bool testBitwiseOperators() {
     const std::string expression = "a & b;\n"
-                             "c | d;\n"
-                             "e ^ f;\n"
-                             "~g;\n"
-                             "h << 2;\n"
-                             "i >> 3;\n"
-                             "(a & b) | (c ^ d);\n"
-                             "a & (b | c);\n"
-                             "~(a & b) | c;\n"
-                             "a & b & c | d ^ e;\n";
+                                   "c | d;\n"
+                                   "e ^ f;\n"
+                                   "~g;\n"
+                                   "h << 2;\n"
+                                   "i >> 3;\n"
+                                   "(a & b) | (c ^ d);\n"
+                                   "a & (b | c);\n"
+                                   "~(a & b) | c;\n"
+                                   "a & b & c | d ^ e;\n";
 
     const std::array<std::string, 10> expected = {"(a & b);",
-                                            "(c | d);",
-                                            "(e ^ f);",
-                                            "(~g);",
-                                            "(h << 2);",
-                                            "(i >> 3);",
-                                            "((a & b) | (c ^ d));",
-                                            "(a & (b | c));",
-                                            "((~(a & b)) | c);",
-                                            "(((a & b) & c) | (d ^ e));"};
+                                                  "(c | d);",
+                                                  "(e ^ f);",
+                                                  "(~g);",
+                                                  "(h << 2);",
+                                                  "(i >> 3);",
+                                                  "((a & b) | (c ^ d));",
+                                                  "(a & (b | c));",
+                                                  "((~(a & b)) | c);",
+                                                  "(((a & b) & c) | (d ^ e));"};
 
     return validateStatements(getParserResults(expression), expected, "Bitwise Operators");
 }
 
 static bool testAggregateDeclarationAndInstantiation() {
     const std::string expression = "public aggregate Point {\n"
-                             "    x: uint128;\n"
-                             "    y: int128;\n"
-                             "    some_field: float64;\n"
-                             "}\n"
-                             "aggregate Rectangle {\n"
-                             "    topLeft: Point;\n"
-                             "    bottomRight: Point;\n"
-                             "    color: uint32;\n"
-                             "}\n"
-                             "let mut p1 = Point{x = 10, y = 20};\n"
-                             "let mut p2: Point = Point{x = 30, y = 40};\n"
-                             "let rect = Rectangle{\n"
-                             "    topLeft = Point{x = 0, y = 0},\n"
-                             "    bottomRight = p2,\n"
-                             "    color = 0xFF0000\n"
-                             "};\n";
+                                   "    x: uint128;\n"
+                                   "    y: int128;\n"
+                                   "    some_field: float64;\n"
+                                   "}\n"
+                                   "aggregate Rectangle {\n"
+                                   "    topLeft: Point;\n"
+                                   "    bottomRight: Point;\n"
+                                   "    color: uint32;\n"
+                                   "}\n"
+                                   "let mut p1 = Point{x = 10, y = 20};\n"
+                                   "let mut p2: Point = Point{x = 30, y = 40};\n"
+                                   "let rect = Rectangle{\n"
+                                   "    topLeft = Point{x = 0, y = 0},\n"
+                                   "    bottomRight = p2,\n"
+                                   "    color = 0xFF0000\n"
+                                   "};\n";
 
     const std::array<std::string, 5> expected = {
         R"(public aggregate Point {
@@ -291,18 +291,18 @@ static bool testAggregateDeclarationAndInstantiation() {
 
 static bool testFunctionDeclarationAndCall() {
     const std::string expression = "public func add(a: int32, b: int32) -> int32 {\n"
-                             "    return a + b;\n"
-                             "}\n"
-                             "func greet(name: string) {\n"
-                             "    print(\"Hello, \" + name);\n"
-                             "}\n"
-                             "func calculate(x: float64, y: mut float64) -> float64 {\n"
-                             "    let result = x * y;\n"
-                             "    return result;\n"
-                             "}\n"
-                             "let sum = add(5u32, 3i16);\n"
-                             "greet(\"World\");\n"
-                             "let product = calculate(2.5f64, 3.01);\n";
+                                   "    return a + b;\n"
+                                   "}\n"
+                                   "func greet(name: string) {\n"
+                                   "    print(\"Hello, \" + name);\n"
+                                   "}\n"
+                                   "func calculate(x: float64, y: mut float64) -> float64 {\n"
+                                   "    let result = x * y;\n"
+                                   "    return result;\n"
+                                   "}\n"
+                                   "let sum = add(5u32, 3i16);\n"
+                                   "greet(\"World\");\n"
+                                   "let product = calculate(2.5f64, 3.01);\n";
 
     const std::array<std::string, 6> expected = {
         R"(public func add(a: int32, b: int32) -> int32 {
@@ -324,26 +324,26 @@ static bool testFunctionDeclarationAndCall() {
 
 static bool testLoops() {
     const std::string expression = "let i = 0;"
-                             "do {++i; print(i); } while (i < 5);"
-                             "let j: int32 = 10;"
-                             "while (true) {"
-                             "    if (j == 5) {continue;}"
-                             "    print(j--);"
-                             "    if (j <= 0) { break; }"
-                             "}"
-                             "for(let k = 0; k < 10; ++k) {print(k);}"
-                             "for (;;) {print(3);}"
-                             "for (i = 10;;) {print(3);}"
-                             "for (;i<4;) {print(3);}"
-                             "for (;;++i) {print(3);}";
+                                   "do {++i; print(i); } while (i < 5);"
+                                   "let j: int32 = 10;"
+                                   "while (true) {"
+                                   "    if (j == 5) {continue;}"
+                                   "    print(j--);"
+                                   "    if (j <= 0) { break; }"
+                                   "}"
+                                   "for(let k = 0; k < 10; ++k) {print(k);}"
+                                   "for (;;) {print(3);}"
+                                   "for (i = 10;;) {print(3);}"
+                                   "for (;i<4;) {print(3);}"
+                                   "for (;;++i) {print(3);}";
 
     const std::array<std::string, 9> expected = {"(let i: private auto = 0);",
-                                           R"(do {
+                                                 R"(do {
     (++i);
     print(i);
 } while ((i < 5));)",
-                                           "(let j: private int32 = 10);",
-                                           R"(while (true) {
+                                                 "(let j: private int32 = 10);",
+                                                 R"(while (true) {
     if ((j == 5)) {
         continue;
     }
@@ -352,19 +352,19 @@ static bool testLoops() {
         break;
     }
 })",
-                                           R"(for ((let k: private auto = 0); (k < 10); (++k)) {
+                                                 R"(for ((let k: private auto = 0); (k < 10); (++k)) {
     print(k);
 })",
-                                           R"(for (;;) {
+                                                 R"(for (;;) {
     print(3);
 })",
-                                           R"(for ((i = 10); ;) {
+                                                 R"(for ((i = 10); ;) {
     print(3);
 })",
-                                           R"(for (;(i < 4); ) {
+                                                 R"(for (;(i < 4); ) {
     print(3);
 })",
-                                           R"(for (;;(++i)) {
+                                                 R"(for (;;(++i)) {
     print(3);
 })"};
 
@@ -373,14 +373,14 @@ static bool testLoops() {
 
 static bool testIfElseStatements() {
     const std::string expression = "if (a < b) {\n"
-                             "    let result = a + b;\n"
-                             "    print(result);\n"
-                             "} elif (a > b) {\n"
-                             "    let result = a - b;\n"
-                             "    print(result);\n"
-                             "} else {\n"
-                             "    print(\"Equal\");\n"
-                             "}";
+                                   "    let result = a + b;\n"
+                                   "    print(result);\n"
+                                   "} elif (a > b) {\n"
+                                   "    let result = a - b;\n"
+                                   "    print(result);\n"
+                                   "} else {\n"
+                                   "    print(\"Equal\");\n"
+                                   "}";
 
     std::string expected = R"(if ((a < b)) {
     (let result: private auto = (a + b));
@@ -397,22 +397,22 @@ static bool testIfElseStatements() {
 
 static bool testEnumDeclarationStatement() {
     const std::string expression = "public enum Color: int8 {\n"
-                             "    Red,\n"
-                             "    Green,\n"
-                             "    Blue,\n"
-                             "}\n"
-                             "private enum Status: float64 {\n"
-                             "    Success = 0,\n"
-                             "    Error = 1,\n"
-                             "    Unknown = -1,\n"
-                             "}"
-                             "enum Letters: uint128 {\n"
-                             "    A = 0,\n"
-                             "    B,\n"
-                             "    C,\n"
-                             "    D,\n"
-                             "    C,\n"
-                             "}";
+                                   "    Red,\n"
+                                   "    Green,\n"
+                                   "    Blue,\n"
+                                   "}\n"
+                                   "private enum Status: float64 {\n"
+                                   "    Success = 0,\n"
+                                   "    Error = 1,\n"
+                                   "    Unknown = -1,\n"
+                                   "}"
+                                   "enum Letters: uint128 {\n"
+                                   "    A = 0,\n"
+                                   "    B,\n"
+                                   "    C,\n"
+                                   "    D,\n"
+                                   "    C,\n"
+                                   "}";
 
     const std::array<std::string, 3> expected = {
         R"(public enum Color: int8 {
@@ -437,15 +437,15 @@ static bool testEnumDeclarationStatement() {
 
 static bool testSwitchStatement() {
     const std::string expression = "switch (variable) {"
-                             "case 1:"
-                             "    print(\"One\");"
-                             "    ++i;"
-                             "case 2:"
-                             "    print(\"Two\");"
-                             "    --i;"
-                             "default:"
-                             "    print(\"Default case\");"
-                             "}";
+                                   "case 1:"
+                                   "    print(\"One\");"
+                                   "    ++i;"
+                                   "case 2:"
+                                   "    print(\"Two\");"
+                                   "    --i;"
+                                   "default:"
+                                   "    print(\"Default case\");"
+                                   "}";
     std::string expected = R"(switch (variable) {
     case 1:
         print("One");
@@ -461,35 +461,35 @@ static bool testSwitchStatement() {
 
 static bool testAccessExpressions() {
     const std::string expression = "let mut point = Point{x = 10, y = 20};\n"
-                             "let mut xCoord = point.x;\n"
-                             "let mut yCoord = point.y;\n"
-                             "let mut color = rect.color;"
-                             "let array = [1, 2, 3];\n"
-                             "let firstElement = array[0];\n"
-                             "let foo = lib::module_::function(a, b, c);\n";
+                                   "let mut xCoord = point.x;\n"
+                                   "let mut yCoord = point.y;\n"
+                                   "let mut color = rect.color;"
+                                   "let array = [1, 2, 3];\n"
+                                   "let firstElement = array[0];\n"
+                                   "let foo = lib::module_::function(a, b, c);\n";
 
     const std::array<std::string, 7> expected = {"(let mut point: private auto = Point {x = 10, y = 20});",
-                                           "(let mut xCoord: private auto = point.x);",
-                                           "(let mut yCoord: private auto = point.y);",
-                                           "(let mut color: private auto = rect.color);",
-                                           "(let array: private auto = [1, 2, 3]);",
-                                           "(let firstElement: private auto = array[0]);",
-                                           "(let foo: private auto = lib::module_::function(a, b, c));"};
+                                                 "(let mut xCoord: private auto = point.x);",
+                                                 "(let mut yCoord: private auto = point.y);",
+                                                 "(let mut color: private auto = rect.color);",
+                                                 "(let array: private auto = [1, 2, 3]);",
+                                                 "(let firstElement: private auto = array[0]);",
+                                                 "(let foo: private auto = lib::module_::function(a, b, c));"};
 
     return validateStatements(getParserResults(expression), expected, "Member Access Expression");
 }
 
 static bool testGenerics() {
     const std::string expression = "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\n"
-                             "    return 3 + valueT + valueU * valueV;\n"
-                             "}\n"
-                             "let result = genericFunction@[int32, float64, char](5, 2.5, (65 as char));"
-                             "aggregate Foo[T, U] {\n"
-                             "    x: T;\n"
-                             "    y: U;\n"
-                             "}\n"
-                             "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n"
-                             "let foo_array: private Foo@[int32, float64][];";
+                                   "    return 3 + valueT + valueU * valueV;\n"
+                                   "}\n"
+                                   "let result = genericFunction@[int32, float64, char](5, 2.5, (65 as char));"
+                                   "aggregate Foo[T, U] {\n"
+                                   "    x: T;\n"
+                                   "    y: U;\n"
+                                   "}\n"
+                                   "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n"
+                                   "let foo_array: private Foo@[int32, float64][];";
     const std::array<std::string, 5> expected = {
         R"(private func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {
     return ((3 + valueT) + (valueU * valueV));
@@ -506,21 +506,22 @@ static bool testGenerics() {
 
 static bool testImportsAndAliases() {
     const std::string expression = "import math::vector;\n"
-                             "import graphics::rendering as render;\n"
-                             "import std::collections::map;\n"
-                             "module dataprocessing;\n"
-                             "alias int32 as Integer;\n"
-                             "alias ptr float64 as pf64;\n"
-                             "alias func(mut Integer, pf64, func(int64) -> int64) -> bool as blah;"
-                             "alias std::HashMap@[string, Integer] as StringIntMap;\n"
-                             "let value: Integer = 42;\n";
+                                   "import graphics::rendering as render;\n"
+                                   "import std::collections::map;\n"
+                                   "module dataprocessing;\n"
+                                   "alias int32 as Integer;\n"
+                                   "alias ptr float64 as pf64;\n"
+                                   "alias func(mut Integer, pf64, func(int64) -> int64) -> bool as blah;"
+                                   "alias std::HashMap@[string, Integer] as StringIntMap;\n"
+                                   "let value: Integer = 42;\n";
 
-    const std::array<std::string, 6> expected = {"",
-                                           "alias (int32) as Integer;",
-                                           "alias (ptr float64) as pf64;",
-                                           "alias (func(mut Integer, pf64, func(int64) -> int64) -> bool) as blah;",
-                                           "alias (std::HashMap@[string, Integer]) as StringIntMap;",
-                                           "(let value: private Integer = 42);"};
+    const std::array<std::string, 6> expected
+        = {"",
+           "alias (int32) as Integer;",
+           "alias (ptr float64) as pf64;",
+           "alias (func(mut Integer, pf64, func(int64) -> int64) -> bool) as blah;",
+           "alias (std::HashMap@[string, Integer]) as StringIntMap;",
+           "(let value: private Integer = 42);"};
 
     return validateStatements(getParserResults(expression), expected, "Import Statements and Type Aliases");
 }
@@ -545,11 +546,11 @@ static bool testRedundantSemicolons() {
 
 static bool testSizeofTypeofAlignof() {
     const std::string expression = "sizeof(int);\n"
-                             "sizeof(x+1);\n"
-                             "alignof(char);\n"
-                             "alignof(x+1);\n"
-                             "let x: typeof(x+1) = 3;\n"
-                             "let y : typeof(foo@[int,char]((p as int32)) + (bar + baz as typeof(3u128)));";
+                                   "sizeof(x+1);\n"
+                                   "alignof(char);\n"
+                                   "alignof(x+1);\n"
+                                   "let x: typeof(x+1) = 3;\n"
+                                   "let y : typeof(foo@[int,char]((p as int32)) + (bar + baz as typeof(3u128)));";
     const std::array<std::string, 6> expected
         = {"(sizeof(int32));",
            "(sizeof(dummy));",
@@ -561,7 +562,8 @@ static bool testSizeofTypeofAlignof() {
 }
 
 static bool testNestedBlocks() {
-    const std::string expression = "func foo() {let x = 10; {let x = 20;} if (x == 10) {{let x = 10;}} else {{let x = 20;}}}";
+    const std::string expression
+        = "func foo() {let x = 10; {let x = 20;} if (x == 10) {{let x = 10;}} else {{let x = 20;}}}";
     std::string expected = R"(private func foo() {
     (let x: private auto = 10);
     {

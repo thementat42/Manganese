@@ -1,14 +1,14 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
 
+#include <cstdint>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token_type.hpp>
-#include <cstdint>
+#include <mnstl/fold_result.hxx>
+#include <mnstl/number.hxx>
 #include <string>
 #include <utility>
 #include <vector>
-#include <mnstl/fold_result.hxx>
-#include <mnstl/number.hxx>
 
 namespace Manganese::ast {
 

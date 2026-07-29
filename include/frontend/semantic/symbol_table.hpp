@@ -1,8 +1,8 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SYMBOL_TABLE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SYMBOL_TABLE_HPP
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>

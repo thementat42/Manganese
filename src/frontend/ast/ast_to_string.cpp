@@ -2,10 +2,10 @@
 #include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
+#include <frontend/lexer/token_base.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <vector>
-#include <frontend/lexer/token_base.hpp>
 
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"

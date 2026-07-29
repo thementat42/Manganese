@@ -1,9 +1,9 @@
 #include <core.hpp>
 #include <format>
 #include <frontend/ast/ast_expressions.hpp>
+#include <frontend/lexer/token_base.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <mnstl/fold_result.hxx>
-#include <frontend/lexer/token_base.hpp>
 
 namespace Manganese::ast {
 

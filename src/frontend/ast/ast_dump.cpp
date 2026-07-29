@@ -1,9 +1,9 @@
 #if MN_DEBUG  // only include dump methods in debug builds
 
-#include <format>
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/type_context.hpp>
@@ -64,7 +64,6 @@ std::string_view getNumberTypeName(const mnstl::number_t& value) {
     ASSERT_UNREACHABLE("Number did not hold a valid type");
 }
 }  // namespace
-
 
 // Statements
 

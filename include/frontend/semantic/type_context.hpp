@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace Manganese::semantic {
 
 class TypeContext;

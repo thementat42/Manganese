@@ -1,13 +1,12 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <frontend/ast/ast_base.hpp>
 #include <string>
 #include <utility>
 #include <vector>
-
 
 namespace Manganese::ast {
 

@@ -6,10 +6,10 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/number.hxx>
+#include <string_view>
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
-#include <string_view>
 
 namespace Manganese::semantic {
 
@@ -488,4 +488,4 @@ auto analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     return result;
 }
 
-}  // namespace semantic
+}  // namespace Manganese::semantic

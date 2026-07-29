@@ -6,10 +6,10 @@
 #if MEMORY_TRACKING && MN_DEBUG
 #include <stdlib.h>
 
-#include <fstream>
-#include <iostream>
 #include <core.hpp>
+#include <fstream>
 #include <io/logging.hpp>
+#include <iostream>
 
 inline size_t lifetimeBytesAllocated = 0;  // How much memory has been allocated in total (ignores deallocations)
 #ifdef CONTINUOUS_MEMORY_TRACKING

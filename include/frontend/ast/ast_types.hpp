@@ -1,8 +1,8 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 
-#include <frontend/ast/ast_base.hpp>
 #include <cstdint>
+#include <frontend/ast/ast_base.hpp>
 #include <string>
 #include <utility>
 #include <vector>

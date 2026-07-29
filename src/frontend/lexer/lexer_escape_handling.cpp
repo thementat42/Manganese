@@ -35,7 +35,6 @@ constexpr inline std::uint8_t UTF8_3B_SHIFT = 18;
 
 // Helpers
 
-
 namespace {
 
 std::optional<char> getEscapeCharacter(char escapeChar, std::size_t line, std::size_t col) {

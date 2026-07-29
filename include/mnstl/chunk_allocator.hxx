@@ -2,8 +2,8 @@
 #define MNSTL_CHUNK_ALLOCATOR 1
 
 #include <core.hpp>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>

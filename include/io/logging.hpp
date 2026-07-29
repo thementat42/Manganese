@@ -1,15 +1,14 @@
 #ifndef MANGANESE_INCLUDE_IO_LOGGING_HPP
 #define MANGANESE_INCLUDE_IO_LOGGING_HPP
 
+#include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <core.hpp>
 #include <format>  // Include format here so any files that use logging have it included
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
-#include <stdexcept>
-
 
 // ANSI color codes for terminal output
 constexpr inline const char* GREEN = "\033[32m";
@@ -66,17 +65,20 @@ void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<A
 }
 
 template <class... Args>
-FORCE_INLINE void logWarning(std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
+FORCE_INLINE void logWarning(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
+                             Args&&... args) noexcept {
     log(LogLevel::Warning, line, col, fmt, std::forward<Args>(args)...);
 }
 
 template <class... Args>
-FORCE_INLINE void logError(std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
+FORCE_INLINE void logError(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
+                           Args&&... args) noexcept {
     log(LogLevel::Error, line, col, fmt, std::forward<Args>(args)...);
 }
 
 template <class... Args>
-FORCE_INLINE void logCritical(std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
+FORCE_INLINE void logCritical(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
+                              Args&&... args) noexcept {
     log(LogLevel::Critical, line, col, fmt, std::forward<Args>(args)...);
 }
 

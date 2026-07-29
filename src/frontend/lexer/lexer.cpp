@@ -12,7 +12,6 @@
 #include <utility>
 #include <utils/result.hpp>
 
-
 namespace Manganese::lexer {
 
 //~ Core Lexer Functions

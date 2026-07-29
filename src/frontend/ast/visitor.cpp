@@ -3,7 +3,6 @@
 #include <frontend/ast/visitor_base.hpp>
 #include <utils/result.hpp>
 
-
 namespace Manganese::ast {
 
 template <class Expr, class Stmt, class Type>

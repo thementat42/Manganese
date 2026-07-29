@@ -1,5 +1,6 @@
 #include <core.hpp>
 #include <cstddef>
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
@@ -8,7 +9,6 @@
 #include <utility>
 #include <utils/result.hpp>
 #include <utils/type_names.hpp>
-#include <format>
 
 namespace Manganese::semantic {
 

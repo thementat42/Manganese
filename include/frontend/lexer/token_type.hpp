@@ -4,7 +4,6 @@
 #include <core.hpp>
 #include <cstdint>
 
-
 namespace Manganese::lexer {
 
 enum class TokenType : std::uint8_t {

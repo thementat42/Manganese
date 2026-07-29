@@ -1,7 +1,7 @@
+#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/parser.hpp>
-#include <cstddef>
 
 namespace Manganese::parser {
 // Lookup Registration Methods

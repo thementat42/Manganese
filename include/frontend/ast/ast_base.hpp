@@ -2,13 +2,13 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 
 #include <core.hpp>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <mnstl/fold_result.hxx>
+#include <ostream>
 #include <string>
 #include <utils/type_names.hpp>
 #include <vector>
-#include <ostream>
 
 #if MN_DEBUG
 #define MN_AST_DUMP void dump(std::ostream& os, size_t indent = 0) const override;

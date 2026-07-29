@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {

@@ -5,8 +5,8 @@
 #include <mnstl/number.hxx>
 #include <string>
 #include <utility>
-#include <vector>
 #include <utils/type_names.hpp>
+#include <vector>
 
 namespace Manganese::parser {
 

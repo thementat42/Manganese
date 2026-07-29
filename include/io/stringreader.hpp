@@ -1,8 +1,8 @@
 #ifndef MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #define MANGANESE_INCLUDE_IO_STRING_READER_HPP
 
-#include <cstddef>
 #include <core.hpp>
+#include <cstddef>
 #include <io/reader.hpp>
 #include <string>
 #include <string_view>

@@ -1,7 +1,6 @@
+#include <chrono>
 #include <cstdio>
 #include <cstring>
-
-#include <chrono>
 #include <filesystem>
 #include <frontend/lexer.hpp>
 #include <io/filereader.hpp>

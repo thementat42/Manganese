@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace Manganese::semantic {
 
 std::string Aggregate::toString() const {
@@ -49,8 +48,9 @@ std::string Pointer::toString() const {
     return std::format("{}ptr {}", (isMutable ? "mut " : ""), baseType->toString());
 }
 
-constexpr static inline std::size_t GOLDEN_RATIO = (sizeof(std::size_t) == 8) ? 0x9E3779B97F4A7C15ULL  // 64-bit fraction
-                                                                       : 0x9E3779B9U;  // 32-bit fraction
+constexpr static inline std::size_t GOLDEN_RATIO = (sizeof(std::size_t) == 8)
+    ? 0x9E3779B97F4A7C15ULL  // 64-bit fraction
+    : 0x9E3779B9U;  // 32-bit fraction
 
 static inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
     return seed ^= value + GOLDEN_RATIO + (seed << 6) + (seed >> 2);
