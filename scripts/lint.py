@@ -8,6 +8,11 @@ from pathlib import Path
 
 DIRECTORIES = ["include", "src", "tests"]
 
+ROOT_FILES = [
+    "manganese.cpp",
+    "manganese_tests.cpp",
+]
+
 BUILD_DIR = "build"
 REPORT_FILE = "x.clang-tidy-report.txt"
 
@@ -50,6 +55,30 @@ def find_files(base_dir: Path):
                 yield path
 
 
+def run_clang_tidy(clang_tidy, file: Path, report):
+    print(f"Checking {file}")
+
+    report.write("X" * 80 + "\n")
+    report.write(f"{file}\n")
+    report.write("X" * 80 + "\n")
+
+    result = subprocess.run(
+        [
+            clang_tidy,
+            str(file),
+            f"-p={BUILD_DIR}",
+            f"-checks={CHECKS}",
+            "-header-filter=^$",  # don't report diagnostics from included headers
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+
+    report.write(result.stdout)
+    report.write("\n\n")
+
+
 def main():
     clang_tidy = shutil.which("clang-tidy")
     if clang_tidy is None:
@@ -70,6 +99,7 @@ def main():
     checked = 0
 
     with open(REPORT_FILE, "w", encoding="utf-8") as report:
+        # Check directories.
         for directory in DIRECTORIES:
             base = Path(directory)
             if not base.is_dir():
@@ -77,29 +107,17 @@ def main():
                 continue
 
             for file in find_files(base):
-                print(f"Checking {file}")
-
-                report.write("X" * 80 + "\n")
-                report.write(f"{file}\n")
-                report.write("X" * 80 + "\n")
-
-                result = subprocess.run(
-                    [
-                        clang_tidy,
-                        str(file),
-                        f"-p={BUILD_DIR}",
-                        f"-checks={CHECKS}",
-                        "-header-filter=^$"  # don't report diagnostics from included headers
-                    ],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                )
-
-                report.write(result.stdout)
-                report.write("\n\n")
-
+                run_clang_tidy(clang_tidy, file, report)
                 checked += 1
+
+        # Check additional root-level files.
+        for file in map(Path, ROOT_FILES):
+            if not file.is_file():
+                print(f"Skipping missing file: {file}")
+                continue
+
+            run_clang_tidy(clang_tidy, file, report)
+            checked += 1
 
     print(f"\nDone. Checked {checked} file(s).")
     print(f"Report written to {REPORT_FILE}")
