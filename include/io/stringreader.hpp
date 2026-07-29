@@ -1,14 +1,17 @@
 #ifndef MANGANESE_INCLUDE_IO_STRING_READER_HPP
 #define MANGANESE_INCLUDE_IO_STRING_READER_HPP
+
+#include <cstddef>
 #include <core.hpp>
 #include <io/reader.hpp>
 #include <string>
+#include <string_view>
 
 namespace Manganese::io {
 
 class StringReader : public Reader {
    private:
-    size_t _position, _line, _column;
+    std::size_t _position, _line, _column;
     std::string_view _source;
 
    public:
@@ -16,16 +19,16 @@ class StringReader : public Reader {
     explicit StringReader(const std::string& source) : _position(0), _line(1), _column(1), _source(source) {}
     ~StringReader() noexcept override = default;
 
-    void setPosition(size_t newPosition) noexcept override {
+    void setPosition(std::size_t newPosition) noexcept override {
         while (_position < newPosition && !done()) { DISCARD(consumeChar()); }
     }
-    constexpr size_t getPosition() const noexcept override { return _position; }
-    constexpr size_t getLine() const noexcept override { return _line; }
-    constexpr size_t getColumn() const noexcept override { return _column; }
+    constexpr std::size_t getPosition() const noexcept override { return _position; }
+    constexpr std::size_t getLine() const noexcept override { return _line; }
+    constexpr std::size_t getColumn() const noexcept override { return _column; }
 
     constexpr bool done() const noexcept override { return _position >= _source.length(); }
 
-    char peekChar(size_t offset = 0) noexcept override {
+    char peekChar(std::size_t offset = 0) noexcept override {
         return (_position + offset >= _source.length()) ? '\0' : _source[_position + offset];
     }
     [[nodiscard]] char consumeChar() noexcept override {

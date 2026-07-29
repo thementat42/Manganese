@@ -1,8 +1,7 @@
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #include <chrono>
-#include <core.hpp>
 #include <filesystem>
 #include <frontend/lexer.hpp>
 #include <io/filereader.hpp>
@@ -13,7 +12,7 @@
 #include "tests/testrunner.hpp"
 #include "tests/tests.hpp"
 
-bool strneq(const char* a, const char* b, size_t max_count) {
+static bool strneq(const char* a, const char* b, size_t max_count) {
     return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
 }
 

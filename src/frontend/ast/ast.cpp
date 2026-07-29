@@ -3,14 +3,14 @@
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <mnstl/fold_result.hxx>
+#include <frontend/lexer/token_base.hpp>
 
-namespace Manganese {
-namespace ast {
+namespace Manganese::ast {
 
 mnstl::fold_result_t BinaryExpression::fold() const noexcept {
     using enum lexer::TokenType;
-    mnstl::fold_result_t leftResult = left->fold();
-    mnstl::fold_result_t rightResult = right->fold();
+    const mnstl::fold_result_t leftResult = left->fold();
+    const mnstl::fold_result_t rightResult = right->fold();
 
     if (!leftResult.has_value() || rightResult.has_value()) { return mnstl::fold_result_t{}; }
 
@@ -69,5 +69,4 @@ mnstl::fold_result_t PostfixExpression::fold() const noexcept {
     }
 };
 
-}  // namespace ast
-}  // namespace Manganese
+}  // namespace Manganese::ast

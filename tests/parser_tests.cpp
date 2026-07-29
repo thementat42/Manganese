@@ -13,12 +13,13 @@
 // The semantic analysis phase is responsible for resolving the actual type
 // So testing for a correct type resolution is outside the scope of these tests
 
-namespace Manganese {
-namespace tests {
+namespace Manganese::tests {
 
-static const char* logFileName = "logs/parser_tests.log";
-mnstl::chunk_allocator allocator;
+constexpr static const char* logFileName = "logs/parser_tests.log";
+static mnstl::chunk_allocator allocator;
 
+// Helpers
+namespace {
 ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode, allocator);
     parser::ParsedFile file = parser.parse();
@@ -41,7 +42,7 @@ bool validateStatements(const ast::Block& block, const std::array<std::string, N
     }
     std::cout << "Parsed " << testName << " AST:" << '\n';
     for (const auto& stmt : block) {
-        std::string stmtStr = stmt->toString(0);
+        const std::string stmtStr = stmt->toString(0);
         std::cout << stmtStr << '\n';
         if (logFile) {
             logFile << "String representation: " << stmtStr << '\n';
@@ -104,21 +105,22 @@ bool validateStatement(const ast::Block& block, const std::string& expected, con
 
     return true;
 }
+}  // namespace
 
-bool testArithmeticOperatorsAndCasting() {
-    std::string expression = "8 - 4 + 6 * 2 // 5 % 3 * 2 * 2 / 7 as float32;";
+static bool testArithmeticOperatorsAndCasting() {
+    const std::string expression = "8 - 4 + 6 * 2 // 5 % 3 * 2 * 2 / 7 as float32;";
     std::string expected = "(((8 - 4) + ((((((6 * 2) // 5) % 3) * 2) * 2) / 7)) as float32);";
 
     return validateStatement(getParserResults(expression), expected, "Arithmetic Operators and Casting");
 }
 
-bool testVariableDeclaration() {
-    std::string expression = "let mut foo = 45.5a;"
+static bool testVariableDeclaration() {
+    const std::string expression = "let mut foo = 45.5a;"
                              "let mut bar = foo * 10;"
                              "let baz : public uint32 = foo + 10 * 2 * bar + foo % 7 + foo*2;"
                              "let boolean = true;";
 
-    std::array<std::string, 4> expected
+    const std::array<std::string, 4> expected
         = {"(let mut foo: private auto = 45.5);", "(let mut bar: private auto = (foo * 10));",
            "(let baz: public uint32 = (((foo + ((10 * 2) * bar)) + (foo % 7)) + (foo * 2)));",
            "(let boolean: private auto = true);"};
@@ -126,8 +128,8 @@ bool testVariableDeclaration() {
     return validateStatements(getParserResults(expression), expected, "Variable Declaration");
 }
 
-bool testAssignmentExpressions() {
-    std::string expression = "a = 5;\n"
+static bool testAssignmentExpressions() {
+    const std::string expression = "a = 5;\n"
                              "b += 3;\n"
                              "c -= 2 * b;\n"
                              "d = -(c + 3);\n"
@@ -145,7 +147,7 @@ bool testAssignmentExpressions() {
                              "m |= n & p;\n"
                              "x ^= ~y;\n";
 
-    std::array<std::string, 17> expected
+    const std::array<std::string, 17> expected
         = {"(a = 5);",          "(b += 3);",       "(c -= (2 * b));",
            "(d = (-(c + 3)));", "(e *= (f + 1));", "(g /= (h - (-2)));",
            "(i %= 4);",         "(k //= 3);",      "(l = (((3 + 4) * 2) - ((1 + 1) * 5)));",
@@ -156,8 +158,8 @@ bool testAssignmentExpressions() {
     return validateStatements(getParserResults(expression), expected, "Assignment Expressions");
 }
 
-bool testPrefixOperators() {
-    std::string expression = "++x;\n"
+static bool testPrefixOperators() {
+    const std::string expression = "++x;\n"
                              "--y;\n"
                              "-z;\n"
                              "+a;\n"
@@ -165,68 +167,68 @@ bool testPrefixOperators() {
                              "-(d + 3);"
                              "++c * 2;\n";
 
-    std::array<std::string, 7> expected
+    const std::array<std::string, 7> expected
         = {"(++x);", "(--y);", "(-z);", "(+a);", "(!b);", "(-(d + 3));", "((++c) * 2);"};
 
     return validateStatements(getParserResults(expression), expected, "Prefix Operators");
 }
 
-bool testParenthesizedExpressions() {
-    std::string expression = "(2 + 3) * 4;\n"
+static bool testParenthesizedExpressions() {
+    const std::string expression = "(2 + 3) * 4;\n"
                              "2 * (3 + 4);\n"
                              "((5 + 2) * (8 - 3)) / 2;\n"
                              "1 + (2 * (3 + 1));\n"
                              "((2 + 3) * 4) - (6 / (1 + 1));";
 
-    std::array<std::string, 5> expected = {"((2 + 3) * 4);", "(2 * (3 + 4));", "(((5 + 2) * (8 - 3)) / 2);",
+    const std::array<std::string, 5> expected = {"((2 + 3) * 4);", "(2 * (3 + 4));", "(((5 + 2) * (8 - 3)) / 2);",
                                            "(1 + (2 * (3 + 1)));", "(((2 + 3) * 4) - (6 / (1 + 1)));"};
 
     return validateStatements(getParserResults(expression), expected, "Parenthesized Expressions");
 }
 
-bool testPointerOperators() {
-    std::string expression = "&variable;\n"
+static bool testPointerOperators() {
+    const std::string expression = "&variable;\n"
                              "*pointer;\n"
                              "**doublePointer;\n"
                              "&(x + y);\n"
                              "*p + 5;\n";
 
-    std::array<std::string, 5> expected
+    const std::array<std::string, 5> expected
         = {"(&variable);", "(*pointer);", "(*(*doublePointer));", "(&(x + y));", "((*p) + 5);"};
 
     return validateStatements(getParserResults(expression), expected, "Pointer Operators");
 }
 
-bool testTypedVariableDeclaration() {
-    std::string expression = "let mut x: int32 = 42;\n"
+static bool testTypedVariableDeclaration() {
+    const std::string expression = "let mut x: int32 = 42;\n"
                              "let y: public float64 = 3.14159;\n"
                              "let mut z: char = 'A';\n"
                              "let mut numbers: int32[3*2];\n"
                              "let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
-    std::array<std::string, 5> expected = {
+    const std::array<std::string, 5> expected = {
         "(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);", "(let mut z: private char = 'A');",
         "(let mut numbers: private int32[(3 * 2)]);", "(let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     return validateStatements(getParserResults(expression), expected, "Typed Variable Declarations");
 }
 
-bool testPostfixOperators() {
-    std::string expression = "x++;\n"
+static bool testPostfixOperators() {
+    const std::string expression = "x++;\n"
                              "y--;\n"
                              "(a + b)++;\n"
                              "arr[i]--;\n"
                              "++x--;\n"
                              "x++ + y--;\n";
 
-    std::array<std::string, 6> expected
+    const std::array<std::string, 6> expected
         = {"(x++);", "(y--);", "((a + b)++);", "(arr[i]--);", "(++(x--));", "((x++) + (y--));"};
 
     return validateStatements(getParserResults(expression), expected, "Postfix Operators");
 }
 
-bool testBitwiseOperators() {
-    std::string expression = "a & b;\n"
+static bool testBitwiseOperators() {
+    const std::string expression = "a & b;\n"
                              "c | d;\n"
                              "e ^ f;\n"
                              "~g;\n"
@@ -237,7 +239,7 @@ bool testBitwiseOperators() {
                              "~(a & b) | c;\n"
                              "a & b & c | d ^ e;\n";
 
-    std::array<std::string, 10> expected = {"(a & b);",
+    const std::array<std::string, 10> expected = {"(a & b);",
                                             "(c | d);",
                                             "(e ^ f);",
                                             "(~g);",
@@ -251,8 +253,8 @@ bool testBitwiseOperators() {
     return validateStatements(getParserResults(expression), expected, "Bitwise Operators");
 }
 
-bool testAggregateDeclarationAndInstantiation() {
-    std::string expression = "public aggregate Point {\n"
+static bool testAggregateDeclarationAndInstantiation() {
+    const std::string expression = "public aggregate Point {\n"
                              "    x: uint128;\n"
                              "    y: int128;\n"
                              "    some_field: float64;\n"
@@ -270,7 +272,7 @@ bool testAggregateDeclarationAndInstantiation() {
                              "    color = 0xFF0000\n"
                              "};\n";
 
-    std::array<std::string, 5> expected = {
+    const std::array<std::string, 5> expected = {
         R"(public aggregate Point {
     x: uint128;
     y: int128;
@@ -287,8 +289,8 @@ bool testAggregateDeclarationAndInstantiation() {
     return validateStatements(getParserResults(expression), expected, "Aggregate Declaration and Instantiation");
 }
 
-bool testFunctionDeclarationAndCall() {
-    std::string expression = "public func add(a: int32, b: int32) -> int32 {\n"
+static bool testFunctionDeclarationAndCall() {
+    const std::string expression = "public func add(a: int32, b: int32) -> int32 {\n"
                              "    return a + b;\n"
                              "}\n"
                              "func greet(name: string) {\n"
@@ -302,7 +304,7 @@ bool testFunctionDeclarationAndCall() {
                              "greet(\"World\");\n"
                              "let product = calculate(2.5f64, 3.01);\n";
 
-    std::array<std::string, 6> expected = {
+    const std::array<std::string, 6> expected = {
         R"(public func add(a: int32, b: int32) -> int32 {
     return (a + b);
 })",
@@ -320,8 +322,8 @@ bool testFunctionDeclarationAndCall() {
     return validateStatements(getParserResults(expression), expected, "Function Declaration and Call");
 }
 
-bool testLoops() {
-    std::string expression = "let i = 0;"
+static bool testLoops() {
+    const std::string expression = "let i = 0;"
                              "do {++i; print(i); } while (i < 5);"
                              "let j: int32 = 10;"
                              "while (true) {"
@@ -335,7 +337,7 @@ bool testLoops() {
                              "for (;i<4;) {print(3);}"
                              "for (;;++i) {print(3);}";
 
-    std::array<std::string, 9> expected = {"(let i: private auto = 0);",
+    const std::array<std::string, 9> expected = {"(let i: private auto = 0);",
                                            R"(do {
     (++i);
     print(i);
@@ -369,8 +371,8 @@ bool testLoops() {
     return validateStatements(getParserResults(expression), expected, "Loops");
 }
 
-bool testIfElseStatements() {
-    std::string expression = "if (a < b) {\n"
+static bool testIfElseStatements() {
+    const std::string expression = "if (a < b) {\n"
                              "    let result = a + b;\n"
                              "    print(result);\n"
                              "} elif (a > b) {\n"
@@ -393,8 +395,8 @@ bool testIfElseStatements() {
     return validateStatement(getParserResults(expression), expected, "If/Else If/Else Statements");
 }
 
-bool testEnumDeclarationStatement() {
-    std::string expression = "public enum Color: int8 {\n"
+static bool testEnumDeclarationStatement() {
+    const std::string expression = "public enum Color: int8 {\n"
                              "    Red,\n"
                              "    Green,\n"
                              "    Blue,\n"
@@ -412,7 +414,7 @@ bool testEnumDeclarationStatement() {
                              "    C,\n"
                              "}";
 
-    std::array<std::string, 3> expected = {
+    const std::array<std::string, 3> expected = {
         R"(public enum Color: int8 {
     Red,
     Green,
@@ -433,8 +435,8 @@ bool testEnumDeclarationStatement() {
     return validateStatements(getParserResults(expression), expected, "Enum Declaration Statement");
 }
 
-bool testSwitchStatement() {
-    std::string expression = "switch (variable) {"
+static bool testSwitchStatement() {
+    const std::string expression = "switch (variable) {"
                              "case 1:"
                              "    print(\"One\");"
                              "    ++i;"
@@ -457,8 +459,8 @@ bool testSwitchStatement() {
     return validateStatement(getParserResults(expression), expected, "Switch Statement");
 }
 
-bool testAccessExpressions() {
-    std::string expression = "let mut point = Point{x = 10, y = 20};\n"
+static bool testAccessExpressions() {
+    const std::string expression = "let mut point = Point{x = 10, y = 20};\n"
                              "let mut xCoord = point.x;\n"
                              "let mut yCoord = point.y;\n"
                              "let mut color = rect.color;"
@@ -466,7 +468,7 @@ bool testAccessExpressions() {
                              "let firstElement = array[0];\n"
                              "let foo = lib::module_::function(a, b, c);\n";
 
-    std::array<std::string, 7> expected = {"(let mut point: private auto = Point {x = 10, y = 20});",
+    const std::array<std::string, 7> expected = {"(let mut point: private auto = Point {x = 10, y = 20});",
                                            "(let mut xCoord: private auto = point.x);",
                                            "(let mut yCoord: private auto = point.y);",
                                            "(let mut color: private auto = rect.color);",
@@ -477,8 +479,8 @@ bool testAccessExpressions() {
     return validateStatements(getParserResults(expression), expected, "Member Access Expression");
 }
 
-bool testGenerics() {
-    std::string expression = "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\n"
+static bool testGenerics() {
+    const std::string expression = "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\n"
                              "    return 3 + valueT + valueU * valueV;\n"
                              "}\n"
                              "let result = genericFunction@[int32, float64, char](5, 2.5, (65 as char));"
@@ -488,7 +490,7 @@ bool testGenerics() {
                              "}\n"
                              "let foo = Foo@[int32, float64]{x = 3, y = 4.5};\n"
                              "let foo_array: private Foo@[int32, float64][];";
-    std::array<std::string, 5> expected = {
+    const std::array<std::string, 5> expected = {
         R"(private func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {
     return ((3 + valueT) + (valueU * valueV));
 })",
@@ -502,8 +504,8 @@ bool testGenerics() {
     return validateStatements(getParserResults(expression), expected, "Generic Function Declaration");
 }
 
-bool testImportsAndAliases() {
-    std::string expression = "import math::vector;\n"
+static bool testImportsAndAliases() {
+    const std::string expression = "import math::vector;\n"
                              "import graphics::rendering as render;\n"
                              "import std::collections::map;\n"
                              "module dataprocessing;\n"
@@ -513,7 +515,7 @@ bool testImportsAndAliases() {
                              "alias std::HashMap@[string, Integer] as StringIntMap;\n"
                              "let value: Integer = 42;\n";
 
-    std::array<std::string, 6> expected = {"",
+    const std::array<std::string, 6> expected = {"",
                                            "alias (int32) as Integer;",
                                            "alias (ptr float64) as pf64;",
                                            "alias (func(mut Integer, pf64, func(int64) -> int64) -> bool) as blah;",
@@ -523,7 +525,7 @@ bool testImportsAndAliases() {
     return validateStatements(getParserResults(expression), expected, "Import Statements and Type Aliases");
 }
 
-bool testParseFromFile() {
+static bool testParseFromFile() {
     std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
     mnstl::chunk_allocator file_allocator{};
     parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
@@ -535,20 +537,20 @@ bool testParseFromFile() {
     return true;
 }
 
-bool testRedundantSemicolons() {
-    std::string expression = "let x = 1 + 2;;;;;";
-    std::array<std::string, 5> expected = {"(let x: private auto = (1 + 2));", "", "", "", ""};
+static bool testRedundantSemicolons() {
+    const std::string expression = "let x = 1 + 2;;;;;";
+    const std::array<std::string, 5> expected = {"(let x: private auto = (1 + 2));", "", "", "", ""};
     return validateStatements(getParserResults(expression), expected, "Redundant Semicolons");
 }
 
-bool testSizeofTypeofAlignof() {
-    std::string expression = "sizeof(int);\n"
+static bool testSizeofTypeofAlignof() {
+    const std::string expression = "sizeof(int);\n"
                              "sizeof(x+1);\n"
                              "alignof(char);\n"
                              "alignof(x+1);\n"
                              "let x: typeof(x+1) = 3;\n"
                              "let y : typeof(foo@[int,char]((p as int32)) + (bar + baz as typeof(3u128)));";
-    std::array<std::string, 6> expected
+    const std::array<std::string, 6> expected
         = {"(sizeof(int32));",
            "(sizeof(dummy));",
            "(alignof(char));",
@@ -558,8 +560,8 @@ bool testSizeofTypeofAlignof() {
     return validateStatements(getParserResults(expression), expected, "Sizeof, Typeof & Alignof");
 }
 
-bool testNestedBlocks() {
-    std::string expression = "func foo() {let x = 10; {let x = 20;} if (x == 10) {{let x = 10;}} else {{let x = 20;}}}";
+static bool testNestedBlocks() {
+    const std::string expression = "func foo() {let x = 10; {let x = 20;} if (x == 10) {{let x = 10;}} else {{let x = 20;}}}";
     std::string expected = R"(private func foo() {
     (let x: private auto = 10);
     {
@@ -580,7 +582,7 @@ bool testNestedBlocks() {
 }
 
 static bool miscTests() {
-    std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
+    const std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
     ast::Block x = getParserResults(expression);
     std::cout << x[0]->toString(0) << "\n";
     return true;
@@ -614,5 +616,4 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Nested Blocks", testNestedBlocks);
     runner.runTest("Miscellaneous Tests", miscTests);
 }
-}  // namespace tests
-}  // namespace Manganese
+}  // namespace Manganese::tests

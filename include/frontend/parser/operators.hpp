@@ -1,17 +1,12 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_OPERATORS_HPP
 
-#include <stdint.h>
-
-#include <frontend/lexer/token.hpp>
-
-
 namespace Manganese::parser {
 
 /**
  * @brief Enumeration of operator precedence levels (bigger = higher precedence)
  */
-enum class Precedence : uint8_t {
+enum class Precedence : char {
     Default = 0,
     Arrow = 1,  // Not really needed
     Assignment = 2,  // = and op=
@@ -36,8 +31,8 @@ enum class Precedence : uint8_t {
 };
 
 struct Operator {
-    Precedence leftBindingPower, rightBindingPower;
-    bool isValid = false;
+    const Precedence leftBindingPower, rightBindingPower;
+    const bool isValid = false;
 
     constexpr static Operator prefix(Precedence _rightBindingPower = Precedence::Default) noexcept {
         return Operator{

@@ -2,11 +2,13 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_BASE_HPP
 
 #include <core.hpp>
-#include <frontend/lexer.hpp>
+#include <cstdint>
+#include <cstddef>
 #include <mnstl/fold_result.hxx>
 #include <string>
 #include <utils/type_names.hpp>
 #include <vector>
+#include <ostream>
 
 #if MN_DEBUG
 #define MN_AST_DUMP void dump(std::ostream& os, size_t indent = 0) const override;
@@ -33,11 +35,11 @@ struct Type;
 
 using Block = std::vector<Statement*>;
 
-enum class ExpressionKind : uint8_t;
-enum class StatementKind : uint8_t;
-enum class TypeKind : uint8_t;
+enum class ExpressionKind : std::uint8_t;
+enum class StatementKind : std::uint8_t;
+enum class TypeKind : std::uint8_t;
 
-enum class PrimitiveType_t : uint8_t {
+enum class PrimitiveType_t : std::uint8_t {
     i8,
     u8,
     i16,
@@ -63,7 +65,7 @@ enum class Visibility : uint8_t {
 
 struct ASTNode {
    protected:
-    size_t line = 0, column = 0;
+    std::size_t line = 0, column = 0;
 
    public:
     constexpr ASTNode() noexcept = default;

@@ -1,7 +1,6 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_ANALYZER_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_ANALYZER_HPP
 
-#include <core.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -14,7 +13,9 @@
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <utils/result.hpp>
 
 namespace Manganese::semantic {
 
@@ -78,7 +79,6 @@ class analyzer final : public _analyzer_base_t {
    private:
     Result collectTypes();
 
-    void _reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) const;
     Result _collectTypesInStatement(ast::Statement*);
     Result _collectTypesInStatementBody(const ast::Block&);
     Result collectGlobals();
@@ -115,7 +115,7 @@ class analyzer final : public _analyzer_base_t {
 #undef EXPR
 #undef TYPE
 
-    Result visit(std::nullptr_t) const noexcept {
+    static Result visit(std::nullptr_t) {
         logging::logInternal(logging::LogLevel::Warning, "visit() called on nullptr in analyzer");
         return Result::Failure;
     }

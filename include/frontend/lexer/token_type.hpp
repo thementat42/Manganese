@@ -1,13 +1,13 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_TYPE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_TYPE_HPP
 
-#include <stdint.h>
-
 #include <core.hpp>
+#include <cstdint>
+
 
 namespace Manganese::lexer {
 
-enum class TokenType : uint8_t {
+enum class TokenType : std::uint8_t {
 #define TOKEN(name, text)    name,
 #define KEYWORD(name, text)  name,
 #define OPERATOR(name, text) name,

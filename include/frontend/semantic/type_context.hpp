@@ -1,15 +1,18 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_TYPE_CONTEXT_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_TYPE_CONTEXT_HPP 1
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <frontend/ast.hpp>
 #include <mnstl/chunk_allocator.hxx>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
 
 namespace Manganese::semantic {
 
@@ -67,7 +70,7 @@ struct Aggregate final : public SemanticType {
         SemanticType(Kind::Aggregate), fields(std::move(fieldTypes)), name(aggregateName) {}
 
     // For anonymous aggregates
-    Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name("") {
+    Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name() {
         fields.reserve(rawTypes.size());
         for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
     }
@@ -183,7 +186,7 @@ class TypeContext {
 
     const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
 
-    const SemanticType* getArray(const SemanticType* baseType, size_t length);
+    const SemanticType* getArray(const SemanticType* elementType, size_t length);
 
     const SemanticType* getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes);
 

@@ -2,14 +2,14 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 
 #include <frontend/ast/ast_base.hpp>
-#include <mnstl/number.hxx>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace Manganese::ast {
 
-enum class TypeKind : uint8_t {
+enum class TypeKind : std::uint8_t {
 #define STMT(name, str)
 #define EXPR(name, str)
 #define TYPE(name, str) name,

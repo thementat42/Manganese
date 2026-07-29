@@ -2,6 +2,7 @@
 #define MNSTL_CHUNK_ALLOCATOR 1
 
 #include <core.hpp>
+#include <cstdint>
 #include <cstddef>
 #include <memory>
 #include <utility>
@@ -11,34 +12,34 @@ namespace mnstl {
 
 class chunk_allocator {
    private:
-    constexpr static inline size_t _default_chunksize = 4096;
+    constexpr static inline std::size_t _default_chunksize = 4096;
     struct chunk {
         std::unique_ptr<std::byte[]> data;
-        size_t used, capacity;
+        std::size_t used, capacity;
     };
-    constexpr static inline size_t _max(size_t a, size_t b) noexcept { return a > b ? a : b; }
+    constexpr static inline std::size_t _max(std::size_t a, std::size_t b) noexcept { return a > b ? a : b; }
 
     std::vector<chunk> _chunks;
-    constexpr static uintptr_t align_up(uintptr_t ptr, uintptr_t alignment) noexcept {
-        uintptr_t mask = alignment - 1;
+    constexpr static std::uintptr_t align_up(std::uintptr_t ptr, std::uintptr_t alignment) noexcept {
+        std::uintptr_t mask = alignment - 1;
         return (ptr + mask) & ~mask;
     }
 
-    void add_chunk(size_t size = _default_chunksize) {
+    void add_chunk(std::size_t size = _default_chunksize) {
         _chunks.push_back(
             chunk{.data = std::make_unique_for_overwrite<std::byte[]>(size),  // avoids initialization of values
                   .used = 0,
                   .capacity = size});
     }
 
-    FORCE_INLINE void* allocate(size_t size, size_t alignment = alignof(std::max_align_t)) {
+    FORCE_INLINE void* allocate(std::size_t size, std::size_t alignment = alignof(std::max_align_t)) {
     _do_allocation:
         chunk& c = _chunks[_chunks.size() - 1];
-        uintptr_t current_position = reinterpret_cast<uintptr_t>(c.data.get() + c.used);
+        const auto current_position = reinterpret_cast<std::uintptr_t>(c.data.get() + c.used);
         // the next place we can safely construct a type, taking padding into account
-        uintptr_t aligned_position = align_up(current_position, alignment);
+        const std::uintptr_t aligned_position = align_up(current_position, alignment);
         // how much room to leave before the next allocation
-        uintptr_t adjustment = aligned_position - current_position;
+        const std::uintptr_t adjustment = aligned_position - current_position;
 
         if (c.used + adjustment + size > c.capacity) {
             // can't fit data here anymore

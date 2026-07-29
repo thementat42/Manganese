@@ -1,14 +1,16 @@
 #include <core.hpp>
+#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/fold_result.hxx>
 #include <string>
 #include <utility>
+#include <utils/result.hpp>
 #include <utils/type_names.hpp>
+#include <format>
 
-namespace Manganese {
-namespace semantic {
+namespace Manganese::semantic {
 
 constexpr static inline uint8_t f32MantissaWidth = 24;
 constexpr static inline uint8_t f64MantissaWidth = 53;
@@ -58,6 +60,7 @@ Result analyzer::checkStatements() {  // semantic analysis pass (this can also c
 
 // Type compatibility
 
+namespace {
 struct PrimitiveInfo {
     enum class Category {
         Int,
@@ -68,7 +71,7 @@ struct PrimitiveInfo {
         String
     };
     Category category;
-    int bit_width = 0;
+    int bitWidth = 0;
 };
 
 inline PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
@@ -76,36 +79,37 @@ inline PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
     using Cat = PrimitiveInfo::Category;
 
     switch (type) {
-        case i8: return {Cat::Int, 8};
-        case i16: return {Cat::Int, 16};
-        case i32: return {Cat::Int, 32};
-        case i64: return {Cat::Int, 64};
-        case i128: return {Cat::Int, 128};
+        case i8: return {.category = Cat::Int, .bitWidth = 8};
+        case i16: return {.category = Cat::Int, .bitWidth = 16};
+        case i32: return {.category = Cat::Int, .bitWidth = 32};
+        case i64: return {.category = Cat::Int, .bitWidth = 64};
+        case i128: return {.category = Cat::Int, .bitWidth = 128};
 
-        case u8: return {Cat::UInt, 8};
-        case u16: return {Cat::UInt, 16};
-        case u32: return {Cat::UInt, 32};
-        case u64: return {Cat::UInt, 64};
-        case u128: return {Cat::UInt, 128};
+        case u8: return {.category = Cat::UInt, .bitWidth = 8};
+        case u16: return {.category = Cat::UInt, .bitWidth = 16};
+        case u32: return {.category = Cat::UInt, .bitWidth = 32};
+        case u64: return {.category = Cat::UInt, .bitWidth = 64};
+        case u128: return {.category = Cat::UInt, .bitWidth = 128};
 
-        case f32: return {Cat::Float, 32};
-        case f64: return {Cat::Float, 64};
+        case f32: return {.category = Cat::Float, .bitWidth = 32};
+        case f64: return {.category = Cat::Float, .bitWidth = 64};
 
-        case character: return {Cat::Char, 8};
-        case boolean: return {Cat::Bool, 1};
-        case str: return {Cat::String, 0};
+        case character: return {.category = Cat::Char, .bitWidth = 8};
+        case boolean: return {.category = Cat::Bool, .bitWidth = 1};
+        case str: return {.category = Cat::String, .bitWidth = 0};
         default: break;
     }
     return {Cat::Int, 0};
 }
+}  // namespace
 
 auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
     -> typeCompatibilityResult {
     using Cat = PrimitiveInfo::Category;
     if (from->primitiveType == to->primitiveType) { return {.result = Compatible_t::Valid}; }
 
-    PrimitiveInfo src = getPrimitiveInfo(from->primitiveType);
-    PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType);
+    const PrimitiveInfo src = getPrimitiveInfo(from->primitiveType);
+    const PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType);
     const bool is_conditional_context = context.ifStatementDepth || context.forLoopDepth || context.whileLoopDepth;
 
     if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
@@ -142,7 +146,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
     // Float <-> integer
     if ((src.category == Cat::Int || src.category == Cat::UInt) && dest.category == Cat::Float) {
         // Int to float can lose precision if the int width >= float mantissa width
-        if (src.bit_width >= (dest.bit_width == 32 ? f32MantissaWidth : f64MantissaWidth)) {
+        if (src.bitWidth >= (dest.bitWidth == 32 ? f32MantissaWidth : f64MantissaWidth)) {
             return yield_warning(std::format("Conversion from '{}' to '{}' may lose precision digits", from->toString(),
                                              to->toString()));
         }
@@ -160,7 +164,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
             std::format("Sign mismatch: conversion between '{}' and '{}' may cause data loss or sign-flipping",
                         from->toString(), to->toString()));
     }
-    if (src.bit_width > dest.bit_width) {
+    if (src.bitWidth > dest.bitWidth) {
         return yield_warning(std::format("Narrowing conversion: potential data loss converting from '{}' to '{}'",
                                          from->toString(), to->toString()));
     }
@@ -221,7 +225,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                     return {.result = Compatible_t::Error, .message = conversionError + error};
                 }
                 if (funcFromParam.isMutable != funcToParam.isMutable) {
-                    std::string error
+                    const std::string error
                         = std::format(" (parameter in position {} in {} is {} but is {} in {})", i,
                                       funcFrom->toString(), (funcFromParam.isMutable ? "mutable" : "immutable"),
                                       (funcToParam.isMutable ? "mutable" : "immutable"), funcToParam.toString());
@@ -274,5 +278,4 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
     }
 }
 
-}  // namespace semantic
-}  // namespace Manganese
+}  // namespace Manganese::semantic

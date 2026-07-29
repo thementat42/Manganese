@@ -5,14 +5,13 @@
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <io/logging.hpp>
 #include <mnstl/number.hxx>
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
+#include <string_view>
 
-namespace Manganese {
-namespace semantic {
+namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
     auto result = Result::Success;
@@ -490,4 +489,3 @@ auto analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
 }
 
 }  // namespace semantic
-}  // namespace Manganese

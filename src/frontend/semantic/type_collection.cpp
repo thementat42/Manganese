@@ -1,12 +1,10 @@
-#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
 #include <string_view>
+#include <utils/result.hpp>
 
-namespace Manganese {
-
-namespace semantic {
+namespace Manganese::semantic {
 
 // Note: all types are nullptr for the moment since this is just meant to collect names
 // Types are set later on
@@ -20,7 +18,7 @@ Result analyzer::collectTypes() {
     return result;
 }
 
-void analyzer::_reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) const {
+static void _reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) {
     logging::logError(node->getLine(), node->getColumn(), "'{}' was already declared in this scope",
                       redeclaredSymbolName);
 }
@@ -30,9 +28,9 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
 
     switch (stmt->kind) {
         case AggregateDeclarationStatement: {
-            auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
+            auto* aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
 
-            Result result = symbolTable.declare(aggregateStmt->name,
+            const Result result = symbolTable.declare(aggregateStmt->name,
                                                 Symbol{
                                                     .type = nullptr,
                                                     .node = aggregateStmt,
@@ -44,9 +42,9 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             return result;
         }
         case AliasStatement: {
-            auto aliasStmt = static_cast<ast::AliasStatement*>(stmt);
+            auto* aliasStmt = static_cast<ast::AliasStatement*>(stmt);
 
-            Result result = symbolTable.declare(aliasStmt->alias,
+            const Result result = symbolTable.declare(aliasStmt->alias,
                                                 Symbol{
                                                     .type = nullptr,
                                                     .node = aliasStmt,
@@ -58,9 +56,9 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             return result;
         }
         case EnumDeclarationStatement: {
-            auto enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
+            auto* enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
 
-            Result result = symbolTable.declare(enumDecl->name,
+            const Result result = symbolTable.declare(enumDecl->name,
                                                 Symbol{
                                                     .type = nullptr,
                                                     .node = enumDecl,
@@ -72,7 +70,7 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             return result;
         }
         case FunctionDeclarationStatement: {
-            auto funcStmt = static_cast<ast::FunctionDeclarationStatement*>(stmt);
+            auto* funcStmt = static_cast<ast::FunctionDeclarationStatement*>(stmt);
 
             // Register the function itself in the current scope
             auto result = symbolTable.declare(funcStmt->name,
@@ -90,7 +88,7 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             return (result == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
         }
         case IfStatement: {
-            auto ifStmt = static_cast<ast::IfStatement*>(stmt);
+            auto* ifStmt = static_cast<ast::IfStatement*>(stmt);
             Result result = Result::Success;
             if (_collectTypesInStatementBody(ifStmt->body) == Result::Failure) { result = Result::Failure; }
             for (const ast::ElifClause& elif : ifStmt->elifs) {
@@ -103,7 +101,7 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             return result;
         }
         case WhileLoopStatement: {
-            auto whileStmt = static_cast<ast::WhileLoopStatement*>(stmt);
+            auto* whileStmt = static_cast<ast::WhileLoopStatement*>(stmt);
             return _collectTypesInStatementBody(whileStmt->body);
         }
         default: return Result::Success;  // Statements that don't introduce scopes or declare types
@@ -122,6 +120,4 @@ Result analyzer::_collectTypesInStatementBody(const ast::Block& body) {
     return result;
 }
 
-}  // namespace semantic
-
-}  // namespace Manganese
+}  // namespace Manganese::semantic

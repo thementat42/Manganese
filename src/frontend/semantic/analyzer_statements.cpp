@@ -1,11 +1,9 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
-#include <io/logging.hpp>
 #include <utils/result.hpp>
 
-namespace Manganese {
-namespace semantic {
+namespace Manganese::semantic {
 
 // auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t;
 
@@ -37,7 +35,8 @@ auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { retur
 
 auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = Result::Success;
-    ContextGuard guard(context.forLoopDepth, static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1));
+    const ContextGuard guard{context.forLoopDepth,
+                             static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1)};
     bool blockNeedsToEnterScope = true;
 
     if (statement->initializationStep) {
@@ -80,8 +79,8 @@ auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
 
 auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     auto result = Result::Success;
-    ContextGuard guard(context.ifStatementDepth,
-                       static_cast<decltype(context.ifStatementDepth)>(context.ifStatementDepth + 1));
+    const ContextGuard guard{context.ifStatementDepth,
+                             static_cast<decltype(context.ifStatementDepth)>(context.ifStatementDepth + 1)};
 
     if (visit(statement->condition) == Result::Failure) { result = Result::Failure; }
 
@@ -165,8 +164,8 @@ auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
 // auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t;
 
 auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
-    ContextGuard guard(context.whileLoopDepth,
-                       static_cast<decltype(context.whileLoopDepth)>(context.whileLoopDepth + 1));
+    const ContextGuard guard{context.whileLoopDepth,
+                             static_cast<decltype(context.whileLoopDepth)>(context.whileLoopDepth + 1)};
 
     auto result = Result::Success;
 
@@ -191,5 +190,4 @@ auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-}  // namespace semantic
-}  // namespace Manganese
+}  // namespace Manganese::semantic

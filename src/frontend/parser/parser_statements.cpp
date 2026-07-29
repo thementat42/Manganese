@@ -1,17 +1,18 @@
 #include <algorithm>
 #include <core.hpp>
+#include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
+#include <io/logging.hpp>
 #include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
-#include "frontend/ast/ast_base.hpp"
 
-namespace Manganese {
-namespace parser {
+
+namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
     const TokenType type = peekTokenType();
@@ -22,7 +23,7 @@ ast::Statement* Parser::parseStatement() {
     }
     const std::size_t index = tokenToIndex(type);
 
-    statementHandler_t handler = statementLookup[index];
+    const statementHandler_t handler = statementLookup[index];
     if (handler) { return (this->*handler)(); }
 
     // Parse out an expression then convert it to a statement
@@ -43,7 +44,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
         DISCARD(consumeToken());
         while (!done() && peekTokenType() != TokenType::RightSquare) {
             std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
-            if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
+            if (std::ranges::find(genericTypes, genericName) != genericTypes.end()) {
                 logError(peekToken().getLine(), peekToken().getColumn(),
                          "Generic type '{}' in aggregate '{}' was already declared", genericName, name);
             } else {
@@ -78,9 +79,11 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
         ast::Type* type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
-        auto duplicate
-            = std::find_if(fields.begin(), fields.end(),
-                           [fieldName](const ast::AggregateField& field) -> bool { return field.name == fieldName; });
+        const auto hasDuplicateField
+            = [fieldName](const ast::AggregateField& field) { return field.name == fieldName; };
+
+        auto duplicate = std::ranges::find_if(fields, hasDuplicateField);
+
         if (duplicate != fields.end()) {
             logError(t.getLine(), t.getColumn(),
                      "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})", fieldName,
@@ -189,8 +192,8 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
             valueExpression = parseExpression(Precedence::Default);
         }
         // Check for duplicate enum value names
-        auto duplicate = std::find_if(values.begin(), values.end(),
-                                      [valueName](const ast::EnumValue& value) { return value.name == valueName; });
+        const auto hasDuplicateName = [valueName](const ast::EnumValue& value) { return value.name == valueName; };
+        auto duplicate = std::ranges::find_if(values.begin(), values.end(), hasDuplicateName);
 
         if (duplicate != values.end()) {
             logError(peekToken().getLine(), peekToken().getColumn(),
@@ -271,7 +274,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
             }
             Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
             std::string genericName = genericToken.getLexeme();
-            if (std::find(genericTypes.begin(), genericTypes.end(), genericName) != genericTypes.end()) {
+            if (std::ranges::find(genericTypes, genericName) != genericTypes.end()) {
                 logError(genericToken.getLine(), genericToken.getColumn(),
                          "Duplicate generic type '{}' in function '{}'", genericName, name);
             } else {
@@ -351,8 +354,8 @@ ast::Statement* Parser::parseIfStatement() {
 }
 
 ast::Statement* Parser::parseImportStatement() {
-    size_t startLine = peekToken().getLine();
-    size_t startColumn = peekToken().getColumn();
+    const std::size_t startLine = peekToken().getLine();
+    const std::size_t startColumn = peekToken().getColumn();
 
     if (this->hasParsedFileHeader) {
         logging::logWarning(startLine, startColumn, "Imports should go at the top of the file");
@@ -395,12 +398,13 @@ ast::Statement* Parser::parseImportStatement() {
 }
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
-    lexer::Token temp = consumeToken();
-    size_t startLine = temp.getLine(), startColumn = temp.getColumn();
+    const lexer::Token temp = consumeToken();
+    const std::size_t startLine = temp.getLine();
+    const std::size_t startColumn = temp.getColumn();
     if (this->hasParsedFileHeader) {
         logging::logWarning(startLine, startColumn, "Module declarations should go at the top of the file");
     }
-    std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
+    const std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
     expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
     if (!this->moduleName.empty()) {
         logError(
@@ -433,7 +437,7 @@ ast::Statement* Parser::parseReturnStatement() {
 
 ast::Statement* Parser::parseSwitchStatement() {
     Token temp = consumeToken();
-    size_t startLine = temp.getLine(), startColumn = temp.getColumn();
+    std::size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
     this->isParsingBlockPrecursor = true;
     ast::Expression* variable = parseExpression(Precedence::Default);
@@ -488,7 +492,7 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
             ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
                                + lexer ::tokenTypeToString(peekTokenType()));
     }
-    size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
+    std::size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
     switch (peekTokenType()) {
         case TokenType::Alias: {
             auto* tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement());
@@ -496,7 +500,8 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
             return tempAlias;
         }
         case TokenType::Aggregate: {
-            auto* tempAggregate = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
+            auto* tempAggregate
+                = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
             tempAggregate->visibility = visibility;
             return tempAggregate;
         }
@@ -584,5 +589,4 @@ ast::Block Parser::parseBlock(const std::string& blockName) {
     }
     return block;
 }
-}  // namespace parser
-}  // namespace Manganese
+}  // namespace Manganese::parser

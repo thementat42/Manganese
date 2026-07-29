@@ -3,6 +3,8 @@
 
 #include <cmath>
 #include <core.hpp>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <mnstl/enum_matches.hxx>
 #include <mnstl/i128.hxx>
@@ -50,7 +52,7 @@ namespace mnstl {
 
 // constexpr inline zero_init_t zero_init{};
 
-enum class Base : uint8_t {
+enum class Base : std::uint8_t {
     Binary = 2,  // 0b prefix
     Octal = 8,  // 0o prefix
     Decimal = 10,  // Default base, no prefix
@@ -92,15 +94,15 @@ class number_t {
         int128_t _i128;
         uint128_t _u128;
         float64_t _f64;
-        int64_t _i64;
-        uint64_t _u64;
+        std::int64_t _i64;
+        std::uint64_t _u64;
         float32_t _f32;
-        int32_t _i32;
-        uint32_t _u32;
-        int16_t _i16;
-        uint16_t _u16;
-        int8_t _i8;
-        uint8_t _u8;
+        std::int32_t _i32;
+        std::uint32_t _u32;
+        std::int16_t _i16;
+        std::uint16_t _u16;
+        std::int8_t _i8;
+        std::uint8_t _u8;
     };
     held_type _underlying;
 
@@ -213,7 +215,7 @@ class number_t {
     //     return _underlying == held_type::none ? std::nullopt : std::make_optional<T>(value_as<T>());
     // }
 
-    constexpr std::string to_string(bool trim_trailing_decimals = false) const noexcept {
+    constexpr std::string to_string(bool trim_trailing_decimals = false) const {
         if (_underlying == held_type::none) { return ""; }
         std::string result = _visit([&](auto v) -> std::string {
             using U = std::remove_cvref_t<decltype(v)>;
@@ -234,7 +236,7 @@ class number_t {
         });
 
         if (is_float() && trim_trailing_decimals) {
-            const size_t dotPos = result.find('.');
+            const std::size_t dotPos = result.find('.');
             if (dotPos != std::string::npos) [[likely]] {
                 while (!result.empty() && result.back() == '0') { result.pop_back(); }
 

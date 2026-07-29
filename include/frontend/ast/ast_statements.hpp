@@ -1,16 +1,17 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 
+#include <cstdint>
+#include <cstddef>
 #include <frontend/ast/ast_base.hpp>
-#include <frontend/ast/ast_expressions.hpp>
-#include <frontend/ast/ast_types.hpp>
 #include <string>
 #include <utility>
 #include <vector>
 
+
 namespace Manganese::ast {
 
-enum class StatementKind : uint8_t {
+enum class StatementKind : std::uint8_t {
 #define STMT(name, str) name,
 #define EXPR(name, str)
 #define TYPE(name, str)
@@ -24,7 +25,7 @@ struct AggregateField {
     std::string name;
     Type* type;
     bool isMutable;
-    size_t line, column;
+    std::size_t line, column;
 };
 
 struct AggregateDeclarationStatement final : public Statement {
@@ -73,7 +74,7 @@ struct EmptyStatement final : public Statement {
 struct EnumValue {
     std::string name;
     Expression* value;
-    size_t line, column;
+    std::size_t line, column;
 };
 
 struct EnumDeclarationStatement final : public Statement {

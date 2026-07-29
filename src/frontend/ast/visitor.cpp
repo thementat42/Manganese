@@ -1,8 +1,10 @@
 #include <format>
+#include <frontend/ast.hpp>
 #include <frontend/ast/visitor_base.hpp>
+#include <utils/result.hpp>
 
-namespace Manganese {
-namespace ast {
+
+namespace Manganese::ast {
 
 template <class Expr, class Stmt, class Type>
 auto Visitor<Expr, Stmt, Type>::visit(ast::Expression* expr) -> exprvisit_t {
@@ -61,5 +63,4 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Type* type) -> typevisit_t {
 
 template class Visitor<Result, Result, Result>;
 
-}  // namespace ast
-}  // namespace Manganese
+}  // namespace Manganese::ast

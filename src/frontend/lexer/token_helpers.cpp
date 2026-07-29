@@ -1,14 +1,10 @@
-#include <format>
+#include <core.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/lexer/token_base.hpp>
 #include <string>
 #include <utils/type_names.hpp>
 
-namespace Manganese {
-
-namespace lexer {
-
-//! Most of this is long
+namespace Manganese::lexer {
 
 TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
     switch (_type) {
@@ -17,27 +13,6 @@ TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
         case TokenType::BitAnd: return TokenType::AddressOf;
         case TokenType::Mul: return TokenType::Dereference;
         default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(_type));
-    }
-}
-
-TokenType getBinaryOperatorFromAssignmentOperator(lexer::TokenType assignmentOp) NOEXCEPT_IF_RELEASE {
-    using enum lexer::TokenType;
-    switch (assignmentOp) {
-        case PlusAssign: return Plus;
-        case MinusAssign: return Minus;
-        case MulAssign: return Mul;
-        case DivAssign: return Div;
-        case FloorDivAssign: return FloorDiv;
-        case ModAssign: return Mod;
-        case BitAndAssign: return BitAnd;
-        case BitOrAssign: return BitOr;
-        case BitXorAssign: return BitXor;
-        case BitLShiftAssign: return BitLShift;
-        case BitRShiftAssign: return BitRShift;
-        default:
-            ASSERT_UNREACHABLE(std::format("Cannot convert assignment operator {} to binary operator",
-                                           lexer ::tokenTypeToString(assignmentOp)));
-            return Unknown;
     }
 }
 
@@ -63,7 +38,4 @@ std::string tokenTypeToString(TokenType type) {
                                + std ::to_string(static_cast<std ::underlying_type<TokenType>::type>(type)));
     }
 }
-
-}  // namespace lexer
-
-}  // namespace Manganese
+}  // namespace Manganese::lexer

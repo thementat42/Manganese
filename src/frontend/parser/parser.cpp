@@ -1,12 +1,10 @@
-#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
 #include <string>
 #include <utility>
 
-namespace Manganese {
-namespace parser {
+namespace Manganese::parser {
 
 ParsedFile Parser::parse() {
     // Parse the header (module declaration and imports)
@@ -62,5 +60,4 @@ std::string importToString(const Import& import) {
     return res + ";";
 }
 
-}  // namespace parser
-}  // namespace Manganese
+}  // namespace Manganese::parser

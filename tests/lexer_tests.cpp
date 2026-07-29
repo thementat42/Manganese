@@ -1,5 +1,4 @@
 #include <cassert>
-#include <core.hpp>
 #include <filesystem>
 #include <frontend/lexer.hpp>
 #include <io/logging.hpp>
@@ -9,9 +8,12 @@
 
 #include "testrunner.hpp"
 
-namespace Manganese {
-namespace tests {
+namespace Manganese::tests {
 using lexer::Token, lexer::TokenType;
+
+// Helpers
+
+namespace {
 
 inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true) {
     if (tokens.empty()) {
@@ -70,20 +72,21 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
     }
     return true;
 }
+}  // namespace
 
-bool testEmptyString() {
+static bool testEmptyString() {
     std::vector<Token> tokens = tokensFromString("");
     printAllTokens(tokens);
     return tokens.empty();
 }
 
-bool testWhitespace() {
+static bool testWhitespace() {
     std::vector<Token> tokens = tokensFromString("  \t\n\r  ");
     printAllTokens(tokens);
     return tokens.empty();
 }
 
-bool testComments() {
+static bool testComments() {
     std::vector<Token> tokens = tokensFromString("# This is a comment\nint x; /*This is\n a\n multiline comment!*/");
     printAllTokens(tokens);
     if (tokens.size() != 3) {
@@ -95,7 +98,7 @@ bool testComments() {
         && checkToken(tokens[2], TokenType::Semicolon, ";");
 }
 
-bool testIdentifiers() {
+static bool testIdentifiers() {
     std::vector<Token> tokens = tokensFromString("foo bar baz _var var123");
     printAllTokens(tokens);
     if (tokens.size() != 5) {
@@ -108,7 +111,7 @@ bool testIdentifiers() {
         && checkToken(tokens[4], TokenType::Identifier, "var123");
 }
 
-bool testKeywords() {
+static bool testKeywords() {
     std::vector<Token> tokens
         = tokensFromString("alias as uint128 bool break aggregate case char mut foo while string");
 
@@ -126,7 +129,7 @@ bool testKeywords() {
         && checkToken(tokens[10], TokenType::While, "while") && checkToken(tokens[11], TokenType::String, "string");
 }
 
-bool testIntegerLiterals() {
+static bool testIntegerLiterals() {
     std::vector<Token> tokens = tokensFromString("0 123u64 456789i8 0xFFF 0b1001 0o33 0x1.23 1.23e-4 1i128");
     printAllTokens(tokens);
     if (tokens.size() != 9) {
@@ -145,7 +148,7 @@ bool testIntegerLiterals() {
         && checkToken(tokens[8], TokenType::IntegerLiteral, "1i128");
 }
 
-bool testFloatLiterals() {
+static bool testFloatLiterals() {
     std::vector<Token> tokens = tokensFromString("0.0f32 1.23f64 456.789 1.44e3q 0b100104e5qq3");
     printAllTokens(tokens);
     if (tokens.size() != 5) {
@@ -160,7 +163,7 @@ bool testFloatLiterals() {
         && checkToken(tokens[4], TokenType::IntegerLiteral, "0b10010") && tokens[4].isInvalid();
 }
 
-bool testCharLiterals() {
+static bool testCharLiterals() {
     std::vector<Token> tokens = tokensFromString("'a' '\\n' '\\'' '\\\\' '\\t' '\\u1234'");
     printAllTokens(tokens);
     if (tokens.size() != 6) {
@@ -174,7 +177,7 @@ bool testCharLiterals() {
         && checkToken(tokens[5], TokenType::CharLiteral, "\u1234");
 }
 
-bool testStringLiterals() {
+static bool testStringLiterals() {
     std::vector<Token> tokens = tokensFromString("\"hello\" \"world\" \"escaped \\\"quote\\\"\"");
     printAllTokens(tokens);
     if (tokens.size() != 3) {
@@ -187,7 +190,7 @@ bool testStringLiterals() {
         && checkToken(tokens[2], TokenType::StrLiteral, "escaped \"quote\"");
 }
 
-bool testOperators() {
+static bool testOperators() {
     std::vector<Token> tokens = tokensFromString(
         "+ - * / // % ++ -- += -= *= /= //= %= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
 
@@ -223,7 +226,7 @@ bool testOperators() {
         && checkToken(tokens[41], TokenType::BitRShiftAssign, ">>=");
 }
 
-bool testBrackets() {
+static bool testBrackets() {
     std::vector<Token> tokens = tokensFromString("( ) { } [ ]");
     printAllTokens(tokens);
     if (tokens.size() != 6) {
@@ -236,7 +239,7 @@ bool testBrackets() {
         && checkToken(tokens[4], TokenType::LeftSquare, "[") && checkToken(tokens[5], TokenType::RightSquare, "]");
 }
 
-bool testPunctuation() {
+static bool testPunctuation() {
     std::vector<Token> tokens = tokensFromString("; , . : ::");
     printAllTokens(tokens);
     if (tokens.size() != 5) {
@@ -249,7 +252,7 @@ bool testPunctuation() {
         && checkToken(tokens[4], TokenType::ScopeResolution, "::");
 }
 
-bool testCompleteProgram() {
+static bool testCompleteProgram() {
     std::vector<Token> tokens = tokensFromFile("tests/lexer_tests.mn");
     printAllTokens(tokens);
     if (tokens.empty()) {
@@ -272,7 +275,7 @@ bool testCompleteProgram() {
         && checkToken(tokens[26], TokenType::Semicolon, ";") && checkToken(tokens[27], TokenType::RightBrace, "}");
 }
 
-bool testNestedBrackets() {
+static bool testNestedBrackets() {
     std::vector<Token> tokens = tokensFromString("arr@[arr@[int16]] foo");
     printAllTokens(tokens);
     if (tokens.size() != 10) {
@@ -287,7 +290,7 @@ bool testNestedBrackets() {
         && checkToken(tokens[8], TokenType::RightSquare, "]") && checkToken(tokens[9], TokenType::Identifier, "foo");
 }
 
-bool testInvalidChar() {
+static bool testInvalidChar() {
     std::vector<Token> tokens = tokensFromString("'too long' '\\z' '\\u9Z99' ");
     printAllTokens(tokens);
     if (tokens.size() != 3) {
@@ -300,7 +303,7 @@ bool testInvalidChar() {
         && tokens[2].getType() == TokenType::CharLiteral && tokens[2].isInvalid();
 }
 
-bool testInvalidEscapeSequence() {
+static bool testInvalidEscapeSequence() {
     std::vector<Token> tokens = tokensFromString("'\\z'");
     printAllTokens(tokens);
     if (tokens.size() != 1) {
@@ -311,7 +314,7 @@ bool testInvalidEscapeSequence() {
     return tokens[0].getType() == TokenType::CharLiteral;
 }
 
-bool testBadFileAccess() {
+static bool testBadFileAccess() {
     try {
         tokensFromFile("__nonexistentfile.mn");
     } catch (const std::runtime_error& e) { return true; }
@@ -338,5 +341,4 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Complete Program", testCompleteProgram);
     runner.runTest("Invalid File", testBadFileAccess);
 }
-}  // namespace tests
-}  // namespace Manganese
+}  // namespace Manganese::tests

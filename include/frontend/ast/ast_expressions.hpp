@@ -2,14 +2,17 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
 
 #include <frontend/ast/ast_base.hpp>
-#include <frontend/ast/ast_types.hpp>
+#include <frontend/lexer/token_type.hpp>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
+#include <mnstl/fold_result.hxx>
+#include <mnstl/number.hxx>
 
 namespace Manganese::ast {
 
-enum class ExpressionKind : uint8_t {
+enum class ExpressionKind : std::uint8_t {
 #define STMT(name, str)
 #define EXPR(name, str) name,
 #define TYPE(name, str)

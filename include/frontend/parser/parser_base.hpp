@@ -1,13 +1,14 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 
-#include <core.hpp>
+#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser/operators.hpp>
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -71,14 +72,14 @@ class Parser {
     using ledHandler_types_t = ast::Type* (Parser::*)(ast::Type*, Precedence);
 
     //~ Lookups
-    static inline std::array<statementHandler_t, static_cast<size_t>(TokenType::_tokenCount)> statementLookup{};
-    static inline std::array<nudHandler_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup{};
-    static inline std::array<ledHandler_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup{};
-    static inline std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap{};
+    static inline std::array<statementHandler_t, static_cast<std::size_t>(TokenType::_tokenCount)> statementLookup{};
+    static inline std::array<nudHandler_t, static_cast<std::size_t>(TokenType::_tokenCount)> nudLookup{};
+    static inline std::array<ledHandler_t, static_cast<std::size_t>(TokenType::_tokenCount)> ledLookup{};
+    static inline std::array<Operator, static_cast<std::size_t>(TokenType::_tokenCount)> operatorPrecedenceMap{};
 
-    static inline std::array<nudHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> nudLookup_types{};
-    static inline std::array<ledHandler_types_t, static_cast<size_t>(TokenType::_tokenCount)> ledLookup_types{};
-    static inline std::array<Operator, static_cast<size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type{};
+    static inline std::array<nudHandler_types_t, static_cast<std::size_t>(TokenType::_tokenCount)> nudLookup_types{};
+    static inline std::array<ledHandler_types_t, static_cast<std::size_t>(TokenType::_tokenCount)> ledLookup_types{};
+    static inline std::array<Operator, static_cast<std::size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type{};
 
     //~ Parsing functions
 
@@ -151,7 +152,8 @@ class Parser {
     Token expectToken(TokenType expectedType, const std::string& errorMessage);
 
     template <class... Args>
-    inline void logError(size_t line, size_t col, std::format_string<Args...> message, Args&&... args) noexcept {
+    inline void logError(std::size_t line, std::size_t col, std::format_string<Args...> message,
+                         Args&&... args) noexcept {
         logging::logError(line, col, message, std::forward<Args>(args)...);
         hasError = true;
     }
@@ -159,7 +161,7 @@ class Parser {
     inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
 
     // ~ Helpers for lookups
-    constexpr static size_t tokenToIndex(TokenType t) noexcept { return static_cast<size_t>(t); }
+    constexpr static std::size_t tokenToIndex(TokenType t) noexcept { return static_cast<std::size_t>(t); }
 
     static void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
     static void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;

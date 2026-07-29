@@ -9,10 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/lexer/token_base.hpp"
-#include "frontend/lexer/token_type.hpp"
-
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`
@@ -48,9 +44,7 @@
  * Everywhere else, interpret as an infix operator
  */
 
-namespace Manganese {
-
-namespace parser {
+namespace Manganese::parser {
 
 ast::Expression* Parser::parseExpression(Precedence precedence) {
     Token token = peekToken();
@@ -64,7 +58,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
     TokenType type = token.getType();
     const std::size_t index = tokenToIndex(type);
 
-    nudHandler_t nudHandler = nudLookup[index];
+    const nudHandler_t nudHandler = nudLookup[index];
     if (!nudHandler) {
         ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
@@ -88,7 +82,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
 
         if (op.leftBindingPower <= precedence || !op.isValid) { break; }
 
-        ledHandler_t handler = ledLookup[idx];
+        const ledHandler_t handler = ledLookup[idx];
         if (!handler) {
             ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
@@ -152,7 +146,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         auto is_duplicate
             = [propertyName](const ast::AggregateInstantiationField& field) { return field.name == propertyName; };
 
-        if (std::find_if(fields.begin(), fields.end(), is_duplicate) != fields.end()) {
+        if (std::ranges::find_if(fields, is_duplicate) != fields.end()) {
             logError(value->getLine(), value->getColumn(), "Duplicate field '{}' in aggregate instantiation of '{}'",
                      propertyName, aggregateName);
         } else {
@@ -215,8 +209,7 @@ ast::Expression* Parser::parseArrayInstantiationExpression() {
             break;  // Done instantiation
         }
         const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
-        ast::Expression* element = parseExpression(static_cast<Precedence>(precedence));
-        elements.push_back(element);
+        elements.push_back(parseExpression(static_cast<Precedence>(precedence)));
         if (peekTokenType() != lexer::TokenType::RightSquare) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate array elements");
         }
@@ -227,14 +220,14 @@ ast::Expression* Parser::parseArrayInstantiationExpression() {
 }
 
 ast::Expression* Parser::parseAssignmentExpression(ast::Expression* left, Precedence precedence) {
-    TokenType op = consumeToken().getType();
+    const TokenType op = consumeToken().getType();
     ast::Expression* right = parseExpression(precedence);
 
     return arena.emplace<ast::AssignmentExpression>(left, op, right);
 }
 
 ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence precedence) {
-    lexer::TokenType op = consumeToken().getType();
+    const lexer::TokenType op = consumeToken().getType();
     ast::Expression* right = parseExpression(precedence);
 
     return arena.emplace<ast::BinaryExpression>(left, op, right);
@@ -316,7 +309,7 @@ ast::Expression* Parser::parsePrefixExpression() {
 }
 
 ast::Expression* Parser::parsePrimaryExpression() {
-    lexer::Token token = consumeToken();
+    const lexer::Token token = consumeToken();
     std::string lexeme = token.getLexeme();
 
     switch (token.getType()) {
@@ -326,7 +319,7 @@ ast::Expression* Parser::parsePrimaryExpression() {
         case TokenType::True: return arena.emplace<ast::BoolLiteralExpression>(true);
         case TokenType::False: return arena.emplace<ast::BoolLiteralExpression>(false);
         case TokenType::FloatLiteral: {
-            mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, true);
+            const mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, true);
             if (!value.exists) {
                 logError(token.getLine(), token.getColumn(), "Invalid float literal '{}'", lexeme);
                 return arena.emplace<ast::NumberLiteralExpression>(0.0);
@@ -337,7 +330,7 @@ ast::Expression* Parser::parsePrimaryExpression() {
             return arena.emplace<ast::NumberLiteralExpression>(value.value);
         }
         case TokenType::IntegerLiteral: {
-            mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, false);
+            const mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, false);
             if (!value.exists) {
                 logError(token.getLine(), token.getColumn(), "Invalid integer literal '{}'", lexeme);
                 return arena.emplace<ast::NumberLiteralExpression>(0);
@@ -387,5 +380,4 @@ ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Preceden
     ast::Type* type = parseType(precedence);
     return arena.emplace<ast::TypeCastExpression>(left, std::move(type));
 }
-}  // namespace parser
-}  // namespace Manganese
+}  // namespace Manganese::parser

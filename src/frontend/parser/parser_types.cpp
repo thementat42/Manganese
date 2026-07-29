@@ -1,19 +1,20 @@
 #include <core.hpp>
+#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <mnstl/number.hxx>
 #include <string>
 #include <utility>
 #include <vector>
+#include <utils/type_names.hpp>
 
-namespace Manganese {
-namespace parser {
+namespace Manganese::parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
     TokenType type = peekTokenType();
     const std::size_t index = tokenToIndex(type);
 
-    nudHandler_types_t nudHandler = nudLookup_types[index];
+    const nudHandler_types_t nudHandler = nudLookup_types[index];
     if (!nudHandler) {
         ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
@@ -26,12 +27,11 @@ ast::Type* Parser::parseType(Precedence precedence) {
         const Operator& op = operatorPrecedenceMap_type[idx];
         if (op.leftBindingPower <= precedence) { break; }
 
-        ledHandler_types_t handler = ledLookup_types[idx];
+        const ledHandler_types_t handler = ledLookup_types[idx];
         if (!handler) {
             ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
-        Precedence rbp = op.rightBindingPower;
-        left = (this->*handler)(left, rbp);
+        left = (this->*handler)(left, op.rightBindingPower);
     }
     return left;
 }
@@ -154,40 +154,40 @@ ast::Type* Parser::parseSymbolType() {
     }
     // If the token is a primitive type, we can directly create a SymbolType
     DISCARD(consumeToken());
-    std::string lex = token.getLexeme();
+    const std::string lexeme = token.getLexeme();
     ast::PrimitiveType_t prim_t = not_primitive;
-    if (lex == int8_str) {
+    if (lexeme == int8_str) {
         prim_t = i8;
-    } else if (lex == int16_str) {
+    } else if (lexeme == int16_str) {
         prim_t = i16;
-    } else if (lex == int32_str) {
+    } else if (lexeme == int32_str) {
         prim_t = i32;
-    } else if (lex == int64_str) {
+    } else if (lexeme == int64_str) {
         prim_t = i64;
-    } else if (lex == int128_str) {
+    } else if (lexeme == int128_str) {
         prim_t = i128;
-    } else if (lex == uint8_str) {
+    } else if (lexeme == uint8_str) {
         prim_t = u8;
-    } else if (lex == uint16_str) {
+    } else if (lexeme == uint16_str) {
         prim_t = u16;
-    } else if (lex == uint32_str) {
+    } else if (lexeme == uint32_str) {
         prim_t = u32;
-    } else if (lex == uint64_str) {
+    } else if (lexeme == uint64_str) {
         prim_t = u64;
-    } else if (lex == uint128_str) {
+    } else if (lexeme == uint128_str) {
         prim_t = u128;
-    } else if (lex == float32_str) {
+    } else if (lexeme == float32_str) {
         prim_t = f32;
-    } else if (lex == float64_str) {
+    } else if (lexeme == float64_str) {
         prim_t = f64;
-    } else if (lex == string_str) {
+    } else if (lexeme == string_str) {
         prim_t = str;
-    } else if (lex == char_str) {
+    } else if (lexeme == char_str) {
         prim_t = character;
-    } else if (lex == bool_str) {
+    } else if (lexeme == bool_str) {
         prim_t = boolean;
     } else {
-        ASSERT_UNREACHABLE("Unknown primitive type " + lex);
+        ASSERT_UNREACHABLE("Unknown primitive type " + lexeme);
     }
     ast::SymbolType* symbol_type = arena.emplace<ast::SymbolType>(token.getLexeme(), prim_t);
     return symbol_type;
@@ -206,5 +206,4 @@ ast::Type* Parser::parseTypeofType() {
     return arena.emplace<ast::TypeofType>(innerExpression);
 }
 
-}  // namespace parser
-}  // namespace Manganese
+}  // namespace Manganese::parser

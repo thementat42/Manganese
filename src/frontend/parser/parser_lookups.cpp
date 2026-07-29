@@ -1,59 +1,59 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/parser.hpp>
+#include <cstddef>
 
-namespace Manganese {
-namespace parser {
+namespace Manganese::parser {
 // Lookup Registration Methods
 
-void Parser::registerLedHandler_binary(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap[_index] = Operator::binary(bindingPower);
-    ledLookup[_index] = handler;
+void Parser::registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept {
+    const std::size_t index = tokenToIndex(type);
+    operatorPrecedenceMap[index] = Operator::binary(precedence);
+    ledLookup[index] = handler;
 }
-void Parser::registerLedHandler_postfix(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap[_index] = Operator::postfix(bindingPower);
-    ledLookup[_index] = handler;
+void Parser::registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept {
+    const std::size_t index = tokenToIndex(type);
+    operatorPrecedenceMap[index] = Operator::postfix(precedence);
+    ledLookup[index] = handler;
 }
-void Parser::registerLedHandler_prefix(TokenType type, Precedence bindingPower, ledHandler_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap[_index] = Operator::prefix(bindingPower);
-    ledLookup[_index] = handler;
+void Parser::registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept {
+    const std::size_t index = tokenToIndex(type);
+    operatorPrecedenceMap[index] = Operator::prefix(precedence);
+    ledLookup[index] = handler;
 }
 
 void Parser::registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap[_index] = Operator::binary(Precedence::Default);
-    nudLookup[_index] = handler;
+    const std::size_t index = tokenToIndex(type);
+    operatorPrecedenceMap[index] = Operator::binary(Precedence::Default);
+    nudLookup[index] = handler;
 }
 
 void Parser::registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap[_index] = Operator::prefix();
-    nudLookup[_index] = handler;
+    const std::size_t index = tokenToIndex(type);
+    operatorPrecedenceMap[index] = Operator::prefix();
+    nudLookup[index] = handler;
 }
 
 void Parser::registerStmtHandler(TokenType type, statementHandler_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap[_index]
+    const std::size_t index = tokenToIndex(type);
+    operatorPrecedenceMap[index]
         = Operator{.leftBindingPower = Precedence::Default, .rightBindingPower = Precedence::Default};
-    statementLookup[_index] = handler;
+    statementLookup[index] = handler;
 }
 
 // Type Lookup Registration Methods
 
 void Parser::registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap_type[_index] = Operator::binary(precedence);
-    ledLookup_types[_index] = handler;
+    const std::size_t index = tokenToIndex(type);
+    operatorPrecedenceMap_type[index] = Operator::binary(precedence);
+    ledLookup_types[index] = handler;
 }
 
 void Parser::registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept {
-    size_t _index = tokenToIndex(type);
-    operatorPrecedenceMap_type[_index]
+    const std::size_t index = tokenToIndex(type);
+    operatorPrecedenceMap_type[index]
         = Operator{.leftBindingPower = Precedence::Primary, .rightBindingPower = Precedence::Default};
-    nudLookup_types[_index] = handler;
+    nudLookup_types[index] = handler;
 }
 
 // Actually register the lookups
@@ -192,6 +192,4 @@ void Parser::initializeTypeLookups() noexcept {
     registerNudHandler_type(Typeof, &Parser::parseTypeofType);
 }
 
-}  // namespace parser
-
-}  // namespace Manganese
+}  // namespace Manganese::parser

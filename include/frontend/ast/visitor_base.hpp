@@ -1,7 +1,6 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_VISITOR_VISITOR_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_VISITOR_VISITOR_BASE_HPP
 
-#include <core.hpp>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_statements.hpp>

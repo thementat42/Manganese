@@ -8,8 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace Manganese {
-namespace io {
+namespace Manganese::io {
 
 FileReader::FileReader(const std::string& filename, size_t bufferCapacity) :
     _position(0), _line(1), _column(1), _filePtr(nullptr), _bufferSize(0), _bufferCapacity(bufferCapacity) {
@@ -69,5 +68,4 @@ char FileReader::consumeChar() noexcept {
     return c;
 }
 
-}  // namespace io
-}  // namespace Manganese
+}  // namespace Manganese::io

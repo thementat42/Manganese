@@ -1,19 +1,19 @@
 #include <cctype>
-#include <core.hpp>
+#include <cstddef>
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
-#include <io/reader.hpp>
 #include <io/stringreader.hpp>
 #include <memory>
 #include <mnstl/number.hxx>
+#include <optional>
 #include <string>
 #include <utility>
+#include <utils/result.hpp>
 
-namespace Manganese {
 
-namespace lexer {
+namespace Manganese::lexer {
 
 //~ Core Lexer Functions
 
@@ -24,9 +24,9 @@ Lexer::Lexer(const std::string& source, Mode mode) : tokenStartLine(1), tokenSta
     }
 }
 
-void Lexer::lex(size_t numTokens) {
+void Lexer::lex(std::size_t numTokens) {
     if (done()) { return; }
-    size_t numTokensMade = 0;
+    std::size_t numTokensMade = 0;
     char currentChar = peekChar();
     while (!done() && numTokensMade < numTokens) {
         Result result = Result::Success;
@@ -126,11 +126,11 @@ Result Lexer::tokenizeCharLiteral() {
 }
 
 Result Lexer::tokenizeKeywordOrIdentifier() {
-    std::string lexeme = "";
+    std::string lexeme;
     while (!done() && (isalnum(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
-    TokenType t = keywordLookup(lexeme);
+    const TokenType t = keywordLookup(lexeme);
 
-    // if t is unknown, assume it's an identifier, otherwise use the given keyword type
+    // if type is unknown, assume it's an identifier, otherwise use the given keyword type
     tokenStream.emplace_back(t == TokenType::Unknown ? TokenType::Identifier : t, std::move(lexeme), tokenStartLine,
                              tokenStartCol);
     return Result::Success;
@@ -171,7 +171,7 @@ Result Lexer::tokenizeNumber() {
         } else if (!isalnum(currentChar)) {
             break;
         } else if (!isValidBaseChar(currentChar)) {
-            char lower_char = tolower(currentChar);
+            const char lower_char = tolower(currentChar);
             if (lower_char == 'i' || lower_char == 'f' || lower_char == 'u' || lower_char == 'e' || lower_char == 'p') {
                 // suffix starts
                 break;
@@ -199,7 +199,8 @@ Result Lexer::tokenizeNumber() {
 Result Lexer::skipBlockComment() {
     advance(2);  // Skip the /*
     int64_t commentDepth = 1;  // Allow nested comments
-    size_t startLine = getLine(), startCol = getCol();
+    std::size_t startLine = getLine();
+    std::size_t startCol = getCol();
     while (!done() && commentDepth > 0) {
         if (peekChar() == '/' && peekChar(1) == '*') {
             ++commentDepth;
@@ -274,9 +275,9 @@ Result Lexer::tokenizeStringLiteral() {
 Result Lexer::tokenizeSymbol() {
     Result result = Result::Success;
     TokenType type;
-    char current = peekChar();
-    char next = peekChar(1);
-    char nextnext = peekChar(2);
+    const char current = peekChar();
+    const char next = peekChar(1);
+    const char nextnext = peekChar(2);
     std::string lexeme = std::string(1, current);
 
     // In here, use TokenType::Operator as a generic value (exact enum mapping determined at the end)
@@ -625,8 +626,7 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
     return Result::Success;
 }
 
-}  // namespace lexer
-}  // namespace Manganese
+}  // namespace Manganese::lexer
 
 /*
 ~ Some ambiguous cases to consider  -- cases where a character could map to more than one operator

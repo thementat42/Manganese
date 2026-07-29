@@ -1,5 +1,6 @@
 #if MN_DEBUG  // only include dump methods in debug builds
 
+#include <format>
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -7,12 +8,12 @@
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/number.hxx>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <utils/type_names.hpp>
 
-namespace Manganese {
-namespace ast {
+namespace Manganese::ast {
 
 // Helpers
 namespace {
@@ -41,7 +42,6 @@ void dumpSemanticType(std::ostream& os, Indent ind, const semantic::SemanticType
     if (!semanticType) { return; }
     os << ind << "semantic type: " << semanticType->toString() << "\n";
 }
-}  // namespace
 
 std::string_view getNumberTypeName(const mnstl::number_t& value) {
     using enum mnstl::number_t::held_type;
@@ -63,11 +63,13 @@ std::string_view getNumberTypeName(const mnstl::number_t& value) {
     }
     ASSERT_UNREACHABLE("Number did not hold a valid type");
 }
+}  // namespace
+
 
 // Statements
 
 void AggregateDeclarationStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "AggregateDeclarationStatement", *this);
     os << ind.next() << "name: " << name << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
@@ -86,7 +88,7 @@ void AggregateDeclarationStatement::dump(std::ostream& os, size_t indent) const 
 }
 
 void AliasStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "AliasStatement", *this);
     os << ind.next() << "alias: " << alias << "\n";
     os << ind.next() << "base type: ";
@@ -95,22 +97,22 @@ void AliasStatement::dump(std::ostream& os, size_t indent) const {
 }
 
 void BreakStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "BreakStatement", *this);
 }
 
 void ContinueStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "ContinueStatement", *this);
 }
 
 void EmptyStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "EmptyStatement", *this);
 }
 
 void EnumDeclarationStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "EnumDeclarationStatement", *this);
 
     os << ind.next() << "name: " << name << "\n";
@@ -129,14 +131,14 @@ void EnumDeclarationStatement::dump(std::ostream& os, size_t indent) const {
 }
 
 void ExpressionStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "ExpressionStatement", *this);
     expression->dump(os, ind.next());
     os << ind << "}\n";
 }
 
 void ForLoopStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "ForLoopStatement", *this);
 
     auto dumpOptionalNode = [&](std::string_view label, const auto* node) {
@@ -157,7 +159,7 @@ void ForLoopStatement::dump(std::ostream& os, size_t indent) const {
 }
 
 void FunctionDeclarationStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "FunctionDeclarationStatement", *this);
     os << ind.next() << "name: " << name << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
@@ -192,7 +194,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, size_t indent) const {
 }
 
 void IfStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "IfStatement", *this);
 
     os << ind.next() << "condition: \n";
@@ -217,13 +219,13 @@ void IfStatement::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void NestedBlockStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "NestedBlockStatement", *this);
     dumpBlock(os, ind.next(), "body", block);
     os << ind << "}\n";
 }
 void ReturnStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "ReturnStatement", *this);
     if (value) {
         os << ind.next() << "value: \n";
@@ -234,7 +236,7 @@ void ReturnStatement::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void SwitchStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "SwitchStatement", *this);
 
     os << ind.next() << "variable: \n";
@@ -254,7 +256,7 @@ void SwitchStatement::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void VariableDeclarationStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "VariableDeclarationStatement", *this);
     os << ind.next() << "name: " << name << "\n";
     os << ind.next() << "isMutable: " << (isMutable ? "true" : "false") << "\n";
@@ -277,7 +279,7 @@ void VariableDeclarationStatement::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void WhileLoopStatement::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "WhileLoopStatement", *this);
     os << ind.next() << "Is Do-While: " << (isDoWhile ? "true" : "false") << "\n";
     os << ind.next() << "condition: \n";
@@ -289,7 +291,7 @@ void WhileLoopStatement::dump(std::ostream& os, size_t indent) const {
 // Expressions
 
 void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "AggregateInstantiationExpression", *this);
     os << ind.next() << "Name: " << name << "\n";
     os << ind.next() << "fields: [\n";
@@ -305,7 +307,7 @@ void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) con
 }
 
 void AggregateLiteralExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "AggregateLiteralExpression", *this);
     os << ind.next() << "Elements {\n";
     for (const Expression* element : elements) { element->dump(os, ind.next(2)); }
@@ -313,7 +315,7 @@ void AggregateLiteralExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void AlignofExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "AlignofExpression", *this);
     os << ind.next() << "type: \n";
     type->dump(os, ind.next(2));
@@ -321,7 +323,7 @@ void AlignofExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void ArrayLiteralExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "ArrayLiteralExpression", *this);
 
     os << ind.next() << "elements: [\n";
@@ -337,7 +339,7 @@ void ArrayLiteralExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void AssignmentExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "AssignmentExpression", *this);
     os << ind.next() << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << ind.next() << "assignee: \n";
@@ -348,7 +350,7 @@ void AssignmentExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void BinaryExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "BinaryExpression", *this);
     os << ind.next() << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << ind.next() << "left: \n";
@@ -359,7 +361,7 @@ void BinaryExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void BoolLiteralExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "BoolLiteralExpression", *this);
     os << ind.next() << "value: " << toString();
     os << "\n";
@@ -367,7 +369,7 @@ void BoolLiteralExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void CharLiteralExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "CharLiteralExpression", *this);
     os << ind.next() << "value: '" << static_cast<char>(value) << "'\n";
     os << ind.next() << "code point: " << static_cast<std::int32_t>(value) << "\n";
@@ -375,7 +377,7 @@ void CharLiteralExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void FunctionCallExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "FunctionCallExpression", *this);
     os << ind.next() << "callee: \n";
     callee->dump(os, ind.next(2));
@@ -392,7 +394,7 @@ void FunctionCallExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void GenericExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "GenericExpression", *this);
     os << ind.next() << "identifier: " << toStringOr(identifier) << "\n";
     os << ind.next() << "generic types: [\n";
@@ -404,14 +406,14 @@ void GenericExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void IdentifierExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "IdentifierExpression", *this);
     os << ind.next() << "name: " << value << "\n";
     os << ind << "}\n";
 }
 
 void IndexExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "IndexExpression", *this);
     os << ind.next() << "variable: \n";
     variable->dump(os, ind.next(2));
@@ -421,7 +423,7 @@ void IndexExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void MemberAccessExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "MemberAccessExpression", *this);
     os << ind.next() << "object: \n";
     object->dump(os, ind.next(2));
@@ -430,7 +432,7 @@ void MemberAccessExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void NumberLiteralExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "NumberLiteralExpression", *this);
     os << ind.next() << "value: " << toString() << "\n";
     os << ind.next() << "Inferred literal type: " << getNumberTypeName(value) << "\n";
@@ -438,7 +440,7 @@ void NumberLiteralExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void PostfixExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "PostfixExpression", *this);
     os << ind.next() << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << ind.next() << "operand: \n";
@@ -447,7 +449,7 @@ void PostfixExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void PrefixExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "PrefixExpression", *this);
     os << ind.next() << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << ind.next() << "operand: \n";
@@ -456,7 +458,7 @@ void PrefixExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void ScopeResolutionExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "ScopeResolutionExpression", *this);
     os << ind.next() << "scope: \n";
     scope->dump(os, ind.next(2));
@@ -465,7 +467,7 @@ void ScopeResolutionExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void SizeofExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "SizeofExpression", *this);
     os << ind.next() << "type: \n";
     type->dump(os, ind.next(2));
@@ -473,7 +475,7 @@ void SizeofExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void StringLiteralExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "StringLiteralExpression", *this);
     os << ind.next() << "value: " << toString() << "\n";
     os << ind.next() << "length: " << value.length() << "\n";
@@ -481,7 +483,7 @@ void StringLiteralExpression::dump(std::ostream& os, size_t indent) const {
 }
 
 void TypeCastExpression::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "TypeCastExpression", *this);
     os << ind.next() << "expression: \n";
     originalValue->dump(os, ind.next(2));
@@ -493,7 +495,7 @@ void TypeCastExpression::dump(std::ostream& os, size_t indent) const {
 // Types
 
 void AggregateType::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "AggregateType", *this);
     os << ind.next() << "fields: [\n";
 
@@ -508,7 +510,7 @@ void AggregateType::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void ArrayType::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "ArrayType", *this);
     os << ind.next() << "elementType:\n";
     elementType->dump(os, ind.next(2));
@@ -521,7 +523,7 @@ void ArrayType::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void FunctionType::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "FunctionType", *this);
     os << ind.next() << "parameter types: [\n";
     for (const auto& paramType : parameterTypes) {
@@ -542,7 +544,7 @@ void FunctionType::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void GenericType::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "GenericType", *this);
 
     os << ind.next() << "base: ";
@@ -557,7 +559,7 @@ void GenericType::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void PointerType::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "PointerType", *this);
     os << ind.next() << "base type: \n";
     baseType->dump(os, ind.next(2));
@@ -565,7 +567,7 @@ void PointerType::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void SymbolType::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "SymbolType", *this);
     os << ind.next() << "name: " << name << "\n";
     os << ind.next() << "primitive type: " << primitiveTypeToString(primitiveType) << "\n";
@@ -573,7 +575,7 @@ void SymbolType::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 void TypeofType::dump(std::ostream& os, size_t indent) const {
-    Indent ind{indent};
+    const Indent ind{indent};
     dumpHeader(os, ind, "TypeofType", *this);
     os << ind.next() << "expression: ";
     expression->dump(os, ind.next());
@@ -581,7 +583,6 @@ void TypeofType::dump(std::ostream& os, size_t indent) const {
     os << ind << "}\n";
 }
 
-}  // namespace ast
-}  // namespace Manganese
+}  // namespace Manganese::ast
 
 #endif  // MN_DEBUG

@@ -1,7 +1,6 @@
 #ifndef MANGANESE_INCLUDE_IO_READER_HPP
 #define MANGANESE_INCLUDE_IO_READER_HPP
 
-#include <core.hpp>
 #include <cstddef>
 
 namespace Manganese::io {
@@ -22,12 +21,12 @@ class Reader {
     Reader(Reader&&) noexcept = delete;
     Reader& operator=(Reader&&) noexcept = delete;
 
-    virtual char peekChar(size_t offset = 0) noexcept = 0;
+    virtual char peekChar(std::size_t offset = 0) noexcept = 0;
     [[nodiscard]] virtual char consumeChar() noexcept = 0;
-    virtual void setPosition(size_t newPosition) noexcept = 0;
-    constexpr virtual size_t getPosition() const noexcept = 0;
-    constexpr virtual size_t getLine() const noexcept = 0;
-    constexpr virtual size_t getColumn() const noexcept = 0;
+    virtual void setPosition(std::size_t newPosition) noexcept = 0;
+    constexpr virtual std::size_t getPosition() const noexcept = 0;
+    constexpr virtual std::size_t getLine() const noexcept = 0;
+    constexpr virtual std::size_t getColumn() const noexcept = 0;
     constexpr virtual bool done() const noexcept = 0;
 };
 }  // namespace Manganese::io

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <compare>
+#include <cstdint>
 #include <format>
 #include <limits>
 #include <mnstl/ext_num_config.hxx>
@@ -98,7 +99,7 @@ struct _basic_int128 {
 
     constexpr _basic_int128(upper_t upper64, std::uint64_t lower64) : _upper(upper64), _lower(lower64) {}
 
-    constexpr _basic_int128(bool value) noexcept : _upper(0), _lower(value) {}
+    constexpr _basic_int128(bool value) noexcept : _upper(0), _lower(static_cast<std::uint64_t>(value)) {}
 
     template <Integral I>
         requires(sizeof(I) < 16)  // avoid ambiguity on overload resolution
@@ -144,7 +145,7 @@ struct _basic_int128 {
 
     template <FloatingPoint F>
     constexpr operator F() const noexcept {
-        return static_cast<F>(_upper) * static_cast<F>(TWO_POW_64) + static_cast<F>(_lower);
+        return (static_cast<F>(_upper) * static_cast<F>(TWO_POW_64)) + static_cast<F>(_lower);
     }
     template <Numeric T>
         requires(!detail::is_any_of<T, int128_t, uint128_t>)  // avoid ambiguity with the copy/move assignment operators
@@ -235,8 +236,8 @@ struct divmod_u128_result {
 struct divmod_i128_result {
     const int128_t quotient, remainder;
 };
-constexpr divmod_u128_result _divmod_u128(uint128_t, uint128_t);
-constexpr divmod_i128_result _divmod_i128(int128_t, int128_t);
+constexpr divmod_u128_result _divmod_u128(uint128_t numerator, uint128_t denominator);
+constexpr divmod_i128_result _divmod_i128(int128_t numerator, int128_t denominator);
 }  // namespace i128_detail
 
 // Casts
@@ -413,7 +414,7 @@ constexpr bool operator==(int128_t l, uint128_t r) noexcept {
 
 constexpr std::strong_ordering operator<=>(int128_t l, uint128_t r) noexcept {
     if (l._upper < 0) { return std::strong_ordering::less; }  // a negative value is always less than an unsigned value
-    const std::uint64_t l_upper_unsigned = static_cast<std::uint64_t>(l._upper);
+    const auto l_upper_unsigned = static_cast<std::uint64_t>(l._upper);
     if (l_upper_unsigned != r._upper) { return l_upper_unsigned <=> r._upper; }
     return l._lower <=> r._lower;
 }
@@ -428,15 +429,15 @@ constexpr std::strong_ordering operator<=>(uint128_t l, int128_t r) noexcept {
 // Bitwise operators between int128_t and uint128_t
 
 constexpr int128_t operator&(int128_t l, uint128_t r) noexcept {
-    const std::int64_t result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) & r._upper);
+    const auto result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) & r._upper);
     return int128_t{result_upper, l._lower & r._lower};
 }
 constexpr int128_t operator|(int128_t l, uint128_t r) noexcept {
-    const std::int64_t result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) | r._upper);
+    const auto result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) | r._upper);
     return int128_t{result_upper, l._lower | r._lower};
 }
 constexpr int128_t operator^(int128_t l, uint128_t r) noexcept {
-    const std::int64_t result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) ^ r._upper);
+    const auto result_upper = static_cast<std::int64_t>(static_cast<std::uint64_t>(l._upper) ^ r._upper);
     return int128_t{result_upper, l._lower ^ r._lower};
 }
 constexpr int128_t operator<<(int128_t l, uint128_t r) noexcept {
@@ -679,19 +680,19 @@ constexpr uint128_t _shr_u128(uint128_t value, unsigned shift) noexcept {
 constexpr int _ctz_u128(uint128_t x) noexcept {
     if (x == 0) { return 128; }
     // there's a 1 somewhere in the lower 64 bits
-    if (x._lower != 0) { return static_cast<int>(std::countr_zero(x._lower)); }
+    if (x._lower != 0) { return std::countr_zero(x._lower); }
     // the lower 64 bits are all 0
-    return 64 + static_cast<int>(std::countr_zero(x._upper));
+    return 64 + std::countr_zero(x._upper);
 }
 
 constexpr int _clz_u128(uint128_t x) noexcept {
     if (x == 0) { return 128; }
-    if (x._upper != 0) { return static_cast<int>(std::countl_zero(x._upper)); }
-    return 64 + static_cast<int>(std::countl_zero(x._lower));
+    if (x._upper != 0) { return std::countl_zero(x._upper); }
+    return 64 + std::countl_zero(x._lower);
 }
 
 constexpr uint128_t _mul_64(std::uint64_t a, std::uint64_t b) noexcept {
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
     unsigned long long high;
     std::uint64_t low = _umul128(a, b, &high);
     return uint128_t{static_cast<std::uint64_t>(high), low};
@@ -732,12 +733,12 @@ constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
     // 4 & 3 is then 0
 
     if ((b & (b - 1)) == 0) {
-        unsigned shift = static_cast<unsigned>(_ctz_u128(b));
+        const auto shift = static_cast<unsigned>(_ctz_u128(b));
         return _shl_u128(a, shift);
     }
 
     if ((a & (a - 1)) == 0) {
-        unsigned shift = static_cast<unsigned>(_ctz_u128(a));
+        const auto shift = static_cast<unsigned>(_ctz_u128(a));
         return _shl_u128(b, shift);
     }
 
@@ -745,31 +746,31 @@ constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
     if (a._upper == 0 && b._upper == 0) { return _mul_64(a._lower, b._lower); }
 
     if (a._upper == 0 || b._upper == 0) {
-        std::uint64_t small_operand = a._upper == 0 ? a._lower : b._lower;
-        mnstl::uint128_t other = a._upper == 0 ? b : a;
-        uint128_t ll = _mul_64(small_operand, other._lower);
-        uint128_t lh = _mul_64(small_operand, other._upper);
+        const std::uint64_t small_operand = a._upper == 0 ? a._lower : b._lower;
+        const mnstl::uint128_t other = a._upper == 0 ? b : a;
+        const uint128_t ll = _mul_64(small_operand, other._lower);
+        const uint128_t lh = _mul_64(small_operand, other._upper);
 
         std::uint64_t low = ll._lower;
         std::uint64_t upper_low = lh._lower + ll._upper;
         return uint128_t{upper_low, low};
     }
 
-    std::uint64_t a_low = a._lower;
-    std::uint64_t a_high = a._upper;
-    std::uint64_t b_low = b._lower;
-    std::uint64_t b_high = b._upper;
+    const std::uint64_t a_low = a._lower;
+    const std::uint64_t a_high = a._upper;
+    const std::uint64_t b_low = b._lower;
+    const std::uint64_t b_high = b._upper;
 
     // effectively FOIL on (upper,lower)*(upper,lower)
-    uint128_t ll = _mul_64(a_low, b_low);
-    uint128_t lh = _mul_64(a_low, b_high);
-    uint128_t hl = _mul_64(a_high, b_low);
+    const uint128_t ll = _mul_64(a_low, b_low);
+    const uint128_t lh = _mul_64(a_low, b_high);
+    const uint128_t hl = _mul_64(a_high, b_low);
     // high*high term goes like 2^128 and can't fit so ignore it
 
-    std::uint64_t low = ll._lower;
+    const std::uint64_t low = ll._lower;
     std::uint64_t carry = ll._upper;
 
-    std::uint64_t mid_low = lh._lower + hl._lower;
+    const std::uint64_t mid_low = lh._lower + hl._lower;
     std::uint64_t mid_carry = mid_low < lh._lower;
     carry += mid_low;
 
@@ -844,11 +845,11 @@ constexpr void swap(uint128_t& a, uint128_t& b) noexcept {
 
 namespace i128_detail {
 constexpr divmod_i128_result _divmod_i128(int128_t numerator, int128_t denominator) {
-    bool negative_numerator = numerator < 0;
-    bool negative_denominator = denominator < 0;
+    const bool negative_numerator = numerator < 0;
+    const bool negative_denominator = denominator < 0;
     const auto divmod_result = _divmod_u128(_abs_i128(numerator), _abs_i128(denominator));
-    int q_sign = (negative_numerator ^ negative_denominator ? -1 : 1);
-    int r_sign = (negative_numerator ? -1 : 1);
+    const int q_sign = (negative_numerator ^ negative_denominator ? -1 : 1);
+    const int r_sign = (negative_numerator ? -1 : 1);
 
     return divmod_i128_result{.quotient = static_cast<int128_t>(divmod_result.quotient) * q_sign,
                               .remainder = static_cast<int128_t>(divmod_result.remainder) * r_sign};
@@ -879,10 +880,10 @@ constexpr std::string _tostr_u128(const uint128_t& i) {
         const auto remainder = divmod.remainder;
 #endif
         --ptr;
-        *ptr = static_cast<char>('0' + std::uint8_t(remainder));  // 0 <= remainder <= 9
+        *ptr = static_cast<char>('0' + static_cast<std::uint8_t>(remainder));  // 0 <= remainder <= 9
         temp = quotient;
     }
-    return std::string(ptr);
+    return {ptr};
 }
 
 constexpr std::string _tostr_i128(const int128_t& i) {

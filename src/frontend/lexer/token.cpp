@@ -1,31 +1,31 @@
-#include <core.hpp>
 #include <frontend/lexer/token.hpp>
 #include <io/logging.hpp>
 #include <string>
 #include <utility>
 
-namespace Manganese {
-namespace lexer {
+namespace Manganese::lexer {
 
 void Token::overrideType(TokenType type, std::string lexeme) {
     logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {} with lexeme '{}'",
                          tokenTypeToString(_type), tokenTypeToString(type), lexeme);
 
     _type = type;
-    if (lexeme != "") { _lexeme = std::move(lexeme); }
+    if (!lexeme.empty()) { _lexeme = std::move(lexeme); }
 }
 
+namespace {
 struct keyword_map_entry {
     std::string_view str;
     TokenType type;
 };
+}  // namespace
 
 // let template argument deduction figure out the size (more flexible for adding/removing keywords)
 constexpr std::array keywordTable = {
 #define TOKEN(name, text)
 #define OPERATOR(name, text)
 
-#define KEYWORD(name, text) keyword_map_entry{text, TokenType::name},
+#define KEYWORD(name, text) keyword_map_entry{.str = text, .type = TokenType::name},
 
 #include <frontend/lexer/tokens.def>
 
@@ -33,11 +33,11 @@ constexpr std::array keywordTable = {
 #undef KEYWORD
 #undef OPERATOR
     // if no width is specified, default to a 32-bit float
-    keyword_map_entry{"float", TokenType::Float32},
+    keyword_map_entry{.str = "float", .type = TokenType::Float32},
     // if no width is specified, default to a 32-bit integer
-    keyword_map_entry{"int", TokenType::Int32},
+    keyword_map_entry{.str = "int", .type = TokenType::Int32},
     // if no width is specified, default to a 32-bit unsigned integer
-    keyword_map_entry{"uint", TokenType::UInt32},
+    keyword_map_entry{.str = "uint", .type = TokenType::UInt32},
 };
 
 TokenType keywordLookup(const std::string_view& s) noexcept {
@@ -52,5 +52,4 @@ std::string Token::toString() const noexcept {
                        _column);
 }
 
-}  // namespace lexer
-}  // namespace Manganese
+}  // namespace Manganese::lexer

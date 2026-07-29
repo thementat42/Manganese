@@ -1,14 +1,15 @@
 #include <core.hpp>
+#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
+#include <mnstl/number.hxx>
 #include <utility>
 #include <vector>
 
-namespace Manganese {
-namespace semantic {
+namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateType* type) -> typevisit_t {
-    const ast::AggregateType* aggregateType = static_cast<const ast::AggregateType*>(type);
+    const auto* aggregateType = static_cast<const ast::AggregateType*>(type);
     std::vector<const SemanticType*> resolvedFields;
     resolvedFields.reserve(aggregateType->fieldTypes.size());
 
@@ -23,7 +24,7 @@ auto analyzer::visit(ast::AggregateType* type) -> typevisit_t {
 }
 
 auto analyzer::visit(ast::ArrayType* type) -> typevisit_t {
-    const ast::ArrayType* arrayType = static_cast<const ast::ArrayType*>(type);
+    const auto* arrayType = static_cast<const ast::ArrayType*>(type);
 
     // for nested arrays
     const SemanticType* outerVarType = context.currentVariableDeclarationType;
@@ -37,10 +38,10 @@ auto analyzer::visit(ast::ArrayType* type) -> typevisit_t {
         logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
         return Result::Failure;
     }
-    size_t length;
+    std::size_t length;
     if (arrayType->lengthExpression) {
         if (visit(arrayType->lengthExpression) == Result::Failure) { return Result::Failure; }
-        mnstl::fold_result_t fold = arrayType->lengthExpression->fold();
+        const mnstl::fold_result_t fold = arrayType->lengthExpression->fold();
         if (!fold.is_number()) {
             logError(arrayType->lengthExpression, "Array length ({}) must be a constant expression",
                      arrayType->lengthExpression->toString());
@@ -60,7 +61,7 @@ auto analyzer::visit(ast::ArrayType* type) -> typevisit_t {
                      lengthValue.to_string());
             return Result::Failure;
         }
-        length = lengthValue.value_as<size_t>();
+        length = lengthValue.value_as<std::size_t>();
     } else if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
         length = static_cast<const Array*>(context.currentVariableDeclarationType)->length;
     } else [[unlikely]] {
@@ -92,7 +93,7 @@ auto analyzer::visit(ast::FunctionType* type) -> typevisit_t {
     return Result::Success;
 }
 auto analyzer::visit(ast::GenericType* type) -> typevisit_t {
-    const ast::GenericType* genericType = static_cast<const ast::GenericType*>(type);
+    const auto* genericType = static_cast<const ast::GenericType*>(type);
     visit(genericType->baseType);
     const SemanticType* baseType = genericType->baseType->semanticType;
     if (!baseType) { return Result::Failure; }
@@ -109,7 +110,7 @@ auto analyzer::visit(ast::GenericType* type) -> typevisit_t {
     return Result::Success;
 }
 auto analyzer::visit(ast::PointerType* type) -> typevisit_t {
-    const ast::PointerType* pointerType = static_cast<const ast::PointerType*>(type);
+    const auto* pointerType = static_cast<const ast::PointerType*>(type);
     visit(pointerType->baseType);
     const SemanticType* baseType = pointerType->baseType->semanticType;
     if (!baseType) {
@@ -120,7 +121,7 @@ auto analyzer::visit(ast::PointerType* type) -> typevisit_t {
     return Result::Success;
 }
 auto analyzer::visit(ast::SymbolType* type) -> typevisit_t {
-    const ast::SymbolType* symbolType = static_cast<const ast::SymbolType*>(type);
+    const auto* symbolType = static_cast<const ast::SymbolType*>(type);
     if (symbolType->primitiveType != ast::PrimitiveType_t::not_primitive) {
         type->semanticType = typeContext.getPrimitive(symbolType->primitiveType);
         return Result::Failure;
@@ -139,11 +140,10 @@ auto analyzer::visit(ast::SymbolType* type) -> typevisit_t {
 }
 
 auto analyzer::visit(ast::TypeofType* type) -> typevisit_t {
-    const ast::TypeofType* typeofType = static_cast<const ast::TypeofType*>(type);
+    const auto* typeofType = static_cast<const ast::TypeofType*>(type);
     if (visit(typeofType->expression) == Result::Failure) { return Result::Failure; }
     type->semanticType = typeofType->expression->semanticType;
     return Result::Success;
 }
 
-}  // namespace semantic
-}  // namespace Manganese
+}  // namespace Manganese::semantic

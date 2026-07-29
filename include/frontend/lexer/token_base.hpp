@@ -2,9 +2,12 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_BASE_HPP
 
 #include <core.hpp>
+#include <cstddef>
 #include <frontend/lexer/token_type.hpp>
 #include <mnstl/enum_matches.hxx>
 #include <string>
+#include <string_view>
+#include <utility>
 
 namespace Manganese::lexer {
 
@@ -13,11 +16,11 @@ class Token {
     bool _isInvalid;
     TokenType _type;
     std::string _lexeme;
-    size_t _line, _column;
+    std::size_t _line, _column;
 
    public:
     Token() noexcept = default;
-    Token(const TokenType type, std::string&& lexeme, const size_t line, const size_t column, bool isInvalid = false) :
+    Token(TokenType type, std::string&& lexeme, std::size_t line, std::size_t column, bool isInvalid = false) :
         _isInvalid(isInvalid), _type(type), _lexeme(std::move(lexeme)), _line(line), _column(column) {
         // Special lexeme override cases
         if (_type == TokenType::Int32) {
@@ -38,8 +41,8 @@ class Token {
     constexpr bool isInvalid() const noexcept { return _isInvalid; }
     constexpr TokenType getType() const noexcept { return _type; }
     constexpr std::string getLexeme() const noexcept { return _lexeme; }
-    constexpr size_t getLine() const noexcept { return _line; }
-    constexpr size_t getColumn() const noexcept { return _column; }
+    constexpr std::size_t getLine() const noexcept { return _line; }
+    constexpr std::size_t getColumn() const noexcept { return _column; }
 
     constexpr bool isPrefixOperator() const noexcept {
         using enum TokenType;
