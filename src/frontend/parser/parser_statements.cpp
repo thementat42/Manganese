@@ -77,9 +77,9 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
         ast::Type* type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
-        auto duplicate = std::find_if(fields.begin(), fields.end(), [fieldName](const ast::AggregateField& field) -> bool {
-            return field.name == fieldName;
-        });
+        auto duplicate
+            = std::find_if(fields.begin(), fields.end(),
+                           [fieldName](const ast::AggregateField& field) -> bool { return field.name == fieldName; });
         if (duplicate != fields.end()) {
             logError(t.getLine(), t.getColumn(),
                      "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})", fieldName,

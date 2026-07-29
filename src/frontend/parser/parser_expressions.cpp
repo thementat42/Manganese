@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "frontend/ast/ast_base.hpp"
 #include "frontend/lexer/token_base.hpp"
 #include "frontend/lexer/token_type.hpp"

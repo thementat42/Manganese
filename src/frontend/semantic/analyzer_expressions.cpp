@@ -441,7 +441,8 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
                 return Result::Failure;
             }
             if (expression->op == UnaryMinus && isUnsignedInteger(opType->primitiveType)) {
-                logWarning(expression, "Applying a '-' to an unsigned integer type  ('{}') causes wrapping", opType->toString());
+                logWarning(expression, "Applying a '-' to an unsigned integer type  ('{}') causes wrapping",
+                           opType->toString());
             }
             expression->semanticType = opType;
         } break;

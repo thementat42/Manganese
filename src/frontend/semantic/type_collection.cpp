@@ -33,13 +33,13 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             auto aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
 
             Result result = symbolTable.declare(aggregateStmt->name,
-                                              Symbol{
-                                                  .type = nullptr,
-                                                  .node = aggregateStmt,
-                                                  .kind = SymbolKind::Aggregate,
-                                                  .visibility = aggregateStmt->visibility,
-                                                  .isMutable = false,
-                                              });
+                                                Symbol{
+                                                    .type = nullptr,
+                                                    .node = aggregateStmt,
+                                                    .kind = SymbolKind::Aggregate,
+                                                    .visibility = aggregateStmt->visibility,
+                                                    .isMutable = false,
+                                                });
             if (result == Result::Failure) { _reportRedeclaration(aggregateStmt->name, aggregateStmt); }
             return result;
         }
@@ -47,13 +47,13 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             auto aliasStmt = static_cast<ast::AliasStatement*>(stmt);
 
             Result result = symbolTable.declare(aliasStmt->alias,
-                                              Symbol{
-                                                  .type = nullptr,
-                                                  .node = aliasStmt,
-                                                  .kind = SymbolKind::TypeAlias,
-                                                  .visibility = aliasStmt->visibility,
-                                                  .isMutable = false,
-                                              });
+                                                Symbol{
+                                                    .type = nullptr,
+                                                    .node = aliasStmt,
+                                                    .kind = SymbolKind::TypeAlias,
+                                                    .visibility = aliasStmt->visibility,
+                                                    .isMutable = false,
+                                                });
             if (result == Result::Failure) { _reportRedeclaration(aliasStmt->alias, aliasStmt); }
             return result;
         }
@@ -61,13 +61,13 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             auto enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
 
             Result result = symbolTable.declare(enumDecl->name,
-                                              Symbol{
-                                                  .type = nullptr,
-                                                  .node = enumDecl,
-                                                  .kind = SymbolKind::Enum,
-                                                  .visibility = enumDecl->visibility,
-                                                  .isMutable = false,
-                                              });
+                                                Symbol{
+                                                    .type = nullptr,
+                                                    .node = enumDecl,
+                                                    .kind = SymbolKind::Enum,
+                                                    .visibility = enumDecl->visibility,
+                                                    .isMutable = false,
+                                                });
             if (result == Result::Failure) { _reportRedeclaration(enumDecl->name, enumDecl); }
             return result;
         }

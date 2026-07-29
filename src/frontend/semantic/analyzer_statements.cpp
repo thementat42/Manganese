@@ -45,7 +45,7 @@ auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
         // since we enter a scope here, we need to the body visitor know it's already in the appropriate scope
         blockNeedsToEnterScope = false;
         symbolTable.enterScope();
-        if (visit(statement->initializationStep) == Result::Failure) { result = Result::Failure;}
+        if (visit(statement->initializationStep) == Result::Failure) { result = Result::Failure; }
     }
     if (statement->stopCondition) {
         // there is a stop condition, check it

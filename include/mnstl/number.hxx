@@ -179,7 +179,7 @@ class number_t {
     constexpr bool is_integer() const noexcept {
         using enum held_type;
         return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64,
-        uint128);
+                                       uint128);
     }
 
     constexpr bool is_float() const noexcept {
@@ -205,7 +205,7 @@ class number_t {
             } else {
                 return static_cast<T>(v);
             }
-         });
+        });
     }
 
     // template <Numeric T>

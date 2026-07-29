@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
 #else
