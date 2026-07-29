@@ -26,7 +26,7 @@ struct Indent {
 };
 
 inline void dumpHeader(std::ostream& os, Indent indent, std::string_view className, const ASTNode& node) {
-    os << indent << std::format("{} [{}:{}]\n", className, node.getLine(), node.getColumn()) << "{\n";
+    os << indent << std::format("{} [{}:{}]", className, node.getLine(), node.getColumn()) << "{\n";
 }
 
 inline void dumpBlock(std::ostream& os, Indent indent, std::string_view label, const ast::Block& block) {
