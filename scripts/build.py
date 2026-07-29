@@ -13,7 +13,7 @@ Options:
     --compile-commands                                     Generate compile_commands.json in the build directory.
     -cxx, -cpp, --cxxcompiler, --cppcompiler CXXCOMPILER   Specify a C++ compiler to use for the build instead of the default for the system
     -d, --debug                                            Build the compiler in debug mode instead of release mode.
-    -f, --fresh                                            Run a fresh build by clearing the build directory before running CMake
+    -f, --fresh-build                                       Run a fresh build by clearing the build directory before running CMake
     -g, --generator                                        Set a generator for CMake's build files.
     -h, --help                                             Print this help message and exit
     -j, --jobs                                             Number of parallel build jobs.
