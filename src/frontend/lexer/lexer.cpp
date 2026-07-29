@@ -94,7 +94,7 @@ Result Lexer::tokenizeCharLiteral() {
     while (true) {
         if (done()) {
             logging::logError(getLine(), getCol(), "Unclosed character literal");
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol,
+            tokenStream.emplace_back(TokenType::CharLiteral, std::move(charLiteral), tokenStartLine, tokenStartCol,
                                      /*invalid=*/true);
             return Result::Failure;
         }
@@ -102,7 +102,7 @@ Result Lexer::tokenizeCharLiteral() {
         if (peekChar() == '\n') {
             logging::logError(getLine(), getCol(), "Unclosed character literal");
 
-            tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol,
+            tokenStream.emplace_back(TokenType::CharLiteral, std::move(charLiteral), tokenStartLine, tokenStartCol,
                                      /*invalid=*/true);
             return Result::Failure;
         }
@@ -120,7 +120,7 @@ Result Lexer::tokenizeCharLiteral() {
         logging::logError(getLine(), getCol(), "Character literal exceeds 1 character limit");
         result = Result::Failure;
     }
-    tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, tokenStartLine, tokenStartCol,
+    tokenStream.emplace_back(TokenType::CharLiteral, std::move(charLiteral), tokenStartLine, tokenStartCol,
                              /*invalid=*/result == Result::Failure);
     return result;
 }
@@ -131,7 +131,7 @@ Result Lexer::tokenizeKeywordOrIdentifier() {
     TokenType t = keywordLookup(lexeme);
 
     // if t is unknown, assume it's an identifier, otherwise use the given keyword type
-    tokenStream.emplace_back(t == TokenType::Unknown ? TokenType::Identifier : t, lexeme, tokenStartLine,
+    tokenStream.emplace_back(t == TokenType::Unknown ? TokenType::Identifier : t, std::move(lexeme), tokenStartLine,
                              tokenStartCol);
     return Result::Success;
 }
@@ -191,7 +191,7 @@ Result Lexer::tokenizeNumber() {
                           numberLiteral);
         result = Result::Failure;
     }
-    tokenStream.emplace_back(isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral, numberLiteral,
+    tokenStream.emplace_back(isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral, std::move(numberLiteral),
                              tokenStartLine, tokenStartCol, /*invalid=*/result == Result::Failure);
     return result;
 }
@@ -230,7 +230,7 @@ Result Lexer::tokenizeStringLiteral() {
     while (true) {
         if (done()) {
             logging::logError(getLine(), getCol(), "Unclosed string literal");
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol,
+            tokenStream.emplace_back(TokenType::StrLiteral, std::move(stringLiteral), tokenStartLine, tokenStartCol,
                                      /*invalid=*/true);
             return Result::Failure;
         }
@@ -249,7 +249,7 @@ Result Lexer::tokenizeStringLiteral() {
                 getLine(), getCol(),
                 "String literal cannot span multiple lines. If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line");
 
-            tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol,
+            tokenStream.emplace_back(TokenType::StrLiteral, std::move(stringLiteral), tokenStartLine, tokenStartCol,
                                      /*invalid=*/true);
             return Result::Failure;
         }
@@ -266,7 +266,7 @@ Result Lexer::tokenizeStringLiteral() {
             stringLiteral = std::move(*processedString);
         }
     }
-    tokenStream.emplace_back(TokenType::StrLiteral, stringLiteral, tokenStartLine, tokenStartCol,
+    tokenStream.emplace_back(TokenType::StrLiteral, std::move(stringLiteral), tokenStartLine, tokenStartCol,
                              /*invalid=*/result == Result::Failure);
     return result;
 }
@@ -478,7 +478,7 @@ Result Lexer::tokenizeSymbol() {
             break;
     }
     advance(lexeme.length());
-    tokenStream.emplace_back(type, lexeme, tokenStartLine, tokenStartCol,
+    tokenStream.emplace_back(type, std::move(lexeme), tokenStartLine, tokenStartCol,
                              /*invalid=*/result == Result::Failure);
     return result;
 }

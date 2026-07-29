@@ -4,6 +4,7 @@
 #include <mnstl/number.hxx>
 #include <optional>
 #include <string>
+#include <utility>
 
 // TODO: Rework to properly handle unicode, validation, etc.
 
@@ -80,7 +81,7 @@ Result Lexer::processCharEscapeSequence(const std::string& charLiteral) {
     std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
     if (!resolved) {
         logging::logError(getLine(), getCol(), "Invalid character literal", charLiteral);
-        tokenStream.emplace_back(TokenType::CharLiteral, charLiteral, getLine(), getCol(), /*invalid=*/true);
+        tokenStream.emplace_back(TokenType::CharLiteral, std::string(charLiteral), getLine(), getCol(), /*invalid=*/true);
         return Result::Failure;
     }
     std::string processed = *resolved;
@@ -99,7 +100,7 @@ Result Lexer::processCharEscapeSequence(const std::string& charLiteral) {
         logging::logError(getLine(), getCol(), "Invalid character literal ", charLiteral);
         result = Result::Failure;
     }
-    tokenStream.emplace_back(TokenType::CharLiteral, processed, getLine(), getCol(),
+    tokenStream.emplace_back(TokenType::CharLiteral, std::move(processed), getLine(), getCol(),
                              /*invalid=*/result == Result::Failure);
     return result;
 }
