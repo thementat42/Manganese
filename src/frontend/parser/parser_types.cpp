@@ -2,6 +2,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <mnstl/number.hxx>
+#include <string>
 #include <utility>
 #include <vector>
 

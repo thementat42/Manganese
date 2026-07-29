@@ -31,7 +31,7 @@ class fold_result_t {
     };
 
    public:
-    constexpr fold_result_t() noexcept : _held(held_type::Void) {};
+    constexpr fold_result_t() noexcept : _held(held_type::Void) {}
     constexpr explicit fold_result_t(bool boolean) noexcept : _held(held_type::Boolean), _bool(boolean) {}
     constexpr explicit fold_result_t(char32_t character) noexcept : _held(held_type::Character), _char(character) {}
     constexpr explicit fold_result_t(number_t number) noexcept : _held(held_type::Number), _number(number) {}

@@ -22,7 +22,6 @@ struct keyword_map_entry {
 
 // let template argument deduction figure out the size (more flexible for adding/removing keywords)
 constexpr std::array keywordTable = {
-
 #define TOKEN(name, text)
 #define OPERATOR(name, text)
 

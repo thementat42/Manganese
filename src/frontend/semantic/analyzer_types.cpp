@@ -1,6 +1,8 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
+#include <utility>
+#include <vector>
 
 namespace Manganese {
 namespace semantic {

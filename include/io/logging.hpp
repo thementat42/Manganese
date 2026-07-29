@@ -5,6 +5,7 @@
 #include <format>  // Include format here so any files that use logging have it included
 #include <iostream>
 #include <utility>
+#include <string>
 
 // ANSI color codes for terminal output
 constexpr inline const char* GREEN = "\033[32m";

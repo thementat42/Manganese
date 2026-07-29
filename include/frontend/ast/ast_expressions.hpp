@@ -277,7 +277,7 @@ struct StringLiteralExpression final : public Expression {
     //     Expression(ExpressionKind::StringLiteralExpression), value(_value) {};
 
     MN_AST_STANDARD_INTERFACE;
-    virtual mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
 };
 
 /**
