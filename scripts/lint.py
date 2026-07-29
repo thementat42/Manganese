@@ -39,10 +39,10 @@ CHECKS = ",".join([
     "-readability-magic-numbers",
     "-readability-identifier-length",
     "-modernize-use-trailing-return-type",
-    "-misc-confusable-identifiers",
     "-misc-non-private-member-variables-in-classes",
+    "-misc-confusable-identifiers",
     "-modernize-use-nodiscard",
-    "-readability-redundant-inline-specifier"
+    "-readability-redundant-inline-specifier",
 ])
 
 
@@ -54,8 +54,28 @@ def find_files(base_dir: Path):
                 yield path
 
 
+def get_files():
+    files = []
+
+    for directory in DIRECTORIES:
+        base = Path(directory)
+        if not base.is_dir():
+            print(f"Skipping missing directory: {directory}")
+            continue
+
+        files.extend(find_files(base))
+
+    for file in map(Path, ROOT_FILES):
+        if not file.is_file():
+            print(f"Skipping missing file: {file}")
+            continue
+
+        files.append(file)
+
+    return sorted(files)
+
+
 def run_clang_tidy(clang_tidy, file: Path, report):
-    print(f"Checking {file}")
 
     report.write("X" * 80 + "\n")
     report.write(f"{file}\n")
@@ -76,8 +96,6 @@ def run_clang_tidy(clang_tidy, file: Path, report):
 
     report.write(result.stdout)
     report.write("\n\n")
-    if result.returncode != 0:
-            print(f"clang-tidy returned {result.returncode} for {file}")
 
 
 def main():
@@ -97,30 +115,16 @@ def main():
         )
         sys.exit(1)
 
-    checked = 0
+    files = get_files()
 
     with open(REPORT_FILE, "w", encoding="utf-8") as report:
-        # Check directories.
-        for directory in DIRECTORIES:
-            base = Path(directory)
-            if not base.is_dir():
-                print(f"Skipping missing directory: {directory}")
-                continue
+        total = len(files)
 
-            for file in find_files(base):
-                run_clang_tidy(clang_tidy, file, report)
-                checked += 1
-
-        # Check additional root-level files.
-        for file in map(Path, ROOT_FILES):
-            if not file.is_file():
-                print(f"Skipping missing file: {file}")
-                continue
-
+        for index, file in enumerate(files, start=1):
+            print(f"[{index}/{total}] Checking {file}")
             run_clang_tidy(clang_tidy, file, report)
-            checked += 1
 
-    print(f"\nDone. Checked {checked} file(s).")
+    print(f"\nDone. Checked {total} file(s).")
     print(f"Report written to {REPORT_FILE}")
 
 
