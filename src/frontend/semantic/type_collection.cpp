@@ -61,10 +61,10 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
         }
         case EnumDeclarationStatement: {
             auto* enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
-
+            const SemanticType* enumType = typeContext.getEnum(enumDecl->name);
             const Result result = symbolTable.declare(enumDecl->name,
                                                       Symbol{
-                                                          .type = nullptr,
+                                                          .type = enumType,
                                                           .node = enumDecl,
                                                           .kind = SymbolKind::Enum,
                                                           .visibility = enumDecl->visibility,
