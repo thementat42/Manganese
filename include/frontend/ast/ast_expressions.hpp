@@ -25,6 +25,7 @@ enum class ExpressionKind : std::uint8_t {
 struct AggregateInstantiationField {
     std::string name;
     Expression* value;
+    std::size_t line, column;
 };
 
 /**

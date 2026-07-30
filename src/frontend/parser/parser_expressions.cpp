@@ -136,18 +136,19 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         if (peekTokenType() == lexer::TokenType::RightBrace) {
             break;  // Done instantiation
         }
-        std::string propertyName
-            = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation").getLexeme();
+        Token token = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation");
+        std::string propertyName = token.getLexeme();
+
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
         // want precedence to be 1 higher than assignment (e.g. field = x = 10 is invalid)
         const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         ast::Expression* value = parseExpression(static_cast<Precedence>(precedence));
 
-        if (std::ranges::find(fields, propertyName, &ast::AggregateInstantiationField::name) != fields.end()) {
-            logError(value->getLine(), value->getColumn(), "Duplicate field '{}' in aggregate instantiation of '{}'",
-                     propertyName, aggregateName);
+        if (auto duplicate = std::ranges::find(fields, propertyName, &ast::AggregateInstantiationField::name); duplicate != fields.end()) {
+            logError(value->getLine(), value->getColumn(), "Duplicate field '{}' in aggregate instantiation of '{}' (previously declared at line {}, column {})",
+                     propertyName, aggregateName, duplicate->line, duplicate->column);
         } else {
-            fields.push_back({.name = propertyName, .value = value});
+            fields.push_back({.name = propertyName, .value = value, .line = token.getLine(), .column = token.getColumn()});
         }
         if (peekTokenType() != lexer::TokenType::RightBrace) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate aggregate fields");

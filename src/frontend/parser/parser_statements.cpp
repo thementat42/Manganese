@@ -45,6 +45,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
         DISCARD(consumeToken());
         while (!done() && peekTokenType() != TokenType::RightSquare) {
             std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
+
             if (std::ranges::find(genericTypes, genericName) != genericTypes.end()) {
                 logError(peekToken().getLine(), peekToken().getColumn(),
                          "Generic type '{}' in aggregate '{}' was already declared", genericName, name);
