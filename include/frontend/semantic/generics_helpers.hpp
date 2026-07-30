@@ -2,7 +2,6 @@
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_GENERICS_HELPERS_HPP 1
 
 #include <cstddef>
-#include <cstdint>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <functional>
@@ -26,14 +25,8 @@ struct InstantiationKey {
     }
 };
 
-enum class InstantiationState : std::int8_t {
-    Failure = -1,
-    InProgress = 0,
-    Success = 1
-};
-
 struct InstantiationResult {
-    InstantiationState state = InstantiationState::InProgress;
+    ResolutionStatus state = ResolutionStatus::InProgress;
     const SemanticType* returnType = nullptr;
 };
 
@@ -70,10 +63,10 @@ class InstantiationCache {
 
     void markAsInProgress(const InstantiationKey& key) { _map.insert_or_assign(key, InstantiationResult{}); }
     void markAsSuccess(const InstantiationKey& key, const SemanticType* returnType) {
-        _map.insert_or_assign(key, InstantiationResult{.state = InstantiationState::Success, .returnType = returnType});
+        _map.insert_or_assign(key, InstantiationResult{.state = ResolutionStatus::Success, .returnType = returnType});
     }
     void markAsFailure(const InstantiationKey& key) {
-        _map.insert_or_assign(key, InstantiationResult{.state = InstantiationState::Failure, .returnType = nullptr});
+        _map.insert_or_assign(key, InstantiationResult{.state = ResolutionStatus::Failure, .returnType = nullptr});
     }
 
     bool contains(const InstantiationKey& key) const { return _map.contains(key); }

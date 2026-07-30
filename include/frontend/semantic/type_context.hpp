@@ -17,13 +17,20 @@ namespace Manganese::semantic {
 
 class TypeContext;
 
-enum class Kind : uint8_t {
+enum class Kind : std::uint8_t {
     Aggregate,
     Array,
     Function,
     Generic,
     Pointer,
     Primitive,
+};
+
+enum class ResolutionStatus : std::int8_t {
+    Failure = -1,
+    InProgress = 0,
+    Success = 1,
+    NotStarted = 2,
 };
 
 struct SemanticType {
@@ -62,14 +69,15 @@ struct AggregateField {
 };
 
 struct Aggregate final : public SemanticType {
-    std::vector<AggregateField> fields;
+    mutable std::vector<AggregateField> fields;
     const std::string_view name;
+    mutable ResolutionStatus status;
 
     Aggregate(std::vector<AggregateField>&& fieldTypes, std::string_view aggregateName = "") noexcept :
-        SemanticType(Kind::Aggregate), fields(std::move(fieldTypes)), name(aggregateName) {}
+        SemanticType(Kind::Aggregate), fields(std::move(fieldTypes)), name(aggregateName), status(ResolutionStatus::NotStarted) {}
 
     // For anonymous aggregates
-    Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name() {
+    Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name(), status(ResolutionStatus::Success) {
         fields.reserve(rawTypes.size());
         for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
     }
