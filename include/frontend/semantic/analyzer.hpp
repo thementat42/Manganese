@@ -8,12 +8,12 @@
 #include <frontend/lexer.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/parser.hpp>
+#include <frontend/semantic/generics_helpers.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <utils/result.hpp>
 
@@ -45,7 +45,7 @@ class analyzer final : public _analyzer_base_t {
     parser::ParsedFile& parsedFile;
 
     struct {
-        bool inFunction : 1 = false;
+        bool inFunction = false;
         uint8_t typeCastDepth = 0;
         uint8_t ifStatementDepth = 0;
         uint8_t switchStatementDepth = 0;
@@ -130,6 +130,10 @@ class analyzer final : public _analyzer_base_t {
         symbolTable.exitScope();
         return result;
     }
+
+    // Overloads to handle generics specializations
+    stmtvisit_t visit(ast::AggregateDeclarationStatement*, generic_tag_t);
+    stmtvisit_t visit(ast::FunctionDeclarationStatement*, generic_tag_t);
 };
 
 constexpr bool isInteger(ast::PrimitiveType_t t) noexcept {
