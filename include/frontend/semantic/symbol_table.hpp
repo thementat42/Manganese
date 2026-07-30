@@ -33,8 +33,8 @@ enum class SymbolKind : std::uint8_t {
 };
 
 struct Symbol {
-    SemanticType* type = nullptr;
-    ast::ASTNode* node = nullptr;
+    const SemanticType* type = nullptr;
+    const ast::ASTNode* node = nullptr;
     SymbolKind kind;
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
@@ -52,6 +52,11 @@ struct Scope {
     inline Result insert(std::string_view name, Symbol symbol) {
         const bool emplace_succeeded = symbols.emplace(name, symbol).second;
         return emplace_succeeded ? Result::Success : Result::Failure;
+    }
+
+    [[nodiscard]] inline Symbol* lookup(std::string_view name) noexcept {
+        auto it = symbols.find(name);
+        return it == symbols.end() ? nullptr : &(it->second);
     }
 
     [[nodiscard]] inline const Symbol* lookup(std::string_view name) const noexcept {
@@ -125,8 +130,20 @@ class SymbolTable {
         return _currentScope->insert(name, symbol);
     }
 
-    const Symbol* lookup(std::string_view name) const noexcept {
+    Symbol* lookup(std::string_view name) noexcept {
         // Safe, upward lexical lookup through parent scopes without index array tracking
+        Scope* probe = _currentScope;
+        while (probe) {
+            Symbol* symbol = probe->lookup(name);
+            if (symbol) { return symbol; }
+            probe = probe->parent;
+        }
+
+        logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", name);
+        return nullptr;
+    }
+
+    const Symbol* lookup(std::string_view name) const noexcept {
         const Scope* probe = _currentScope;
         while (probe) {
             const Symbol* symbol = probe->lookup(name);

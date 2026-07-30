@@ -1,11 +1,43 @@
 #include <core.hpp>
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
+#include <io/logging.hpp>
 #include <utils/result.hpp>
 
 namespace Manganese::semantic {
 
-// auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t;
+auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
+    // We don't know the generic types at declaration so we can't check them
+    // Instead, check only when they're instantiated
+    if (!statement->genericTypes.empty()) { return Result::Success; }
+    std::vector<AggregateField> fieldTypes;
+    fieldTypes.reserve(statement->fields.size());
+
+    for (const ast::AggregateField& field : statement->fields) {
+        visit(field.type);
+        const SemanticType* resolvedFieldType = field.type->semanticType;
+        if (!resolvedFieldType) {
+            logging::logError(field.line, field.column, "Unknown type for field '{}' in aggregate '{}'", field.name,
+                              statement->name);
+            return Result::Failure;
+        }
+        if (resolvedFieldType->isAggregate()
+            && static_cast<const Aggregate*>(resolvedFieldType)->name == statement->name) {
+            logging::logError(field.line, field.column,
+                              "Aggregate '{}' cannot contain a direct instance of itself in field '{}'",
+                              statement->name, field.name);
+            return Result::Failure;
+        }
+        fieldTypes.push_back(AggregateField{.name = field.name, .type = resolvedFieldType});
+    }
+    Symbol* symbol = symbolTable.lookup(statement->name);
+    if (!symbol) {
+        ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
+    }
+    symbol->type = typeContext.getNamedAggregate(statement->name, std::move(fieldTypes));
+    return Result::Success;
+}
 
 // auto analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t;
 
@@ -75,7 +107,54 @@ auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-// auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t;
+auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
+    if (context.inFunction) {
+        logError(statement,
+                 "Nested functions are not supported: function '{}' cannot be declared inside another function",
+                 statement->name);
+        return Result::Failure;
+    }
+    const ContextGuard guard{context.inFunction, true};
+    // We don't know the generic types at declaration so we can't check them
+    // Instead, check only when they're instantiated
+    if (!statement->genericTypes.empty()) { return Result::Success; }
+    const SemanticType* resolvedReturnType = nullptr;
+    if (statement->returnType) {
+        visit(statement->returnType);
+        resolvedReturnType = statement->returnType->semanticType;
+        if (!resolvedReturnType) {
+            logError(statement, "Unknown return type for function '{}'", statement->name);
+            return Result::Failure;
+        }
+    }
+    symbolTable.enterScope();
+    for (const ast::FunctionParameter& param : statement->parameters) {
+        visit(param.type);
+        const SemanticType* resolvedParamType = param.type->semanticType;
+        if (!resolvedParamType) {
+            logError(statement, "Unknown type for parameter '{}' in function '{}'", param.name, statement->name);
+            symbolTable.exitScope();
+            return Result::Failure;
+        }
+        Result paramDeclaration = symbolTable.declare(
+            param.name,
+            Symbol{.type = resolvedParamType,
+                   .node = statement,
+                   .kind = (param.isMutable) ? SymbolKind::Parameter : SymbolKind::ConstantParameter,
+                   .isMutable = param.isMutable});
+        if (paramDeclaration == Result::Failure) [[unlikely]] {
+            logError(statement, "Failed to declare parameter '{}' in scope for function '{}'", param.name,
+                     statement->name);
+            symbolTable.exitScope();
+            return Result::Failure;
+        }
+    }
+    context.currentFunctionReturnType = resolvedReturnType;
+    // already entered a scope for the parameters so we don't want to enter a scope while visiting the body
+    Result bodyResult = visit(statement->body, false);
+    context.currentFunctionReturnType = nullptr;
+    return bodyResult;
+}
 
 auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     auto result = Result::Success;
