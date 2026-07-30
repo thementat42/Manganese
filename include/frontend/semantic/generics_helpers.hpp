@@ -37,11 +37,11 @@ namespace std {
 template <>
 struct hash<Manganese::semantic::InstantiationKey> {
     std::size_t operator()(const Manganese::semantic::InstantiationKey& key) const noexcept {
-        std::size_t hash = std::hash<const Manganese::ast::ASTNode*>{}(key.declNode);
+        std::size_t hash_value = std::hash<const Manganese::ast::ASTNode*>{}(key.declNode);
         for (const auto* type : key.typeArgs) {
-            hash = Manganese::semantic::hash_combine(hash, std::hash<decltype(type)>{}(type));
+            hash_value = Manganese::semantic::hash_combine(hash_value, std::hash<decltype(type)>{}(type));
         }
-        return hash;
+        return hash_value;
     }
 };
 
