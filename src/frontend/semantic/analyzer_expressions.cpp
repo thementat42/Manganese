@@ -269,8 +269,10 @@ auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
     return Result::Success;
 }
 
-// auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t;
-// auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t;
+auto analyzer::visit([[maybe_unused]] ast::FunctionCallExpression* expression) -> exprvisit_t {
+    return Result::Success;
+}
+auto analyzer::visit([[maybe_unused]] ast::GenericExpression* expression) -> exprvisit_t { return Result::Success; }
 
 auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
     const Symbol* symbol = symbolTable.lookup(expression->value);
@@ -469,7 +471,9 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     return Result::Success;
 }
 
-// auto analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t;
+auto analyzer::visit([[maybe_unused]] ast::ScopeResolutionExpression* expression) -> exprvisit_t {
+    return Result::Success;
+}
 
 auto analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);

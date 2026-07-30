@@ -61,7 +61,7 @@ auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     return Result::Success;
 }
 
-// auto analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t;
+auto analyzer::visit([[maybe_unused]] ast::AliasStatement* statement) -> stmtvisit_t { return Result::Success; }
 
 auto analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
     if (!context.whileLoopDepth && !context.forLoopDepth && !context.switchStatementDepth) {
@@ -83,7 +83,9 @@ auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
     return Result::Success;  // nothing to check
 }
 
-// auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t;
+auto analyzer::visit([[maybe_unused]] ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
+    return Result::Success;
+}
 
 auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { return visit(statement->expression); }
 
@@ -261,8 +263,10 @@ auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     return Result::Success;
 }
 
-// auto analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t;
-// auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t;
+auto analyzer::visit([[maybe_unused]] ast::SwitchStatement* statement) -> stmtvisit_t { return Result::Success; }
+auto analyzer::visit([[maybe_unused]] ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
+    return Result::Success;
+}
 
 auto analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
     const ContextGuard guard{context.whileLoopDepth,
