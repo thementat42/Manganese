@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -78,12 +80,8 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
         ast::Type* type = parseType(Precedence::Default);
         expectToken(TokenType::Semicolon, "Expected a ';'");
 
-        const auto hasDuplicateField
-            = [fieldName](const ast::AggregateField& field) { return field.name == fieldName; };
-
-        auto duplicate = std::ranges::find_if(fields, hasDuplicateField);
-
-        if (duplicate != fields.end()) {
+        if (auto duplicate = std::ranges::find(fields, fieldName, &ast::AggregateField::name);
+            duplicate != fields.end()) {
             logError(t.getLine(), t.getColumn(),
                      "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})", fieldName,
                      name, duplicate->line, duplicate->column);
@@ -190,11 +188,8 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
             DISCARD(consumeToken());
             valueExpression = parseExpression(Precedence::Default);
         }
-        // Check for duplicate enum value names
-        const auto hasDuplicateName = [valueName](const ast::EnumValue& value) { return value.name == valueName; };
-        auto duplicate = std::ranges::find_if(values.begin(), values.end(), hasDuplicateName);
 
-        if (duplicate != values.end()) {
+        if (auto duplicate = std::ranges::find(values, valueName, &ast::EnumValue::name); duplicate != values.end()) {
             logError(peekToken().getLine(), peekToken().getColumn(),
                      "Duplicate enum value '{}' in enum '{}' (previously declared at line {}, column {})", valueName,
                      name, duplicate->line, duplicate->column);
@@ -273,6 +268,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
             }
             Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
             std::string genericName = genericToken.getLexeme();
+
             if (std::ranges::find(genericTypes, genericName) != genericTypes.end()) {
                 logError(genericToken.getLine(), genericToken.getColumn(),
                          "Duplicate generic type '{}' in function '{}'", genericName, name);

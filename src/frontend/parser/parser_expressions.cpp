@@ -143,10 +143,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         ast::Expression* value = parseExpression(static_cast<Precedence>(precedence));
 
-        auto is_duplicate
-            = [propertyName](const ast::AggregateInstantiationField& field) { return field.name == propertyName; };
-
-        if (std::ranges::find_if(fields, is_duplicate) != fields.end()) {
+        if (std::ranges::find(fields, propertyName, &ast::AggregateInstantiationField::name) != fields.end()) {
             logError(value->getLine(), value->getColumn(), "Duplicate field '{}' in aggregate instantiation of '{}'",
                      propertyName, aggregateName);
         } else {
