@@ -121,6 +121,8 @@ auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
     return result;
 }
 
+auto analyzer::visit([[maybe_unused]] ast::AlignofExpression* expression) -> exprvisit_t { return Result::Success; }
+
 auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     if (expression->elements.empty()) {
         if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
@@ -272,6 +274,7 @@ auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
 auto analyzer::visit([[maybe_unused]] ast::FunctionCallExpression* expression) -> exprvisit_t {
     return Result::Success;
 }
+
 auto analyzer::visit([[maybe_unused]] ast::GenericExpression* expression) -> exprvisit_t { return Result::Success; }
 
 auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
@@ -474,6 +477,8 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
 auto analyzer::visit([[maybe_unused]] ast::ScopeResolutionExpression* expression) -> exprvisit_t {
     return Result::Success;
 }
+
+auto analyzer::visit([[maybe_unused]] ast::SizeofExpression* expression) -> exprvisit_t { return Result::Success; }
 
 auto analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
