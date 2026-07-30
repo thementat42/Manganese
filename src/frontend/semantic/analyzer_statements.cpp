@@ -236,6 +236,8 @@ auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     return result;
 }
 
+auto analyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
+
 auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     if (!context.inFunction) {
         logError(statement, "'return' can only be used in a function");
