@@ -11,6 +11,23 @@ auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     // We don't know the generic types at declaration so we can't check them
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return Result::Success; }
+
+    Symbol* symbol = symbolTable.lookup(statement->name);
+    if (!symbol) {
+        ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
+    }
+
+    const auto* aggregateType = static_cast<const Aggregate*>(symbol->type);
+
+    if (aggregateType->status == ResolutionStatus::InProgress) {
+        logError(statement, "Aggregate '{}' eventually contains itself through a dependency chain", statement->name);
+        return Result::Failure;
+    }
+
+    if (aggregateType->status == ResolutionStatus::Success) { return Result::Success; }
+
+    aggregateType->status = ResolutionStatus::InProgress;
+
     std::vector<AggregateField> fieldTypes;
     fieldTypes.reserve(statement->fields.size());
 
@@ -22,20 +39,25 @@ auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
                               statement->name);
             return Result::Failure;
         }
-        if (resolvedFieldType->isAggregate()
-            && static_cast<const Aggregate*>(resolvedFieldType)->name == statement->name) {
-            logging::logError(field.line, field.column,
-                              "Aggregate '{}' cannot contain a direct instance of itself in field '{}'",
-                              statement->name, field.name);
-            return Result::Failure;
+
+        if (resolvedFieldType->isAggregate()) {
+            const auto* nestedAggregateType = static_cast<const Aggregate*>(resolvedFieldType);
+            Symbol* nestedSymbol = symbolTable.lookup(nestedAggregateType->name);
+            if (nestedSymbol && nestedSymbol->node) {
+                // Cast to non-const ast::Statement* so visit() can accept it
+                auto* nestedStmt = static_cast<ast::Statement*>(nestedSymbol->node);
+
+                if (visit(nestedStmt) == Result::Failure) {
+                    aggregateType->status = ResolutionStatus::Failure;
+                    return Result::Failure;
+                }
+            }
         }
         fieldTypes.push_back(AggregateField{.name = field.name, .type = resolvedFieldType});
     }
-    Symbol* symbol = symbolTable.lookup(statement->name);
-    if (!symbol) {
-        ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
-    }
-    symbol->type = typeContext.getNamedAggregate(statement->name, std::move(fieldTypes));
+
+    aggregateType->fields = std::move(fieldTypes);
+    aggregateType->status = ResolutionStatus::Success;
     return Result::Success;
 }
 
