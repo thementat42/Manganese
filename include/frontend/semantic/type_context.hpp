@@ -160,6 +160,13 @@ struct TypeLookup {
     bool operator()(const SemanticType* lhs, const SemanticType* rhs) const noexcept;
 };
 
+constexpr inline std::size_t GOLDEN_RATIO = (sizeof(std::size_t) == 8) ? 0x9E3779B97F4A7C15ULL  // 64-bit fraction
+                                                                       : 0x9E3779B9U;  // 32-bit fraction
+
+inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
+    return seed ^= value + GOLDEN_RATIO + (seed << 6) + (seed >> 2);
+}
+
 class TypeContext {
    private:
     mnstl::chunk_allocator& _allocator;
