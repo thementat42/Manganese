@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <frontend/ast.hpp>
 #include <mnstl/chunk_allocator.hxx>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -20,6 +21,7 @@ class TypeContext;
 enum class Kind : std::uint8_t {
     Aggregate,
     Array,
+    Enum,
     Function,
     Generic,
     Pointer,
@@ -74,10 +76,14 @@ struct Aggregate final : public SemanticType {
     mutable ResolutionStatus status;
 
     Aggregate(std::vector<AggregateField>&& fieldTypes, std::string_view aggregateName = "") noexcept :
-        SemanticType(Kind::Aggregate), fields(std::move(fieldTypes)), name(aggregateName), status(ResolutionStatus::NotStarted) {}
+        SemanticType(Kind::Aggregate),
+        fields(std::move(fieldTypes)),
+        name(aggregateName),
+        status(ResolutionStatus::NotStarted) {}
 
     // For anonymous aggregates
-    Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name(), status(ResolutionStatus::Success) {
+    Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept :
+        SemanticType(Kind::Aggregate), name(), status(ResolutionStatus::Success) {
         fields.reserve(rawTypes.size());
         for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
     }
@@ -106,6 +112,31 @@ struct Array final : public SemanticType {
     Array(const SemanticType* baseType, size_t len) noexcept :
         SemanticType(Kind::Array), elementType(baseType), length(len) {}
     ~Array() override = default;
+    std::string toString() const override;
+};
+
+struct Variant {
+    std::string_view name;
+    std::optional<int64_t> value = std::nullopt;
+};
+
+struct Enum final : public SemanticType {
+    const std::string_view name;
+    mutable const SemanticType* underlyingType = nullptr;
+    mutable std::vector<Variant> variants;
+    mutable ResolutionStatus status = ResolutionStatus::NotStarted;
+
+    explicit Enum(std::string_view enumName, const SemanticType* defaultUnderlying = nullptr) noexcept :
+        SemanticType(Kind::Enum), name(enumName), underlyingType(defaultUnderlying) {}
+
+    bool hasVariant(std::string_view variantName) const noexcept {
+        for (const auto& v : variants) {
+            if (v.name == variantName) { return true; }
+        }
+        return false;
+    }
+
+    ~Enum() override = default;
     std::string toString() const override;
 };
 
@@ -205,6 +236,8 @@ class TypeContext {
     const SemanticType* getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes);
 
     const SemanticType* getNamedAggregate(std::string_view name, std::vector<AggregateField>&& fieldTypes);
+
+    const SemanticType* getEnum(std::string_view name);
 
     const SemanticType* getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType);
 

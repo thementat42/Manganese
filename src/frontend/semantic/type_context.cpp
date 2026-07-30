@@ -4,6 +4,7 @@
 #include <frontend/semantic.hpp>
 #include <functional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -21,6 +22,8 @@ std::string Aggregate::toString() const {
 }
 
 std::string Array::toString() const { return std::format("{}[{}]", elementType->toString(), length); }
+
+std::string Enum::toString() const { return std::string(name); }
 
 std::string Function::toString() const {
     std::string result = "func(";
@@ -76,6 +79,11 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(array->elementType));
             return hash_combine(hash, std::hash<std::size_t>{}(array->length));
         }
+
+        case Kind::Enum: {
+            const auto* enumeration = static_cast<const Enum*>(t);
+            return std::hash<std::string_view>{}(enumeration->name);
+        }
         case Kind::Function: {
             const auto* function = static_cast<const Function*>(t);
             // Mix the return type first to establish the base function signature
@@ -130,8 +138,14 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
         case Kind::Aggregate: {
             const auto* left = static_cast<const Aggregate*>(lhs);
             const auto* right = static_cast<const Aggregate*>(rhs);
-
+            // For named aggregates, we can immediately distinguish by names
+            // Only for anonymous aggregates do we need to check fields
             return (left->name == right->name) && (left->fields == right->fields);
+        }
+        case Kind::Enum: {
+            const auto* left = static_cast<const Enum*>(lhs);
+            const auto* right = static_cast<const Enum*>(rhs);
+            return left->name == right->name;
         }
         case Kind::Function: {
             const auto* left = static_cast<const Function*>(lhs);
@@ -177,9 +191,15 @@ const SemanticType* TypeContext::getAnonymousAggregate(std::vector<const Semanti
 
 const SemanticType* TypeContext::getNamedAggregate(std::string_view name, std::vector<AggregateField>&& fieldTypes) {
     // Named types are nominal: they are unique by their declaration name.
-    Aggregate tmp(std::move(fieldTypes), name);
-    if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields), name);
+    if (auto it = _cache.find(name); it != _cache.end()) { return *it; }
+    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(fieldTypes), name);
+    _cache.insert(heapAlloc);
+    return heapAlloc;
+}
+
+const SemanticType* TypeContext::getEnum(std::string_view name) {
+    if (auto it = _cache.find(name); it != _cache.end()) { return *it; }
+    auto* heapAlloc = _allocator.emplace<Enum>(name);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
