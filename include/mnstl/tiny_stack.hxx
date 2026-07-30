@@ -15,9 +15,9 @@ class tiny_stack {
    public:
     void push(const T&) = delete;
 
-    inline void push(T&& element) { _data.push_back(std::move(element)); }
+    void push(T&& element) { _data.push_back(std::move(element)); }
 
-    inline void pop() noexcept {
+    void pop() noexcept {
         if (_data.empty()) { return; }  // for safety
         _data.pop_back();
     }
