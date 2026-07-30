@@ -288,14 +288,26 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     while (!done()) {
         if (peekTokenType() == TokenType::RightParen) { break; }
         bool isMutable = false;
-        std::string param_name = expectToken(TokenType::Identifier, "Expected a variable name").getLexeme();
+        Token t = expectToken(TokenType::Identifier, "Expected a variable name");
+        std::string paramName = t.getLexeme();
         expectToken(TokenType::Colon);
         if (peekTokenType() == TokenType::Mut) {
             DISCARD(consumeToken());
             isMutable = true;
         }
         ast::Type* param_type = parseType(Precedence::Default);
-        params.push_back({.name = param_name, .type = param_type, .isMutable = isMutable});
+        if (auto duplicate = std::ranges::find(params, paramName, &ast::FunctionParameter::name);
+            duplicate != params.end()) {
+            logError(t.getLine(), t.getColumn(),
+                     "Duplicate parameter '{}' in function '{}' (previously declared at line {}, column {})", paramName,
+                     name, duplicate->line, duplicate->column);
+        } else {
+            params.push_back({.name = paramName,
+                              .type = param_type,
+                              .isMutable = isMutable,
+                              .line = t.getLine(),
+                              .column = t.getColumn()});
+        }
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
                         "Expected a ',' to separate function parameters, or a ) to close the parameter list");

@@ -124,6 +124,7 @@ struct FunctionParameter {
     std::string name;
     Type* type;
     bool isMutable;
+    std::size_t line, column;
 };
 
 struct FunctionDeclarationStatement final : public Statement {
