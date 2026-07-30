@@ -34,7 +34,7 @@ enum class SymbolKind : std::uint8_t {
 
 struct Symbol {
     const SemanticType* type = nullptr;
-    const ast::ASTNode* node = nullptr;
+    ast::ASTNode* node = nullptr;
     SymbolKind kind;
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
