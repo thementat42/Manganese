@@ -121,7 +121,16 @@ auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
     return result;
 }
 
-auto analyzer::visit([[maybe_unused]] ast::AlignofExpression* expression) -> exprvisit_t { return Result::Success; }
+auto analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
+    if (visit(expression->type) == Result::Failure) { return Result::Failure; }
+    const SemanticType* targetSemanticType = expression->type->semanticType;
+    if (!targetSemanticType) {
+        logError(expression, "Invalid type in alignof expression {}", expression->toString());
+        return Result::Failure;
+    }
+    expression->semanticType = typeContext.getSizeType();
+    return Result::Success;
+}
 
 auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     if (expression->elements.empty()) {
@@ -478,7 +487,16 @@ auto analyzer::visit([[maybe_unused]] ast::ScopeResolutionExpression* expression
     return Result::Success;
 }
 
-auto analyzer::visit([[maybe_unused]] ast::SizeofExpression* expression) -> exprvisit_t { return Result::Success; }
+auto analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
+    if (visit(expression->type) == Result::Failure) { return Result::Failure; }
+    const SemanticType* targetSemanticType = expression->type->semanticType;
+    if (!targetSemanticType) {
+        logError(expression, "Invalid type in sizeof expression {}", expression->toString());
+        return Result::Failure;
+    }
+    expression->semanticType = typeContext.getSizeType();
+    return Result::Success;
+}
 
 auto analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
