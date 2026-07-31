@@ -38,6 +38,7 @@ struct Symbol {
     SymbolKind kind;
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
+    ResolutionStatus status = ResolutionStatus::NotStarted;
     std::string toString() const noexcept;
 };
 

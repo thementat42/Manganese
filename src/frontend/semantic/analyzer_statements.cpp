@@ -5,6 +5,8 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
+#include "frontend/semantic/type_context.hpp"
+
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
@@ -61,7 +63,32 @@ auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     return Result::Success;
 }
 
-auto analyzer::visit([[maybe_unused]] ast::AliasStatement* statement) -> stmtvisit_t { return Result::Success; }
+auto analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
+    Symbol* symbol = symbolTable.lookup(statement->alias);
+    if (!symbol) {
+        ASSERT_UNREACHABLE(
+            std::format("Alias symbol '{}' was not registered during type collection", statement->alias));
+    }
+    // Already resolved
+    if (symbol->status == ResolutionStatus::Success) { return Result::Success; }
+    if (symbol->status == ResolutionStatus::Failure) { return Result::Failure; }
+
+    // 2. Cycle Detection
+    if (symbol->status == ResolutionStatus::InProgress) {
+        logError(statement, "Cyclic type alias detected in the definition of alias '{}'", statement->alias);
+        symbol->status = ResolutionStatus::Failure;
+        return Result::Failure;
+    }
+
+    symbol->status = ResolutionStatus::InProgress;
+    if (visit(statement->baseType) == Result::Failure) {
+        symbol->status = ResolutionStatus::Failure;
+        return Result::Failure;
+    }
+    symbol->type = statement->baseType->semanticType;
+    symbol->status = ResolutionStatus::Success;
+    return Result::Success;
+}
 
 auto analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
     if (!context.whileLoopDepth && !context.forLoopDepth && !context.switchStatementDepth) {
