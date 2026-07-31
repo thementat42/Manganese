@@ -73,7 +73,7 @@ auto analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     if (symbol->status == ResolutionStatus::Success) { return Result::Success; }
     if (symbol->status == ResolutionStatus::Failure) { return Result::Failure; }
 
-    // 2. Cycle Detection
+    // Cycle Detection
     if (symbol->status == ResolutionStatus::InProgress) {
         logError(statement, "Cyclic type alias detected in the definition of alias '{}'", statement->alias);
         symbol->status = ResolutionStatus::Failure;
