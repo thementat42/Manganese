@@ -70,7 +70,7 @@ std::string AggregateDeclarationStatement::toString(std::size_t indent) const {
 }
 
 std::string AliasStatement::toString(std::size_t indent) const {
-    return getIndent(indent) + std::format("alias " WRAP("{}") " as {};", baseType->toString(indent), alias);
+    return getIndent(indent) + std::format("alias {} = " WRAP("{}") ";", alias, baseType->toString(indent));
 }
 
 std::string BreakStatement::toString(std::size_t indent) const { return getIndent(indent) + "break;"; }

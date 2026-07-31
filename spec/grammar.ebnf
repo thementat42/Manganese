@@ -140,7 +140,7 @@ module_statement = "module" identifier ";";
 break_statement = "break" ";";
 continue_statement = "continue" ";";
 
-alias_statement = "alias" type "as" identifier ";""; 
+alias_statement = "alias" identifier "=" type ";""; 
 
 #* Functions
 function_decl = access_modifer? "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";

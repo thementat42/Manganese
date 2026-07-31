@@ -75,6 +75,9 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence precedence) {
         // If the next token is not a right square bracket, it's a length expression
         lengthExpression = parseExpression(Precedence::Default);
     }
+    if (isParsingAliasStatement && lengthExpression == nullptr) {
+        logError(left->getLine(), left->getColumn(), "Arrays in alias statements must have an explicit length expression");
+    }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
     return arena.emplace<ast::ArrayType>(left, lengthExpression);
 }
@@ -149,8 +152,15 @@ ast::Type* Parser::parseSymbolType() {
     using enum ast::PrimitiveType_t;
     Token token = peekToken();
     if (!token.isPrimitiveType()) {
-        // If it's not a primitive type, expect an identifier (i.e., a user-defined type)
-        return arena.emplace<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
+        std::string path = expectToken(TokenType::Identifier).getLexeme();
+        while (peekTokenType() == TokenType::ScopeResolution) {
+            path += consumeToken().getLexeme();  // consume '::'
+            path += expectToken(TokenType::Identifier,
+                                std::format("Expected identifier after {}",
+                                            lexer::tokenTypeToString(TokenType::ScopeResolution)))
+                        .getLexeme();
+        }
+        return arena.emplace<ast::SymbolType>(std::move(path));
     }
     // If the token is a primitive type, we can directly create a SymbolType
     DISCARD(consumeToken());

@@ -11,8 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
-
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -100,39 +98,13 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
 }
 
 ast::Statement* Parser::parseAliasStatement() {
-    DISCARD(consumeToken());
-    ast::Type* baseType;
-    if (peekToken().isPrimitiveType() || peekTokenType() == TokenType::Func || peekTokenType() == TokenType::Ptr) {
-        // Primitive types are easy to alias -- just parse a regular type
-        baseType = parseType(Precedence::Default);
-    } else {
-        // If it's not a primitive type, we expect an identifier.
-        // This might be a path (e.g. alias foo::bar as baz, so we need to handle that)
-        std::string path
-            = expectToken(TokenType::Identifier, "Expected an identifier after 'alias', or a primitive type.")
-                  .getLexeme();
-        while (peekTokenType() == TokenType::ScopeResolution) {
-            path += consumeToken().getLexeme();
-            path += expectToken(TokenType::Identifier,
-                                std::format("Expected an identifier after {}",
-                                            lexer::tokenTypeToString(TokenType::ScopeResolution)))
-                        .getLexeme();
-        }
-
-        if (peekTokenType() == TokenType::At) {
-            // Generic Type
-            baseType = parseGenericType(arena.emplace<ast::SymbolType>(std::move(path)), Precedence::Default);
-        } else if (peekTokenType() == TokenType::LeftSquare) {
-            // Array type
-            baseType = parseArrayType(arena.emplace<ast::SymbolType>(std::move(path)), Precedence::Default);
-        } else {
-            // Regular (identifier) type
-            baseType = arena.emplace<ast::SymbolType>(std::move(path));
-        }
-    }
-    expectToken(TokenType::As, "Expected 'as' to introduce the type alias");
+    isParsingAliasStatement = true;
+    DISCARD(consumeToken());  // consume alias
     std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
+    expectToken(TokenType::Assignment, "Expected '=' after an alias name to introduce the aliased type.");
+    ast::Type* baseType = parseType(Precedence::Default);
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
+    isParsingAliasStatement = false;
     return arena.emplace<ast::AliasStatement>(baseType, std::move(alias));
 }
 

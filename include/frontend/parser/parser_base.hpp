@@ -45,6 +45,7 @@ class Parser {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
         bool isParsingBlockPrecursor : 1 = false;  // if/for/while, etc.
+        bool isParsingAliasStatement : 1 = false;
     };
 
    public:

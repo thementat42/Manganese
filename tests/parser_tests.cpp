@@ -509,18 +509,18 @@ static bool testImportsAndAliases() {
                                    "import graphics::rendering as render;\n"
                                    "import std::collections::map;\n"
                                    "module dataprocessing;\n"
-                                   "alias int32 as Integer;\n"
-                                   "alias ptr float64 as pf64;\n"
-                                   "alias func(mut Integer, pf64, func(int64) -> int64) -> bool as blah;"
-                                   "alias std::HashMap@[string, Integer] as StringIntMap;\n"
+                                   "alias IntegerArray = int32[5];\n"
+                                   "alias  pf64 = ptr float64;\n"
+                                   "alias  blah = func(mut Integer, pf64, func(int64) -> int64) -> bool;\n"
+                                   "alias StringIntMap = std::HashMap@[string, Integer];\n"
                                    "let value: Integer = 42;\n";
 
     const std::array<std::string, 6> expected
         = {"",
-           "alias (int32) as Integer;",
-           "alias (ptr float64) as pf64;",
-           "alias (func(mut Integer, pf64, func(int64) -> int64) -> bool) as blah;",
-           "alias (std::HashMap@[string, Integer]) as StringIntMap;",
+           "alias IntegerArray = (int32[5]);",
+           "alias pf64 = (ptr float64);",
+           "alias blah = (func(mut Integer, pf64, func(int64) -> int64) -> bool);",
+           "alias StringIntMap = (std::HashMap@[string, Integer]);",
            "(let value: private Integer = 42);"};
 
     return validateStatements(getParserResults(expression), expected, "Import Statements and Type Aliases");
