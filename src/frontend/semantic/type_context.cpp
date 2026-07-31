@@ -161,18 +161,6 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
     }
 }
 
-const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) const noexcept {
-    return &_primitives[static_cast<unsigned>(primitive)];
-}
-
-const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool isMutable) {
-    Pointer tmp(baseType, isMutable);
-    if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Pointer>(baseType, isMutable);
-    _cache.insert(heapAlloc);
-    return heapAlloc;
-}
-
 const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::size_t length) {
     Array tmp(elementType, length);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
@@ -222,4 +210,29 @@ const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
+
+const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool isMutable) {
+    Pointer tmp(baseType, isMutable);
+    if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
+    auto* heapAlloc = _allocator.emplace<Pointer>(baseType, isMutable);
+    _cache.insert(heapAlloc);
+    return heapAlloc;
+}
+
+const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) const noexcept {
+    return &_primitives[static_cast<unsigned>(primitive)];
+}
+
+const SemanticType* TypeContext::getSizeType() const noexcept {
+#if UINTPTR_MAX == 0xFFFFFFFF
+    // 32-bit Host Architecture
+    return getPrimitive(ast::PrimitiveType_t::u32);
+#elif UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF
+    // 64-bit Host Architecture
+    return getPrimitive(ast::PrimitiveType_t::u64);
+#else
+#error "Unsupported pointer width / host architecture"
+#endif
+}
+
 }  // namespace Manganese::semantic

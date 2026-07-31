@@ -227,9 +227,6 @@ class TypeContext {
     TypeContext(const TypeContext&) = delete;
     TypeContext& operator=(const TypeContext&) = delete;
 
-    const SemanticType* getPrimitive(ast::PrimitiveType_t primitive) const noexcept;
-
-    const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
 
     const SemanticType* getArray(const SemanticType* elementType, size_t length);
 
@@ -243,6 +240,12 @@ class TypeContext {
 
     const SemanticType* getGenericInstance(const SemanticType* baseType,
                                            std::vector<const SemanticType*>&& typeArguments);
+
+    const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
+
+    const SemanticType* getPrimitive(ast::PrimitiveType_t primitive) const noexcept;
+
+    const SemanticType* getSizeType() const noexcept;
 };
 
 }  // namespace Manganese::semantic
