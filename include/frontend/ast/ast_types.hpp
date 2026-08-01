@@ -91,12 +91,25 @@ struct PointerType final : public Type {
 };
 
 /**
+ * e.g. foo::bar
+ */
+struct ScopedType final : public Type {
+    Type* qualifier;
+    Type* baseType;
+
+    ScopedType(Type* _qualifier, Type* _baseType) noexcept :
+        Type(TypeKind::ScopedType), qualifier(_qualifier), baseType(_baseType) {}
+
+    MN_AST_STANDARD_INTERFACE
+};
+
+/**
  * e.g. T, int, etc.
  */
 struct SymbolType final : public Type {
     std::string name;
 
-    constexpr explicit SymbolType(std::string&& _name, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
+    explicit SymbolType(std::string&& _name, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
         Type(TypeKind::SymbolType, prim), name(std::move(_name)) {}
     MN_AST_STANDARD_INTERFACE;
 };
