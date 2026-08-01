@@ -7,6 +7,7 @@
 #include <utility>
 #include <utils/type_names.hpp>
 #include <vector>
+#include "frontend/ast/ast_types.hpp"
 
 namespace Manganese::parser {
 
@@ -76,7 +77,8 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence precedence) {
         lengthExpression = parseExpression(Precedence::Default);
     }
     if (isParsingAliasStatement && lengthExpression == nullptr) {
-        logError(left->getLine(), left->getColumn(), "Arrays in alias statements must have an explicit length expression");
+        logError(left->getLine(), left->getColumn(),
+                 "Arrays in alias statements must have an explicit length expression");
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
     return arena.emplace<ast::ArrayType>(left, lengthExpression);
@@ -148,19 +150,18 @@ ast::Type* Parser::parsePointerType() {
     return arena.emplace<ast::PointerType>(parseType(Precedence::Default), isMutable);
 }
 
+
+ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
+    DISCARD(consumeToken());  // consume the `::`
+    ast::Type* type = parseType(precedence);
+    return arena.emplace<ast::ScopedType>(left, type);
+}
+
 ast::Type* Parser::parseSymbolType() {
     using enum ast::PrimitiveType_t;
     Token token = peekToken();
     if (!token.isPrimitiveType()) {
-        std::string path = expectToken(TokenType::Identifier).getLexeme();
-        while (peekTokenType() == TokenType::ScopeResolution) {
-            path += consumeToken().getLexeme();  // consume '::'
-            path += expectToken(TokenType::Identifier,
-                                std::format("Expected identifier after {}",
-                                            lexer::tokenTypeToString(TokenType::ScopeResolution)))
-                        .getLexeme();
-        }
-        return arena.emplace<ast::SymbolType>(std::move(path));
+        return arena.emplace<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
     }
     // If the token is a primitive type, we can directly create a SymbolType
     DISCARD(consumeToken());

@@ -2,6 +2,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/parser.hpp>
+#include "frontend/parser/operators.hpp"
 
 namespace Manganese::parser {
 // Lookup Registration Methods
@@ -190,6 +191,7 @@ void Parser::initializeTypeLookups() noexcept {
     registerLedHandler_type(LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
     registerNudHandler_type(LeftParen, &Parser::parseParenthesizedType);
     registerNudHandler_type(Typeof, &Parser::parseTypeofType);
+    registerLedHandler_type(ScopeResolution, Precedence::Default, &Parser::parseScopedType);
 }
 
 }  // namespace Manganese::parser

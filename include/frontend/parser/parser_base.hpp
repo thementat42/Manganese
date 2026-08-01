@@ -133,6 +133,7 @@ class Parser {
     ast::Type* parseGenericType(ast::Type* left, Precedence precedence);
     ast::Type* parsePointerType();
     ast::Type* parseParenthesizedType();
+    ast::Type* parseScopedType(ast::Type* left, Precedence precedence);
     ast::Type* parseSymbolType();
     ast::Type* parseTypeofType();
 
