@@ -6,10 +6,6 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/ast/ast_statements.hpp"
-#include "frontend/semantic/type_context.hpp"
-
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
@@ -114,6 +110,7 @@ auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
 }
 
 auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
+    Result result = Result::Success;
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (!symbol) {
         ASSERT_UNREACHABLE(std::format("Enum {} was not registered during type initalization", statement->name));
@@ -128,7 +125,7 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     if (statement->baseType) {
         if (visit(statement->baseType) == Result::Failure) {
             symbol->status = ResolutionStatus::Failure;
-            return Result::Failure;
+            result = Result::Failure;
         }
         underlyingType = statement->baseType->semanticType;
     } else {
@@ -145,20 +142,20 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
 
     for (ast::EnumValue& variant : statement->values) {
         if (variant.value) {
-            if (visit(variant.value) == Result::Failure) { return Result::Failure; }
+            if (visit(variant.value) == Result::Failure) { result = Result::Failure; }
             auto explicitVal = variant.value->fold();
             if (!explicitVal.has_value()) {
                 logging::logError(variant.line, variant.column,
                                   "Variant {} (in enum {}) must have a compile-time value", variant.name,
                                   statement->name);
                 symbol->status = ResolutionStatus::Failure;
-                return Result::Failure;
+                result = Result::Failure;
             }
             if (!explicitVal.is_number() || !explicitVal.number_unchecked().is_integer()) {
                 logging::logError(variant.line, variant.column, "Variant {} (in enum {}) must have an integer value",
                                   variant.name, statement->name);
                 symbol->status = ResolutionStatus::Failure;
-                return Result::Failure;
+                result = Result::Failure;
             }
             currentVariantValue = explicitVal.number_unchecked().value_as<int64_t>();
         }
@@ -167,7 +164,7 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
         currentVariantValue++;
     }
     enumType->variants = std::move(variants);
-    return Result::Success;
+    return result;
 }
 
 auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { return visit(statement->expression); }
