@@ -159,7 +159,7 @@ std::string ReturnStatement::toString(std::size_t indent) const {
 }
 
 std::string SwitchStatement::toString(std::size_t indent) const {
-    std::string result = getIndent(indent) + std::format("switch ({})", variable->toString(indent)) + " {\n";
+    std::string result = getIndent(indent) + std::format("switch ({})", target->toString(indent)) + " {\n";
     for (const CaseClause& _case : cases) {
         result += getIndent(indent + 1) + std::format("case {}:\n", _case.literalValue->toString(indent + 1));
         for (const Statement* stmt : _case.body) { result += stmt->toString(indent + 2) + "\n"; }

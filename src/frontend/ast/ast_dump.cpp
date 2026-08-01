@@ -238,8 +238,8 @@ void SwitchStatement::dump(std::ostream& os, size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "SwitchStatement", *this);
 
-    os << ind.next() << "variable: \n";
-    variable->dump(os, ind.next(2));
+    os << ind.next() << "target: \n";
+    target->dump(os, ind.next(2));
     os << ind.next() << "cases: [\n";
 
     for (const auto& c : cases) {
