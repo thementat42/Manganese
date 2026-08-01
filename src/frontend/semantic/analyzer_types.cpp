@@ -128,6 +128,8 @@ auto analyzer::visit(ast::PointerType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
+auto analyzer::visit([[maybe_unused]] ast::ScopedType* type) -> typevisit_t { return typevisit_t::Success; }
+
 auto analyzer::visit(ast::SymbolType* type) -> typevisit_t {
     const auto* symbolType = static_cast<const ast::SymbolType*>(type);
     if (symbolType->primitiveType != ast::PrimitiveType_t::not_primitive) {
