@@ -6,6 +6,9 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
+#include "frontend/ast/ast_statements.hpp"
+#include "frontend/semantic/type_context.hpp"
+
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
@@ -288,7 +291,8 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
     constexpr bool bodyNeedsToEnterScope = false;
     const stmtvisit_t bodyResult = visit(statement->body, bodyNeedsToEnterScope);
     context.currentFunctionReturnType = nullptr;
-    return (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success) ? stmtvisit_t::Success : stmtvisit_t::Failure;
+    return (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success) ? stmtvisit_t::Success
+                                                                                           : stmtvisit_t::Failure;
 }
 
 auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
@@ -376,8 +380,86 @@ auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto analyzer::visit([[maybe_unused]] ast::SwitchStatement* statement) -> stmtvisit_t { return stmtvisit_t::Success; }
-auto analyzer::visit([[maybe_unused]] ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
+auto analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
+    if (!statement->target) {
+        logError(statement, "Switch statement is missing a target expression");
+        return stmtvisit_t::Failure;
+    }
+    if (visit(statement->target) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
+    const SemanticType* targetType = statement->target->semanticType;
+    if (!targetType) {
+        logError(statement, "Could not determine type of switch target expression");
+        return stmtvisit_t::Failure;
+    }
+    stmtvisit_t result = stmtvisit_t::Success;
+    for (ast::CaseClause& caseClause : statement->cases) {
+        const bool visitSuccess = visit(caseClause.literalValue) == exprvisit_t::Success;
+
+        if (!visitSuccess) { result = stmtvisit_t::Failure; }
+        if (!caseClause.literalValue->fold().has_value()) {
+            logError(caseClause.literalValue, "case value must be a constant expression");
+            result = stmtvisit_t::Failure;
+        }
+        if (visitSuccess) {
+            const SemanticType* literalValueType = caseClause.literalValue->semanticType;
+            if (literalValueType && !areTypesComparable(targetType, literalValueType)) {
+                logError(caseClause.literalValue,
+                         "Type mismatch in switch case: target has type '{}', but case literal has type '{}'",
+                         targetType->toString(), literalValueType->toString());
+                result = stmtvisit_t::Failure;
+            }
+        }
+        if (visit(caseClause.body) == Result::Failure) { result = stmtvisit_t::Failure; }
+    }
+    if (!statement->defaultBody.empty() && visit(statement->defaultBody) == Result::Failure) {
+        result = stmtvisit_t::Failure;
+    }
+    return result;
+}
+
+auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
+    const SemanticType* variableType = nullptr;
+    if (statement->type) {
+        // User has an explicit type
+        if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
+        variableType = statement->type->semanticType;
+    }
+    if (statement->value) {
+        if (visit(statement->value) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
+        const SemanticType* initializerType = statement->value->semanticType;
+        if (!variableType) {
+            // deduce type from the initializer
+            if (!initializerType) {
+                logError(statement, "Could not deduce type of variable '{}' from initializer '{}'", statement->name,
+                         statement->value->toString());
+                return stmtvisit_t::Failure;
+            }
+            variableType = initializerType;
+        } else if (initializerType && !areTypesComparable(variableType, initializerType)) {
+            logError(statement, "Cannot assign '{}' (type {}) to variable {} (type {}).", statement->value->toString(),
+                     initializerType->toString(), statement->name, statement->value->semanticType->toString());
+            return stmtvisit_t::Failure;
+        }
+    } else if (!statement->isMutable) {
+        logError(statement, "Immutable variable '{}' must have an initializer", statement->name);
+        return stmtvisit_t::Failure;
+    }
+    if (!variableType) {
+        logError(statement, "Variable '{}' must either have an explicit type or an initial value", statement->name);
+        return stmtvisit_t::Failure;
+    }
+    const Result declarationResult
+        = symbolTable.declare(statement->name,
+                              Symbol{.type = variableType,
+                                     .node = statement,
+                                     .kind = statement->isMutable ? SymbolKind::Variable : SymbolKind::Constant,
+                                     .isMutable = statement->isMutable,
+                                     .status = ResolutionStatus::Success});
+    if (declarationResult == Result::Failure) {
+        logError(statement, "Redeclaration error: variable '{}' is already declared in this scope", statement->name);
+        return stmtvisit_t::Failure;
+    }
+
     return stmtvisit_t::Success;
 }
 

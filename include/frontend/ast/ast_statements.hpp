@@ -193,13 +193,13 @@ struct CaseClause {
 };
 
 struct SwitchStatement final : public Statement {
-    Expression* variable;
+    Expression* target;
     std::vector<CaseClause> cases;
     Block defaultBody;
 
-    SwitchStatement(Expression* _variable, std::vector<CaseClause>&& _cases, Block&& _defaultBody = {}) noexcept :
+    SwitchStatement(Expression* _target, std::vector<CaseClause>&& _cases, Block&& _defaultBody = {}) noexcept :
         Statement(StatementKind::SwitchStatement),
-        variable(_variable),
+        target(_target),
         cases(std::move(_cases)),
         defaultBody(std::move(_defaultBody)) {}
 
