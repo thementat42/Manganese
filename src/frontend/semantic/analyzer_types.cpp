@@ -20,11 +20,11 @@ auto analyzer::visit(ast::AggregateType* type) -> typevisit_t {
     for (ast::Type* fieldType : aggregateType->fieldTypes) {
         visit(fieldType);
         const SemanticType* resolvedFieldType = fieldType->semanticType;
-        if (!resolvedFieldType) { return Result::Failure; }
+        if (!resolvedFieldType) { return typevisit_t::Failure; }
         resolvedFields.push_back(resolvedFieldType);
     }
     type->semanticType = typeContext.getAnonymousAggregate(std::move(resolvedFields));
-    return Result::Success;
+    return typevisit_t::Success;
 }
 
 auto analyzer::visit(ast::ArrayType* type) -> typevisit_t {
@@ -40,41 +40,41 @@ auto analyzer::visit(ast::ArrayType* type) -> typevisit_t {
 
     if (!elementType) {
         logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
-        return Result::Failure;
+        return typevisit_t::Failure;
     }
     std::size_t length;
     if (arrayType->lengthExpression) {
-        if (visit(arrayType->lengthExpression) == Result::Failure) { return Result::Failure; }
+        if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
         const mnstl::fold_result_t fold = arrayType->lengthExpression->fold();
         if (!fold.is_number()) {
             logError(arrayType->lengthExpression, "Array length ({}) must be a constant expression",
                      arrayType->lengthExpression->toString());
-            return Result::Failure;
+            return typevisit_t::Failure;
         }
         const mnstl::number_t lengthValue = fold.number_unchecked();
         if (lengthValue.is_error()) {
             logError(arrayType->lengthExpression, "{}", lengthValue.error_unchecked());
-            return Result::Failure;
+            return typevisit_t::Failure;
         }
         if (!lengthValue.is_integer()) {
             logError(arrayType->lengthExpression, "Array length must be an integer value");
-            return Result::Failure;
+            return typevisit_t::Failure;
         }
         if (lengthValue <= 0) {
             logError(arrayType->lengthExpression, "Array length must be greater than 0 (got {})",
                      lengthValue.to_string());
-            return Result::Failure;
+            return typevisit_t::Failure;
         }
         length = lengthValue.value_as<std::size_t>();
     } else if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
         length = static_cast<const Array*>(context.currentVariableDeclarationType)->length;
     } else [[unlikely]] {
         logError(type, "Cannot infer array length; explicitly specify length or provide an initializer");
-        return Result::Failure;
+        return typevisit_t::Failure;
     }
 
     type->semanticType = typeContext.getArray(elementType, length);
-    return Result::Success;
+    return typevisit_t::Success;
 }
 
 auto analyzer::visit(ast::FunctionType* type) -> typevisit_t {
@@ -83,7 +83,7 @@ auto analyzer::visit(ast::FunctionType* type) -> typevisit_t {
     for (const ast::FunctionParameterType& parameterType : functionType->parameterTypes) {
         visit(parameterType.type);
         const SemanticType* resolvedParameterType = parameterType.type->semanticType;
-        if (!resolvedParameterType) { return Result::Failure; }
+        if (!resolvedParameterType) { return typevisit_t::Failure; }
 
         resolvedParameterTypes.push_back({.isMutable = parameterType.isMutable, .type = resolvedParameterType});
     }
@@ -92,28 +92,28 @@ auto analyzer::visit(ast::FunctionType* type) -> typevisit_t {
         // function is not returning void
         visit(functionType->returnType);
         returnType = functionType->returnType->semanticType;
-        if (!returnType) { return Result::Failure; }
+        if (!returnType) { return typevisit_t::Failure; }
     }
     type->semanticType = typeContext.getFunction(std::move(resolvedParameterTypes), returnType);
-    return Result::Success;
+    return typevisit_t::Success;
 }
 
 auto analyzer::visit(ast::GenericType* type) -> typevisit_t {
     const auto* genericType = static_cast<const ast::GenericType*>(type);
     visit(genericType->baseType);
     const SemanticType* baseType = genericType->baseType->semanticType;
-    if (!baseType) { return Result::Failure; }
+    if (!baseType) { return typevisit_t::Failure; }
     std::vector<const SemanticType*> resolvedTypeParameters;
     resolvedTypeParameters.reserve(genericType->typeParameters.size());
 
     for (ast::Type* typeParameter : genericType->typeParameters) {
         visit(typeParameter);
         const SemanticType* resolvedTypeParameter = typeParameter->semanticType;
-        if (!resolvedTypeParameter) { return Result::Failure; }
+        if (!resolvedTypeParameter) { return typevisit_t::Failure; }
         resolvedTypeParameters.push_back(resolvedTypeParameter);
     }
     type->semanticType = typeContext.getGenericInstance(baseType, std::move(resolvedTypeParameters));
-    return Result::Success;
+    return typevisit_t::Success;
 }
 
 auto analyzer::visit(ast::PointerType* type) -> typevisit_t {
@@ -122,40 +122,40 @@ auto analyzer::visit(ast::PointerType* type) -> typevisit_t {
     const SemanticType* baseType = pointerType->baseType->semanticType;
     if (!baseType) {
         logError(type, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString());
-        return Result::Failure;
+        return typevisit_t::Failure;
     }
     type->semanticType = typeContext.getPointer(baseType, pointerType->isMutable);
-    return Result::Success;
+    return typevisit_t::Success;
 }
 
 auto analyzer::visit(ast::SymbolType* type) -> typevisit_t {
     const auto* symbolType = static_cast<const ast::SymbolType*>(type);
     if (symbolType->primitiveType != ast::PrimitiveType_t::not_primitive) {
         type->semanticType = typeContext.getPrimitive(symbolType->primitiveType);
-        return Result::Success;
+        return typevisit_t::Success;
     }
     Symbol* symbol = symbolTable.lookup(symbolType->name);
     if (!symbol) {
         logError(type, "Unknown type '{}'", symbolType->name);
-        return Result::Failure;
+        return typevisit_t::Failure;
     }
     if (symbol->kind == SymbolKind::TypeAlias && symbol->status != ResolutionStatus::Success) {
         auto* aliasStatement = static_cast<ast::AliasStatement*>(symbol->node);
-        if (visit(aliasStatement) == Result::Failure) { return Result::Failure; }
+        if (visit(aliasStatement) == typevisit_t::Failure) { return typevisit_t::Failure; }
     }
     if (!symbol->type) {
         logError(type, "'{}' is not a valid type", symbolType->name);
-        return Result::Failure;
+        return typevisit_t::Failure;
     }
     type->semanticType = symbol->type;
-    return Result::Success;
+    return typevisit_t::Success;
 }
 
 auto analyzer::visit(ast::TypeofType* type) -> typevisit_t {
     const auto* typeofType = static_cast<const ast::TypeofType*>(type);
-    if (visit(typeofType->expression) == Result::Failure) { return Result::Failure; }
+    if (visit(typeofType->expression) == typevisit_t::Failure) { return typevisit_t::Failure; }
     type->semanticType = typeofType->expression->semanticType;
-    return Result::Success;
+    return typevisit_t::Success;
 }
 
 }  // namespace Manganese::semantic

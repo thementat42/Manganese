@@ -14,16 +14,16 @@
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
-    auto result = Result::Success;
+    auto result = exprvisit_t::Success;
     const Symbol* symbol = symbolTable.lookup(expression->name);
     if (!symbol) {
         logError(expression, "Type '{}' was not found in the current scope.", expression->name);
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
 
     if (!symbol->type || symbol->kind != SymbolKind::Aggregate) {
         logError(expression, "Type '{}' is not an aggregate type", expression->name);
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
 
     const auto* targetType = static_cast<const Aggregate*>(symbol->type);
@@ -36,12 +36,12 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
             visit(genericAstType);
             const SemanticType* resolved = genericAstType->semanticType;
             if (!resolved) {
-                result = Result::Failure;
+                result = exprvisit_t::Failure;
             } else {
                 resolvedGenerics.push_back(resolved);
             }
         }
-        if (result == Result::Failure) { return result; }
+        if (result == exprvisit_t::Failure) { return result; }
 
         targetType
             = static_cast<const Aggregate*>(typeContext.getGenericInstance(targetType, std::move(resolvedGenerics)));
@@ -50,11 +50,11 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
     expression->semanticType = targetType;
 
     for (ast::AggregateInstantiationField& field : expression->fields) {
-        if (visit(field.value) == Result::Failure) { result = Result::Failure; }
-        if (!field.value->semanticType) { result = Result::Failure; }
+        if (visit(field.value) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+        if (!field.value->semanticType) { result = exprvisit_t::Failure; }
     }
 
-    if (result == Result::Failure) { return result; }
+    if (result == exprvisit_t::Failure) { return result; }
 
     std::unordered_set<std::string_view> initializedFields;
     initializedFields.reserve(expression->fields.size());
@@ -63,7 +63,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         // e.g., Point { x = 1, x = 2 }
         if (!initializedFields.insert(field.name).second) {
             logError(field.value, "Duplicate initialization for field '{}' in '{}'", field.name, expression->name);
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
             continue;
         }
 
@@ -71,7 +71,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         const SemanticType* expectedFieldType = targetType->getFieldType(field.name);
         if (!expectedFieldType) {
             logError(field.value, "Type '{}' has no field named '{}'", expression->name, field.name);
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
             continue;
         }
 
@@ -80,7 +80,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         if (!compatibility) {
             logError(field.value, "Cannot initialize field '{}' of type {} with value of type {}", field.name,
                      expectedFieldType->toString(), field.value->semanticType->toString());
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
         } else if (compatibility.result == Compatible_t::Warning) {
             logWarning(field.value, "{}", compatibility.message);
         }
@@ -91,7 +91,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
             if (!initializedFields.contains(declaredField.name)) {
                 logError(expression, "Missing field '{}' in instantiation of '{}'", declaredField.name,
                          expression->name);
-                result = Result::Failure;
+                result = exprvisit_t::Failure;
             }
         }
     }
@@ -100,21 +100,21 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
 }
 
 auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
-    auto result = Result::Success;
+    auto result = exprvisit_t::Success;
     std::vector<const SemanticType*> elementTypes;
     elementTypes.reserve(expression->elements.size());
 
     for (ast::Expression* element : expression->elements) {
-        if (visit(element) == Result::Failure) { result = Result::Failure; }
+        if (visit(element) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
         if (!element->semanticType) {
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
         } else {
             elementTypes.push_back(element->semanticType);
         }
     }
 
     // If sub expressions failed, bail early so getting a type doesn't fail
-    if (result == Result::Failure) { return Result::Failure; }
+    if (result == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
     expression->semanticType = typeContext.getAnonymousAggregate(std::move(elementTypes));
 
@@ -122,26 +122,26 @@ auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
 }
 
 auto analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
-    if (visit(expression->type) == Result::Failure) { return Result::Failure; }
+    if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
     if (!targetSemanticType) {
         logError(expression, "Invalid type in alignof expression {}", expression->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     expression->semanticType = typeContext.getSizeType();
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     if (expression->elements.empty()) {
         if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
             expression->semanticType = context.currentVariableDeclarationType;
-            return Result::Success;
+            return exprvisit_t::Success;
         }
         logError(expression, "Cannot infer element type for empty array literal without type annotation");
     }
 
-    auto result = Result::Success;
+    auto result = exprvisit_t::Success;
     const SemanticType* expectedElementType = nullptr;
     if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
         expectedElementType = static_cast<const Array*>(context.currentVariableDeclarationType)->elementType;
@@ -150,12 +150,12 @@ auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     const SemanticType* synthesizedElementType = nullptr;
 
     for (ast::Expression* element : expression->elements) {
-        if (visit(element) == Result::Failure) {
-            result = Result::Failure;
+        if (visit(element) == exprvisit_t::Failure) {
+            result = exprvisit_t::Failure;
             continue;
         }
         if (!element->semanticType) {
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
             continue;
         }
         // top-down type deduction
@@ -164,7 +164,7 @@ auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             if (!canConvertElementType) {
                 logError(element, "Array element of type '{}' is not compatible with expected array element type '{}'",
                          element->semanticType->toString(), expectedElementType->toString());
-                result = Result::Failure;
+                result = exprvisit_t::Failure;
             } else if (canConvertElementType.result == Compatible_t::Warning) {
                 logWarning(element, "{}", canConvertElementType.message);
             }
@@ -179,24 +179,24 @@ auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
         if (!canConvertElementType) {
             logError(element, "Mismatched element types in array literal: expected '{}', got '{}'",
                      synthesizedElementType->toString(), element->semanticType->toString());
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
         } else if (canConvertElementType.result == Compatible_t::Warning) {
             logWarning(element, "{}", canConvertElementType.message);
         }
     }
-    if (result == Result::Failure) { return Result::Failure; }
+    if (result == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
     const SemanticType* elementType = expectedElementType ? expectedElementType : synthesizedElementType;
     expression->semanticType = typeContext.getArray(elementType, expression->elements.size());
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
-    auto result = Result::Success;
-    if (visit(expression->assignee) == Result::Failure) { result = Result::Failure; }
-    if (visit(expression->value) == Result::Failure) { result = Result::Failure; }
+    auto result = exprvisit_t::Success;
+    if (visit(expression->assignee) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    if (visit(expression->value) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
-    if (!expression->assignee->semanticType || !expression->value->semanticType) { return Result::Failure; }
+    if (!expression->assignee->semanticType || !expression->value->semanticType) { return exprvisit_t::Failure; }
 
     // TODO: Check that the LHS can actually be assigned to
 
@@ -205,7 +205,7 @@ auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     if (!isAssignmentValid) {
         logError(expression, "Cannot assign a value of type {} to a value of type {}",
                  expression->value->semanticType->toString(), expression->assignee->semanticType->toString());
-        result = Result::Failure;
+        result = exprvisit_t::Failure;
     } else if (isAssignmentValid.result == Compatible_t::Warning) {
         logWarning(expression, "{}", isAssignmentValid.message);
     }
@@ -214,17 +214,17 @@ auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
 }
 
 auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
-    auto result = Result::Success;
+    auto result = exprvisit_t::Success;
 
-    if (visit(expression->left) == Result::Failure) { result = Result::Failure; }
-    if (visit(expression->right) == Result::Failure) { result = Result::Failure; }
+    if (visit(expression->left) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    if (visit(expression->right) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (!expression->left->semanticType) {
         logError(expression, "Could not deduce type of expression {}", expression->left->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     if (!expression->right->semanticType) {
         logError(expression, "Could not deduce type of expression {}", expression->right->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
 
     const SemanticType* lhsType = expression->left->semanticType;
@@ -235,7 +235,7 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         if (!lhsType->isBoolean() || !rhsType->isBoolean()) {
             logError(expression, "Operator '{}' requires boolean operands, got {} and {}", lexer::tokenTypeToString(op),
                      lhsType->toString(), rhsType->toString());
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
         }
         expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
         return result;
@@ -243,7 +243,7 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         if (!isInteger(lhsType->primitiveType) || !isInteger(lhsType->primitiveType)) {
             logError(expression, "Bitwise operators require integer operands, got {} and {}", lhsType->toString(),
                      rhsType->toString());
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
         }
         expression->semanticType = promoteNumericTypes(lhsType, rhsType);
         return result;
@@ -251,7 +251,7 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         if (!areTypesComparable(lhsType, rhsType)) {
             logError(expression, "Cannot compare incompatible types {} and {}", lhsType->toString(),
                      rhsType->toString());
-            result = Result::Failure;
+            result = exprvisit_t::Failure;
         }
         expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
         return result;
@@ -261,7 +261,7 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         if (!commonType) {
             logError(expression, "Invalid operands for arithmetic operator '{}': {} and {}",
                      lexer::tokenTypeToString(op), lhsType->toString(), rhsType->toString());
-            return Result::Failure;
+            return exprvisit_t::Failure;
         }
 
         expression->semanticType = commonType;
@@ -273,56 +273,56 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
 
 auto analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::character);
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit([[maybe_unused]] ast::FunctionCallExpression* expression) -> exprvisit_t {
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
-auto analyzer::visit([[maybe_unused]] ast::GenericExpression* expression) -> exprvisit_t { return Result::Success; }
+auto analyzer::visit([[maybe_unused]] ast::GenericExpression* expression) -> exprvisit_t { return exprvisit_t::Success; }
 
 auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
     const Symbol* symbol = symbolTable.lookup(expression->value);
     if (!symbol) {
         logError(expression, "Identifier '{}' was not found in the current scope", expression->value);
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     if (!symbol->type) [[unlikely]] {
         logError(expression, "Identifier '{}' used before its type could be determined", expression->value);
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     expression->semanticType = symbol->type;
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
-    auto result = Result::Success;
-    if (visit(expression->variable) == Result::Failure) { result = Result::Failure; }
-    if (visit(expression->index) == Result::Failure) { result = Result::Failure; }
+    auto result = exprvisit_t::Success;
+    if (visit(expression->variable) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    if (visit(expression->index) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
     if (!expression->variable->semanticType) {
         logError(expression->variable, "Could not deduce type of expression {}", expression->variable->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     if (!expression->index->semanticType) {
         logError(expression->index, "Could not deduce type of expression {}", expression->index->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
 
     if (!expression->variable->semanticType->isArray()) {
         logError(expression->variable, "Cannot index into non array type {}",
                  expression->variable->semanticType->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
 
     if (!isInteger(expression->index->semanticType->primitiveType)) {
         logError(expression, "Index value should be an integer, not {}", expression->index->semanticType->toString());
-        result = Result::Failure;
+        result = exprvisit_t::Failure;
     }
 
     expression->semanticType = static_cast<const Array*>(expression->variable->semanticType)->elementType;
@@ -335,7 +335,7 @@ auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     const SemanticType* objectType = expression->object->semanticType;
     if (!objectType) {
         logError(expression->object, "Could not deduce type of expression {}", expression->object->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     // accessing a mamber from a pointer to an aggregate is also done using x.y so auto-dereference if that's the case
     if (objectType->isPointer()) { objectType = static_cast<const Pointer*>(objectType)->baseType; }
@@ -344,7 +344,7 @@ auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
         logError(expression->object,
                  "Element access can only be performed on an aggregate type (ora  pointer to an aggregate) not '{}'",
                  objectType->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
 
     const auto* aggregateType = static_cast<const Aggregate*>(objectType);
@@ -352,13 +352,13 @@ auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     for (const AggregateField& field : aggregateType->fields) {
         if (field.name == expression->property) {
             expression->semanticType = field.type;
-            return Result::Success;
+            return exprvisit_t::Success;
         }
     }
     logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(),
              expression->property);
 
-    return Result::Failure;
+    return exprvisit_t::Failure;
 }
 
 auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
@@ -380,21 +380,21 @@ auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
         case held_t::error: {
             logError(expression, "{}", expression->value.error_unchecked());
             expression->semanticType = nullptr;
-            return Result::Failure;
+            return exprvisit_t::Failure;
         }
         case held_t::none: [[fallthrough]];
         default: ASSERT_UNREACHABLE("In analyzer: Number literal expression had no parser-deduced type");
     }
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     auto result = visit(expression->left);
-    if (result == Result::Failure) { return result; }
+    if (result == exprvisit_t::Failure) { return result; }
     // the only postfix operators are ++ and -- so the expression must be an integer
     if (!expression->left->semanticType) {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     const ast::PrimitiveType_t primitiveType = expression->left->semanticType->primitiveType;
 
@@ -405,19 +405,19 @@ auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     if (!isInteger(primitiveType)) {
         logError(expression, "operator {} can only be applied to integer types",
                  lexer::tokenTypeToString(expression->op));
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     // TODO: check that the value has an address to store the inc/dec result
 
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     auto result = visit(expression->right);
-    if (result == Result::Failure) { return result; }
+    if (result == exprvisit_t::Failure) { return result; }
     if (!expression->right->semanticType) {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
 
     const ast::PrimitiveType_t primitiveType = expression->right->semanticType->primitiveType;
@@ -430,7 +430,7 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             if (!isInteger(primitiveType)) {
                 logError(expression, "operator {} can only be applied to integer types",
                          lexer::tokenTypeToString(expression->op));
-                return Result::Failure;
+                return exprvisit_t::Failure;
             }
             // TODO: check that the value has an address to store the inc/dec result
         } break;
@@ -440,19 +440,19 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             if (!isInteger(primitiveType)) {
                 logError(expression, "operator {} can only be applied to integer types",
                          lexer::tokenTypeToString(expression->op));
-                return Result::Failure;
+                return exprvisit_t::Failure;
             }
         } break;
 
         case UnaryPlus:
         case UnaryMinus: {
-            if (visit(expression->right) == Result::Failure) { return Result::Failure; }
+            if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
             const SemanticType* opType = expression->right->semanticType;
-            if (!opType) { return Result::Failure; }
+            if (!opType) { return exprvisit_t::Failure; }
             if (!isNumeric(opType->primitiveType)) {
                 logError(expression, "Operator '{}' can only be applied to numeric types (got '{}')",
                          lexer::tokenTypeToString(expression->op), opType->toString());
-                return Result::Failure;
+                return exprvisit_t::Failure;
             }
             if (expression->op == UnaryMinus && isUnsignedInteger(opType->primitiveType)) {
                 logWarning(expression, "Applying a '-' to an unsigned integer type  ('{}') causes wrapping",
@@ -472,7 +472,7 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
                 logError(expression, "Dereferencing cannot be applied to a non-pointer type");
                 // dummy (figure out a better option later)
                 expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::u8);
-                return Result::Failure;
+                return exprvisit_t::Failure;
             }
             expression->semanticType = static_cast<const Pointer*>(expression->right->semanticType)->baseType;
         } break;
@@ -480,37 +480,37 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         default:
             ASSERT_UNREACHABLE(std::format("Unknown prefix operator {}", lexer::tokenTypeToString(expression->op)));
     }
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit([[maybe_unused]] ast::ScopeResolutionExpression* expression) -> exprvisit_t {
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
-    if (visit(expression->type) == Result::Failure) { return Result::Failure; }
+    if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
     if (!targetSemanticType) {
         logError(expression, "Invalid type in sizeof expression {}", expression->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
     expression->semanticType = typeContext.getSizeType();
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 
 auto analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
-    return Result::Success;
+    return exprvisit_t::Success;
 }
 auto analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
-    auto result = Result::Success;
+    auto result = exprvisit_t::Success;
     ContextGuard guard(context.typeCastDepth, static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
-    if (visit(expression->originalValue) == Result::Failure) { result = Result::Failure; }
+    if (visit(expression->originalValue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (!expression->originalValue->semanticType) {
         logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString());
-        return Result::Failure;
+        return exprvisit_t::Failure;
     }
-    if (visit(expression->targetType) == Result::Failure) { result = Result::Failure; }
+    if (visit(expression->targetType) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
     return result;
 }
