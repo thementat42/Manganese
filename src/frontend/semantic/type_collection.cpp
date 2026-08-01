@@ -4,6 +4,8 @@
 #include <string_view>
 #include <utils/result.hpp>
 
+#include "frontend/ast/ast_statements.hpp"
+
 namespace Manganese::semantic {
 
 // Note: all types are nullptr for the moment since this is just meant to collect names
@@ -102,6 +104,18 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
                 result = Result::Failure;
             }
 
+            return result;
+        }
+        case SwitchStatement: {
+            auto* switchStmt = static_cast<ast::SwitchStatement*>(stmt);
+            Result result = Result::Success;
+            for (const ast::CaseClause& clause : switchStmt->cases) {
+                if (_collectTypesInStatementBody(clause.body) == Result::Failure) { result = Result::Failure; }
+            }
+            if (!switchStmt->defaultBody.empty()
+                && _collectTypesInStatementBody(switchStmt->defaultBody) == Result::Failure) {
+                result = Result::Failure;
+            }
             return result;
         }
         case WhileLoopStatement: {
