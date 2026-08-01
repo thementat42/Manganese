@@ -565,6 +565,17 @@ void PointerType::dump(std::ostream& os, size_t indent) const {
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
+
+void ScopedType::dump(std::ostream& os, size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ScopedType", *this);
+    os << ind.next() << "qualifier: \n";
+    qualifier->dump(os, ind.next(2));
+    os << ind.next() << "base type: \n";
+    baseType->dump(os, ind.next(2));
+    os << ind << "}\n";
+}
+
 void SymbolType::dump(std::ostream& os, size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "SymbolType", *this);

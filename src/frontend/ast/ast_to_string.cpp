@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+#include "frontend/ast/ast_types.hpp"
+
+
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
 #else
@@ -335,6 +338,10 @@ std::string GenericType::toString(std::size_t indent) const {
 
 std::string PointerType::toString(std::size_t indent) const {
     return std::format("ptr {}{}", (isMutable ? "mut " : ""), baseType->toString(indent));
+}
+
+std::string ScopedType::toString(std::size_t) const {
+    return std::format("{}::{}", qualifier->toString(), baseType->toString());
 }
 
 std::string SymbolType::toString(std::size_t) const { return name; }
