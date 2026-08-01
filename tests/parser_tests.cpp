@@ -510,8 +510,8 @@ static bool testImportsAndAliases() {
                                    "import std::collections::map;\n"
                                    "module dataprocessing;\n"
                                    "alias IntegerArray = int32[5];\n"
-                                   "alias  pf64 = ptr float64;\n"
-                                   "alias  blah = func(mut Integer, pf64, func(int64) -> int64) -> bool;\n"
+                                   "alias pf64 = ptr float64;\n"
+                                   "alias blah = func(mut Integer, pf64, func(int64) -> int64) -> bool;\n"
                                    "alias StringIntMap = std::HashMap@[string, Integer];\n"
                                    "let value: Integer = 42;\n";
 
