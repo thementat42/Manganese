@@ -191,7 +191,7 @@ void Parser::initializeTypeLookups() noexcept {
     registerLedHandler_type(LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
     registerNudHandler_type(LeftParen, &Parser::parseParenthesizedType);
     registerNudHandler_type(Typeof, &Parser::parseTypeofType);
-    registerLedHandler_type(ScopeResolution, Precedence::Default, &Parser::parseScopedType);
+    registerLedHandler_type(ScopeResolution, Precedence::ScopeResolution, &Parser::parseScopedType);
 }
 
 }  // namespace Manganese::parser
