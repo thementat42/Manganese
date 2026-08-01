@@ -27,7 +27,7 @@ ast::Statement* Parser::parseStatement() {
 
     // Parse out an expression then convert it to a statement
     ast::Expression* expr = parseExpression(Precedence::Default);
-    if (!isParsingBlockPrecursor) { expectToken(TokenType::Semicolon, "Expected semicolon after expression"); }
+    if (!flags.parsingBlockPrecursor) { expectToken(TokenType::Semicolon, "Expected semicolon after expression"); }
     return arena.emplace<ast::ExpressionStatement>(expr);
 }
 
@@ -98,13 +98,13 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
 }
 
 ast::Statement* Parser::parseAliasStatement() {
-    isParsingAliasStatement = true;
+    flags.parsingAliasStatement = true;
     DISCARD(consumeToken());  // consume alias
     std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Assignment, "Expected '=' after an alias name to introduce the aliased type.");
     ast::Type* baseType = parseType(Precedence::Default);
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
-    isParsingAliasStatement = false;
+    flags.parsingAliasStatement = false;
     return arena.emplace<ast::AliasStatement>(baseType, std::move(alias));
 }
 
@@ -295,12 +295,12 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
 }
 
 ast::Statement* Parser::parseIfStatement() {
-    this->isParsingBlockPrecursor = true;
+    flags.parsingBlockPrecursor = true;
     DISCARD(consumeToken());
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
-    this->isParsingBlockPrecursor = false;
+    flags.parsingBlockPrecursor = false;
     expectToken(TokenType::RightParen, "Expected ')' to end if condition");
     ast::Block body = parseBlock("if body");
 
@@ -308,10 +308,10 @@ ast::Statement* Parser::parseIfStatement() {
     while (peekTokenType() == TokenType::Elif) {
         DISCARD(consumeToken());
 
-        this->isParsingBlockPrecursor = true;
+        flags.parsingBlockPrecursor = true;
         expectToken(TokenType::LeftParen, "Expected '(' to introduce elif condition");
         ast::Expression* elifCondition = parseExpression(Precedence::Default);
-        this->isParsingBlockPrecursor = false;
+        flags.parsingBlockPrecursor = false;
         expectToken(TokenType::RightParen, "Expected ')' to end elif condition");
 
         elifs.emplace_back(elifCondition, parseBlock("elif body"));
@@ -337,7 +337,7 @@ ast::Statement* Parser::parseImportStatement() {
     const std::size_t startLine = peekToken().getLine();
     const std::size_t startColumn = peekToken().getColumn();
 
-    if (this->hasParsedFileHeader) {
+    if (flags.hasParsedFileHeader) {
         logging::logWarning(startLine, startColumn, "Imports should go at the top of the file");
     }
     DISCARD(consumeToken());
@@ -381,7 +381,7 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
     const lexer::Token temp = consumeToken();
     const std::size_t startLine = temp.getLine();
     const std::size_t startColumn = temp.getColumn();
-    if (this->hasParsedFileHeader) {
+    if (flags.hasParsedFileHeader) {
         logging::logWarning(startLine, startColumn, "Module declarations should go at the top of the file");
     }
     const std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
@@ -419,9 +419,9 @@ ast::Statement* Parser::parseSwitchStatement() {
     Token temp = consumeToken();
     std::size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
-    this->isParsingBlockPrecursor = true;
+    flags.parsingBlockPrecursor = true;
     ast::Expression* variable = parseExpression(Precedence::Default);
-    this->isParsingBlockPrecursor = false;
+    flags.parsingBlockPrecursor = false;
     expectToken(TokenType::RightParen, "Expected ')' to end switch variable");
     expectToken(TokenType::LeftBrace, "Expected '{' to start the switch body");
 

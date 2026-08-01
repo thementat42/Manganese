@@ -89,7 +89,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
 
         if (type == TokenType::LeftBrace && left->kind != ast::ExpressionKind::IdentifierExpression
             && left->kind != ast::ExpressionKind::GenericExpression) [[unlikely]] {
-            if (isParsingBlockPrecursor) {
+            if (flags.parsingBlockPrecursor) {
                 // Left braces after an expression can either start a block or an aggregate instantiation
                 // If we're parsing a block precursor (if/for/while, etc.) AND the previous expression is not an
                 // identifier, we assume it's the start of a block and break If the previous expression IS an

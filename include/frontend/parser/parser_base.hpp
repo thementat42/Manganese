@@ -44,9 +44,9 @@ class Parser {
     struct {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
-        bool isParsingBlockPrecursor : 1 = false;  // if/for/while, etc.
-        bool isParsingAliasStatement : 1 = false;
-    };
+        bool parsingBlockPrecursor : 1 = false;  // if/for/while, etc.
+        bool parsingAliasStatement : 1 = false;
+    } flags;
 
    public:
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
@@ -157,7 +157,7 @@ class Parser {
     inline void logError(std::size_t line, std::size_t col, std::format_string<Args...> message,
                          Args&&... args) noexcept {
         logging::logError(line, col, message, std::forward<Args>(args)...);
-        hasError = true;
+        flags.hasError = true;
     }
 
     inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
