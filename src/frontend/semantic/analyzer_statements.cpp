@@ -1,10 +1,13 @@
 #include <core.hpp>
+#include <cstdint>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
+#include "frontend/ast/ast_base.hpp"
+#include "frontend/ast/ast_statements.hpp"
 #include "frontend/semantic/type_context.hpp"
 
 namespace Manganese::semantic {
@@ -110,7 +113,60 @@ auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
     return Result::Success;  // nothing to check
 }
 
-auto analyzer::visit([[maybe_unused]] ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
+auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
+    Symbol* symbol = symbolTable.lookup(statement->name);
+    if (!symbol) {
+        ASSERT_UNREACHABLE(std::format("Enum {} was not registered during type initalization", statement->name));
+    }
+
+    if (symbol->status == ResolutionStatus::Success) { return Result::Success; }
+    if (symbol->status == ResolutionStatus::Failure) { return Result::Failure; }
+
+    symbol->status = ResolutionStatus::InProgress;
+
+    const SemanticType* underlyingType = nullptr;
+    if (statement->baseType) {
+        if (visit(statement->baseType) == Result::Failure) {
+            symbol->status = ResolutionStatus::Failure;
+            return Result::Failure;
+        }
+        underlyingType = statement->baseType->semanticType;
+    } else {
+        // If not specified, use int32
+        underlyingType = typeContext.getPrimitive(ast::PrimitiveType_t::i32);
+    }
+    const Enum* enumType = static_cast<const Enum*>(typeContext.getEnum(statement->name));
+    enumType->underlyingType = underlyingType;
+    symbol->type = enumType;
+
+    int64_t currentVariantValue = 0;
+
+    std::vector<Variant> variants;
+
+    for (ast::EnumValue& variant : statement->values) {
+        if (variant.value) {
+            if (visit(variant.value) == Result::Failure) { return Result::Failure; }
+            auto explicitVal = variant.value->fold();
+            if (!explicitVal.has_value()) {
+                logging::logError(variant.line, variant.column,
+                                  "Variant {} (in enum {}) must have a compile-time value", variant.name,
+                                  statement->name);
+                symbol->status = ResolutionStatus::Failure;
+                return Result::Failure;
+            }
+            if (!explicitVal.is_number() || !explicitVal.number_unchecked().is_integer()) {
+                logging::logError(variant.line, variant.column, "Variant {} (in enum {}) must have an integer value",
+                                  variant.name, statement->name);
+                symbol->status = ResolutionStatus::Failure;
+                return Result::Failure;
+            }
+            currentVariantValue = explicitVal.number_unchecked().value_as<int64_t>();
+        }
+
+        variants.emplace_back(variant.name, currentVariantValue);
+        currentVariantValue++;
+    }
+    enumType->variants = std::move(variants);
     return Result::Success;
 }
 
@@ -129,6 +185,7 @@ auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
         symbolTable.enterScope();
         if (visit(statement->initializationStep) == Result::Failure) { result = Result::Failure; }
     }
+
     if (statement->stopCondition) {
         // there is a stop condition, check it
         if (visit(statement->stopCondition) == Result::Failure) { result = Result::Failure; }
@@ -165,27 +222,53 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
                  statement->name);
         return Result::Failure;
     }
-    const ContextGuard guard{context.inFunction, true};
+
     // We don't know the generic types at declaration so we can't check them
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return Result::Success; }
+
+    Symbol* symbol = symbolTable.lookup(statement->name);
+    if (!symbol) {
+        ASSERT_UNREACHABLE(
+            std::format("Function '{}' was not registered during symbol initialization", statement->name));
+    }
+
+    if (symbol->status == ResolutionStatus::Success) { return Result::Success; }
+    if (symbol->status == ResolutionStatus::Failure) { return Result::Failure; }
+
+    // Direct circular dependencies in function signatures (e.g. infinite type expansions)
+    if (symbol->status == ResolutionStatus::InProgress) {
+        // Recursive calls inside bodies are fine because body resolution happens while InProgress.
+        // Re-entering here only happens if signature resolution loops.
+        logError(statement, "Cyclic dependency detected in signature of function '{}'", statement->name);
+        symbol->status = ResolutionStatus::Failure;
+        return Result::Failure;
+    }
+
+    symbol->status = ResolutionStatus::InProgress;
+
+    const ContextGuard contextGuard{context.inFunction, true};
     const SemanticType* resolvedReturnType = nullptr;
+    Result signatureResult = Result::Success;
+
     if (statement->returnType) {
         visit(statement->returnType);
         resolvedReturnType = statement->returnType->semanticType;
         if (!resolvedReturnType) {
             logError(statement, "Unknown return type for function '{}'", statement->name);
-            return Result::Failure;
+            signatureResult = Result::Failure;
         }
     }
+
     symbolTable.enterScope();
     for (const ast::FunctionParameter& param : statement->parameters) {
         visit(param.type);
         const SemanticType* resolvedParamType = param.type->semanticType;
         if (!resolvedParamType) {
             logError(statement, "Unknown type for parameter '{}' in function '{}'", param.name, statement->name);
-            symbolTable.exitScope();
-            return Result::Failure;
+
+            symbol->status = ResolutionStatus::Failure;
+            signatureResult = Result::Failure;
         }
         Result paramDeclaration = symbolTable.declare(
             param.name,
@@ -193,18 +276,22 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
                    .node = statement,
                    .kind = (param.isMutable) ? SymbolKind::Parameter : SymbolKind::ConstantParameter,
                    .isMutable = param.isMutable});
+
         if (paramDeclaration == Result::Failure) [[unlikely]] {
             logError(statement, "Failed to declare parameter '{}' in scope for function '{}'", param.name,
                      statement->name);
-            symbolTable.exitScope();
-            return Result::Failure;
+
+            symbol->status = ResolutionStatus::Failure;
+            signatureResult = Result::Failure;
         }
     }
+
     context.currentFunctionReturnType = resolvedReturnType;
     // already entered a scope for the parameters so we don't want to enter a scope while visiting the body
-    Result bodyResult = visit(statement->body, false);
+    constexpr bool bodyNeedsToEnterScope = false;
+    const Result bodyResult = visit(statement->body, bodyNeedsToEnterScope);
     context.currentFunctionReturnType = nullptr;
-    return bodyResult;
+    return (signatureResult == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
 }
 
 auto analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
