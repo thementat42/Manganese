@@ -7,6 +7,8 @@
 
 namespace Manganese::ast {
 
+mnstl::fold_result_t AlignofExpression::fold() const noexcept { return mnstl::fold_result_t{}; }
+
 mnstl::fold_result_t BinaryExpression::fold() const noexcept {
     using enum lexer::TokenType;
     const mnstl::fold_result_t leftResult = left->fold();
@@ -68,5 +70,8 @@ mnstl::fold_result_t PostfixExpression::fold() const noexcept {
         default: ASSERT_UNREACHABLE(std::format("Unknown postfix operator {}", lexer::tokenTypeToString(op)));
     }
 };
+
+mnstl::fold_result_t SizeofExpression::fold() const noexcept { return mnstl::fold_result_t{}; }
+
 
 }  // namespace Manganese::ast

@@ -63,6 +63,8 @@ struct AlignofExpression final : public Expression {
 
     AlignofExpression(Type* t) noexcept : Expression(ExpressionKind::AlignofExpression), type(t) {}
 
+    mnstl::fold_result_t fold() const noexcept override;
+
     MN_AST_STANDARD_INTERFACE
 };
 
@@ -262,6 +264,7 @@ struct SizeofExpression final : public Expression {
     Type* type;
 
     SizeofExpression(Type* t) noexcept : Expression(ExpressionKind::SizeofExpression), type(t) {}
+    mnstl::fold_result_t fold() const noexcept override;
 
     MN_AST_STANDARD_INTERFACE
 };
