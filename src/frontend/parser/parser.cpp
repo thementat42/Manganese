@@ -11,7 +11,7 @@ ParsedFile Parser::parse() {
     if (peekTokenType() == TokenType::Module) { parseModuleDeclarationStatement(); }
     while (peekTokenType() == TokenType::Import) { parseImportStatement(); }
 
-    this->hasParsedFileHeader = true;  // Now, setting a module or import name should be a warning
+    flags.hasParsedFileHeader = true;  // Now, setting a module or import name should be a warning
 
     ast::Block program;
     while (!done()) {
@@ -45,9 +45,9 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
     if (tok.getType() == expectedType) { return consumeToken(); }
     logging::logError(tok.getLine(), tok.getColumn(), "{} (expected '{}' but got '{}')", errorMessage,
                       lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(tok.getType()));
-    this->hasError = true;
+    flags.hasError = true;
 
-    return hasError ? lexer::Token{} : consumeToken();
+    return flags.hasError ? lexer::Token{} : consumeToken();
 }
 
 std::string importToString(const Import& import) {
