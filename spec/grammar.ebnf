@@ -113,6 +113,7 @@ indexing_expression = identifier"["expression"]"
 
 #* Statements
 block = statement*;
+nested_block = "{" block "}"
 
 statement = variable_decl | expression_statement | conditional_statement | switch_statement | return_statement | loop_statement | break_statement | continue_statement | alias_statement;
 
@@ -147,7 +148,7 @@ function_decl = access_modifer? "func" identifier generic_parameters? "(" parame
 generic_parameters = "[" identifier ("," identifier)* "]";
 parameter_list = (variable_name "const"? ":" (type_qualifiers? type)? ("=" literal)? ",")+;
 
-lambda_statement = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";  #! TODO: Rework
+lambda = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";  #! TODO: Rework
 
 function_call = expression ("@" "["type ("," type)* "]")? "(" ( expression ("," expression)*)? ")";
 
@@ -158,4 +159,4 @@ aggregate_member_decl = variable_name ":" type_qualifiers? type ";";
 
 enum_decl = ("public"|"private")? "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}";
 
-aggregate_instantiation = identifier("@" "["type ("," type)*"]") "{" (identifier "=" expression) "," (identifier "=" expression)* "}";
+aggregate_instantiation = identifier("@" "["type ("," type)*"]") "{" (identifier "=" expression) ("," identifier "=" expression)* "}";
