@@ -79,10 +79,10 @@ binary_op = arithmetic_op | comparison_op | boolean_op | bitwise_op;
 binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)
 
 #* Variables
-variable_decl = ("let" | "const") variable_name (":" access_modifer? type)? ("=" expression)? ";"  # semantically, the expression must match the given type
+variable_decl = ("let" | "let mut") variable_name (":" access_modifer? type)? ("=" expression)? ";"  # semantically, the expression must match the given type
 access_modifer = "public" | "private"  # default access is private
 type = primitive_type | user_type | pointer_type;
-pointer_type = "ptr" "const"? type  # recursive: allows for ptr ptr ptr ... x
+pointer_type = "ptr" "mut"? type  # recursive: allows for ptr ptr ptr ... x
 primitive_type = int_type | float_type | "char" | "bool";
 
 int_type = ("u"?)"int"(int_width?);  # u makes it unsigned, if no width specified, defaults to 32 bits
@@ -146,7 +146,7 @@ alias_statement = "alias" identifier "=" type ";"";
 #* Functions
 function_decl = access_modifer? "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
 generic_parameters = "[" identifier ("," identifier)* "]";
-parameter_list = (variable_name "const"? ":" (type_qualifiers? type)? ("=" literal)? ",")+;
+parameter_list = (variable_name "mut"? ":" (type_qualifiers? type)? ("=" literal)? ",")+;
 
 lambda = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";  #! TODO: Rework
 
