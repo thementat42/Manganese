@@ -87,19 +87,6 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
             ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
 
-        // if (type == TokenType::LeftBrace && left->kind != ast::ExpressionKind::IdentifierExpression
-        //     && left->kind != ast::ExpressionKind::GenericExpression) [[unlikely]] {
-        //     if (flags.parsingBlockPrecursor) {
-        //         // Left braces after an expression can either start a block or an aggregate instantiation
-        //         // If we're parsing a block precursor (if/for/while, etc.) AND the previous expression is not an
-        //         // identifier, we assume it's the start of a block and break If the previous expression IS an
-        //         // identifier, it might be an inline aggregate instantiation
-        //         return left;
-        //     }
-        //     logError(token.getLine(), token.getColumn(),
-        //              "Left brace after an expression must be preceded by an identifier (aggregate instantiation)"
-        //              " or a block precursor (if/for/while, etc.)");
-        // }
         left = (this->*handler)(left, op.rightBindingPower);
     }
     return left;
@@ -133,60 +120,6 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
     }
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end aggregate instantiation");
     return arena.emplace<ast::AggregateInstantiationExpression>(left, std::move(fields));
-
-    // std::string aggregateName;
-    // std::vector<ast::Type*> genericTypes;
-    // // Parse out an aggregate instantiation even if there's an error
-    // expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start aggregate instantiation");
-    // std::vector<ast::AggregateInstantiationField> fields;
-
-    // if (left->kind == ast::ExpressionKind::GenericExpression) {
-    //     auto* genericExpr = static_cast<ast::GenericExpression*>(left);
-    //     if (genericExpr->identifier->kind != ast::ExpressionKind::IdentifierExpression) {
-    //         logError(left->getLine(), left->getColumn(),
-    //                  "Generic aggregate instantiation must start with an aggregate name");
-    //     } else {
-    //         auto* identifierExpr = static_cast<ast::IdentifierExpression*>(genericExpr->identifier);
-    //         aggregateName = identifierExpr->value;
-    //         genericTypes = std::move(genericExpr->types);
-    //     }
-    // } else if (left->kind == ast::ExpressionKind::IdentifierExpression) {
-    //     auto* underlying = static_cast<ast::IdentifierExpression*>(left);
-    //     aggregateName = underlying->value;
-    // } else {
-    //     logError(left->getLine(), left->getColumn(),
-    //              "Aggregate instantiation expression must start with an aggregate name, not {}", ast::toStringOr(left));
-    // }
-
-    // while (!done()) {
-    //     if (peekTokenType() == lexer::TokenType::RightBrace) {
-    //         break;  // Done instantiation
-    //     }
-    //     Token token = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation");
-    //     std::string propertyName = token.getLexeme();
-
-    //     expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
-    //     // want precedence to be 1 higher than assignment (e.g. field = x = 10 is invalid)
-    //     const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
-    //     ast::Expression* value = parseExpression(static_cast<Precedence>(precedence));
-
-    //     if (auto duplicate = std::ranges::find(fields, propertyName, &ast::AggregateInstantiationField::name);
-    //         duplicate != fields.end()) {
-    //         logError(
-    //             value->getLine(), value->getColumn(),
-    //             "Duplicate field '{}' in aggregate instantiation of '{}' (previously declared at line {}, column {})",
-    //             propertyName, aggregateName, duplicate->line, duplicate->column);
-    //     } else {
-    //         fields.push_back(
-    //             {.name = propertyName, .value = value, .line = token.getLine(), .column = token.getColumn()});
-    //     }
-    //     if (peekTokenType() != lexer::TokenType::RightBrace) {
-    //         expectToken(lexer::TokenType::Comma, "Expected ',' to separate aggregate fields");
-    //     }
-    // }
-    // expectToken(lexer::TokenType::RightBrace, "Expected '}' to end aggregate instantiation");
-    // return arena.emplace<ast::AggregateInstantiationExpression>(std::move(aggregateName), std::move(genericTypes),
-    //                                                             std::move(fields));
 }
 
 ast::Expression* Parser::parseAggregateLiteralExpression() {
