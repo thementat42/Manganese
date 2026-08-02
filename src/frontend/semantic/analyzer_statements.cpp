@@ -93,8 +93,8 @@ auto analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
 }
 
 auto analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
-    if (!context.whileLoopDepth && !context.forLoopDepth && !context.switchStatementDepth) {
-        logError(statement, "'break' can only be used in loops or switch statements");
+    if (!context.whileLoopDepth && !context.forLoopDepth) {
+        logError(statement, "'break' can only be used in loops ");
         return stmtvisit_t::Failure;
     }
     return stmtvisit_t::Success;
@@ -393,20 +393,20 @@ auto analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
     }
     stmtvisit_t result = stmtvisit_t::Success;
     for (ast::CaseClause& caseClause : statement->cases) {
-        const bool visitSuccess = visit(caseClause.literalValue) == exprvisit_t::Success;
-
-        if (!visitSuccess) { result = stmtvisit_t::Failure; }
-        if (!caseClause.literalValue->fold().has_value()) {
-            logError(caseClause.literalValue, "case value must be a constant expression");
-            result = stmtvisit_t::Failure;
-        }
-        if (visitSuccess) {
-            const SemanticType* literalValueType = caseClause.literalValue->semanticType;
-            if (literalValueType && !areTypesComparable(targetType, literalValueType)) {
-                logError(caseClause.literalValue,
-                         "Type mismatch in switch case: target has type '{}', but case literal has type '{}'",
-                         targetType->toString(), literalValueType->toString());
+        for (ast::Expression* val : caseClause.values) {
+            const bool visitSuccess = visit(val) == exprvisit_t::Success;
+            if (!visitSuccess) { result = stmtvisit_t::Failure; }
+            if (!val->fold().has_value()) {
+                logError(val, "case vlue must be a constant expression");
                 result = stmtvisit_t::Failure;
+            }
+            if (visitSuccess) {
+                const SemanticType* valType = val->semanticType;
+                if (valType && !areTypesComparable(targetType, valType)) {
+                    logError(val, "Type mismatch in switch case: target has type '{}', but case value has type '{}'",
+                             targetType->toString(), valType->toString());
+                    result = stmtvisit_t::Failure;
+                }
             }
         }
         if (visit(caseClause.body) == Result::Failure) { result = stmtvisit_t::Failure; }
