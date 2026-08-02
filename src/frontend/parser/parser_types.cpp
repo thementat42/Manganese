@@ -76,7 +76,7 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence precedence) {
         // If the next token is not a right square bracket, it's a length expression
         lengthExpression = parseExpression(Precedence::Default);
     }
-    if (isParsingAliasStatement && lengthExpression == nullptr) {
+    if (flags.parsingAliasStatement && lengthExpression == nullptr) {
         logError(left->getLine(), left->getColumn(),
                  "Arrays in alias statements must have an explicit length expression");
     }
