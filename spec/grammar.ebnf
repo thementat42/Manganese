@@ -121,7 +121,7 @@ conditional_statement = "if" "(" expression ")" "{" block "}"
                         ("else" "{" block "}")?;
 
 switch_statement = "switch" "(" expression ")"
-                   "{" ("case" expression ":" block "break;"?)* "}"
+                   "{" ("case" expression(,expression)* ":" block)* "}"
                    ("default" ":" block)? ;
 
 return_statement = "return" expression ";";
