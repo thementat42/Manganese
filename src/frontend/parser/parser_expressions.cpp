@@ -9,6 +9,10 @@
 #include <utility>
 #include <vector>
 
+#include "frontend/lexer/token_type.hpp"
+#include "frontend/parser/operators.hpp"
+
+
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`
@@ -239,7 +243,7 @@ ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Preceden
 ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence) {
     DISCARD(consumeToken());  // Consume the member access operator (.)
     return arena.emplace<ast::MemberAccessExpression>(
-        std::move(left), expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
+        left, expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
 }
 
 ast::Expression* Parser::parseParenthesizedExpression() {
@@ -309,8 +313,10 @@ ast::Expression* Parser::parsePrimaryExpression() {
 
 ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left, Precedence) {
     DISCARD(consumeToken());  // Consume the scope resolution operator (::)
-    std::string element = expectToken(lexer::TokenType::Identifier, "Expected identifier after '::'").getLexeme();
-    return arena.emplace<ast::ScopeResolutionExpression>(left, std::move(element));
+    if (peekTokenType() != lexer::TokenType::Identifier) {
+        logError(peekToken().getLine(), peekToken().getColumn(), "Expected identifier after '::'");
+    }
+    return arena.emplace<ast::ScopeResolutionExpression>(left, parseExpression(Precedence::ScopeResolution));
 }
 
 ast::Expression* Parser::parseSizeofExpression() {
@@ -339,6 +345,6 @@ ast::Expression* Parser::parseSizeofExpression() {
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {
     DISCARD(consumeToken());  // Consume the 'as' token
     ast::Type* type = parseType(precedence);
-    return arena.emplace<ast::TypeCastExpression>(left, std::move(type));
+    return arena.emplace<ast::TypeCastExpression>(left, type);
 }
 }  // namespace Manganese::parser

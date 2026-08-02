@@ -285,7 +285,7 @@ std::string PrefixExpression::toString(std::size_t indent) const {
 }
 
 std::string ScopeResolutionExpression::toString(std::size_t indent) const {
-    return std::format("{}::{}", scope->toString(indent), element);
+    return std::format("{}::{}", scope->toString(indent), element->toString());
 }
 
 std::string SizeofExpression::toString(std::size_t indent) const {

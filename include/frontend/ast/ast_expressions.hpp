@@ -250,10 +250,10 @@ struct PrefixExpression final : public Expression {
  */
 struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
-    const std::string element;
+    Expression* element;
 
-    ScopeResolutionExpression(Expression* _scope, std::string&& _element) noexcept :
-        Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope), element(std::move(_element)) {}
+    ScopeResolutionExpression(Expression* _scope, Expression* _element) noexcept :
+        Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope), element(_element) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

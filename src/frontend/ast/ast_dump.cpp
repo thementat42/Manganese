@@ -464,8 +464,8 @@ void ScopeResolutionExpression::dump(std::ostream& os, size_t indent) const {
     dumpHeader(os, ind, "ScopeResolutionExpression", *this);
     os << ind.next() << "scope: \n";
     scope->dump(os, ind.next(2));
-    os << ind.next() << "element: " << element << "\n";
-    os << ind << "}\n";
+    os << ind.next() << "element: \n";
+    element->dump(os, ind.next(2));
 }
 
 void SizeofExpression::dump(std::ostream& os, size_t indent) const {
