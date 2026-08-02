@@ -293,7 +293,9 @@ void WhileLoopStatement::dump(std::ostream& os, size_t indent) const {
 void AggregateInstantiationExpression::dump(std::ostream& os, size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AggregateInstantiationExpression", *this);
-    os << ind.next() << "Name: " << name << "\n";
+    os << ind.next() << "base:\n";
+    base->dump(os, ind.next(2));
+
     os << ind.next() << "fields: [\n";
     for (const AggregateInstantiationField& field : fields) {
         os << ind.next(2) << "{\n";

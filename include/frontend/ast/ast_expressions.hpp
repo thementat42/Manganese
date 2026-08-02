@@ -32,15 +32,13 @@ struct AggregateInstantiationField {
  * @brief e.g. `Point3D{ x = 1, y = 2, z = 3 }`
  */
 struct AggregateInstantiationExpression final : public Expression {
-    std::string name;
-    std::vector<Type*> genericTypes;
+    Expression* base;
     std::vector<AggregateInstantiationField> fields;
 
-    AggregateInstantiationExpression(std::string&& _name, std::vector<Type*>&& _genericTypes,
+    AggregateInstantiationExpression(Expression* _base,
                                      std::vector<AggregateInstantiationField>&& _fields) noexcept :
         Expression(ExpressionKind::AggregateInstantiationExpression),
-        name(std::move(_name)),
-        genericTypes(std::move(_genericTypes)),
+        base(_base),
         fields(std::move(_fields)) {}
 
     MN_AST_STANDARD_INTERFACE;

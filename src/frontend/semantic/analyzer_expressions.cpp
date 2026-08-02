@@ -13,90 +13,91 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
-    auto result = exprvisit_t::Success;
-    const Symbol* symbol = symbolTable.lookup(expression->name);
-    if (!symbol) {
-        logError(expression, "Type '{}' was not found in the current scope.", expression->name);
-        return exprvisit_t::Failure;
-    }
+auto analyzer::visit([[maybe_unused]] ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+    return exprvisit_t::Success;
+    // auto result = exprvisit_t::Success;
+    // const Symbol* symbol = symbolTable.lookup(expression->name);
+    // if (!symbol) {
+    //     logError(expression, "Type '{}' was not found in the current scope.", expression->name);
+    //     return exprvisit_t::Failure;
+    // }
 
-    if (!symbol->type || symbol->kind != SymbolKind::Aggregate) {
-        logError(expression, "Type '{}' is not an aggregate type", expression->name);
-        return exprvisit_t::Failure;
-    }
+    // if (!symbol->type || symbol->kind != SymbolKind::Aggregate) {
+    //     logError(expression, "Type '{}' is not an aggregate type", expression->name);
+    //     return exprvisit_t::Failure;
+    // }
 
-    const auto* targetType = static_cast<const Aggregate*>(symbol->type);
+    // const auto* targetType = static_cast<const Aggregate*>(symbol->type);
 
-    if (!expression->genericTypes.empty()) {
-        std::vector<const SemanticType*> resolvedGenerics;
-        resolvedGenerics.reserve(expression->genericTypes.size());
+    // if (!expression->genericTypes.empty()) {
+    //     std::vector<const SemanticType*> resolvedGenerics;
+    //     resolvedGenerics.reserve(expression->genericTypes.size());
 
-        for (ast::Type* genericAstType : expression->genericTypes) {
-            visit(genericAstType);
-            const SemanticType* resolved = genericAstType->semanticType;
-            if (!resolved) {
-                result = exprvisit_t::Failure;
-            } else {
-                resolvedGenerics.push_back(resolved);
-            }
-        }
-        if (result == exprvisit_t::Failure) { return result; }
+    //     for (ast::Type* genericAstType : expression->genericTypes) {
+    //         visit(genericAstType);
+    //         const SemanticType* resolved = genericAstType->semanticType;
+    //         if (!resolved) {
+    //             result = exprvisit_t::Failure;
+    //         } else {
+    //             resolvedGenerics.push_back(resolved);
+    //         }
+    //     }
+    //     if (result == exprvisit_t::Failure) { return result; }
 
-        targetType
-            = static_cast<const Aggregate*>(typeContext.getGenericInstance(targetType, std::move(resolvedGenerics)));
-    }
+    //     targetType
+    //         = static_cast<const Aggregate*>(typeContext.getGenericInstance(targetType, std::move(resolvedGenerics)));
+    // }
 
-    expression->semanticType = targetType;
+    // expression->semanticType = targetType;
 
-    for (ast::AggregateInstantiationField& field : expression->fields) {
-        if (visit(field.value) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
-        if (!field.value->semanticType) { result = exprvisit_t::Failure; }
-    }
+    // for (ast::AggregateInstantiationField& field : expression->fields) {
+    //     if (visit(field.value) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    //     if (!field.value->semanticType) { result = exprvisit_t::Failure; }
+    // }
 
-    if (result == exprvisit_t::Failure) { return result; }
+    // if (result == exprvisit_t::Failure) { return result; }
 
-    std::unordered_set<std::string_view> initializedFields;
-    initializedFields.reserve(expression->fields.size());
+    // std::unordered_set<std::string_view> initializedFields;
+    // initializedFields.reserve(expression->fields.size());
 
-    for (const ast::AggregateInstantiationField& field : expression->fields) {
-        // e.g., Point { x = 1, x = 2 }
-        if (!initializedFields.insert(field.name).second) {
-            logError(field.value, "Duplicate initialization for field '{}' in '{}'", field.name, expression->name);
-            result = exprvisit_t::Failure;
-            continue;
-        }
+    // for (const ast::AggregateInstantiationField& field : expression->fields) {
+    //     // e.g., Point { x = 1, x = 2 }
+    //     if (!initializedFields.insert(field.name).second) {
+    //         logError(field.value, "Duplicate initialization for field '{}' in '{}'", field.name, expression->name);
+    //         result = exprvisit_t::Failure;
+    //         continue;
+    //     }
 
-        // Can't instantiate an undeclared field
-        const SemanticType* expectedFieldType = targetType->getFieldType(field.name);
-        if (!expectedFieldType) {
-            logError(field.value, "Type '{}' has no field named '{}'", expression->name, field.name);
-            result = exprvisit_t::Failure;
-            continue;
-        }
+    //     // Can't instantiate an undeclared field
+    //     const SemanticType* expectedFieldType = targetType->getFieldType(field.name);
+    //     if (!expectedFieldType) {
+    //         logError(field.value, "Type '{}' has no field named '{}'", expression->name, field.name);
+    //         result = exprvisit_t::Failure;
+    //         continue;
+    //     }
 
-        // Check that that field can be instantiated
-        const typeCompatibilityResult compatibility = areTypesCompatible(expectedFieldType, field.value->semanticType);
-        if (!compatibility) {
-            logError(field.value, "Cannot initialize field '{}' of type {} with value of type {}", field.name,
-                     expectedFieldType->toString(), field.value->semanticType->toString());
-            result = exprvisit_t::Failure;
-        } else if (compatibility.result == Compatible_t::Warning) {
-            logWarning(field.value, "{}", compatibility.message);
-        }
-    }
+    //     // Check that that field can be instantiated
+    //     const typeCompatibilityResult compatibility = areTypesCompatible(expectedFieldType, field.value->semanticType);
+    //     if (!compatibility) {
+    //         logError(field.value, "Cannot initialize field '{}' of type {} with value of type {}", field.name,
+    //                  expectedFieldType->toString(), field.value->semanticType->toString());
+    //         result = exprvisit_t::Failure;
+    //     } else if (compatibility.result == Compatible_t::Warning) {
+    //         logWarning(field.value, "{}", compatibility.message);
+    //     }
+    // }
 
-    if (initializedFields.size() < targetType->fields.size()) {
-        for (const AggregateField& declaredField : targetType->fields) {
-            if (!initializedFields.contains(declaredField.name)) {
-                logError(expression, "Missing field '{}' in instantiation of '{}'", declaredField.name,
-                         expression->name);
-                result = exprvisit_t::Failure;
-            }
-        }
-    }
+    // if (initializedFields.size() < targetType->fields.size()) {
+    //     for (const AggregateField& declaredField : targetType->fields) {
+    //         if (!initializedFields.contains(declaredField.name)) {
+    //             logError(expression, "Missing field '{}' in instantiation of '{}'", declaredField.name,
+    //                      expression->name);
+    //             result = exprvisit_t::Failure;
+    //         }
+    //     }
+    // }
 
-    return result;
+    // return result;
 }
 
 auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {

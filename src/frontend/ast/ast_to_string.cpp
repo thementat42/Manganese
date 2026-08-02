@@ -204,7 +204,7 @@ std::string WhileLoopStatement::toString(std::size_t indent) const {
 // Expressions (Expressions do not typically prepend self-indentation since they sit inside statements)
 
 std::string AggregateInstantiationExpression::toString(std::size_t indent) const {
-    std::string result = std::format("{}{} ", name, genericsToString(genericTypes, indent)) + "{";
+    std::string result = base->toString(indent) + " {";
     for (std::size_t i = 0; i < fields.size(); ++i) {
         const AggregateInstantiationField& field = fields[i];
         result += std::format("{} = {}", field.name, field.value->toString(indent));
