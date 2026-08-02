@@ -244,8 +244,9 @@ void SwitchStatement::dump(std::ostream& os, size_t indent) const {
 
     for (const auto& c : cases) {
         os << ind.next(2) << "{\n";
-        os << ind.next(3) << "literalValue: \n";
-        c.literalValue->dump(os, ind.next(4));
+        os << ind.next(3) << "values: [\n";
+        for (const auto* val : c.values) { val->dump(os, ind.next(3)); }
+        os << ind.next(3) << "]\n";
         dumpBlock(os, ind.next(3), "body", c.body);
         os << ind.next(2) << "}\n";
     }

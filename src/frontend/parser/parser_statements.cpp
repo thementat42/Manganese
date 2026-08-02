@@ -419,9 +419,11 @@ ast::Statement* Parser::parseSwitchStatement() {
     Token temp = consumeToken();
     std::size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
+
     flags.parsingBlockPrecursor = true;
     ast::Expression* variable = parseExpression(Precedence::Default);
     flags.parsingBlockPrecursor = false;
+
     expectToken(TokenType::RightParen, "Expected ')' to end switch variable");
     expectToken(TokenType::LeftBrace, "Expected '{' to start the switch body");
 
@@ -430,15 +432,26 @@ ast::Statement* Parser::parseSwitchStatement() {
     bool hasDefault = false;
 
     while (peekTokenType() == TokenType::Case) {
-        DISCARD(consumeToken());
-        ast::Expression* caseValue = parseExpression(Precedence::Default);
+        DISCARD(consumeToken());  // consume 'case'
+        std::vector<ast::Expression*> caseValues;
+
+        do {
+            caseValues.push_back(parseExpression(Precedence::Default));
+            if (peekTokenType() == TokenType::Comma) {
+                DISCARD(consumeToken());  // consume ','
+            } else {
+                break;   // no more cases
+            }
+        } while (true);
         ast::Block caseBody;
-        expectToken(TokenType::Colon, "Expected ':' after case value");
+        expectToken(TokenType::Colon,
+                    std::format("Expected ':' after case value{}", (caseValues.size() > 1 ? "s" : "")));
+
         while (peekTokenType() != TokenType::Case && peekTokenType() != TokenType::Default
                && peekTokenType() != TokenType::RightBrace) {
             caseBody.push_back(parseStatement());
         }
-        cases.push_back(ast::CaseClause{.literalValue = caseValue, .body = std::move(caseBody)});
+        cases.push_back(ast::CaseClause{.values = std::move(caseValues), .body = std::move(caseBody)});
     }
     if (peekTokenType() == TokenType::Default) {
         hasDefault = true;

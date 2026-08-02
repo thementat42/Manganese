@@ -188,7 +188,7 @@ struct ReturnStatement final : public Statement {
 };
 
 struct CaseClause {
-    Expression* literalValue;
+    std::vector<Expression*> values;
     Block body;
 };
 
