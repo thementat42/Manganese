@@ -12,7 +12,7 @@ namespace mnstl {
 
 class chunk_allocator {
    private:
-    constexpr static inline std::size_t _default_chunksize = 4096;
+    constexpr static inline std::size_t _default_chunksize = 0x1000;
     struct chunk {
         std::unique_ptr<std::byte[]> data;
         std::size_t used, capacity;
