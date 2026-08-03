@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token_base.hpp>
@@ -14,85 +13,8 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::instantiateGenericAggregateIfNeeded(ast::Expression* baseExpr) -> exprvisit_t {
-    ast::Expression* targetExpression = unwrapBaseDeclaration(baseExpr);
-    if (!targetExpression || targetExpression->kind != ast::ExpressionKind::IdentifierExpression) {
-        return exprvisit_t::Success;
-    }
-
-    auto* identifier = static_cast<ast::IdentifierExpression*>(targetExpression);
-    const Symbol* sym = symbolTable.lookup(identifier->value);
-    if (!sym || !sym->node) { return exprvisit_t::Success; }
-
-    if (sym->kind != SymbolKind::Aggregate && sym->kind != SymbolKind::GenericType) { return exprvisit_t::Success; }
-
-    auto* aggregate = static_cast<ast::AggregateDeclarationStatement*>(sym->node);
-    if (aggregate->genericTypes.empty()) { return exprvisit_t::Success; }
-
-    // Invoke generic overload to instantiate and type-check the generic aggregate
-    if (visit(aggregate, generic_tag) == stmtvisit_t::Failure) { return exprvisit_t::Failure; }
-
+auto analyzer::visit([[maybe_unused]] ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
-}
-
-auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
-    auto result = exprvisit_t::Success;
-
-    if (visit(expression->base) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
-
-    if (instantiateGenericAggregateIfNeeded(expression->base) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
-
-    const SemanticType* baseType = expression->base->semanticType;
-    if (!baseType) {
-        logError(expression->base, "Could not determine type of base expression in aggregate instantiation.");
-        return exprvisit_t::Failure;
-    }
-
-    if (!baseType->isAggregate()) {
-        logError(expression->base, "Type '{}' is not an aggregate type", baseType->toString());
-        return exprvisit_t::Failure;
-    }
-    const auto* targetType = static_cast<const Aggregate*>(baseType);
-    expression->semanticType = targetType;
-
-    for (ast::AggregateInstantiationField& field : expression->fields) {
-        if (visit(field.value) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
-    }
-
-    if (result == exprvisit_t::Failure) { return result; }
-
-    for (const ast::AggregateInstantiationField& field : expression->fields) {
-        if (!field.value->semanticType) {
-            result = exprvisit_t::Failure;
-            continue;
-        }
-        const SemanticType* expectedFieldType = targetType->getFieldType(field.name);
-        if (!expectedFieldType) {
-            logError(field.value, "Type '{}' has no field named '{}'", targetType->toString(), field.name);
-            result = exprvisit_t::Failure;
-            continue;
-        }
-        const typeCompatibilityResult compatibility = areTypesCompatible(expectedFieldType, field.value->semanticType);
-        if (!compatibility) {
-            logError(field.value, "Cannot initialize field '{}' of type '{}' with value of type '{}'", field.name,
-                     expectedFieldType->toString(), field.value->semanticType->toString());
-            result = exprvisit_t::Failure;
-        } else if (compatibility.result == Compatible_t::Warning) {
-            logWarning(field.value, "{}", compatibility.message);
-        }
-    }
-
-    if (expression->fields.size() < targetType->fields.size()) {
-        for (const AggregateField& declaredField : targetType->fields) {
-            if (std::ranges::find(expression->fields, declaredField.name, &ast::AggregateInstantiationField::name)
-                == expression->fields.end()) {
-                logError(expression, "Missing field '{}' in instantiation of aggregate '{}'", declaredField.name,
-                         targetType->toString());
-                result = exprvisit_t::Failure;
-            }
-        }
-    }
-    return result;
 }
 
 auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
@@ -280,8 +202,77 @@ auto analyzer::visit([[maybe_unused]] ast::FunctionCallExpression* expression) -
     return exprvisit_t::Success;
 }
 
-auto analyzer::visit([[maybe_unused]] ast::GenericExpression* expression) -> exprvisit_t {
-    return exprvisit_t::Success;
+auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {
+    std::vector<const SemanticType*> resolvedTypeArguments;
+    resolvedTypeArguments.reserve(expression->types.size());
+
+    for (ast::Type* type : expression->types) {
+        visit(type);
+        const SemanticType* resolved = type->semanticType;
+        if (!resolved) {
+            logError(type, "Failed to resolve generic type argument '{}' in generic expression", type->toString());
+            return exprvisit_t::Failure;
+        }
+        resolvedTypeArguments.push_back(resolved);
+    }
+
+    ast::Expression* targetDeclaration = unwrapBaseDeclaration(expression->identifier);
+    if (!targetDeclaration || targetDeclaration->kind != ast::ExpressionKind::IdentifierExpression) {
+        logError(expression->identifier,
+                 "Target of generic expression must be a named function or aggregate declaration");
+        return exprvisit_t::Failure;
+    }
+    auto* identifier = static_cast<ast::IdentifierExpression*>(targetDeclaration);
+    const Symbol* symbol = symbolTable.lookup(identifier->value);
+    if (!symbol || !symbol->node) {
+        logError(identifier, "Use of undeclared symbol '{}'", identifier->value);
+        return exprvisit_t::Failure;
+    }
+    StackGuard guard{genericsStack, std::move(resolvedTypeArguments)};
+
+    if (symbol->kind == SymbolKind::Function) {
+        auto* functionDeclaration = static_cast<ast::FunctionDeclarationStatement*>(symbol->node);
+        if (functionDeclaration->genericTypes.size() != genericsStack.top().size()) {
+            logError(expression, "Generic function '{}' expects {} type arguments, but {} were provided",
+                     functionDeclaration->name, functionDeclaration->genericTypes.size(), genericsStack.top().size());
+            return exprvisit_t::Failure;
+        }
+        if (visit(functionDeclaration, generic_tag) == stmtvisit_t::Failure) { return exprvisit_t::Failure; }
+        const SemanticType* concreteType = getInstantiatedFunctionType(functionDeclaration, genericsStack.top());
+        if (!concreteType) {
+            logError(expression, "Failed to materialize instantiated function type for '{}'",
+                     functionDeclaration->name);
+            return exprvisit_t::Failure;
+        }
+        expression->semanticType = concreteType;
+        expression->identifier->semanticType = concreteType;  // Attach to base for parent visitors
+        return exprvisit_t::Success;
+    } else if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
+        auto* aggregateDecl = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
+
+        if (aggregateDecl->genericTypes.size() != genericsStack.top().size()) {
+            logError(expression, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
+                     aggregateDecl->name, aggregateDecl->genericTypes.size(), genericsStack.top().size());
+            return exprvisit_t::Failure;
+        }
+
+        // Type-check / instantiate the generic aggregate definition
+        if (visit(aggregateDecl, generic_tag) == stmtvisit_t::Failure) { return exprvisit_t::Failure; }
+
+        // Retrieve the concrete aggregate type layout from cache/context
+        const SemanticType* concreteType = getInstantiatedAggregateType(aggregateDecl, genericsStack.top());
+        if (!concreteType) {
+            logError(expression, "Failed to materialize instantiated aggregate type for '{}'", aggregateDecl->name);
+            return exprvisit_t::Failure;
+        }
+
+        expression->semanticType = concreteType;
+        expression->identifier->semanticType = concreteType;  // Attach to base for parent visitors
+        return exprvisit_t::Success;
+    }
+
+    logError(identifier, "Symbol '{}' is neither a generic function nor a generic aggregate", identifier->value);
+    return exprvisit_t::Failure;
 }
 
 auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {

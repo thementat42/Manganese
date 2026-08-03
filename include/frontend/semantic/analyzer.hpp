@@ -18,8 +18,6 @@
 #include <utility>
 #include <utils/result.hpp>
 
-#include "frontend/ast/ast_expressions.hpp"
-
 namespace Manganese::semantic {
 
 /**
@@ -39,6 +37,15 @@ struct [[nodiscard]] ContextGuard {
     ContextGuard& operator=(const ContextGuard&) = delete;
 };
 
+template <class T>
+struct [[nodiscard]] StackGuard {
+    mnstl::tiny_stack<T>& stack;
+    explicit StackGuard(mnstl::tiny_stack<T>& _stack, T&& _new_element) noexcept : stack(_stack) {
+        stack.push(std::move(_new_element));
+    }
+    ~StackGuard() noexcept { stack.pop(); }
+};
+
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
 
 class analyzer final : public _analyzer_base_t {
@@ -47,6 +54,7 @@ class analyzer final : public _analyzer_base_t {
     TypeContext typeContext;
     parser::ParsedFile& parsedFile;
     mnstl::tiny_stack<std::vector<const SemanticType*>> genericsStack;
+    InstantiationCache instantiationCache;
 
     struct {
         bool inFunction = false;
@@ -137,7 +145,9 @@ class analyzer final : public _analyzer_base_t {
     // Overloads to handle generics specializations
     stmtvisit_t visit(ast::AggregateDeclarationStatement*, generic_tag_t);
     stmtvisit_t visit(ast::FunctionDeclarationStatement*, generic_tag_t);
-    exprvisit_t instantiateGenericAggregateIfNeeded(ast::Expression* baseExpr);
+    const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
+                                                    const std::vector<const SemanticType*>& typeArgs);
+        const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl, const std::vector<const SemanticType*>& typeArgs);
 
     static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
         if (!expr) [[unlikely]] { return nullptr; }
