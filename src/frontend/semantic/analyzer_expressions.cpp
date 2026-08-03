@@ -175,6 +175,11 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         return result;
     } else if (isArithmeticOp(op)) {
         if (lhsType->isPointer() || rhsType->isPointer()) { return analyzePointerArithmetic(lhsType, rhsType); }
+        if (op == lexer::TokenType::Plus && lhsType->primitiveType == ast::PrimitiveType_t::str
+            && rhsType->primitiveType == ast::PrimitiveType_t::str) {
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
+            return exprvisit_t::Success;
+        }
         const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
         if (!commonType) {
             logError(expression, "Invalid operands for arithmetic operator '{}': {} and {}",
