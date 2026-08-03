@@ -58,10 +58,10 @@ class analyzer final : public _analyzer_base_t {
 
     struct {
         bool inFunction = false;
-        uint8_t typeCastDepth = 0;
-        uint8_t ifStatementDepth = 0;
-        uint8_t forLoopDepth = 0;
-        uint8_t whileLoopDepth = 0;
+        std::uint8_t typeCastDepth = 0;
+        std::uint8_t ifStatementDepth = 0;
+        std::uint8_t forLoopDepth = 0;
+        std::uint8_t whileLoopDepth = 0;
         const SemanticType* currentFunctionReturnType = nullptr;
         const SemanticType* currentVariableDeclarationType = nullptr;
     } context;

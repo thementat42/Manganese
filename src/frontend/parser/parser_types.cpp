@@ -8,8 +8,6 @@
 #include <utils/type_names.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_types.hpp"
-
 namespace Manganese::parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
@@ -211,7 +209,7 @@ ast::Type* Parser::parseTypeofType() {
     if (!innerExpression) {
         logError(peekToken().getLine(), peekToken().getColumn(), "Expected a valid expression inside 'typeof(...)'.");
         // Error recovery: give it a safe dummy fallback expression
-        innerExpression = arena.emplace<ast::NumberLiteralExpression>(mnstl::number_t{int32_t{0}});
+        innerExpression = arena.emplace<ast::NumberLiteralExpression>(mnstl::number_t{std::int32_t{0}});
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
     return arena.emplace<ast::TypeofType>(innerExpression);

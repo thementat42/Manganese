@@ -1,5 +1,6 @@
 #include <array>
 #include <core.hpp>
+#include <cstddef>
 #include <filesystem>
 #include <frontend/parser.hpp>
 #include <fstream>
@@ -32,7 +33,7 @@ ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer:
     return std::move(file.program);
 }
 
-template <size_t N>
+template <std::size_t N>
 bool validateStatements(const ast::Block& block, const std::array<std::string, N>& expected, const char* testName) {
     std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
@@ -58,7 +59,7 @@ bool validateStatements(const ast::Block& block, const std::array<std::string, N
         return false;
     }
 
-    for (size_t i = 0; i < N; ++i) {
+    for (std::size_t i = 0; i < N; ++i) {
         std::string actual = block[i]->toString(0);
         if (actual != expected[i]) {
             std::cerr << "ERROR: Statement " << (i + 1) << " does not match expected in test: " << testName << '\n';

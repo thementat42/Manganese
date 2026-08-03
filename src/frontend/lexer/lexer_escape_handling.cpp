@@ -140,7 +140,7 @@ std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& esc
             return std::nullopt;
         }
         std::optional<char32_t> escapeChar;
-        uint8_t skipLength = 1;
+        std::uint8_t skipLength = 1;
         if (escapeString[i] == 'u') {
             const std::string escDigits = escapeString.substr(i + 1, 4);  // 4 for uXXXX
             escapeChar = resolveUnicodeCharacters(escDigits, getLine(), getCol());

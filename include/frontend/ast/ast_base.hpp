@@ -11,13 +11,13 @@
 #include <vector>
 
 #if MN_DEBUG
-#define MN_AST_DUMP void dump(std::ostream& os, size_t indent = 0) const override;
+#define MN_AST_DUMP void dump(std::ostream& os, std::size_t indent = 0) const override;
 #else
 #define MN_AST_DUMP
 #endif
 
-#define MN_AST_STANDARD_INTERFACE                           \
-    std::string toString(size_t indent = 0) const override; \
+#define MN_AST_STANDARD_INTERFACE                                \
+    std::string toString(std::size_t indent = 0) const override; \
     MN_AST_DUMP
 
 namespace Manganese {
@@ -58,7 +58,7 @@ enum class PrimitiveType_t : std::uint8_t {
     not_primitive,
 };
 
-enum class Visibility : uint8_t {
+enum class Visibility : std::uint8_t {
     Public = 0,
     Private = 2,
 };
@@ -77,13 +77,13 @@ struct ASTNode {
 
     virtual ~ASTNode() noexcept = default;
 
-    virtual std::string toString(size_t indent = 0) const = 0;
+    virtual std::string toString(std::size_t indent = 0) const = 0;
 
-    constexpr size_t getLine() const noexcept { return line; }
-    constexpr size_t getColumn() const noexcept { return column; }
+    constexpr std::size_t getLine() const noexcept { return line; }
+    constexpr std::size_t getColumn() const noexcept { return column; }
 
 #if MN_DEBUG
-    virtual void dump(std::ostream& os, size_t indentDepth = 0) const = 0;
+    virtual void dump(std::ostream& os, std::size_t indentDepth = 0) const = 0;
 #endif  // MN_DEBUG
 };
 

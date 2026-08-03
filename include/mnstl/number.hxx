@@ -71,7 +71,7 @@ constexpr const char* baseToString(Base b) noexcept {
 
 class number_t {
    public:
-    enum class held_type : uint8_t {
+    enum class held_type : std::uint8_t {
         int8,
         int16,
         int32,
@@ -130,16 +130,16 @@ class number_t {
 
    public:
     constexpr number_t() noexcept : _underlying(held_type::none) {}
-    constexpr number_t(int8_t i8) noexcept : _i8(i8), _underlying(held_type::int8) {}
-    constexpr number_t(int16_t i16) noexcept : _i16(i16), _underlying(held_type::int16) {}
-    constexpr number_t(int32_t i32) noexcept : _i32(i32), _underlying(held_type::int32) {}
-    constexpr number_t(int64_t i64) noexcept : _i64(i64), _underlying(held_type::int64) {}
+    constexpr number_t(std::int8_t i8) noexcept : _i8(i8), _underlying(held_type::int8) {}
+    constexpr number_t(std::int16_t i16) noexcept : _i16(i16), _underlying(held_type::int16) {}
+    constexpr number_t(std::int32_t i32) noexcept : _i32(i32), _underlying(held_type::int32) {}
+    constexpr number_t(std::int64_t i64) noexcept : _i64(i64), _underlying(held_type::int64) {}
     constexpr number_t(int128_t i128) noexcept : _i128(i128), _underlying(held_type::int128) {}
 
-    constexpr number_t(uint8_t u8) noexcept : _u8(u8), _underlying(held_type::uint8) {}
-    constexpr number_t(uint16_t u16) noexcept : _u16(u16), _underlying(held_type::uint16) {}
-    constexpr number_t(uint32_t u32) noexcept : _u32(u32), _underlying(held_type::uint32) {}
-    constexpr number_t(uint64_t u64) noexcept : _u64(u64), _underlying(held_type::uint64) {}
+    constexpr number_t(std::uint8_t u8) noexcept : _u8(u8), _underlying(held_type::uint8) {}
+    constexpr number_t(std::uint16_t u16) noexcept : _u16(u16), _underlying(held_type::uint16) {}
+    constexpr number_t(std::uint32_t u32) noexcept : _u32(u32), _underlying(held_type::uint32) {}
+    constexpr number_t(std::uint64_t u64) noexcept : _u64(u64), _underlying(held_type::uint64) {}
     constexpr number_t(uint128_t u128) noexcept : _u128(u128), _underlying(held_type::uint128) {}
 
     constexpr number_t(float32_t f32) noexcept : _f32(f32), _underlying(held_type::float32) {}
@@ -221,7 +221,7 @@ class number_t {
             using U = std::remove_cvref_t<decltype(v)>;
             if constexpr (std::is_same_v<decltype(v), const char*>) {
                 return _err;
-            } else if constexpr (std::is_same_v<U, int8_t> || std::is_same_v<U, uint8_t>) {
+            } else if constexpr (std::is_same_v<U, std::int8_t> || std::is_same_v<U, std::uint8_t>) {
                 // since int8 and uint8 are char-based, force a promotion to an integer here to print out a number
                 // without the promotion this results in an ASCII character
                 return std::to_string(+v);
@@ -659,30 +659,30 @@ constexpr string_conversion_result_t<number_t> str_to_num(std::string_view str, 
         // default to 64-bit float
         return wrap_result(detail::_stox<float64_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::int8) {
-        return wrap_result(detail::_stox<int8_t>(parsing_start, parsing_end, base, is_negative));
+        return wrap_result(detail::_stox<std::int8_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::int16) {
-        return wrap_result(detail::_stox<int16_t>(parsing_start, parsing_end, base, is_negative));
+        return wrap_result(detail::_stox<std::int16_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::int32) {
-        return wrap_result(detail::_stox<int32_t>(parsing_start, parsing_end, base, is_negative));
+        return wrap_result(detail::_stox<std::int32_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::int64) {
-        return wrap_result(detail::_stox<int64_t>(parsing_start, parsing_end, base, is_negative));
+        return wrap_result(detail::_stox<std::int64_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::int128) {
         return wrap_result(detail::_stox<int128_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::uint8) {
-        return wrap_result(detail::_stox<uint8_t>(parsing_start, parsing_end, base, is_negative));
+        return wrap_result(detail::_stox<std::uint8_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::uint16) {
-        return wrap_result(detail::_stox<uint16_t>(parsing_start, parsing_end, base, is_negative));
+        return wrap_result(detail::_stox<std::uint16_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::uint32) {
-        return wrap_result(detail::_stox<uint32_t>(parsing_start, parsing_end, base, is_negative));
+        return wrap_result(detail::_stox<std::uint32_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::uint64) {
-        return wrap_result(detail::_stox<uint64_t>(parsing_start, parsing_end, base, is_negative));
+        return wrap_result(detail::_stox<std::uint64_t>(parsing_start, parsing_end, base, is_negative));
     } else if (t == number_t::held_type::uint128) {
         return wrap_result(detail::_stox<uint128_t>(parsing_start, parsing_end, base, is_negative));
     } else {
-        auto result32 = detail::_stox<int32_t>(parsing_start, parsing_end, base, is_negative);
+        auto result32 = detail::_stox<std::int32_t>(parsing_start, parsing_end, base, is_negative);
         if (!result32.overflowed) { return wrap_result(result32); }
         // if int32 fails try int64
-        auto result64 = detail::_stox<int64_t>(parsing_start, parsing_end, base, is_negative);
+        auto result64 = detail::_stox<std::int64_t>(parsing_start, parsing_end, base, is_negative);
         if (!result64.overflowed) { return wrap_result(result64); }
         // if int64 fails try int128
         auto result128 = detail::_stox<int128_t>(parsing_start, parsing_end, base, is_negative);

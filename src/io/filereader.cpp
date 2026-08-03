@@ -1,4 +1,5 @@
 #include <core.hpp>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <format>
@@ -10,7 +11,7 @@
 
 namespace Manganese::io {
 
-FileReader::FileReader(const std::string& filename, size_t bufferCapacity) :
+FileReader::FileReader(const std::string& filename, std::size_t bufferCapacity) :
     _position(0), _line(1), _column(1), _filePtr(nullptr), _bufferSize(0), _bufferCapacity(bufferCapacity) {
     _filePtr = std::fopen(filename.c_str(), "r");
     if (!_filePtr) {
@@ -33,15 +34,15 @@ FileReader::FileReader(const std::string& filename, size_t bufferCapacity) :
 }
 
 void FileReader::refillBuffer() {
-    const size_t unreadBytes = _bufferSize - _position;
+    const std::size_t unreadBytes = _bufferSize - _position;
     if (unreadBytes) {
         // Move any unread data to the beginning of the buffer
         // This way, if we are near the end of a chunk and try to read into the next chunk
         // unread data can still be read later
         std::memmove(_buffer.get(), _buffer.get() + _position, unreadBytes);
     }
-    const size_t remainingCapacity = _bufferCapacity - unreadBytes;
-    size_t bytesRead = std::fread(_buffer.get() + unreadBytes, sizeof(char), remainingCapacity, _filePtr);
+    const std::size_t remainingCapacity = _bufferCapacity - unreadBytes;
+    std::size_t bytesRead = std::fread(_buffer.get() + unreadBytes, sizeof(char), remainingCapacity, _filePtr);
 
     _bufferSize = unreadBytes + bytesRead;
     _position = 0;  // We moved any remaining data to the front, so reset position to 0
@@ -49,7 +50,7 @@ void FileReader::refillBuffer() {
     _buffer[_bufferSize] = '\0';
 }
 
-char FileReader::peekChar(size_t offset) noexcept {
+char FileReader::peekChar(std::size_t offset) noexcept {
     if (_position + offset >= _bufferSize) { refillBuffer(); }
     // If still out of bounds after refill, we're done reading the file
     return (_position + offset >= _bufferSize) ? '\0' : _buffer[_position + offset];

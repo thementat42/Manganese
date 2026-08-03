@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/generics_helpers.hpp>

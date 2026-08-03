@@ -95,7 +95,7 @@ struct Aggregate final : public SemanticType {
         return nullptr;
     }
 
-    const SemanticType* getFieldType(size_t index) const noexcept {
+    const SemanticType* getFieldType(std::size_t index) const noexcept {
         if (index < fields.size()) [[likely]] { return fields[index].type; }
         return nullptr;
     }
@@ -107,9 +107,9 @@ struct Aggregate final : public SemanticType {
 
 struct Array final : public SemanticType {
     const SemanticType* elementType;
-    const size_t length;
+    const std::size_t length;
 
-    Array(const SemanticType* baseType, size_t len) noexcept :
+    Array(const SemanticType* baseType, std::size_t len) noexcept :
         SemanticType(Kind::Array), elementType(baseType), length(len) {}
     ~Array() override = default;
     std::string toString() const override;
@@ -117,7 +117,7 @@ struct Array final : public SemanticType {
 
 struct Variant {
     std::string_view name;
-    std::optional<int64_t> value = std::nullopt;
+    std::optional<std::int64_t> value = std::nullopt;
 };
 
 struct Enum final : public SemanticType {
@@ -193,7 +193,7 @@ struct TypeLookup {
     using prim_int_t = std::underlying_type_t<ast::PrimitiveType_t>;
 
     // Hashing
-    size_t operator()(const SemanticType* t) const noexcept;
+    std::size_t operator()(const SemanticType* t) const noexcept;
 
     // Lookup
     bool operator()(const SemanticType* lhs, const SemanticType* rhs) const noexcept;
@@ -227,7 +227,7 @@ class TypeContext {
     TypeContext(const TypeContext&) = delete;
     TypeContext& operator=(const TypeContext&) = delete;
 
-    const SemanticType* getArray(const SemanticType* elementType, size_t length);
+    const SemanticType* getArray(const SemanticType* elementType, std::size_t length);
 
     const SemanticType* getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes);
 

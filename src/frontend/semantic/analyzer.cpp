@@ -12,8 +12,8 @@
 
 namespace Manganese::semantic {
 
-constexpr static inline uint8_t f32MantissaWidth = 24;
-constexpr static inline uint8_t f64MantissaWidth = 53;
+constexpr static inline std::uint8_t f32MantissaWidth = 24;
+constexpr static inline std::uint8_t f64MantissaWidth = 53;
 
 Result analyzer::analyze() {
     Result isSemanticallyValid = Result::Success;
@@ -57,7 +57,6 @@ Result analyzer::checkStatements() {  // semantic analysis pass (this can also c
     }
     return programIsSemanticallyValid;
 }
-
 
 // Type compatibility
 
@@ -246,7 +245,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                 return {.result = Compatible_t::Error,
                         .message = conversionError + " (different number of type parameters)."};
             }
-            for (size_t i = 0; i < genericFrom->typeArguments.size(); ++i) {
+            for (std::size_t i = 0; i < genericFrom->typeArguments.size(); ++i) {
                 const SemanticType* fromArgument = genericFrom->typeArguments[i];
                 const SemanticType* toArgument = genericTo->typeArguments[i];
                 if (!areTypesCompatible(fromArgument, toArgument)) {

@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
@@ -52,7 +53,7 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
 
 std::string importToString(const Import& import) {
     std::string res = "import ";
-    for (size_t i = 0; i < import.path.size(); ++i) {
+    for (std::size_t i = 0; i < import.path.size(); ++i) {
         res += import.path[i];
         if (i < import.path.size() - 1) [[likely]] { res += "::"; }
     }

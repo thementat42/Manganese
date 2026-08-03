@@ -139,7 +139,7 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     enumType->underlyingType = underlyingType;
     symbol->type = enumType;
 
-    int64_t currentVariantValue = 0;
+    std::int64_t currentVariantValue = 0;
 
     std::vector<Variant> variants;
 
@@ -160,7 +160,7 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
                 symbol->status = ResolutionStatus::Failure;
                 result = stmtvisit_t::Failure;
             }
-            currentVariantValue = explicitVal.number_unchecked().value_as<int64_t>();
+            currentVariantValue = explicitVal.number_unchecked().value_as<std::int64_t>();
         }
 
         variants.emplace_back(variant.name, currentVariantValue);

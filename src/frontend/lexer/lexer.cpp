@@ -197,7 +197,7 @@ Result Lexer::tokenizeNumber() {
 
 Result Lexer::skipBlockComment() {
     advance(2);  // Skip the /*
-    int64_t commentDepth = 1;  // Allow nested comments
+    std::int64_t commentDepth = 1;  // Allow nested comments
     std::size_t startLine = getLine();
     std::size_t startCol = getCol();
     while (!done() && commentDepth > 0) {

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <core.hpp>
+#include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>

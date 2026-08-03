@@ -7,17 +7,18 @@
 #include <stdlib.h>
 
 #include <core.hpp>
+#include <cstddef>
 #include <fstream>
 #include <io/logging.hpp>
 #include <iostream>
 
-inline size_t lifetimeBytesAllocated = 0;  // How much memory has been allocated in total (ignores deallocations)
+inline std::size_t lifetimeBytesAllocated = 0;  // How much memory has been allocated in total (ignores deallocations)
 #ifdef CONTINUOUS_MEMORY_TRACKING
-inline size_t bytesCurrentlyAllocated = 0;  // How much memory is currently allocated (accounts for deallocations)
+inline std::size_t bytesCurrentlyAllocated = 0;  // How much memory is currently allocated (accounts for deallocations)
 inline std::ofstream memoryLogFile("logs/memory_tracking.log", std::ios::out | std::ios::trunc);
 #endif  // CONTINUOUS_MEMORY_TRACKING
 
-void* operator new(size_t size) {
+void* operator new(std::size_t size) {
     void* ptr = malloc(size);
     if (ptr == nullptr) { throw std::bad_alloc(); }
     lifetimeBytesAllocated += size;
@@ -32,7 +33,7 @@ void* operator new(size_t size) {
     return ptr;
 }
 
-void* operator new[](size_t size) {
+void* operator new[](std::size_t size) {
     void* ptr = malloc(size);
     if (ptr == nullptr) { throw std::bad_alloc(); }
     lifetimeBytesAllocated += size;
@@ -47,7 +48,7 @@ void* operator new[](size_t size) {
     return ptr;
 }
 
-void operator delete(void* ptr, size_t size) noexcept {
+void operator delete(void* ptr, std::size_t size) noexcept {
     if (ptr != nullptr) {
 #ifdef CONTINUOUS_MEMORY_TRACKING
         bytesCurrentlyAllocated -= size;
@@ -62,7 +63,7 @@ void operator delete(void* ptr, size_t size) noexcept {
     }
 }
 
-void operator delete[](void* ptr, size_t size) noexcept {
+void operator delete[](void* ptr, std::size_t size) noexcept {
     if (ptr != nullptr) {
 #ifdef CONTINUOUS_MEMORY_TRACKING
         bytesCurrentlyAllocated -= size;

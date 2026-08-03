@@ -62,9 +62,9 @@ template <class T>
 concept FloatingPoint = detail::is_any_of<T, float32_t, float64_t>;
 
 template <class T>
-concept SignedIntegral = detail::is_any_of<T, int8_t, int16_t, int32_t, int64_t, int128_t>;
+concept SignedIntegral = detail::is_any_of<T, std::int8_t, std::int16_t, std::int32_t, std::int64_t, int128_t>;
 template <class T>
-concept UnsignedIntegral = detail::is_any_of<T, uint8_t, uint16_t, uint32_t, uint64_t, uint128_t>;
+concept UnsignedIntegral = detail::is_any_of<T, std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t, uint128_t>;
 template <class T>
 concept Integral = SignedIntegral<T> || UnsignedIntegral<T>;
 
