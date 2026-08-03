@@ -8,8 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
-
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateType* type) -> typevisit_t {

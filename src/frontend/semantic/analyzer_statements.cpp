@@ -6,9 +6,6 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
-#include "frontend/ast/ast_statements.hpp"
-#include "frontend/semantic/type_context.hpp"
-
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {

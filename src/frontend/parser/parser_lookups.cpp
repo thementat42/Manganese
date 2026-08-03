@@ -3,8 +3,6 @@
 #include <frontend/lexer/token_type.hpp>
 #include <frontend/parser.hpp>
 
-#include "frontend/parser/operators.hpp"
-
 namespace Manganese::parser {
 // Lookup Registration Methods
 
