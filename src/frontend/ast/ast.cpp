@@ -73,5 +73,4 @@ mnstl::fold_result_t PostfixExpression::fold() const noexcept {
 
 mnstl::fold_result_t SizeofExpression::fold() const noexcept { return mnstl::fold_result_t{}; }
 
-
 }  // namespace Manganese::ast

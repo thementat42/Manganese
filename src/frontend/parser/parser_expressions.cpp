@@ -12,7 +12,6 @@
 #include "frontend/lexer/token_type.hpp"
 #include "frontend/parser/operators.hpp"
 
-
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`

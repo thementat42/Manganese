@@ -227,7 +227,6 @@ class TypeContext {
     TypeContext(const TypeContext&) = delete;
     TypeContext& operator=(const TypeContext&) = delete;
 
-
     const SemanticType* getArray(const SemanticType* elementType, size_t length);
 
     const SemanticType* getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes);

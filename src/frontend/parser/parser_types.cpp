@@ -7,6 +7,7 @@
 #include <utility>
 #include <utils/type_names.hpp>
 #include <vector>
+
 #include "frontend/ast/ast_types.hpp"
 
 namespace Manganese::parser {
@@ -149,7 +150,6 @@ ast::Type* Parser::parsePointerType() {
     }
     return arena.emplace<ast::PointerType>(parseType(Precedence::Default), isMutable);
 }
-
 
 ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
     DISCARD(consumeToken());  // consume the `::`

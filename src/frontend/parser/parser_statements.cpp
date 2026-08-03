@@ -440,7 +440,7 @@ ast::Statement* Parser::parseSwitchStatement() {
             if (peekTokenType() == TokenType::Comma) {
                 DISCARD(consumeToken());  // consume ','
             } else {
-                break;   // no more cases
+                break;  // no more cases
             }
         } while (true);
         ast::Block caseBody;

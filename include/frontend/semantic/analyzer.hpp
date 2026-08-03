@@ -147,7 +147,8 @@ class analyzer final : public _analyzer_base_t {
     stmtvisit_t visit(ast::FunctionDeclarationStatement*, generic_tag_t);
     const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
                                                     const std::vector<const SemanticType*>& typeArgs);
-        const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl, const std::vector<const SemanticType*>& typeArgs);
+    const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
+                                                     const std::vector<const SemanticType*>& typeArgs);
 
     static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
         if (!expr) [[unlikely]] { return nullptr; }

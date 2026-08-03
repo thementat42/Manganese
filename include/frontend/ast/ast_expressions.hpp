@@ -35,11 +35,8 @@ struct AggregateInstantiationExpression final : public Expression {
     Expression* base;
     std::vector<AggregateInstantiationField> fields;
 
-    AggregateInstantiationExpression(Expression* _base,
-                                     std::vector<AggregateInstantiationField>&& _fields) noexcept :
-        Expression(ExpressionKind::AggregateInstantiationExpression),
-        base(_base),
-        fields(std::move(_fields)) {}
+    AggregateInstantiationExpression(Expression* _base, std::vector<AggregateInstantiationField>&& _fields) noexcept :
+        Expression(ExpressionKind::AggregateInstantiationExpression), base(_base), fields(std::move(_fields)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
