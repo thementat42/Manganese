@@ -13,9 +13,12 @@
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
+#include <mnstl/tiny_stack.hxx>
 #include <string>
 #include <utility>
 #include <utils/result.hpp>
+
+#include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese::semantic {
 
@@ -43,6 +46,7 @@ class analyzer final : public _analyzer_base_t {
     SymbolTable symbolTable;
     TypeContext typeContext;
     parser::ParsedFile& parsedFile;
+    mnstl::tiny_stack<std::vector<const SemanticType*>> genericsStack;
 
     struct {
         bool inFunction = false;
@@ -69,7 +73,7 @@ class analyzer final : public _analyzer_base_t {
 
    public:
     analyzer(parser::ParsedFile& file, mnstl::chunk_allocator& arena) :
-        symbolTable(arena), typeContext(arena), parsedFile(file) {}
+        symbolTable(arena), typeContext(arena), parsedFile(file), genericsStack() {}
 
     Result analyze();
 
@@ -133,44 +137,56 @@ class analyzer final : public _analyzer_base_t {
     // Overloads to handle generics specializations
     stmtvisit_t visit(ast::AggregateDeclarationStatement*, generic_tag_t);
     stmtvisit_t visit(ast::FunctionDeclarationStatement*, generic_tag_t);
+    exprvisit_t instantiateGenericAggregateIfNeeded(ast::Expression* baseExpr);
+
+    static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
+        if (!expr) [[unlikely]] { return nullptr; }
+        using enum ast::ExpressionKind;
+        switch (expr->kind) {
+            case GenericExpression:
+                return unwrapBaseDeclaration(static_cast<ast::GenericExpression*>(expr)->identifier);
+            case ScopeResolutionExpression:
+                return unwrapBaseDeclaration(static_cast<ast::ScopeResolutionExpression*>(expr)->element);
+            default: return expr;
+        }
+    }
 };
 
 constexpr bool isInteger(ast::PrimitiveType_t t) noexcept {
     using enum ast::PrimitiveType_t;
-    return mnstl::enum_matches<ast::PrimitiveType_t>(t, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
+    return mnstl::enum_matches(t, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
 }
 
 constexpr bool isFloat(ast::PrimitiveType_t t) noexcept {
     using enum ast::PrimitiveType_t;
-    return mnstl::enum_matches<ast::PrimitiveType_t>(t, f32, f64);
+    return mnstl::enum_matches(t, f32, f64);
 }
 
 constexpr bool isUnsignedInteger(ast::PrimitiveType_t t) noexcept {
     using enum ast::PrimitiveType_t;
-    return mnstl::enum_matches<ast::PrimitiveType_t>(t, u8, u16, u32, u64, u128);
+    return mnstl::enum_matches(t, u8, u16, u32, u64, u128);
 }
 
 constexpr bool isNumeric(ast::PrimitiveType_t t) noexcept { return isInteger(t) || isFloat(t); }
 
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches<lexer::TokenType>(t, And, Or, Not);
+    return mnstl::enum_matches(t, And, Or, Not);
 }
 
 constexpr bool isArithmeticOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches<lexer::TokenType>(t, Plus, Minus, Mul, Div, FloorDiv, Mod);
+    return mnstl::enum_matches(t, Plus, Minus, Mul, Div, FloorDiv, Mod);
 }
 
 constexpr bool isRelationalOp(lexer::TokenType t) {
     using enum lexer::TokenType;
-    return mnstl::enum_matches<lexer::TokenType>(t, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal,
-                                                 NotEqual);
+    return mnstl::enum_matches(t, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual);
 }
 
 constexpr bool isBitwiseOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches<lexer::TokenType>(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
+    return mnstl::enum_matches(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
 }
 
 }  // namespace Manganese::semantic
