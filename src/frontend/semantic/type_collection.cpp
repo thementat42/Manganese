@@ -1,3 +1,4 @@
+#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
@@ -18,7 +19,7 @@ Result analyzer::collectTypes() {
     return result;
 }
 
-static void _reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) {
+static FORCE_INLINE void _reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) {
     logging::logError(node->getLine(), node->getColumn(), "'{}' was already declared in this scope",
                       redeclaredSymbolName);
 }

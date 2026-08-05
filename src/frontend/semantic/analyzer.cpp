@@ -19,7 +19,6 @@ Result analyzer::analyze() {
     Result isSemanticallyValid = Result::Success;
     if (collectTypes() == Result::Failure) { isSemanticallyValid = Result::Failure; }
     if (collectGlobals() == Result::Failure) { isSemanticallyValid = Result::Failure; }
-    if (collectAndSpecializeGenerics() == Result::Failure) { isSemanticallyValid = Result::Failure; }
     // Don't want errors cascading because of conflicting redeclarations
     if (isSemanticallyValid == Result::Failure) { return isSemanticallyValid; }
 
@@ -31,7 +30,6 @@ Result analyzer::analyze() {
 // Placeholders to satisfy the linker
 // TODO: implement these
 Result analyzer::collectGlobals() { return Result::Success; }
-Result analyzer::collectAndSpecializeGenerics() { return Result::Success; }
 
 const SemanticType* analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
     DISCARD(lhs);
