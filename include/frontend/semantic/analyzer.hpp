@@ -55,6 +55,7 @@ class analyzer final : public _analyzer_base_t {
     parser::ParsedFile& parsedFile;
     mnstl::tiny_stack<std::vector<const SemanticType*>> genericsStack;
     InstantiationCache instantiationCache;
+    std::unordered_map<std::string_view, std::size_t> activeGenericParams;
 
     struct {
         bool inFunction = false;
@@ -100,6 +101,7 @@ class analyzer final : public _analyzer_base_t {
     typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
     Result analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const;
+    const SemanticType* resolveGenericType(const ast::Type* type);
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
