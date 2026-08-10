@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <frontend/ast/ast_base.hpp>
-#include <frontend/lexer/token_type.hpp>
+#include <frontend/lexer/token.hpp>
 #include <mnstl/fold_result.hxx>
 #include <mnstl/number.hxx>
 #include <string>

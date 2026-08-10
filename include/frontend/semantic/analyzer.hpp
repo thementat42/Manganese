@@ -6,7 +6,7 @@
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
-#include <frontend/lexer/token_type.hpp>
+#include <frontend/lexer/token.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/generics_helpers.hpp>
 #include <frontend/semantic/symbol_table.hpp>

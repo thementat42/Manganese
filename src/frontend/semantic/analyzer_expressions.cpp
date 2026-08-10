@@ -1,7 +1,6 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
-#include <frontend/lexer/token_base.hpp>
-#include <frontend/lexer/token_type.hpp>
+#include <frontend/lexer/token.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>

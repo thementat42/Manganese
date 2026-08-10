@@ -1,6 +1,6 @@
 #include <cstddef>
 #include <frontend/ast.hpp>
-#include <frontend/lexer/token_type.hpp>
+#include <frontend/lexer/token.hpp>
 #include <frontend/parser.hpp>
 
 namespace Manganese::parser {

@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
-#include <frontend/lexer/token_base.hpp>
+#include <frontend/lexer/token.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <vector>

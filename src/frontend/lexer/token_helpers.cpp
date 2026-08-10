@@ -1,6 +1,5 @@
 #include <core.hpp>
 #include <frontend/lexer/token.hpp>
-#include <frontend/lexer/token_base.hpp>
 #include <string>
 #include <utils/type_names.hpp>
 
