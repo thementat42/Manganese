@@ -6,6 +6,28 @@
 
 namespace Manganese::ast {
 
+std::string_view primitiveTypeToString(PrimitiveType_t prim) {
+    switch (prim) {
+        case PrimitiveType_t::not_primitive: return "not primitive";
+        case PrimitiveType_t::i8: return int8_str;
+        case PrimitiveType_t::i16: return int16_str;
+        case PrimitiveType_t::i32: return int32_str;
+        case PrimitiveType_t::i64: return int64_str;
+        case PrimitiveType_t::i128: return int128_str;
+        case PrimitiveType_t::u8: return uint8_str;
+        case PrimitiveType_t::u16: return uint16_str;
+        case PrimitiveType_t::u32: return uint32_str;
+        case PrimitiveType_t::u64: return uint64_str;
+        case PrimitiveType_t::u128: return uint128_str;
+        case PrimitiveType_t::f32: return float32_str;
+        case PrimitiveType_t::f64: return float64_str;
+        case PrimitiveType_t::character: return char_str;
+        case PrimitiveType_t::str: return string_str;
+        case PrimitiveType_t::boolean: return bool_str;
+        default: ASSERT_UNREACHABLE("Invalid primitive type");
+    }
+}
+
 mnstl::fold_result_t AlignofExpression::fold() const noexcept { return mnstl::fold_result_t{}; }
 
 mnstl::fold_result_t BinaryExpression::fold() const noexcept {
