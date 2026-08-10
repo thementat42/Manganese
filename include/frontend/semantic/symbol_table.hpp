@@ -156,17 +156,11 @@ class SymbolTable {
         return nullptr;
     }
 
-    const Symbol* lookupAtCurrentDepth(std::string_view name) const noexcept {
-        if (noScopeAvailable()) {
-            logging::logInternal(logging::LogLevel::Error, "No active scope in which to look up symbol");
-            return nullptr;
-        }
-        const Symbol* symbol = _currentScope->lookup(name);
-        if (!symbol) {
-            logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found at current local depth", name);
-        }
-        return symbol;
-    }
+    // TODO: implement
+    Symbol* scopedLookup(...) noexcept;
+    const Symbol* scopedLookup(...) const noexcept;
+
+
 };
 
 }  // namespace Manganese::semantic

@@ -86,8 +86,17 @@ const SemanticType* analyzer::resolveGenericType(const ast::Type* type) {
                 logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
                 return nullptr;
             }
-            if (!length.is_number() || !length.number_unchecked().is_integer()) {
-                logError(arrayType->lengthExpression, "Array length must be an integer");
+            if (!length.is_number()) {
+                logError(arrayType->lengthExpression, "Array length must be an integer value");
+                return nullptr;
+            }
+            const auto lengthValue = length.number_unchecked();
+            if (lengthValue.is_error()) {
+                logError(arrayType->lengthExpression, "{}", lengthValue.error_unchecked());
+                return nullptr;
+            }
+            if (!lengthValue.is_integer()) {
+                logError(arrayType->lengthExpression, "Array length must be an integer value");
                 return nullptr;
             }
             return typeContext.getArray(elementType, length.number_unchecked().value_as<std::size_t>());
@@ -111,23 +120,34 @@ const SemanticType* analyzer::resolveGenericType(const ast::Type* type) {
             const auto* genericType = static_cast<const ast::GenericType*>(type);
             std::vector<const SemanticType*> resolvedTypes;
             resolvedTypes.reserve(genericType->typeParameters.size());
+
             for (const ast::Type* param : genericType->typeParameters) {
                 const SemanticType* paramType = resolveGenericType(param);
                 if (!paramType) { return nullptr; }
                 resolvedTypes.push_back(paramType);
             }
-            const Symbol* symbol = symbolTable.lookup(genericType->baseType->toString());
+
+            const Symbol* symbol = nullptr;
+            if (genericType->baseType->kind == SymbolType) {
+                const auto* symbolType = static_cast<const ast::SymbolType*>(genericType->baseType);
+                symbol = symbolTable.lookup(symbolType->name);
+            } else if (genericType->baseType->kind == ScopedType) {
+                const auto* scopedType = static_cast<const ast::ScopedType*>(genericType->baseType);
+                symbol = symbolTable.scopedLookup(scopedType->qualifier, scopedType->baseType);
+            }
             if (!symbol || !symbol->node) {
-                logError(type, "Unknown generic base declaration '{}'", genericType->baseType->toString());
+                logError(type, "Unknown generic base declaration");
                 return nullptr;
             }
+
             if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
                 auto* aggregate = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
                 StackGuard guard{genericsStack, std::move(resolvedTypes)};
                 if (visit(aggregate, generic_tag) == stmtvisit_t::Failure) { return nullptr; }
                 return getInstantiatedAggregateType(aggregate, genericsStack.top());
             }
-            logError(type, "Symbol '{}' is not a generic aggregate type", genericType->baseType->toString());
+
+            logError(type, "Symbol '{}' is not a generic type", genericType->baseType->toString());
             return nullptr;
         }
         case PointerType: {
