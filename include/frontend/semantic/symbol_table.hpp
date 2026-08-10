@@ -157,10 +157,8 @@ class SymbolTable {
     }
 
     // TODO: implement
-    Symbol* scopedLookup(...) noexcept;
-    const Symbol* scopedLookup(...) const noexcept;
-
-
+    Symbol* scopedLookup(...) noexcept { return nullptr; }
+    const Symbol* scopedLookup(...) const noexcept { return nullptr; }
 };
 
 }  // namespace Manganese::semantic
