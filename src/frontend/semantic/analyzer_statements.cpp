@@ -394,7 +394,7 @@ auto analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
             const bool visitSuccess = visit(val) == exprvisit_t::Success;
             if (!visitSuccess) { result = stmtvisit_t::Failure; }
             if (!val->fold().has_value()) {
-                logError(val, "case vlue must be a constant expression");
+                logError(val, "case value must be a constant expression");
                 result = stmtvisit_t::Failure;
             }
             if (visitSuccess) {
