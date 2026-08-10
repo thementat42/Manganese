@@ -100,7 +100,7 @@ class Token {
     std::string toString() const noexcept;
 };
 
-TokenType keywordLookup(const std::string_view& s) noexcept;
+TokenType keywordLookup(std::string_view s) noexcept;
 
 }  // namespace Manganese::lexer
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_HPP

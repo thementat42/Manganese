@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <frontend/lexer/token.hpp>
 #include <io/logging.hpp>
 #include <string>
@@ -73,9 +74,9 @@ constexpr std::array keywordTable = {
     keyword_map_entry{.str = "uint", .type = TokenType::UInt32},
 };
 
-TokenType keywordLookup(const std::string_view& s) noexcept {
-    for (const keyword_map_entry& p : keywordTable) {
-        if (p.str == s) { return p.type; }
+TokenType keywordLookup(std::string_view s) noexcept {
+    if (auto entry = std::ranges::find(keywordTable, s, &keyword_map_entry::str); entry != keywordTable.end()) {
+        return entry->type;
     }
     return TokenType::Unknown;
 }
