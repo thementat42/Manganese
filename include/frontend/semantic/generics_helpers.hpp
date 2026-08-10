@@ -56,8 +56,7 @@ class InstantiationCache {
     InstantiationCache() noexcept = default;
 
     const InstantiationResult* find(const InstantiationKey& key) const {
-        auto it = _map.find(key);
-        if (it != _map.end()) { return &(it->second); }
+        if (auto it = _map.find(key); it != _map.end()) { return &(it->second); }
         return nullptr;
     }
 
