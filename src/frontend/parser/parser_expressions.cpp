@@ -74,7 +74,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
         token = peekToken();
 
         if (isUnaryContext() && token.hasUnaryCounterpart()) {
-            token.overrideType(token.getUnaryCounterpart());
+            token.overrideType(token.getUnaryCounterpart(), token.getLexeme());
             precedence = Precedence::Unary;
         }
         type = token.getType();

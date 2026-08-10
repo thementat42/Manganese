@@ -23,6 +23,8 @@ enum class TokenType : std::uint8_t {
 #undef OPERATOR
 };
 
+std::string tokenTypeToString(TokenType type);
+
 class Token {
    private:
     bool _isInvalid;
@@ -91,15 +93,13 @@ class Token {
     /**
      * @note Parser only: be careful
      */
-    void overrideType(TokenType, std::string = "");
+    void overrideType(TokenType newType, std::string newLexeme);
 
     // These functions are long, so are implemented in a separate header
     TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
     std::string toString() const noexcept;
 };
 
-//~ Helpers, not tied to the Token class
-std::string tokenTypeToString(TokenType type);
 TokenType keywordLookup(const std::string_view& s) noexcept;
 
 }  // namespace Manganese::lexer

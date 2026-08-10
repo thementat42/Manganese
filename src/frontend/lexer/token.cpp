@@ -5,16 +5,6 @@
 
 namespace Manganese::lexer {
 
-TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
-    switch (_type) {
-        case TokenType::Plus: return TokenType::UnaryPlus;
-        case TokenType::Minus: return TokenType::UnaryMinus;
-        case TokenType::BitAnd: return TokenType::AddressOf;
-        case TokenType::Mul: return TokenType::Dereference;
-        default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(_type));
-    }
-}
-
 std::string tokenTypeToString(TokenType type) {
     switch (type) {
 #define TOKEN(name, text) \
@@ -38,12 +28,22 @@ std::string tokenTypeToString(TokenType type) {
     }
 }
 
-void Token::overrideType(TokenType type, std::string lexeme) {
-    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {} with lexeme '{}'",
-                         tokenTypeToString(_type), tokenTypeToString(type), lexeme);
+TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
+    switch (_type) {
+        case TokenType::Plus: return TokenType::UnaryPlus;
+        case TokenType::Minus: return TokenType::UnaryMinus;
+        case TokenType::BitAnd: return TokenType::AddressOf;
+        case TokenType::Mul: return TokenType::Dereference;
+        default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(_type));
+    }
+}
 
-    _type = type;
-    if (!lexeme.empty()) { _lexeme = std::move(lexeme); }
+void Token::overrideType(TokenType newType, std::string newLexeme) {
+    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {} with lexeme '{}'",
+                         tokenTypeToString(_type), tokenTypeToString(newType), newLexeme);
+
+    _type = newType;
+    if (!newLexeme.empty()) { _lexeme = std::move(newLexeme); }
 }
 
 namespace {
