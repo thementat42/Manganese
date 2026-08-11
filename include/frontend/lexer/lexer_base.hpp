@@ -5,11 +5,13 @@
 #include <cstdint>
 #include <deque>
 #include <frontend/lexer/token.hpp>
+#include <io/logging.hpp>
 #include <io/reader.hpp>
 #include <memory>
 #include <mnstl/number.hxx>
 #include <optional>
 #include <string>
+#include <utility>
 #include <utils/result.hpp>
 
 namespace Manganese::lexer {
@@ -64,6 +66,11 @@ class Lexer {
     Result tokenizeSymbol();
 
     //~ Helper functions
+    template <class... Args>
+    void logError(std::format_string<Args...> message, Args&&... args) const {
+        logging::logError(getLine(), getCol(), message, std::forward<Args>(args)...);
+    }
+    void emitToken(TokenType type, std::string&& lexeme, bool invalid);
     NumberPrefixResult processNumberPrefix();
     Result processNumberSuffix(mnstl::Base base, std::string& numberLiteral, bool isFloat);
     std::optional<std::string> resolveEscapeCharacters(const std::string& escapeString);
