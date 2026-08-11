@@ -60,7 +60,8 @@ std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
     return tokens;
 }
 
-bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme) {
+bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme,
+                bool wantInvalid = false) {
     if (token.getType() != expectedType) {
         std::cout << "Expected token type " << tokenTypeToString(expectedType) << " but got "
                   << tokenTypeToString(token.getType()) << " (lexeme was " << token.getLexeme() << ")" << '\n';
@@ -69,6 +70,10 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
     if (token.getLexeme() != expectedLexeme) {
         std::cout << "Expected lexeme '" << expectedLexeme << "' but got '" << token.getLexeme() << "'" << '\n';
         return false;
+    }
+    if (wantInvalid && !token.isInvalid()) {
+        std::cout << "Expected token to be invalid, but was incorrectly classified as valid" << " (lexeme was "
+                  << token.getLexeme() << ")" << '\n';
     }
     return true;
 }
@@ -130,37 +135,85 @@ static bool testKeywords() {
 }
 
 static bool testIntegerLiterals() {
-    std::vector<Token> tokens = tokensFromString("0 123u64 456789i8 0xFFF 0b1001 0o33 0x1.23 1.23e-4 1i128");
+    std::vector<Token> tokens = tokensFromString("0 123 123u64 456789i8 1i128 "
+                                                 "0xFFF 0xABCD_DEFE "
+                                                 "0b1001 0b1010_0101 "
+                                                 "0o33 0o755");
+
     printAllTokens(tokens);
+
+    if (tokens.size() != 11) {
+        std::cout << "Expected 11 tokens, got " << tokens.size() << '\n';
+        return false;
+    }
+
+    return checkToken(tokens[0], TokenType::IntegerLiteral, "0")
+        && checkToken(tokens[1], TokenType::IntegerLiteral, "123")
+        && checkToken(tokens[2], TokenType::IntegerLiteral, "123u64")
+        && checkToken(tokens[3], TokenType::IntegerLiteral, "456789i8")
+        && checkToken(tokens[4], TokenType::IntegerLiteral, "1i128")
+        && checkToken(tokens[5], TokenType::IntegerLiteral, "0xFFF")
+        && checkToken(tokens[6], TokenType::IntegerLiteral, "0xABCDDEFE")
+        && checkToken(tokens[7], TokenType::IntegerLiteral, "0b1001")
+        && checkToken(tokens[8], TokenType::IntegerLiteral, "0b10100101")
+        && checkToken(tokens[9], TokenType::IntegerLiteral, "0o33")
+        && checkToken(tokens[10], TokenType::IntegerLiteral, "0o755");
+}
+
+static bool testFloatLiterals() {
+    std::vector<Token> tokens = tokensFromString("0.0 0.0f32 1.23f64 456.789 "
+                                                 "1.23e4 1.23e-4 1.23e+4 "
+                                                 "1.23e4f32 1.23e4f64");
+
+    printAllTokens(tokens);
+
     if (tokens.size() != 9) {
         std::cout << "Expected 9 tokens, got " << tokens.size() << '\n';
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::IntegerLiteral, "0")
-        && checkToken(tokens[1], TokenType::IntegerLiteral, "123u64")
-        && checkToken(tokens[2], TokenType::IntegerLiteral, "456789i8")
-        && checkToken(tokens[3], TokenType::IntegerLiteral, "0xFFF")
-        && checkToken(tokens[4], TokenType::IntegerLiteral, "0b1001")
-        && checkToken(tokens[5], TokenType::IntegerLiteral, "0o33")
-        && checkToken(tokens[6], TokenType::FloatLiteral, "0x1.23")
-        && checkToken(tokens[7], TokenType::FloatLiteral, "1.23e-4")
-        && checkToken(tokens[8], TokenType::IntegerLiteral, "1i128");
+    return checkToken(tokens[0], TokenType::FloatLiteral, "0.0")
+        && checkToken(tokens[1], TokenType::FloatLiteral, "0.0f32")
+        && checkToken(tokens[2], TokenType::FloatLiteral, "1.23f64")
+        && checkToken(tokens[3], TokenType::FloatLiteral, "456.789")
+        && checkToken(tokens[4], TokenType::FloatLiteral, "1.23e4")
+        && checkToken(tokens[5], TokenType::FloatLiteral, "1.23e-4")
+        && checkToken(tokens[6], TokenType::FloatLiteral, "1.23e+4")
+        && checkToken(tokens[7], TokenType::FloatLiteral, "1.23e4f32")
+        && checkToken(tokens[8], TokenType::FloatLiteral, "1.23e4f64");
 }
 
-static bool testFloatLiterals() {
-    std::vector<Token> tokens = tokensFromString("0.0f32 1.23f64 456.789 1.44e3q 0b100104e5qq3");
+static bool testInvalidNumberLiterals() {
+    std::vector<Token> tokens = tokensFromString("0x1.23 "
+                                                 "1.23 "
+                                                 "1e "
+                                                 "1e+ "
+                                                 "1e- "
+                                                 "123f32 "
+                                                 "123i16 "
+                                                 "1.5i32 "
+                                                 "1.5f128 "
+                                                 "0b102 "
+                                                 "0o789");
+
     printAllTokens(tokens);
-    if (tokens.size() != 5) {
-        std::cout << "Expected 5 tokens, got " << tokens.size() << '\n';
+
+    if (tokens.size() != 11) {
+        std::cout << "Expected 11 tokens, got " << tokens.size() << '\n';
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::FloatLiteral, "0.0f32")
-        && checkToken(tokens[1], TokenType::FloatLiteral, "1.23f64")
-        && checkToken(tokens[2], TokenType::FloatLiteral, "456.789")
-        && checkToken(tokens[3], TokenType::FloatLiteral, "1.44e3") && tokens[3].isInvalid()
-        && checkToken(tokens[4], TokenType::IntegerLiteral, "0b10010") && tokens[4].isInvalid();
+    return checkToken(tokens[0], TokenType::IntegerLiteral, "0x123", true)
+        && checkToken(tokens[1], TokenType::FloatLiteral, "1.23", true)
+        && checkToken(tokens[2], TokenType::FloatLiteral, "1e", true)
+        && checkToken(tokens[3], TokenType::FloatLiteral, "1e+", true)
+        && checkToken(tokens[4], TokenType::FloatLiteral, "1e-", true)
+        && checkToken(tokens[5], TokenType::IntegerLiteral, "123f32", true)
+        && checkToken(tokens[6], TokenType::IntegerLiteral, "123i16")
+        && checkToken(tokens[7], TokenType::FloatLiteral, "1.5i32", true)
+        && checkToken(tokens[8], TokenType::FloatLiteral, "1.5f128", true)
+        && checkToken(tokens[9], TokenType::IntegerLiteral, "0b10", true)
+        && checkToken(tokens[10], TokenType::IntegerLiteral, "0o7", true);
 }
 
 static bool testCharLiterals() {
@@ -331,6 +384,7 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Operators", testOperators);
     runner.runTest("Integer Literals", testIntegerLiterals);
     runner.runTest("Float Literals", testFloatLiterals);
+    runner.runTest("Invalid Number Literals", testInvalidNumberLiterals);
     runner.runTest("Character Literals", testCharLiterals);
     runner.runTest("String Literals", testStringLiterals);
     runner.runTest("Brackets", testBrackets);
