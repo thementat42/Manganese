@@ -528,11 +528,9 @@ Result Lexer::processScientificNotation(std::string& numberLiteral) {
         return Result::Failure;
     }
 
-    Result result = Result::Success;
-
     while (!done() && isdigit(peekChar())) { numberLiteral += consumeChar(); }
 
-    return result;
+    return Result::Success;
 }
 
 Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
