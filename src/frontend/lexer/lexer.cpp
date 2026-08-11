@@ -530,18 +530,7 @@ Result Lexer::processScientificNotation(std::string& numberLiteral) {
 
     Result result = Result::Success;
 
-    while (!done() && isalnum(peekChar())) {
-        const char currentChar = peekChar();
-
-        if (!isdigit(currentChar)) {
-            logError("Invalid character '{}' in exponent", currentChar);
-            advance();
-            result = Result::Failure;
-            continue;
-        }
-
-        numberLiteral += consumeChar();
-    }
+    while (!done() && isdigit(peekChar())) { numberLiteral += consumeChar(); }
 
     return result;
 }
@@ -570,26 +559,31 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
     const bool isIntegerSuffix = suffix == 'i' || suffix == 'u';
     const bool isFloatSuffix = suffix == 'f';
 
+    Result result = Result::Success;
+
     if (isIntegerSuffix) {
         if (width != "8" && width != "16" && width != "32" && width != "64" && width != "128") {
             logError("Invalid integer suffix '{}': must be 8, 16, 32, 64 or 128", width);
-            return Result::Failure;
+            result = Result::Failure;
         }
         if (isFloat) {
             logError("Integer suffix '{}' cannot be used with floating-point literals", suffix);
-            return Result::Failure;
+            result = Result::Failure;
         }
     }
     if (isFloatSuffix) {
         if (width != "32" && width != "64") {
             logError("Invalid float suffix '{}' : must be 32 or 64", width);
-            return Result::Failure;
+            result = Result::Failure;
         }
-        if (!isFloat) { logError("Float suffix '{}' can only be used with floating point literals", suffix); }
+        if (!isFloat) {
+            logError("Float suffix '{}' can only be used with floating point literals", suffix);
+            result = Result::Failure;
+        }
     }
     numberLiteral += suffix;
     numberLiteral += width;
-    return Result::Success;
+    return result;
 }
 
 }  // namespace Manganese::lexer
