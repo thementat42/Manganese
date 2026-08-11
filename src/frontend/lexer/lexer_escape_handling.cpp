@@ -87,7 +87,7 @@ std::optional<std::string> encodeUTF8(char32_t codepoint) {
                            static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
     }
     if (p <= UTF8_3B_MAX) {
-        return std::string{static_cast<char>(UTF8_3B_PRE | (p >> UTF8_3B_SHIFT)),
+        return std::string{static_cast<char>(UTF8_3B_PRE | (p >> UTF8_2B_SHIFT)),
                            static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK)),
                            static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
     }
