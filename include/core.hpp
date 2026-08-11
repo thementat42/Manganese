@@ -69,6 +69,8 @@
     panic(message.c_str(), file, line, func);
 }
 
+#define BETWEEN(c, low, high) (((low) <= (c)) && ((c) <= (high)))
+
 #if MN_DEBUG
 #define ASSERT_UNREACHABLE(message) panic((message), __FILE__, __LINE__, __func__)
 #else

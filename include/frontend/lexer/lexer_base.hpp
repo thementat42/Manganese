@@ -2,6 +2,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 
 #include <cstddef>
+#include <core.hpp>
 #include <cstdint>
 #include <deque>
 #include <frontend/lexer/token.hpp>
@@ -13,6 +14,7 @@
 #include <string>
 #include <utility>
 #include <utils/result.hpp>
+
 
 namespace Manganese::lexer {
 
@@ -94,18 +96,15 @@ class Lexer {
 //~ Static helper functions
 
 constexpr bool isbdigit(char c) noexcept { return c == '0' || c == '1'; }
-constexpr bool isdigit(char c) noexcept { return (c >= '0' && c <= '9'); }
-constexpr bool isodigit(char c) { return (c >= '0' && c <= '7'); }
-constexpr bool isxdigit(char c) noexcept { return isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); }
-constexpr bool isalpha(char c) noexcept { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+constexpr bool isdigit(char c) noexcept { return BETWEEN(c, '0', '9'); }
+constexpr bool isodigit(char c) { return BETWEEN(c, '0', '7'); }
+constexpr bool isxdigit(char c) noexcept { return isdigit(c) || BETWEEN(c, 'a', 'f') || BETWEEN(c, 'A', 'F'); }
+constexpr bool isalpha(char c) noexcept { return BETWEEN(c, 'a', 'z') || BETWEEN(c, 'A', 'Z'); }
 constexpr bool isalnum(char c) noexcept { return isalpha(c) || isdigit(c); }
 constexpr bool isspace(char c) noexcept {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
 }
-constexpr char tolower(char c) noexcept {
-    if (c >= 'A' && c <= 'Z') { return c - 'A' + 'a'; }
-    return c;
-}
+constexpr char tolower(char c) noexcept { return BETWEEN(c, 'A', 'Z') ? (c + 32) : c; }
 
 }  // namespace Manganese::lexer
 

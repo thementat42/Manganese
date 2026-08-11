@@ -398,9 +398,9 @@ struct string_conversion_result_t {
 namespace detail {
 
 [[nodiscard]] constexpr int _chtoi(char c) noexcept {
-    if (c >= '0' && c <= '9') { return c - '0'; }
-    if (c >= 'a' && c <= 'f') { return c - 'a' + 10; }
-    if (c >= 'A' && c <= 'F') { return c - 'A' + 10; }
+    if (BETWEEN(c, '0', '9')) { return c - '0'; }
+    if (BETWEEN(c, 'a', 'f')) { return c - 'a' + 10; }
+    if (BETWEEN(c, 'A', 'F')) { return c - 'A' + 10; }
     return -1;
 }
 
@@ -439,7 +439,7 @@ template <FloatingPoint T>
     while (ptr != end && isdigit(*ptr)) {
         hasDigits = true;
         int d = _chtoi(*ptr);
-        if (d < 0 || d >= 10) {
+        if (!BETWEEN(d, 0, 9)) {
             result.exists = false;
             return result;
         }
@@ -454,7 +454,7 @@ template <FloatingPoint T>
         while (ptr != end && isdigit(*ptr)) {
             hasDigits = true;
             int d = _chtoi(*ptr);
-            if (d < 0 || d >= 10) {
+            if (!BETWEEN(d, 0, 9)) {
                 result.exists = false;
                 return result;
             }
