@@ -62,6 +62,10 @@ std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
 
 bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme,
                 bool wantInvalid = false) {
+    const static auto printBytes = [](std::string_view str) {
+        for (char c : str) { std::cout << std::format("{:02X} ", (unsigned char)c); }
+        std::cout << '\n';
+    };
     if (token.getType() != expectedType) {
         std::cout << "Expected token type " << tokenTypeToString(expectedType) << " but got "
                   << tokenTypeToString(token.getType()) << " (lexeme was " << token.getLexeme() << ")" << '\n';
@@ -69,11 +73,18 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
     }
     if (token.getLexeme() != expectedLexeme) {
         std::cout << "Expected lexeme '" << expectedLexeme << "' but got '" << token.getLexeme() << "'" << '\n';
+
+        std::cout << "Expected bytes: ";
+        printBytes(expectedLexeme);
+
+        std::cout << "Actual bytes:   ";
+        printBytes(token.getLexeme());
         return false;
     }
     if (wantInvalid && !token.isInvalid()) {
         std::cout << "Expected token to be invalid, but was incorrectly classified as valid" << " (lexeme was "
                   << token.getLexeme() << ")" << '\n';
+        return false;
     }
     return true;
 }
@@ -185,7 +196,7 @@ static bool testFloatLiterals() {
 
 static bool testInvalidNumberLiterals() {
     std::vector<Token> tokens = tokensFromString("0x1.23 "
-                                                 "1.23 "
+                                                 "1.2.3 "
                                                  "1e "
                                                  "1e+ "
                                                  "1e- "
@@ -217,30 +228,109 @@ static bool testInvalidNumberLiterals() {
 }
 
 static bool testCharLiterals() {
-    std::vector<Token> tokens = tokensFromString("'a' '\\n' '\\'' '\\\\' '\\t' '\\u1234'");
+    const std::vector<Token> tokens = tokensFromString("'a' "
+                                                       "'\\n' "
+                                                       "'\\'' "
+                                                       "'\\\\' "
+                                                       "'\\t' "
+                                                       "'\\u1234' "
+                                                       "'λ' "
+                                                       "'😀'");
+
     printAllTokens(tokens);
-    if (tokens.size() != 6) {
-        std::cout << "Expected 6 tokens, got " << tokens.size() << '\n';
+
+    if (tokens.size() != 8) {
+        std::cout << "Expected 8 tokens, got " << tokens.size() << '\n';
         return false;
     }
 
+    const std::string expected1234{static_cast<char>(0xE1), static_cast<char>(0x88), static_cast<char>(0xB4)};
+    const std::string expectedEmoji{static_cast<char>(0xF0), static_cast<char>(0x9F), static_cast<char>(0x98),
+                                    static_cast<char>(0x80)};
+
     return checkToken(tokens[0], TokenType::CharLiteral, "a") && checkToken(tokens[1], TokenType::CharLiteral, "\n")
-        && checkToken(tokens[2], TokenType::CharLiteral, "\'") && checkToken(tokens[3], TokenType::CharLiteral, "\\")
+        && checkToken(tokens[2], TokenType::CharLiteral, "'") && checkToken(tokens[3], TokenType::CharLiteral, "\\")
         && checkToken(tokens[4], TokenType::CharLiteral, "\t")
-        && checkToken(tokens[5], TokenType::CharLiteral, "\u1234");
+        && checkToken(tokens[5], TokenType::CharLiteral, expected1234)  // U+1234
+        && checkToken(tokens[6], TokenType::CharLiteral, "\xCE\xBB")  // U+03BB
+        && checkToken(tokens[7], TokenType::CharLiteral, expectedEmoji);
 }
 
 static bool testStringLiterals() {
-    std::vector<Token> tokens = tokensFromString("\"hello\" \"world\" \"escaped \\\"quote\\\"\"");
+    const std::vector<Token> tokens = tokensFromString("\"hello\" "
+                                                       "\"world\" "
+                                                       "\"escaped \\\"quote\\\"\" "
+                                                       "\"newline\\nindent\\ttab\" "
+                                                       "\"unicode \\u1234\" "
+                                                       "\"emoji \\u0001F600\" "
+                                                       "\"literal λ 😀\"");
+
     printAllTokens(tokens);
-    if (tokens.size() != 3) {
-        std::cout << "Expected 3 tokens, got " << tokens.size() << '\n';
+
+    if (tokens.size() != 7) {
+        std::cout << "Expected 7 tokens, got " << tokens.size() << '\n';
         return false;
     }
 
     return checkToken(tokens[0], TokenType::StrLiteral, "hello")
         && checkToken(tokens[1], TokenType::StrLiteral, "world")
-        && checkToken(tokens[2], TokenType::StrLiteral, "escaped \"quote\"");
+        && checkToken(tokens[2], TokenType::StrLiteral, "escaped \"quote\"")
+        && checkToken(tokens[3], TokenType::StrLiteral, "newline\nindent\ttab")
+        && checkToken(tokens[4], TokenType::StrLiteral, "unicode \xE1\x88\xB4")
+        && checkToken(tokens[5], TokenType::StrLiteral, "emoji \xF0\x9F\x98\x80")
+        && checkToken(tokens[6], TokenType::StrLiteral, "literal \xCE\xBB \xF0\x9F\x98\x80");
+}
+
+static bool testInvalidCharLiterals() {
+    const std::vector<Token> tokens = tokensFromString("'' "
+                                                       "'ab' "
+                                                       "'\\x' "
+                                                       "'\\u123' "
+                                                       "'\\u12345' "
+                                                       "'\\uD800' "
+                                                       "'\\u110000' "
+                                                       "'\\u123456789' "
+                                                       "'\\xFF'");
+
+    printAllTokens(tokens);
+
+    if (tokens.size() != 9) {
+        std::cout << "Expected 9 tokens, got " << tokens.size() << '\n';
+        return false;
+    }
+
+    return checkToken(tokens[0], TokenType::CharLiteral, "", true)
+        && checkToken(tokens[1], TokenType::CharLiteral, "ab", true)
+        && checkToken(tokens[2], TokenType::CharLiteral, "\\x", true)
+        && checkToken(tokens[3], TokenType::CharLiteral, "\\u123", true)
+        && checkToken(tokens[4], TokenType::CharLiteral, "\\u12345", true)
+        && checkToken(tokens[5], TokenType::CharLiteral, "\\uD800", true)
+        && checkToken(tokens[6], TokenType::CharLiteral, "\\u110000", true)
+        && checkToken(tokens[7], TokenType::CharLiteral, "\\u123456789", true)
+        && checkToken(tokens[8], TokenType::CharLiteral, "\\xFF", true);
+}
+
+static bool testInvalidStringLiterals() {
+    const std::vector<Token> tokens = tokensFromString("\"unterminated\\n\" "
+                                                       "\"bad escape \\x\" "
+                                                       "\"bad unicode \\u123\" "
+                                                       "\"bad unicode \\uD800\" "
+                                                       "\"bad unicode \\u110000\" "
+                                                       "\"bad unicode \\u123456789\"");
+
+    printAllTokens(tokens);
+
+    if (tokens.size() != 6) {
+        std::cout << "Expected 6 tokens, got " << tokens.size() << '\n';
+        return false;
+    }
+
+    return checkToken(tokens[0], TokenType::StrLiteral, "unterminated\n", false)
+        && checkToken(tokens[1], TokenType::StrLiteral, "bad escape \\x", true)
+        && checkToken(tokens[2], TokenType::StrLiteral, "bad unicode \\u123", true)
+        && checkToken(tokens[3], TokenType::StrLiteral, "bad unicode \\uD800", true)
+        && checkToken(tokens[4], TokenType::StrLiteral, "bad unicode \\u110000", true)
+        && checkToken(tokens[5], TokenType::StrLiteral, "bad unicode \\u123456789", true);
 }
 
 static bool testOperators() {
@@ -387,6 +477,8 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Invalid Number Literals", testInvalidNumberLiterals);
     runner.runTest("Character Literals", testCharLiterals);
     runner.runTest("String Literals", testStringLiterals);
+    runner.runTest("Invalid Character Literals", testInvalidCharLiterals);
+    runner.runTest("Invalid String Literals", testInvalidStringLiterals);
     runner.runTest("Brackets", testBrackets);
     runner.runTest("Punctuation", testPunctuation);
     runner.runTest("Nested Brackets", testNestedBrackets);
