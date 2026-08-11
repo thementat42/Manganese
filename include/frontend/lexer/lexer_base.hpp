@@ -1,8 +1,8 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_LEXER_LEXER_BASE_HPP
 
-#include <cstddef>
 #include <core.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <frontend/lexer/token.hpp>
@@ -14,7 +14,6 @@
 #include <string>
 #include <utility>
 #include <utils/result.hpp>
-
 
 namespace Manganese::lexer {
 

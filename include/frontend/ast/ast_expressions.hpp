@@ -1,9 +1,9 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_EXPRESSIONS_HPP
 
+#include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <core.hpp>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <mnstl/fold_result.hxx>

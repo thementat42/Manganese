@@ -8,8 +8,6 @@
 #include <string>
 #include <utils/result.hpp>
 
-#include "frontend/lexer/token.hpp"
-
 // TODO: Rework to properly handle unicode, validation, etc.
 
 namespace Manganese::lexer {
