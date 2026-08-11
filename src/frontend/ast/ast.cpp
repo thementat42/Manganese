@@ -28,9 +28,9 @@ std::string_view primitiveTypeToString(PrimitiveType_t prim) {
     }
 }
 
-mnstl::fold_result_t AlignofExpression::fold() const noexcept { return mnstl::fold_result_t{}; }
+mnstl::fold_result_t AlignofExpression::fold() const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
 
-mnstl::fold_result_t BinaryExpression::fold() const noexcept {
+mnstl::fold_result_t BinaryExpression::fold() const NOEXCEPT_IF_RELEASE {
     using enum lexer::TokenType;
     const mnstl::fold_result_t leftResult = left->fold();
     const mnstl::fold_result_t rightResult = right->fold();
@@ -63,7 +63,7 @@ mnstl::fold_result_t BinaryExpression::fold() const noexcept {
     return mnstl::fold_result_t{};
 };
 
-mnstl::fold_result_t PrefixExpression::fold() const noexcept {
+mnstl::fold_result_t PrefixExpression::fold() const NOEXCEPT_IF_RELEASE {
     mnstl::fold_result_t result = right->fold();
     if (!result.has_value()) { return mnstl::fold_result_t{}; }
 
@@ -80,7 +80,7 @@ mnstl::fold_result_t PrefixExpression::fold() const noexcept {
     }
 };
 
-mnstl::fold_result_t PostfixExpression::fold() const noexcept {
+mnstl::fold_result_t PostfixExpression::fold() const NOEXCEPT_IF_RELEASE {
     mnstl::fold_result_t result = left->fold();
     if (!result.has_value()) { return mnstl::fold_result_t{}; }
 
@@ -92,6 +92,6 @@ mnstl::fold_result_t PostfixExpression::fold() const noexcept {
     }
 };
 
-mnstl::fold_result_t SizeofExpression::fold() const noexcept { return mnstl::fold_result_t{}; }
+mnstl::fold_result_t SizeofExpression::fold() const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
 
 }  // namespace Manganese::ast

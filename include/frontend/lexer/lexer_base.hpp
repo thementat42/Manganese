@@ -47,8 +47,8 @@ class Lexer {
     Lexer& operator=(const Lexer&) = delete;
     Lexer& operator=(Lexer&&) = delete;
 
-    Token peekToken() noexcept;
-    Token consumeToken() noexcept;
+    Token peekToken();
+    Token consumeToken();
     inline bool done() const noexcept { return reader->done(); }
     constexpr bool hasError() const noexcept { return _hasError; }
 

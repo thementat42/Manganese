@@ -92,7 +92,7 @@ struct Expression : public ASTNode {
     const semantic::SemanticType* semanticType = nullptr;
 
     virtual ~Expression() noexcept = default;
-    virtual mnstl::fold_result_t fold() const noexcept { return mnstl::fold_result_t{}; }
+    virtual mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
 
    protected:
     constexpr explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}

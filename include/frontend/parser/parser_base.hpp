@@ -142,10 +142,10 @@ class Parser {
 
     bool isUnaryContext() const noexcept;
 
-    [[nodiscard]] inline Token peekToken() const noexcept { return lexer->peekToken(); }
-    [[nodiscard]] inline TokenType peekTokenType() noexcept { return lexer->peekToken().getType(); }
+    [[nodiscard]] inline Token peekToken() const { return lexer->peekToken(); }
+    [[nodiscard]] inline TokenType peekTokenType() { return lexer->peekToken().getType(); }
 
-    [[nodiscard]] inline Token consumeToken() noexcept {
+    [[nodiscard]] inline Token consumeToken() {
         previousToken = peekToken();
         return lexer->consumeToken();
     }

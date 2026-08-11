@@ -40,7 +40,7 @@ struct [[nodiscard]] ContextGuard {
 template <class T>
 struct [[nodiscard]] StackGuard {
     mnstl::tiny_stack<T>& stack;
-    explicit StackGuard(mnstl::tiny_stack<T>& _stack, T&& _new_element) noexcept : stack(_stack) {
+    explicit StackGuard(mnstl::tiny_stack<T>& _stack, T&& _new_element) : stack(_stack) {
         stack.push(std::move(_new_element));
     }
     ~StackGuard() noexcept { stack.pop(); }

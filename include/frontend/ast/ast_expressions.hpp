@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <core.hpp>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <mnstl/fold_result.hxx>
@@ -59,7 +60,7 @@ struct AlignofExpression final : public Expression {
 
     AlignofExpression(Type* t) noexcept : Expression(ExpressionKind::AlignofExpression), type(t) {}
 
-    mnstl::fold_result_t fold() const noexcept override;
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 
     MN_AST_STANDARD_INTERFACE
 };
@@ -103,7 +104,7 @@ struct BinaryExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold() const noexcept override;
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 };
 
 /**
@@ -117,7 +118,7 @@ struct BoolLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };
 
 /**
@@ -133,7 +134,7 @@ struct CharLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };
 
 /**
@@ -211,7 +212,7 @@ struct NumberLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };
 
 /**
@@ -225,7 +226,7 @@ struct PostfixExpression final : public Expression {
         Expression(ExpressionKind::PostfixExpression), left(_left), op(_op) {}
 
     MN_AST_STANDARD_INTERFACE;
-    mnstl::fold_result_t fold() const noexcept override;
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 };
 
 /**
@@ -240,7 +241,7 @@ struct PrefixExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold() const noexcept override;
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 };
 
 /**
@@ -260,7 +261,7 @@ struct SizeofExpression final : public Expression {
     Type* type;
 
     SizeofExpression(Type* t) noexcept : Expression(ExpressionKind::SizeofExpression), type(t) {}
-    mnstl::fold_result_t fold() const noexcept override;
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 
     MN_AST_STANDARD_INTERFACE
 };
@@ -278,7 +279,7 @@ struct StringLiteralExpression final : public Expression {
     //     Expression(ExpressionKind::StringLiteralExpression), value(_value) {};
 
     MN_AST_STANDARD_INTERFACE;
-    mnstl::fold_result_t fold() const noexcept override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };
 
 /**

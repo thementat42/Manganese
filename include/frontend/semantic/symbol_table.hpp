@@ -39,7 +39,7 @@ struct Symbol {
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
     ResolutionStatus status = ResolutionStatus::NotStarted;
-    std::string toString() const noexcept;
+    std::string toString() const;
 };
 
 struct Scope {

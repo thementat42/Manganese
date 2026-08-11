@@ -97,7 +97,7 @@ class Token {
 
     // These functions are long, so are implemented in a separate header
     TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
-    std::string toString() const noexcept;
+    std::string toString() const;
 };
 
 TokenType keywordLookup(std::string_view s) noexcept;
