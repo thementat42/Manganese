@@ -253,12 +253,6 @@ Result Lexer::processCharEscapeSequence(std::string_view charLiteral) {
     if (!encoded) {
         emitToken(TokenType::CharLiteral, std::string(charLiteral), true);
         return Result::Failure;
-    } else {
-        std::cerr << std::format("encoded U+{:04X}: ", static_cast<std::uint32_t>(*codepoint));
-
-        for (char c : *encoded) { std::cerr << std::format("{:02X} ", (unsigned char)c); }
-
-        std::cerr << '\n';
     }
     emitToken(TokenType::CharLiteral, std::move(*encoded), false);
     return Result::Success;
