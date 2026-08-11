@@ -32,20 +32,19 @@ enum class Precedence : char {
 
 struct Operator {
     Precedence leftBindingPower, rightBindingPower;
-    bool isValid = false;
 
     constexpr static Operator prefix(Precedence _rightBindingPower = Precedence::Default) noexcept {
         return Operator{
-            .leftBindingPower = Precedence::Unary, .rightBindingPower = _rightBindingPower, .isValid = true};
+            .leftBindingPower = Precedence::Unary, .rightBindingPower = _rightBindingPower};
     }
 
     constexpr static Operator postfix(Precedence _leftBindingPower = Precedence::Default) noexcept {
         return Operator{
-            .leftBindingPower = _leftBindingPower, .rightBindingPower = Precedence::Postfix, .isValid = true};
+            .leftBindingPower = _leftBindingPower, .rightBindingPower = Precedence::Postfix};
     }
 
     constexpr static Operator binary(Precedence bindingPower) noexcept {
-        return Operator{.leftBindingPower = bindingPower, .rightBindingPower = bindingPower, .isValid = true};
+        return Operator{.leftBindingPower = bindingPower, .rightBindingPower = bindingPower};
     }
 };
 }  // namespace Manganese::parser

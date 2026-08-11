@@ -81,7 +81,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
         const std::size_t idx = tokenToIndex(type);
         const Operator& op = operatorPrecedenceMap[idx];
 
-        if (op.leftBindingPower <= precedence || !op.isValid) { break; }
+        if (op.leftBindingPower <= precedence) { break; }
 
         const ledHandler_t handler = ledLookup[idx];
         if (!handler) {
