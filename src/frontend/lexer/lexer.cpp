@@ -11,6 +11,9 @@
 #include <utility>
 #include <utils/result.hpp>
 
+#include "frontend/lexer/lexer_base.hpp"
+
+
 namespace Manganese::lexer {
 
 //~ Core Lexer Functions
@@ -115,9 +118,15 @@ Result Lexer::tokenizeCharLiteral() {
         result = Result::Failure;
     } else if (charLiteral[0] == '\\') {
         return processCharEscapeSequence(charLiteral);
-    } else if (charLiteral.length() > 1) {
-        logError("Character literal exceeds 1 character limit");
-        result = Result::Failure;
+    } else {
+        const std::optional<DecodedUTF8> decoded = decodeUTF8(charLiteral, 0);
+        if (!decoded) {
+            logError("Invalid UTF-8 character literal");
+            result = Result::Failure;
+        } else if (decoded->bytecount != charLiteral.size()) {
+            logError("Character literal exceeds 1 character limit");
+            result = Result::Failure;
+        }
     }
     emitToken(TokenType::CharLiteral, std::move(charLiteral), result == Result::Failure);
     return result;

@@ -3,15 +3,17 @@
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/logging.hpp>
+#include <mnstl/number.hxx>
 #include <optional>
 #include <string>
-#include <utility>
 #include <utils/result.hpp>
+
+#include "frontend/lexer/token.hpp"
 
 // TODO: Rework to properly handle unicode, validation, etc.
 
 namespace Manganese::lexer {
-// ~ Constants for UTF-8 encoding
+
 constexpr inline std::uint32_t UTF8_1B_MAX = 0x7F;
 constexpr inline std::uint32_t UTF8_2B_MAX = 0x7FF;
 constexpr inline std::uint32_t UTF8_3B_MAX = 0xFFFF;
@@ -33,170 +35,233 @@ constexpr inline std::uint8_t UTF8_CONT_SHIFT = 6;
 constexpr inline std::uint8_t UTF8_2B_SHIFT = 12;
 constexpr inline std::uint8_t UTF8_3B_SHIFT = 18;
 
-// Helpers
-
 namespace {
+// Code point helpers
+constexpr bool isSurrogate(char32_t codepoint) noexcept {
+    return UTF16_SURROGATE_MIN <= codepoint && codepoint <= UTF16_SURROGATE_MAX;
+}
+constexpr bool isValidCodePoint(char32_t codepoint) noexcept {
+    return static_cast<std::uint32_t>(codepoint) <= UTF8_4B_MAX && !isSurrogate(codepoint);
+}
 
-std::optional<char> getEscapeCharacter(char escapeChar, std::size_t line, std::size_t col) {
+// Hex helpers
+
+constexpr int hexDigitToInt(char c) noexcept { return mnstl::detail::_chtoi(c); }
+
+std::optional<char32_t> parseHexCodePoint(std::string_view digits, std::size_t line, std::size_t col) {
+    if (digits.empty()) {
+        logging::logError(line, col, "Unicode code point cannot be empty");
+        return std::nullopt;
+    }
+    std::uint32_t codepoint = 0;
+
+    for (char c : digits) {
+        std::uint32_t value;
+
+        if (!isxdigit(c)) {
+            logging::logError(line, col, "Invalid hexadecimal digit '{}'", c);
+            return std::nullopt;
+        }
+        value = static_cast<std::uint32_t>(hexDigitToInt(c));
+        codepoint = (codepoint << 4) | value;
+    }
+
+    const auto result = static_cast<char32_t>(codepoint);
+    if (!isValidCodePoint(result)) {
+        logging::logError(line, col, "Invalid unicode code point: U+{:X}", codepoint);
+        return std::nullopt;
+    }
+    return result;
+}
+
+// Unicode -> UTF8
+
+std::optional<std::string> encodeUTF8(char32_t codepoint) {
+    const auto p = static_cast<std::uint32_t>(codepoint);
+
+    if (!isValidCodePoint(codepoint)) { return std::nullopt; }
+
+    if (p <= UTF8_1B_MAX) { return std::string{static_cast<char>(p)}; }
+    if (p <= UTF8_2B_MAX) {
+        return std::string{static_cast<char>(UTF8_2B_PRE | (p >> UTF8_2B_SHIFT)),
+                           static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
+    }
+    if (p <= UTF8_3B_MAX) {
+        return std::string{static_cast<char>(UTF8_3B_PRE | (p >> UTF8_3B_SHIFT)),
+                           static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK)),
+                           static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
+    }
+
+    return std::string{static_cast<char>(UTF8_4B_PRE | (p >> UTF8_3B_SHIFT)),
+                       static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_2B_SHIFT) & UTF8_CONT_MASK)),
+                       static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK)),
+                       static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
+}
+
+// Escape sequences
+
+std::optional<char32_t> getEscapeCharacter(char escapeChar, std::size_t line, std::size_t col) {
     switch (escapeChar) {
-        case '\\': return '\\';
-        case '\'': return '\'';
-        case '\"': return '\"';
-        case 'a': return '\a';
-        case 'b': return '\b';
-        case 'f': return '\f';
-        case 'n': return '\n';
-        case 'r': return '\r';
-        case 't': return '\t';
-        case 'v': return '\v';
-        case '0': return '\0';
+        // \, ', ", abfnrtv0
+        case '\\': return U'\\';
+        case '\'': return U'\'';
+        case '"': return U'"';
+        case 'a': return U'\a';
+        case 'b': return U'\b';
+        case 'f': return U'\f';
+        case 'n': return U'\n';
+        case 'r': return U'\r';
+        case 't': return U'\t';
+        case 'v': return U'\v';
+        case '0': return U'\0';
         default:
             logging::logError(
                 line, col,
-                "\\{} is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes ",
+                "\\{} is not a valid escape sequence. If you meant to type a backslash ('\\'), use two backslashes",
                 escapeChar);
             return std::nullopt;
     }
 }
 
-inline int hexDigitToInt(char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    return -1;  // Not a valid hex digit
-}
-
-std::optional<char32_t> resolveHexCharacters(const std::string& esc) {
-    // Check that the string is exactly 2 characters long
-    if (esc.length() != 2) { return std::nullopt; }
-    // Check that both characters are hex digits
-    if (!isxdigit(esc[0]) || !isxdigit(esc[1])) { return std::nullopt; }
-    auto hexChar = static_cast<char32_t>(hexDigitToInt(esc[0]));
-    hexChar <<= 4;  // Make room for the second hex digit
-    hexChar |= static_cast<char32_t>(hexDigitToInt(esc[1]));
-    return hexChar;
-}
-
-std::optional<char32_t> resolveUnicodeCharacters(const std::string& esc, std::size_t line, std::size_t col,
-                                                 bool isLongUnicode = false) {
-    std::size_t expectedLength = isLongUnicode ? 8 : 4;  // 8 for \UXXXXXXXX, 4 for \uXXXX
-    if (esc.length() != expectedLength) { return std::nullopt; }
-    char32_t unicodeChar = 0;
-    for (const char c : esc) {
-        if (!isxdigit(c)) { return std::nullopt; }
-        unicodeChar <<= 4;
-        unicodeChar |= static_cast<char32_t>(hexDigitToInt(c));
-    }
-    if (unicodeChar >= UTF16_SURROGATE_MIN && unicodeChar <= UTF16_SURROGATE_MAX) {
-        // Invalid Unicode character in the surrogate range
-        logging::logError(line, col, "Error: Invalid Unicode character in the surrogate range");
+std::optional<char32_t> parseEscapeSequence(std::string_view input, std::size_t& index, std::size_t line,
+                                            std::size_t column) {
+    // Index should point at the backslash
+    if (index >= input.size() || input[index] != '\\') {
+        logging::logError(line, column, R"(Expected '\\' to begin escape sequence)");
         return std::nullopt;
     }
-    if (unicodeChar > UTF8_4B_MAX) {
-        // Unicode character is outside the valid range for UTF-8
-        logging::logError(line, col, "Error: Unicode character is outside the valid range for UTF-8");
+    ++index;
+
+    // a backslash at the end of the input is an incomplete escape sequence
+    if (index >= input.size()) {
+        logging::logError(line, column, "Incomplete escape sequence");
         return std::nullopt;
     }
-    return unicodeChar;
-}
 
-static std::string encodeUTF8String(char32_t wideChar) {
-    std::string result;
-    if (wideChar <= UTF8_1B_MAX) {
-        result += static_cast<char>(wideChar);  // Narrow character
-    } else if (wideChar <= UTF8_2B_MAX) {
-        // 2-byte UTF-8 character
-        result += static_cast<char>(UTF8_2B_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_2B_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
-    } else if (wideChar <= UTF8_3B_MAX) {
-        // 3-byte UTF-8 character
-        result += static_cast<char>(UTF8_3B_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_3B_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
-    } else {  // No need to check the upper limit -- that was done in the escape sequence resolver
-        // 4-byte UTF-8 character (outside the Basic Multilingual Plane)
-        result += static_cast<char>(UTF8_4B_PRE | ((wideChar >> UTF8_3B_SHIFT) & UTF8_4B_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_2B_SHIFT) & UTF8_CONT_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | ((wideChar >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK));
-        result += static_cast<char>(UTF8_CONT_PRE | (wideChar & UTF8_CONT_MASK));
+    const char escapeChar = input[index];
+
+    if (tolower(escapeChar) == 'u') {
+        ++index;  // skip the u
+        const std::size_t digitsStart = index;
+        std::size_t digitCount = 0;
+
+        while (index < input.size() && digitCount < 9) {
+            if (!isxdigit(input[index])) { break; }
+            ++index;
+            ++digitCount;
+        }
+
+        if (digitCount != 4 && digitCount != 8) {
+            logging::logError(line, column, "Unicode escape sequence must contain exactly 4 or 8 hexadecimal digits");
+            return std::nullopt;
+        }
+
+        const std::string_view digits = input.substr(digitsStart, digitCount);
+        return parseHexCodePoint(digits, line, column);
     }
 
+    // regular escape sequence
+    const auto result = getEscapeCharacter(escapeChar, line, column);
+    if (result) { ++index; }
     return result;
 }
+
 }  // namespace
 
-std::optional<std::string> Lexer::resolveEscapeCharacters(const std::string& escapeString) {
-    std::string processed;
-    processed.reserve(escapeString.length() - 1);
-    std::size_t i = 0;
-    while (i < escapeString.length()) {
-        if (escapeString[i] != '\\') [[likely]] {  // Most characters are not escaped
-            processed += escapeString[i++];
-            continue;
-        }
-        ++i;  // skip the backslash
-        if (i >= escapeString.length()) {
-            logging::logError(getLine(), getCol(), "Incomplete escape sequence at end of string");
-            return std::nullopt;
-        }
-        std::optional<char32_t> escapeChar;
-        std::uint8_t skipLength = 1;
-        if (escapeString[i] == 'u') {
-            const std::string escDigits = escapeString.substr(i + 1, 4);  // 4 for uXXXX
-            escapeChar = resolveUnicodeCharacters(escDigits, getLine(), getCol());
-            skipLength = 5;
-        } else if (escapeString[i] == 'U') {
-            const std::string escDigits = escapeString.substr(i + 1, 8);  // 8 for UXXXXXXXX
-            escapeChar = resolveUnicodeCharacters(escDigits, getLine(), getCol(), /*isLongUnicode=*/true);
-            skipLength = 9;
-        } else if (escapeString[i] == 'x') [[unlikely]] {  // Hex escape sequences aren't usually used
-            const std::string escDigits = escapeString.substr(i + 1, 2);  // 2 for xXX
-            escapeChar = resolveHexCharacters(escDigits);
-            skipLength = 3;
-        } else {
-            escapeChar = getEscapeCharacter(escapeString[i], getLine(), getCol());
-        }
-        if (!escapeChar) {
-            if (escapeString[i] == 'x') {
-                logging::logError(getLine(), getCol(), "Invalid hex escape sequence (expected \\xXX)");
-            } else if (escapeString[i] == 'u') {
-                logging::logError(getLine(), getCol(), "Invalid unicode escape sequence (expected \\uXXXX)");
-            }
-            return std::nullopt;
-        }
-        i += skipLength;
-        processed += encodeUTF8String(*escapeChar);
+std::optional<DecodedUTF8> Lexer::decodeUTF8(std::string_view input, std::size_t offset) {
+    if (offset >= input.size()) { return std::nullopt; }
+    const auto byte = [](char c) -> std::uint8_t { return static_cast<std::uint8_t>(static_cast<unsigned char>(c)); };
+
+    const std::uint8_t first = byte(input[offset]);
+    if (first <= UTF8_1B_MAX) { return DecodedUTF8{.codepoint = static_cast<char32_t>(first), .bytecount = 1}; }
+
+    std::size_t bytecount;
+    std::uint32_t codepoint;
+
+    if ((first & 0xE0) == UTF8_2B_PRE) {
+        bytecount = 2;
+        codepoint = first & UTF8_2B_MASK;
+    } else if ((first & 0xF0) == UTF8_3B_PRE) {
+        bytecount = 3;
+        codepoint = first & UTF8_3B_MASK;
+    } else if ((first & 0xF8) == UTF8_4B_PRE) {
+        bytecount = 4;
+        codepoint = first & UTF8_4B_MASK;
+    } else {
+        return std::nullopt;
     }
-    return processed;
+
+    // make sure the entire byte sequence is present
+    if (offset + bytecount > input.size()) { return std::nullopt; }
+
+    // decode continuation bytes
+    for (std::size_t i = 1; i < bytecount; ++i) {
+        const std::uint8_t current = byte(input[offset + i]);
+        if ((current & 0xC0) != UTF8_CONT_PRE) { return std::nullopt; }
+        codepoint = (codepoint << UTF8_CONT_SHIFT) | (current & UTF8_CONT_MASK);
+    }
+
+    const auto result = static_cast<char32_t>(codepoint);
+
+    // Reject overlong encodings
+    if (bytecount == 2 && codepoint <= UTF8_1B_MAX) { return std::nullopt; }
+    if (bytecount == 3 && codepoint <= UTF8_2B_MAX) { return std::nullopt; }
+    if (bytecount == 4 && codepoint <= UTF8_3B_MAX) { return std::nullopt; }
+    if (!isValidCodePoint(result)) { return std::nullopt; }
+    return DecodedUTF8{.codepoint = codepoint, .bytecount = bytecount};
 }
 
-Result Lexer::processCharEscapeSequence(const std::string& charLiteral) {
-    std::optional<std::string> resolved = resolveEscapeCharacters(charLiteral);
-    if (!resolved) {
-        logging::logError(getLine(), getCol(), "Invalid character literal", charLiteral);
-        tokenStream.emplace_back(TokenType::CharLiteral, std::string(charLiteral), getLine(), getCol(),
-                                 /*invalid=*/true);
+std::optional<std::string> Lexer::resolveEscapeCharacters(std::string_view escapeString) {
+    std::string result;
+    result.reserve(escapeString.size());
+
+    std::size_t index = 0;
+    while (index < escapeString.size()) {
+        if (escapeString[index] != '\\') {
+            result += escapeString[index++];
+            continue;
+        }
+        const std::optional<char32_t> codepoint = parseEscapeSequence(escapeString, index, getLine(), getCol());
+
+        if (!codepoint) { return std::nullopt; }
+
+        const auto encoded = encodeUTF8(*codepoint);
+
+        if (!encoded) { return std::nullopt; }
+        result += *encoded;
+    }
+    return result;
+}
+
+Result Lexer::processCharEscapeSequence(std::string_view charLiteral) {
+    std::size_t index = 0;
+
+    const auto codepoint = parseEscapeSequence(charLiteral, index, getLine(), getCol());
+
+    if (!codepoint) {
+        emitToken(TokenType::CharLiteral, std::string(charLiteral), true);
         return Result::Failure;
     }
-    std::string processed = *resolved;
-    // For escaped characters, we need to check if it represents a single code point
-    // not necessarily the same as the length of the resolved string being 1
-    const std::size_t byteCount = processed.length();
-    bool isValidSingleCodePoint = true;
-    if (byteCount > 1) {
-        const auto firstByte = static_cast<unsigned char>(processed[0]);
-        isValidSingleCodePoint = (byteCount == 2 && (firstByte & 0xE0) == 0xC0) ||  // 2-byte UTF-8 character
-            (byteCount == 3 && (firstByte & 0xF0) == 0xE0) ||  // 3-byte UTF-8 character
-            (byteCount == 4 && (firstByte & 0xF8) == 0xF0);  // 4-byte UTF-8 character
+    if (index != charLiteral.size()) {
+        logError("character literal must contain exactly one character");
+
+        emitToken(TokenType::CharLiteral, std::string(charLiteral), true);
+        return Result::Failure;
     }
-    Result result = Result::Success;
-    if (!isValidSingleCodePoint) {
-        logging::logError(getLine(), getCol(), "Invalid character literal ", charLiteral);
-        result = Result::Failure;
+
+    auto encoded = encodeUTF8(*codepoint);
+    if (!encoded) {
+        emitToken(TokenType::CharLiteral, std::string(charLiteral), true);
+        return Result::Failure;
+    } else {
+        std::cerr << std::format("encoded U+{:04X}: ", static_cast<std::uint32_t>(*codepoint));
+
+        for (char c : *encoded) { std::cerr << std::format("{:02X} ", (unsigned char)c); }
+
+        std::cerr << '\n';
     }
-    tokenStream.emplace_back(TokenType::CharLiteral, std::move(processed), getLine(), getCol(),
-                             /*invalid=*/result == Result::Failure);
-    return result;
+    emitToken(TokenType::CharLiteral, std::move(*encoded), false);
+    return Result::Success;
 }
 
 }  // namespace Manganese::lexer

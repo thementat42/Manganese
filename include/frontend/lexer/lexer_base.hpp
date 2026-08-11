@@ -27,6 +27,11 @@ struct NumberPrefixResult {
     std::string prefix;
 };
 
+struct DecodedUTF8 {
+    char32_t codepoint;
+    std::size_t bytecount;
+};
+
 /**
  * @brief The lexer is responsible for turning the source code into a non-textual representation that the parser can
  * understand.
@@ -74,8 +79,9 @@ class Lexer {
     NumberPrefixResult processNumberPrefix();
     Result processScientificNotation(std::string& numberLiteral);
     Result processNumberSuffix(std::string& numberLiteral, bool isFloat);
-    std::optional<std::string> resolveEscapeCharacters(const std::string& escapeString);
-    Result processCharEscapeSequence(const std::string& charLiteral);
+    std::optional<std::string> resolveEscapeCharacters(std::string_view escapeString);
+    static std::optional<DecodedUTF8> decodeUTF8(std::string_view input, std::size_t offset);
+    Result processCharEscapeSequence(std::string_view charLiteral);
 
     //~ Reader wrapper functions
     inline char peekChar(std::size_t offset = 0) const noexcept { return reader->peekChar(offset); }
