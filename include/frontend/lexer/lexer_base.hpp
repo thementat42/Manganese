@@ -72,7 +72,8 @@ class Lexer {
     }
     void emitToken(TokenType type, std::string&& lexeme, bool invalid);
     NumberPrefixResult processNumberPrefix();
-    Result processNumberSuffix(mnstl::Base base, std::string& numberLiteral, bool isFloat);
+    Result processScientificNotation(std::string& numberLiteral);
+    Result processNumberSuffix(std::string& numberLiteral, bool isFloat);
     std::optional<std::string> resolveEscapeCharacters(const std::string& escapeString);
     Result processCharEscapeSequence(const std::string& charLiteral);
 
@@ -91,6 +92,7 @@ constexpr bool isdigit(char c) noexcept { return (c >= '0' && c <= '9'); }
 constexpr bool isodigit(char c) { return (c >= '0' && c <= '7'); }
 constexpr bool isxdigit(char c) noexcept { return isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); }
 constexpr bool isalpha(char c) noexcept { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+constexpr bool isalnum(char c) noexcept { return isalpha(c) || isdigit(c); }
 constexpr bool isspace(char c) noexcept {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
 }

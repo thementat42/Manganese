@@ -1,4 +1,3 @@
-#include <cctype>
 #include <cstddef>
 #include <format>
 #include <frontend/lexer.hpp>
@@ -137,41 +136,45 @@ Result Lexer::tokenizeKeywordOrIdentifier() {
 Result Lexer::tokenizeNumber() {
     std::string numberLiteral;
     Result result = Result::Success;
-    bool isFloat = false;
-    auto [base, isValidBaseChar, prefix] = processNumberPrefix();
+
+    const auto [base, isValidBaseChar, prefix] = processNumberPrefix();
     numberLiteral += prefix;
-    char currentChar = peekChar();  // If there was a number prefix, update the current char
+
+    bool isFloat = false;
 
     while (!done()) {
-        currentChar = peekChar();
+        const char currentChar = peekChar();
         if (currentChar == '_') {
-            // Ignore underscores
             advance();
             continue;
-        } else if (currentChar == '.') {
+        }
+
+        if (currentChar == '.') {
             if (isFloat) {
-                // Invalid number -- two decimal points
                 logError("Invalid number literal: multiple decimal points");
                 advance();
                 result = Result::Failure;
                 continue;
             }
-            // Reject floating point for octal and binary numbers
-            if (base == mnstl::Base::Octal || base == mnstl::Base::Binary) {
-                logError("Invalid number literal: floating point not allowed for {} numbers", baseToString(base));
+
+            if (base != mnstl::Base::Decimal) {
+                logError("Invalid number literal : floating point values are only allowed for decimal literals");
                 advance();
                 result = Result::Failure;
                 continue;
             }
+
             isFloat = true;
-        } else if (!isalnum(currentChar)) {
-            break;
-        } else if (!isValidBaseChar(currentChar)) {
-            const char lower_char = tolower(currentChar);
-            if (lower_char == 'i' || lower_char == 'f' || lower_char == 'u' || lower_char == 'e' || lower_char == 'p') {
-                // suffix starts
-                break;
-            }
+            numberLiteral += consumeChar();
+            continue;
+        }
+
+        if (!isalnum(currentChar)) { break; }
+
+        if (!isValidBaseChar(currentChar)) {
+            const char lowerChar = tolower(currentChar);
+
+            if (lowerChar == 'i' || lowerChar == 'f' || lowerChar == 'u' || lowerChar == 'e') { break; }
             logError("Invalid digit '{}' in numeric constant", currentChar);
             advance();
             result = Result::Failure;
@@ -179,15 +182,17 @@ Result Lexer::tokenizeNumber() {
         }
         numberLiteral += consumeChar();
     }
+    if (base == mnstl::Base::Decimal && tolower(peekChar()) == 'e') {
+        if (processScientificNotation(numberLiteral) == Result::Failure) { result = Result::Failure; }
 
-    // Handle scientific notation (e.g., 1.23e4), size suffixes (e.g., 1.23f), etc.
-    if (processNumberSuffix(base, numberLiteral, isFloat) == Result::Failure) { result = Result::Failure; }
-    if (isFloat && base != mnstl::Base::Decimal) {
-        logError("Invalid floating-point literal {}. Only decimal floats are supported.", numberLiteral);
-        result = Result::Failure;
+        isFloat = true;
     }
+
+    if (processNumberSuffix(numberLiteral, isFloat) == Result::Failure) { result = Result::Failure; }
+
     emitToken(isFloat ? TokenType::FloatLiteral : TokenType::IntegerLiteral, std::move(numberLiteral),
-              result == Result::Failure);
+              result != Result::Success);
+
     return result;
 }
 
@@ -513,7 +518,35 @@ NumberPrefixResult Lexer::processNumberPrefix() {
     }
 }
 
-Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, bool isFloat) {
+Result Lexer::processScientificNotation(std::string& numberLiteral) {
+    // Caller guarantees next character is an 'e'
+    numberLiteral += tolower(consumeChar());
+    if (peekChar() == '+' || peekChar() == '-') { numberLiteral += consumeChar(); }
+
+    if (!isdigit(peekChar())) {
+        logError("Invalid exponent: must be a number");
+        return Result::Failure;
+    }
+
+    Result result = Result::Success;
+
+    while (!done() && isalnum(peekChar())) {
+        const char currentChar = peekChar();
+
+        if (!isdigit(currentChar)) {
+            logError("Invalid character '{}' in exponent", currentChar);
+            advance();
+            result = Result::Failure;
+            continue;
+        }
+
+        numberLiteral += consumeChar();
+    }
+
+    return result;
+}
+
+Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
     /*
         The valid numeric suffixes are:
         - i8, i16, i32, i64, i128 (signed integers with the corresponding bit width)
@@ -522,98 +555,40 @@ Result Lexer::processNumberSuffix(mnstl::Base base, std::string& numberLiteral, 
         NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
         */
 
-    auto readUint = [this]() -> int {
-        int value = 0;
-        while (!done() && isdigit(peekChar())) { value = value * 10 + (consumeChar() - '0'); }
-        return value;
-    };
+    const char suffix = tolower(peekChar());
 
-    // Suffix Handling
+    if (suffix != 'i' && suffix != 'u' && suffix != 'f') { return Result::Success; }
 
-    char currentChar = tolower(peekChar());
-    if (currentChar == 'i' || currentChar == 'u' || currentChar == 'f') {
-        char suffix = tolower(consumeChar());
-        int width = readUint();
-        if (width == 0) {
-            logError("Invalid Numeric Suffix {}", width);
+    DISCARD(consumeChar());
+
+    std::string width;
+
+    while (!done() && isdigit(peekChar())) { width += consumeChar(); }
+
+    if (width.empty()) { logError("Numeric suffix '{}' must specify a bit width", suffix); }
+
+    const bool isIntegerSuffix = suffix == 'i' || suffix == 'u';
+    const bool isFloatSuffix = suffix == 'f';
+
+    if (isIntegerSuffix) {
+        if (width != "8" && width != "16" && width != "32" && width != "64" && width != "128") {
+            logError("Invalid integer suffix '{}': must be 8, 16, 32, 64 or 128", width);
             return Result::Failure;
         }
-        const bool validIntWidth = (width == 8 || width == 16 || width == 32 || width == 64 || width == 128);
-        const bool validFloatWidth = (width == 32 || width == 64);
-
-        if ((suffix == 'i' || suffix == 'u') && !validIntWidth) {
-            logError("Invalid integer suffix '{}': must be 8, 16, 32, 64 or 128", suffix);
-            return Result::Failure;
-        }
-        if (suffix == 'f' && !validFloatWidth) {
-            logError("Invalid float suffix '{}': must be 32 or 64", suffix);
-            return Result::Failure;
-        }
-        if (suffix == 'f' && !isFloat) {
-            logError("Float suffix '{}' can only be used with floating-point literals", suffix);
-            return Result::Failure;
-        }
-
-        if ((suffix == 'i' || suffix == 'u') && isFloat) {
+        if (isFloat) {
             logError("Integer suffix '{}' cannot be used with floating-point literals", suffix);
             return Result::Failure;
         }
-        numberLiteral += suffix;
-        numberLiteral += std::to_string(width);
     }
-
-    // Scientific Notation
-
-    currentChar = tolower(peekChar());
-
-    if (!isalpha(currentChar)) {  // there's no scientific notation
-        return Result::Success;
-    }
-
-    auto processScientificNotation = [&](char expected) -> Result {
-        if (currentChar != expected) { return Result::Failure; }
-
-        numberLiteral += tolower(consumeChar());
-
-        char next = peekChar();
-        if (next == '+' || next == '-') { numberLiteral += consumeChar(); }
-
-        if (!isdigit(peekChar())) {
-            logError("Invalid exponent: must be a number");
+    if (isFloatSuffix) {
+        if (width != "32" && width != "64") {
+            logError("Invalid float suffix '{}' : must be 32 or 64", width);
             return Result::Failure;
         }
-        Result result = Result::Success;
-
-        while (!done() && isalnum(peekChar())) {
-            if (!isdigit(peekChar())) {
-                logError("Invalid character {} in exponent", peekChar());
-                result = Result::Failure;
-                advance();
-                continue;
-            }
-            numberLiteral += consumeChar();
-        }
-
-        return result;
-    };
-
-    if (base == mnstl::Base::Decimal) {
-        if (processScientificNotation('e') == Result::Failure) {
-            logError("Invalid decimal float: must have 'e' exponent");
-            return Result::Failure;
-        }
-    } else if (base == mnstl::Base::Hexadecimal && isFloat) {
-        // if (processScientificNotation('p') == Result::Failure) {
-        //     logError( "Invalid hexadecimal float: must have 'p' exponent");
-        //     return Result::Failure;
-        // }
-    } else {
-        if (tolower(peekChar()) == 'e') {  //|| (char)std::tolower(peekChar()) == 'p') {
-            logError("{} numbers do not support exponents", baseToString(base));
-        }
-        while (isalnum(peekChar())) { logError("Invalid character {} in numeric literal", consumeChar()); }
-        return Result::Failure;
+        if (!isFloat) { logError("Float suffix '{}' can only be used with floating point literals", suffix); }
     }
+    numberLiteral += suffix;
+    numberLiteral += width;
     return Result::Success;
 }
 
