@@ -301,11 +301,15 @@ static bool testFunctionDeclarationAndCall() {
                                    "    let result = x * y;\n"
                                    "    return result;\n"
                                    "}\n"
+                                   "func increment(value: int32, amount: int32 = 1) -> int32 {\n"
+                                   "    return value + amount;\n"
+                                   "}\n"
                                    "let sum = add(5u32, 3i16);\n"
                                    "greet(\"World\");\n"
-                                   "let product = calculate(2.5f64, 3.01);\n";
+                                   "let product = calculate(2.5f64, 3.01);\n"
+                                   "let incremented = increment(10);\n";
 
-    const std::array<std::string, 6> expected = {
+    const std::array<std::string, 8> expected = {
         R"(public func add(a: int32, b: int32) -> int32 {
     return (a + b);
 })",
@@ -316,9 +320,13 @@ static bool testFunctionDeclarationAndCall() {
     (let result: private auto = (x * y));
     return result;
 })",
+        R"(private func increment(value: int32, amount: int32 = 1) -> int32 {
+    return (value + amount);
+})",
         "(let sum: private auto = add(5, 3));",
         "greet(\"World\");",
-        "(let product: private auto = calculate(2.5, 3.01));"};
+        "(let product: private auto = calculate(2.5, 3.01));",
+        "(let incremented: private auto = increment(10));"};
 
     return validateStatements(getParserResults(expression), expected, "Function Declaration and Call");
 }

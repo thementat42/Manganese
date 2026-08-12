@@ -11,6 +11,9 @@
 #include <utility>
 #include <vector>
 
+#include "frontend/lexer/token.hpp"
+
+
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -219,7 +222,6 @@ ast::Statement* Parser::parseForLoopStatement() {
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
     // TODO: Handle function attributes
-    // TODO: Handle function default parameters
     // TODO: Handle function variadic parameters
     DISCARD(consumeToken());
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
@@ -227,6 +229,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     std::vector<std::string> genericTypes;
     ast::Type* returnType = nullptr;
     ast::Block body;
+    bool hasDefaultParameter = false;
 
     if (peekTokenType() == TokenType::LeftSquare) {
         // Generics
@@ -260,6 +263,8 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     while (!done()) {
         if (peekTokenType() == TokenType::RightParen) { break; }
         bool isMutable = false;
+        ast::Expression* defaultValue = nullptr;
+
         Token t = expectToken(TokenType::Identifier, "Expected a variable name");
         std::string paramName = t.getLexeme();
         expectToken(TokenType::Colon);
@@ -268,15 +273,27 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
             isMutable = true;
         }
         ast::Type* param_type = parseType(Precedence::Default);
+
+        if (peekTokenType() == TokenType::Assignment) {
+            DISCARD(consumeToken());
+
+            hasDefaultParameter = true;
+            defaultValue = parseExpression(Precedence::Default);
+        } else if (hasDefaultParameter) {
+            logError(t.getLine(), t.getColumn(), "Non-default parameter '{}' cannot follow a default parameter",
+                     paramName);
+        }
+
         if (auto duplicate = std::ranges::find(params, paramName, &ast::FunctionParameter::name);
             duplicate != params.end()) {
             logError(t.getLine(), t.getColumn(),
                      "Duplicate parameter '{}' in function '{}' (previously declared at line {}, column {})", paramName,
                      name, duplicate->line, duplicate->column);
         } else {
-            params.push_back({.name = paramName,
+            params.push_back(ast::FunctionParameter{.name = paramName,
                               .type = param_type,
                               .isMutable = isMutable,
+                              .defaultValue = defaultValue,
                               .line = t.getLine(),
                               .column = t.getColumn()});
         }

@@ -8,8 +8,6 @@
 #include <string>
 #include <utils/result.hpp>
 
-// TODO: Rework to properly handle unicode, validation, etc.
-
 namespace Manganese::lexer {
 
 constexpr inline std::uint32_t UTF8_1B_MAX = 0x7F;

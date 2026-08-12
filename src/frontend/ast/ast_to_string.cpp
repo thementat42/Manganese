@@ -127,6 +127,7 @@ std::string FunctionDeclarationStatement::toString(std::size_t indent) const {
     for (std::size_t i = 0; i < parameters.size(); ++i) {
         const FunctionParameter& param = parameters[i];
         result += std::format("{}: {}{}", param.name, (param.isMutable ? "mut " : ""), param.type->toString(indent));
+        if (param.defaultValue) {result += std::format(" = {}", param.defaultValue->toString());}
         if (i < parameters.size() - 1) { result += ", "; }
     }
     result += ')';

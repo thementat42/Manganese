@@ -176,6 +176,14 @@ void FunctionDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
         os << ind.next(3) << "isMutable: " << (param.isMutable ? "true" : "false") << "\n";
         os << ind.next(3) << "type: \n";
         param.type->dump(os, ind.next(4));
+
+        os << ind.next(3) << "default value: ";
+        if (param.defaultValue) {
+            os << "\n";
+            param.defaultValue->dump(os, ind.next(4));
+        } else {
+            os << "none\n";
+        }
         os << ind.next(2) << "}\n";
     }
     os << ind.next() << "]\n";

@@ -124,6 +124,7 @@ struct FunctionParameter {
     std::string name;
     Type* type;
     bool isMutable;
+    Expression* defaultValue;
     std::size_t line, column;
 };
 
