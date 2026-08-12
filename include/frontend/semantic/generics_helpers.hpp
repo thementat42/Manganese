@@ -6,7 +6,6 @@
 #include <frontend/semantic/type_context.hpp>
 #include <functional>
 #include <unordered_map>
-#include <vector>
 
 namespace Manganese::semantic {
 
@@ -18,11 +17,9 @@ constexpr inline generic_tag_t generic_tag{42};
 
 struct InstantiationKey {
     const ast::ASTNode* declNode;
-    std::vector<const SemanticType*> typeArgs;
+    TypeList typeArgs;
 
-    friend bool operator==(const InstantiationKey& a, const InstantiationKey& b) noexcept {
-        return (a.declNode == b.declNode) && (a.typeArgs == b.typeArgs);
-    }
+    friend bool operator==(const InstantiationKey&, const InstantiationKey&) noexcept = default;
 };
 
 struct InstantiationResult {
