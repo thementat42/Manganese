@@ -12,7 +12,7 @@ namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateType* type) -> typevisit_t {
     const auto* aggregateType = static_cast<const ast::AggregateType*>(type);
-    std::vector<const SemanticType*> resolvedFields;
+    TypeList resolvedFields;
     resolvedFields.reserve(aggregateType->fieldTypes.size());
 
     for (ast::Type* fieldType : aggregateType->fieldTypes) {
@@ -101,7 +101,7 @@ auto analyzer::visit(ast::GenericType* type) -> typevisit_t {
     visit(genericType->baseType);
     const SemanticType* baseType = genericType->baseType->semanticType;
     if (!baseType) { return typevisit_t::Failure; }
-    std::vector<const SemanticType*> resolvedTypeParameters;
+    TypeList resolvedTypeParameters;
     resolvedTypeParameters.reserve(genericType->typeParameters.size());
 
     for (ast::Type* typeParameter : genericType->typeParameters) {

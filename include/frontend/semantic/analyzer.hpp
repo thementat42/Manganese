@@ -53,7 +53,7 @@ class analyzer final : public _analyzer_base_t {
     SymbolTable symbolTable;
     TypeContext typeContext;
     parser::ParsedFile& parsedFile;
-    mnstl::tiny_stack<std::vector<const SemanticType*>> genericsStack;
+    mnstl::tiny_stack<TypeList> genericsStack;
     InstantiationCache instantiationCache;
     std::unordered_map<std::string_view, std::size_t> activeGenericParams;
 
@@ -147,9 +147,9 @@ class analyzer final : public _analyzer_base_t {
     stmtvisit_t visit(ast::AggregateDeclarationStatement*, generic_tag_t);
     stmtvisit_t visit(ast::FunctionDeclarationStatement*, generic_tag_t);
     const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
-                                                    const std::vector<const SemanticType*>& typeArgs);
+                                                    const TypeList& typeArgs);
     const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
-                                                     const std::vector<const SemanticType*>& typeArgs);
+                                                     const TypeList& typeArgs);
 
     static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
         if (!expr) [[unlikely]] { return nullptr; }

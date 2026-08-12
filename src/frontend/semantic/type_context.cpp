@@ -169,7 +169,7 @@ const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::
     return heapAlloc;
 }
 
-const SemanticType* TypeContext::getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes) {
+const SemanticType* TypeContext::getAnonymousAggregate(TypeList&& fieldTypes) {
     Aggregate tmp(std::move(fieldTypes));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
     auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields));
@@ -203,7 +203,7 @@ const SemanticType* TypeContext::getFunction(std::vector<Parameter>&& parameterT
 }
 
 const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType,
-                                                    std::vector<const SemanticType*>&& typeArguments) {
+                                                    TypeList&& typeArguments) {
     GenericInstance tmp(baseType, std::move(typeArguments));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
     auto* heapAlloc = _allocator.emplace<GenericInstance>(baseType, std::move(tmp.typeArguments));

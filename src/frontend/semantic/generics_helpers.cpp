@@ -10,7 +10,7 @@ auto analyzer::visit(ast::AggregateDeclarationStatement*, generic_tag_t) -> stmt
 auto analyzer::visit(ast::FunctionDeclarationStatement*, generic_tag_t) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 const SemanticType* analyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
-                                                          const std::vector<const SemanticType*>& typeArgs) {
+                                                          const TypeList& typeArgs) {
     if (!decl) [[unlikely]] { return nullptr; }
     InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
@@ -32,7 +32,7 @@ const SemanticType* analyzer::getInstantiatedFunctionType(const ast::FunctionDec
 }
 
 const SemanticType* analyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
-                                                           const std::vector<const SemanticType*>& typeArgs) {
+                                                           const TypeList& typeArgs) {
     if (!decl) [[unlikely]] { return nullptr; }
     InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
@@ -67,7 +67,7 @@ const SemanticType* analyzer::resolveGenericType(const ast::Type* type) {
     switch (type->kind) {
         case AggregateType: {
             const auto* aggregateType = static_cast<const ast::AggregateType*>(type);
-            std::vector<const SemanticType*> fields;
+            TypeList fields;
             fields.reserve(aggregateType->fieldTypes.size());
 
             for (const ast::Type* field : aggregateType->fieldTypes) {
@@ -118,7 +118,7 @@ const SemanticType* analyzer::resolveGenericType(const ast::Type* type) {
         }
         case GenericType: {
             const auto* genericType = static_cast<const ast::GenericType*>(type);
-            std::vector<const SemanticType*> resolvedTypes;
+            TypeList resolvedTypes;
             resolvedTypes.reserve(genericType->typeParameters.size());
 
             for (const ast::Type* param : genericType->typeParameters) {

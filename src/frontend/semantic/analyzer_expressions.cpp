@@ -18,7 +18,7 @@ auto analyzer::visit([[maybe_unused]] ast::AggregateInstantiationExpression* exp
 
 auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
     auto result = exprvisit_t::Success;
-    std::vector<const SemanticType*> elementTypes;
+    TypeList elementTypes;
     elementTypes.reserve(expression->elements.size());
 
     for (ast::Expression* element : expression->elements) {
@@ -207,7 +207,7 @@ auto analyzer::visit([[maybe_unused]] ast::FunctionCallExpression* expression) -
 }
 
 auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {
-    std::vector<const SemanticType*> resolvedTypeArguments;
+    TypeList resolvedTypeArguments;
     resolvedTypeArguments.reserve(expression->types.size());
 
     for (ast::Type* type : expression->types) {

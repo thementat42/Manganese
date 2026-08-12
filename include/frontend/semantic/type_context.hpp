@@ -16,7 +16,10 @@
 
 namespace Manganese::semantic {
 
+struct SemanticType;
 class TypeContext;
+
+using TypeList = std::vector<const SemanticType*>;
 
 enum class Kind : std::uint8_t {
     Aggregate,
@@ -67,7 +70,7 @@ struct AggregateField {
     std::string_view name;  // empty for anonymous aggregates
     const SemanticType* type;
 
-    bool operator==(const AggregateField& other) const noexcept = default;
+    friend bool operator==(const AggregateField&, const AggregateField&) noexcept = default;
 };
 
 struct Aggregate final : public SemanticType {
@@ -82,8 +85,7 @@ struct Aggregate final : public SemanticType {
         status(ResolutionStatus::NotStarted) {}
 
     // For anonymous aggregates
-    Aggregate(std::vector<const SemanticType*>&& rawTypes) noexcept :
-        SemanticType(Kind::Aggregate), name(), status(ResolutionStatus::Success) {
+    Aggregate(TypeList&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name(), status(ResolutionStatus::Success) {
         fields.reserve(rawTypes.size());
         for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
     }
@@ -144,7 +146,7 @@ struct Parameter {
     bool isMutable;
     const SemanticType* type;
 
-    bool operator==(const Parameter&) const noexcept = default;
+    friend bool operator==(const Parameter&, const Parameter&) noexcept = default;
 
     inline std::string toString() const {
         std::string result = type->toString();
@@ -168,9 +170,9 @@ struct Function final : public SemanticType {
 
 struct GenericInstance final : public SemanticType {
     const SemanticType* baseType;
-    std::vector<const SemanticType*> typeArguments;
+    TypeList typeArguments;
 
-    GenericInstance(const SemanticType* base, std::vector<const SemanticType*>&& args) noexcept :
+    GenericInstance(const SemanticType* base, TypeList&& args) noexcept :
         SemanticType(Kind::Generic), baseType(base), typeArguments(std::move(args)) {}
 
     ~GenericInstance() override = default;
@@ -229,7 +231,7 @@ class TypeContext {
 
     const SemanticType* getArray(const SemanticType* elementType, std::size_t length);
 
-    const SemanticType* getAnonymousAggregate(std::vector<const SemanticType*>&& fieldTypes);
+    const SemanticType* getAnonymousAggregate(TypeList&& fieldTypes);
 
     const SemanticType* getNamedAggregate(std::string_view name, std::vector<AggregateField>&& fieldTypes);
 
@@ -237,8 +239,7 @@ class TypeContext {
 
     const SemanticType* getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType);
 
-    const SemanticType* getGenericInstance(const SemanticType* baseType,
-                                           std::vector<const SemanticType*>&& typeArguments);
+    const SemanticType* getGenericInstance(const SemanticType* baseType, TypeList&& typeArguments);
 
     const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
 
