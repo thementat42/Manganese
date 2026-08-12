@@ -281,6 +281,31 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
             symbol->status = ResolutionStatus::Failure;
             signatureResult = stmtvisit_t::Failure;
         }
+
+        // Default arguments are checked in the parameter scope so that they can refer to anything already visible at
+        // this point
+
+        if (param.defaultValue) {
+            visit(param.defaultValue);
+
+            const SemanticType* defaultType = param.defaultValue->semanticType;
+
+            if (!defaultType) {
+                logError(statement, "Unable to determine type of default value for parameter '{}' in function '{}'",
+                         param.name, statement->name);
+
+                symbol->status = ResolutionStatus::Failure;
+                signatureResult = stmtvisit_t::Failure;
+            } else if (resolvedParamType && !areTypesCompatible(resolvedParamType, defaultType)) {
+                logError(statement,
+                         "Default value for parameter '{}' in function '{}' has type '{}', "
+                         "but '{}' was expected",
+                         param.name, statement->name, defaultType->toString(), resolvedParamType->toString());
+
+                symbol->status = ResolutionStatus::Failure;
+                signatureResult = stmtvisit_t::Failure;
+            }
+        }
     }
 
     context.currentFunctionReturnType = resolvedReturnType;

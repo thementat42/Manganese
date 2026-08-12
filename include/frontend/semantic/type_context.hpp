@@ -144,12 +144,14 @@ struct Enum final : public SemanticType {
 
 struct Parameter {
     bool isMutable;
+    bool isVariadic;
     const SemanticType* type;
 
     friend bool operator==(const Parameter&, const Parameter&) noexcept = default;
 
     inline std::string toString() const {
         std::string result = type->toString();
+        if (isVariadic) { result += "..."; }
         if (isMutable) { result = "mut " + result; }
         return result;
     }

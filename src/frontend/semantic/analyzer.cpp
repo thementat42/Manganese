@@ -230,6 +230,14 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
 
                     return {.result = Compatible_t::Error, .message = conversionError + error};
                 }
+                if (funcFromParam.isVariadic != funcToParam.isVariadic) {
+                    const std::string error
+                        = std::format(" (parameter in position {} is {} in {} but {} in {})", i,
+                                      (funcFromParam.isVariadic ? "variadic" : "non-variadic"), funcFrom->toString(),
+                                      (funcToParam.isVariadic ? "variadic" : "non-variadic"), funcTo->toString());
+
+                    return {.result = Compatible_t::Error, .message = conversionError + error};
+                }
             }
             return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
         } break;
