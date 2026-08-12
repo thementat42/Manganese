@@ -8,6 +8,9 @@
 #include <utils/type_names.hpp>
 #include <vector>
 
+#include "frontend/ast/ast_types.hpp"
+
+
 namespace Manganese::parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
@@ -87,22 +90,47 @@ ast::Type* Parser::parseFunctionType() {
     DISCARD(consumeToken());  // consume the 'func' token
 
     expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
+
     std::vector<ast::FunctionParameterType> parameterTypes;
+    bool seenVariadic = false;
+
     while (!done()) {
-        if (peekTokenType() == TokenType::RightParen) {
-            break;  // Done with parameter types
-        }
+        if (peekTokenType() == TokenType::RightParen) { break; }
+
         bool isMutable = false;
         if (peekTokenType() == TokenType::Mut) {
             isMutable = true;
             DISCARD(consumeToken());
         }
-        parameterTypes.emplace_back(isMutable, parseType(Precedence::Default));
+
+        ast::Type* parameterType = parseType(Precedence::Default);
+
+        bool isVariadic = false;
+        if (peekTokenType() == TokenType::Ellipsis) {
+            DISCARD(consumeToken());
+            isVariadic = true;
+
+            if (seenVariadic) {
+                logError(peekToken().getLine(), peekToken().getColumn(),
+                         "A function type cannot have more than one variadic parameter");
+            }
+
+            seenVariadic = true;
+        }
+
+        parameterTypes.emplace_back(
+            ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType});
+
+        if (isVariadic && peekTokenType() != TokenType::RightParen) {
+            logError(peekToken().getLine(), peekToken().getColumn(), "A variadic parameter must be the last parameter");
+            // Let normal comma handling recover
+        }
 
         if (peekTokenType() != TokenType::RightParen) {
             expectToken(TokenType::Comma, "Expected ',' to separate parameter types or ')' to end parameter list");
         }
     }
+
     expectToken(TokenType::RightParen, "Expected ')' to end parameter type list");
 
     ast::Type* returnType = nullptr;
