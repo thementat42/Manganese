@@ -1,11 +1,12 @@
 aggregate
 alias
+alignof
 as
+blueprint
 bool
 break
 case
 char
-const
 continue
 default
 do
@@ -13,14 +14,13 @@ elif
 else
 enum
 false
-float
 float32
 float64
 for
 func
 if
 import
-int
+int128
 int16
 int32
 int64
@@ -28,20 +28,18 @@ int8
 lambda
 let
 module
+mut
 private
 ptr
 public
 return
+sizeof
+string
 switch
 true
-typeof
-uint
-uint8
+typeof uint128
 uint16
 uint32
 uint64
+uint8
 while
-
--- Contextual --
-main
-    always interpreted as the entry point of the program
