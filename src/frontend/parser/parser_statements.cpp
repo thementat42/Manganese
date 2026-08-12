@@ -13,7 +13,6 @@
 
 #include "frontend/lexer/token.hpp"
 
-
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -222,7 +221,6 @@ ast::Statement* Parser::parseForLoopStatement() {
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
     // TODO: Handle function attributes
-    // TODO: Handle function variadic parameters
     DISCARD(consumeToken());
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
     std::vector<ast::FunctionParameter> params;
@@ -230,6 +228,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     ast::Type* returnType = nullptr;
     ast::Block body;
     bool hasDefaultParameter = false;
+    bool hasVariadicParameter = false;
 
     if (peekTokenType() == TokenType::LeftSquare) {
         // Generics
@@ -263,10 +262,23 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     while (!done()) {
         if (peekTokenType() == TokenType::RightParen) { break; }
         bool isMutable = false;
+        bool isVariadic = false;
         ast::Expression* defaultValue = nullptr;
 
         Token t = expectToken(TokenType::Identifier, "Expected a variable name");
         std::string paramName = t.getLexeme();
+        if (peekTokenType() == TokenType::Ellipsis) {
+            DISCARD(consumeToken());
+            if (hasVariadicParameter) {
+                logError(t.getLine(), t.getColumn(), "Only one variadic parameter is allowed in function '{}'", name);
+            } else {
+                isVariadic = true;
+                hasVariadicParameter = true;
+            }
+        } else if (hasVariadicParameter) {
+            logError(t.getLine(), t.getColumn(), "Parameter '{}' cannot follow a variadic parameter", paramName);
+        }
+
         expectToken(TokenType::Colon);
         if (peekTokenType() == TokenType::Mut) {
             DISCARD(consumeToken());
@@ -279,6 +291,11 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
 
             hasDefaultParameter = true;
             defaultValue = parseExpression(Precedence::Default);
+
+            if (isVariadic) {
+                logError(t.getLine(), t.getColumn(), "Variadic parameter '{}' cannot have a default value", paramName);
+            }
+
         } else if (hasDefaultParameter) {
             logError(t.getLine(), t.getColumn(), "Non-default parameter '{}' cannot follow a default parameter",
                      paramName);
@@ -291,11 +308,12 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
                      name, duplicate->line, duplicate->column);
         } else {
             params.push_back(ast::FunctionParameter{.name = paramName,
-                              .type = param_type,
-                              .isMutable = isMutable,
-                              .defaultValue = defaultValue,
-                              .line = t.getLine(),
-                              .column = t.getColumn()});
+                                                    .type = param_type,
+                                                    .isMutable = isMutable,
+                                                    .isVariadic = isVariadic,
+                                                    .defaultValue = defaultValue,
+                                                    .line = t.getLine(),
+                                                    .column = t.getColumn()});
         }
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,

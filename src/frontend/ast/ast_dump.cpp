@@ -174,6 +174,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
         os << ind.next(2) << "{\n";
         os << ind.next(3) << "name: " << param.name << "\n";
         os << ind.next(3) << "isMutable: " << (param.isMutable ? "true" : "false") << "\n";
+        os << ind.next(3) << "isVariadic: " << (param.isVariadic ? "true" : "false") << "\n";
         os << ind.next(3) << "type: \n";
         param.type->dump(os, ind.next(4));
 
