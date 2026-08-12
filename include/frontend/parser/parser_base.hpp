@@ -55,12 +55,6 @@ class Parser {
         initializeTypeLookups();
     }
 
-    // Avoid file ownership issues
-    Parser(const Parser&) = delete;
-    Parser(Parser&&) = delete;
-    Parser& operator=(const Parser&) = delete;
-    Parser& operator=(Parser&&) = delete;
-
     ~Parser() noexcept = default;
 
     ParsedFile parse();
@@ -73,14 +67,15 @@ class Parser {
     using ledHandler_types_t = ast::Type* (Parser::*)(ast::Type*, Precedence);
 
     //~ Lookups
-    static inline std::array<statementHandler_t, static_cast<std::size_t>(TokenType::_tokenCount)> statementLookup{};
-    static inline std::array<nudHandler_t, static_cast<std::size_t>(TokenType::_tokenCount)> nudLookup{};
-    static inline std::array<ledHandler_t, static_cast<std::size_t>(TokenType::_tokenCount)> ledLookup{};
-    static inline std::array<Operator, static_cast<std::size_t>(TokenType::_tokenCount)> operatorPrecedenceMap{};
+    constexpr static inline auto _lookupSize = static_cast<std::size_t>(TokenType::_tokenCount);
+    static inline std::array<statementHandler_t, _lookupSize> statementLookup{};
+    static inline std::array<nudHandler_t, _lookupSize> nudLookup{};
+    static inline std::array<ledHandler_t, _lookupSize> ledLookup{};
+    static inline std::array<Operator, _lookupSize> operatorPrecedenceMap{};
 
-    static inline std::array<nudHandler_types_t, static_cast<std::size_t>(TokenType::_tokenCount)> nudLookup_types{};
-    static inline std::array<ledHandler_types_t, static_cast<std::size_t>(TokenType::_tokenCount)> ledLookup_types{};
-    static inline std::array<Operator, static_cast<std::size_t>(TokenType::_tokenCount)> operatorPrecedenceMap_type{};
+    static inline std::array<nudHandler_types_t, _lookupSize> nudLookup_types{};
+    static inline std::array<ledHandler_types_t, _lookupSize> ledLookup_types{};
+    static inline std::array<Operator, _lookupSize> operatorPrecedenceMap_type{};
 
     //~ Parsing functions
 
