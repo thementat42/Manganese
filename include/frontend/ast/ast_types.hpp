@@ -19,9 +19,7 @@ enum class TypeKind : std::uint8_t {
 #undef TYPE
 };
 
-/**
- * e.g. aggregate {int, float}
- */
+
 struct AggregateType final : public Type {
     std::vector<Type*> fieldTypes;
 
@@ -30,9 +28,6 @@ struct AggregateType final : public Type {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * e.g. int[], float[][], etc.
- */
 struct ArrayType final : public Type {
     Type* elementType;
     Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
@@ -46,13 +41,8 @@ struct ArrayType final : public Type {
 struct FunctionParameterType {
     bool isMutable;
     Type* type;
-
-    FunctionParameterType(bool _isMutable, Type* _type) noexcept : isMutable(_isMutable), type(_type) {}
 };
 
-/**
- * e.g. func(int, int) -> bool
- */
 struct FunctionType final : public Type {
     std::vector<FunctionParameterType> parameterTypes;
     Type* returnType;
@@ -64,9 +54,7 @@ struct FunctionType final : public Type {
 };
 
 /**
- * @brief Represents the application of generic arguments to a base type.
- * e.g. some_function@[T, U](args)
- * It does not represent the generic type itself
+ * represents the application of generic arguments to a base type, not represent the generic type itself
  */
 struct GenericType final : public Type {
     Type* baseType;  // some_function in `some_function@[T,U]`
@@ -77,9 +65,6 @@ struct GenericType final : public Type {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * ptr + any type
- */
 struct PointerType final : public Type {
     Type* baseType;
     bool isMutable;
@@ -90,9 +75,6 @@ struct PointerType final : public Type {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * e.g. foo::bar
- */
 struct ScopedType final : public Type {
     Type* qualifier;
     Type* baseType;
@@ -103,9 +85,6 @@ struct ScopedType final : public Type {
     MN_AST_STANDARD_INTERFACE
 };
 
-/**
- * e.g. T, int, etc.
- */
 struct SymbolType final : public Type {
     std::string name;
 

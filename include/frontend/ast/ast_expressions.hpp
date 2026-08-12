@@ -30,9 +30,7 @@ struct AggregateInstantiationField {
     std::size_t line, column;
 };
 
-/**
- * @brief e.g. `Point3D{ x = 1, y = 2, z = 3 }`
- */
+
 struct AggregateInstantiationExpression final : public Expression {
     Expression* base;
     std::vector<AggregateInstantiationField> fields;
@@ -43,9 +41,7 @@ struct AggregateInstantiationExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * @brief represents a sequence of elements of different types
- */
+
 struct AggregateLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
 
@@ -65,9 +61,7 @@ struct AlignofExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE
 };
 
-/**
- * @brief e.g. [1, 2, 3]
- */
+
 struct ArrayLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
 
@@ -77,9 +71,7 @@ struct ArrayLiteralExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * e.g. `foo = bar`, `baz *= 1`
- */
+
 struct AssignmentExpression final : public Expression {
     Expression* assignee;  // The thing being assigned to (foo in foo = bar)
     Expression* value;  // The value being assigned (bar in foo = bar)
@@ -91,9 +83,7 @@ struct AssignmentExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * @brief e.g. `a + b`, `x * y`
- */
+
 struct BinaryExpression final : public Expression {
     Expression* left;
     Expression* right;
@@ -107,9 +97,6 @@ struct BinaryExpression final : public Expression {
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 };
 
-/**
- * @brief e.g. `true`, `false`
- */
 struct BoolLiteralExpression final : public Expression {
     const bool value;
 
@@ -121,9 +108,6 @@ struct BoolLiteralExpression final : public Expression {
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };
 
-/**
- * @brief e.g. 'a', '\u1234', '\n'
- */
 struct CharLiteralExpression final : public Expression {
     const char32_t value;
 
@@ -137,9 +121,6 @@ struct CharLiteralExpression final : public Expression {
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };
 
-/**
- * @brief e.g. `foo()`, `bar(1, 2, 3)`
- */
 struct FunctionCallExpression final : public Expression {
     Expression* callee;
     std::vector<Expression*> arguments;
@@ -163,9 +144,6 @@ struct GenericExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * @brief e.g. `foo`, `bar`
- */
 struct IdentifierExpression final : public Expression {
     const std::string value;
 
@@ -175,9 +153,6 @@ struct IdentifierExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * @brief e.g. `foo[0]`, `bar[1 + 2]`
- */
 struct IndexExpression final : public Expression {
     Expression* variable;
     Expression* index;
@@ -188,9 +163,6 @@ struct IndexExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * @brief e.g. `foo.bar`
- */
 struct MemberAccessExpression final : public Expression {
     Expression* object;
     const std::string property;
@@ -201,9 +173,6 @@ struct MemberAccessExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
-/**
- * @brief e.g. `42`, `3.14`, `-1`
- */
 struct NumberLiteralExpression final : public Expression {
     const mnstl::number_t value;
 
@@ -215,9 +184,6 @@ struct NumberLiteralExpression final : public Expression {
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };
 
-/**
- * @brief e.g. `foo++`, `bar--`
- */
 struct PostfixExpression final : public Expression {
     Expression* left;
     lexer::TokenType op;
@@ -229,9 +195,6 @@ struct PostfixExpression final : public Expression {
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 };
 
-/**
- * @brief e.g. `++foo`, `--bar`
- */
 struct PrefixExpression final : public Expression {
     lexer::TokenType op;
     Expression* right;
@@ -244,9 +207,7 @@ struct PrefixExpression final : public Expression {
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 };
 
-/**
- * @brief e.g. `Module::Element`
- */
+
 struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
     Expression* element;
@@ -266,9 +227,6 @@ struct SizeofExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE
 };
 
-/**
- * @brief e.g. `"Hello, World!"`, `"Line 1\nLine 2"`
- */
 struct StringLiteralExpression final : public Expression {
     const std::string value;
 
@@ -282,9 +240,6 @@ struct StringLiteralExpression final : public Expression {
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };
 
-/**
- * @brief e.g. `foo as Bar`
- */
 struct TypeCastExpression final : public Expression {
     Expression* originalValue;
     Type* targetType;

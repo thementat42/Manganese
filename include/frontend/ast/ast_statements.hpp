@@ -92,7 +92,7 @@ struct EnumDeclarationStatement final : public Statement {
 };
 
 /**
- * @brief Wrapper struct to final convert an expression into a statement
+ * Wrapper struct to final convert an expression into a statement
  */
 struct ExpressionStatement final : public Statement {
     Expression* expression;
@@ -151,8 +151,6 @@ struct FunctionDeclarationStatement final : public Statement {
 struct ElifClause {
     Expression* condition;
     Block body;
-
-    ElifClause(Expression* _condition, Block&& _body) noexcept : condition(_condition), body(std::move(_body)) {}
 };
 
 struct IfStatement final : public Statement {
