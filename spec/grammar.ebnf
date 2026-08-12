@@ -34,7 +34,7 @@ literal = int_literal |
           array_literal;
 
 int_literal = ("-" | "+")? (decimal_int | hex_int | octal_int | binary_int) int_suffix?;
-float_literal = ("-" | "+")? (decimal_float | hex_float) float_suffix?;
+float_literal = ("-" | "+")? (decimal_float) float_suffix?;
 
 char_literal = "'" [^'] "'";
 
@@ -58,8 +58,6 @@ octal_int = "0o" octal_digit+;
 binary_int = "0b" ("0" | "1")+;
 
 decimal_float = digit+ "." digit* ("e" ("+" | "-")? digit+)?;
-
-hex_float = "0x" hex_digit+ "." hex_digit* "p" ("-" | "+")? decimal_int
 
 int_suffix = ("u" | "U") (("l" | "L") | ("ll" | "LL"))? |
               (("l" | "L") | ("ll" | "LL")) ("u" | "U")?;
@@ -145,8 +143,14 @@ alias_statement = "alias" identifier "=" type ";"";
 
 #* Functions
 function_decl = access_modifer? "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
-generic_parameters = "[" identifier ("," identifier)* "]";
-parameter_list = (variable_name "mut"? ":" (type_qualifiers? type)? ("=" literal)? ",")+;
+
+parameter_list = parameter ("," parameter)*;
+parameter = variable_name variadic_parameter? ":" "mut"? type default_parameter?;
+variadic_parameter = "...";
+default_parameter = "=" expression;
+
+# at most one parameter can be variadic and it must be the last
+# once a parameter has a default, all subsequent parameters must have defaults
 
 lambda = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";  #! TODO: Rework
 
