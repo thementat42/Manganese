@@ -335,7 +335,7 @@ static bool testInvalidStringLiterals() {
 
 static bool testOperators() {
     std::vector<Token> tokens = tokensFromString(
-        "+ - * / // % ++ -- += -= *= /= //= %= == != && || ! & | ~ ^ &= |= ~= ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
+        "+ - * / // % ++ -- += -= *= /= //= %= == != && || ! & | ~ ^ &= |= ... ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
 
     printAllTokens(tokens);
     if (tokens.size() != 42) {
@@ -356,7 +356,7 @@ static bool testOperators() {
         && checkToken(tokens[19], TokenType::BitAnd, "&") && checkToken(tokens[20], TokenType::BitOr, "|")
         && checkToken(tokens[21], TokenType::BitNot, "~") && checkToken(tokens[22], TokenType::BitXor, "^")
         && checkToken(tokens[23], TokenType::BitAndAssign, "&=") && checkToken(tokens[24], TokenType::BitOrAssign, "|=")
-        && checkToken(tokens[25], TokenType::BitNotAssign, "~=")
+        && checkToken(tokens[25], TokenType::Ellipsis, "...")
         && checkToken(tokens[26], TokenType::BitXorAssign, "^=") && checkToken(tokens[27], TokenType::MemberAccess, ".")
         && checkToken(tokens[28], TokenType::Colon, ":") && checkToken(tokens[29], TokenType::ScopeResolution, "::")
         && checkToken(tokens[30], TokenType::Assignment, "=") && checkToken(tokens[31], TokenType::Arrow, "->")

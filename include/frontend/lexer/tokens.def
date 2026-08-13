@@ -130,7 +130,6 @@ OPERATOR(BitRShift, ">>")
 
 OPERATOR(BitAndAssign, "&=")
 OPERATOR(BitOrAssign, "|=")
-OPERATOR(BitNotAssign, "~=")
 OPERATOR(BitXorAssign, "^=")
 OPERATOR(BitLShiftAssign, "<<=")
 OPERATOR(BitRShiftAssign, ">>=")

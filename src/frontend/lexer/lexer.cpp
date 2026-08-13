@@ -344,12 +344,7 @@ Result Lexer::tokenizeSymbol() {
             break;
         }
         case '~': {
-            if (next == '=') {
-                lexeme += next;
-                type = TokenType::BitNotAssign;
-            } else {
-                type = TokenType::BitNot;
-            }
+            type = TokenType::BitNot;
             break;
         }
         case '=': {

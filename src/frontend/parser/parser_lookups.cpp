@@ -66,7 +66,6 @@ void Parser::initializeLookups() noexcept {
     registerLedHandler_binary(Assignment, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(BitAndAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(BitLShiftAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
-    registerLedHandler_binary(BitNotAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(BitOrAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(BitRShiftAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
     registerLedHandler_binary(BitXorAssign, Precedence::Assignment, &Parser::parseAssignmentExpression);
