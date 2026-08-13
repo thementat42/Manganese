@@ -37,7 +37,8 @@ sizeof
 string
 switch
 true
-typeof uint128
+typeof
+uint128
 uint16
 uint32
 uint64
