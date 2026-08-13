@@ -3,164 +3,368 @@
 # * means 0 or more times
 # + means one or more times
 # | indicates an alternative
-# ; ends a statement
 # () group statements
 # ? means optional
+# [...] means a character class (regex-esque)
+# [^...] means a negated character class (regex-esque)
+# {n} means exactly n repetitions
 
-## Formal Grammar
-#* Basics
-single_line_comment = "#" [^\n]*;
-multi_line_comment = "/*" [^*]* ("*" [^/])* "*/";
+#~ Basics
 
-letter = "A" | "B" | "C" | "D" | "E" | "F" | "G"
-       | "H" | "I" | "J" | "K" | "L" | "M" | "N"
-       | "O" | "P" | "Q" | "R" | "S" | "T" | "U"
-       | "V" | "W" | "X" | "Y" | "Z" | "a" | "b"
-       | "c" | "d" | "e" | "f" | "g" | "h" | "i"
-       | "j" | "k" | "l" | "m" | "n" | "o" | "p"
-       | "q" | "r" | "s" | "t" | "u" | "v" | "w"
-       | "x" | "y" | "z" ;
+translation_unit =
+    module_statement?
+    import_statement*
+    statement*
 
-digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
-octal_digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" ;
-hex_digit = digit | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b"
-       | "c" | "d" | "e" | "f";
+single_line_comment = "#" [^\n]*
+multi_line_comment = "/*" ([^*] | "*" [^/] | multi_line_comment)* "*/"
 
-literal = int_literal |
-          float_literal |
-          char_literal |
-          string_literal |
-          bool_literal |
-          array_literal;
+letter = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 
+         'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 
+         'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 
+         'V' | 'W' | 'X' | 'Y' | 'Z' | 'a' | 'b' | 
+         'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 
+         'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 
+         'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 
+         'x' | 'y' | 'z'
 
-int_literal = ("-" | "+")? (decimal_int | hex_int | octal_int | binary_int) int_suffix?;
-float_literal = ("-" | "+")? (decimal_float) float_suffix?;
+binary_digit = '0' | '1'
+octal_digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7'
+decimal_digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' 
+hexadecimal_digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 
+                    'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f'
 
-char_literal = "'" [^'] "'";
+binary_integer_literal = "0b" binary_digit+
+octal_integer_literal = "0o" octal_digit+
+decimal_integer_literal = decimal_digit+
+hexadecimal_integer_literal = "0x" hexadecimal_digit+
 
-string_literal = '"' (unescaped_char | escape_seq)* '"';
-raw_string_literal = '`' unescaped_char* '`';
+integer_suffix = "i8" | "i16" | "i32" | "i64" | "i128" | "u8" | "u16" | "u32" | "u64" | "u128" | 
+                 "I8" | "I16" | "I32" | "I64" | "I128" | "U8" | "U16" | "U32" | "U64" | "U128"
 
-unescaped_char = [^"\];
+floating_point_suffix = "f32" | "f64" | "F32" | "F64"
 
-escape_seq = "\\" ("n" | "t" | "\\" | "\"" | "u" hex_digit{4} | "a" | "b" | "x");
+exponent = ("e" | "E") ("+" | "-")? decimal_digit+
 
-bool_literal = "true" | "false";
+integer_literal = (binary_integer_literal | octal_integer_literal | decimal_integer_literal | hexadecimal_integer_literal) integer_suffix?
 
-array_literal = "["expression ("," expression)*"]"
+floating_point_literal = decimal_digit+ "." decimal_digit* exponent? floating_point_suffix?
 
-decimal_int = digit+;
+boolean_literal = "true" | "false"
 
-hex_int = "0x" hex_digit+;
+unicode_escape_sequence = ("u" | "U") (hexadecimal_digit{4} | hexadecimal_digit{8})
 
-octal_int = "0o" octal_digit+;
+escape_sequence =
+    "\\" (
+        "'"
+      | '"'
+      | "\\"
+      | "a"
+      | "b"
+      | "f"
+      | "n"
+      | "r"
+      | "t"
+      | "v"
+      | "0"
+      | unicode_escape_sequence
+    )
 
-binary_int = "0b" ("0" | "1")+;
+array_literal = ("[" expression ("," expression)* "]") | ("[" "]")
 
-decimal_float = digit+ "." digit* ("e" ("+" | "-")? digit+)?;
+identifier = (letter | "_") (letter | decimal_digit | "_")*
 
-int_suffix = ("u" | "U") (("l" | "L") | ("ll" | "LL"))? |
-              (("l" | "L") | ("ll" | "LL")) ("u" | "U")?;
+whitespace = " " | "\t" | "\r" | "\n"
 
-float_suffix = "f" | "F" | "d" | "D";
+character = [^'\\\n\r] | escape_sequence
+string_character = [^"\\\n\r] | escape_sequence
 
-#* Operators
-arithmetic_op = "+" | "-" | "*" | "/" | "//" | "%";
-comparison_op = "<" | "<=" | ">" | ">=" | "==" | "!=";
-boolean_op = "&&" | "||" | "!";
-bitwise_op = "&" | "|" | "~" | "^" | "<<" | ">>";
-access_op = "::" | "."  # Scope resolution / member access
-other_op = "as" type | "typeof"
-prefix_unary_op = "++" | "--" | "!" | "~" | "&" | "*";  # & and * are parsed as unary if the previous token is an operator or a left paren
-postfix_unary_op = "++" | "--";
-binary_op = arithmetic_op | comparison_op | boolean_op | bitwise_op;
-binary_op_eq = arithmetic_op | bitwise_op;  # op= syntax (+=, *=, etc)
+character_literal = "'" character "'"
+string_literal = '"' string_character* '"'
 
-#* Variables
-variable_decl = ("let" | "let mut") variable_name (":" access_modifer? type)? ("=" expression)? ";"  # semantically, the expression must match the given type
-access_modifer = "public" | "private"  # default access is private
-type = primitive_type | user_type | pointer_type;
-pointer_type = "ptr" "mut"? type  # recursive: allows for ptr ptr ptr ... x
-primitive_type = int_type | float_type | "char" | "bool";
+access_modifier = "public" | "private"
 
-int_type = ("u"?)"int"(int_width?);  # u makes it unsigned, if no width specified, defaults to 32 bits
-float_type = "float"(float_width?);  # if no width specified, defaults to 32 bits
+#~ Operators
 
-int_width = "8" | "16" | "32" | "64";
-float_width = "32" | "64";
+# lexer uses maximal munch (so >>= becomes >>=, not three separate tokens)
 
-user_type = identifier;
-variable_name = identifier;
-identifier = (letter | "_") (letter | digit | "_")*;  # starts with letter or _, can contain letters, digits or _
+arithmetic_operator = "+" | "-" | "*" | "/" | "//" | "%"
+assignment_operator = "+=" | "-=" | "*=" | "/=" | "//=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
+bitwise_operator = "&" | "|" | "~" | "^" | "<<" | ">>"
+relational_operator = "<" | "<=" | ">" | ">=" | "==" | "!="
+logical_operator = "&&" | "||" | "!"
+postfix_operator = "++" | "--"
+prefix_operator = "++" | "--" | "!" | "-" | "&" | "*"
 
-#* Expressions
-expression = unary_expression |
-             (expression | literal) binary_op (expression | literal) |
-             "(" expression ")" |
-             identifier binary_op_eq (identifier | literal) |
-             function_call | scope_resolution_expression | type_cast_expression;
+binary_operator =
+      arithmetic_operator
+    | "&"
+    | "|"
+    | "^"
+    | "<<"
+    | ">>"
+    | relational_operator
+    | "&&"
+    | "||"
 
-expression_statement = expression ";";
+#~ Punctuators
 
-unary_expression = prefix_unary_op expression | expression postfix_unary_op;
+left_paren = "("
+right_paren = ")"
+left_bracket = "["
+right_bracket = "]"
+left_brace = "{"
+right_brace = "}"
+comma = ","
+semicolon = ";"
+colon = ":"
+at = "@"
+arrow = "->"
+ellipsis = "..."
 
-scope_resolution_expression = identifier"::"(identifier | scope_resolution_expression);
+punctuator = left_paren | right_paren | left_bracket | right_bracket | left_brace | right_brace | comma | semicolon | colon | at | arrow | ellipsis
 
-type_cast_expression = type "as" identifier;
-indexing_expression = identifier"["expression"]"
+#~ Expressions
 
-#* Statements
-block = statement*;
-nested_block = "{" block "}"
+expression =
+      assignment_expression
+    | binary_expression
+    | type_cast_expression
+    | prefix_expression
+    | postfix_expression
+    | function_call_expression
+    | generic_expression
+    | index_expression
+    | member_access_expression
+    | scope_resolution_expression
+    | sizeof_expression
+    | alignof_expression
+    | identifier_expression
+    | number_literal_expression
+    | bool_literal_expression
+    | char_literal_expression
+    | string_literal_expression
+    | array_literal_expression
+    | aggregate_literal_expression
+    | aggregate_instantiation_expression
+    | "(" expression ")"
 
-statement = variable_decl | expression_statement | conditional_statement | switch_statement | return_statement | loop_statement | break_statement | continue_statement | alias_statement;
 
-conditional_statement = "if" "(" expression ")" "{" block "}"
-                        ("else if" "(" expression ")" "{" block "}")*
-                        ("else" "{" block "}")?;
+assignment_expression = expression assignment_operator expression
 
-switch_statement = "switch" "(" expression ")"
-                   "{" ("case" expression(,expression)* ":" block)* "}"
-                   ("default" ":" block)? ;
+binary_expression = expression binary_operator expression
 
-return_statement = "return" expression ";";
+bool_literal_expression = boolean_literal
 
-loop_statement = for_loop | while_loop | do_while_loop | "break;" | "continue;";
+char_literal_expression = character_literal
 
-for_loop = "for" "(" (variable_decl | expression)* ";" expression? ";" expression* ")" "{" block "}";
+type_cast_expression = expression "as" type
 
-while_loop = "while" "(" expression ")" "{" block "}";
+prefix_expression = prefix_operator expression
 
-do_while_loop = "do" "{" block "}" "while" "(" expression ")" ";";
+postfix_expression = expression postfix_operator
 
-import_statement = "import" identifier("::"identifier)* ("as" identifier)? ";";
-module_statement = "module" identifier ";";
+function_call_expression = expression "(" (expression ("," expression)*)? ")"
 
-break_statement = "break" ";";
-continue_statement = "continue" ";";
+generic_expression = expression "@[" type ("," type)* "]"
 
-alias_statement = "alias" identifier "=" type ";""; 
+index_expression = expression "[" expression "]"
 
-#* Functions
-function_decl = access_modifer? "func" identifier generic_parameters? "(" parameter_list? ")" ("->" type)? "{" block "}";
+member_access_expression = expression "." identifier
 
-parameter_list = parameter ("," parameter)*;
-parameter = variable_name variadic_parameter? ":" "mut"? type default_parameter?;
-variadic_parameter = "...";
-default_parameter = "=" expression;
+number_literal_expression = integer_literal | floating_point_literal
 
-# at most one parameter can be variadic and it must be the last
-# once a parameter has a default, all subsequent parameters must have defaults
+scope_resolution_expression = expression "::" identifier
 
-lambda = "lambda" "(" type identifier ("," type identifier)* ")" "->" type ":" expression ";";  #! TODO: Rework
+sizeof_expression = "sizeof" "(" type ")"
 
-function_call = expression ("@" "["type ("," type)* "]")? "(" ( expression ("," expression)*)? ")";
+alignof_expression = "alignof" "(" type ")"
 
-#* Data Encapsulation
-aggregate_decl = ("public"|"private")? "aggregate" identifier generic_parameters? "{" aggregate_member_decl+ "}";
+identifier_expression = identifier
 
-aggregate_member_decl = variable_name ":" type_qualifiers? type ";";
+string_literal_expression = string_literal
 
-enum_decl = ("public"|"private")? "enum" identifier (":" primitive_type)? "{" identifier ("=" int_literal)? ("," identifier ("=" int_literal)?)* "}";
+array_literal_expression = array_literal
 
-aggregate_instantiation = identifier("@" "["type ("," type)*"]") "{" (identifier "=" expression) ("," identifier "=" expression)* "}";
+aggregate_literal_expression =
+    "aggregate" "{"
+        (expression ("," expression)*)?
+    "}"
+
+aggregate_instantiation_expression =
+    identifier ("@[" type ("," type)* "]")?
+    "{"
+        (identifier "=" expression ("," identifier "=" expression)*)?
+    "}"
+
+#~ Statements
+
+statement =
+      declaration_statement
+    | control_flow_statement
+    | expression_statement
+    | nested_block_statement
+    | empty_statement
+
+##~ Declarations
+
+declaration_statement =
+      aggregate_declaration_statement
+    | alias_statement
+    | enum_declaration_statement
+    | function_declaration_statement
+    | variable_declaration_statement
+
+
+aggregate_declaration_statement =
+    access_modifier? "aggregate" identifier generic_parameter_list? "{"
+        aggregate_member*
+    "}"
+
+aggregate_member = identifier ":" type ";"
+
+alias_statement = access_modifier? "alias" identifier "=" type ";"
+
+enum_member = identifier ("=" expression)?
+
+enum_declaration_statement =
+    access_modifier? "enum" identifier ":" type "{"
+        enum_member ("," enum_member)* ","?
+    "}"
+
+function_declaration_statement =
+    access_modifier? "func" identifier generic_parameter_list?
+    "(" parameter_list? ")" ("->" type)?
+    block
+
+parameter_list =
+      parameter ("," parameter)* ("," variadic_parameter)?
+    | variadic_parameter
+
+parameter = identifier ":" type ("=" expression)?
+
+variadic_parameter = identifier "..." ":" type
+
+# semantically, variable declaration needs a type or an expression
+
+variable_declaration = "let" identifier (":" "mut"? type) ("=" expression)?
+
+variable_declaration_statement = variable_declaration ";"
+
+generic_parameter_list =
+    generic_parameter ("," generic_parameter)*
+
+generic_parameter = identifier
+
+#~ Control Flow
+
+control_flow_statement =
+      break_statement
+    | continue_statement
+    | for_loop_statement
+    | if_statement
+    | return_statement
+    | switch_statement
+    | while_loop_statement
+
+break_statement = "break" ";"
+continue_statement = "continue" ";"
+
+for_loop_statement =
+    "for" "("
+        for_initializer?
+        ";"
+        expression?
+        ";"
+        expression?
+    ")"
+    block
+
+for_initializer =
+      variable_declaration
+    | expression
+
+if_statement =
+    "if" "(" expression ")" block
+    ("elif" "(" expression ")" block)*
+    ("else" block)?
+
+return_statement = "return" expression? ";"
+
+switch_statement =
+    "switch" "(" expression ")" "{"
+        switch_case*
+        switch_default?
+    "}"
+
+switch_case = "case" expression ":" statement*
+
+switch_default = "default" ":" statement*
+
+while_loop_statement =
+      "while" "(" expression ")" block
+    | "do" block "while" "(" expression ")" ";"
+
+#~ Other Statements
+
+expression_statement = expression ";"
+
+nested_block_statement = block
+
+block = "{" statement* "}"
+
+empty_statement = ";"
+
+#~ Types
+
+type =
+      aggregate_type
+    | array_type
+    | function_type
+    | generic_type
+    | pointer_type
+    | scoped_type
+    | symbol_type
+    | typeof_type
+
+
+aggregate_type =
+    "aggregate" "{"
+        (type ("," type)*)?
+    "}"
+
+array_type = type "[" expression? "]"
+
+function_type = "func" "(" function_type_parameter_list? ")" ("->" type)?
+
+function_type_parameter_list =
+    function_type_parameter
+    ("," function_type_parameter)*
+    ("," function_type_variadic_parameter)?
+
+function_type_parameter = type
+
+function_type_variadic_parameter = type "..."
+
+generic_type = generic_base "@[" type ("," type)* "]"
+
+generic_base = symbol_type | scoped_type
+
+
+pointer_type = "mut"? "ptr" type
+
+scoped_type = identifier ("::" identifier)+
+
+symbol_type = identifier
+
+typeof_type = "typeof" "(" expression ")"
+
+#~ Modules and Imports
+
+import_statement =
+    "import"
+    identifier ("::" identifier)*
+    ("as" identifier)?
+    ";"
+
+module_statement = "module" identifier ";"
