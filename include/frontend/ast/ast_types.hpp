@@ -19,7 +19,6 @@ enum class TypeKind : std::uint8_t {
 #undef TYPE
 };
 
-
 struct AggregateType final : public Type {
     std::vector<Type*> fieldTypes;
 

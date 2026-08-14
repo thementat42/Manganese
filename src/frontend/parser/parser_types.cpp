@@ -8,9 +8,6 @@
 #include <utils/type_names.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_types.hpp"
-
-
 namespace Manganese::parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
