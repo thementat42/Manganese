@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <core.hpp>
 #include <cstddef>
 #include <format>
@@ -106,15 +105,9 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
         const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
         ast::Expression* value = parseExpression(static_cast<Precedence>(precedence));
-        if (auto duplicate = std::ranges::find(fields, propertyName, &ast::AggregateInstantiationField::name);
-            duplicate != fields.end()) {
-            logError(value->getLine(), value->getColumn(),
-                     "Duplicate field '{}' in aggregate instantiation (previously declared at line {}, column {})",
-                     propertyName, duplicate->line, duplicate->column);
-        } else {
-            fields.push_back(
-                {.name = propertyName, .value = value, .line = token.getLine(), .column = token.getColumn()});
-        }
+
+        fields.push_back({.name = propertyName, .value = value, .line = token.getLine(), .column = token.getColumn()});
+
         if (peekTokenType() != lexer::TokenType::RightBrace) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate aggregate fields");
         }
