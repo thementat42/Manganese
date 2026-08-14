@@ -30,7 +30,6 @@ struct AggregateInstantiationField {
     std::size_t line, column;
 };
 
-
 struct AggregateInstantiationExpression final : public Expression {
     Expression* base;
     std::vector<AggregateInstantiationField> fields;
@@ -40,7 +39,6 @@ struct AggregateInstantiationExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 };
-
 
 struct AggregateLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
@@ -61,7 +59,6 @@ struct AlignofExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE
 };
 
-
 struct ArrayLiteralExpression final : public Expression {
     std::vector<Expression*> elements;
 
@@ -70,7 +67,6 @@ struct ArrayLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 };
-
 
 struct AssignmentExpression final : public Expression {
     Expression* assignee;  // The thing being assigned to (foo in foo = bar)
@@ -82,7 +78,6 @@ struct AssignmentExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 };
-
 
 struct BinaryExpression final : public Expression {
     Expression* left;
@@ -206,7 +201,6 @@ struct PrefixExpression final : public Expression {
 
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override;
 };
-
 
 struct ScopeResolutionExpression final : public Expression {
     Expression* scope;

@@ -6,9 +6,6 @@
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/fold_result.hxx>
 
-#include "frontend/semantic/analyzer.hpp"
-
-
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {

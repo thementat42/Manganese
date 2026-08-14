@@ -11,8 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/lexer/token.hpp"
-
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
