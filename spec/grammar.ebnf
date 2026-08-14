@@ -203,6 +203,7 @@ statement =
       declaration_statement
     | control_flow_statement
     | expression_statement
+    | namespace_statement
     | nested_block_statement
     | empty_statement
 
@@ -310,6 +311,8 @@ while_loop_statement =
 expression_statement = expression ";"
 
 nested_block_statement = block
+
+namespace_statement = "namespace" identifier block
 
 block = "{" statement* "}"
 
