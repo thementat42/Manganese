@@ -45,7 +45,7 @@ auto analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
         logError(expression, "Invalid type in alignof expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
-    expression->semanticType = typeContext.getSizeType();
+    expression->semanticType = typeContext.getUSizeType();
     return exprvisit_t::Success;
 }
 
@@ -157,7 +157,7 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
         return result;
     } else if (isBitwiseOp(op)) {
-        if (!isInteger(lhsType->primitiveType) || !isInteger(lhsType->primitiveType)) {
+        if (!lhsType->isInteger() || !rhsType->isInteger()) {
             logError(expression, "Bitwise operators require integer operands, got {} and {}", lhsType->toString(),
                      rhsType->toString());
             result = exprvisit_t::Failure;
@@ -173,7 +173,7 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
         return result;
     } else if (isArithmeticOp(op)) {
-        if (lhsType->isPointer() || rhsType->isPointer()) { return analyzePointerArithmetic(lhsType, rhsType); }
+        if (lhsType->isPointer() || rhsType->isPointer()) { return analyzePointerArithmetic(expression); }
         if (op == lexer::TokenType::Plus && lhsType->primitiveType == ast::PrimitiveType_t::str
             && rhsType->primitiveType == ast::PrimitiveType_t::str) {
             expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
@@ -313,7 +313,7 @@ auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
 
-    if (!isInteger(expression->index->semanticType->primitiveType)) {
+    if (!expression->index->semanticType->isInteger()) {
         logError(expression, "Index value should be an integer, not {}", expression->index->semanticType->toString());
         result = exprvisit_t::Failure;
     }
@@ -389,13 +389,12 @@ auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
-    const ast::PrimitiveType_t primitiveType = expression->left->semanticType->primitiveType;
 
     // set the type here even if the expression is invalid so we don't have a bunch of propagating nulls
     //? should this implicitly promote? (probably not)
-    expression->semanticType = typeContext.getPrimitive(primitiveType);
+    expression->semanticType = typeContext.getPrimitive(expression->left->semanticType->primitiveType);
 
-    if (!isInteger(primitiveType)) {
+    if (!expression->left->semanticType->isInteger()) {
         logError(expression, "operator {} can only be applied to integer types",
                  lexer::tokenTypeToString(expression->op));
         return exprvisit_t::Failure;
@@ -413,14 +412,14 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
 
-    const ast::PrimitiveType_t primitiveType = expression->right->semanticType->primitiveType;
+    const SemanticType* rhsType = expression->right->semanticType;
 
     using enum lexer::TokenType;
     switch (expression->op) {
         case Inc:
         case Dec: {
-            expression->semanticType = typeContext.getPrimitive(primitiveType);
-            if (!isInteger(primitiveType)) {
+            expression->semanticType = typeContext.getPrimitive(rhsType->primitiveType);
+            if (!rhsType->isInteger()) {
                 logError(expression, "operator {} can only be applied to integer types",
                          lexer::tokenTypeToString(expression->op));
                 return exprvisit_t::Failure;
@@ -429,8 +428,8 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         } break;
 
         case BitNot: {
-            expression->semanticType = typeContext.getPrimitive(primitiveType);
-            if (!isInteger(primitiveType)) {
+            expression->semanticType = typeContext.getPrimitive(rhsType->primitiveType);
+            if (!rhsType->isInteger()) {
                 logError(expression, "operator {} can only be applied to integer types",
                          lexer::tokenTypeToString(expression->op));
                 return exprvisit_t::Failure;
@@ -442,12 +441,12 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
             const SemanticType* opType = expression->right->semanticType;
             if (!opType) { return exprvisit_t::Failure; }
-            if (!isNumeric(opType->primitiveType)) {
+            if (!opType->isNumeric()) {
                 logError(expression, "Operator '{}' can only be applied to numeric types (got '{}')",
                          lexer::tokenTypeToString(expression->op), opType->toString());
                 return exprvisit_t::Failure;
             }
-            if (expression->op == UnaryMinus && isUnsignedInteger(opType->primitiveType)) {
+            if (expression->op == UnaryMinus && opType->isUnsignedInteger()) {
                 logWarning(expression, "Applying a '-' to an unsigned integer type  ('{}') causes wrapping",
                            opType->toString());
             }
@@ -487,7 +486,7 @@ auto analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
         logError(expression, "Invalid type in sizeof expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
-    expression->semanticType = typeContext.getSizeType();
+    expression->semanticType = typeContext.getUSizeType();
     return exprvisit_t::Success;
 }
 

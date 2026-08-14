@@ -93,14 +93,13 @@ class analyzer final : public _analyzer_base_t {
 
     Result _collectTypesInStatement(ast::Statement*);
     Result _collectTypesInStatementBody(const ast::Block&);
-    Result collectGlobals();
     Result checkStatements();
 
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
-    Result analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const;
+    Result analyzePointerArithmetic(ast::BinaryExpression* expr) const;
     const SemanticType* resolveGenericType(const ast::Type* type);
 
     template <class... Args>
@@ -163,23 +162,6 @@ class analyzer final : public _analyzer_base_t {
         }
     }
 };
-
-constexpr bool isInteger(ast::PrimitiveType_t t) noexcept {
-    using enum ast::PrimitiveType_t;
-    return mnstl::enum_matches(t, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
-}
-
-constexpr bool isFloat(ast::PrimitiveType_t t) noexcept {
-    using enum ast::PrimitiveType_t;
-    return mnstl::enum_matches(t, f32, f64);
-}
-
-constexpr bool isUnsignedInteger(ast::PrimitiveType_t t) noexcept {
-    using enum ast::PrimitiveType_t;
-    return mnstl::enum_matches(t, u8, u16, u32, u64, u128);
-}
-
-constexpr bool isNumeric(ast::PrimitiveType_t t) noexcept { return isInteger(t) || isFloat(t); }
 
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;

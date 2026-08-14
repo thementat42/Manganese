@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <frontend/ast.hpp>
 #include <mnstl/chunk_allocator.hxx>
+#include <mnstl/enum_matches.hxx>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -50,6 +51,7 @@ struct SemanticType {
 
     constexpr bool isAggregate() const noexcept { return kind == Kind::Aggregate; }
     constexpr bool isArray() const noexcept { return kind == Kind::Array; }
+    constexpr bool isEnum() const noexcept { return kind == Kind::Enum; }
     constexpr bool isFunction() const noexcept { return kind == Kind::Function; }
     constexpr bool isGeneric() const noexcept { return kind == Kind::Generic; }
     constexpr bool isPointer() const noexcept { return kind == Kind::Pointer; }
@@ -57,6 +59,22 @@ struct SemanticType {
     constexpr bool isBoolean() const noexcept {
         return isPrimitive() && primitiveType == ast::PrimitiveType_t::boolean;
     }
+
+    constexpr bool isUnsignedInteger() const noexcept {
+        using enum ast::PrimitiveType_t;
+        return isPrimitive() && mnstl::enum_matches(primitiveType, u8, u16, u32, u64, u128);
+    }
+    constexpr bool isSignedInteger() const noexcept {
+        using enum ast::PrimitiveType_t;
+        return isPrimitive() && mnstl::enum_matches(primitiveType, i8, i16, i32, i64, i128);
+    }
+    constexpr bool isInteger() const noexcept { return isSignedInteger() || isUnsignedInteger(); }
+    constexpr bool isFloat() const noexcept {
+        using enum ast::PrimitiveType_t;
+        return isPrimitive() && mnstl::enum_matches(primitiveType, f32, f64);
+    }
+
+    constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }
 
     virtual std::string toString() const { return std::string(ast::primitiveTypeToString(primitiveType)); }
 
@@ -191,6 +209,21 @@ struct Pointer final : public SemanticType {
     std::string toString() const override;
 };
 
+struct PrimitiveInfo {
+    enum class Category {
+        Int,
+        UInt,
+        Float,
+        Char,
+        Bool,
+        String
+    };
+    Category category;
+    int bitWidth = 0;
+};
+
+PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type);
+
 struct TypeLookup {
     using is_transparent = void;  // enables heterogenous lookup inside std::unordered_set
     using kind_int_t = std::underlying_type_t<Kind>;
@@ -247,7 +280,8 @@ class TypeContext {
 
     const SemanticType* getPrimitive(ast::PrimitiveType_t primitive) const noexcept;
 
-    const SemanticType* getSizeType() const noexcept;
+    const SemanticType* getUSizeType() const noexcept;
+    const SemanticType* getSSizeType() const noexcept;
 };
 
 }  // namespace Manganese::semantic

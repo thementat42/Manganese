@@ -10,6 +10,34 @@
 
 namespace Manganese::semantic {
 
+PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
+    using enum ast::PrimitiveType_t;
+    using Cat = PrimitiveInfo::Category;
+
+    switch (type) {
+        case i8: return {.category = Cat::Int, .bitWidth = 8};
+        case i16: return {.category = Cat::Int, .bitWidth = 16};
+        case i32: return {.category = Cat::Int, .bitWidth = 32};
+        case i64: return {.category = Cat::Int, .bitWidth = 64};
+        case i128: return {.category = Cat::Int, .bitWidth = 128};
+
+        case u8: return {.category = Cat::UInt, .bitWidth = 8};
+        case u16: return {.category = Cat::UInt, .bitWidth = 16};
+        case u32: return {.category = Cat::UInt, .bitWidth = 32};
+        case u64: return {.category = Cat::UInt, .bitWidth = 64};
+        case u128: return {.category = Cat::UInt, .bitWidth = 128};
+
+        case f32: return {.category = Cat::Float, .bitWidth = 32};
+        case f64: return {.category = Cat::Float, .bitWidth = 64};
+
+        case character: return {.category = Cat::Char, .bitWidth = 8};
+        case boolean: return {.category = Cat::Bool, .bitWidth = 1};
+        case str: return {.category = Cat::String, .bitWidth = 0};
+        default: break;
+    }
+    return {Cat::Int, 0};
+}
+
 std::string Aggregate::toString() const {
     std::string result = name.empty() ? "aggregate{" : (std::string(name) + " { ");
     for (std::size_t i = 0; i < fields.size(); ++i) {
@@ -202,8 +230,7 @@ const SemanticType* TypeContext::getFunction(std::vector<Parameter>&& parameterT
     return heapAlloc;
 }
 
-const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType,
-                                                    TypeList&& typeArguments) {
+const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType, TypeList&& typeArguments) {
     GenericInstance tmp(baseType, std::move(typeArguments));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
     auto* heapAlloc = _allocator.emplace<GenericInstance>(baseType, std::move(tmp.typeArguments));
@@ -223,13 +250,25 @@ const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) co
     return &_primitives[static_cast<unsigned>(primitive)];
 }
 
-const SemanticType* TypeContext::getSizeType() const noexcept {
+const SemanticType* TypeContext::getUSizeType() const noexcept {
 #if UINTPTR_MAX == 0xFFFFFFFF
     // 32-bit Host Architecture
     return getPrimitive(ast::PrimitiveType_t::u32);
 #elif UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF
     // 64-bit Host Architecture
     return getPrimitive(ast::PrimitiveType_t::u64);
+#else
+#error "Unsupported pointer width / host architecture"
+#endif
+}
+
+const SemanticType* TypeContext::getSSizeType() const noexcept {
+#if UINTPTR_MAX == 0xFFFFFFFF
+    // 32-bit Host Architecture
+    return getPrimitive(ast::PrimitiveType_t::i32);
+#elif UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF
+    // 64-bit Host Architecture
+    return getPrimitive(ast::PrimitiveType_t::i64);
 #else
 #error "Unsupported pointer width / host architecture"
 #endif

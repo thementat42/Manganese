@@ -2,8 +2,10 @@
 #include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
+#include <frontend/lexer/token.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <mnstl/enum_matches.hxx>
 #include <mnstl/fold_result.hxx>
 #include <string>
 #include <utility>
@@ -18,7 +20,6 @@ constexpr static inline std::uint8_t f64MantissaWidth = 53;
 Result analyzer::analyze() {
     Result isSemanticallyValid = Result::Success;
     if (collectTypes() == Result::Failure) { isSemanticallyValid = Result::Failure; }
-    if (collectGlobals() == Result::Failure) { isSemanticallyValid = Result::Failure; }
     // Don't want errors cascading because of conflicting redeclarations
     if (isSemanticallyValid == Result::Failure) { return isSemanticallyValid; }
 
@@ -27,25 +28,115 @@ Result analyzer::analyze() {
     return isSemanticallyValid;
 }
 
-// Placeholders to satisfy the linker
-// TODO: implement these
-Result analyzer::collectGlobals() { return Result::Success; }
-
 const SemanticType* analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
-    DISCARD(lhs);
-    DISCARD(rhs);
+    if (!lhs || !rhs) { return nullptr; }
+    // direct match, don't need to promote
+    if (lhs == rhs) { return lhs; }
+
+    const PrimitiveInfo lhsInfo = getPrimitiveInfo(lhs->primitiveType);
+    const PrimitiveInfo rhsInfo = getPrimitiveInfo(rhs->primitiveType);
+
+    const bool lhsIsFloat = lhsInfo.category == PrimitiveInfo::Category::Float;
+    const bool rhsIsFloat = rhsInfo.category == PrimitiveInfo::Category::Float;
+
+    const bool lhsIsSignedInteger = (lhsInfo.category == PrimitiveInfo::Category::Int);
+    const bool rhsIsSignedInteger = (rhsInfo.category == PrimitiveInfo::Category::Int);
+    const bool lhsIsUnsignedInteger = (lhsInfo.category == PrimitiveInfo::Category::UInt);
+    const bool rhsIsUnsignedInteger = (rhsInfo.category == PrimitiveInfo::Category::UInt);
+
+    const bool lhsIsInteger = lhsIsSignedInteger || lhsIsUnsignedInteger;
+    const bool rhsIsInteger = rhsIsSignedInteger || rhsIsUnsignedInteger;
+
+    // If both floats, choose the wider one
+    if (lhsIsFloat && rhsIsFloat) { return lhsInfo.bitWidth >= rhsInfo.bitWidth ? lhs : rhs; }
+
+    // if at least one operand is a float, convert to a float
+    if (lhsIsFloat && rhsIsInteger) { return lhs; }
+    if (rhsIsFloat && lhsIsInteger) { return rhs; }
+
+    if (lhsIsInteger && rhsIsInteger) {
+        // Same sign, choose wider
+        if (lhsIsSignedInteger == rhsIsSignedInteger) { return lhsInfo.bitWidth >= rhsInfo.bitWidth ? lhs : rhs; }
+        const SemanticType* signedType = lhsIsSignedInteger ? lhs : rhs;
+        const SemanticType* unsignedType = lhsIsSignedInteger ? rhs : lhs;
+
+        const auto signedInfo = getPrimitiveInfo(signedType->primitiveType);
+        const auto unsignedInfo = getPrimitiveInfo(unsignedType->primitiveType);
+
+        if (signedInfo.bitWidth > unsignedInfo.bitWidth) { return signedType; }
+        return unsignedType;
+    }
     return nullptr;
 }
 
-Result analyzer::analyzePointerArithmetic(const SemanticType* lhs, const SemanticType* rhs) const {
-    DISCARD(lhs);
-    DISCARD(rhs);
-    return Result::Success;
+Result analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
+    const SemanticType* lhsType = expr->left->semanticType;
+    const SemanticType* rhsType = expr->right->semanticType;
+
+    const bool lhsIsPtr = lhsType->isPointer();
+    const bool rhsIsPtr = rhsType->isPointer();
+
+    // Pointer +/- integer
+    if ((lhsIsPtr && rhsType->isInteger()) || (rhsIsPtr && lhsType->isInteger())) {
+        expr->semanticType = lhsIsPtr ? lhsType : rhsType;
+
+        // Reject int - ptr
+        if (expr->op == lexer::TokenType::Minus && !lhsIsPtr) {
+            logError(expr, "Cannot subtract a pointer from an integer");
+            return Result::Failure;
+        }
+
+        if (expr->op != lexer::TokenType::Plus && expr->op != lexer::TokenType::Minus) {
+            logError(expr, "Only + and - are valid for pointer arithmetic, not '{}'",
+                     lexer::tokenTypeToString(expr->op));
+            return Result::Failure;
+        }
+        return Result::Success;
+    }
+
+    // Pointer - Pointer (distance)
+    if (lhsIsPtr && rhsIsPtr) {
+        expr->semanticType = typeContext.getSSizeType();
+        if (expr->op != lexer::TokenType::Minus) {
+            logError(expr, "Only - is valid for arithmetic between two pointers, not {}",
+                     lexer::tokenTypeToString(expr->op));
+            return Result::Failure;
+        }
+        const auto* lhsPtr = static_cast<const Pointer*>(lhsType);
+        const auto* rhsPtr = static_cast<const Pointer*>(rhsType);
+        if (lhsPtr->baseType == rhsPtr->baseType) { return Result::Success; }
+    }
+    return Result::Failure;
 }
+
 auto analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const -> typeCompatibilityResult {
-    DISCARD(lhs);
-    DISCARD(rhs);
-    return {.result = Compatible_t::Valid};
+    if (lhs == rhs) { return {.result = Compatible_t::Valid}; }
+
+    if (lhs->isNumeric() && rhs->isNumeric()) { return {.result = Compatible_t::Valid}; }
+
+    if (lhs->isPointer() && rhs->isPointer()) {
+        const auto* lhsBase = static_cast<const Pointer*>(lhs)->baseType;
+        const auto* rhsBase = static_cast<const Pointer*>(rhs)->baseType;
+
+        if (lhsBase == rhsBase) { return {.result = Compatible_t::Valid}; }
+
+        return {.result = Compatible_t::Error,
+                .message
+                = std::format("Cannot compare distinct pointer types '{}' and '{}'", lhs->toString(), rhs->toString())};
+    }
+
+    if (lhs->isEnum() && rhs->isEnum()) {
+        if (lhs != rhs) {
+            return {.result = Compatible_t::Error,
+                    .message = std::format("Cannot compare distinct enum types '{}' and '{}'", lhs->toString(),
+                                           rhs->toString())};
+        }
+        return {.result = Compatible_t::Valid};
+    }
+
+    return {
+        .result = Compatible_t::Error,
+        .message = std::format("Incompatible types for comparison: '{}' and '{}'", lhs->toString(), rhs->toString())};
 }
 
 Result analyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
@@ -57,49 +148,6 @@ Result analyzer::checkStatements() {  // semantic analysis pass (this can also c
 }
 
 // Type compatibility
-
-namespace {
-struct PrimitiveInfo {
-    enum class Category {
-        Int,
-        UInt,
-        Float,
-        Char,
-        Bool,
-        String
-    };
-    Category category;
-    int bitWidth = 0;
-};
-
-inline PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
-    using enum ast::PrimitiveType_t;
-    using Cat = PrimitiveInfo::Category;
-
-    switch (type) {
-        case i8: return {.category = Cat::Int, .bitWidth = 8};
-        case i16: return {.category = Cat::Int, .bitWidth = 16};
-        case i32: return {.category = Cat::Int, .bitWidth = 32};
-        case i64: return {.category = Cat::Int, .bitWidth = 64};
-        case i128: return {.category = Cat::Int, .bitWidth = 128};
-
-        case u8: return {.category = Cat::UInt, .bitWidth = 8};
-        case u16: return {.category = Cat::UInt, .bitWidth = 16};
-        case u32: return {.category = Cat::UInt, .bitWidth = 32};
-        case u64: return {.category = Cat::UInt, .bitWidth = 64};
-        case u128: return {.category = Cat::UInt, .bitWidth = 128};
-
-        case f32: return {.category = Cat::Float, .bitWidth = 32};
-        case f64: return {.category = Cat::Float, .bitWidth = 64};
-
-        case character: return {.category = Cat::Char, .bitWidth = 8};
-        case boolean: return {.category = Cat::Bool, .bitWidth = 1};
-        case str: return {.category = Cat::String, .bitWidth = 0};
-        default: break;
-    }
-    return {Cat::Int, 0};
-}
-}  // namespace
 
 auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
     -> typeCompatibilityResult {
