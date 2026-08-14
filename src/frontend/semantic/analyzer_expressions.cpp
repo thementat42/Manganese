@@ -12,7 +12,73 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::visit([[maybe_unused]] ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+    if (visit(expression->base) == exprvisit_t::Failure) {
+        if (expression->base->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+
+        return exprvisit_t::Failure;
+    }
+
+    const SemanticType* baseType = expression->base->semanticType;
+    if (!baseType) {
+        logError(expression->base, "Cannot instantiate unresolvable aggregate type");
+        if (expression->base->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+        return exprvisit_t::Failure;
+    }
+
+    if (!baseType->isAggregate()) {
+        logError(expression->base, "Type '{}' is not an aggregate type", baseType->toString());
+        if (expression->base->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+        return exprvisit_t::Failure;
+    }
+
+    const auto* aggregateType = static_cast<const Aggregate*>(baseType);
+    std::unordered_set<std::string_view> initializedFields;
+    initializedFields.reserve(expression->fields.size());
+
+    bool success = true;
+    for (auto& fieldInit : expression->fields) {
+        // Visit field value expression
+        if (visit(fieldInit.value) == exprvisit_t::Failure) {
+            success = false;
+            continue;
+        }
+
+        if (!initializedFields.insert(fieldInit.name).second) {
+            logError(expression, "Duplicate initialization of field '{}'", fieldInit.name);
+            success = false;
+            continue;
+        }
+
+        const SemanticType* expectedFieldType = aggregateType->getFieldType(fieldInit.name);
+        if (!expectedFieldType) {
+            logError(expression, "Aggregate '{}' has no field named '{}'", aggregateType->toString(), fieldInit.name);
+            success = false;
+            continue;
+        }
+
+        const SemanticType* actualFieldType = fieldInit.value->semanticType;
+        if (!areTypesCompatible(expectedFieldType, actualFieldType)) {
+            logError(fieldInit.value, "Type mismatch for field '{}': expected '{}', got '{}'", fieldInit.name,
+                     expectedFieldType->toString(), actualFieldType->toString());
+            success = false;
+        }
+    }
+
+    if (success && initializedFields.size() < aggregateType->fields.size()) {
+        for (const auto& declaredField : aggregateType->fields) {
+            if (!initializedFields.contains(declaredField.name)) {
+                logError(expression, "Missing initialization for field '{}' of aggregate '{}'", declaredField.name,
+                         aggregateType->toString());
+                success = false;
+            }
+        }
+    }
+
+    if (expression->base->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+    if (!success) { return exprvisit_t::Failure; }
+
+    expression->semanticType = aggregateType;
     return exprvisit_t::Success;
 }
 
@@ -202,7 +268,55 @@ auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto analyzer::visit([[maybe_unused]] ast::FunctionCallExpression* expression) -> exprvisit_t {
+auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
+    if (visit(expression->callee) == exprvisit_t::Failure) {
+        if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+        return exprvisit_t::Failure;
+    }
+    const SemanticType* calleeType = expression->callee->semanticType;
+    if (!calleeType) {
+        if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+
+        logError(expression->callee, "Cannot call expression with unresolvable type");
+        return exprvisit_t::Failure;
+    }
+
+    if (!calleeType->isFunction()) {
+        if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+        logError(expression->callee, "Expression of type '{}' is not callable", calleeType->toString());
+        return exprvisit_t::Failure;
+    }
+
+    const auto* functionType = static_cast<const Function*>(calleeType);
+
+    if (expression->arguments.size() != functionType->parameterTypes.size()) {
+        logError(expression, "Function expected {} arguments, but got {}", functionType->parameterTypes.size(),
+                 expression->arguments.size());
+        if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+        return exprvisit_t::Failure;
+    }
+
+    bool success = true;
+    for (std::size_t i = 0; i < expression->arguments.size(); ++i) {
+        ast::Expression* argExpr = expression->arguments[i];
+        if (visit(argExpr) == exprvisit_t::Failure) {
+            success = false;
+            continue;
+        }
+
+        const SemanticType* expectedType = functionType->parameterTypes[i].type;
+        const SemanticType* actualType = argExpr->semanticType;
+
+        if (!areTypesCompatible(expectedType, actualType)) {
+            logError(argExpr, "Type mismatch for argument {}: expected '{}', got '{}'", i + 1, expectedType->toString(),
+                     actualType->toString());
+            success = false;
+        }
+    }
+    if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
+    if (!success) { return exprvisit_t::Failure; }
+
+    expression->semanticType = functionType->returnType;
     return exprvisit_t::Success;
 }
 
