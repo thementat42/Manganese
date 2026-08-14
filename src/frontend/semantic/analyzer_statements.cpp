@@ -457,7 +457,7 @@ auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
                 return stmtvisit_t::Failure;
             }
             variableType = initializerType;
-        } else if (initializerType && !areTypesComparable(variableType, initializerType)) {
+        } else if (initializerType && !areTypesCompatible(variableType, initializerType)) {
             logError(statement, "Cannot assign '{}' (type {}) to variable {} (type {}).", statement->value->toString(),
                      initializerType->toString(), statement->name, statement->value->semanticType->toString());
             return stmtvisit_t::Failure;
