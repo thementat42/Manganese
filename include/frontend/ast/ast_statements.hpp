@@ -171,6 +171,16 @@ struct IfStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE;
 };
 
+struct NamespaceStatement final : public Statement {
+    std::string name;
+    Block block;
+
+    NamespaceStatement(std::string&& _name, Block&& _block) noexcept :
+        Statement(StatementKind::NamespaceStatement), name(std::move(_name)), block(std::move(_block)) {}
+
+    MN_AST_STANDARD_INTERFACE;
+};
+
 struct NestedBlockStatement final : public Statement {
     Block block;
 

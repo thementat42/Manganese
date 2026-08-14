@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+
+
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
 #else
@@ -149,6 +152,10 @@ std::string IfStatement::toString(std::size_t indent) const {
     }
     if (!elseBody.empty()) { result += " else " + blockToString(elseBody, indent); }
     return result;
+}
+
+std::string NamespaceStatement::toString(std::size_t indent) const {
+    return getIndent(indent) + std::format("namespace {}", name) + blockToString(block, indent);
 }
 
 std::string NestedBlockStatement::toString(std::size_t indent) const {

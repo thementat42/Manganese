@@ -226,12 +226,22 @@ void IfStatement::dump(std::ostream& os, std::size_t indent) const {
 
     os << ind << "}\n";
 }
+
+void NamespaceStatement::dump(std::ostream& os, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "NamespaceStatement", *this);
+    os << ind.next() << "name: " << name << "\n";
+    dumpBlock(os, ind.next(), "statement", block);
+    os << ind << "}\n";
+}
+
 void NestedBlockStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "NestedBlockStatement", *this);
     dumpBlock(os, ind.next(), "body", block);
     os << ind << "}\n";
 }
+
 void ReturnStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ReturnStatement", *this);
