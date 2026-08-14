@@ -29,6 +29,7 @@ lambda
 let
 module
 mut
+namespace
 private
 ptr
 public

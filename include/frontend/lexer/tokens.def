@@ -75,6 +75,7 @@ KEYWORD(Return, "return")
 
 KEYWORD(Import, "import")
 KEYWORD(Module, "module")
+KEYWORD(Namespace, "namespace")
 KEYWORD(As, "as")
 
 KEYWORD(Aggregate, "aggregate")
