@@ -147,6 +147,7 @@ void Parser::initializeLookups() noexcept {
     registerStmtHandler(Import, &Parser::parseImportStatement);
     registerStmtHandler(Let, &Parser::parseVariableDeclarationStatement);
     registerStmtHandler(Module, &Parser::parseModuleDeclarationStatement);
+    registerStmtHandler(Namespace, &Parser::parseNamespace);
     registerStmtHandler(Private, &Parser::parseVisibilityAffectedStatement);
     registerStmtHandler(Public, &Parser::parseVisibilityAffectedStatement);
     registerStmtHandler(Return, &Parser::parseReturnStatement);

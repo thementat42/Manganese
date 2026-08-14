@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
 #include "frontend/lexer/token.hpp"
 
 namespace Manganese::parser {
@@ -431,6 +432,13 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
 
     // Dummy node since there's no need to semantically analyze module declarations (that happens here)
     return arena.emplace<ast::EmptyStatement>();
+}
+
+ast::Statement* Parser::parseNamespace() {
+    DISCARD(consumeToken());  // skip 'namespace'
+    std::string name = expectToken(TokenType::Identifier, "Expected a namespace name after 'namespace'").getLexeme();
+    ast::Block body = parseBlock("namespace " + name);
+    return arena.emplace<ast::NamespaceStatement>(std::move(name), std::move(body));
 }
 
 ast::Statement* Parser::parseRedundantSemicolon() {

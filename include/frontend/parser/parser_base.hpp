@@ -113,6 +113,7 @@ class Parser {
     ast::Statement* parseIfStatement();
     ast::Statement* parseImportStatement();
     ast::Statement* parseModuleDeclarationStatement();
+    ast::Statement* parseNamespace();
     ast::Statement* parseRedundantSemicolon();
     ast::Statement* parseReturnStatement();
     ast::Statement* parseSwitchStatement();
