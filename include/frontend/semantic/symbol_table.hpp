@@ -123,12 +123,12 @@ class SymbolTable {
         _currentScope = _currentScope->parent;
     }
 
-    Result declare(std::string_view name, Symbol symbol) {
+    Result declare(std::string_view name, Symbol&& symbol) {
         if (noScopeAvailable()) [[unlikely]] {
             logging::logInternal(logging::LogLevel::Error, "No active scope in which to declare a symbol");
             return Result::Failure;
         }
-        return _currentScope->insert(name, symbol);
+        return _currentScope->insert(name, std::move(symbol));
     }
 
     Symbol* lookup(std::string_view name) noexcept {

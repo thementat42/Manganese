@@ -8,7 +8,6 @@
 
 #include "frontend/semantic/analyzer.hpp"
 
-
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
@@ -93,14 +92,16 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
             break;
         }
 
-        if (symbolTable.declare(
-                param.name,
-                Symbol{.type = paramType,
-                       .node = nullptr,
-                       .kind = (param.isMutable ? SymbolKind::Parameter : SymbolKind::ConstantParameter),
-                       .isMutable = param.isMutable,
-                       .status = ResolutionStatus::Success})
-            == Result::Failure) {
+        const bool declarationResult
+            = symbolTable.declare(
+                  param.name,
+                  Symbol{.type = paramType,
+                         .node = nullptr,
+                         .kind = (param.isMutable ? SymbolKind::Parameter : SymbolKind::ConstantParameter),
+                         .isMutable = param.isMutable,
+                         .status = ResolutionStatus::Success})
+            == Result::Failure;
+        if (declarationResult) {
             logError(stmt, "Redefinition of parameter '{}' in generic function '{}'", param.name, stmt->name);
             success = false;
             break;
