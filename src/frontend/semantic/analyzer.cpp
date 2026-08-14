@@ -110,6 +110,9 @@ Result analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
 }
 
 auto analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const -> typeCompatibilityResult {
+    if (lhs->isVoid() || rhs->isVoid()) {
+        return {.result = Compatible_t::Error, .message = "Cannot compare void types"};
+    }
     if (lhs == rhs) { return {.result = Compatible_t::Valid}; }
 
     if (lhs->isNumeric() && rhs->isNumeric()) { return {.result = Compatible_t::Valid}; }
@@ -221,6 +224,11 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
     // Null pointer means something went wrong in type deduction
     if (!from || !to) { return {.result = Compatible_t::Error, .message = "Could not deduce types"}; }
 
+    if (from->isVoid() || to->isVoid()) {
+        return {.result = Compatible_t::Error,
+                .message = "Cannot use an expression that evaluates to 'void' in this context"};
+    }
+
     // Duplicated types point to the same underlying value so we can just do a fast pointer comparison
     if (from == to) { return {.result = Compatible_t::Valid}; }
 
@@ -287,6 +295,9 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                     return {.result = Compatible_t::Error, .message = conversionError + error};
                 }
             }
+            if (funcFrom->returnType->isVoid() && funcTo->returnType->isVoid()) {
+                return {.result = Compatible_t::Valid};
+            }
             return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
         } break;
 
@@ -328,6 +339,9 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         case Kind::Primitive: {
             return arePrimitivesCompatible(from, to);
         }; break;
+        case Kind::Void:
+            return {.result = Compatible_t::Error, .message = "Cannot use 'void' expression in this context"};
+
         default: ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
     }
 }

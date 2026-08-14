@@ -13,10 +13,7 @@
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
-    if (visit(expression->base) == exprvisit_t::Failure) {
-
-        return exprvisit_t::Failure;
-    }
+    if (visit(expression->base) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
     const SemanticType* baseType = expression->base->semanticType;
     if (!baseType) {
@@ -33,24 +30,30 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
     std::unordered_set<std::string_view> initializedFields;
     initializedFields.reserve(expression->fields.size());
 
-    bool success = true;
+    exprvisit_t result = exprvisit_t::Success;
     for (auto& fieldInit : expression->fields) {
         // Visit field value expression
         if (visit(fieldInit.value) == exprvisit_t::Failure) {
-            success = false;
+            result = exprvisit_t::Failure;
+            continue;
+        }
+
+        if (fieldInit.value->semanticType->isVoid()) {
+            logError(fieldInit.value, "Cannot use 'void' expression in aggregate instantiation");
+            result = exprvisit_t::Failure;
             continue;
         }
 
         if (!initializedFields.insert(fieldInit.name).second) {
             logError(expression, "Duplicate initialization of field '{}'", fieldInit.name);
-            success = false;
+            result = exprvisit_t::Failure;
             continue;
         }
 
         const SemanticType* expectedFieldType = aggregateType->getFieldType(fieldInit.name);
         if (!expectedFieldType) {
             logError(expression, "Aggregate '{}' has no field named '{}'", aggregateType->toString(), fieldInit.name);
-            success = false;
+            result = exprvisit_t::Failure;
             continue;
         }
 
@@ -58,24 +61,22 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         if (!areTypesCompatible(expectedFieldType, actualFieldType)) {
             logError(fieldInit.value, "Type mismatch for field '{}': expected '{}', got '{}'", fieldInit.name,
                      expectedFieldType->toString(), actualFieldType->toString());
-            success = false;
+            result = exprvisit_t::Failure;
         }
     }
 
-    if (success && initializedFields.size() < aggregateType->fields.size()) {
+    if (result == exprvisit_t::Success && initializedFields.size() < aggregateType->fields.size()) {
         for (const auto& declaredField : aggregateType->fields) {
             if (!initializedFields.contains(declaredField.name)) {
                 logError(expression, "Missing initialization for field '{}' of aggregate '{}'", declaredField.name,
                          aggregateType->toString());
-                success = false;
+                result = exprvisit_t::Failure;
             }
         }
     }
 
-    if (!success) { return exprvisit_t::Failure; }
-
     expression->semanticType = aggregateType;
-    return exprvisit_t::Success;
+    return result;
 }
 
 auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
@@ -86,6 +87,9 @@ auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
     for (ast::Expression* element : expression->elements) {
         if (visit(element) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
         if (!element->semanticType) {
+            result = exprvisit_t::Failure;
+        } else if (element->semanticType->isVoid()) {
+            logError(element, "Cannot use 'void' expression in aggregate literal");
             result = exprvisit_t::Failure;
         } else {
             elementTypes.push_back(element->semanticType);
@@ -134,6 +138,11 @@ auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             continue;
         }
         if (!element->semanticType) {
+            result = exprvisit_t::Failure;
+            continue;
+        }
+        if (element->semanticType->isVoid()) {
+            logError(element, "Cannot use 'void' expression in array literal");
             result = exprvisit_t::Failure;
             continue;
         }
@@ -265,12 +274,9 @@ auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
 }
 
 auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
-    if (visit(expression->callee) == exprvisit_t::Failure) {
-        return exprvisit_t::Failure;
-    }
+    if (visit(expression->callee) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* calleeType = expression->callee->semanticType;
     if (!calleeType) {
-
         logError(expression->callee, "Cannot call expression with unresolvable type");
         return exprvisit_t::Failure;
     }
@@ -288,27 +294,32 @@ auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
 
-    bool success = true;
+    exprvisit_t result = exprvisit_t::Success;
     for (std::size_t i = 0; i < expression->arguments.size(); ++i) {
         ast::Expression* argExpr = expression->arguments[i];
         if (visit(argExpr) == exprvisit_t::Failure) {
-            success = false;
+            result = exprvisit_t::Failure;
             continue;
         }
 
         const SemanticType* expectedType = functionType->parameterTypes[i].type;
         const SemanticType* actualType = argExpr->semanticType;
 
+        if (actualType && actualType->isVoid()) {
+            logError(argExpr, "Cannot pass expression returning 'void' as argument {} to function", i + 1);
+            result = exprvisit_t::Failure;
+            continue;
+        }
+
         if (!areTypesCompatible(expectedType, actualType)) {
             logError(argExpr, "Type mismatch for argument {}: expected '{}', got '{}'", i + 1, expectedType->toString(),
                      actualType->toString());
-            success = false;
+            result = exprvisit_t::Failure;
         }
     }
-    if (!success) { return exprvisit_t::Failure; }
 
     expression->semanticType = functionType->returnType;
-    return exprvisit_t::Success;
+    return result;
 }
 
 auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {

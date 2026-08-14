@@ -167,7 +167,13 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t { return visit(statement->expression); }
+auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
+    if (visit(statement->expression) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
+
+    // Crucial distinction:
+    if (!statement->expression->semanticType) { return stmtvisit_t::Failure; }
+    return stmtvisit_t::Success;
+}
 
 auto analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
@@ -245,7 +251,7 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
     symbol->status = ResolutionStatus::InProgress;
 
     const ContextGuard contextGuard{context.inFunction, true};
-    const SemanticType* resolvedReturnType = nullptr;
+    const SemanticType* resolvedReturnType = typeContext.getVoid();
     stmtvisit_t signatureResult = stmtvisit_t::Success;
 
     if (statement->returnType) {
@@ -383,7 +389,7 @@ auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
 
     // void return
     if (!statement->value) {
-        if (context.currentFunctionReturnType != nullptr) {
+        if (context.currentFunctionReturnType != typeContext.getVoid()) {
             logError(statement, "Non-void function must return a value");
             return stmtvisit_t::Failure;
         }
@@ -411,6 +417,10 @@ auto analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
     const SemanticType* targetType = statement->target->semanticType;
     if (!targetType) {
         logError(statement, "Could not determine type of switch target expression");
+        return stmtvisit_t::Failure;
+    }
+    if (targetType && targetType->isVoid()) {
+        logError(statement->target, "Switch target expression cannot evaluate to 'void'");
         return stmtvisit_t::Failure;
     }
     stmtvisit_t result = stmtvisit_t::Success;
@@ -449,6 +459,11 @@ auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
     if (statement->value) {
         if (visit(statement->value) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
         const SemanticType* initializerType = statement->value->semanticType;
+        if (initializerType && initializerType->isVoid()) {
+            logError(statement->value, "Cannot initialize variable '{}' with a void expression", statement->name);
+            return stmtvisit_t::Failure;
+        }
+
         if (!variableType) {
             // deduce type from the initializer
             if (!initializerType) {

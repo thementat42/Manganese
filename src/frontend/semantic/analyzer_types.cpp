@@ -40,6 +40,8 @@ auto analyzer::visit(ast::ArrayType* type) -> typevisit_t {
         logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
         return typevisit_t::Failure;
     }
+    if (elementType->isVoid()) { logError(type, "Cannot form an array of 'void'"); }
+
     std::size_t length;
     if (arrayType->lengthExpression) {
         if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
@@ -85,7 +87,7 @@ auto analyzer::visit(ast::FunctionType* type) -> typevisit_t {
 
         resolvedParameterTypes.push_back({.isMutable = parameterType.isMutable, .isVariadic = parameterType.isVariadic, .type = resolvedParameterType});
     }
-    const SemanticType* returnType = nullptr;
+    const SemanticType* returnType = typeContext.getVoid();
     if (functionType->returnType) {
         // function is not returning void
         visit(functionType->returnType);
@@ -120,6 +122,10 @@ auto analyzer::visit(ast::PointerType* type) -> typevisit_t {
     const SemanticType* baseType = pointerType->baseType->semanticType;
     if (!baseType) {
         logError(type, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString());
+        return typevisit_t::Failure;
+    }
+    if (baseType->isVoid()) {
+        logError(type, "Cannot form pointer to a void expression");
         return typevisit_t::Failure;
     }
     type->semanticType = typeContext.getPointer(baseType, pointerType->isMutable);
