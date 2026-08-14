@@ -2,12 +2,132 @@
 #include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
+#include <frontend/semantic/generics_helpers.hpp>
+#include <frontend/semantic/type_context.hpp>
 #include <mnstl/fold_result.hxx>
+
+#include "frontend/semantic/analyzer.hpp"
+
 
 namespace Manganese::semantic {
 
-auto analyzer::visit(ast::AggregateDeclarationStatement*, generic_tag_t) -> stmtvisit_t { return stmtvisit_t::Success; }
-auto analyzer::visit(ast::FunctionDeclarationStatement*, generic_tag_t) -> stmtvisit_t { return stmtvisit_t::Success; }
+auto analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
+    const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
+
+    if (auto* cached = instantiationCache.find(key)) {
+        if (cached->state == ResolutionStatus::InProgress) {
+            logError(stmt, "Decursive aggregate layout dependency in '{}'", stmt->name);
+            return stmtvisit_t::Failure;
+        }
+        return cached->state == ResolutionStatus::Success ? stmtvisit_t::Success : stmtvisit_t::Failure;
+    }
+
+    instantiationCache.markAsInProgress(key);
+    auto oldParams = activeGenericParams;
+    activeGenericParams.clear();
+
+    for (std::size_t i = 0; i < stmt->genericTypes.size(); ++i) { activeGenericParams[stmt->genericTypes[i]] = i; }
+    bool success = true;
+    for (const auto& field : stmt->fields) {
+        const SemanticType* fieldType = resolveGenericType(field.type);
+        if (!fieldType) {
+            success = false;
+            break;
+        }
+    }
+    activeGenericParams = std::move(oldParams);
+    if (success) {
+        instantiationCache.markAsSuccess(key, nullptr);
+    } else {
+        instantiationCache.markAsFailure(key);
+    }
+
+    return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
+}
+
+auto analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
+    const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
+
+    if (auto* cached = instantiationCache.find(key)) {
+        if (cached->state == ResolutionStatus::InProgress) {
+            logError(stmt, "Recursive generic function instantiation dependency in '{}'", stmt->name);
+            return stmtvisit_t::Failure;
+        }
+        return cached->state == ResolutionStatus::Success ? stmtvisit_t::Success : stmtvisit_t::Failure;
+    }
+
+    if (context.inFunction) {
+        logError(stmt, "Cannot declare nested functions");
+        instantiationCache.markAsFailure(key);
+        return stmtvisit_t::Failure;
+    }
+
+    ContextGuard<bool> guard{context.inFunction, true};
+
+    instantiationCache.markAsInProgress(key);
+    auto oldParams = activeGenericParams;
+    activeGenericParams.clear();
+
+    for (std::size_t i = 0; i < stmt->genericTypes.size(); ++i) { activeGenericParams[stmt->genericTypes[i]] = i; }
+
+    const SemanticType* resolvedReturnType = nullptr;
+    if (stmt->returnType) {
+        resolvedReturnType = resolveGenericType(stmt->returnType);
+        if (!resolvedReturnType) {
+            activeGenericParams = std::move(oldParams);
+            instantiationCache.markAsFailure(key);
+            return stmtvisit_t::Failure;
+        }
+    }
+
+    symbolTable.enterScope();
+    const SemanticType* previousFunctionReturnType = context.currentFunctionReturnType;
+    context.currentFunctionReturnType = resolvedReturnType;
+
+    bool success = true;
+
+    for (const auto& param : stmt->parameters) {
+        const SemanticType* paramType = resolveGenericType(param.type);
+        if (!paramType) {
+            success = false;
+            break;
+        }
+
+        if (symbolTable.declare(
+                param.name,
+                Symbol{.type = paramType,
+                       .node = nullptr,
+                       .kind = (param.isMutable ? SymbolKind::Parameter : SymbolKind::ConstantParameter),
+                       .isMutable = param.isMutable,
+                       .status = ResolutionStatus::Success})
+            == Result::Failure) {
+            logError(stmt, "Redefinition of parameter '{}' in generic function '{}'", param.name, stmt->name);
+            success = false;
+            break;
+        }
+    }
+
+    if (success) {
+        for (auto* bodyStmt : stmt->body) {
+            if (visit(bodyStmt) == stmtvisit_t::Failure) {
+                success = false;
+                break;
+            }
+        }
+    }
+
+    context.currentFunctionReturnType = previousFunctionReturnType;
+    symbolTable.exitScope();
+    activeGenericParams = std::move(oldParams);
+
+    if (success) {
+        instantiationCache.markAsSuccess(key, resolvedReturnType);
+    } else {
+        instantiationCache.markAsFailure(key);
+    }
+
+    return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
+}
 
 const SemanticType* analyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
                                                           const TypeList& typeArgs) {
