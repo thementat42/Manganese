@@ -556,47 +556,6 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
     }
 }
 
-ast::Statement* Parser::parseVariableDeclarationStatement() {
-    ast::Type* explicitType = nullptr;
-    ast::Expression* value = nullptr;
-    ast::Visibility visibility = defaultVisibility;
-
-    DISCARD(consumeToken());  // Consume the 'let' token
-    bool isMutable = false;
-    if (peekTokenType() == TokenType::Mut) {
-        DISCARD(consumeToken());  // Consume the 'mut' token
-        isMutable = true;
-    }
-    std::string name = expectToken(TokenType::Identifier,
-                                   std::format("Expected variable name after '{}'", isMutable ? "let mut" : "let"))
-                           .getLexeme();
-    if (peekTokenType() == TokenType::Colon) {
-        DISCARD(consumeToken());  // Consume the colon
-        if (peekTokenType() == TokenType::Public) {
-            visibility = ast::Visibility::Public;
-            DISCARD(consumeToken());  // Consume the public keyword
-        } else if (peekTokenType() == TokenType::Private) [[unlikely]] {
-            // private is the default so it'd mainly be used for emphasis
-            visibility = ast::Visibility::Private;
-            DISCARD(consumeToken());  // Consume the private keyword
-        }
-        explicitType = parseType(Precedence::Default);
-    }
-    if (peekTokenType() != TokenType::Semicolon) {
-        expectToken(TokenType::Assignment, "Expected '=' or ';' after variable name");
-        value = parseExpression(Precedence::Default);
-    } else if (explicitType == nullptr) {
-        // If no value is provided, we need to have a type
-        expectToken(TokenType::Colon, "Expected ':' to specify type for variable without initial value");
-        explicitType = parseType(Precedence::Default);
-    }
-
-    expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
-
-    return arena.emplace<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, value,
-                                                            explicitType);
-}
-
 ast::Statement* Parser::parseWhileLoopStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
@@ -604,22 +563,5 @@ ast::Statement* Parser::parseWhileLoopStatement() {
     expectToken(TokenType::RightParen, "Expected ')' to end while condition");
 
     return arena.emplace<ast::WhileLoopStatement>(parseBlock("while loop body"), condition);
-}
-
-// Helper Functions
-ast::Block Parser::parseBlock(const std::string& blockName) {
-    expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
-    ast::Block block;
-    while (!done()) {
-        if (peekTokenType() == TokenType::RightBrace) {
-            break;  // End of the block
-        }
-        block.push_back(parseStatement());
-    }
-    expectToken(TokenType::RightBrace, "Expected '}' to end " + blockName);
-    if (block.empty()) {
-        logging::logWarning(peekToken().getLine(), peekToken().getColumn(), "{} is empty", blockName);
-    }
-    return block;
 }
 }  // namespace Manganese::parser
