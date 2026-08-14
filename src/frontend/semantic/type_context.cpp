@@ -79,6 +79,8 @@ std::string Pointer::toString() const {
     return std::format("{}ptr {}", (isMutable ? "mut " : ""), baseType->toString());
 }
 
+std::string Void::toString() const { return "void"; }
+
 std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
     if (!t) { return 0; }
     // start by hashing the type kind (isolates primitives, pointers, etc)
@@ -142,13 +144,14 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
         case Kind::Primitive:
             // Since each primitive value is unique we can just hash the enum type
             return hash_combine(hash, std::hash<prim_int_t>{}(static_cast<prim_int_t>(t->primitiveType)));
+        case Kind::Void: return hash;  // no extra logic neexex
         default: ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup hash");
     }
 }
 
 bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) const noexcept {
-    if (lhs == rhs) { return true; }
     if (!lhs || !rhs) { return false; }  // no deduced type; can't be equal
+    if (lhs == rhs) { return true; }
     if (lhs->kind != rhs->kind) { return false; }
 
     switch (lhs->kind) {
@@ -184,6 +187,9 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             const auto* left = static_cast<const GenericInstance*>(lhs);
             const auto* right = static_cast<const GenericInstance*>(rhs);
             return (left->baseType == right->baseType) && (left->typeArguments == right->typeArguments);
+        }
+        case Kind::Void: {
+            return true;
         }
         default: ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
     }
@@ -249,6 +255,8 @@ const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool i
 const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) const noexcept {
     return &_primitives[static_cast<unsigned>(primitive)];
 }
+
+const SemanticType* TypeContext::getVoid() const noexcept { return &_voidInstance; }
 
 const SemanticType* TypeContext::getUSizeType() const noexcept {
 #if UINTPTR_MAX == 0xFFFFFFFF

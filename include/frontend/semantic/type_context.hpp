@@ -30,6 +30,7 @@ enum class Kind : std::uint8_t {
     Generic,
     Pointer,
     Primitive,
+    Void,
 };
 
 enum class ResolutionStatus : std::int8_t {
@@ -56,6 +57,8 @@ struct SemanticType {
     constexpr bool isGeneric() const noexcept { return kind == Kind::Generic; }
     constexpr bool isPointer() const noexcept { return kind == Kind::Pointer; }
     constexpr bool isPrimitive() const noexcept { return kind == Kind::Primitive; }
+    constexpr bool isVoid() const noexcept { return kind == Kind::Primitive; }
+
     constexpr bool isBoolean() const noexcept {
         return isPrimitive() && primitiveType == ast::PrimitiveType_t::boolean;
     }
@@ -224,6 +227,12 @@ struct PrimitiveInfo {
 
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type);
 
+struct Void final : public SemanticType {
+    Void() noexcept : SemanticType(Kind::Void) {};
+    ~Void() override = default;
+    std::string toString() const override;
+};
+
 struct TypeLookup {
     using is_transparent = void;  // enables heterogenous lookup inside std::unordered_set
     using kind_int_t = std::underlying_type_t<Kind>;
@@ -250,6 +259,7 @@ class TypeContext {
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
     std::array<SemanticType, NUM_PRIMITIVES> _primitives;
+    Void _voidInstance;
 
     template <std::size_t... Is>
     constexpr static std::array<SemanticType, sizeof...(Is)> _makePrimitives(std::index_sequence<Is...>) noexcept {
@@ -279,6 +289,8 @@ class TypeContext {
     const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
 
     const SemanticType* getPrimitive(ast::PrimitiveType_t primitive) const noexcept;
+
+    const SemanticType* getVoid() const noexcept;
 
     const SemanticType* getUSizeType() const noexcept;
     const SemanticType* getSSizeType() const noexcept;
