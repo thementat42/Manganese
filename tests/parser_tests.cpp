@@ -600,6 +600,43 @@ static bool testNestedBlocks() {
     return validateStatement(getParserResults(expression), expected, "Nested Blocks");
 }
 
+static bool testNamespaces() {
+    const std::string expression = "namespace Graphics {\n"
+                                   "    public func drawPixel(x: int32, y: int32) {\n"
+                                   "        print(\"Drawing pixel\");\n"
+                                   "    }\n"
+                                   "    aggregate Color {\n"
+                                   "        r: uint8;\n"
+                                   "        g: uint8;\n"
+                                   "        b: uint8;\n"
+                                   "    }\n"
+                                   "}\n"
+                                   "namespace Math::Vector {\n"
+                                   "    func magnitude(v: Vector) -> float64 {\n"
+                                   "        return 0.0;\n"
+                                   "    }\n"
+                                   "}";
+
+    const std::array<std::string, 2> expected = {
+        R"(private namespace Graphics {
+    public func drawPixel(x: int32, y: int32) {
+        print("Drawing pixel");
+    }
+    private aggregate Color {
+        r: uint8;
+        g: uint8;
+        b: uint8;
+    }
+})",
+        R"(private namespace Math::Vector {
+    private func magnitude(v: Vector) -> float64 {
+        return 0.0;
+    }
+})"};
+
+    return validateStatements(getParserResults(expression), expected, "Namespace Declaration");
+}
+
 static bool miscTests() {
     const std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
     ast::Block x = getParserResults(expression);
@@ -633,6 +670,7 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Redundant Semicolons", testRedundantSemicolons);
     runner.runTest("Sizeof, Typeof & Alignof", testSizeofTypeofAlignof);
     runner.runTest("Nested Blocks", testNestedBlocks);
+    runner.runTest("Namespaces", testNamespaces);
     runner.runTest("Miscellaneous Tests", miscTests);
 }
 }  // namespace Manganese::tests
