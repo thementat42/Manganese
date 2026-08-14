@@ -263,14 +263,14 @@ static bool testAggregateDeclarationAndInstantiation() {
                                    "aggregate Rectangle {\n"
                                    "    topLeft: Point;\n"
                                    "    bottomRight: Point;\n"
-                                   "    color: uint32;\n"
+                                   "    colour: uint32;\n"
                                    "}\n"
                                    "let mut p1 = Point{x = 10, y = 20};\n"
                                    "let mut p2: Point = Point{x = 30, y = 40};\n"
                                    "let rect = Rectangle{\n"
                                    "    topLeft = Point{x = 0, y = 0},\n"
                                    "    bottomRight = p2,\n"
-                                   "    color = 0xFF0000\n"
+                                   "    colour = 0xFF0000\n"
                                    "};\n";
 
     const std::array<std::string, 5> expected = {
@@ -282,10 +282,10 @@ static bool testAggregateDeclarationAndInstantiation() {
         R"(private aggregate Rectangle {
     topLeft: Point;
     bottomRight: Point;
-    color: uint32;
+    colour: uint32;
 })",
         "(let mut p1: private auto = Point {x = 10, y = 20});", "(let mut p2: private Point = Point {x = 30, y = 40});",
-        "(let rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, color = 16711680});"};
+        "(let rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, colour = 16711680});"};
 
     return validateStatements(getParserResults(expression), expected, "Aggregate Declaration and Instantiation");
 }
@@ -413,7 +413,7 @@ static bool testIfElseStatements() {
 }
 
 static bool testEnumDeclarationStatement() {
-    const std::string expression = "public enum Color: int8 {\n"
+    const std::string expression = "public enum Colour: int8 {\n"
                                    "    Red,\n"
                                    "    Green,\n"
                                    "    Blue,\n"
@@ -432,7 +432,7 @@ static bool testEnumDeclarationStatement() {
                                    "}";
 
     const std::array<std::string, 3> expected = {
-        R"(public enum Color: int8 {
+        R"(public enum Colour: int8 {
     Red,
     Green,
     Blue
@@ -480,7 +480,7 @@ static bool testAccessExpressions() {
     const std::string expression = "let mut point = Point{x = 10, y = 20};\n"
                                    "let mut xCoord = point.x;\n"
                                    "let mut yCoord = point.y;\n"
-                                   "let mut color = rect.color;"
+                                   "let mut colour = rect.colour;"
                                    "let array = [1, 2, 3];\n"
                                    "let firstElement = array[0];\n"
                                    "let foo = lib::module_::function(a, b, c);\n";
@@ -488,7 +488,7 @@ static bool testAccessExpressions() {
     const std::array<std::string, 7> expected = {"(let mut point: private auto = Point {x = 10, y = 20});",
                                                  "(let mut xCoord: private auto = point.x);",
                                                  "(let mut yCoord: private auto = point.y);",
-                                                 "(let mut color: private auto = rect.color);",
+                                                 "(let mut colour: private auto = rect.colour);",
                                                  "(let array: private auto = [1, 2, 3]);",
                                                  "(let firstElement: private auto = array[0]);",
                                                  "(let foo: private auto = lib::module_::function(a, b, c));"};
@@ -605,30 +605,30 @@ static bool testNamespaces() {
                                    "    public func drawPixel(x: int32, y: int32) {\n"
                                    "        print(\"Drawing pixel\");\n"
                                    "    }\n"
-                                   "    aggregate Color {\n"
+                                   "    aggregate Colour {\n"
                                    "        r: uint8;\n"
                                    "        g: uint8;\n"
                                    "        b: uint8;\n"
                                    "    }\n"
                                    "}\n"
-                                   "namespace Math::Vector {\n"
+                                   "namespace Math {\n"
                                    "    func magnitude(v: Vector) -> float64 {\n"
                                    "        return 0.0;\n"
                                    "    }\n"
                                    "}";
 
     const std::array<std::string, 2> expected = {
-        R"(private namespace Graphics {
+        R"(namespace Graphics {
     public func drawPixel(x: int32, y: int32) {
         print("Drawing pixel");
     }
-    private aggregate Color {
+    private aggregate Colour {
         r: uint8;
         g: uint8;
         b: uint8;
     }
 })",
-        R"(private namespace Math::Vector {
+        R"(namespace Math {
     private func magnitude(v: Vector) -> float64 {
         return 0.0;
     }

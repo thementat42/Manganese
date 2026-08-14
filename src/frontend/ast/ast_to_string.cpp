@@ -155,7 +155,7 @@ std::string IfStatement::toString(std::size_t indent) const {
 }
 
 std::string NamespaceStatement::toString(std::size_t indent) const {
-    return getIndent(indent) + std::format("namespace {}", name) + blockToString(block, indent);
+    return getIndent(indent) + std::format("namespace {} ", name) + blockToString(block, indent);
 }
 
 std::string NestedBlockStatement::toString(std::size_t indent) const {
