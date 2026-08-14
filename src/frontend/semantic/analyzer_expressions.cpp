@@ -14,7 +14,6 @@ namespace Manganese::semantic {
 
 auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
     if (visit(expression->base) == exprvisit_t::Failure) {
-        if (expression->base->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
 
         return exprvisit_t::Failure;
     }
@@ -22,13 +21,11 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
     const SemanticType* baseType = expression->base->semanticType;
     if (!baseType) {
         logError(expression->base, "Cannot instantiate unresolvable aggregate type");
-        if (expression->base->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
         return exprvisit_t::Failure;
     }
 
     if (!baseType->isAggregate()) {
         logError(expression->base, "Type '{}' is not an aggregate type", baseType->toString());
-        if (expression->base->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
         return exprvisit_t::Failure;
     }
 
@@ -75,7 +72,6 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         }
     }
 
-    if (expression->base->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
     if (!success) { return exprvisit_t::Failure; }
 
     expression->semanticType = aggregateType;
@@ -270,19 +266,16 @@ auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
 
 auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     if (visit(expression->callee) == exprvisit_t::Failure) {
-        if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
         return exprvisit_t::Failure;
     }
     const SemanticType* calleeType = expression->callee->semanticType;
     if (!calleeType) {
-        if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
 
         logError(expression->callee, "Cannot call expression with unresolvable type");
         return exprvisit_t::Failure;
     }
 
     if (!calleeType->isFunction()) {
-        if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
         logError(expression->callee, "Expression of type '{}' is not callable", calleeType->toString());
         return exprvisit_t::Failure;
     }
@@ -292,7 +285,6 @@ auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     if (expression->arguments.size() != functionType->parameterTypes.size()) {
         logError(expression, "Function expected {} arguments, but got {}", functionType->parameterTypes.size(),
                  expression->arguments.size());
-        if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
         return exprvisit_t::Failure;
     }
 
@@ -313,7 +305,6 @@ auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
             success = false;
         }
     }
-    if (expression->callee->kind == ast::ExpressionKind::GenericExpression) { genericsStack.pop(); }
     if (!success) { return exprvisit_t::Failure; }
 
     expression->semanticType = functionType->returnType;
@@ -618,6 +609,7 @@ auto analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
     if (visit(expression->targetType) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    expression->semanticType = expression->targetType->semanticType;
 
     return result;
 }
