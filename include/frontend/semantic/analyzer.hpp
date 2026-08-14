@@ -15,6 +15,8 @@
 #include <mnstl/enum_matches.hxx>
 #include <mnstl/tiny_stack.hxx>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <utils/result.hpp>
 

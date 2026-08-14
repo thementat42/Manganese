@@ -2,6 +2,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 
 #include <cstddef>
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser/operators.hpp>
