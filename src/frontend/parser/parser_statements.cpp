@@ -24,7 +24,7 @@ ast::Statement* Parser::parseStatement() {
     // Handle bare semicolons
     if (type == TokenType::Semicolon) {
         DISCARD(consumeToken());
-        return arena.emplace<ast::EmptyStatement>();
+        return ast::getEmptyStatement();
     }
     const std::size_t index = tokenToIndex(type);
 
@@ -363,7 +363,7 @@ ast::Statement* Parser::parseIfStatement() {
             // in this edge case, there is a body but it's empty, which makes the printing logic think there isn't one
             // to get around this, add a dummy statement (doesn't print anything) so the empty else block is still
             // printed
-            elseBody.push_back(arena.emplace<ast::EmptyStatement>());
+            elseBody.push_back(ast::getEmptyStatement());
         }
     }
     return arena.emplace<ast::IfStatement>(condition, std::move(body), std::move(elifs), std::move(elseBody));
@@ -410,7 +410,7 @@ ast::Statement* Parser::parseImportStatement() {
     }
     if (!duplicate) { imports.push_back({.path = std::move(path), .alias = std::move(alias)}); }
     // Dummy node since imports are stored separately
-    return arena.emplace<ast::EmptyStatement>();
+    return ast::getEmptyStatement();
 }
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
@@ -431,7 +431,7 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
     }
 
     // Dummy node since there's no need to semantically analyze module declarations (that happens here)
-    return arena.emplace<ast::EmptyStatement>();
+    return ast::getEmptyStatement();
 }
 
 ast::Statement* Parser::parseNamespace() {
@@ -443,7 +443,7 @@ ast::Statement* Parser::parseNamespace() {
 
 ast::Statement* Parser::parseRedundantSemicolon() {
     DISCARD(consumeToken());
-    return arena.emplace<ast::EmptyStatement>();
+    return ast::getEmptyStatement();
 }
 
 ast::Statement* Parser::parseReturnStatement() {
@@ -510,7 +510,7 @@ ast::Statement* Parser::parseSwitchStatement() {
         // there's no default statement (leading to a confusing printout)
         // To get around this, push a dummy statement (doesn't print anything) so the printing logic recognizes
         // there's a body but still prints nothing after it
-        defaultBody.push_back(arena.emplace<ast::EmptyStatement>());
+        defaultBody.push_back(ast::getEmptyStatement());
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 

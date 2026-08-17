@@ -249,6 +249,11 @@ struct WhileLoopStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE;
 };
 
+inline EmptyStatement* getEmptyStatement() noexcept {
+    static EmptyStatement instance{};
+    return &instance;
+}
+
 }  // namespace Manganese::ast
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
