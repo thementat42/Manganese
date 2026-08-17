@@ -7,7 +7,6 @@
 
 #include "frontend/ast/ast_statements.hpp"
 
-
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
@@ -24,7 +23,9 @@ auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
 
 auto analyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
 
-auto analyzer::visit([[maybe_unused]] ast::NamespaceStatement* statement) -> stmtvisit_t { return stmtvisit_t::Success; }
+auto analyzer::visit([[maybe_unused]] ast::NamespaceStatement* statement) -> stmtvisit_t {
+    return stmtvisit_t::Success;
+}
 
 auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     if (!context.inFunction) {

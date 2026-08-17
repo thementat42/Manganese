@@ -9,7 +9,6 @@
 
 #include "frontend/ast/ast_statements.hpp"
 
-
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
 #else

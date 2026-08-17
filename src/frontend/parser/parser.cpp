@@ -4,6 +4,7 @@
 #include <io/logging.hpp>
 #include <string>
 #include <utility>
+
 #include "core.hpp"
 
 namespace Manganese::parser {
