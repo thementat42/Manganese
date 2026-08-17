@@ -64,19 +64,15 @@ enum class Visibility : std::uint8_t {
 };
 
 struct ASTNode {
+    std::size_t line = 0, column = 0;
     constexpr ASTNode() noexcept = default;
     virtual ~ASTNode() noexcept = default;
 
     virtual std::string toString(std::size_t indent = 0) const = 0;
-    constexpr std::size_t getLine() const noexcept { return line; }
-    constexpr std::size_t getColumn() const noexcept { return column; }
 
 #if MN_DEBUG
     virtual void dump(std::ostream& os, std::size_t indentDepth = 0) const = 0;
 #endif  // MN_DEBUG
-
-   protected:
-    std::size_t line = 0, column = 0;
 };
 
 struct Expression : public ASTNode {

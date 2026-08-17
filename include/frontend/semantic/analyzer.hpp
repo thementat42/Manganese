@@ -106,12 +106,12 @@ class analyzer final : public _analyzer_base_t {
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
-        logging::logError(node->getLine(), node->getColumn(), message, std::forward<Args>(args)...);
+        logging::logError(node->line, node->column, message, std::forward<Args>(args)...);
     }
 
     template <class... Args>
     static void logWarning(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
-        logging::logWarning(node->getLine(), node->getColumn(), message, std::forward<Args>(args)...);
+        logging::logWarning(node->line, node->column, message, std::forward<Args>(args)...);
     }
 
    protected:
