@@ -39,7 +39,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
 // Specific type parsing methods
 
 ast::Type* Parser::parseAggregateType() {
-    DISCARD(consumeToken());  // Consume the 'aggregate' token
+    const Token startToken = consumeToken();  // Consume the 'aggregate' token
     if (peekTokenType() == TokenType::Identifier) {
         logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
                             "Aggregate names are ignored in aggregate type declarations");
@@ -64,27 +64,25 @@ ast::Type* Parser::parseAggregateType() {
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end aggregate type declaration");
-    return arena.emplace<ast::AggregateType>(std::move(fieldTypes));
+    return makeNode<ast::AggregateType>(startToken, std::move(fieldTypes));
 }
 
-ast::Type* Parser::parseArrayType(ast::Type* left, Precedence precedence) {
+ast::Type* Parser::parseArrayType(ast::Type* left, Precedence) {
     ast::Expression* lengthExpression = nullptr;
-    DISCARD(precedence);  // Avoid unused variable warning
-    DISCARD(consumeToken());  // Consume the left square bracket '['
+    const Token startToken = consumeToken();  // Consume the left square bracket '['
     if (peekTokenType() != TokenType::RightSquare) {
         // If the next token is not a right square bracket, it's a length expression
         lengthExpression = parseExpression(Precedence::Default);
     }
     if (flags.parsingAliasStatement && lengthExpression == nullptr) {
-        logError(left->getLine(), left->getColumn(),
-                 "Arrays in alias statements must have an explicit length expression");
+        logError(left->line, left->column, "Arrays in alias statements must have an explicit length expression");
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
-    return arena.emplace<ast::ArrayType>(left, lengthExpression);
+    return makeNode<ast::ArrayType>(startToken, left, lengthExpression);
 }
 
 ast::Type* Parser::parseFunctionType() {
-    DISCARD(consumeToken());  // consume the 'func' token
+    const Token startToken = consumeToken();  // consume the 'func' token
 
     expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
 
@@ -136,11 +134,11 @@ ast::Type* Parser::parseFunctionType() {
         returnType = parseType(Precedence::Default);
     }
 
-    return arena.emplace<ast::FunctionType>(std::move(parameterTypes), returnType);
+    return makeNode<ast::FunctionType>(startToken, std::move(parameterTypes), returnType);
 }
 
 ast::Type* Parser::parseGenericType(ast::Type* left, Precedence) {
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken();
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
     std::vector<ast::Type*> typeParameters;
     while (!done()) {
@@ -154,41 +152,41 @@ ast::Type* Parser::parseGenericType(ast::Type* left, Precedence) {
         }
     }
     expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return arena.emplace<ast::GenericType>(left, std::move(typeParameters));
+    return makeNode<ast::GenericType>(startToken, left, std::move(typeParameters));
 }
 
 ast::Type* Parser::parseParenthesizedType() {
-    DISCARD(consumeToken());  // Skip the '('
+    const Token startToken = consumeToken();  // Skip the '('
     ast::Type* innerType = parseType(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
     return innerType;
 }
 
 ast::Type* Parser::parsePointerType() {
-    DISCARD(consumeToken());  // Consume `ptr`
+    const Token startToken = consumeToken();  // Consume `ptr`
     bool isMutable = false;
     if (peekTokenType() == TokenType::Mut) {
         isMutable = true;
         DISCARD(consumeToken());  // Consume `mut`
     }
-    return arena.emplace<ast::PointerType>(parseType(Precedence::Default), isMutable);
+    return makeNode<ast::PointerType>(startToken, parseType(Precedence::Default), isMutable);
 }
 
 ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
-    DISCARD(consumeToken());  // consume the `::`
+    const Token startToken = consumeToken();  // consume the `::`
     ast::Type* type = parseType(precedence);
-    return arena.emplace<ast::ScopedType>(left, type);
+    return makeNode<ast::ScopedType>(startToken, left, type);
 }
 
 ast::Type* Parser::parseSymbolType() {
     using enum ast::PrimitiveType_t;
-    Token token = peekToken();
-    if (!token.isPrimitiveType()) {
-        return arena.emplace<ast::SymbolType>(expectToken(TokenType::Identifier).getLexeme());
+    const Token startToken = peekToken();
+    if (!startToken.isPrimitiveType()) {
+        return makeNode<ast::SymbolType>(startToken, expectToken(TokenType::Identifier).getLexeme());
     }
     // If the token is a primitive type, we can directly create a SymbolType
     DISCARD(consumeToken());
-    const std::string lexeme = token.getLexeme();
+    const std::string lexeme = startToken.getLexeme();
     ast::PrimitiveType_t prim_t = not_primitive;
     if (lexeme == int8_str) {
         prim_t = i8;
@@ -223,21 +221,20 @@ ast::Type* Parser::parseSymbolType() {
     } else {
         ASSERT_UNREACHABLE("Unknown primitive type " + lexeme);
     }
-    ast::SymbolType* symbol_type = arena.emplace<ast::SymbolType>(token.getLexeme(), prim_t);
-    return symbol_type;
+    return makeNode<ast::SymbolType>(startToken, startToken.getLexeme(), prim_t);
 }
 
 ast::Type* Parser::parseTypeofType() {
-    DISCARD(consumeToken());  // skip typeof
+    const Token startToken = consumeToken();  // skip typeof
     expectToken(lexer::TokenType::LeftParen, "Expected '(' after typeof");
     ast::Expression* innerExpression = parseExpression(Precedence::Default);
     if (!innerExpression) {
         logError(peekToken().getLine(), peekToken().getColumn(), "Expected a valid expression inside 'typeof(...)'.");
         // Error recovery: give it a safe dummy fallback expression
-        innerExpression = arena.emplace<ast::NumberLiteralExpression>(mnstl::number_t{std::int32_t{0}});
+        innerExpression = makeNode<ast::NumberLiteralExpression>(startToken, mnstl::number_t{std::int32_t{0}});
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
-    return arena.emplace<ast::TypeofType>(innerExpression);
+    return makeNode<ast::TypeofType>(startToken, innerExpression);
 }
 
 }  // namespace Manganese::parser
