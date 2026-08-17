@@ -76,6 +76,7 @@ mnstl::fold_result_t PrefixExpression::fold() const NOEXCEPT_IF_RELEASE {
         case UnaryPlus:
         case UnaryMinus:
         case BitNot:
+        case Not: return mnstl::fold_result_t{};
         default: ASSERT_UNREACHABLE(std::format("Unknown prefix operator {}", lexer::tokenTypeToString(op)));
     }
 };

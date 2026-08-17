@@ -181,6 +181,19 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             expression->semanticType = static_cast<const Pointer*>(expression->right->semanticType)->baseType;
         } break;
 
+        case Not: {
+            const typeCompatibilityResult canBeBool
+                = areTypesCompatible(rhsType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+
+            if (!canBeBool) {
+                logError(expression, "Operator '!' requires a boolean operand, got '{}'", rhsType->toString());
+                return exprvisit_t::Failure;
+            } else if (canBeBool.result == Compatible_t::Warning) {
+                logWarning(expression, "{}", canBeBool.message);
+            }
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
+        } break;
+
         default:
             ASSERT_UNREACHABLE(std::format("Unknown prefix operator {}", lexer::tokenTypeToString(expression->op)));
     }
