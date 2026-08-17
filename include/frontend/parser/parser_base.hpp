@@ -11,6 +11,7 @@
 #include <mnstl/chunk_allocator.hxx>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -135,6 +136,14 @@ class Parser {
 
     // ~ Helpers
     ast::Block parseBlock(const std::string& blockName);
+    template <class T, class... Args>
+        requires(std::is_convertible_v<T*, ast::ASTNode*>)
+    T* makeNode(const Token& startToken, Args&&... args) {
+        T* node = arena.emplace<T>(std::forward<Args>(args)...);
+        node->line = startToken.getLine();
+        node->column = startToken.getColumn();
+        return node;
+    }
 
     bool isUnaryContext() const noexcept;
 
