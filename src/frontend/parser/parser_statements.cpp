@@ -517,46 +517,6 @@ ast::Statement* Parser::parseSwitchStatement() {
     return arena.emplace<ast::SwitchStatement>(variable, std::move(cases), std::move(defaultBody));
 }
 
-ast::Statement* Parser::parseVisibilityAffectedStatement() {
-    ast::Visibility visibility;
-    switch (consumeToken().getType()) {
-        case TokenType::Private: visibility = ast::Visibility::Private; break;
-        case TokenType::Public: visibility = ast::Visibility::Public; break;
-        default:
-            ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
-                               + lexer ::tokenTypeToString(peekTokenType()));
-    }
-    std::size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
-    switch (peekTokenType()) {
-        case TokenType::Alias: {
-            auto* tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement());
-            tempAlias->visibility = visibility;
-            return tempAlias;
-        }
-        case TokenType::Aggregate: {
-            auto* tempAggregate
-                = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
-            tempAggregate->visibility = visibility;
-            return tempAggregate;
-        }
-        case TokenType::Enum: {
-            auto* tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement());
-            tempEnum->visibility = visibility;
-            return tempEnum;
-        }
-        case TokenType::Func: {
-            auto* tempFunction = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement());
-            tempFunction->visibility = visibility;
-            return tempFunction;
-        }
-        default:
-            logError(startLine, startColumn, "{} cannot follow a visibility modifier",
-                     lexer::tokenTypeToString(peekTokenType()));
-            // Parse the statement as if it had no visibility modifier
-            return parseStatement();
-    }
-}
-
 ast::Statement* Parser::parseWhileLoopStatement() {
     DISCARD(consumeToken());
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
@@ -565,4 +525,46 @@ ast::Statement* Parser::parseWhileLoopStatement() {
 
     return arena.emplace<ast::WhileLoopStatement>(parseBlock("while loop body"), condition);
 }
+
+ast::Statement* Parser::parseVariableDeclarationStatement() {
+    ast::Type* explicitType = nullptr;
+    ast::Expression* value = nullptr;
+    ast::Visibility visibility = defaultVisibility;
+
+    DISCARD(consumeToken());  // Consume the 'let' token
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        DISCARD(consumeToken());  // Consume the 'mut' token
+        isMutable = true;
+    }
+    std::string name = expectToken(TokenType::Identifier,
+                                   std::format("Expected variable name after '{}'", isMutable ? "let mut" : "let"))
+                           .getLexeme();
+    if (peekTokenType() == TokenType::Colon) {
+        DISCARD(consumeToken());  // Consume the colon
+        if (peekTokenType() == TokenType::Public) {
+            visibility = ast::Visibility::Public;
+            DISCARD(consumeToken());  // Consume the public keyword
+        } else if (peekTokenType() == TokenType::Private) [[unlikely]] {
+            // private is the default so it'd mainly be used for emphasis
+            visibility = ast::Visibility::Private;
+            DISCARD(consumeToken());  // Consume the private keyword
+        }
+        explicitType = parseType(Precedence::Default);
+    }
+    if (peekTokenType() != TokenType::Semicolon) {
+        expectToken(TokenType::Assignment, "Expected '=' or ';' after variable name");
+        value = parseExpression(Precedence::Default);
+    } else if (explicitType == nullptr) {
+        // If no value is provided, we need to have a type
+        expectToken(TokenType::Colon, "Expected ':' to specify type for variable without initial value");
+        explicitType = parseType(Precedence::Default);
+    }
+
+    expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
+
+    return arena.emplace<ast::VariableDeclarationStatement>(isMutable, std::move(name), visibility, value,
+                                                            explicitType);
+}
+
 }  // namespace Manganese::parser
