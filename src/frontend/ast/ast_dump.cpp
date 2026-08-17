@@ -108,6 +108,7 @@ void ContinueStatement::dump(std::ostream& os, std::size_t indent) const {
 void EmptyStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "EmptyStatement", *this);
+    os << " }";  // header includes an opening curly brace
 }
 
 void EnumDeclarationStatement::dump(std::ostream& os, std::size_t indent) const {
