@@ -42,7 +42,7 @@ ast::Statement* Parser::parseStatement() {
 // Specific statement parsing methods
 
 ast::Statement* Parser::parseAggregateDeclarationStatement() {
-    const Token startToken = consumeToken(); 
+    const Token startToken = consumeToken();
     std::vector<std::string> genericTypes;
     std::vector<ast::AggregateField> fields;
     std::string name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
@@ -102,12 +102,12 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
 
     // Move since AggregateField contains a unique_ptr which is not copyable
     return makeNode<ast::AggregateDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
-                                                             std::move(fields));
+                                                        std::move(fields));
 }
 
 ast::Statement* Parser::parseAliasStatement() {
     flags.parsingAliasStatement = true;
-    const Token startToken = consumeToken();   // consume alias
+    const Token startToken = consumeToken();  // consume alias
     std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Assignment, "Expected '=' after an alias name to introduce the aliased type.");
     ast::Type* baseType = parseType(Precedence::Default);
@@ -117,19 +117,19 @@ ast::Statement* Parser::parseAliasStatement() {
 }
 
 ast::Statement* Parser::parseBreakStatement() {
-    const Token startToken = consumeToken(); 
+    const Token startToken = consumeToken();
     expectToken(TokenType::Semicolon);
     return makeNode<ast::BreakStatement>(startToken);
 }
 
 ast::Statement* Parser::parseContinueStatement() {
-    const Token startToken = consumeToken(); 
+    const Token startToken = consumeToken();
     expectToken(TokenType::Semicolon);
     return makeNode<ast::ContinueStatement>(startToken);
 }
 
 ast::Statement* Parser::parseDoWhileLoopStatement() {
-    const Token startToken = consumeToken(); 
+    const Token startToken = consumeToken();
     ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
@@ -185,14 +185,12 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the enum body");
-    if (values.empty()) {
-        logError(startToken.getLine(), startToken.getColumn(), "Enum '{}' has no values", name);
-    }
+    if (values.empty()) { logError(startToken.getLine(), startToken.getColumn(), "Enum '{}' has no values", name); }
     return makeNode<ast::EnumDeclarationStatement>(startToken, std::move(name), baseType, std::move(values));
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
-    const Token startToken = consumeToken();   // consume 'for'
+    const Token startToken = consumeToken();  // consume 'for'
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce for loop");
 
@@ -227,7 +225,7 @@ ast::Statement* Parser::parseForLoopStatement() {
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
     // TODO: Handle function attributes
-    const Token startToken = consumeToken(); 
+    const Token startToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
     std::vector<ast::FunctionParameter> params;
     std::vector<std::string> genericTypes;
@@ -331,12 +329,12 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         DISCARD(consumeToken());
         returnType = parseType(Precedence::Default);
     }
-    return makeNode<ast::FunctionDeclarationStatement>(startToken, std::move(name), std::move(genericTypes), std::move(params),
-                                                            returnType, parseBlock("function body"));
+    return makeNode<ast::FunctionDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
+                                                       std::move(params), returnType, parseBlock("function body"));
 }
 
 ast::Statement* Parser::parseIfStatement() {
-    const Token startToken = consumeToken(); 
+    const Token startToken = consumeToken();
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
@@ -437,7 +435,7 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
 }
 
 ast::Statement* Parser::parseNamespace() {
-    const Token startToken = consumeToken();   // skip 'namespace'
+    const Token startToken = consumeToken();  // skip 'namespace'
     std::string name = expectToken(TokenType::Identifier, "Expected a namespace name after 'namespace'").getLexeme();
     ast::Block body = parseBlock("namespace " + name);
     return makeNode<ast::NamespaceStatement>(startToken, std::move(name), std::move(body));
@@ -449,7 +447,7 @@ ast::Statement* Parser::parseRedundantSemicolon() {
 }
 
 ast::Statement* Parser::parseReturnStatement() {
-    const Token startToken = consumeToken(); 
+    const Token startToken = consumeToken();
     ast::Expression* expression = nullptr;
     if (peekTokenType() != TokenType::Semicolon) {
         // If the next token is not a semicolon, parse an expression
@@ -520,7 +518,7 @@ ast::Statement* Parser::parseSwitchStatement() {
 }
 
 ast::Statement* Parser::parseWhileLoopStatement() {
-    const Token startToken = consumeToken(); 
+    const Token startToken = consumeToken();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end while condition");
@@ -533,7 +531,7 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
     ast::Expression* value = nullptr;
     ast::Visibility visibility = defaultVisibility;
 
-    const Token startToken = consumeToken();   // Consume the 'let' token
+    const Token startToken = consumeToken();  // Consume the 'let' token
     bool isMutable = false;
     if (peekTokenType() == TokenType::Mut) {
         DISCARD(consumeToken());  // Consume the 'mut' token
@@ -566,7 +564,7 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
     return makeNode<ast::VariableDeclarationStatement>(startToken, isMutable, std::move(name), visibility, value,
-                                                            explicitType);
+                                                       explicitType);
 }
 
 }  // namespace Manganese::parser
