@@ -27,7 +27,7 @@ struct Indent {
 };
 
 inline void dumpHeader(std::ostream& os, Indent indent, std::string_view className, const ASTNode& node) {
-    os << indent << std::format("{} [{}:{}]", className, node.getLine(), node.getColumn()) << " {\n";
+    os << indent << std::format("{} [{}:{}]", className, node.line, node.column) << " {\n";
 }
 
 inline void dumpBlock(std::ostream& os, Indent indent, std::string_view label, const ast::Block& block) {
@@ -108,6 +108,7 @@ void ContinueStatement::dump(std::ostream& os, std::size_t indent) const {
 void EmptyStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "EmptyStatement", *this);
+    os << " }";  // header includes an opening curly brace
 }
 
 void EnumDeclarationStatement::dump(std::ostream& os, std::size_t indent) const {

@@ -14,17 +14,19 @@
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
+    const Token startToken = peekToken();
     const TokenType type = peekTokenType();
 
     if (type == TokenType::LeftBrace) {
         // don't need to move thanks to copy elision
-        return arena.emplace<ast::NestedBlockStatement>(parseBlock("nested block"));
+        return makeNode<ast::NestedBlockStatement>(startToken, parseBlock("nested block"));
     }
 
     // Handle bare semicolons
     if (type == TokenType::Semicolon) {
         DISCARD(consumeToken());
-        return ast::getEmptyStatement();
+        // still want line and column information for these
+        return makeNode<ast::EmptyStatement>(startToken);
     }
     const std::size_t index = tokenToIndex(type);
 
@@ -34,13 +36,13 @@ ast::Statement* Parser::parseStatement() {
     // Parse out an expression then convert it to a statement
     ast::Expression* expr = parseExpression(Precedence::Default);
     expectToken(TokenType::Semicolon, "Expected semicolon after expression");
-    return arena.emplace<ast::ExpressionStatement>(expr);
+    return makeNode<ast::ExpressionStatement>(startToken, expr);
 }
 
 // Specific statement parsing methods
 
 ast::Statement* Parser::parseAggregateDeclarationStatement() {
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken(); 
     std::vector<std::string> genericTypes;
     std::vector<ast::AggregateField> fields;
     std::string name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
@@ -99,46 +101,46 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
     expectToken(TokenType::RightBrace);
 
     // Move since AggregateField contains a unique_ptr which is not copyable
-    return arena.emplace<ast::AggregateDeclarationStatement>(std::move(name), std::move(genericTypes),
+    return makeNode<ast::AggregateDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
                                                              std::move(fields));
 }
 
 ast::Statement* Parser::parseAliasStatement() {
     flags.parsingAliasStatement = true;
-    DISCARD(consumeToken());  // consume alias
+    const Token startToken = consumeToken();   // consume alias
     std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Assignment, "Expected '=' after an alias name to introduce the aliased type.");
     ast::Type* baseType = parseType(Precedence::Default);
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
     flags.parsingAliasStatement = false;
-    return arena.emplace<ast::AliasStatement>(baseType, std::move(alias));
+    return makeNode<ast::AliasStatement>(startToken, baseType, std::move(alias));
 }
 
 ast::Statement* Parser::parseBreakStatement() {
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken(); 
     expectToken(TokenType::Semicolon);
-    return arena.emplace<ast::BreakStatement>();
+    return makeNode<ast::BreakStatement>(startToken);
 }
 
 ast::Statement* Parser::parseContinueStatement() {
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken(); 
     expectToken(TokenType::Semicolon);
-    return arena.emplace<ast::ContinueStatement>();
+    return makeNode<ast::ContinueStatement>(startToken);
 }
 
 ast::Statement* Parser::parseDoWhileLoopStatement() {
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken(); 
     ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
     expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
-    return arena.emplace<ast::WhileLoopStatement>(std::move(body), std::move(condition), /*isDoWhile=*/true);
+    return makeNode<ast::WhileLoopStatement>(startToken, std::move(body), std::move(condition), /*isDoWhile=*/true);
 }
 
 ast::Statement* Parser::parseEnumDeclarationStatement() {
-    Token enumStartToken = consumeToken();
+    const Token startToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
     ast::Type* baseType = nullptr;  // default if no type specified or if there's an error
     std::vector<ast::EnumValue> values;
@@ -150,7 +152,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
                      "Enums can only have integral types as their underlying type, not {}", underlyingTok.getLexeme());
             DISCARD(consumeToken());
         } else if (underlyingTok.isPrimitiveType()) {
-            baseType = arena.emplace<ast::SymbolType>(underlyingTok.getLexeme());
+            baseType = makeNode<ast::SymbolType>(startToken, underlyingTok.getLexeme());
             DISCARD(consumeToken());
         } else {
             logError(underlyingTok.getLine(), underlyingTok.getColumn(), "Expected an underlying type for an enum");
@@ -158,7 +160,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
             if (underlyingTok.getType() != TokenType::LeftBrace) { DISCARD(consumeToken()); }
         }
     }
-    if (!baseType) { baseType = arena.emplace<ast::SymbolType>("int32"); }
+    if (!baseType) { baseType = makeNode<ast::SymbolType>(startToken, "int32"); }
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
     while (!done() && peekTokenType() != TokenType::RightBrace) {
         std::string valueName = expectToken(TokenType::Identifier, "Expected enum value name").getLexeme();
@@ -184,13 +186,13 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the enum body");
     if (values.empty()) {
-        logError(enumStartToken.getLine(), enumStartToken.getColumn(), "Enum '{}' has no values", name);
+        logError(startToken.getLine(), startToken.getColumn(), "Enum '{}' has no values", name);
     }
-    return arena.emplace<ast::EnumDeclarationStatement>(std::move(name), baseType, std::move(values));
+    return makeNode<ast::EnumDeclarationStatement>(startToken, std::move(name), baseType, std::move(values));
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
-    DISCARD(consumeToken());  // consume 'for'
+    const Token startToken = consumeToken();   // consume 'for'
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce for loop");
 
@@ -201,7 +203,7 @@ ast::Statement* Parser::parseForLoopStatement() {
             init = parseVariableDeclarationStatement();
         } else {
             ast::Expression* initExpr = parseExpression(Precedence::Default);
-            init = arena.emplace<ast::ExpressionStatement>(initExpr);
+            init = makeNode<ast::ExpressionStatement>(startToken, initExpr);
             expectToken(TokenType::Semicolon, "Expected ';' after for-loop initializer");
         }
     } else {
@@ -220,12 +222,12 @@ ast::Statement* Parser::parseForLoopStatement() {
 
     ast::Block body = parseBlock("for loop body");
 
-    return arena.emplace<ast::ForLoopStatement>(init, condition, post, std::move(body));
+    return makeNode<ast::ForLoopStatement>(startToken, init, condition, post, std::move(body));
 }
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
     // TODO: Handle function attributes
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken(); 
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
     std::vector<ast::FunctionParameter> params;
     std::vector<std::string> genericTypes;
@@ -329,12 +331,12 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         DISCARD(consumeToken());
         returnType = parseType(Precedence::Default);
     }
-    return arena.emplace<ast::FunctionDeclarationStatement>(std::move(name), std::move(genericTypes), std::move(params),
+    return makeNode<ast::FunctionDeclarationStatement>(startToken, std::move(name), std::move(genericTypes), std::move(params),
                                                             returnType, parseBlock("function body"));
 }
 
 ast::Statement* Parser::parseIfStatement() {
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken(); 
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
@@ -366,7 +368,7 @@ ast::Statement* Parser::parseIfStatement() {
             elseBody.push_back(ast::getEmptyStatement());
         }
     }
-    return arena.emplace<ast::IfStatement>(condition, std::move(body), std::move(elifs), std::move(elseBody));
+    return makeNode<ast::IfStatement>(startToken, condition, std::move(body), std::move(elifs), std::move(elseBody));
 }
 
 ast::Statement* Parser::parseImportStatement() {
@@ -435,10 +437,10 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
 }
 
 ast::Statement* Parser::parseNamespace() {
-    DISCARD(consumeToken());  // skip 'namespace'
+    const Token startToken = consumeToken();   // skip 'namespace'
     std::string name = expectToken(TokenType::Identifier, "Expected a namespace name after 'namespace'").getLexeme();
     ast::Block body = parseBlock("namespace " + name);
-    return arena.emplace<ast::NamespaceStatement>(std::move(name), std::move(body));
+    return makeNode<ast::NamespaceStatement>(startToken, std::move(name), std::move(body));
 }
 
 ast::Statement* Parser::parseRedundantSemicolon() {
@@ -447,7 +449,7 @@ ast::Statement* Parser::parseRedundantSemicolon() {
 }
 
 ast::Statement* Parser::parseReturnStatement() {
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken(); 
     ast::Expression* expression = nullptr;
     if (peekTokenType() != TokenType::Semicolon) {
         // If the next token is not a semicolon, parse an expression
@@ -455,12 +457,12 @@ ast::Statement* Parser::parseReturnStatement() {
         expression = parseExpression(Precedence::Default);
     }
     expectToken(TokenType::Semicolon, "Expected semicolon after return statement");
-    return arena.emplace<ast::ReturnStatement>(expression);
+    return makeNode<ast::ReturnStatement>(startToken, expression);
 }
 
 ast::Statement* Parser::parseSwitchStatement() {
-    Token temp = consumeToken();
-    std::size_t startLine = temp.getLine(), startColumn = temp.getColumn();
+    const Token startToken = consumeToken();
+    std::size_t startLine = startToken.getLine(), startColumn = startToken.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
 
     ast::Expression* variable = parseExpression(Precedence::Default);
@@ -514,55 +516,57 @@ ast::Statement* Parser::parseSwitchStatement() {
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
-    return arena.emplace<ast::SwitchStatement>(variable, std::move(cases), std::move(defaultBody));
-}
-
-ast::Statement* Parser::parseVisibilityAffectedStatement() {
-    ast::Visibility visibility;
-    switch (consumeToken().getType()) {
-        case TokenType::Private: visibility = ast::Visibility::Private; break;
-        case TokenType::Public: visibility = ast::Visibility::Public; break;
-        default:
-            ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
-                               + lexer ::tokenTypeToString(peekTokenType()));
-    }
-    std::size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
-    switch (peekTokenType()) {
-        case TokenType::Alias: {
-            auto* tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement());
-            tempAlias->visibility = visibility;
-            return tempAlias;
-        }
-        case TokenType::Aggregate: {
-            auto* tempAggregate
-                = static_cast<ast::AggregateDeclarationStatement*>(parseAggregateDeclarationStatement());
-            tempAggregate->visibility = visibility;
-            return tempAggregate;
-        }
-        case TokenType::Enum: {
-            auto* tempEnum = static_cast<ast::EnumDeclarationStatement*>(parseEnumDeclarationStatement());
-            tempEnum->visibility = visibility;
-            return tempEnum;
-        }
-        case TokenType::Func: {
-            auto* tempFunction = static_cast<ast::FunctionDeclarationStatement*>(parseFunctionDeclarationStatement());
-            tempFunction->visibility = visibility;
-            return tempFunction;
-        }
-        default:
-            logError(startLine, startColumn, "{} cannot follow a visibility modifier",
-                     lexer::tokenTypeToString(peekTokenType()));
-            // Parse the statement as if it had no visibility modifier
-            return parseStatement();
-    }
+    return makeNode<ast::SwitchStatement>(startToken, variable, std::move(cases), std::move(defaultBody));
 }
 
 ast::Statement* Parser::parseWhileLoopStatement() {
-    DISCARD(consumeToken());
+    const Token startToken = consumeToken(); 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end while condition");
 
-    return arena.emplace<ast::WhileLoopStatement>(parseBlock("while loop body"), condition);
+    return makeNode<ast::WhileLoopStatement>(startToken, parseBlock("while loop body"), condition);
 }
+
+ast::Statement* Parser::parseVariableDeclarationStatement() {
+    ast::Type* explicitType = nullptr;
+    ast::Expression* value = nullptr;
+    ast::Visibility visibility = defaultVisibility;
+
+    const Token startToken = consumeToken();   // Consume the 'let' token
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        DISCARD(consumeToken());  // Consume the 'mut' token
+        isMutable = true;
+    }
+    std::string name = expectToken(TokenType::Identifier,
+                                   std::format("Expected variable name after '{}'", isMutable ? "let mut" : "let"))
+                           .getLexeme();
+    if (peekTokenType() == TokenType::Colon) {
+        DISCARD(consumeToken());  // Consume the colon
+        if (peekTokenType() == TokenType::Public) {
+            visibility = ast::Visibility::Public;
+            DISCARD(consumeToken());  // Consume the public keyword
+        } else if (peekTokenType() == TokenType::Private) [[unlikely]] {
+            // private is the default so it'd mainly be used for emphasis
+            visibility = ast::Visibility::Private;
+            DISCARD(consumeToken());  // Consume the private keyword
+        }
+        explicitType = parseType(Precedence::Default);
+    }
+    if (peekTokenType() != TokenType::Semicolon) {
+        expectToken(TokenType::Assignment, "Expected '=' or ';' after variable name");
+        value = parseExpression(Precedence::Default);
+    } else if (explicitType == nullptr) {
+        // If no value is provided, we need to have a type
+        expectToken(TokenType::Colon, "Expected ':' to specify type for variable without initial value");
+        explicitType = parseType(Precedence::Default);
+    }
+
+    expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
+
+    return makeNode<ast::VariableDeclarationStatement>(startToken, isMutable, std::move(name), visibility, value,
+                                                            explicitType);
+}
+
 }  // namespace Manganese::parser

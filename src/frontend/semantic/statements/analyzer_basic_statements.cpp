@@ -5,8 +5,6 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
-#include "frontend/ast/ast_statements.hpp"
-
 namespace Manganese::semantic {
 
 auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {

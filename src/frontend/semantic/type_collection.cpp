@@ -20,7 +20,7 @@ Result analyzer::collectTypes() {
 }
 
 static FORCE_INLINE void _reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) {
-    logging::logError(node->getLine(), node->getColumn(), "'{}' was already declared in this scope",
+    logging::logError(node->line, node->column, "'{}' was already declared in this scope",
                       redeclaredSymbolName);
 }
 
