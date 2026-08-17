@@ -4,6 +4,7 @@
 #include <io/logging.hpp>
 #include <string>
 #include <utility>
+#include "core.hpp"
 
 namespace Manganese::parser {
 
@@ -105,9 +106,11 @@ std::string importToString(const Import& import) {
 ast::Block Parser::parseBlock(const std::string& blockName) {
     expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
     ast::Block block;
-    while (!done()) {
-        if (peekTokenType() == TokenType::RightBrace) {
-            break;  // End of the block
+    while (!done() && peekTokenType() != TokenType::RightBrace) {
+        if (peekTokenType() == TokenType::Semicolon) {
+            // skip bare semicolons
+            DISCARD(consumeToken());
+            continue;
         }
         block.push_back(parseStatement());
     }

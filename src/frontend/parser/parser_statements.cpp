@@ -20,6 +20,12 @@ ast::Statement* Parser::parseStatement() {
         // don't need to move thanks to copy elision
         return arena.emplace<ast::NestedBlockStatement>(parseBlock("nested block"));
     }
+
+    // Handle bare semicolons
+    if (type == TokenType::Semicolon) {
+        DISCARD(consumeToken());
+        return arena.emplace<ast::EmptyStatement>();
+    }
     const std::size_t index = tokenToIndex(type);
 
     const statementHandler_t handler = statementLookup[index];
@@ -27,7 +33,7 @@ ast::Statement* Parser::parseStatement() {
 
     // Parse out an expression then convert it to a statement
     ast::Expression* expr = parseExpression(Precedence::Default);
-    if (!flags.parsingBlockPrecursor) { expectToken(TokenType::Semicolon, "Expected semicolon after expression"); }
+    expectToken(TokenType::Semicolon, "Expected semicolon after expression");
     return arena.emplace<ast::ExpressionStatement>(expr);
 }
 
@@ -328,12 +334,10 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
 }
 
 ast::Statement* Parser::parseIfStatement() {
-    flags.parsingBlockPrecursor = true;
     DISCARD(consumeToken());
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
-    flags.parsingBlockPrecursor = false;
     expectToken(TokenType::RightParen, "Expected ')' to end if condition");
     ast::Block body = parseBlock("if body");
 
@@ -341,10 +345,9 @@ ast::Statement* Parser::parseIfStatement() {
     while (peekTokenType() == TokenType::Elif) {
         DISCARD(consumeToken());
 
-        flags.parsingBlockPrecursor = true;
         expectToken(TokenType::LeftParen, "Expected '(' to introduce elif condition");
         ast::Expression* elifCondition = parseExpression(Precedence::Default);
-        flags.parsingBlockPrecursor = false;
+
         expectToken(TokenType::RightParen, "Expected ')' to end elif condition");
 
         elifs.emplace_back(elifCondition, parseBlock("elif body"));
@@ -460,9 +463,7 @@ ast::Statement* Parser::parseSwitchStatement() {
     std::size_t startLine = temp.getLine(), startColumn = temp.getColumn();
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
 
-    flags.parsingBlockPrecursor = true;
     ast::Expression* variable = parseExpression(Precedence::Default);
-    flags.parsingBlockPrecursor = false;
 
     expectToken(TokenType::RightParen, "Expected ')' to end switch variable");
     expectToken(TokenType::LeftBrace, "Expected '{' to start the switch body");

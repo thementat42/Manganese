@@ -45,7 +45,6 @@ class Parser {
     struct {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
-        bool parsingBlockPrecursor : 1 = false;  // if/for/while, etc.
         bool parsingAliasStatement : 1 = false;
     } flags;
 
