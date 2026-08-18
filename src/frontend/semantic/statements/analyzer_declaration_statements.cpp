@@ -274,7 +274,7 @@ auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
             variableType = initializerType;
         } else {
             // Check explicit type against initializer type
-            const typeCompatibilityResult compat = areTypesCompatible(variableType, initializerType);
+            const typeCompatibilityResult compat = areTypesCompatible(initializerType, variableType);
             if (!compat) {
                 logError(statement, "Cannot assign value of type {} to variable '{}' of type {}",
                          initializerType->toString(), statement->name, variableType->toString());
