@@ -1,32 +1,48 @@
 #include <cassert>
 #include <core.hpp>
+#include <filesystem>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <fstream>
+#include <iostream>
 #include <string>
 
 #include "testrunner.hpp"
 
 namespace Manganese::tests {
 
-using semantic::analyzer;
-
+constexpr static const char* logFileName = "logs/parser_tests.log";
 static mnstl::chunk_allocator arena;
 
 // Helper: Parses and runs full semantic analysis on source code
-static bool analyzeSource(const std::string& source, bool expectSuccess = true) {
+static bool analyzeSource(const std::string& source, bool expectSuccess = true, std::string_view testName = "") {
     parser::Parser parser(source, lexer::Mode::String, arena);
     parser::ParsedFile parsedFile = parser.parse();
 
-    analyzer analyzer(parsedFile, arena);
+    semantic::analyzer analyzer(parsedFile, arena);
     Result result = analyzer.analyze();
 
-    if (expectSuccess) {
-        return result == Result::Success;
+    std::ofstream logFile(logFileName, std::ios::app);
+    if (!logFile) {
+        std::cerr << "ERROR: Could not open log file for writing.\n";
     } else {
-        return result == Result::Failure;
+        logFile << "Test: " << testName << "\n";
+        logFile << "Expected Result: " << (expectSuccess ? "Success" : "Failure") << "\n";
+        logFile << "Actual Result: " << (result == Result::Success ? "Success" : "Failure") << '\n';
+        logFile << "Analyzed " << testName << "AST:\n";
+        for (const auto& stmt : parsedFile.program) {
+            logFile << "String representation: " << stmt->toString(0) << '\n';
+            logFile << "Dumping statement:\n";
+            stmt->dump(logFile);  // Node dump includes semanticType when available
+            logFile << "---------------------\n";
+
+            logFile.close();
+        }
     }
+
+    return expectSuccess ? result == Result::Success : result == Result::Failure;
 }
 
 // Statement Tests
@@ -144,7 +160,6 @@ static bool testIfStatement() {
     // TODO
     return true;
 }
-
 
 static bool testSwitchStatement() {
     std::string source = R"(
@@ -380,6 +395,39 @@ static bool testFunctionTypeAsValue() {
     return true;
 }
 
+// Other
+
+static bool testAnalyzeFromFile() {
+    std::filesystem::path fullPath = std::filesystem::current_path() / "tests/analyzer_tests.mn";
+
+    mnstl::chunk_allocator file_allocator{};
+    parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
+    parser::ParsedFile parsedFile = parser.parse();
+
+    semantic::analyzer analyzer(parsedFile, file_allocator);
+
+    std::ofstream logFile(logFileName, std::ios::app);
+    Result result = analyzer.analyze();
+
+    if (!logFile) {
+        std::cerr << "ERROR: Could not open log file for writing.\n";
+    } else {
+        logFile << "Test: Analysis from file\n";
+        logFile << "Expected Result: Success\n";
+        logFile << "Actual Result: " << (result == Result::Success ? "Success" : "Failure") << '\n';
+        logFile << "Analyzed File AST:\n";
+        for (const auto& stmt : parsedFile.program) {
+            logFile << "String representation: " << stmt->toString(0) << '\n';
+            logFile << "Dumping statement:\n";
+            stmt->dump(logFile);  // Node dump includes semanticType when available
+            logFile << "---------------------\n";
+            logFile.close();
+        }
+    }
+
+    return result == Result::Success;
+}
+
 void runAnalyzerTests(TestRunner& runner) {
     // Statements
     runner.runTest("Aggregate Declaration Statement analysis", testAggregateDeclarationStatement);
@@ -409,6 +457,9 @@ void runAnalyzerTests(TestRunner& runner) {
     runner.runTest("Pointer Mutability Rules analysis", testPointerTypeMutability);
     runner.runTest("Disallow Array of Void analysis", testArrayOfVoidDisallowed);
     runner.runTest("First-class Function Types analysis", testFunctionTypeAsValue);
+
+    // Other
+    runner.runTest("Analysis from file", testAnalyzeFromFile);
 }
 
 }  // namespace Manganese::tests

@@ -1,0 +1,70 @@
+module semantic_tests;
+
+import std::io;
+
+alias MathFn = func(int32, int32) -> int32;
+
+public aggregate Vector2 [T] {
+    x: T;
+    y: T;
+}
+
+enum Status : uint8 {
+    Ok = 0,
+    Err = 1,
+}
+
+public func add(a: int32, b: int32) -> int32 {
+    return a + b;
+}
+
+func computeVectorSum(v1: Vector2@[int32], v2: Vector2@[int32]) -> Vector2@[int32] {
+    let result = Vector2@[int32] {
+        x = add(v1.x, v2.x),
+        y = add(v1.y, v2.y)
+    };
+    return result;
+}
+
+public func main() -> int32 {
+    # Variable Declarations & Inferencing
+    let mut counter: int32 = 0;
+    let pi = 3.14159f64;
+    let convertedPi = pi as float32;
+
+    # Aggregate & Generic Instantiation
+    let mut vecA = Vector2@[int32] { x = 10, y = 20 };
+    let vecB = Vector2@[int32] { x = 5, y = 15 };
+    let vecSum = computeVectorSum(vecA, vecB);
+
+    # Pointer Operators & Mutability
+    let mut targetValue: int32 = 100;
+    let mutPtr: ptr mut int32 = &targetValue;
+    *mutPtr = 200;
+
+    let readOnlyPtr: ptr int32 = mutPtr; # Coercing mut ptr to const ptr
+    let readValue = *readOnlyPtr;
+
+    # First-class Functions
+    let fnRef: MathFn = add;
+    let opResult = fnRef(counter, readValue);
+
+    # Control Flow & Arrays
+    let numbers = [1, 2, 3, 4, 5];
+    let mut index = 0;
+
+    while (index < 5) {
+        if (numbers[index] % 2 == 0) {
+            counter += numbers[index];
+        } else {
+            counter = counter + 1;
+        }
+        index++;
+    }
+
+    # Sizeof & Alignof expressions
+    let sizeCheck = sizeof(Vector2@[int32]);
+    let alignCheck = alignof(Status);
+
+    return counter + opResult;
+}
