@@ -47,14 +47,14 @@
 namespace Manganese::parser {
 
 ast::Expression* Parser::parseExpression(Precedence precedence) {
-    Token token = peekToken();
-
-    // Handle operators which have a unary and a binary version
-    // (e.g. `-` can be a unary negation or a binary subtraction)
-    if (isUnaryContext() && token.hasUnaryCounterpart()) {
-        token.overrideType(token.getUnaryCounterpart(), token.getLexeme());
-        precedence = Precedence::Unary;
+    if (isUnaryContext()) {
+        Token& lookahead = peekToken();
+        if (lookahead.hasUnaryCounterpart()) {
+            lookahead.overrideType(lookahead.getUnaryCounterpart(), lookahead.getLexeme());
+        }
     }
+
+    Token token = peekToken();
     TokenType type = token.getType();
     const std::size_t index = tokenToIndex(type);
 
@@ -64,10 +64,6 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
     }
     // ast::Expression* left = nudIterator->second(this);
     ast::Expression* left = (this->*nudHandler)();
-
-    // ! For some reason this works
-    // ! Do not delete this
-    if (type == TokenType::AddressOf || type == TokenType::Dereference) { precedence = Precedence::Default; }
 
     while (!done()) {
         token = peekToken();
