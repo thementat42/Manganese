@@ -332,12 +332,11 @@ static bool testTypeCastExpression() {
 // Type Tests
 
 static bool testPointerTypeMutability() {
-    // Assigning immutable pointer to mutable pointer must fail
     std::string invalid = R"(
         func main() {
             let val: int32 = 10;
             let constPtr: ptr int32 = &val;
-            let mut mutPtr: ptr int32 = constPtr;
+            let mutPtr: ptr mut int32 = constPtr;
         }
     )";
     if (!analyzeSource(invalid, false)) { return false; }
