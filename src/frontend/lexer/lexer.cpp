@@ -67,9 +67,15 @@ void Lexer::lex(std::size_t numTokens) {
     }
 }
 
-Token Lexer::peekToken() {
-    if (done() && tokenStream.empty()) { return Token(TokenType::EndOfFile, "EOF", getLine(), getCol()); }
-    if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
+Token& Lexer::peekToken() {
+    if (tokenStream.empty()) {
+        if (done()) {
+            tokenStream.emplace_back(TokenType::EndOfFile, "EOF", getLine(), getCol());
+        } else {
+            lex(QUEUE_LOOKAHEAD_AMOUNT);
+        }
+    }
+
     return tokenStream[0];
 }
 
