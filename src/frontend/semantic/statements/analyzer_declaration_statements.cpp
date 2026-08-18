@@ -101,6 +101,7 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
 
     symbol->status = ResolutionStatus::InProgress;
 
+    // Default to an int32 if no type is given
     const SemanticType* underlyingType = typeContext.getPrimitive(ast::PrimitiveType_t::i32);
     if (statement->baseType) {
         if (visit(statement->baseType) == stmtvisit_t::Failure) {

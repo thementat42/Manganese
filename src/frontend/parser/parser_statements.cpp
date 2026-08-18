@@ -10,6 +10,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "frontend/parser/operators.hpp"
 
 namespace Manganese::parser {
 
@@ -140,31 +141,28 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
 }
 
 ast::Statement* Parser::parseEnumDeclarationStatement() {
-    const Token startToken = consumeToken();
+    const Token startToken = consumeToken();  // consume 'enum'
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
-    ast::Type* baseType = nullptr;  // default if no type specified or if there's an error
+
+    ast::Type* baseType = nullptr;
     std::vector<ast::EnumValue> values;
+
     if (peekTokenType() == TokenType::Colon) {
-        DISCARD(consumeToken());
-        Token underlyingTok = peekToken();
-        if (!underlyingTok.isInteger()) {
-            logError(underlyingTok.getLine(), underlyingTok.getColumn(),
-                     "Enums can only have integral types as their underlying type, not {}", underlyingTok.getLexeme());
-            DISCARD(consumeToken());
-        } else if (underlyingTok.isPrimitiveType()) {
-            baseType = makeNode<ast::SymbolType>(startToken, underlyingTok.getLexeme());
-            DISCARD(consumeToken());
-        } else {
-            logError(underlyingTok.getLine(), underlyingTok.getColumn(), "Expected an underlying type for an enum");
-            // If underlying type was just missing, don't skip the opening brace since that error will cascade
-            if (underlyingTok.getType() != TokenType::LeftBrace) { DISCARD(consumeToken()); }
+        DISCARD(consumeToken());  // consume ':'
+
+        // Parse any valid type expression (built-ins, aliases, qualified types, etc.)
+        baseType = parseType(Precedence::Default);
+        if (!baseType) {
+            logError(peekToken().getLine(), peekToken().getColumn(),
+                     "Expected valid underlying type after ':' for enum '{}'", name);
         }
     }
-    if (!baseType) { baseType = makeNode<ast::SymbolType>(startToken, "int32"); }
+
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
     while (!done() && peekTokenType() != TokenType::RightBrace) {
         std::string valueName = expectToken(TokenType::Identifier, "Expected enum value name").getLexeme();
         ast::Expression* valueExpression = nullptr;
+
         if (peekTokenType() == TokenType::Assignment) {
             DISCARD(consumeToken());
             valueExpression = parseExpression(Precedence::Default);
@@ -180,12 +178,15 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
                                             .line = peekToken().getLine(),
                                             .column = peekToken().getColumn()});
         }
+
         if (peekTokenType() != TokenType::RightBrace) {
             expectToken(TokenType::Comma, "Expected ',' to separate enum values");
         }
     }
     expectToken(TokenType::RightBrace, "Expected '}' to end the enum body");
+
     if (values.empty()) { logError(startToken.getLine(), startToken.getColumn(), "Enum '{}' has no values", name); }
+
     return makeNode<ast::EnumDeclarationStatement>(startToken, std::move(name), baseType, std::move(values));
 }
 
