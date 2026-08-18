@@ -39,12 +39,13 @@ Requirements:
     - The script should be run from the project root directory containing CMakeLists.txt
 """
 
-import sys
-import os
-import subprocess
 import argparse
-import shutil
+import os
 from pathlib import Path
+import shutil
+import subprocess
+import sys
+import time
 
 def check_cmake_installation():
     """Check that cmake is installed before running
@@ -307,8 +308,12 @@ if args.build_arg:
     # so collect all those items
     build_args.extend(list(arg[0] for arg in args.build_arg))
 
+build_start = time.perf_counter()
+
 run_command(cmake_args)
 run_command(build_args)
+
+build_time = time.perf_counter() - build_start
 
 # Move the output file from build/bin to the root directory
 os.chdir("..")  # since the build directory path is relative to the root, go back there
@@ -341,6 +346,8 @@ if args.clean:
         except Exception as e:
             print(f"\033[33mWarning: Could not remove {item}: {e}\033[0m")
     print("\033[34mCleaned build directory\033[0m")
+
+print(f"\033[95mBuild completed in {build_time:.2f} seconds\033[0m")
 
 if args.run:
     # If we chose not to move the file, it should be executed from the build/bin directory
