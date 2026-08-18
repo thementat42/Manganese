@@ -437,7 +437,7 @@ static bool testEnumDeclarationStatement() {
     Green,
     Blue
 })",
-        R"(private enum Status: int32 {
+        R"(private enum Status: float64 {
     Success = 0,
     Error = 1,
     Unknown = (-1)
