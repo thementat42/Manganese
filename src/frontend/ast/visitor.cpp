@@ -8,11 +8,11 @@ namespace Manganese::ast {
 template <class Expr, class Stmt, class Type>
 auto Visitor<Expr, Stmt, Type>::visit(ast::Expression* expr) -> exprvisit_t {
     switch (expr->kind) {
-#define STMT(name, str)
-#define EXPR(name, str) \
+#define STMT(name)
+#define EXPR(name) \
     case ast::ExpressionKind::name: return visit(static_cast<ast::name*>(expr));
 
-#define TYPE(name, str)
+#define TYPE(name)
 #include <frontend/ast/ast.def>
 
         default:
@@ -26,11 +26,11 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Expression* expr) -> exprvisit_t {
 template <class Expr, class Stmt, class Type>
 auto Visitor<Expr, Stmt, Type>::visit(ast::Statement* stmt) -> stmtvisit_t {
     switch (stmt->kind) {
-#define STMT(name, str) \
+#define STMT(name) \
     case ast::StatementKind::name: return visit(static_cast<ast::name*>(stmt));
 
-#define EXPR(name, str)
-#define TYPE(name, str)
+#define EXPR(name)
+#define TYPE(name)
 
 #include <frontend/ast/ast.def>
 
@@ -44,10 +44,10 @@ auto Visitor<Expr, Stmt, Type>::visit(ast::Statement* stmt) -> stmtvisit_t {
 template <class Expr, class Stmt, class Type>
 auto Visitor<Expr, Stmt, Type>::visit(ast::Type* type) -> typevisit_t {
     switch (type->kind) {
-#define STMT(name, str)
-#define EXPR(name, str)
+#define STMT(name)
+#define EXPR(name)
 
-#define TYPE(name, str) \
+#define TYPE(name) \
     case ast::TypeKind::name: return visit(static_cast<ast::name*>(type));
 
 #include <frontend/ast/ast.def>

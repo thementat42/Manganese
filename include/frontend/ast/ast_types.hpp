@@ -10,9 +10,9 @@
 namespace Manganese::ast {
 
 enum class TypeKind : std::uint8_t {
-#define STMT(name, str)
-#define EXPR(name, str)
-#define TYPE(name, str) name,
+#define STMT(name)
+#define EXPR(name)
+#define TYPE(name) name,
 #include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR

@@ -118,9 +118,9 @@ class analyzer final : public _analyzer_base_t {
     // overrides for visitor functions
     using _analyzer_base_t::visit;
 
-#define STMT(name, str) stmtvisit_t visit(ast::name*) override;
-#define EXPR(name, str) exprvisit_t visit(ast::name*) override;
-#define TYPE(name, str) typevisit_t visit(ast::name*) override;
+#define STMT(name) stmtvisit_t visit(ast::name*) override;
+#define EXPR(name) exprvisit_t visit(ast::name*) override;
+#define TYPE(name) typevisit_t visit(ast::name*) override;
 
 #include <frontend/ast/ast.def>
 

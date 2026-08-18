@@ -11,9 +11,9 @@
 namespace Manganese::ast {
 
 enum class StatementKind : std::uint8_t {
-#define STMT(name, str) name,
-#define EXPR(name, str)
-#define TYPE(name, str)
+#define STMT(name) name,
+#define EXPR(name)
+#define TYPE(name)
 #include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR

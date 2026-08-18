@@ -17,9 +17,9 @@ class Visitor {
     using typevisit_t = TypeResult;
 
    protected:
-#define STMT(name, str) virtual stmtvisit_t visit(ast::name*) = 0;
-#define EXPR(name, str) virtual exprvisit_t visit(ast::name*) = 0;
-#define TYPE(name, str) virtual typevisit_t visit(ast::name*) = 0;
+#define STMT(name) virtual stmtvisit_t visit(ast::name*) = 0;
+#define EXPR(name) virtual exprvisit_t visit(ast::name*) = 0;
+#define TYPE(name) virtual typevisit_t visit(ast::name*) = 0;
 #include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR
