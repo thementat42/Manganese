@@ -39,8 +39,13 @@ inline void dumpBlock(std::ostream& os, Indent indent, std::string_view label, c
 }
 
 void dumpSemanticType(std::ostream& os, Indent ind, const semantic::SemanticType* semanticType) {
-    if (!semanticType) { return; }
-    os << ind << "semantic type: " << semanticType->toString() << "\n";
+    os << ind << "semantic type: ";
+    if (semanticType) {
+        os << semanticType->toString();
+    } else {
+        os << "not yet deduced";
+    }
+    os << "\n";
 }
 
 std::string_view getNumberTypeName(const mnstl::number_t& value) {
