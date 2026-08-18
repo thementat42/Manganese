@@ -40,8 +40,8 @@ TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
 }
 
 void Token::overrideType(TokenType newType, std::string newLexeme) {
-    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {} with lexeme '{}'",
-                         tokenTypeToString(_type), tokenTypeToString(newType), newLexeme);
+    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {}{} with lexeme '{}'",
+                         tokenTypeToString(_type), tokenTypeToString(newType), (hasUnaryCounterpart() ? " (unary)" : ""), newLexeme);
 
     _type = newType;
     if (!newLexeme.empty()) { _lexeme = std::move(newLexeme); }
