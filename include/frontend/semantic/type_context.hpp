@@ -57,7 +57,7 @@ struct SemanticType {
     constexpr bool isGeneric() const noexcept { return kind == Kind::Generic; }
     constexpr bool isPointer() const noexcept { return kind == Kind::Pointer; }
     constexpr bool isPrimitive() const noexcept { return kind == Kind::Primitive; }
-    constexpr bool isVoid() const noexcept { return kind == Kind::Primitive; }
+    constexpr bool isVoid() const noexcept { return kind == Kind::Void; }
 
     constexpr bool isBoolean() const noexcept {
         return isPrimitive() && primitiveType == ast::PrimitiveType_t::boolean;
