@@ -10,11 +10,12 @@ class TestRunner {
    private:
     int passed = 0;
     int failed = 0;
+    std::string passedTests;
     std::string failedTests;  // Keep track of failed tests for debugging
 
    public:
     void runTest(const std::string& testName, bool (*testFunction)());
-    void printSummary() noexcept;
+    void printSummary() const noexcept;
     constexpr bool allTestsPassed() const noexcept { return failed == 0; }
 };
 }  // namespace Manganese::tests

@@ -57,23 +57,23 @@ int main(int argc, char const* argv[]) {
     if (lexer) {
         printf("%sLexer Tests%s\n", PINK, RESET);
         Manganese::tests::runLexerTests(runner);
-        printf("\n");
+        printf("\n----------\n");
     }
     if (parser) {
         printf("%sParser Tests%s\n", PINK, RESET);
         Manganese::tests::runParserTests(runner);
-        printf("\n");
+        printf("\n----------\n");
     }
     if (semantic) {
         printf("%sSemantic Analyzer Tests%s\n", PINK, RESET);
         Manganese::tests::runAnalyzerTests(runner);
-        printf("\n");
+        printf("\n----------\n");
     }
     if (codegen) {
         printf("%sCodegen Tests%s\n", PINK, RESET);
         // TODO: Add once codegen has progress
         printf("To be implemented.\n");
-        printf("\n");
+        printf("\n----------\n");
     }
 
     logTotalAllocatedMemory();  // Only does something if memory tracking is enabled
