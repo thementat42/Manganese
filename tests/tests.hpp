@@ -6,7 +6,7 @@
 namespace Manganese::tests {
 void runLexerTests(TestRunner& runner);
 void runParserTests(TestRunner& runner);
-void runSemanticAnalysisTests(TestRunner& runner);
+void runAnalyzerTests(TestRunner& runner);
 void runCodeGenerationTests(TestRunner& runner);
 
 }  // namespace Manganese::tests
