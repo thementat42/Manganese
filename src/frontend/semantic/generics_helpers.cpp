@@ -67,7 +67,7 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
 
     for (std::size_t i = 0; i < stmt->genericTypes.size(); ++i) { activeGenericParams[stmt->genericTypes[i]] = i; }
 
-    const SemanticType* resolvedReturnType = nullptr;
+    const SemanticType* resolvedReturnType = typeContext.getVoid();
     if (stmt->returnType) {
         resolvedReturnType = resolveGenericType(stmt->returnType);
         if (!resolvedReturnType) {
