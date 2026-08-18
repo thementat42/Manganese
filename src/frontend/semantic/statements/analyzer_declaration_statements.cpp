@@ -101,11 +101,15 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
 
     symbol->status = ResolutionStatus::InProgress;
 
-    // Default to an int32 if no type is given
+    // Default to an int32 if no type is given (or if there's an error)
     const SemanticType* underlyingType = typeContext.getPrimitive(ast::PrimitiveType_t::i32);
     if (statement->baseType) {
         if (visit(statement->baseType) == stmtvisit_t::Failure) {
             symbol->status = ResolutionStatus::Failure;
+            result = stmtvisit_t::Failure;
+        } else if (!statement->baseType->semanticType->isInteger()) {
+            logError(statement->baseType, "Base type of enum '{}' must be an integer type, not '{}'", statement->name,
+                     statement->baseType->semanticType->toString());
             result = stmtvisit_t::Failure;
         } else {
             underlyingType = statement->baseType->semanticType;
