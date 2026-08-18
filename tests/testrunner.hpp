@@ -1,7 +1,6 @@
 #ifndef MANGANESE_TESTS_TEST_RUNNER_HPP
 #define MANGANESE_TESTS_TEST_RUNNER_HPP
 
-#include <core.hpp>
 #include <string>
 
 namespace Manganese::tests {

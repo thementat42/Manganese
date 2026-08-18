@@ -9,6 +9,7 @@
 #include <string>
 #include <utils/type_names.hpp>
 #include <vector>
+#include <string_view>
 
 #if MN_DEBUG
 #define MN_AST_DUMP void dump(std::ostream& os, std::size_t indent = 0) const override;
@@ -79,7 +80,7 @@ struct Expression : public ASTNode {
     const ExpressionKind kind;
     const semantic::SemanticType* semanticType = nullptr;
 
-    virtual ~Expression() noexcept = default;
+    ~Expression() noexcept override = default;
     virtual mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
 
    protected:
@@ -89,7 +90,7 @@ struct Expression : public ASTNode {
 struct Statement : public ASTNode {
     const StatementKind kind;
 
-    virtual ~Statement() noexcept = default;
+    ~Statement() noexcept override = default;
 
    protected:
     constexpr explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}
@@ -100,7 +101,7 @@ struct Type : public ASTNode {
     const PrimitiveType_t primitiveType;
     const semantic::SemanticType* semanticType = nullptr;
 
-    virtual ~Type() noexcept = default;
+    ~Type() noexcept override = default;
 
    protected:
     constexpr explicit Type(TypeKind _kind, PrimitiveType_t _primitiveType = PrimitiveType_t::not_primitive) noexcept :

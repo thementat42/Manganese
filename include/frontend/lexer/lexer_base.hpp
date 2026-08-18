@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <deque>
+#include <format>
 #include <frontend/lexer/token.hpp>
 #include <io/logging.hpp>
 #include <io/reader.hpp>
