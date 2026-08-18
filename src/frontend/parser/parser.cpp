@@ -29,15 +29,19 @@ ParsedFile Parser::parse() {
 
 // Helper functions
 bool Parser::isUnaryContext() const noexcept {
-    if (!previousToken) {
-        // No previous token (this is the start of an expression), so it's a unary context
-        // e.g. -3
+    if (!previousToken) { return true; /* Start of file */ }
+    const TokenType lastType = previousToken->getType();
+
+    // Statement or expression delimiters
+    if (mnstl::enum_matches(lastType, TokenType::Semicolon, TokenType::LeftParen, TokenType::LeftBrace,
+                            TokenType::LeftSquare, TokenType::Comma, TokenType::Colon, TokenType::Assignment)) {
         return true;
     }
-    const Token& lastToken = *previousToken;
 
-    return lastToken.getType() == TokenType::LeftParen
-        || (lastToken.isOperator() && lastToken.getType() != TokenType::Inc && lastToken.getType() != TokenType::Dec);
+    // 2. Binary / prefix operators (e.g. `1 + -2` or `return *ptr`)
+    if (previousToken->isOperator() && lastType != TokenType::Inc && lastType != TokenType::Dec) { return true; }
+
+    return false;
 }
 
 Token Parser::expectToken(TokenType expectedType) { return expectToken(expectedType, "Unexpected token: "); }
