@@ -13,7 +13,7 @@
 
 namespace Manganese::tests {
 
-constexpr static const char* logFileName = "logs/parser_tests.log";
+constexpr static const char* logFileName = "logs/analyzer_tests.log";
 static mnstl::chunk_allocator arena;
 
 // Helper: Parses and runs full semantic analysis on source code
