@@ -101,17 +101,15 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
 
     symbol->status = ResolutionStatus::InProgress;
 
-    const SemanticType* underlyingType = nullptr;
+    const SemanticType* underlyingType = typeContext.getPrimitive(ast::PrimitiveType_t::i32);
     if (statement->baseType) {
         if (visit(statement->baseType) == stmtvisit_t::Failure) {
             symbol->status = ResolutionStatus::Failure;
             result = stmtvisit_t::Failure;
+        } else {
+            underlyingType = statement->baseType->semanticType;
         }
-        underlyingType = statement->baseType->semanticType;
-    } else {
-        // If not specified, use int32
-        underlyingType = typeContext.getPrimitive(ast::PrimitiveType_t::i32);
-    }
+    } 
     const Enum* enumType = static_cast<const Enum*>(typeContext.getEnum(statement->name));
     enumType->underlyingType = underlyingType;
     symbol->type = enumType;
@@ -254,47 +252,58 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
 
 auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     const SemanticType* variableType = nullptr;
+
     if (statement->type) {
         // User has an explicit type
         if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
         variableType = statement->type->semanticType;
     }
+
     if (statement->value) {
-        if (visit(statement->value) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
+        if (visit(statement->value) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
         const SemanticType* initializerType = statement->value->semanticType;
-        if (initializerType && initializerType->isVoid()) {
+
+        // Catch missing or void initializer types immediately
+        if (!initializerType || initializerType->isVoid()) {
             logError(statement->value, "Cannot initialize variable '{}' with a void expression", statement->name);
             return stmtvisit_t::Failure;
         }
 
         if (!variableType) {
-            // deduce type from the initializer
-            if (!initializerType) {
-                logError(statement, "Could not deduce type of variable '{}' from initializer '{}'", statement->name,
-                         statement->value->toString());
-                return stmtvisit_t::Failure;
-            }
+            // Deduce type from initializer
             variableType = initializerType;
-        } else if (initializerType && !areTypesCompatible(variableType, initializerType)) {
-            logError(statement, "Cannot assign '{}' (type {}) to variable {} (type {}).", statement->value->toString(),
-                     initializerType->toString(), statement->name, statement->value->semanticType->toString());
-            return stmtvisit_t::Failure;
+        } else {
+            // Check explicit type against initializer type
+            const typeCompatibilityResult compat = areTypesCompatible(variableType, initializerType);
+            if (!compat) {
+                logError(statement, "Cannot assign value of type {} to variable '{}' of type {}",
+                         initializerType->toString(), statement->name, variableType->toString());
+                return stmtvisit_t::Failure;
+            } else if (compat.result == Compatible_t::Warning) {
+                logWarning(statement, "{}", compat.message);
+            }
         }
     } else if (!statement->isMutable) {
         logError(statement, "Immutable variable '{}' must have an initializer", statement->name);
         return stmtvisit_t::Failure;
     }
+
     if (!variableType) {
         logError(statement, "Variable '{}' must either have an explicit type or an initial value", statement->name);
         return stmtvisit_t::Failure;
     }
-    const Result declarationResult
-        = symbolTable.declare(statement->name,
-                              Symbol{.type = variableType,
-                                     .node = statement,
-                                     .kind = statement->isMutable ? SymbolKind::Variable : SymbolKind::Constant,
-                                     .isMutable = statement->isMutable,
-                                     .status = ResolutionStatus::Success});
+
+    const Result declarationResult = symbolTable.declare(
+        statement->name,
+        Symbol{
+            .type = variableType,
+            .node = statement,
+            .kind = statement->isMutable ? SymbolKind::Variable : SymbolKind::Constant,
+            .isMutable = statement->isMutable,
+            .status = ResolutionStatus::Success
+        }
+    );
+
     if (declarationResult == Result::Failure) {
         logError(statement, "Redeclaration error: variable '{}' is already declared in this scope", statement->name);
         return stmtvisit_t::Failure;
