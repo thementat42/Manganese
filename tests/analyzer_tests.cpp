@@ -383,8 +383,14 @@ static bool testFunctionTypeAsValue() {
         func add(a: int32, b: int32) -> int32 { 
             return a + b; 
         }
+        func bar[T](x: T) -> T { return x; }
         func main() {
             let fnPtr: func(int32, int32) -> int32 = add;
+            fnPtr(1,2);
+            let x = [fnPtr, add];
+            x[0](1,1);
+            let y = [bar@[char]];
+            y[0];
         }
     )";
     return analyzeSource(source, true);
