@@ -12,8 +12,6 @@ enum class Result : bool {
     Success
 };
 
-constexpr const char* resultToString(Result r) noexcept { return r == Result::Success ? "success" : "failure"; }
-
 }  // namespace Manganese
 
 #endif  // MANGANESE_INCLUDE_UTILS_RESULT_HPP
