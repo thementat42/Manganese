@@ -325,6 +325,7 @@ void AggregateInstantiationExpression::dump(std::ostream& os, std::size_t indent
         os << ind.next(2) << "}\n";
     }
     os << ind.next() << "]\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -341,6 +342,7 @@ void AlignofExpression::dump(std::ostream& os, std::size_t indent) const {
     dumpHeader(os, ind, "AlignofExpression", *this);
     os << ind.next() << "type: \n";
     type->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -357,6 +359,7 @@ void ArrayLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     }
 
     os << ind.next() << "]\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -368,6 +371,7 @@ void AssignmentExpression::dump(std::ostream& os, std::size_t indent) const {
     assignee->dump(os, ind.next(2));
     os << ind.next() << "value: \n";
     value->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -379,6 +383,7 @@ void BinaryExpression::dump(std::ostream& os, std::size_t indent) const {
     left->dump(os, ind.next(2));
     os << ind.next() << "right: \n";
     right->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -387,6 +392,7 @@ void BoolLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     dumpHeader(os, ind, "BoolLiteralExpression", *this);
     os << ind.next() << "value: " << toString();
     os << "\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -395,6 +401,7 @@ void CharLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     dumpHeader(os, ind, "CharLiteralExpression", *this);
     os << ind.next() << "value: '" << static_cast<char>(value) << "'\n";
     os << ind.next() << "code point: " << static_cast<std::int32_t>(value) << "\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -412,6 +419,7 @@ void FunctionCallExpression::dump(std::ostream& os, std::size_t indent) const {
     }
 
     os << ind.next() << "]\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -424,6 +432,7 @@ void GenericExpression::dump(std::ostream& os, std::size_t indent) const {
     for (const Type* type : types) { os << ind.next(2) << toStringOr(type) << "\n"; }
 
     os << ind.next() << "]\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -431,6 +440,7 @@ void IdentifierExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "IdentifierExpression", *this);
     os << ind.next() << "name: " << value << "\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -441,6 +451,7 @@ void IndexExpression::dump(std::ostream& os, std::size_t indent) const {
     variable->dump(os, ind.next(2));
     os << ind.next() << "index: \n";
     index->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -450,6 +461,7 @@ void MemberAccessExpression::dump(std::ostream& os, std::size_t indent) const {
     os << ind.next() << "object: \n";
     object->dump(os, ind.next(2));
     os << ind.next() << "property: " << property << "\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -458,6 +470,7 @@ void NumberLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     dumpHeader(os, ind, "NumberLiteralExpression", *this);
     os << ind.next() << "value: " << toString() << "\n";
     os << ind.next() << "Inferred literal type: " << getNumberTypeName(value) << "\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -467,6 +480,7 @@ void PostfixExpression::dump(std::ostream& os, std::size_t indent) const {
     os << ind.next() << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << ind.next() << "operand: \n";
     left->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -476,6 +490,7 @@ void PrefixExpression::dump(std::ostream& os, std::size_t indent) const {
     os << ind.next() << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << ind.next() << "operand: \n";
     right->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -486,6 +501,8 @@ void ScopeResolutionExpression::dump(std::ostream& os, std::size_t indent) const
     scope->dump(os, ind.next(2));
     os << ind.next() << "element: \n";
     element->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
+    os << ind << "}\n";
 }
 
 void SizeofExpression::dump(std::ostream& os, std::size_t indent) const {
@@ -493,6 +510,7 @@ void SizeofExpression::dump(std::ostream& os, std::size_t indent) const {
     dumpHeader(os, ind, "SizeofExpression", *this);
     os << ind.next() << "type: \n";
     type->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -501,6 +519,7 @@ void StringLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     dumpHeader(os, ind, "StringLiteralExpression", *this);
     os << ind.next() << "value: " << toString() << "\n";
     os << ind.next() << "length: " << value.length() << "\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -511,6 +530,7 @@ void TypeCastExpression::dump(std::ostream& os, std::size_t indent) const {
     originalValue->dump(os, ind.next(2));
     os << ind.next() << "target type: \n";
     targetType->dump(os, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
@@ -529,6 +549,7 @@ void AggregateType::dump(std::ostream& os, std::size_t indent) const {
     dumpSemanticType(os, ind.next(), semanticType);
 
     os << ind.next() << "]\n";
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 void ArrayType::dump(std::ostream& os, std::size_t indent) const {
