@@ -110,7 +110,7 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
         } else {
             underlyingType = statement->baseType->semanticType;
         }
-    } 
+    }
     const Enum* enumType = static_cast<const Enum*>(typeContext.getEnum(statement->name));
     enumType->underlyingType = underlyingType;
     symbol->type = enumType;
@@ -294,16 +294,13 @@ auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
         return stmtvisit_t::Failure;
     }
 
-    const Result declarationResult = symbolTable.declare(
-        statement->name,
-        Symbol{
-            .type = variableType,
-            .node = statement,
-            .kind = statement->isMutable ? SymbolKind::Variable : SymbolKind::Constant,
-            .isMutable = statement->isMutable,
-            .status = ResolutionStatus::Success
-        }
-    );
+    const Result declarationResult
+        = symbolTable.declare(statement->name,
+                              Symbol{.type = variableType,
+                                     .node = statement,
+                                     .kind = statement->isMutable ? SymbolKind::Variable : SymbolKind::Constant,
+                                     .isMutable = statement->isMutable,
+                                     .status = ResolutionStatus::Success});
 
     if (declarationResult == Result::Failure) {
         logError(statement, "Redeclaration error: variable '{}' is already declared in this scope", statement->name);
