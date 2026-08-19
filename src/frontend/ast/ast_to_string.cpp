@@ -261,7 +261,7 @@ std::string BinaryExpression::toString(std::size_t indent) const {
 
 std::string BoolLiteralExpression::toString(std::size_t) const { return value ? "true" : "false"; }
 
-std::string CharLiteralExpression::toString(std::size_t) const { return codepointToUTF8(value); }
+std::string CharLiteralExpression::toString(std::size_t) const { return std::format("'{}'", codepointToUTF8(value)); }
 
 std::string FunctionCallExpression::toString(std::size_t indent) const {
     std::string result = callee->toString(indent) + "(";
