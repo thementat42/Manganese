@@ -103,7 +103,7 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
 };
 
 auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
-    auto result = visit(expression->left);
+    exprvisit_t result = visit(expression->left);
     if (result == exprvisit_t::Failure) { return result; }
     // the only postfix operators are ++ and -- so the expression must be an integer
     if (!expression->left->semanticType) {
@@ -111,27 +111,27 @@ auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
 
-    // set the type here even if the expression is invalid so we don't have a bunch of propagating nulls
-    expression->semanticType = typeContext.getPrimitive(expression->left->semanticType->primitiveType);
-    ast::Expression* operand = expression->left;
+    const ast::Expression* operand = expression->left;
 
     if (!isLvalue(operand)) {
         logError(operand, "Cannot apply operator {} to an rvalue '{}'", lexer::tokenTypeToString(expression->op),
                  operand->toString());
-        return exprvisit_t::Failure;
+        result = exprvisit_t::Failure;
     }
-    if (!operand->semanticType->isInteger() && operand->semanticType->isPointer()) {
-        logError(expression, "operator {} can only be applied to integer or pointer types",
-                 lexer::tokenTypeToString(expression->op));
-        return exprvisit_t::Failure;
+    if (!operand->semanticType->isInteger() && !operand->semanticType->isPointer()) {
+        logError(expression, "operator {} can only be applied to integer or pointer types, not '{}'",
+                 lexer::tokenTypeToString(expression->op), operand->semanticType->toString());
+        result = exprvisit_t::Failure;
     }
     if (!isMutableExpression(operand)) {
         logError(operand, "Cannot apply operator {} to an immutable value '{}'",
                  lexer::tokenTypeToString(expression->op), operand->toString());
-        return exprvisit_t::Failure;
+        result = exprvisit_t::Failure;
     }
 
-    return exprvisit_t::Success;
+    expression->semanticType = operand->semanticType;
+
+    return result;
 }
 
 auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
@@ -147,15 +147,15 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     switch (expression->op) {
         case Inc:
         case Dec: {
-            expression->semanticType = typeContext.getPrimitive(rhsType->primitiveType);
+            expression->semanticType = rhsType;
             if (!isLvalue(expression->right)) {
                 logError(expression->right, "Cannot apply operator {} to an rvalue '{}'",
                          lexer::tokenTypeToString(expression->op), expression->right->toString());
                 return exprvisit_t::Failure;
             }
             if (!rhsType->isInteger() && !rhsType->isPointer()) {
-                logError(expression, "operator {} can only be applied to integer or pointer types",
-                         lexer::tokenTypeToString(expression->op));
+                logError(expression, "operator {} can only be applied to integer or pointer types, not '{}'",
+                         lexer::tokenTypeToString(expression->op), rhsType->toString());
                 return exprvisit_t::Failure;
             }
             if (!isMutableExpression(expression->right)) {
@@ -166,7 +166,7 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         } break;
 
         case BitNot: {
-            expression->semanticType = typeContext.getPrimitive(rhsType->primitiveType);
+            expression->semanticType = rhsType;
             if (!rhsType->isInteger()) {
                 logError(expression, "operator {} can only be applied to integer types",
                          lexer::tokenTypeToString(expression->op));
