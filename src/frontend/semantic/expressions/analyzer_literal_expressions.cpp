@@ -110,13 +110,13 @@ auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
 }
 
 auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
-    const Symbol* symbol = symbolTable.lookup(expression->value);
+    const Symbol* symbol = symbolTable.lookup(expression->name);
     if (!symbol) {
-        logError(expression, "Identifier '{}' was not found in the current scope", expression->value);
+        logError(expression, "Identifier '{}' was not found in the current scope", expression->name);
         return exprvisit_t::Failure;
     }
     if (!symbol->type) [[unlikely]] {
-        logError(expression, "Identifier '{}' used before its type could be determined", expression->value);
+        logError(expression, "Identifier '{}' used before its type could be determined", expression->name);
         return exprvisit_t::Failure;
     }
     expression->semanticType = symbol->type;

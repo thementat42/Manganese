@@ -444,7 +444,7 @@ void GenericExpression::dump(std::ostream& os, std::size_t indent) const {
 void IdentifierExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "IdentifierExpression", *this);
-    os << ind.next() << "name: " << value << "\n";
+    os << ind.next() << "name: " << name << "\n";
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }

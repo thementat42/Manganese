@@ -163,6 +163,8 @@ class analyzer final : public _analyzer_base_t {
             default: return expr;
         }
     }
+
+    bool isMutableExpression(const ast::Expression* expr);
 };
 
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
@@ -183,6 +185,15 @@ constexpr bool isRelationalOp(lexer::TokenType t) {
 constexpr bool isBitwiseOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
     return mnstl::enum_matches(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
+}
+
+constexpr bool isLvalue(const ast::Expression* expr) noexcept {
+    using enum ast::ExpressionKind;
+    const ast::ExpressionKind k = expr->kind;
+    if (k == PrefixExpression) {
+        return static_cast<const ast::PrefixExpression*>(expr)->op == lexer::TokenType::Dereference;
+    }
+    return mnstl::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression, ScopeResolutionExpression);
 }
 
 }  // namespace Manganese::semantic

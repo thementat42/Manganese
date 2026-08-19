@@ -43,9 +43,9 @@ auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
     auto* identifier = static_cast<ast::IdentifierExpression*>(targetDeclaration);
-    const Symbol* symbol = symbolTable.lookup(identifier->value);
+    const Symbol* symbol = symbolTable.lookup(identifier->name);
     if (!symbol || !symbol->node) {
-        logError(identifier, "Use of undeclared symbol '{}'", identifier->value);
+        logError(identifier, "Use of undeclared symbol '{}'", identifier->name);
         return exprvisit_t::Failure;
     }
     StackGuard guard{genericsStack, std::move(resolvedTypeArguments)};
@@ -91,7 +91,7 @@ auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {
         return exprvisit_t::Success;
     }
 
-    logError(identifier, "Symbol '{}' is neither a generic function nor a generic aggregate", identifier->value);
+    logError(identifier, "Symbol '{}' is neither a generic function nor a generic aggregate", identifier->name);
     return exprvisit_t::Failure;
 }
 

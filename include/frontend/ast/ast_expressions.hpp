@@ -140,10 +140,10 @@ struct GenericExpression final : public Expression {
 };
 
 struct IdentifierExpression final : public Expression {
-    const std::string value;
+    const std::string name;
 
-    constexpr explicit IdentifierExpression(std::string&& _value) noexcept :
-        Expression(ExpressionKind::IdentifierExpression), value(std::move(_value)) {}
+    constexpr explicit IdentifierExpression(std::string&& _name) noexcept :
+        Expression(ExpressionKind::IdentifierExpression), name(std::move(_name)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

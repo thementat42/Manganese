@@ -12,6 +12,9 @@
 #include <utils/result.hpp>
 #include <utils/type_names.hpp>
 
+#include "frontend/ast/ast_expressions.hpp"
+
+
 namespace Manganese::semantic {
 
 constexpr static inline std::uint8_t f32MantissaWidth = 24;
@@ -26,6 +29,41 @@ Result analyzer::analyze() {
     symbolTable.switchToCheckingMode();
     isSemanticallyValid = checkStatements();
     return isSemanticallyValid;
+}
+
+bool analyzer::isMutableExpression(const ast::Expression* expr) {
+    if (!expr) { return false; }
+    using enum ast::ExpressionKind;
+    switch (expr->kind) {
+        case IdentifierExpression: {
+            const auto* id = static_cast<const ast::IdentifierExpression*>(expr);
+            const Symbol* symbol = symbolTable.lookup(id->name);
+            return symbol ? symbol->isMutable : false;
+        }
+        case PrefixExpression: {
+            const auto* prefix = static_cast<const ast::PrefixExpression*>(expr);
+            if (prefix->op == lexer::TokenType::Dereference) {
+                const SemanticType* opType = prefix->right->semanticType;
+                if (!opType || !opType->isPointer()) { return false; }
+                return static_cast<const Pointer*>(opType)->isMutable;
+            }
+            return false;
+        }
+        case MemberAccessExpression: {
+            const auto* mem = static_cast<const ast::MemberAccessExpression*>(expr);
+            return isMutableExpression(mem->object);
+        }
+        case IndexExpression: {
+            const auto* index = static_cast<const ast::IndexExpression*>(expr);
+            return isMutableExpression(index->variable);
+        }
+        case ScopeResolutionExpression: {
+            const auto* scope = static_cast<const ast::ScopeResolutionExpression*>(expr);
+            Symbol* sym = symbolTable.scopedLookup(scope->scope, scope->element);
+            return sym ? sym->isMutable : false;
+        }
+        default: return false;
+    }
 }
 
 const SemanticType* analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {

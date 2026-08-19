@@ -15,7 +15,10 @@ auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
 
     if (!expression->assignee->semanticType || !expression->value->semanticType) { return exprvisit_t::Failure; }
 
-    // TODO: Check that the LHS can actually be assigned to
+    if (!isLvalue(expression->assignee)) {
+        logError(expression->assignee, "Cannot assign a value to expression '{}'", expression->assignee->toString());
+        result = exprvisit_t::Failure;
+    }
 
     const typeCompatibilityResult isAssignmentValid
         = areTypesCompatible(expression->assignee->semanticType, expression->value->semanticType);
@@ -26,6 +29,12 @@ auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     } else if (isAssignmentValid.result == Compatible_t::Warning) {
         logWarning(expression, "{}", isAssignmentValid.message);
     }
+    if (!isMutableExpression(expression->assignee)) {
+        logError(expression->assignee, "Cannot assign a value to immutable value '{}'",
+                 expression->assignee->toString());
+        result = exprvisit_t::Failure;
+    }
+
     expression->semanticType = expression->assignee->semanticType;
     return result;
 }
@@ -103,22 +112,30 @@ auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     }
 
     // set the type here even if the expression is invalid so we don't have a bunch of propagating nulls
-    //? should this implicitly promote? (probably not)
     expression->semanticType = typeContext.getPrimitive(expression->left->semanticType->primitiveType);
+    ast::Expression* operand = expression->left;
 
-    if (!expression->left->semanticType->isInteger()) {
-        logError(expression, "operator {} can only be applied to integer types",
+    if (!isLvalue(operand)) {
+        logError(operand, "Cannot apply operator {} to an rvalue '{}'", lexer::tokenTypeToString(expression->op),
+                 operand->toString());
+        return exprvisit_t::Failure;
+    }
+    if (!operand->semanticType->isInteger() && operand->semanticType->isPointer()) {
+        logError(expression, "operator {} can only be applied to integer or pointer types",
                  lexer::tokenTypeToString(expression->op));
         return exprvisit_t::Failure;
     }
-    // TODO: check that the value has an address to store the inc/dec result
+    if (!isMutableExpression(operand)) {
+        logError(operand, "Cannot apply operator {} to an immutable value '{}'",
+                 lexer::tokenTypeToString(expression->op), operand->toString());
+        return exprvisit_t::Failure;
+    }
 
     return exprvisit_t::Success;
 }
 
 auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
-    auto result = visit(expression->right);
-    if (result == exprvisit_t::Failure) { return result; }
+    if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     if (!expression->right->semanticType) {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
         return exprvisit_t::Failure;
@@ -131,12 +148,21 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         case Inc:
         case Dec: {
             expression->semanticType = typeContext.getPrimitive(rhsType->primitiveType);
-            if (!rhsType->isInteger()) {
-                logError(expression, "operator {} can only be applied to integer types",
+            if (!isLvalue(expression->right)) {
+                logError(expression->right, "Cannot apply operator {} to an rvalue '{}'",
+                         lexer::tokenTypeToString(expression->op), expression->right->toString());
+                return exprvisit_t::Failure;
+            }
+            if (!rhsType->isInteger() && !rhsType->isPointer()) {
+                logError(expression, "operator {} can only be applied to integer or pointer types",
                          lexer::tokenTypeToString(expression->op));
                 return exprvisit_t::Failure;
             }
-            // TODO: check that the value has an address to store the inc/dec result
+            if (!isMutableExpression(expression->right)) {
+                logError(expression->right, "Cannot apply operator {} to an immutable value '{}'",
+                         lexer::tokenTypeToString(expression->op), expression->right->toString());
+                return exprvisit_t::Failure;
+            }
         } break;
 
         case BitNot: {
@@ -166,9 +192,14 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         } break;
 
         case AddressOf: {
-            // TODO: Check that the expression has an address that can be taken
-            // TODO: is there some way to determine mutability of pointer?
-            expression->semanticType = typeContext.getPointer(expression->right->semanticType, true);
+            // temporary, to avoid failures
+            expression->semanticType = typeContext.getPointer(expression->right->semanticType, false);
+            if (!isLvalue(expression->right)) {
+                logError(expression->right, "Cannot take the address of r-value '{}'", expression->right->toString());
+                return exprvisit_t::Failure;
+            }
+            const bool isMut = isMutableExpression(expression->right);
+            expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMut);
         } break;
 
         case Dereference: {

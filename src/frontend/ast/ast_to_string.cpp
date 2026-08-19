@@ -270,7 +270,7 @@ std::string GenericExpression::toString(std::size_t indent) const {
     return identifier->toString(indent) + genericsToString(types, indent);
 }
 
-std::string IdentifierExpression::toString(std::size_t) const { return value; }
+std::string IdentifierExpression::toString(std::size_t) const { return name; }
 
 std::string IndexExpression::toString(std::size_t indent) const {
     return std::format("{}[{}]", variable->toString(indent), index->toString(indent));
