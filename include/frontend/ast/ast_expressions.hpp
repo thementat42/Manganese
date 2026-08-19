@@ -227,9 +227,6 @@ struct StringLiteralExpression final : public Expression {
     constexpr explicit StringLiteralExpression(std::string&& _value) noexcept :
         Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
 
-    // constexpr explicit StringLiteralExpression(const char* _value) noexcept :
-    //     Expression(ExpressionKind::StringLiteralExpression), value(_value) {};
-
     MN_AST_STANDARD_INTERFACE;
     mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
 };

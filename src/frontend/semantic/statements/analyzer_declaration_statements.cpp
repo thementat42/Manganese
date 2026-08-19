@@ -248,8 +248,7 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
 
     context.currentFunctionReturnType = resolvedReturnType;
     // already entered a scope for the parameters so we don't want to enter a scope while visiting the body
-    constexpr bool bodyNeedsToEnterScope = false;
-    const stmtvisit_t bodyResult = visit(statement->body, bodyNeedsToEnterScope);
+    const stmtvisit_t bodyResult = visit(statement->body, false);
     context.currentFunctionReturnType = nullptr;
     return (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success) ? stmtvisit_t::Success
                                                                                            : stmtvisit_t::Failure;

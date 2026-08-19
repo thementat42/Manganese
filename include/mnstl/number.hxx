@@ -46,11 +46,6 @@
     });
 
 namespace mnstl {
-// struct zero_init_t {
-//     constexpr explicit zero_init_t() noexcept = default;
-// };
-
-// constexpr inline zero_init_t zero_init{};
 
 enum class Base : std::uint8_t {
     Binary = 2,  // 0b prefix
@@ -107,7 +102,7 @@ class number_t {
     held_type _underlying;
 
     template <class F>
-    constexpr decltype(auto) _visit(F&& f) const NOEXCEPT_IF_RELEASE {
+    decltype(auto) _visit(F&& f) const NOEXCEPT_IF_RELEASE {
         using enum held_type;
         switch (_underlying) {
             case int8: return std::forward<F>(f)(_i8);
@@ -146,33 +141,8 @@ class number_t {
     constexpr number_t(float64_t f64) noexcept : _f64(f64), _underlying(held_type::float64) {}
     constexpr number_t(const char* error_message) noexcept : _err(error_message), _underlying(held_type::error) {}
 
-    // constexpr number_t(zero_init_t, held_type t) noexcept : _underlying(t) {
-    //     using enum held_type;
-    //     switch (t) {
-    //         case int8: _i8 = 0; break;
-    //         case int16: _i16 = 0; break;
-    //         case int32: _i32 = 0; break;
-    //         case int64: _i64 = 0; break;
-    //         case int128: _i128 = 0; break;
-    //         case uint8: _u8 = 0; break;
-    //         case uint16: _u16 = 0; break;
-    //         case uint32: _u32 = 0; break;
-    //         case uint64: _u64 = 0; break;
-    //         case uint128: _u128 = 0; break;
-    //         case float32: _f32 = 0; break;
-    //         case float64: _f64 = 0; break;
-    //         case none: break;
-    //     }
-    // }
+    
 
-    // Union and tag are both trivially copyable and moveable (just bit copies)
-    constexpr number_t(const number_t&) noexcept = default;
-    constexpr number_t& operator=(const number_t&) noexcept = default;
-    constexpr number_t(number_t&&) noexcept = default;
-    constexpr number_t& operator=(number_t&&) noexcept = default;
-    constexpr ~number_t() noexcept = default;
-
-    // constexpr bool has_value() const noexcept { return _underlying != held_type::none; }
     constexpr bool is_error() const noexcept { return _underlying == held_type::error; }
     constexpr const char* error_unchecked() const noexcept { return _err; }
 
@@ -189,18 +159,8 @@ class number_t {
         return enum_matches<held_type>(_underlying, float32, float64);
     }
 
-    // constexpr bool is_signed() const noexcept {
-    //     using enum held_type;
-    //     return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, float32, float64);
-    // }
-
-    // constexpr bool is_unsigned() const noexcept {
-    //     using enum held_type;
-    //     return enum_matches<held_type>(_underlying, uint8, uint16, uint32, uint64, uint128);
-    // }
-
     template <Numeric T>
-    constexpr inline T value_as() const NOEXCEPT_IF_RELEASE {
+    inline T value_as() const NOEXCEPT_IF_RELEASE {
         return _visit([&](auto v) -> T {
             if constexpr (std::is_same_v<decltype(v), const char*>) {
                 ASSERT_UNREACHABLE("Cannot cast a number_t holding an error to another type");
@@ -210,12 +170,7 @@ class number_t {
         });
     }
 
-    // template <Numeric T>
-    // constexpr std::optional<T> value() const noexcept {
-    //     return _underlying == held_type::none ? std::nullopt : std::make_optional<T>(value_as<T>());
-    // }
-
-    constexpr std::string to_string(bool trim_trailing_decimals = false) const {
+    std::string to_string(bool trim_trailing_decimals = false) const {
         if (_underlying == held_type::none) { return ""; }
         std::string result = _visit([&](auto v) -> std::string {
             using U = std::remove_cvref_t<decltype(v)>;
@@ -248,7 +203,7 @@ class number_t {
     }
 
     // Operators
-    constexpr number_t operator-() const noexcept {
+    number_t operator-() const noexcept {
         return _visit([](auto val) {
             if constexpr (std::is_same_v<decltype(val), const char*>) {
                 return number_t{val};
@@ -262,11 +217,11 @@ class number_t {
         });
     }
 
-    constexpr number_t operator+() const noexcept {
+    number_t operator+() const noexcept {
         return _visit([](auto val) { return number_t{val}; });
     }
 
-    constexpr number_t operator~() const noexcept {
+    number_t operator~() const noexcept {
         return _visit([](auto val) {
             if constexpr (std::is_same_v<decltype(val), const char*>) {
                 return number_t{val};
@@ -278,10 +233,10 @@ class number_t {
         });
     }
 
-    constexpr number_t operator+(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(+); }
-    constexpr number_t operator-(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(-); }
-    constexpr number_t operator*(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(*); }
-    constexpr number_t operator%(const number_t& other) const noexcept {
+    number_t operator+(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(+); }
+    number_t operator-(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(-); }
+    number_t operator*(const number_t& other) const noexcept { MNSTL_NUMBER_BINARY_OP(*); }
+    number_t operator%(const number_t& other) const noexcept {
         return _visit([&](auto l) {
             return other._visit([&](auto r) {
                 if constexpr (std ::is_same_v<decltype(l), const char*>) {
@@ -301,7 +256,7 @@ class number_t {
         });
     }
 
-    constexpr number_t true_div(const number_t& other) const noexcept {
+    number_t true_div(const number_t& other) const noexcept {
         return _visit([&](auto l) {
             return other._visit([&](auto r) {
                 if constexpr (std::is_same_v<decltype(l), const char*>) {
@@ -315,7 +270,7 @@ class number_t {
             });
         });
     }
-    constexpr number_t floor_div(const number_t& other) const noexcept {
+    number_t floor_div(const number_t& other) const noexcept {
         return _visit([&](auto l) {
             return other._visit([&](auto r) {
                 if constexpr (std::is_same_v<decltype(l), const char*>) {
@@ -342,13 +297,13 @@ class number_t {
         });
     }
 
-    constexpr number_t operator&(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(&); }
-    constexpr number_t operator|(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(|); }
-    constexpr number_t operator^(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(^); }
-    constexpr number_t operator<<(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(<<); }
-    constexpr number_t operator>>(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(>>); }
+    number_t operator&(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(&); }
+    number_t operator|(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(|); }
+    number_t operator^(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(^); }
+    number_t operator<<(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(<<); }
+    number_t operator>>(const number_t& other) const noexcept { MNSTL_NUMBER_INTEGRAL_BINARY_OP(>>); }
 
-    constexpr bool operator==(const number_t& other) const noexcept {
+    bool operator==(const number_t& other) const noexcept {
         return _visit([&](auto l) {
             return other._visit([&](auto r) {
                 if constexpr (std ::is_same_v<decltype(l), const char*>) {
@@ -364,7 +319,7 @@ class number_t {
             });
         });
     }
-    constexpr std::partial_ordering operator<=>(const number_t& other) const noexcept {
+    std::partial_ordering operator<=>(const number_t& other) const noexcept {
         return _visit([&](auto l) {
             return other._visit([&](auto r) {
                 if constexpr (std ::is_same_v<decltype(l), const char*>) {
@@ -385,7 +340,7 @@ class number_t {
     }
 };  // class number_t
 
-constexpr std::string to_string(const number_t& x) noexcept { return x.to_string(); }
+inline std::string to_string(const number_t& x) noexcept { return x.to_string(); }
 
 template <class T>
     requires(std::is_constructible_v<number_t, T>)
@@ -406,7 +361,7 @@ namespace detail {
 
 [[nodiscard]] constexpr bool isdigit(char c) noexcept { return c >= '0' && c <= '9'; }
 
-[[nodiscard]] constexpr double pow10(int exp) noexcept {
+[[nodiscard]] inline double pow10(int exp) noexcept {
     if (std::is_constant_evaluated()) {
         double result = 1.0;
         if (exp > 0) {
@@ -421,7 +376,7 @@ namespace detail {
 }
 
 template <FloatingPoint T>
-[[nodiscard]] constexpr string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b,
+[[nodiscard]] string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b,
                                                             bool is_negative) noexcept {
     string_conversion_result_t<T> result;
     if (ptr >= end) [[unlikely]] {
@@ -514,7 +469,7 @@ template <FloatingPoint T>
 }
 
 template <Integral T>
-constexpr string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b, bool is_negative) noexcept {
+string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b, bool is_negative) noexcept {
     string_conversion_result_t<T> result;
     using U = mnstl::mnstl_make_unsigned_t<T>;
 
@@ -569,12 +524,12 @@ constexpr string_conversion_result_t<T> _stox(const char* ptr, const char* end, 
 }  // namespace detail
 
 template <class T>
-constexpr string_conversion_result_t<number_t> wrap_result(const string_conversion_result_t<T>& result) noexcept {
+string_conversion_result_t<number_t> wrap_result(const string_conversion_result_t<T>& result) noexcept {
     return string_conversion_result_t<number_t>{
         .value = number_t(result.value), .exists = result.exists, .overflowed = result.overflowed};
 }
 
-constexpr string_conversion_result_t<number_t> str_to_num(std::string_view str, bool isFloat) NOEXCEPT_IF_RELEASE {
+inline string_conversion_result_t<number_t> str_to_num(std::string_view str, bool isFloat) NOEXCEPT_IF_RELEASE {
     if (str.empty()) { return {.exists = false}; }
     const char* const base_ptr = str.data();
     const char* parsing_start = base_ptr;

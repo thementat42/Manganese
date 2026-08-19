@@ -21,8 +21,8 @@ namespace {
 struct Indent {
     const std::size_t level;
 
-    constexpr Indent next(std::size_t delta = 1) const noexcept { return Indent{.level = level + delta}; }
-    constexpr operator std::size_t() const noexcept { return level; }
+    Indent next(std::size_t delta = 1) const noexcept { return Indent{.level = level + delta}; }
+    operator std::size_t() const noexcept { return level; }
     friend std::ostream& operator<<(std::ostream& os, Indent ind) { return os << std::string(ind.level * 2, ' '); }
 };
 

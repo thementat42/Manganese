@@ -22,11 +22,11 @@ class StringReader : public Reader {
     void setPosition(std::size_t newPosition) noexcept override {
         while (_position < newPosition && !done()) { DISCARD(consumeChar()); }
     }
-    constexpr std::size_t getPosition() const noexcept override { return _position; }
-    constexpr std::size_t getLine() const noexcept override { return _line; }
-    constexpr std::size_t getColumn() const noexcept override { return _column; }
+    std::size_t getPosition() const noexcept override { return _position; }
+    std::size_t getLine() const noexcept override { return _line; }
+    std::size_t getColumn() const noexcept override { return _column; }
 
-    constexpr bool done() const noexcept override { return _position >= _source.length(); }
+    bool done() const noexcept override { return _position >= _source.length(); }
 
     char peekChar(std::size_t offset = 0) noexcept override {
         return (_position + offset >= _source.length()) ? '\0' : _source[_position + offset];

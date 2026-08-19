@@ -15,7 +15,7 @@ class TestRunner {
    public:
     void runTest(const std::string& testName, bool (*testFunction)());
     void printSummary() const noexcept;
-    constexpr bool allTestsPassed() const noexcept { return failed == 0; }
+    bool allTestsPassed() const noexcept { return failed == 0; }
 };
 }  // namespace Manganese::tests
 

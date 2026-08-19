@@ -59,7 +59,7 @@ class Lexer {
     Token& peekToken();
     Token consumeToken();
     inline bool done() const noexcept { return reader->done(); }
-    constexpr bool hasError() const noexcept { return _hasError; }
+    bool hasError() const noexcept { return _hasError; }
 
    private:
     //~ Main tokenization functions
