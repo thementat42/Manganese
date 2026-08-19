@@ -70,30 +70,6 @@ std::optional<char32_t> parseHexCodePoint(std::string_view digits, std::size_t l
     return result;
 }
 
-// Unicode -> UTF8
-
-std::optional<std::string> encodeUTF8(char32_t codepoint) {
-    const auto p = static_cast<std::uint32_t>(codepoint);
-
-    if (!isValidCodePoint(codepoint)) { return std::nullopt; }
-
-    if (p <= UTF8_1B_MAX) { return std::string{static_cast<char>(p)}; }
-    if (p <= UTF8_2B_MAX) {
-        return std::string{static_cast<char>(UTF8_2B_PRE | (p >> UTF8_2B_SHIFT)),
-                           static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
-    }
-    if (p <= UTF8_3B_MAX) {
-        return std::string{static_cast<char>(UTF8_3B_PRE | (p >> UTF8_2B_SHIFT)),
-                           static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK)),
-                           static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
-    }
-
-    return std::string{static_cast<char>(UTF8_4B_PRE | (p >> UTF8_3B_SHIFT)),
-                       static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_2B_SHIFT) & UTF8_CONT_MASK)),
-                       static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK)),
-                       static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
-}
-
 // Escape sequences
 
 std::optional<char32_t> getEscapeCharacter(char escapeChar, std::size_t line, std::size_t col) {
@@ -163,6 +139,30 @@ std::optional<char32_t> parseEscapeSequence(std::string_view input, std::size_t&
 }
 
 }  // namespace
+
+// Unicode -> UTF8
+
+std::optional<std::string> encodeUTF8(char32_t codepoint) {
+    const auto p = static_cast<std::uint32_t>(codepoint);
+
+    if (!isValidCodePoint(codepoint)) { return std::nullopt; }
+
+    if (p <= UTF8_1B_MAX) { return std::string{static_cast<char>(p)}; }
+    if (p <= UTF8_2B_MAX) {
+        return std::string{static_cast<char>(UTF8_2B_PRE | (p >> UTF8_2B_SHIFT)),
+                           static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
+    }
+    if (p <= UTF8_3B_MAX) {
+        return std::string{static_cast<char>(UTF8_3B_PRE | (p >> UTF8_2B_SHIFT)),
+                           static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK)),
+                           static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
+    }
+
+    return std::string{static_cast<char>(UTF8_4B_PRE | (p >> UTF8_3B_SHIFT)),
+                       static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_2B_SHIFT) & UTF8_CONT_MASK)),
+                       static_cast<char>(UTF8_CONT_PRE | ((p >> UTF8_CONT_SHIFT) & UTF8_CONT_MASK)),
+                       static_cast<char>(UTF8_CONT_PRE | (p & UTF8_CONT_MASK))};
+}
 
 std::optional<DecodedUTF8> Lexer::decodeUTF8(std::string_view input, std::size_t offset) {
     if (offset >= input.size()) { return std::nullopt; }

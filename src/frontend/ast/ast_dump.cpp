@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <format>
 #include <frontend/ast.hpp>
-#include <frontend/lexer/token.hpp>
+#include <frontend/lexer.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/number.hxx>
 #include <ostream>
@@ -68,6 +68,21 @@ std::string_view getNumberTypeName(const mnstl::number_t& value) {
     }
     ASSERT_UNREACHABLE("Number did not hold a valid type");
 }
+
+inline std::size_t utf8Length(std::string_view str) noexcept {
+    std::size_t count = 0;
+    for (char c : str) {
+        if ((static_cast<unsigned char>(c) & 0xC0) != 0x80) { ++count; }
+    }
+    return count;
+}
+
+inline std::string codepointToUTF8(char32_t codepoint) {
+    if (codepoint <= 0x7F) { return std::string(1, static_cast<char>(codepoint)); }
+    auto encoded = lexer::encodeUTF8(codepoint);
+    return encoded ? *encoded : "";
+}
+
 }  // namespace
 
 // Statements
@@ -404,7 +419,7 @@ void BoolLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
 void CharLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "CharLiteralExpression", *this);
-    os << ind.next() << "value: '" << static_cast<char>(value) << "'\n";
+    os << ind.next() << "value: '" << codepointToUTF8(value) << "'\n";
     os << ind.next() << "code point: " << static_cast<std::int32_t>(value) << "\n";
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
@@ -523,7 +538,8 @@ void StringLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "StringLiteralExpression", *this);
     os << ind.next() << "value: " << toString() << "\n";
-    os << ind.next() << "length: " << value.length() << "\n";
+    os << ind.next() << "byte length: " << value.length() << "\n";
+    os << ind.next() << "character length: " << utf8Length(value) << "\n";
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }

@@ -95,6 +95,8 @@ class Lexer {
 
 //~ Static helper functions
 
+std::optional<std::string> encodeUTF8(char32_t);
+
 constexpr bool isbdigit(char c) noexcept { return c == '0' || c == '1'; }
 constexpr bool isdigit(char c) noexcept { return BETWEEN(c, '0', '9'); }
 constexpr bool isodigit(char c) { return BETWEEN(c, '0', '7'); }

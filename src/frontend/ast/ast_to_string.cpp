@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
-#include <frontend/lexer/token.hpp>
+#include <frontend/lexer.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <vector>
@@ -54,6 +54,13 @@ std::string genericsToString(const std::vector<Type*>& params, std::size_t inden
     if (params.empty()) { return ""; }
     return std::format("@[{}]", commaSeparatedList(params, indent));
 }
+
+inline std::string codepointToUTF8(char32_t codepoint) {
+    if (codepoint <= 0x7F) { return std::string(1, static_cast<char>(codepoint)); }
+    auto encoded = lexer::encodeUTF8(codepoint);
+    return encoded ? *encoded : "";
+}
+
 }  // namespace
 
 // Statements
@@ -254,7 +261,7 @@ std::string BinaryExpression::toString(std::size_t indent) const {
 
 std::string BoolLiteralExpression::toString(std::size_t) const { return value ? "true" : "false"; }
 
-std::string CharLiteralExpression::toString(std::size_t) const { return std::format("'{}'", static_cast<char>(value)); }
+std::string CharLiteralExpression::toString(std::size_t) const { return codepointToUTF8(value); }
 
 std::string FunctionCallExpression::toString(std::size_t indent) const {
     std::string result = callee->toString(indent) + "(";
