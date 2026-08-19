@@ -253,6 +253,9 @@ const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool i
 }
 
 const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) const noexcept {
+    if (primitive == ast::PrimitiveType_t::not_primitive) {
+        ASSERT_UNREACHABLE("Attempted to get a primitive type corresponding to a non-primitive value!");
+    }
     return &_primitives[static_cast<unsigned>(primitive)];
 }
 
