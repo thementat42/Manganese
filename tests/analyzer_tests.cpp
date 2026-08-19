@@ -434,6 +434,57 @@ static bool testAnalyzeFromFile() {
     return result == Result::Success;
 }
 
+static bool testPointerDereferenceAndMutability() {
+    std::string validSource = R"(
+        func main() {
+            let mut target: int32 = 100;
+            let immutableTarget: int32 = 50;
+
+            # Address-of on mutable variable produces `ptr mut int32`
+            let mut mutPtr: ptr mut int32 = &target;
+
+            # Address-of on immutable variable produces `ptr int32`
+            let constPtr: ptr int32 = &immutableTarget;
+
+            # Dereference assignment to `ptr mut`
+            *mutPtr = 200;
+
+            # Pointer arithmetic
+            mutPtr++;
+            --mutPtr;
+        }
+    )";
+    if (!analyzeSource(validSource, true, __func__)) { return false; }
+
+    // Assigning through a dereference of an immutable pointer (`ptr int32`) is invalid
+    std::string assignThroughConstPtr = R"(
+        func main() {
+            let target: int32 = 100;
+            let constPtr: ptr int32 = &target;
+            *constPtr = 200;
+        }
+    )";
+    if (!analyzeSource(assignThroughConstPtr, false, __func__)) { return false; }
+
+    // Incrementing/decrementing an immutable variable and an rvalue is invalid
+    std::string incImmutable = R"(
+        func main() {
+            let immutableVal: int32 = 10;
+            immutableVal++;
+            --3;
+        }
+    )";
+    if (!analyzeSource(incImmutable, false, __func__)) { return false; }
+
+    // Taking address of an r-value (or assigning to an r-value) is invalid
+    std::string addressOfRValue = R"(
+        func main() {
+            let ptrVal = &42;
+        }
+    )";
+    return analyzeSource(addressOfRValue, false, __func__);
+}
+
 void runAnalyzerTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
@@ -468,6 +519,7 @@ void runAnalyzerTests(TestRunner& runner) {
 
     // Other
     runner.runTest("Analysis from file", testAnalyzeFromFile);
+    runner.runTest("Dereference & Immutability", testPointerDereferenceAndMutability);
 }
 
 }  // namespace Manganese::tests
