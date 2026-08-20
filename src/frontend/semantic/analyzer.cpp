@@ -12,23 +12,35 @@
 #include <utils/result.hpp>
 #include <utils/type_names.hpp>
 
-#include "frontend/ast/ast_expressions.hpp"
-
-
 namespace Manganese::semantic {
 
 constexpr static inline std::uint8_t f32MantissaWidth = 24;
 constexpr static inline std::uint8_t f64MantissaWidth = 53;
 
 Result analyzer::analyze() {
-    Result isSemanticallyValid = Result::Success;
-    if (collectTypes() == Result::Failure) { isSemanticallyValid = Result::Failure; }
     // Don't want errors cascading because of conflicting redeclarations
-    if (isSemanticallyValid == Result::Failure) { return isSemanticallyValid; }
-
+    if (collectTypes() == Result::Failure) { return Result::Failure; }
     symbolTable.switchToCheckingMode();
-    isSemanticallyValid = checkStatements();
-    return isSemanticallyValid;
+    if (collectGlobals() == Result::Failure) { return Result::Failure; }
+    return checkStatements();
+}
+
+Result analyzer::collectGlobals() {
+    Result result = Result::Success;
+    for (ast::Statement* statement : parsedFile.program) {
+        if (statement->kind != ast::StatementKind::AggregateDeclarationStatement) { continue; }
+        auto* aggregate = static_cast<ast::AggregateDeclarationStatement*>(statement);
+        if (collectGlobalAggregate(aggregate) == Result::Failure) { result = Result::Failure; }
+    }
+
+    // Do this on a separate pass in case a function uses an aggregate in its signature
+    for (ast::Statement* statement : parsedFile.program) {
+        if (statement->kind != ast::StatementKind::FunctionDeclarationStatement) { continue; }
+        auto* function = static_cast<ast::FunctionDeclarationStatement*>(statement);
+        if (collectGlobalFunction(function) == Result::Failure) { result = Result::Failure; }
+    }
+
+    return result;
 }
 
 bool analyzer::isMutableExpression(const ast::Expression* expr) {
@@ -64,6 +76,95 @@ bool analyzer::isMutableExpression(const ast::Expression* expr) {
         }
         default: return false;
     }
+}
+
+Result analyzer::collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate) {
+    // Skip uninstantiated generics
+    if (!aggregate->genericTypes.empty()) { return Result::Success; }
+
+    Symbol* symbol = symbolTable.lookup(aggregate->name);
+    if (!symbol) {
+        ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not recorded during type collection", aggregate->name));
+    }
+
+    // Skip if already processed
+    if (symbol->type) { return Result::Success; }
+
+    Result result = Result::Success;
+    std::vector<AggregateField> fields;
+    fields.reserve(aggregate->fields.size());
+
+    for (const auto& field : aggregate->fields) {
+        const typevisit_t fieldResult = visit(field.type);
+        if (fieldResult == typevisit_t::Failure) {
+            logError(aggregate, "Unknown type '{}' for field '{}' in aggregate '{}'", field.type->toString(),
+                     field.name, aggregate->name);
+            result = Result::Failure;
+        }
+
+        const SemanticType* fieldType
+            = (fieldResult == typevisit_t::Failure ? typeContext.getVoid() : field.type->semanticType);
+        fields.push_back(AggregateField{.name = field.name, .type = fieldType});
+    }
+
+    symbol->type = typeContext.getNamedAggregate(aggregate->name, std::move(fields));
+    symbol->status = ResolutionStatus::NotStarted;
+
+    return result;
+}
+
+Result analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* function) {
+    // Skip uninstantiated generics
+    if (!function->genericTypes.empty()) { return Result::Success; }
+
+    Symbol* symbol = symbolTable.lookup(function->name);
+    if (!symbol) {
+        ASSERT_UNREACHABLE(std::format("Function '{}' was not recorded during type collection", function->name));
+    }
+
+    // Detect direct signature cycles (e.g. infinite parameter expansion)
+    if (symbol->status == ResolutionStatus::InProgress) {
+        logError(function, "Cyclic dependency detected in signature of function '{}'", function->name);
+        symbol->status = ResolutionStatus::Failure;
+        return Result::Failure;
+    }
+
+    symbol->status = ResolutionStatus::InProgress;
+
+    std::vector<Parameter> paramTypes;
+    paramTypes.reserve(function->parameters.size());
+    Result funcResult = Result::Success;
+
+    for (const auto& param : function->parameters) {
+        const typevisit_t paramResult = visit(param.type);
+        if (paramResult == typevisit_t::Failure) {
+            logError(function, "Unknown parameter type '{}' for parameter '{}' in function '{}'",
+                     param.type->toString(), param.name, function->name);
+            funcResult = Result::Failure;
+        }
+
+        const SemanticType* paramType
+            = (paramResult == typevisit_t::Failure ? typeContext.getVoid() : param.type->semanticType);
+        paramTypes.push_back(
+            Parameter{.isMutable = param.isMutable, .isVariadic = param.isVariadic, .type = paramType});
+    }
+
+    const SemanticType* resolvedReturnType = typeContext.getVoid();
+    if (function->returnType) {
+        const typevisit_t returnResult = visit(function->returnType);
+        if (returnResult == typevisit_t::Failure) {
+            logError(function, "Unknown return type '{}' in function '{}'", function->returnType->toString(),
+                     function->name);
+            funcResult = Result::Failure;
+        } else {
+            resolvedReturnType = function->returnType->semanticType;
+        }
+    }
+
+    symbol->type = typeContext.getFunction(std::move(paramTypes), resolvedReturnType);
+    symbol->status = ResolutionStatus::NotStarted;
+
+    return funcResult;
 }
 
 const SemanticType* analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {

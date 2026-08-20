@@ -158,53 +158,32 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
         return stmtvisit_t::Failure;
     }
 
-    // We don't know the generic types at declaration so we can't check them
-    // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     Symbol* symbol = symbolTable.lookup(statement->name);
-    if (!symbol) {
-        ASSERT_UNREACHABLE(
-            std::format("Function '{}' was not registered during symbol initialization", statement->name));
+    if (!symbol || !symbol->type) {
+        ASSERT_UNREACHABLE(std::format("Function '{}' was not registered during symbol collection", statement->name));
     }
 
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
     if (symbol->status == ResolutionStatus::Failure) { return stmtvisit_t::Failure; }
 
-    // Direct circular dependencies in function signatures (e.g. infinite type expansions)
-    if (symbol->status == ResolutionStatus::InProgress) {
-        // Recursive calls inside bodies are fine because body resolution happens while InProgress.
-        // Re-entering here only happens if signature resolution loops.
-        logError(statement, "Cyclic dependency detected in signature of function '{}'", statement->name);
-        symbol->status = ResolutionStatus::Failure;
-        return stmtvisit_t::Failure;
-    }
+    // Re-entrancy check: allow recursive calls inside the body
+    if (symbol->status == ResolutionStatus::InProgress) { return stmtvisit_t::Success; }
 
     symbol->status = ResolutionStatus::InProgress;
 
     const ContextGuard contextGuard{context.inFunction, true};
-    const SemanticType* resolvedReturnType = typeContext.getVoid();
+    const Function* functionType = static_cast<const Function*>(symbol->type);
+
     stmtvisit_t signatureResult = stmtvisit_t::Success;
 
-    if (statement->returnType) {
-        visit(statement->returnType);
-        resolvedReturnType = statement->returnType->semanticType;
-        if (!resolvedReturnType) {
-            logError(statement, "Unknown return type for function '{}'", statement->name);
-            signatureResult = stmtvisit_t::Failure;
-        }
-    }
-
     symbolTable.enterScope();
-    for (const ast::FunctionParameter& param : statement->parameters) {
-        visit(param.type);
-        const SemanticType* resolvedParamType = param.type->semanticType;
-        if (!resolvedParamType) {
-            logError(statement, "Unknown type for parameter '{}' in function '{}'", param.name, statement->name);
+    for (std::size_t i = 0; i < statement->parameters.size(); ++i) {
+        const auto& param = statement->parameters[i];
+        const SemanticType* resolvedParamType = functionType->parameterTypes[i].type;
 
-            symbol->status = ResolutionStatus::Failure;
-            signatureResult = stmtvisit_t::Failure;
-        }
+        // Register parameter in local function scope
         stmtvisit_t paramDeclaration = symbolTable.declare(
             param.name,
             Symbol{.type = resolvedParamType,
@@ -215,14 +194,10 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
         if (paramDeclaration == stmtvisit_t::Failure) [[unlikely]] {
             logError(statement, "Failed to declare parameter '{}' in scope for function '{}'", param.name,
                      statement->name);
-
-            symbol->status = ResolutionStatus::Failure;
             signatureResult = stmtvisit_t::Failure;
         }
 
-        // Default arguments are checked in the parameter scope so that they can refer to anything already visible at
-        // this point
-
+        // Validate default arguments in local scope
         if (param.defaultValue) {
             visit(param.defaultValue);
 
@@ -231,27 +206,26 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
             if (!defaultType) {
                 logError(statement, "Unable to determine type of default value for parameter '{}' in function '{}'",
                          param.name, statement->name);
-
-                symbol->status = ResolutionStatus::Failure;
                 signatureResult = stmtvisit_t::Failure;
             } else if (resolvedParamType && !areTypesCompatible(resolvedParamType, defaultType)) {
                 logError(statement,
                          "Default value for parameter '{}' in function '{}' has type '{}', "
                          "but '{}' was expected",
                          param.name, statement->name, defaultType->toString(), resolvedParamType->toString());
-
-                symbol->status = ResolutionStatus::Failure;
                 signatureResult = stmtvisit_t::Failure;
             }
         }
     }
 
-    context.currentFunctionReturnType = resolvedReturnType;
-    // already entered a scope for the parameters so we don't want to enter a scope while visiting the body
+    // Type-check the body
+    context.currentFunctionReturnType = functionType->returnType;
     const stmtvisit_t bodyResult = visit(statement->body, false);
     context.currentFunctionReturnType = nullptr;
-    return (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success) ? stmtvisit_t::Success
-                                                                                           : stmtvisit_t::Failure;
+
+    const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);
+    symbol->status = isSuccess ? ResolutionStatus::Success : ResolutionStatus::Failure;
+
+    return isSuccess ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
 auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {

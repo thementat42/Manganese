@@ -95,6 +95,9 @@ class analyzer final : public _analyzer_base_t {
 
     Result _collectTypesInStatement(ast::Statement*);
     Result _collectTypesInStatementBody(const ast::Block&);
+    Result collectGlobals();
+    Result collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate);
+    Result collectGlobalFunction(ast::FunctionDeclarationStatement* function);
     Result checkStatements();
 
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
