@@ -29,8 +29,9 @@ static bool analyzeSource(const std::string& source, bool expectSuccess, std::st
         std::cerr << "ERROR: Could not open log file for writing.\n";
     } else {
         logFile << "Test: " << testName << "\n";
-        logFile << "Expected Result: " << (expectSuccess ? "Success" : "Failure") << "\n";
-        logFile << "Actual Result: " << (result == Result::Success ? "Success" : "Failure") << '\n';
+        logFile << "Expected Result: Semantically " << (expectSuccess ? "Valid" : "Invalid") << "\n";
+        logFile << "Actual Result: Semantically " << (result == Result::Success ? "Valid" : "Invalid") << '\n';
+        logFile << "Test " << (result == Result::Success ? "Passed" : "Failed") << '\n';
         logFile << "Analyzed " << testName << "AST:\n";
         for (const auto& stmt : parsedFile.program) {
             logFile << "String representation: " << stmt->toString(0) << '\n';
@@ -416,8 +417,8 @@ static bool testAnalyzeFromFile() {
         std::cerr << "ERROR: Could not open log file for writing.\n";
     } else {
         logFile << "Test: Analysis from file\n";
-        logFile << "Expected Result: Success\n";
-        logFile << "Actual Result: " << (result == Result::Success ? "Success" : "Failure") << '\n';
+        logFile << "Expected Result: Semantically Valid\n";
+        logFile << "Actual Result: Semantically " << (result == Result::Success ? "Valid" : "Invalid") << '\n';
         logFile << "Analyzed File AST:\n";
         for (const auto& stmt : parsedFile.program) {
             logFile << "String representation: " << stmt->toString(0) << '\n';
@@ -517,6 +518,7 @@ void runAnalyzerTests(TestRunner& runner) {
     // Other
     runner.runTest("Analysis from file", testAnalyzeFromFile);
     runner.runTest("Dereference & Immutability", testPointerDereferenceAndMutability);
+
 }
 
 }  // namespace Manganese::tests
