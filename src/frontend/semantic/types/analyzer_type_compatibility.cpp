@@ -50,9 +50,23 @@ Result analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
                      lexer::tokenTypeToString(expr->op));
             return Result::Failure;
         }
-        const auto* lhsPtr = static_cast<const Pointer*>(lhsType);
-        const auto* rhsPtr = static_cast<const Pointer*>(rhsType);
-        if (lhsPtr->baseType == rhsPtr->baseType) { return Result::Success; }
+        const auto* lhsBase = static_cast<const Pointer*>(lhsType)->baseType;
+        const auto* rhsBase = static_cast<const Pointer*>(rhsType)->baseType;
+
+        if (!lhsBase) {
+            logError(expr, "Could not deduce type of pointer '{}'", expr->left->toString());
+            return Result::Failure;
+        }
+
+        if (!rhsBase) {
+            logError(expr, "Could not deduce type of pointer '{}'", expr->right->toString());
+            return Result::Failure;
+        }
+
+        if (lhsBase == rhsBase) { return Result::Success; }
+        logError(expr, "Cannot subtract pointers of different types '{}' and '{}'", lhsBase->toString(),
+                 rhsBase->toString());
+        return Result::Failure;
     }
     return Result::Failure;
 }
