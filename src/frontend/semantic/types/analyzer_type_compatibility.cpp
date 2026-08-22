@@ -17,7 +17,7 @@ namespace Manganese::semantic {
 constexpr static inline std::uint8_t f32MantissaWidth = 24;
 constexpr static inline std::uint8_t f64MantissaWidth = 53;
 
-Result analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
+Result Analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
     const SemanticType* lhsType = expr->left->semanticType;
     const SemanticType* rhsType = expr->right->semanticType;
 
@@ -71,7 +71,7 @@ Result analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
     return Result::Failure;
 }
 
-const SemanticType* analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
+const SemanticType* Analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
     if (!lhs || !rhs) { return nullptr; }
     // direct match, don't need to promote
     if (lhs == rhs) { return lhs; }
@@ -112,7 +112,7 @@ const SemanticType* analyzer::promoteNumericTypes(const SemanticType* lhs, const
     return nullptr;
 }
 
-auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
+auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
     // Null pointer means something went wrong in type deduction
     if (!from || !to) { return {.result = Compatible_t::Error, .message = "Could not deduce types"}; }
 
@@ -238,7 +238,7 @@ auto analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
     }
 }
 
-auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
+auto Analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
     -> typeCompatibilityResult {
     using Cat = PrimitiveInfo::Category;
     if (from->primitiveType == to->primitiveType) { return {.result = Compatible_t::Valid}; }
@@ -306,7 +306,7 @@ auto analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
     return {.result = Compatible_t::Valid};  // Widening conversion is fine
 }
 
-auto analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const -> typeCompatibilityResult {
+auto Analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const -> typeCompatibilityResult {
     if (lhs->isVoid() || rhs->isVoid()) {
         return {.result = Compatible_t::Error, .message = "Cannot compare void types"};
     }

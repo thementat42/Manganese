@@ -8,7 +8,7 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
+auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
     if (auto* cached = instantiationCache.find(key)) {
@@ -42,7 +42,7 @@ auto analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) ->
     return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-auto analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
+auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
     if (auto* cached = instantiationCache.find(key)) {
@@ -128,7 +128,7 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
     return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-const SemanticType* analyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
+const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
                                                           const TypeList& typeArgs) {
     if (!decl) [[unlikely]] { return nullptr; }
     InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
@@ -151,7 +151,7 @@ const SemanticType* analyzer::getInstantiatedFunctionType(const ast::FunctionDec
     return typeContext.getFunction(std::move(instantiatedParams), resolvedReturnType);
 }
 
-const SemanticType* analyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
+const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
                                                            const TypeList& typeArgs) {
     if (!decl) [[unlikely]] { return nullptr; }
     InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
@@ -177,7 +177,7 @@ const SemanticType* analyzer::getInstantiatedAggregateType(const ast::AggregateD
     return typeContext.getNamedAggregate(instantiatedName, std::move(instantiatedFields));
 }
 
-const SemanticType* analyzer::resolveGenericType(const ast::Type* type) {
+const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
     if (!type) [[unlikely]] { return nullptr; }
     if (type->primitiveType != ast::PrimitiveType_t::not_primitive) {
         return typeContext.getPrimitive(type->primitiveType);

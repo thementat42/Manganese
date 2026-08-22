@@ -50,7 +50,7 @@ struct [[nodiscard]] StackGuard {
 
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
 
-class analyzer final : public _analyzer_base_t {
+class Analyzer final : public _analyzer_base_t {
    private:
     SymbolTable symbolTable;
     TypeContext typeContext;
@@ -83,12 +83,12 @@ class analyzer final : public _analyzer_base_t {
     };
 
    public:
-    analyzer(parser::ParsedFile& file, mnstl::chunk_allocator& arena) :
+    Analyzer(parser::ParsedFile& file, mnstl::chunk_allocator& arena) :
         symbolTable(arena), typeContext(arena), parsedFile(file), genericsStack() {}
 
     Result analyze();
 
-    ~analyzer() override = default;
+    ~Analyzer() override = default;
 
    private:
     Result collectTypes();

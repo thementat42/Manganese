@@ -11,7 +11,7 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
     if (!targetSemanticType) {
@@ -22,7 +22,7 @@ auto analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {
     TypeList resolvedTypeArguments;
     resolvedTypeArguments.reserve(expression->types.size());
 
@@ -95,7 +95,7 @@ auto analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {
     return exprvisit_t::Failure;
 }
 
-auto analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
     if (!targetSemanticType) {

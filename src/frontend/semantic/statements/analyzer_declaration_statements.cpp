@@ -8,7 +8,7 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
+auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
     // We don't know the generic types at declaration so we can't check them
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
@@ -62,7 +62,7 @@ auto analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     return stmtvisit_t::Success;
 }
 
-auto analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
+auto Analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     Symbol* symbol = symbolTable.lookup(statement->alias);
     if (!symbol) {
         ASSERT_UNREACHABLE(
@@ -89,7 +89,7 @@ auto analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
+auto Analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     stmtvisit_t result = stmtvisit_t::Success;
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (!symbol) {
@@ -150,7 +150,7 @@ auto analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
+auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
     if (context.inFunction) {
         logError(statement,
                  "Nested functions are not supported: function '{}' cannot be declared inside another function",
@@ -228,7 +228,7 @@ auto analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
     return isSuccess ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-auto analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
+auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     const SemanticType* variableType = nullptr;
 
     if (statement->type) {

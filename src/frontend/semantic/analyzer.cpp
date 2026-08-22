@@ -12,7 +12,7 @@
 
 namespace Manganese::semantic {
 
-Result analyzer::analyze() {
+Result Analyzer::analyze() {
     // Don't want errors cascading because of conflicting redeclarations
     if (collectTypes() == Result::Failure) { return Result::Failure; }
     symbolTable.switchToCheckingMode();
@@ -20,7 +20,7 @@ Result analyzer::analyze() {
     return checkStatements();
 }
 
-Result analyzer::collectGlobals() {
+Result Analyzer::collectGlobals() {
     Result result = Result::Success;
     for (ast::Statement* statement : parsedFile.program) {
         if (statement->kind != ast::StatementKind::AggregateDeclarationStatement) { continue; }
@@ -38,7 +38,7 @@ Result analyzer::collectGlobals() {
     return result;
 }
 
-bool analyzer::isMutableExpression(const ast::Expression* expr) {
+bool Analyzer::isMutableExpression(const ast::Expression* expr) {
     if (!expr) { return false; }
     using enum ast::ExpressionKind;
     switch (expr->kind) {
@@ -73,7 +73,7 @@ bool analyzer::isMutableExpression(const ast::Expression* expr) {
     }
 }
 
-Result analyzer::collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate) {
+Result Analyzer::collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate) {
     // Skip uninstantiated generics
     if (!aggregate->genericTypes.empty()) { return Result::Success; }
 
@@ -108,7 +108,7 @@ Result analyzer::collectGlobalAggregate(ast::AggregateDeclarationStatement* aggr
     return result;
 }
 
-Result analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* function) {
+Result Analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* function) {
     // Skip uninstantiated generics
     if (!function->genericTypes.empty()) { return Result::Success; }
 
@@ -163,7 +163,7 @@ Result analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* functi
 }
 
 
-Result analyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
+Result Analyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
     Result programIsSemanticallyValid = Result::Success;
     for (ast::Statement* stmt : parsedFile.program) {
         if (this->visit(stmt) == Result::Failure) { programIsSemanticallyValid = Result::Failure; }

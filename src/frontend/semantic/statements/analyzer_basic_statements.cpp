@@ -7,11 +7,11 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
+auto Analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
     return stmtvisit_t::Success;  // nothing to check
 }
 
-auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
+auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
     if (visit(statement->expression) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
 
     // Crucial distinction:
@@ -19,13 +19,13 @@ auto analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto analyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
+auto Analyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
 
-auto analyzer::visit([[maybe_unused]] ast::NamespaceStatement* statement) -> stmtvisit_t {
+auto Analyzer::visit([[maybe_unused]] ast::NamespaceStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
+auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     if (!context.inFunction) {
         logError(statement, "'return' can only be used in a function");
         return stmtvisit_t::Failure;

@@ -10,7 +10,7 @@ namespace Manganese::semantic {
 // Note: all types are nullptr for the moment since this is just meant to collect names
 // Types are set later on
 
-Result analyzer::collectTypes() {
+Result Analyzer::collectTypes() {
     // first pass -- collect all user-defined types
     Result result = Result::Success;
     for (ast::Statement* stmt : parsedFile.program) {
@@ -23,7 +23,7 @@ static FORCE_INLINE void _reportRedeclaration(std::string_view redeclaredSymbolN
     logging::logError(node->line, node->column, "'{}' was already declared in this scope", redeclaredSymbolName);
 }
 
-Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
+Result Analyzer::_collectTypesInStatement(ast::Statement* stmt) {
     using enum ast::StatementKind;
 
     switch (stmt->kind) {
@@ -124,7 +124,7 @@ Result analyzer::_collectTypesInStatement(ast::Statement* stmt) {
     }
 }
 
-Result analyzer::_collectTypesInStatementBody(const ast::Block& body) {
+Result Analyzer::_collectTypesInStatementBody(const ast::Block& body) {
     symbolTable.enterScope();
     Result result = Result::Success;
 

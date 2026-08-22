@@ -12,7 +12,7 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
     if (visit(expression->base) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
     const SemanticType* baseType = expression->base->semanticType;
@@ -79,7 +79,7 @@ auto analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
     return result;
 }
 
-auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     if (visit(expression->callee) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* calleeType = expression->callee->semanticType;
     if (!calleeType) {
@@ -128,7 +128,7 @@ auto analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     return result;
 }
 
-auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     auto result = exprvisit_t::Success;
     if (visit(expression->variable) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->index) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
@@ -158,7 +158,7 @@ auto analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     return result;
 }
 
-auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     visit(expression->object);
     const SemanticType* objectType = expression->object->semanticType;
     if (!objectType) {
@@ -189,7 +189,7 @@ auto analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     return exprvisit_t::Failure;
 }
 
-auto analyzer::visit([[maybe_unused]] ast::ScopeResolutionExpression* expression) -> exprvisit_t {
+auto Analyzer::visit([[maybe_unused]] ast::ScopeResolutionExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 

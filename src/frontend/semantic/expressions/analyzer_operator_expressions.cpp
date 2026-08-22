@@ -8,7 +8,7 @@
 #include <utils/result.hpp>
 
 namespace Manganese::semantic {
-auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     auto result = exprvisit_t::Success;
     if (visit(expression->assignee) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->value) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
@@ -39,7 +39,7 @@ auto analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     return result;
 }
 
-auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     auto result = exprvisit_t::Success;
 
     if (visit(expression->left) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
@@ -102,7 +102,7 @@ auto analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         std::format("Unhandled binary operator {} in visit(BinaryExpression)", lexer::tokenTypeToString(op)));
 };
 
-auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     exprvisit_t result = visit(expression->left);
     if (result == exprvisit_t::Failure) { return result; }
     // the only postfix operators are ++ and -- so the expression must be an integer
@@ -134,7 +134,7 @@ auto analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     return result;
 }
 
-auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     if (!expression->right->semanticType) {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
@@ -231,7 +231,7 @@ auto analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     auto result = exprvisit_t::Success;
     ContextGuard guard(context.typeCastDepth, static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
     if (visit(expression->originalValue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }

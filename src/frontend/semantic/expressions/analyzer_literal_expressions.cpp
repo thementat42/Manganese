@@ -11,7 +11,7 @@
 
 namespace Manganese::semantic {
 
-auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
     auto result = exprvisit_t::Success;
     TypeList elementTypes;
     elementTypes.reserve(expression->elements.size());
@@ -36,7 +36,7 @@ auto analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
     return result;
 }
 
-auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     if (expression->elements.empty()) {
         if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
             expression->semanticType = context.currentVariableDeclarationType;
@@ -100,16 +100,16 @@ auto analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
     return exprvisit_t::Success;
 }
-auto analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::character);
     return exprvisit_t::Success;
 }
 
-auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
     const Symbol* symbol = symbolTable.lookup(expression->name);
     if (!symbol) {
         logError(expression, "Identifier '{}' was not found in the current scope", expression->name);
@@ -123,7 +123,7 @@ auto analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     using held_t = mnstl::number_t::held_type;
     using prim_t = ast::PrimitiveType_t;
     switch (expression->value.underlying_type()) {
@@ -150,7 +150,7 @@ auto analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
     return exprvisit_t::Success;
 }
