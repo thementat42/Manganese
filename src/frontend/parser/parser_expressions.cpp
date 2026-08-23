@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "frontend/parser/operators.hpp"
 
 /**
  * Ambiguous cases:
@@ -100,8 +101,8 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         Token token = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation");
         std::string propertyName = token.getLexeme();
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
-        const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
-        ast::Expression* value = parseExpression(static_cast<Precedence>(precedence));
+        constexpr auto precedence = precedenceAbove(Precedence::Assignment);
+        ast::Expression* value = parseExpression(precedence);
 
         fields.push_back({.name = propertyName, .value = value, .line = token.getLine(), .column = token.getColumn()});
 
@@ -160,8 +161,8 @@ ast::Expression* Parser::parseArrayInstantiationExpression() {
         if (peekTokenType() == lexer::TokenType::RightSquare) {
             break;  // Done instantiation
         }
-        const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
-        elements.push_back(parseExpression(static_cast<Precedence>(precedence)));
+        constexpr auto precedence = precedenceAbove(Precedence::Assignment);
+        elements.push_back(parseExpression(precedence));
         if (peekTokenType() != lexer::TokenType::RightSquare) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate array elements");
         }
@@ -223,8 +224,8 @@ ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedenc
 
 ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence) {
     const Token startToken = consumeToken();  // Consume the left square bracket
-    const auto precedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
-    ast::Expression* index = parseExpression(static_cast<Precedence>(precedence));
+    constexpr auto precedence = precedenceAbove(Precedence::Assignment);
+    ast::Expression* index = parseExpression(precedence);
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
     return makeNode<ast::IndexExpression>(startToken, left, index);
 }
