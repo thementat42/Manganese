@@ -32,9 +32,9 @@ class chunk_allocator {
                   .capacity = size});
     }
 
-    FORCE_INLINE void* allocate(std::size_t size, std::size_t alignment = alignof(std::max_align_t)) {
+    FORCE_INLINE void* allocate(std::size_t size, std::size_t alignment) {
     _do_allocation:
-        chunk& c = _chunks[_chunks.size() - 1];
+        chunk& c = _chunks.back();
         const auto current_position = reinterpret_cast<std::uintptr_t>(c.data.get() + c.used);
         // the next place we can safely construct a type, taking padding into account
         const std::uintptr_t aligned_position = align_up(current_position, alignment);
