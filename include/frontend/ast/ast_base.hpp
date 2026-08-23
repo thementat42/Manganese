@@ -7,9 +7,9 @@
 #include <mnstl/fold_result.hxx>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <utils/type_names.hpp>
 #include <vector>
-#include <string_view>
 
 #if MN_DEBUG
 #define MN_AST_DUMP void dump(std::ostream& os, std::size_t indent = 0) const override;

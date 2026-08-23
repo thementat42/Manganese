@@ -120,8 +120,7 @@ Result Analyzer::_buildStatementScope(ast::Statement* stmt) {
             for (const ast::CaseClause& clause : switchStmt->cases) {
                 if (_buildBodyScope(clause.body) == Result::Failure) { result = Result::Failure; }
             }
-            if (!switchStmt->defaultBody.empty()
-                && _buildBodyScope(switchStmt->defaultBody) == Result::Failure) {
+            if (!switchStmt->defaultBody.empty() && _buildBodyScope(switchStmt->defaultBody) == Result::Failure) {
                 result = Result::Failure;
             }
             return result;

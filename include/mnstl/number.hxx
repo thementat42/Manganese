@@ -141,8 +141,6 @@ class number_t {
     constexpr number_t(float64_t f64) noexcept : _f64(f64), _underlying(held_type::float64) {}
     constexpr number_t(const char* error_message) noexcept : _err(error_message), _underlying(held_type::error) {}
 
-    
-
     constexpr bool is_error() const noexcept { return _underlying == held_type::error; }
     constexpr const char* error_unchecked() const noexcept { return _err; }
 
@@ -376,8 +374,7 @@ namespace detail {
 }
 
 template <FloatingPoint T>
-[[nodiscard]] string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b,
-                                                            bool is_negative) noexcept {
+[[nodiscard]] string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b, bool is_negative) noexcept {
     string_conversion_result_t<T> result;
     if (ptr >= end) [[unlikely]] {
         result.exists = false;

@@ -518,7 +518,6 @@ void runAnalyzerTests(TestRunner& runner) {
     // Other
     runner.runTest("Analysis from file", testAnalyzeFromFile);
     runner.runTest("Dereference & Immutability", testPointerDereferenceAndMutability);
-
 }
 
 }  // namespace Manganese::tests

@@ -162,7 +162,6 @@ Result Analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* functi
     return funcResult;
 }
 
-
 Result Analyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
     Result programIsSemanticallyValid = Result::Success;
     for (ast::Statement* stmt : parsedFile.program) {
