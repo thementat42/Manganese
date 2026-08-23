@@ -8,7 +8,7 @@
 namespace Manganese::semantic {
 
 auto Analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
-    if (!context.inWhileLoopCondition && !context.inForLoopCondition) {
+    if (!context.whileLoopDepth && !context.forLoopDepth) {
         logError(statement, "'break' can only be used in loops ");
         return stmtvisit_t::Failure;
     }
@@ -16,7 +16,7 @@ auto Analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
 }
 
 auto Analyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
-    if (!context.inWhileLoopCondition && !context.inForLoopCondition) {
+    if (!context.whileLoopDepth && !context.forLoopDepth) {
         logError(statement, "'continue' can only be used in loops");
         return stmtvisit_t::Failure;
     }
@@ -25,6 +25,8 @@ auto Analyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
 
 auto Analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
+    const ContextGuard guard{context.forLoopDepth,
+                             static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1)};
     bool blockNeedsToEnterScope = true;
 
     if (statement->initializationStep) {
@@ -37,10 +39,7 @@ auto Analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
 
     if (statement->stopCondition) {
         // there is a stop condition, check it
-        context.inForLoopCondition = true;
         if (visit(statement->stopCondition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-        context.inForLoopCondition = false;
-
         if (!statement->stopCondition->semanticType) {
             logError(statement->stopCondition, "Could not deduce type of for loop stop condition {}",
                      statement->stopCondition->toString());
@@ -69,10 +68,10 @@ auto Analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
 
 auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
+    const ContextGuard guard{context.ifStatementDepth,
+                             static_cast<decltype(context.ifStatementDepth)>(context.ifStatementDepth + 1)};
 
-    context.inIfStatementCondition = true;
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-    context.inIfStatementCondition = false;
 
     if (!statement->condition->semanticType) {
         logError(statement, "Could not deduce type of condition {}", statement->condition->toString());
@@ -165,12 +164,12 @@ auto Analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
 }
 
 auto Analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
+    const ContextGuard guard{context.whileLoopDepth,
+                             static_cast<decltype(context.whileLoopDepth)>(context.whileLoopDepth + 1)};
+
     auto result = stmtvisit_t::Success;
 
-    context.inWhileLoopCondition = true;
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-    context.inWhileLoopCondition = false;
-
     if (!statement->condition->semanticType) {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
         return stmtvisit_t::Failure;
