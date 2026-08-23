@@ -39,7 +39,10 @@ auto Analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
 
     if (statement->stopCondition) {
         // there is a stop condition, check it
+        context.inForLoopCondition = true;
         if (visit(statement->stopCondition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        context.inForLoopCondition = false;
+
         if (!statement->stopCondition->semanticType) {
             logError(statement->stopCondition, "Could not deduce type of for loop stop condition {}",
                      statement->stopCondition->toString());
@@ -71,7 +74,9 @@ auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     const ContextGuard guard{context.ifStatementDepth,
                              static_cast<decltype(context.ifStatementDepth)>(context.ifStatementDepth + 1)};
 
+    context.inIfCondition = true;
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    context.inIfCondition = false;
 
     if (!statement->condition->semanticType) {
         logError(statement, "Could not deduce type of condition {}", statement->condition->toString());
@@ -169,7 +174,10 @@ auto Analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
 
     auto result = stmtvisit_t::Success;
 
+    context.inWhileLoopCondition = true;
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    context.inWhileLoopCondition = false;
+
     if (!statement->condition->semanticType) {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
         return stmtvisit_t::Failure;
