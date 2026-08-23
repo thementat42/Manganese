@@ -95,7 +95,6 @@ class Token {
      */
     void overrideType(TokenType newType, std::string newLexeme);
 
-    // These functions are long, so are implemented in a separate header
     TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
     std::string toString() const;
 };

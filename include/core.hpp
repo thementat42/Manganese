@@ -19,7 +19,7 @@
 #endif  // MN_DEBUG
 
 /**
- * Indicates that a function will not throw in release builds, to enable more optimizations.
+ * Indicates that a function will not throw in release builds.
  * This is a no-op in debug builds, where more exceptions are expected.
  * Note: This macro should not be used on functions that will actually never throw (in those cases, use `noexcept`
  * directly).
