@@ -137,9 +137,9 @@ class Parser {
     // ~ Helpers
     ast::Block parseBlock(const std::string& blockName);
     template <class T, class... Args>
-        requires(std::is_convertible_v<T*, ast::ASTNode*>)
+        requires(std::is_convertible_v<T*, ast::ASTNode*> && std::is_constructible_v<T, Args...>)
     T* makeNode(const Token& startToken, Args&&... args) {
-        T* node = arena.emplace<T>(std::forward<Args>(args)...);
+        T* const node = arena.emplace<T>(std::forward<Args>(args)...);
         node->line = startToken.getLine();
         node->column = startToken.getColumn();
         return node;
@@ -169,6 +169,9 @@ class Parser {
 
     // ~ Helpers for lookups
     constexpr static std::size_t tokenToIndex(TokenType t) noexcept { return static_cast<std::size_t>(t); }
+    consteval static Precedence precedenceAbove(Precedence p) noexcept {
+        return static_cast<Precedence>(static_cast<std::underlying_type_t<Precedence>>(p) + 1);
+    }
 
     static void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
     static void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
