@@ -5,16 +5,18 @@
 #include <string_view>
 #include <utils/result.hpp>
 
+#include "frontend/ast/ast_statements.hpp"
+
 namespace Manganese::semantic {
 
 // Note: all types are nullptr for the moment since this is just meant to collect names
 // Types are set later on
 
-Result Analyzer::collectTypes() {
+Result Analyzer::buildScopeTree() {
     // first pass -- collect all user-defined types
     Result result = Result::Success;
     for (ast::Statement* stmt : parsedFile.program) {
-        if (_collectTypesInStatement(stmt) == Result::Failure) { result = Result::Failure; }
+        if (_buildStatementScope(stmt) == Result::Failure) { result = Result::Failure; }
     }
     return result;
 }
@@ -23,7 +25,7 @@ static FORCE_INLINE void _reportRedeclaration(std::string_view redeclaredSymbolN
     logging::logError(node->line, node->column, "'{}' was already declared in this scope", redeclaredSymbolName);
 }
 
-Result Analyzer::_collectTypesInStatement(ast::Statement* stmt) {
+Result Analyzer::_buildStatementScope(ast::Statement* stmt) {
     using enum ast::StatementKind;
 
     switch (stmt->kind) {
@@ -88,51 +90,71 @@ Result Analyzer::_collectTypesInStatement(ast::Statement* stmt) {
             if (result == Result::Failure) { _reportRedeclaration(funcStmt->name, funcStmt); }
 
             // Process the internal block statements
-            Result bodyResult = _collectTypesInStatementBody(funcStmt->body);
+            Result bodyResult = _buildBodyScope(funcStmt->body);
             return (result == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
         }
         case IfStatement: {
             auto* ifStmt = static_cast<ast::IfStatement*>(stmt);
             Result result = Result::Success;
-            if (_collectTypesInStatementBody(ifStmt->body) == Result::Failure) { result = Result::Failure; }
+            if (_buildBodyScope(ifStmt->body) == Result::Failure) { result = Result::Failure; }
             for (const ast::ElifClause& elif : ifStmt->elifs) {
-                if (_collectTypesInStatementBody(elif.body) == Result::Failure) { result = Result::Failure; }
+                if (_buildBodyScope(elif.body) == Result::Failure) { result = Result::Failure; }
             }
-            if (!ifStmt->elseBody.empty() && _collectTypesInStatementBody(ifStmt->elseBody) == Result::Failure) {
+            if (!ifStmt->elseBody.empty() && _buildBodyScope(ifStmt->elseBody) == Result::Failure) {
                 result = Result::Failure;
             }
 
             return result;
         }
+        case NamespaceStatement: {
+            auto* namespaceStatement = static_cast<ast::NamespaceStatement*>(stmt);
+            return _buildNamespaceScope(namespaceStatement);
+        }
+        case NestedBlockStatement: {
+            auto* block = static_cast<ast::NestedBlockStatement*>(stmt);
+            return _buildBodyScope(block->block);
+        }
         case SwitchStatement: {
             auto* switchStmt = static_cast<ast::SwitchStatement*>(stmt);
             Result result = Result::Success;
             for (const ast::CaseClause& clause : switchStmt->cases) {
-                if (_collectTypesInStatementBody(clause.body) == Result::Failure) { result = Result::Failure; }
+                if (_buildBodyScope(clause.body) == Result::Failure) { result = Result::Failure; }
             }
             if (!switchStmt->defaultBody.empty()
-                && _collectTypesInStatementBody(switchStmt->defaultBody) == Result::Failure) {
+                && _buildBodyScope(switchStmt->defaultBody) == Result::Failure) {
                 result = Result::Failure;
             }
             return result;
         }
         case WhileLoopStatement: {
             auto* whileStmt = static_cast<ast::WhileLoopStatement*>(stmt);
-            return _collectTypesInStatementBody(whileStmt->body);
+            return _buildBodyScope(whileStmt->body);
         }
         default: return Result::Success;  // Statements that don't introduce scopes or declare types
     }
 }
 
-Result Analyzer::_collectTypesInStatementBody(const ast::Block& body) {
+Result Analyzer::_buildBodyScope(const ast::Block& body) {
     symbolTable.enterScope();
     Result result = Result::Success;
 
     for (ast::Statement* subStatement : body) {
-        if (_collectTypesInStatement(subStatement) == Result::Failure) { result = Result::Failure; }
+        if (_buildStatementScope(subStatement) == Result::Failure) { result = Result::Failure; }
     }
 
-    symbolTable.exitScope();  // Guaranteed to run without being skipped by case returns
+    symbolTable.exitScope();
+    return result;
+}
+
+Result Analyzer::_buildNamespaceScope(ast::NamespaceStatement* node) {
+    symbolTable.enterNamespace(node->name, node);
+    Result result = Result::Success;
+
+    for (ast::Statement* subStatement : node->block) {
+        if (_buildStatementScope(subStatement) == Result::Failure) { result = Result::Failure; }
+    }
+
+    symbolTable.exitNamespace();
     return result;
 }
 

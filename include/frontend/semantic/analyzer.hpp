@@ -94,10 +94,11 @@ class Analyzer final : public _analyzer_base_t {
     ~Analyzer() override = default;
 
    private:
-    Result collectTypes();
+    Result buildScopeTree();
 
-    Result _collectTypesInStatement(ast::Statement*);
-    Result _collectTypesInStatementBody(const ast::Block&);
+    Result _buildStatementScope(ast::Statement* stmt);
+    Result _buildBodyScope(const ast::Block& block);
+    Result _buildNamespaceScope(ast::NamespaceStatement* node);
     Result collectGlobals();
     Result collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate);
     Result collectGlobalFunction(ast::FunctionDeclarationStatement* function);
@@ -199,7 +200,8 @@ constexpr bool isLvalue(const ast::Expression* expr) noexcept {
     if (k == PrefixExpression) {
         return static_cast<const ast::PrefixExpression*>(expr)->op == lexer::TokenType::Dereference;
     }
-    return mnstl::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression, ScopeResolutionExpression);
+    return mnstl::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression,
+                               ScopeResolutionExpression);
 }
 
 }  // namespace Manganese::semantic

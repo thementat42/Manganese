@@ -29,6 +29,7 @@ enum class SymbolKind : std::uint8_t {
     Import,
     TypeAlias,
     GenericType,
+    Namespace,
     Invalid
 };
 
@@ -49,6 +50,7 @@ struct Scope {
     Scope* parent = nullptr;
     std::vector<Scope*> children;
     std::size_t currentChildIndex = 0;
+    std::string_view namespaceName = {};
 
     inline Result insert(std::string_view name, Symbol symbol) {
         const bool emplace_succeeded = symbols.emplace(name, symbol).second;
@@ -96,32 +98,10 @@ class SymbolTable {
         _currentScope = _root;
     }
 
-    void enterScope() {
-        if (_flags._isFirstPass) {
-            // Allocate memory to build a new scope
-            auto* newScope = _arena.emplace<Scope>();
-            newScope->parent = _currentScope;
-
-            _currentScope->children.push_back(newScope);
-            _currentScope = newScope;
-        } else {
-            // Retrieve the next child scope in the same order it was recorded in in pass 1
-            if (_currentScope->currentChildIndex >= _currentScope->children.size()) [[unlikely]] {
-                logging::logInternal(logging::LogLevel::Error, "Mismatched scope structural traversal");
-                return;
-            }
-            _currentScope = _currentScope->children[_currentScope->currentChildIndex++];
-        }
-    }
-
-    void exitScope() noexcept {
-        if (noScopeAvailable() || !_currentScope->parent) [[unlikely]] {
-            logging::logInternal(logging::LogLevel::Warning,
-                                 "Attempted to exit scope when no parent scope was available");
-            return;
-        }
-        _currentScope = _currentScope->parent;
-    }
+    void enterScope();
+    void enterNamespace(std::string_view name, ast::ASTNode* node);
+    void exitScope() noexcept;
+    void FORCE_INLINE exitNamespace() noexcept { exitScope(); }
 
     Result declare(std::string_view name, Symbol&& symbol) {
         if (noScopeAvailable()) [[unlikely]] {
@@ -131,30 +111,8 @@ class SymbolTable {
         return _currentScope->insert(name, std::move(symbol));
     }
 
-    Symbol* lookup(std::string_view name) noexcept {
-        // Safe, upward lexical lookup through parent scopes without index array tracking
-        Scope* probe = _currentScope;
-        while (probe) {
-            Symbol* symbol = probe->lookup(name);
-            if (symbol) { return symbol; }
-            probe = probe->parent;
-        }
-
-        logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", name);
-        return nullptr;
-    }
-
-    const Symbol* lookup(std::string_view name) const noexcept {
-        const Scope* probe = _currentScope;
-        while (probe) {
-            const Symbol* symbol = probe->lookup(name);
-            if (symbol) { return symbol; }
-            probe = probe->parent;
-        }
-
-        logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", name);
-        return nullptr;
-    }
+    Symbol* lookup(std::string_view name) noexcept;
+    const Symbol* lookup(std::string_view name) const noexcept;
 
     // TODO: implement
     Symbol* scopedLookup(...) noexcept { return nullptr; }

@@ -14,7 +14,7 @@ namespace Manganese::semantic {
 
 Result Analyzer::analyze() {
     // Don't want errors cascading because of conflicting redeclarations
-    if (collectTypes() == Result::Failure) { return Result::Failure; }
+    if (buildScopeTree() == Result::Failure) { return Result::Failure; }
     symbolTable.switchToCheckingMode();
     if (collectGlobals() == Result::Failure) { return Result::Failure; }
     return checkStatements();
