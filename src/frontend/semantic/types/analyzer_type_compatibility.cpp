@@ -245,7 +245,7 @@ auto Analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
 
     const PrimitiveInfo src = getPrimitiveInfo(from->primitiveType);
     const PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType);
-    const bool is_conditional_context = context.inIfStatementCondition || context.inForLoopCondition || context.inWhileLoopCondition;
+    const bool is_conditional_context = context.inIfCondition || context.inForLoopCondition || context.inWhileLoopCondition;
 
     if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
 
