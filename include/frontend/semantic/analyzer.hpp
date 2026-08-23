@@ -29,7 +29,7 @@ namespace Manganese::semantic {
  */
 template <class T>
 struct [[nodiscard]] ContextGuard {
-    T& ref;
+    T ref;
     T old_val;
 
     ContextGuard(T& target, T new_val) : ref(target), old_val(target) { ref = new_val; }
@@ -61,10 +61,10 @@ class Analyzer final : public _analyzer_base_t {
 
     struct {
         bool inFunction = false;
+        bool inIfStatementCondition : 1 = false;
+        bool inForLoopCondition : 1 = false;
+        bool inWhileLoopCondition : 1 = false;
         std::uint8_t typeCastDepth = 0;
-        std::uint8_t ifStatementDepth = 0;
-        std::uint8_t forLoopDepth = 0;
-        std::uint8_t whileLoopDepth = 0;
         const SemanticType* currentFunctionReturnType = nullptr;
         const SemanticType* currentVariableDeclarationType = nullptr;
     } context;
