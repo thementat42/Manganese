@@ -21,8 +21,14 @@ auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
 
 auto Analyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
 
-auto Analyzer::visit([[maybe_unused]] ast::NamespaceStatement* statement) -> stmtvisit_t {
-    return stmtvisit_t::Success;
+auto Analyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {
+    symbolTable.enterNamespace(statement->name, statement);
+    stmtvisit_t result = stmtvisit_t::Success;
+    for (ast::Statement* stmt : statement->block) {
+        if (visit(stmt) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    }
+    symbolTable.exitNamespace();
+    return result;
 }
 
 auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
