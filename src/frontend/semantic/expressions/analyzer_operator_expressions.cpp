@@ -193,12 +193,13 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
 
         case AddressOf: {
             // temporary, to avoid failures
-            expression->semanticType = typeContext.getPointer(expression->right->semanticType, false);
+            bool isMut = false;
+            expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMut);
             if (!isLvalue(expression->right)) {
                 logError(expression->right, "Cannot take the address of r-value '{}'", expression->right->toString());
                 return exprvisit_t::Failure;
             }
-            const bool isMut = isMutableExpression(expression->right);
+            isMut = isMutableExpression(expression->right);
             expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMut);
         } break;
 
