@@ -369,7 +369,7 @@ namespace detail {
         }
         return result;
     } else {
-        return static_cast<double>(std::pow(1, exp));
+        return static_cast<double>(std::pow(10, exp));
     }
 }
 
