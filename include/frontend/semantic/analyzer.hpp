@@ -163,8 +163,8 @@ class Analyzer final : public _analyzer_base_t {
         if (!expr) [[unlikely]] { return nullptr; }
         using enum ast::ExpressionKind;
         switch (expr->kind) {
-            case GenericExpression:
-                return unwrapBaseDeclaration(static_cast<ast::GenericExpression*>(expr)->identifier);
+            case GenericInstantiationExpression:
+                return unwrapBaseDeclaration(static_cast<ast::GenericInstantiationExpression*>(expr)->identifier);
             case ScopeResolutionExpression:
                 return unwrapBaseDeclaration(static_cast<ast::ScopeResolutionExpression*>(expr)->element);
             default: return expr;

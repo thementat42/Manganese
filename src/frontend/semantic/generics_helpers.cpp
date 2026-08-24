@@ -237,8 +237,8 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             if (!returnType) { return nullptr; }
             return typeContext.getFunction(std::move(params), returnType);
         }
-        case GenericType: {
-            const auto* genericType = static_cast<const ast::GenericType*>(type);
+        case GenericInstantiationType: {
+            const auto* genericType = static_cast<const ast::GenericInstantiationType*>(type);
             TypeList resolvedTypes;
             resolvedTypes.reserve(genericType->typeParameters.size());
 

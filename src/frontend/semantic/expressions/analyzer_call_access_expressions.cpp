@@ -190,7 +190,7 @@ auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit([[maybe_unused]] ast::ScopeResolutionExpression* expression) -> exprvisit_t {
-    return exprvisit_t::Success;
+    if (visit(expression->scope) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 }
 
 }  // namespace Manganese::semantic

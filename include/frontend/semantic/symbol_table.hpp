@@ -33,6 +33,8 @@ enum class SymbolKind : std::uint8_t {
     Invalid
 };
 
+struct Scope;
+
 struct Symbol {
     const SemanticType* type = nullptr;
     ast::ASTNode* node = nullptr;
@@ -40,6 +42,7 @@ struct Symbol {
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
     ResolutionStatus status = ResolutionStatus::NotStarted;
+    Scope* scope = nullptr;
     std::string toString() const;
 };
 
@@ -114,9 +117,11 @@ class SymbolTable {
     Symbol* lookup(std::string_view name) noexcept;
     const Symbol* lookup(std::string_view name) const noexcept;
 
-    // TODO: implement
-    Symbol* scopedLookup(...) noexcept { return nullptr; }
-    const Symbol* scopedLookup(...) const noexcept { return nullptr; }
+    Symbol* scopedLookup(Scope* targetScope, std::string_view member) noexcept { return targetScope->lookup(member); }
+
+    const Symbol* scopedLookup(const Scope* targetScope, std::string_view member) const noexcept {
+        return targetScope->lookup(member);
+    }
 };
 
 }  // namespace Manganese::semantic

@@ -126,7 +126,7 @@ void Parser::initializeLookups() noexcept {
     registerLedHandler_postfix(Inc, Precedence::Postfix, &Parser::parsePostfixExpression);
 
     //~ Call/Member Expressions
-    registerLedHandler_binary(At, Precedence::Postfix, &Parser::parseGenericExpression);
+    registerLedHandler_binary(At, Precedence::Postfix, &Parser::parseGenericInstantiationExpression);
     registerLedHandler_binary(LeftBrace, Precedence::Postfix, &Parser::parseAggregateInstantiationExpression);
     registerLedHandler_binary(LeftParen, Precedence::Postfix, &Parser::parseFunctionCallExpression);
     registerNudHandler_binary(LeftSquare, &Parser::parseArrayInstantiationExpression);
@@ -185,7 +185,7 @@ void Parser::initializeTypeLookups() noexcept {
 
     //~ Complex types
     registerNudHandler_type(Aggregate, &Parser::parseAggregateType);
-    registerLedHandler_type(At, Precedence::Generic, &Parser::parseGenericType);
+    registerLedHandler_type(At, Precedence::Generic, &Parser::parseGenericInstantiationType);
     registerNudHandler_type(Func, &Parser::parseFunctionType);
     registerLedHandler_type(LeftSquare, Precedence::Postfix, &Parser::parseArrayType);
     registerNudHandler_type(LeftParen, &Parser::parseParenthesizedType);

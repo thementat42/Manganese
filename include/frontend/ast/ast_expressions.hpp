@@ -129,12 +129,12 @@ struct FunctionCallExpression final : public Expression {
 /**
  * e.g. `foo@[int, string]`
  */
-struct GenericExpression final : public Expression {
+struct GenericInstantiationExpression final : public Expression {
     Expression* identifier;
     std::vector<Type*> types;
 
-    GenericExpression(Expression* _identifier, std::vector<Type*>&& _types) noexcept :
-        Expression(ExpressionKind::GenericExpression), identifier(_identifier), types(std::move(_types)) {}
+    GenericInstantiationExpression(Expression* _identifier, std::vector<Type*>&& _types) noexcept :
+        Expression(ExpressionKind::GenericInstantiationExpression), identifier(_identifier), types(std::move(_types)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

@@ -278,7 +278,7 @@ static bool testFunctionCallExpression() {
     return analyzeSource(valid, true, __func__);
 }
 
-static bool testGenericExpression() {
+static bool testGenericInstantiationExpression() {
     std::string source = R"(
         aggregate Container[T]{ value: T; }
         func main() {
@@ -504,7 +504,7 @@ void runAnalyzerTests(TestRunner& runner) {
     runner.runTest("Assignment Expression analysis", testAssignmentExpression);
     runner.runTest("Unary & Binary Expressions analysis", testBinaryAndUnaryExpressions);
     runner.runTest("Function Calls & Void Args analysis", testFunctionCallExpression);
-    runner.runTest("Generic Expressions analysis", testGenericExpression);
+    runner.runTest("Generic Expressions analysis", testGenericInstantiationExpression);
     runner.runTest("Member Access Expression analysis", testMemberAccessExpression);
     runner.runTest("Pointer Operators (& and *) analysis", testPrefixPostfixPointerOperators);
     runner.runTest("Sizeof & Alignof Expressions analysis", testSizeofAndAlignofExpression);

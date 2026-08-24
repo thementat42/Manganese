@@ -273,7 +273,7 @@ std::string FunctionCallExpression::toString(std::size_t indent) const {
     return result;
 }
 
-std::string GenericExpression::toString(std::size_t indent) const {
+std::string GenericInstantiationExpression::toString(std::size_t indent) const {
     return identifier->toString(indent) + genericsToString(types, indent);
 }
 
@@ -345,7 +345,7 @@ std::string FunctionType::toString(std::size_t indent) const {
     return result;
 }
 
-std::string GenericType::toString(std::size_t indent) const {
+std::string GenericInstantiationType::toString(std::size_t indent) const {
     return baseType->toString(indent) + genericsToString(typeParameters, indent);
 }
 

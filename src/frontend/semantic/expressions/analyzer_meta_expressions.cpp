@@ -22,7 +22,7 @@ auto Analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::GenericExpression* expression) -> exprvisit_t {
+auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvisit_t {
     TypeList resolvedTypeArguments;
     resolvedTypeArguments.reserve(expression->types.size());
 

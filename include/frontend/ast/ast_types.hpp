@@ -56,11 +56,11 @@ struct FunctionType final : public Type {
 /**
  * represents the application of generic arguments to a base type, not represent the generic type itself
  */
-struct GenericType final : public Type {
+struct GenericInstantiationType final : public Type {
     Type* baseType;  // some_function in `some_function@[T,U]`
     std::vector<Type*> typeParameters;  // T and U in `some_function@[T,U]`
-    GenericType(Type* _baseType, std::vector<Type*>&& _typeParameters) noexcept :
-        Type(TypeKind::GenericType), baseType(_baseType), typeParameters(std::move(_typeParameters)) {}
+    GenericInstantiationType(Type* _baseType, std::vector<Type*>&& _typeParameters) noexcept :
+        Type(TypeKind::GenericInstantiationType), baseType(_baseType), typeParameters(std::move(_typeParameters)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

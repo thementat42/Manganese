@@ -100,8 +100,8 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::GenericType* type) -> typevisit_t {
-    const auto* genericType = static_cast<const ast::GenericType*>(type);
+auto Analyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t {
+    const auto* genericType = static_cast<const ast::GenericInstantiationType*>(type);
     visit(genericType->baseType);
     const SemanticType* baseType = genericType->baseType->semanticType;
     if (!baseType) { return typevisit_t::Failure; }

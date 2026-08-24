@@ -206,7 +206,7 @@ ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Prec
     return makeNode<ast::FunctionCallExpression>(startToken, left, std::move(arguments));
 }
 
-ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedence) {
+ast::Expression* Parser::parseGenericInstantiationExpression(ast::Expression* left, Precedence) {
     const Token startToken = consumeToken();  // Consume the '@' token
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
     std::vector<ast::Type*> typeParameters;
@@ -220,7 +220,7 @@ ast::Expression* Parser::parseGenericExpression(ast::Expression* left, Precedenc
         }
     }
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return makeNode<ast::GenericExpression>(startToken, left, std::move(typeParameters));
+    return makeNode<ast::GenericInstantiationExpression>(startToken, left, std::move(typeParameters));
 }
 
 ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence) {

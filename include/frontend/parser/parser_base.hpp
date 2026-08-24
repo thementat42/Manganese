@@ -89,7 +89,7 @@ class Parser {
     ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseBinaryExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseFunctionCallExpression(ast::Expression* left, Precedence precedence);
-    ast::Expression* parseGenericExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseGenericInstantiationExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseIndexingExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseMemberAccessExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseParenthesizedExpression();
@@ -127,7 +127,7 @@ class Parser {
     ast::Type* parseArrayType(ast::Type* left, Precedence precedence);
     ast::Type* parseAggregateType();
     ast::Type* parseFunctionType();
-    ast::Type* parseGenericType(ast::Type* left, Precedence precedence);
+    ast::Type* parseGenericInstantiationType(ast::Type* left, Precedence precedence);
     ast::Type* parsePointerType();
     ast::Type* parseParenthesizedType();
     ast::Type* parseScopedType(ast::Type* left, Precedence precedence);

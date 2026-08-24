@@ -443,9 +443,9 @@ void FunctionCallExpression::dump(std::ostream& os, std::size_t indent) const {
     os << ind << "}\n";
 }
 
-void GenericExpression::dump(std::ostream& os, std::size_t indent) const {
+void GenericInstantiationExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
-    dumpHeader(os, ind, "GenericExpression", *this);
+    dumpHeader(os, ind, "GenericInstantiationExpression", *this);
     os << ind.next() << "identifier: " << toStringOr(identifier) << "\n";
     os << ind.next() << "generic types: [\n";
 
@@ -607,9 +607,9 @@ void FunctionType::dump(std::ostream& os, std::size_t indent) const {
 
     os << ind << "}\n";
 }
-void GenericType::dump(std::ostream& os, std::size_t indent) const {
+void GenericInstantiationType::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
-    dumpHeader(os, ind, "GenericType", *this);
+    dumpHeader(os, ind, "GenericInstantiationType", *this);
 
     os << ind.next() << "base: ";
     baseType->dump(os, ind.next());

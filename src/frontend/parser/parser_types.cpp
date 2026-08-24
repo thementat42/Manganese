@@ -137,7 +137,7 @@ ast::Type* Parser::parseFunctionType() {
     return makeNode<ast::FunctionType>(startToken, std::move(parameterTypes), returnType);
 }
 
-ast::Type* Parser::parseGenericType(ast::Type* left, Precedence) {
+ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence) {
     const Token startToken = consumeToken();
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
     std::vector<ast::Type*> typeParameters;
@@ -152,7 +152,7 @@ ast::Type* Parser::parseGenericType(ast::Type* left, Precedence) {
         }
     }
     expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
-    return makeNode<ast::GenericType>(startToken, left, std::move(typeParameters));
+    return makeNode<ast::GenericInstantiationType>(startToken, left, std::move(typeParameters));
 }
 
 ast::Type* Parser::parseParenthesizedType() {
