@@ -65,7 +65,7 @@ std::string Function::toString() const {
     return result;
 }
 
-std::string GenericInstance::toString() const {
+std::string GenericInstantiation::toString() const {
     std::string result = baseType->toString() + "@[";
     for (std::size_t i = 0; i < typeArguments.size(); ++i) {
         result += typeArguments[i]->toString();
@@ -127,7 +127,7 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             return hash;
         }
         case Kind::Generic: {
-            const auto* generic = static_cast<const GenericInstance*>(t);
+            const auto* generic = static_cast<const GenericInstantiation*>(t);
             // Mix the base generic template type (e.g., the List in List@[int])
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(generic->baseType));
             for (const SemanticType* arg : generic->typeArguments) {
@@ -184,8 +184,8 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             return (left->returnType == right->returnType) && (left->parameterTypes == right->parameterTypes);
         }
         case Kind::Generic: {
-            const auto* left = static_cast<const GenericInstance*>(lhs);
-            const auto* right = static_cast<const GenericInstance*>(rhs);
+            const auto* left = static_cast<const GenericInstantiation*>(lhs);
+            const auto* right = static_cast<const GenericInstantiation*>(rhs);
             return (left->baseType == right->baseType) && (left->typeArguments == right->typeArguments);
         }
         case Kind::Void: {
@@ -237,9 +237,9 @@ const SemanticType* TypeContext::getFunction(std::vector<Parameter>&& parameterT
 }
 
 const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType, TypeList&& typeArguments) {
-    GenericInstance tmp(baseType, std::move(typeArguments));
+    GenericInstantiation tmp(baseType, std::move(typeArguments));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<GenericInstance>(baseType, std::move(tmp.typeArguments));
+    auto* heapAlloc = _allocator.emplace<GenericInstantiation>(baseType, std::move(tmp.typeArguments));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }

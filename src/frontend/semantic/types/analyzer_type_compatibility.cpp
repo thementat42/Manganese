@@ -194,8 +194,8 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         } break;
 
         case Kind::Generic: {
-            const auto* genericFrom = static_cast<const GenericInstance*>(from);
-            const auto* genericTo = static_cast<const GenericInstance*>(to);
+            const auto* genericFrom = static_cast<const GenericInstantiation*>(from);
+            const auto* genericTo = static_cast<const GenericInstantiation*>(to);
 
             if (genericFrom->baseType != genericTo->baseType) { return {.result = Compatible_t::Error}; }
             if (genericFrom->typeArguments.size() != genericTo->typeArguments.size()) {

@@ -191,14 +191,14 @@ struct Function final : public SemanticType {
     std::string toString() const override;
 };
 
-struct GenericInstance final : public SemanticType {
+struct GenericInstantiation final : public SemanticType {
     const SemanticType* baseType;
     TypeList typeArguments;
 
-    GenericInstance(const SemanticType* base, TypeList&& args) noexcept :
+    GenericInstantiation(const SemanticType* base, TypeList&& args) noexcept :
         SemanticType(Kind::Generic), baseType(base), typeArguments(std::move(args)) {}
 
-    ~GenericInstance() override = default;
+    ~GenericInstantiation() override = default;
     std::string toString() const override;
 };
 
