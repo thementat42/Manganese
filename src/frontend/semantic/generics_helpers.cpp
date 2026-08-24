@@ -253,8 +253,8 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
                 const auto* symbolType = static_cast<const ast::SymbolType*>(genericType->baseType);
                 symbol = symbolTable.lookup(symbolType->name);
             } else if (genericType->baseType->kind == ScopedType) {
-                const auto* scopedType = static_cast<const ast::ScopedType*>(genericType->baseType);
-                symbol = symbolTable.scopedLookup(scopedType->qualifier, scopedType->baseType);
+                // const auto* scopedType = static_cast<const ast::ScopedType*>(genericType->baseType);
+                symbol = nullptr;// symbolTable.scopedLookup(scopedType->qualifier, scopedType->baseType);
             }
             if (!symbol || !symbol->node) {
                 logError(type, "Unknown generic base declaration");
