@@ -65,9 +65,7 @@ bool Analyzer::isMutableExpression(const ast::Expression* expr) {
             return isMutableExpression(index->variable);
         }
         case ScopeResolutionExpression: {
-            const auto* scope = static_cast<const ast::ScopeResolutionExpression*>(expr);
-            Symbol* sym = symbolTable.scopedLookup(scope->scope, scope->element);
-            return sym ? sym->isMutable : false;
+            return false;  // TODO
         }
         default: return false;
     }
