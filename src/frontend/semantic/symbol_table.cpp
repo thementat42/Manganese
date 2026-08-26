@@ -25,15 +25,18 @@ void SymbolTable::enterScope() {
 
 void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
     if (_flags._isFirstPass) {
+        Symbol* namespaceSymbol = _currentScope->lookup(name);
         // Declare the namespace in the current scope if it's not already declared
-        if (Symbol* existingSymbol = _currentScope->lookup(name); existingSymbol == nullptr) {
+        if (namespaceSymbol == nullptr) {
             _currentScope->insert(name,
                                   Symbol{.type = nullptr,
                                          .node = node,
                                          .kind = SymbolKind::Namespace,
                                          .visibility = ast::Visibility::Public,
                                          .isMutable = false,
-                                         .status = ResolutionStatus::Success});
+                                         .status = ResolutionStatus::Success,
+                                         .hostScope = _currentScope});
+            namespaceSymbol = _currentScope->lookup(name);
         }
 
         Scope* namespaceScope = nullptr;
@@ -50,6 +53,7 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
             namespaceScope->namespaceName = name;
             _currentScope->children.push_back(namespaceScope);
         }
+        if (namespaceSymbol) {namespaceSymbol->scopeDefined = namespaceScope;}
         _currentScope = namespaceScope;
     } else {
         if (_currentScope->currentChildIndex >= _currentScope->children.size()) [[unlikely]] {

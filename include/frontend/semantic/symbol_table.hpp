@@ -42,7 +42,8 @@ struct Symbol {
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
     ResolutionStatus status = ResolutionStatus::NotStarted;
-    Scope* scope = nullptr;
+    Scope* hostScope = nullptr;  // which scope this symbol lives in (set in SymbolTable::declare())
+    Scope* scopeDefined = nullptr;  // for namespaces/modules, indicates that this symbol defines a scope
     std::string toString() const;
 };
 
@@ -111,6 +112,7 @@ class SymbolTable {
             logging::logInternal(logging::LogLevel::Error, "No active scope in which to declare a symbol");
             return Result::Failure;
         }
+        symbol.hostScope = _currentScope;
         return _currentScope->insert(name, std::move(symbol));
     }
 
