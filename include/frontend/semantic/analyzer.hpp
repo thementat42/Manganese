@@ -70,6 +70,7 @@ class Analyzer final : public _analyzer_base_t {
         std::uint8_t whileLoopDepth = 0;
         const SemanticType* currentFunctionReturnType = nullptr;
         const SemanticType* currentVariableDeclarationType = nullptr;
+        const Symbol* nestedScopeResolutionCurrentSymbol = nullptr;
     } context;
 
     enum class Compatible_t : std::int8_t {

@@ -9,6 +9,7 @@
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
+#include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese::semantic {
 
@@ -189,9 +190,40 @@ auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     return exprvisit_t::Failure;
 }
 
-auto Analyzer::visit([[maybe_unused]] ast::ScopeResolutionExpression* expression) -> exprvisit_t {
-    if (visit(expression->scope) == exprvisit_t::Failure) {}
-    return exprvisit_t::Failure;
+auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t {
+    const Symbol* scopeSymbol = nullptr;
+
+    if (expression->scope->kind == ast::ExpressionKind::IdentifierExpression) {
+        // regular identifier (e.g. Foo::Bar)
+        scopeSymbol = symbolTable.lookup(static_cast<ast::IdentifierExpression*>(expression->scope)->name);
+    } else if (expression->scope->kind == ast::ExpressionKind::ScopeResolutionExpression) {
+        // chained resolution (e.g. Foo::Bar::Baz): recursively resolve it
+        if (visit(expression->scope) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
+        scopeSymbol = context.nestedScopeResolutionCurrentSymbol;
+    }
+
+    if (!scopeSymbol) {
+        logError(expression, "Unknown scope");
+        return exprvisit_t::Failure;
+    }
+    if (!scopeSymbol->scopeDefined) {
+        logError(expression, "'{}' is not a namespace or module", scopeSymbol->toString());
+        return exprvisit_t::Failure;
+    }
+    if (expression->element->kind != ast::ExpressionKind::IdentifierExpression) {
+        logError(expression->element, "Expected an identifier in a scope resolution expression");
+        return exprvisit_t::Failure;
+    }
+    const std::string_view memberName = static_cast<ast::IdentifierExpression*>(expression->element)->name;
+
+    Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
+    if (!memberSymbol) {
+        logError(expression->element, "No member named '{}' in scope", memberName);
+        return exprvisit_t::Failure;
+    }
+    expression->semanticType = memberSymbol->type;
+    context.nestedScopeResolutionCurrentSymbol = memberSymbol;
+    return exprvisit_t::Success;
 }
 
 }  // namespace Manganese::semantic
