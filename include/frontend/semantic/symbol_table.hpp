@@ -41,7 +41,7 @@ struct Symbol {
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
     ResolutionStatus status = ResolutionStatus::NotStarted;
-    Scope* hostScope;  // which scope this symbol lives in (set in SymbolTable::declare())
+    Scope* hostScope = nullptr;  // which scope this symbol lives in (set in SymbolTable::declare())
     Scope* scopeDefined = nullptr;  // for namespaces/modules, indicates that this symbol defines a scope
 };
 
