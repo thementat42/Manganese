@@ -166,7 +166,7 @@ static bool testNamespaceStatement() {
             }
         }
 
-        // Re-opening the namespace to add more symbols
+        # Re-opening the namespace to add more symbols
         namespace Math {
             func sub(a: int32, b: int32) -> int32 {
                 return a - b;
@@ -371,7 +371,7 @@ static bool testScopeResolutionExpression() {
     )";
     if (!analyzeSource(valid, true, __func__)) { return false; }
 
-    // Accessing a symbol that does not exist in the namespace must fail
+    // Accessing a symbol that does not exist in the namespace
     std::string missingMember = R"(
         namespace Math {}
         func main() {
@@ -380,7 +380,7 @@ static bool testScopeResolutionExpression() {
     )";
     if (!analyzeSource(missingMember, false, __func__)) { return false; }
 
-    // Using a non-namespace/non-module variable as a scope must fail
+    // Using a non-namespace/non-module variable as a scope
     std::string invalidScope = R"(
         func main() {
             let notAScope: int32 = 5;
@@ -434,7 +434,7 @@ static bool testPointerTypeMutability() {
 }
 
 static bool testArrayOfVoidDisallowed() {
-    // Array of void elements must fail
+    // Array of void elements is invalid
     std::string source = R"(
         func getVoid() {}
         func main() {
@@ -481,7 +481,7 @@ static bool testScopedType() {
     )";
     if (!analyzeSource(valid, true, __func__)) { return false; }
 
-    // Using a function or non-type symbol as a scoped type must fail
+    // Using a function or non-type symbol as a scoped type
     std::string nonTypeAsType = R"(
         namespace Math {
             func calculate() {}

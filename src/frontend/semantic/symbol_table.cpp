@@ -1,7 +1,7 @@
 #include <algorithm>
+#include <frontend/ast.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 
-#include "frontend/ast/ast_base.hpp"
 
 namespace Manganese::semantic {
 
@@ -53,7 +53,7 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
             namespaceScope->namespaceName = name;
             _currentScope->children.push_back(namespaceScope);
         }
-        if (namespaceSymbol) {namespaceSymbol->scopeDefined = namespaceScope;}
+        if (namespaceSymbol) { namespaceSymbol->scopeDefined = namespaceScope; }
         _currentScope = namespaceScope;
     } else {
         if (_currentScope->currentChildIndex >= _currentScope->children.size()) [[unlikely]] {

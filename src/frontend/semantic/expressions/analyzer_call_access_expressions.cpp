@@ -207,7 +207,7 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
         return exprvisit_t::Failure;
     }
     if (!scopeSymbol->scopeDefined) {
-        logError(expression, "'{}' is not a namespace or module", scopeSymbol->toString());
+        logError(expression, "'{}' is not a namespace or module", scopeSymbol->node->toString());
         return exprvisit_t::Failure;
     }
     if (expression->element->kind != ast::ExpressionKind::IdentifierExpression) {

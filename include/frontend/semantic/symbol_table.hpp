@@ -9,7 +9,6 @@
 #include <functional>
 #include <io/logging.hpp>
 #include <mnstl/chunk_allocator.hxx>
-#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utils/result.hpp>
@@ -36,15 +35,14 @@ enum class SymbolKind : std::uint8_t {
 struct Scope;
 
 struct Symbol {
-    const SemanticType* type = nullptr;
-    ast::ASTNode* node = nullptr;
+    const SemanticType* type;
+    ast::ASTNode* node;
     SymbolKind kind;
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
     ResolutionStatus status = ResolutionStatus::NotStarted;
     Scope* hostScope = nullptr;  // which scope this symbol lives in (set in SymbolTable::declare())
-    Scope* scopeDefined = nullptr;  // for namespaces/modules, indicates that this symbol defines a scope
-    std::string toString() const;
+    Scope* scopeDefined;  // for namespaces/modules, indicates that this symbol defines a scope
 };
 
 struct Scope {
