@@ -157,9 +157,38 @@ static bool testIfStatement() {
     return analyzeSource(valid2, true, __func__);
 }
 
-[[maybe_unused]] static bool testNamespaceStatement() {
-    // TODO
-    return true;
+static bool testNamespaceStatement() {
+    // Valid namespace declarations, reopening, and nested namespaces
+    std::string valid = R"(
+        namespace Math {
+            func add(a: int32, b: int32) -> int32 {
+                return a + b;
+            }
+        }
+
+        // Re-opening the namespace to add more symbols
+        namespace Math {
+            func sub(a: int32, b: int32) -> int32 {
+                return a - b;
+            }
+        }
+
+        namespace Outer {
+            namespace Inner {
+                let val: int32 = 42;
+            }
+        }
+    )";
+    if (!analyzeSource(valid, true, __func__)) { return false; }
+
+    // Duplicate symbol declaration within the same namespace must fail
+    std::string duplicateSymbol = R"(
+        namespace Math {
+            let x: int32 = 10;
+            let x: int32 = 20;
+        }
+    )";
+    return analyzeSource(duplicateSymbol, false, __func__);
 }
 
 static bool testSwitchStatement() {
@@ -320,9 +349,45 @@ static bool testPrefixPostfixPointerOperators() {
     return analyzeSource(invalid, false, __func__);
 }
 
-[[maybe_unused]] static bool testScopeResolutionExpression() {
-    // TODO
-    return true;
+static bool testScopeResolutionExpression() {
+    // Valid scope resolution calls and chained lookups
+    std::string valid = R"(
+        namespace Math {
+            func getFortyTwo() -> int32 {
+                return 42;
+            }
+        }
+
+        namespace Outer {
+            namespace Inner {
+                let number: int32 = 100;
+            }
+        }
+
+        func main() {
+            let a = Math::getFortyTwo();
+            let b = Outer::Inner::number;
+        }
+    )";
+    if (!analyzeSource(valid, true, __func__)) { return false; }
+
+    // Accessing a symbol that does not exist in the namespace must fail
+    std::string missingMember = R"(
+        namespace Math {}
+        func main() {
+            let x = Math::doesNotExist;
+        }
+    )";
+    if (!analyzeSource(missingMember, false, __func__)) { return false; }
+
+    // Using a non-namespace/non-module variable as a scope must fail
+    std::string invalidScope = R"(
+        func main() {
+            let notAScope: int32 = 5;
+            let x = notAScope::member;
+        }
+    )";
+    return analyzeSource(invalidScope, false, __func__);
 }
 
 static bool testSizeofAndAlignofExpression() {
@@ -394,9 +459,39 @@ static bool testFunctionTypeAsValue() {
     return analyzeSource(source, true, __func__);
 }
 
-[[maybe_unused]] static bool testScopedType() {
-    // TODO
-    return true;
+static bool testScopedType() {
+    // Valid scoped types (aggregates and aliases inside namespaces)
+    std::string valid = R"(
+        namespace Geometry {
+            aggregate Point { x: int32; y: int32; }
+            alias Distance = int32;
+        }
+
+        namespace Graphics {
+            namespace 2D {
+                aggregate Canvas { width: int32; height: int32; }
+            }
+        }
+
+        func main() {
+            let p: Geometry::Point = Geometry::Point { x = 0, y = 0 };
+            let d: Geometry::Distance = 10;
+            let c: Graphics::2D::Canvas = Graphics::2D::Canvas { width = 800, height = 600 };
+        }
+    )";
+    if (!analyzeSource(valid, true, __func__)) { return false; }
+
+    // Using a function or non-type symbol as a scoped type must fail
+    std::string nonTypeAsType = R"(
+        namespace Math {
+            func calculate() {}
+        }
+
+        func main() {
+            let x: Math::calculate = 42;
+        }
+    )";
+    return analyzeSource(nonTypeAsType, false, __func__);
 }
 
 // Other
@@ -494,6 +589,8 @@ void runAnalyzerTests(TestRunner& runner) {
     runner.runTest("For Loop Statement analysis", testForLoopStatement);
     runner.runTest("Function Declaration & Returns analysis", testFunctionDeclarationAndReturnStatement);
     runner.runTest("If Statement Conditions analysis", testIfStatement);
+    runner.runTest("Namespace Statement analysis", testNamespaceStatement);
+    runner.runTest("Scope Resolution Expression analysis", testScopeResolutionExpression);
     runner.runTest("Switch Statement analysis", testSwitchStatement);
     runner.runTest("Variable Declaration Statement analysis", testVariableDeclarationStatement);
     runner.runTest("While Loop Statement analysis", testWhileLoopStatement);
@@ -514,6 +611,7 @@ void runAnalyzerTests(TestRunner& runner) {
     runner.runTest("Pointer Mutability Rules analysis", testPointerTypeMutability);
     runner.runTest("Disallow Array of Void analysis", testArrayOfVoidDisallowed);
     runner.runTest("First-class Function Types analysis", testFunctionTypeAsValue);
+    runner.runTest("Scoped Type analysis", testScopedType);
 
     // Other
     runner.runTest("Analysis from file", testAnalyzeFromFile);
