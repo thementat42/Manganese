@@ -354,7 +354,7 @@ std::string PointerType::toString(std::size_t indent) const {
 }
 
 std::string ScopedType::toString(std::size_t) const {
-    return std::format("{}::{}", qualifier->toString(), baseType->toString());
+    return std::format("{}::{}", scope->toString(), type->toString());
 }
 
 std::string SymbolType::toString(std::size_t) const { return name; }

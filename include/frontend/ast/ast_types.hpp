@@ -76,11 +76,11 @@ struct PointerType final : public Type {
 };
 
 struct ScopedType final : public Type {
-    Type* qualifier;
-    Type* baseType;
+    Type* scope;
+    Type* type;
 
-    ScopedType(Type* _qualifier, Type* _baseType) noexcept :
-        Type(TypeKind::ScopedType), qualifier(_qualifier), baseType(_baseType) {}
+    ScopedType(Type* _qualifier, Type* _type) noexcept :
+        Type(TypeKind::ScopedType), scope(_qualifier), type(_type) {}
 
     MN_AST_STANDARD_INTERFACE
 };

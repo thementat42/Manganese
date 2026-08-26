@@ -635,9 +635,9 @@ void ScopedType::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ScopedType", *this);
     os << ind.next() << "qualifier: \n";
-    qualifier->dump(os, ind.next(2));
+    scope->dump(os, ind.next(2));
     os << ind.next() << "base type: \n";
-    baseType->dump(os, ind.next(2));
+    type->dump(os, ind.next(2));
     os << ind << "}\n";
 }
 
