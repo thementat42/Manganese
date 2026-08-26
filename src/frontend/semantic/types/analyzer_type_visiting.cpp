@@ -134,7 +134,45 @@ auto Analyzer::visit(ast::PointerType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit([[maybe_unused]] ast::ScopedType* type) -> typevisit_t { return typevisit_t::Success; }
+auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
+    const Symbol* scopeSymbol = nullptr;
+
+    if (type->scope->kind == ast::TypeKind::SymbolType) {
+        // regular identifier (e.g. Foo::Bar)
+        scopeSymbol = symbolTable.lookup(static_cast<ast::SymbolType*>(type->scope)->name);
+    } else if (type->scope->kind == ast::TypeKind::ScopedType) {
+        // chained resolution (e.g. Foo::Bar::Baz): recursively resolve it
+        if (visit(type->scope) == typevisit_t::Failure) { return typevisit_t::Failure; }
+        scopeSymbol = context.nestedScopeResolutionCurrentSymbol;
+    }
+
+    if (!scopeSymbol) {
+        logError(type, "Unknown scope");
+        return typevisit_t::Failure;
+    }
+    if (!scopeSymbol->scopeDefined) {
+        logError(type, "'{}' is not a namespace or module", scopeSymbol->toString());
+        return typevisit_t::Failure;
+    }
+    if (type->type->kind != ast::TypeKind::SymbolType) {
+        logError(type->type, "Expected an identifier in a scope resolution expression");
+        return typevisit_t::Failure;
+    }
+    const std::string_view memberName = static_cast<ast::SymbolType*>(type->type)->name;
+
+    Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
+    if (!memberSymbol) {
+        logError(type->type, "No member named '{}' in scope", memberName);
+        return typevisit_t::Failure;
+    }
+    if (memberSymbol->kind != SymbolKind::Aggregate && memberSymbol->kind != SymbolKind::TypeAlias) {
+        logError(type->type, "'{}' in scope '{}' is not a type", memberName, scopeSymbol->toString());
+        return typevisit_t::Failure;
+    }
+    type->semanticType = memberSymbol->type;
+    context.nestedScopeResolutionCurrentSymbol = memberSymbol;
+    return typevisit_t::Success;
+}
 
 auto Analyzer::visit(ast::SymbolType* type) -> typevisit_t {
     const auto* symbolType = static_cast<const ast::SymbolType*>(type);
