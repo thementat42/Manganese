@@ -359,7 +359,7 @@ namespace detail {
 
 [[nodiscard]] constexpr bool isdigit(char c) noexcept { return c >= '0' && c <= '9'; }
 
-[[nodiscard]] inline double pow10(int exp) noexcept {
+[[nodiscard]] constexpr inline double pow10(int exp) noexcept {
     if (std::is_constant_evaluated()) {
         double result = 1.0;
         if (exp > 0) {
