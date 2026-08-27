@@ -31,11 +31,10 @@ Result Analyzer::_buildStatementScope(ast::Statement* stmt) {
     switch (stmt->kind) {
         case AggregateDeclarationStatement: {
             auto* aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
-            const SemanticType* shellType = nullptr;
-            if (aggregateStmt->genericTypes.empty()) {
-                // Creates an Aggregate shell with name, empty fields ({}), and ResolutionStatus::Unresolved
-                shellType = typeContext.getNamedAggregate(aggregateStmt->name, /*fields=*/{});
-            }
+
+            // Creates an Aggregate shell with name, empty fields ({}), and ResolutionStatus::Unresolved
+            const SemanticType* shellType = typeContext.getNamedAggregate(aggregateStmt->name, /*fields=*/{});
+
             const Result result = symbolTable.declare(aggregateStmt->name,
                                                       Symbol{
                                                           .type = shellType,
