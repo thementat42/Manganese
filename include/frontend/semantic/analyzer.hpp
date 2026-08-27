@@ -101,6 +101,7 @@ class Analyzer final : public _analyzer_base_t {
     Result _buildBodyScope(const ast::Block& block);
     Result _buildNamespaceScope(ast::NamespaceStatement* node);
     Result collectGlobals();
+    Result _collectGlobalsInStatement(ast::Statement* statement, ast::StatementKind targetKind);
     Result collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate);
     Result collectGlobalFunction(ast::FunctionDeclarationStatement* function);
     Result checkStatements();

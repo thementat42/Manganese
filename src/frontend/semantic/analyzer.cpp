@@ -23,19 +23,45 @@ Result Analyzer::analyze() {
 Result Analyzer::collectGlobals() {
     Result result = Result::Success;
     for (ast::Statement* statement : parsedFile.program) {
-        if (statement->kind != ast::StatementKind::AggregateDeclarationStatement) { continue; }
-        auto* aggregate = static_cast<ast::AggregateDeclarationStatement*>(statement);
-        if (collectGlobalAggregate(aggregate) == Result::Failure) { result = Result::Failure; }
+        if (_collectGlobalsInStatement(statement, ast::StatementKind::AggregateDeclarationStatement)
+            == Result::Failure) {
+            result = Result::Failure;
+        }
     }
 
     // Do this on a separate pass in case a function uses an aggregate in its signature
     for (ast::Statement* statement : parsedFile.program) {
-        if (statement->kind != ast::StatementKind::FunctionDeclarationStatement) { continue; }
-        auto* function = static_cast<ast::FunctionDeclarationStatement*>(statement);
-        if (collectGlobalFunction(function) == Result::Failure) { result = Result::Failure; }
+        if (_collectGlobalsInStatement(statement, ast::StatementKind::FunctionDeclarationStatement)
+            == Result::Failure) {
+            result = Result::Failure;
+        }
     }
 
     return result;
+}
+
+Result Analyzer::_collectGlobalsInStatement(ast::Statement* statement, ast::StatementKind targetKind) {
+    if (statement->kind == targetKind) {
+        if (targetKind == ast::StatementKind::AggregateDeclarationStatement) {
+            return collectGlobalAggregate(static_cast<ast::AggregateDeclarationStatement*>(statement));
+        }
+        if (targetKind == ast::StatementKind::FunctionDeclarationStatement) {
+            return collectGlobalFunction(static_cast<ast::FunctionDeclarationStatement*>(statement));
+        }
+    }
+    if (statement->kind == ast::StatementKind::NamespaceStatement) {
+        auto* namespaceStatement = static_cast<ast::NamespaceStatement*>(statement);
+        symbolTable.enterNamespace(namespaceStatement->name, namespaceStatement);
+        Result result = Result::Success;
+        for (ast::Statement* innerStatement : namespaceStatement->block) {
+            if (_collectGlobalsInStatement(innerStatement, targetKind) == Result::Failure) { result = Result::Failure; }
+        }
+
+        symbolTable.exitNamespace();
+        return result;
+    }
+    // something else we don't care about
+    return Result::Success;
 }
 
 bool Analyzer::isMutableExpression(const ast::Expression* expr) {
