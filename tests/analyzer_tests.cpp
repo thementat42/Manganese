@@ -468,7 +468,7 @@ static bool testScopedType() {
         }
 
         namespace Graphics {
-            namespace 2D {
+            namespace _2D {
                 aggregate Canvas { width: int32; height: int32; }
             }
         }
@@ -476,7 +476,7 @@ static bool testScopedType() {
         func main() {
             let p: Geometry::Point = Geometry::Point { x = 0, y = 0 };
             let d: Geometry::Distance = 10;
-            let c: Graphics::2D::Canvas = Graphics::2D::Canvas { width = 800, height = 600 };
+            let c: Graphics::_2D::Canvas = Graphics::_2D::Canvas { width = 800, height = 600 };
         }
     )";
     if (!analyzeSource(valid, true, __func__)) { return false; }
