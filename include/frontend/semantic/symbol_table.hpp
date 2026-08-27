@@ -68,6 +68,7 @@ struct Scope {
         auto it = symbols.find(name);
         return it == symbols.end() ? nullptr : &(it->second);
     }
+    std::string getQualifiedName() const;
 };
 
 class SymbolTable {

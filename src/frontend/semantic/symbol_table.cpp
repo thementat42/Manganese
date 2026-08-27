@@ -56,12 +56,21 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
         if (namespaceSymbol) { namespaceSymbol->scopeDefined = namespaceScope; }
         _currentScope = namespaceScope;
     } else {
-        if (_currentScope->currentChildIndex >= _currentScope->children.size()) [[unlikely]] {
-            logging::logInternal(logging::LogLevel::Error, "Mismatched namespace scope traversal");
+        Symbol* namespaceSymbol = _currentScope->lookup(name);
+        if (!namespaceSymbol || !namespaceSymbol->scopeDefined) {
+            logging::logInternal(logging::LogLevel::Error, "Failed to resolve namespace scope during pass");
             return;
         }
-        _currentScope = _currentScope->children[_currentScope->currentChildIndex++];
+        
+        _currentScope = namespaceSymbol->scopeDefined;
     }
+}
+
+std::string Scope::getQualifiedName() const {
+    if (!parent || parent->namespaceName.empty()) {
+        return std::string(namespaceName);
+    }
+    return parent->getQualifiedName() + "::" + std::string(namespaceName);
 }
 
 void SymbolTable::exitScope() noexcept {
