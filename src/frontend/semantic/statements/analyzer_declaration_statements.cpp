@@ -161,8 +161,11 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     Symbol* symbol = symbolTable.lookup(statement->name);
-    if (!symbol || !symbol->type) {
+    if (!symbol) {
         ASSERT_UNREACHABLE(std::format("Function '{}' was not registered during symbol collection", statement->name));
+    }
+    if (!symbol->type) {
+        ASSERT_UNREACHABLE(std::format("Function '{}' was registered during symbol collection but had no type", statement->name));
     }
 
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
