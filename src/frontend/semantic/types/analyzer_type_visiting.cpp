@@ -151,7 +151,7 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
         return typevisit_t::Failure;
     }
     if (!scopeSymbol->scopeDefined) {
-        logError(type, "'{}' is not a namespace or module", scopeSymbol->node->toString());
+        logError(type, "'{}' is not a namespace or module", type->scope->toString());
         return typevisit_t::Failure;
     }
     if (type->type->kind != ast::TypeKind::SymbolType) {
@@ -165,8 +165,14 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
         logError(type->type, "No member named '{}' in scope", memberName);
         return typevisit_t::Failure;
     }
+
+    context.nestedScopeResolutionCurrentSymbol = memberSymbol;
+
+    if (memberSymbol->kind == SymbolKind::Namespace) { return typevisit_t::Success; }
+
     if (memberSymbol->kind != SymbolKind::Aggregate && memberSymbol->kind != SymbolKind::TypeAlias) {
-        logError(type->type, "'{}' in scope '{}' is not a type", memberName, scopeSymbol->node->toString());
+        logError(type->type, "'{}' in scope '{}' is not a type", memberName,
+                 scopeSymbol->scopeDefined->getQualifiedName());
         return typevisit_t::Failure;
     }
     type->semanticType = memberSymbol->type;
