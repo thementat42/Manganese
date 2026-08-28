@@ -171,7 +171,7 @@ auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
 
     if (!objectType->isAggregate()) {
         logError(expression->object,
-                 "Element access can only be performed on an aggregate type (ora  pointer to an aggregate) not '{}'",
+                 "Element access can only be performed on an aggregate type (or a pointer to an aggregate) not '{}'",
                  objectType->toString());
         return exprvisit_t::Failure;
     }
