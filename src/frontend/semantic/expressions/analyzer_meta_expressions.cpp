@@ -57,8 +57,22 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
                      functionDeclaration->name, functionDeclaration->genericTypes.size(), genericsStack.top().size());
             return exprvisit_t::Failure;
         }
-        if (visit(functionDeclaration, generic_tag) == stmtvisit_t::Failure) { return exprvisit_t::Failure; }
-        const SemanticType* concreteType = getInstantiatedFunctionType(functionDeclaration, genericsStack.top());
+
+        // set up params for function instantiation
+        auto oldParams = activeGenericParams;
+        activeGenericParams.clear();
+        for (std::size_t i = 0; i < functionDeclaration->genericTypes.size(); ++i) {
+            activeGenericParams[functionDeclaration->genericTypes[i]] = i;
+        }
+
+        stmtvisit_t visitRes = visit(functionDeclaration, generic_tag);
+        const SemanticType* concreteType = nullptr;
+        if (visitRes != stmtvisit_t::Failure) {
+            concreteType = getInstantiatedFunctionType(functionDeclaration, genericsStack.top());
+        }
+
+        activeGenericParams = std::move(oldParams);
+
         if (!concreteType) {
             logError(expression, "Failed to materialize instantiated function type for '{}'",
                      functionDeclaration->name);
@@ -67,6 +81,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
         expression->semanticType = concreteType;
         expression->identifier->semanticType = concreteType;  // Attach to base for parent visitors
         return exprvisit_t::Success;
+
     } else if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
         auto* aggregateDecl = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
 
@@ -76,11 +91,22 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
             return exprvisit_t::Failure;
         }
 
-        // Type-check / instantiate the generic aggregate definition
-        if (visit(aggregateDecl, generic_tag) == stmtvisit_t::Failure) { return exprvisit_t::Failure; }
+        // set up params for instantiation
+        auto oldParams = activeGenericParams;
+        activeGenericParams.clear();
+        for (std::size_t i = 0; i < aggregateDecl->genericTypes.size(); ++i) {
+            activeGenericParams[aggregateDecl->genericTypes[i]] = i;
+        }
 
-        // Retrieve the concrete aggregate type layout from cache/context
-        const SemanticType* concreteType = getInstantiatedAggregateType(aggregateDecl, genericsStack.top());
+        // Instantiate the generic aggregate definition
+        stmtvisit_t visitRes = visit(aggregateDecl, generic_tag);
+        const SemanticType* concreteType = nullptr;
+        if (visitRes != stmtvisit_t::Failure) {
+            concreteType = getInstantiatedAggregateType(aggregateDecl, genericsStack.top());
+        }
+
+        activeGenericParams = std::move(oldParams);
+
         if (!concreteType) {
             logError(expression, "Failed to materialize instantiated aggregate type for '{}'", aggregateDecl->name);
             return exprvisit_t::Failure;

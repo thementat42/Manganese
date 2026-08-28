@@ -211,11 +211,11 @@ const SemanticType* TypeContext::getAnonymousAggregate(TypeList&& fieldTypes) {
     return heapAlloc;
 }
 
-const SemanticType* TypeContext::getNamedAggregate(std::string_view name, std::vector<AggregateField>&& fieldTypes) {
+const SemanticType* TypeContext::getNamedAggregate(std::string&& name, std::vector<AggregateField>&& fieldTypes) {
     // Named types are nominal: they are unique by their declaration name.
-    Aggregate tmp(std::move(fieldTypes), name);
+    Aggregate tmp(std::move(fieldTypes), std::move(name));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields), name);
+    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields), std::move(tmp.name));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }

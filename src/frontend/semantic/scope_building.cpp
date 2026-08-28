@@ -33,7 +33,7 @@ Result Analyzer::_buildStatementScope(ast::Statement* stmt) {
             auto* aggregateStmt = static_cast<ast::AggregateDeclarationStatement*>(stmt);
 
             // Creates an Aggregate shell with name, empty fields ({}), and ResolutionStatus::Unresolved
-            const SemanticType* shellType = typeContext.getNamedAggregate(aggregateStmt->name, /*fields=*/{});
+            const SemanticType* shellType = typeContext.getNamedAggregate(std::string(aggregateStmt->name), /*fields=*/{});
 
             const Result result = symbolTable.declare(aggregateStmt->name,
                                                       Symbol{

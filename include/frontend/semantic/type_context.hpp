@@ -96,13 +96,13 @@ struct AggregateField {
 
 struct Aggregate final : public SemanticType {
     mutable std::vector<AggregateField> fields;
-    const std::string_view name;
+    std::string name;
     mutable ResolutionStatus status;
 
-    Aggregate(std::vector<AggregateField>&& fieldTypes, std::string_view aggregateName = "") noexcept :
+    Aggregate(std::vector<AggregateField>&& fieldTypes, std::string&& aggregateName = "") noexcept :
         SemanticType(Kind::Aggregate),
         fields(std::move(fieldTypes)),
-        name(aggregateName),
+        name(std::move(aggregateName)),
         status(ResolutionStatus::NotStarted) {}
 
     // For anonymous aggregates
@@ -278,7 +278,7 @@ class TypeContext {
 
     const SemanticType* getAnonymousAggregate(TypeList&& fieldTypes);
 
-    const SemanticType* getNamedAggregate(std::string_view name, std::vector<AggregateField>&& fieldTypes);
+    const SemanticType* getNamedAggregate(std::string&& name, std::vector<AggregateField>&& fieldTypes);
 
     const SemanticType* getEnum(std::string_view name);
 

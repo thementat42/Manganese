@@ -174,7 +174,7 @@ const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateD
         instantiatedName += typeArgs[i]->toString();
     }
 
-    return typeContext.getNamedAggregate(instantiatedName, std::move(instantiatedFields));
+    return typeContext.getNamedAggregate(std::move(instantiatedName), std::move(instantiatedFields));
 }
 
 const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {

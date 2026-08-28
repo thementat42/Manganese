@@ -85,7 +85,7 @@ Result Analyzer::collectGlobalAggregate(ast::AggregateDeclarationStatement* aggr
         fields.push_back(AggregateField{.name = field.name, .type = fieldType});
     }
 
-    symbol->type = typeContext.getNamedAggregate(aggregate->name, std::move(fields));
+    symbol->type = typeContext.getNamedAggregate(std::string(aggregate->name), std::move(fields));
     symbol->status = ResolutionStatus::NotStarted;
 
     return result;
