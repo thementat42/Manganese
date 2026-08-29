@@ -128,6 +128,43 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
     return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
+const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
+                                                           const TypeList& typeArgs) {
+    if (!decl) [[unlikely]] { return nullptr; }
+    InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
+    const InstantiationResult* cachedResult = instantiationCache.find(key);
+    if (!cachedResult || cachedResult->state != ResolutionStatus::Success) {
+        return nullptr;  // Not instantiated or failed
+    }
+
+    // Temporarily bind generic parameters for field type resolution
+    auto oldParams = activeGenericParams;
+    activeGenericParams.clear();
+    for (std::size_t i = 0; i < decl->genericTypes.size(); ++i) { activeGenericParams[decl->genericTypes[i]] = i; }
+
+    std::vector<AggregateField> instantiatedFields;
+    instantiatedFields.reserve(decl->fields.size());
+
+    for (const ast::AggregateField& fieldNode : decl->fields) {
+        const SemanticType* fieldType = resolveGenericType(fieldNode.type);
+        if (!fieldType) {
+            activeGenericParams = std::move(oldParams);
+            return nullptr;
+        }
+        instantiatedFields.push_back(AggregateField{.name = fieldNode.name, .type = fieldType});
+    }
+
+    activeGenericParams = std::move(oldParams);
+
+    std::string instantiatedName = decl->name + "$";
+    for (std::size_t i = 0; i < typeArgs.size(); ++i) {
+        if (i > 0) { instantiatedName += "$"; }
+        instantiatedName += typeArgs[i]->toString();
+    }
+
+    return typeContext.getNamedAggregate(std::string(instantiatedName), std::move(instantiatedFields));
+}
+
 const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
                                                           const TypeList& typeArgs) {
     if (!decl) [[unlikely]] { return nullptr; }
@@ -139,42 +176,27 @@ const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDec
 
     const SemanticType* resolvedReturnType = cachedResult->returnType;
 
+    // Temporarily bind generic parameters for parameter type resolution
+    auto oldParams = activeGenericParams;
+    activeGenericParams.clear();
+    for (std::size_t i = 0; i < decl->genericTypes.size(); ++i) { activeGenericParams[decl->genericTypes[i]] = i; }
+
     std::vector<Parameter> instantiatedParams;
     instantiatedParams.reserve(decl->parameters.size());
 
     for (const ast::FunctionParameter& paramNode : decl->parameters) {
         const SemanticType* paramType = resolveGenericType(paramNode.type);
-        if (!paramType) { return nullptr; }
+        if (!paramType) {
+            activeGenericParams = std::move(oldParams);
+            return nullptr;
+        }
         instantiatedParams.push_back(
             Parameter{.isMutable = paramNode.isMutable, .isVariadic = paramNode.isVariadic, .type = paramType});
     }
+
+    activeGenericParams = std::move(oldParams);
+
     return typeContext.getFunction(std::move(instantiatedParams), resolvedReturnType);
-}
-
-const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
-                                                           const TypeList& typeArgs) {
-    if (!decl) [[unlikely]] { return nullptr; }
-    InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
-    const InstantiationResult* cachedResult = instantiationCache.find(key);
-    if (!cachedResult || cachedResult->state != ResolutionStatus::Success) {
-        return nullptr;  // Not instantiated or failed
-    }
-    std::vector<AggregateField> instantiatedFields;
-    instantiatedFields.reserve(decl->fields.size());
-
-    for (const ast::AggregateField& fieldNode : decl->fields) {
-        const SemanticType* fieldType = resolveGenericType(fieldNode.type);
-        if (!fieldType) { return nullptr; }
-        instantiatedFields.push_back(AggregateField{.name = fieldNode.name, .type = fieldType});
-    }
-
-    std::string instantiatedName = decl->name + "$";
-    for (std::size_t i = 0; i < typeArgs.size(); ++i) {
-        if (i > 0) { instantiatedName += "$"; }
-        instantiatedName += typeArgs[i]->toString();
-    }
-
-    return typeContext.getNamedAggregate(std::move(instantiatedName), std::move(instantiatedFields));
 }
 
 const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
@@ -254,7 +276,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
                 symbol = symbolTable.lookup(symbolType->name);
             } else if (genericType->baseType->kind == ScopedType) {
                 // const auto* scopedType = static_cast<const ast::ScopedType*>(genericType->baseType);
-                symbol = nullptr;// symbolTable.scopedLookup(scopedType->qualifier, scopedType->baseType);
+                symbol = nullptr;  // symbolTable.scopedLookup(scopedType->qualifier, scopedType->baseType);
             }
             if (!symbol || !symbol->node) {
                 logError(type, "Unknown generic base declaration");
