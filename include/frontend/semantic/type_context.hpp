@@ -80,6 +80,7 @@ struct SemanticType {
     constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }
 
     virtual std::string toString() const { return std::string(ast::primitiveTypeToString(primitiveType)); }
+    virtual std::string toStringWithTypeArguments(const TypeList& typeArguments) const;
 
    private:
     constexpr SemanticType() noexcept : kind(Kind::Primitive), primitiveType(ast::PrimitiveType_t::not_primitive) {}
@@ -126,6 +127,7 @@ struct Aggregate final : public SemanticType {
     ~Aggregate() override = default;
 
     std::string toString() const override;
+    std::string toStringWithTypeArguments(const TypeList& typeArguments) const override;
 };
 
 struct Array final : public SemanticType {

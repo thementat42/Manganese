@@ -38,8 +38,35 @@ PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
     return {Cat::Int, 0};
 }
 
+std::string SemanticType::toStringWithTypeArguments(const TypeList& typeArguments) const {
+    std::string result = toString() + "@[";
+    for (std::size_t i = 0; i < typeArguments.size(); ++i) {
+        result += typeArguments[i]->toString();
+        if (i != typeArguments.size() - 1) [[likely]] { result += ", "; }
+    }
+    result += ']';
+    return result;
+}
+
 std::string Aggregate::toString() const {
     std::string result = name.empty() ? "aggregate{" : (std::string(name) + " { ");
+    for (std::size_t i = 0; i < fields.size(); ++i) {
+        if (!fields[i].name.empty()) { result += std::string(fields[i].name) + ": "; }
+        result += fields[i].type->toString();
+        if (i != fields.size() - 1) [[likely]] { result += ", "; }
+    }
+    result += "}";
+    return result;
+}
+
+std::string Aggregate::toStringWithTypeArguments(const TypeList& typeArguments) const {
+    std::string aggName = name.empty() ? "aggregate" : name;
+    std::string result = aggName + "@[";
+    for (std::size_t i = 0; i < typeArguments.size(); ++i) {
+        result += typeArguments[i]->toString();
+        if (i != typeArguments.size() - 1) [[likely]] { result += ", "; }
+    }
+    result += "] { ";
     for (std::size_t i = 0; i < fields.size(); ++i) {
         if (!fields[i].name.empty()) { result += std::string(fields[i].name) + ": "; }
         result += fields[i].type->toString();
@@ -66,13 +93,7 @@ std::string Function::toString() const {
 }
 
 std::string GenericInstantiation::toString() const {
-    std::string result = baseType->toString() + "@[";
-    for (std::size_t i = 0; i < typeArguments.size(); ++i) {
-        result += typeArguments[i]->toString();
-        if (i != typeArguments.size() - 1) [[likely]] { result += ", "; }
-    }
-    result += ']';
-    return result;
+    return baseType->toStringWithTypeArguments(typeArguments);
 }
 
 std::string Pointer::toString() const {
