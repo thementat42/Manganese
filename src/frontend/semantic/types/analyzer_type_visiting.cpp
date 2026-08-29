@@ -101,20 +101,9 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
 }
 
 auto Analyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t {
-    const auto* genericType = static_cast<const ast::GenericInstantiationType*>(type);
-    visit(genericType->baseType);
-    const SemanticType* baseType = genericType->baseType->semanticType;
-    if (!baseType) { return typevisit_t::Failure; }
-    TypeList resolvedTypeParameters;
-    resolvedTypeParameters.reserve(genericType->typeParameters.size());
-
-    for (ast::Type* typeParameter : genericType->typeParameters) {
-        visit(typeParameter);
-        const SemanticType* resolvedTypeParameter = typeParameter->semanticType;
-        if (!resolvedTypeParameter) { return typevisit_t::Failure; }
-        resolvedTypeParameters.push_back(resolvedTypeParameter);
-    }
-    type->semanticType = typeContext.getGenericInstance(baseType, std::move(resolvedTypeParameters));
+    const SemanticType* resolved = resolveGenericType(type);
+    if (!resolved) { return typevisit_t::Failure; }
+    type->semanticType = resolved;
     return typevisit_t::Success;
 }
 
