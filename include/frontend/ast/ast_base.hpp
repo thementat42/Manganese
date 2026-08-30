@@ -71,7 +71,7 @@ constexpr const char* visibilityToString(Visibility visibility) noexcept {
 }
 
 struct ASTNode {
-    std::size_t line = 0, column = 0;
+    std::uint32_t line = 0, column = 0;
     ASTNode() noexcept = default;
     virtual ~ASTNode() noexcept = default;
 
