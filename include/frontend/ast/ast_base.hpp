@@ -34,11 +34,11 @@ struct Expression;
 struct Statement;
 struct Type;
 
-using Block = std::vector<Statement*>;
-
 enum class ExpressionKind : std::uint8_t;
 enum class StatementKind : std::uint8_t;
 enum class TypeKind : std::uint8_t;
+
+using Block = std::vector<Statement*>;
 
 enum class PrimitiveType_t : std::uint8_t {
     i8,
@@ -65,6 +65,10 @@ enum class Visibility : std::uint8_t {
     Public = 0,
     Private = 2,
 };
+
+constexpr const char* visibilityToString(Visibility visibility) noexcept {
+    return visibility == Visibility::Public ? "public" : "private";
+}
 
 struct ASTNode {
     std::size_t line = 0, column = 0;
@@ -104,10 +108,6 @@ struct Type : public ASTNode {
     explicit Type(TypeKind _kind, PrimitiveType_t _primitiveType = PrimitiveType_t::not_primitive) noexcept :
         kind(_kind), primitiveType(_primitiveType) {}
 };
-
-constexpr const char* visibilityToString(Visibility visibility) noexcept {
-    return visibility == Visibility::Public ? "public" : "private";
-}
 
 }  // namespace ast
 }  // namespace Manganese
