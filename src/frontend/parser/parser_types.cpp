@@ -221,8 +221,16 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
     return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
 }
 
-std::string Parser::parseGenericTypeParameter() {
-    return expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme();
+std::optional<std::string> Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics, const std::string& contextName) {
+    Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
+    std::string genericName = genericToken.getLexeme();
+
+    if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
+        logError(genericToken.getLine(), genericToken.getColumn(),
+                 "Duplicate generic type '{}' in '{}'", genericName, contextName);
+        return std::nullopt;
+    }
+    return std::make_optional(genericName);
 }
 
 }  // namespace Manganese::parser

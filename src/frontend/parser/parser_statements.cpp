@@ -51,7 +51,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
         DISCARD(consumeToken());  // Consume '['
         genericTypes = parseCommaSeparatedList<std::string>(
             TokenType::RightSquare, "Expected a ',' to separate generic types, or a ']' to close the generic type list",
-            [this]() { return expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme(); });
+            [this, &genericTypes, &name]() { return parseGenericTypeParameter(genericTypes, name); });
     }
     expectToken(TokenType::LeftBrace, "Expected a '{'");
 
@@ -200,7 +200,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
             genericTypes = parseCommaSeparatedList<std::string>(
                 TokenType::RightSquare,
                 "Expected a ',' to separate generic types, or a ']' to close the generic type list",
-                [this]() { return parseGenericTypeParameter(); });
+                [this, &genericTypes, &name]() { return parseGenericTypeParameter(genericTypes, name); });
         }
     }
     expectToken(TokenType::LeftParen);
@@ -274,8 +274,6 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     return makeNode<ast::FunctionDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
                                                        std::move(params), returnType, parseBlock("function body"));
 }
-
-
 
 ast::Statement* Parser::parseIfStatement() {
     const Token startToken = consumeToken();
