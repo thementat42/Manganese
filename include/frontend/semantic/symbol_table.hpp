@@ -37,12 +37,12 @@ struct Scope;
 struct Symbol {
     const SemanticType* type;
     ast::ASTNode* node;
+    Scope* hostScope = nullptr;  // which scope this symbol lives in (set in SymbolTable::declare())
+    Scope* scopeDefined = nullptr;  // for namespaces/modules, indicates that this symbol defines a scope
     SymbolKind kind;
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
     ResolutionStatus status = ResolutionStatus::NotStarted;
-    Scope* hostScope = nullptr;  // which scope this symbol lives in (set in SymbolTable::declare())
-    Scope* scopeDefined = nullptr;  // for namespaces/modules, indicates that this symbol defines a scope
 };
 
 struct Scope {

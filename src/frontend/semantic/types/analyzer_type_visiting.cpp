@@ -85,9 +85,9 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
         const SemanticType* resolvedParameterType = parameterType.type->semanticType;
         if (!resolvedParameterType) { return typevisit_t::Failure; }
 
-        resolvedParameterTypes.push_back({.isMutable = parameterType.isMutable,
-                                          .isVariadic = parameterType.isVariadic,
-                                          .type = resolvedParameterType});
+        resolvedParameterTypes.push_back({.type = resolvedParameterType,
+                                          .isMutable = parameterType.isMutable,
+                                          .isVariadic = parameterType.isVariadic});
     }
     const SemanticType* returnType = typeContext.getVoid();
     if (functionType->returnType) {

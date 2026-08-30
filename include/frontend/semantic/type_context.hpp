@@ -166,9 +166,9 @@ struct Enum final : public SemanticType {
 };
 
 struct Parameter {
+    const SemanticType* type;
     bool isMutable;
     bool isVariadic;
-    const SemanticType* type;
 
     friend bool operator==(const Parameter&, const Parameter&) noexcept = default;
 

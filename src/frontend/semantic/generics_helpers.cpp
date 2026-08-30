@@ -191,7 +191,7 @@ const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDec
             return nullptr;
         }
         instantiatedParams.push_back(
-            Parameter{.isMutable = paramNode.isMutable, .isVariadic = paramNode.isVariadic, .type = paramType});
+            Parameter{.type = paramType, .isMutable = paramNode.isMutable, .isVariadic = paramNode.isVariadic});
     }
 
     activeGenericParams = std::move(oldParams);
@@ -252,7 +252,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
                 const SemanticType* paramType = resolveGenericType(param.type);
                 if (!paramType) { return nullptr; }
                 params.push_back(
-                    Parameter{.isMutable = param.isMutable, .isVariadic = param.isVariadic, .type = paramType});
+                    Parameter{.type = paramType, .isMutable = param.isMutable, .isVariadic = param.isVariadic});
             }
 
             const SemanticType* returnType = resolveGenericType(functionType->returnType);

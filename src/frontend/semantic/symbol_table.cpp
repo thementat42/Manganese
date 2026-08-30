@@ -30,11 +30,11 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
             DISCARD(_currentScope->insert(name,
                                           Symbol{.type = nullptr,
                                                  .node = node,
+                                                 .hostScope = _currentScope,
                                                  .kind = SymbolKind::Namespace,
                                                  .visibility = ast::Visibility::Public,
                                                  .isMutable = false,
-                                                 .status = ResolutionStatus::Success,
-                                                 .hostScope = _currentScope}));
+                                                 .status = ResolutionStatus::Success}));
             namespaceSymbol = _currentScope->lookup(name);
         }
 
