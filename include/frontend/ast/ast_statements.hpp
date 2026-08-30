@@ -84,7 +84,7 @@ struct EnumDeclarationStatement final : public Statement {
 
     EnumDeclarationStatement(std::string&& _name, Type* _baseType, std::vector<EnumValue>&& _values) noexcept :
         Statement(StatementKind::EnumDeclarationStatement),
-        name(_name),
+        name(std::move(_name)),
         baseType(_baseType),
         values(std::move(_values)) {}
 
