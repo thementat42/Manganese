@@ -6,9 +6,6 @@
 #include <string>
 #include <utility>
 #include <utils/type_names.hpp>
-#include <vector>
-
-#include "frontend/parser/operators.hpp"
 
 namespace Manganese::parser {
 

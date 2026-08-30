@@ -5,8 +5,6 @@
 #include <string_view>
 #include <utils/result.hpp>
 
-#include "frontend/ast/ast_statements.hpp"
-
 namespace Manganese::semantic {
 
 // Note: all types are nullptr for the moment since this is just meant to collect names

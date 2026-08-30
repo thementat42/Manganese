@@ -10,8 +10,6 @@
 #include <utils/result.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_expressions.hpp"
-
 namespace Manganese::semantic {
 
 auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
