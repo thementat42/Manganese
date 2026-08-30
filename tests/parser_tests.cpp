@@ -60,13 +60,8 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
 
     std::cout << "Parsed " << testName << " AST:" << '\n';
 
-    // 1. Dump optional module declaration
     if (parsedFile.fileModule) { dumpStatement(parsedFile.fileModule, logFile ? &logFile : nullptr); }
-
-    // 2. Dump import statements
     for (const auto* importStmt : parsedFile.imports) { dumpStatement(importStmt, logFile ? &logFile : nullptr); }
-
-    // 3. Dump body statements
     for (const auto& stmt : parsedFile.program) { dumpStatement(stmt, logFile ? &logFile : nullptr); }
 
     if (logFile) { logFile.close(); }
@@ -99,14 +94,8 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
     }
 
     std::cout << "Parsed " << testName << " AST:" << '\n';
-
-    // 1. Dump optional module declaration
     if (parsedFile.fileModule) { dumpStatement(parsedFile.fileModule, logFile ? &logFile : nullptr); }
-
-    // 2. Dump import statements
     for (const auto* importStmt : parsedFile.imports) { dumpStatement(importStmt, logFile ? &logFile : nullptr); }
-
-    // 3. Dump body statements
     for (const auto& stmt : parsedFile.program) { dumpStatement(stmt, logFile ? &logFile : nullptr); }
 
     if (logFile) { logFile.close(); }
