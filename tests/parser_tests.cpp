@@ -27,7 +27,7 @@ ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer:
 
     if (!file.moduleName.empty()) { std::cout << "module " << file.moduleName << "\n"; }
     if (!file.imports.empty()) {
-        for (const auto& element : file.imports) { std::cout << parser::importToString(element) << "\n"; }
+        for (const auto& _import : file.imports) { std::cout << _import->toString() << "\n"; }
     }
 
     return std::move(file.program);
@@ -549,7 +549,7 @@ static bool testParseFromFile() {
     parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
     auto x = p.parse();
     if (!x.moduleName.empty()) { std::cout << "module " << x.moduleName << ";\n"; }
-    for (const auto& element : x.imports) { std::cout << parser::importToString(element) << "\n"; }
+    for (const auto& _import : x.imports) { std::cout << _import->toString() << "\n"; }
 
     for (const auto& element : x.program) { std::cout << element->toString(0) << "\n"; }
     return true;

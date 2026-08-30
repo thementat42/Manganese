@@ -6,7 +6,6 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
-#include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
@@ -231,47 +230,14 @@ ast::Statement* Parser::parseIfStatement() {
 }
 
 ast::Statement* Parser::parseImportStatement() {
-    const std::size_t startLine = peekToken().getLine();
-    const std::size_t startColumn = peekToken().getColumn();
+    const Token startToken = consumeToken();
 
-    if (flags.hasParsedFileHeader) {
-        logging::logWarning(startLine, startColumn, "Imports should go at the top of the file");
-    }
-    DISCARD(consumeToken());
-    std::vector<std::string> path;
-    path.push_back(expectToken(TokenType::Identifier, "Expected a module name or path").getLexeme());
-    while (peekTokenType() == TokenType::ScopeResolution) {
-        DISCARD(consumeToken());  // Consume '::'
-        path.push_back(expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme());
-    }
-    std::string alias;
-    if (peekTokenType() == TokenType::As) {
-        DISCARD(consumeToken());
-        alias = expectToken(TokenType::Identifier, "Expected an identifier as an import alias").getLexeme();
-    }
+    std::vector<std::string> path = parseImportPath();
+    std::optional<std::string> alias = parseImportAlias();
+
     expectToken(TokenType::Semicolon, "Expected a ';' to end an import statement");
 
-    bool duplicate = false;
-    for (const auto& [existingPath, existingAlias] : imports) {
-        if (path == existingPath) {
-            std::string imported
-                = std::accumulate(existingPath.begin() + 1, existingPath.end(),
-                                  existingPath[0],  // existingPath should never be empty
-                                  [](const std::string& a, const std::string& b) { return a + "::" + b; });
-
-            logging::logWarning(startLine, startColumn, "Duplicate import of {}", imported);
-            duplicate = true;
-            break;
-
-        } else if (alias == existingAlias && !alias.empty()) {
-            logging::logWarning(startLine, startColumn, "Alias {} was already used", existingAlias);
-            duplicate = true;
-            break;
-        }
-    }
-    if (!duplicate) { imports.push_back({.path = std::move(path), .alias = std::move(alias)}); }
-    // Dummy node since imports are stored separately
-    return ast::getEmptyStatement();
+    return makeNode<ast::ImportStatement>(startToken, std::move(path), std::move(alias));
 }
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
@@ -567,6 +533,27 @@ ast::Block Parser::parseDefaultClause() {
     if (defaultBody.empty()) { defaultBody.push_back(ast::getEmptyStatement()); }
 
     return defaultBody;
+}
+
+std::vector<std::string> Parser::parseImportPath() {
+    std::vector<std::string> path;
+    path.push_back(expectToken(TokenType::Identifier, "Expected a module name or path").getLexeme());
+
+    while (peekTokenType() == TokenType::ScopeResolution) {
+        DISCARD(consumeToken()); // Consume '::'
+        path.push_back(expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme());
+    }
+
+    return path;
+}
+
+std::optional<std::string> Parser::parseImportAlias() {
+    if (peekTokenType() == TokenType::As) {
+        DISCARD(consumeToken()); // Consume 'as'
+        return expectToken(TokenType::Identifier, "Expected an identifier as an import alias").getLexeme();
+    }
+
+    return std::nullopt;
 }
 
 }  // namespace Manganese::parser

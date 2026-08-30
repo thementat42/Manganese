@@ -121,6 +121,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
     return exprvisit_t::Failure;
 }
 
+
 auto Analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;

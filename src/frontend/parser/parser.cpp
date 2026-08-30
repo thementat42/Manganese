@@ -9,16 +9,23 @@
 namespace Manganese::parser {
 
 ParsedFile Parser::parse() {
+    ast::Block program;
+    std::vector<ast::ImportStatement*> imports;
     // Parse the header (module declaration and imports)
     if (peekTokenType() == TokenType::Module) { parseModuleDeclarationStatement(); }
-    while (peekTokenType() == TokenType::Import) { parseImportStatement(); }
+    while (peekTokenType() == TokenType::Import) {
+        imports.push_back(static_cast<ast::ImportStatement*>(parseImportStatement()));
+    }
 
     flags.hasParsedFileHeader = true;  // Now, setting a module or import name should be a warning
 
-    ast::Block program;
     while (!done()) {
-        // No need to move thanks to copy elision
-        program.push_back(parseStatement());
+        ast::Statement* stmt = parseStatement();
+        if (stmt->kind == ast::StatementKind::ImportStatement) {
+            imports.push_back(static_cast<ast::ImportStatement*>(stmt));
+        } else {
+            program.push_back(stmt);
+        }
 
         // Lookbehind is only needed within a statement, not across them
         previousToken.reset();
@@ -54,16 +61,6 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
     flags.hasError = true;
 
     return flags.hasError ? lexer::Token{} : consumeToken();
-}
-
-std::string importToString(const Import& import) {
-    std::string res = "import ";
-    for (std::size_t i = 0; i < import.path.size(); ++i) {
-        res += import.path[i];
-        if (i < import.path.size() - 1) [[likely]] { res += "::"; }
-    }
-    if (!import.alias.empty()) { res += " as " + import.alias; }
-    return res + ";";
 }
 
 ast::Block Parser::parseBlock(const std::string& blockName) {

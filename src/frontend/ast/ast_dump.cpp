@@ -242,6 +242,21 @@ void IfStatement::dump(std::ostream& os, std::size_t indent) const {
     os << ind << "}\n";
 }
 
+void ImportStatement::dump(std::ostream& os, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ImportStatement", *this);
+
+    os << ind.next() << "path: [";
+    for (std::size_t i = 0; i < path.size(); ++i) {
+        os << path[i];
+        if (i + 1 < path.size()) { os << ", "; }
+    }
+    os << "]\n";
+
+    os << ind.next() << std::format("alias: {}\n", alias.value_or("none"));
+    os << ind << "}\n";
+}
+
 void NamespaceStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "NamespaceStatement", *this);

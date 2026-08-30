@@ -19,19 +19,11 @@
 namespace Manganese::parser {
 using lexer::TokenType, lexer::Token;
 
-struct Import {
-    std::vector<std::string> path;
-    std::string alias;
-};
-
 struct ParsedFile {
     std::string moduleName;
-    std::vector<Import> imports;
+    std::vector<ast::ImportStatement*> imports;
     ast::Block program;
 };
-
-//~ Helper functions that don't depend on the parser class's methods/variables
-std::string importToString(const Import& import);
 
 class Parser {
    private:
@@ -40,7 +32,6 @@ class Parser {
     std::optional<Token> previousToken;
 
     std::string moduleName;
-    std::vector<Import> imports;
     mnstl::chunk_allocator& arena;
 
     static inline std::once_flag lookupsInitFlag;
@@ -128,7 +119,6 @@ class Parser {
 
     ast::EnumValue parseEnumMember();
     std::vector<std::string> parseGenericsList(std::string_view context_name);
-
     std::optional<ast::AggregateField> parseAggregateField(const std::string& aggregateName,
                                                            const std::vector<ast::AggregateField>& existingFields);
 
@@ -138,6 +128,9 @@ class Parser {
 
     ast::CaseClause parseCaseClause();
     ast::Block parseDefaultClause();
+
+    std::vector<std::string> parseImportPath();
+    std::optional<std::string> parseImportAlias();
 
     // Type Parsing
 

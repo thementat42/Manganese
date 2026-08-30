@@ -152,6 +152,19 @@ std::string IfStatement::toString(std::size_t indent) const {
     return result;
 }
 
+std::string ImportStatement::toString(std::size_t indent) const {
+    std::string pathStr;
+    for (std::size_t i = 0; i < path.size(); ++i) {
+        pathStr += path[i];
+        if (i != path.size() - 1) [[likely]] { pathStr += "::"; }
+    }
+    if (alias.has_value()) {
+        return getIndent(indent) + std::format("import {} as {};", pathStr, *alias);
+    } else {
+        return getIndent(indent) + std::format("import {};", pathStr);
+    }
+}
+
 std::string NamespaceStatement::toString(std::size_t indent) const {
     return getIndent(indent) + std::format("namespace {} ", name) + blockToString(block, indent);
 }
