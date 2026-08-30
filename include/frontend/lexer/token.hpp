@@ -27,15 +27,15 @@ std::string tokenTypeToString(TokenType type);
 
 class Token {
    private:
-    bool _isInvalid;
-    TokenType _type;
-    std::string _lexeme;
-    std::size_t _line, _column;
+   std::string _lexeme;
+   std::size_t _line, _column;
+   TokenType _type;
+   bool _isInvalid;
 
    public:
     Token() noexcept = default;
     Token(TokenType type, std::string&& lexeme, std::size_t line, std::size_t column, bool isInvalid = false) :
-        _isInvalid(isInvalid), _type(type), _line(line), _column(column) {
+        _line(line), _column(column), _type(type), _isInvalid(isInvalid) {
         // Special lexeme override cases
         if (_type == TokenType::Int32) {
             _lexeme = "int32";
