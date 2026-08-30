@@ -180,6 +180,15 @@ struct ImportStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE;
 };
 
+struct ModuleDeclarationStatement final : public Statement {
+    std::string name;
+
+    explicit ModuleDeclarationStatement(std::string&& _name) noexcept :
+        Statement(StatementKind::ModuleDeclarationStatement), name(std::move(_name)) {}
+
+    MN_AST_STANDARD_INTERFACE; 
+};
+
 struct NamespaceStatement final : public Statement {
     std::string name;
     Block block;

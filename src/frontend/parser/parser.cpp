@@ -9,10 +9,13 @@
 namespace Manganese::parser {
 
 ParsedFile Parser::parse() {
+    ast::ModuleDeclarationStatement* fileModule = nullptr;
     ast::Block program;
     std::vector<ast::ImportStatement*> imports;
     // Parse the header (module declaration and imports)
-    if (peekTokenType() == TokenType::Module) { parseModuleDeclarationStatement(); }
+    if (peekTokenType() == TokenType::Module) {
+        fileModule = static_cast<ast::ModuleDeclarationStatement*>(parseModuleDeclarationStatement());
+    }
     while (peekTokenType() == TokenType::Import) {
         imports.push_back(static_cast<ast::ImportStatement*>(parseImportStatement()));
     }
@@ -23,6 +26,9 @@ ParsedFile Parser::parse() {
         ast::Statement* stmt = parseStatement();
         if (stmt->kind == ast::StatementKind::ImportStatement) {
             imports.push_back(static_cast<ast::ImportStatement*>(stmt));
+        } else if (stmt->kind == ast::StatementKind::ModuleDeclarationStatement && !flags.hasModuleDeclaration) {
+        fileModule = static_cast<ast::ModuleDeclarationStatement*>(stmt);
+            
         } else {
             program.push_back(stmt);
         }
@@ -31,7 +37,7 @@ ParsedFile Parser::parse() {
         previousToken.reset();
     }
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
-    return ParsedFile{.moduleName = moduleName, .imports = std::move(imports), .program = std::move(program)};
+    return ParsedFile{.fileModule = fileModule, .imports = std::move(imports), .program = std::move(program)};
 }
 
 // Helper functions

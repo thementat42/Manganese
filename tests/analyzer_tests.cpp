@@ -32,15 +32,22 @@ static bool analyzeSource(const std::string& source, bool expectSuccess, std::st
         logFile << "Expected Result: Semantically " << (expectSuccess ? "Valid" : "Invalid") << "\n";
         logFile << "Actual Result: Semantically " << (result == Result::Success ? "Valid" : "Invalid") << '\n';
         logFile << "Test " << (result == Result::Success ? "Passed" : "Failed") << '\n';
-        logFile << "Analyzed " << testName << "AST:\n";
-        for (const auto& stmt : parsedFile.program) {
+        logFile << "Analyzed " << testName << " AST:\n";
+
+        // Helper lambda to write statement string rep and dump to log
+        auto logStatement = [&logFile](const ast::Statement* stmt) {
+            if (!stmt) return;
             logFile << "String representation: " << stmt->toString(0) << '\n';
             logFile << "Dumping statement:\n";
             stmt->dump(logFile);  // Node dump includes semanticType when available
             logFile << "---------------------\n";
+        };
 
-            logFile.close();
-        }
+        if (parsedFile.fileModule) { logStatement(parsedFile.fileModule); }
+        for (const auto* importStmt : parsedFile.imports) { logStatement(importStmt); }
+        for (const auto& stmt : parsedFile.program) { logStatement(stmt); }
+
+        logFile.close();
     }
 
     return expectSuccess ? result == Result::Success : result == Result::Failure;

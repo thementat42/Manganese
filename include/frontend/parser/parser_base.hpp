@@ -20,7 +20,7 @@ namespace Manganese::parser {
 using lexer::TokenType, lexer::Token;
 
 struct ParsedFile {
-    std::string moduleName;
+    ast::ModuleDeclarationStatement* fileModule;
     std::vector<ast::ImportStatement*> imports;
     ast::Block program;
 };
@@ -30,8 +30,6 @@ class Parser {
     std::unique_ptr<lexer::Lexer> lexer;
     constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
     std::optional<Token> previousToken;
-
-    std::string moduleName;
     mnstl::chunk_allocator& arena;
 
     static inline std::once_flag lookupsInitFlag;
@@ -41,6 +39,7 @@ class Parser {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
         bool parsingAliasStatement : 1 = false;
+        bool hasModuleDeclaration: 1 = false;
     } flags;
 
    public:

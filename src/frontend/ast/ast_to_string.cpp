@@ -169,6 +169,10 @@ std::string NamespaceStatement::toString(std::size_t indent) const {
     return getIndent(indent) + std::format("namespace {} ", name) + blockToString(block, indent);
 }
 
+std::string ModuleDeclarationStatement::toString(std::size_t indent) const {
+    return getIndent(indent) + std::format("module {};", name);
+}
+
 std::string NestedBlockStatement::toString(std::size_t indent) const {
     return getIndent(indent) + blockToString(block, indent);
 }

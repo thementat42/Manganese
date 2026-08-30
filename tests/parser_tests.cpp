@@ -6,7 +6,6 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <utility>
 
 #include "testrunner.hpp"
 
@@ -20,40 +19,59 @@ constexpr static const char* logFileName = "logs/parser_tests.log";
 static mnstl::chunk_allocator allocator;
 
 // Helpers
+
 namespace {
-ast::Block getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
+
+parser::ParsedFile getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode, allocator);
     parser::ParsedFile file = parser.parse();
 
-    if (!file.moduleName.empty()) { std::cout << "module " << file.moduleName << "\n"; }
+    if (file.fileModule) { std::cout << file.fileModule->toString() << "\n"; }
     if (!file.imports.empty()) {
         for (const auto& _import : file.imports) { std::cout << _import->toString() << "\n"; }
     }
 
-    return std::move(file.program);
+    return file;
 }
 
+void dumpStatement(const ast::Statement* stmt, std::ostream* logFile) {
+    if (!stmt) return;
+
+    const std::string stmtStr = stmt->toString(0);
+    std::cout << stmtStr << '\n';
+    if (logFile && *logFile) {
+        *logFile << "String representation: " << stmtStr << '\n';
+        *logFile << "Dumping statement:\n";
+        stmt->dump(*logFile);
+        *logFile << "---------------------\n";
+    }
+}
+}  // namespace
+
 template <std::size_t N>
-bool validateStatements(const ast::Block& block, const std::array<std::string, N>& expected, const char* testName) {
+bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<std::string, N>& expected,
+                        const char* testName) {
     std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
         std::cerr << "ERROR: Could not open log file for writing.\n";
     } else {
         logFile << "Test: " << testName << '\n';
     }
+
     std::cout << "Parsed " << testName << " AST:" << '\n';
-    for (const auto& stmt : block) {
-        const std::string stmtStr = stmt->toString(0);
-        std::cout << stmtStr << '\n';
-        if (logFile) {
-            logFile << "String representation: " << stmtStr << '\n';
-            logFile << "Dumping statement:\n";
-            stmt->dump(logFile);
-            logFile << "---------------------\n";
-        }
-    }
+
+    // 1. Dump optional module declaration
+    if (parsedFile.fileModule) { dumpStatement(parsedFile.fileModule, logFile ? &logFile : nullptr); }
+
+    // 2. Dump import statements
+    for (const auto* importStmt : parsedFile.imports) { dumpStatement(importStmt, logFile ? &logFile : nullptr); }
+
+    // 3. Dump body statements
+    for (const auto& stmt : parsedFile.program) { dumpStatement(stmt, logFile ? &logFile : nullptr); }
+
     if (logFile) { logFile.close(); }
 
+    const auto& block = parsedFile.program;
     if (block.size() != N) {
         std::cerr << "ERROR: Expected " << N << " statements, got " << block.size() << " in test: " << testName << '\n';
         return false;
@@ -72,25 +90,28 @@ bool validateStatements(const ast::Block& block, const std::array<std::string, N
     return true;
 }
 
-bool validateStatement(const ast::Block& block, const std::string& expected, const std::string& testName) {
+bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& expected, const std::string& testName) {
     std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
         std::cerr << "ERROR: Could not open log file for writing.\n";
     } else {
         logFile << "Test: " << testName << '\n';
     }
-    std::cout << "Parsed " << testName << " AST:" << '\n';
-    for (const auto& stmt : block) {
-        std::string stmtStr = stmt->toString(0);
-        std::cout << stmtStr << '\n';
-        if (logFile) {
-            logFile << "String representation: " << stmtStr << '\n';
-            logFile << "Dumping statement:\n";
-            stmt->dump(logFile);
-            logFile << "---------------------\n";
-        }
-    }
 
+    std::cout << "Parsed " << testName << " AST:" << '\n';
+
+    // 1. Dump optional module declaration
+    if (parsedFile.fileModule) { dumpStatement(parsedFile.fileModule, logFile ? &logFile : nullptr); }
+
+    // 2. Dump import statements
+    for (const auto* importStmt : parsedFile.imports) { dumpStatement(importStmt, logFile ? &logFile : nullptr); }
+
+    // 3. Dump body statements
+    for (const auto& stmt : parsedFile.program) { dumpStatement(stmt, logFile ? &logFile : nullptr); }
+
+    if (logFile) { logFile.close(); }
+
+    const auto& block = parsedFile.program;
     if (block.size() != 1) {
         std::cerr << "ERROR: Expected 1 statement, got " << block.size() << " in test: " << testName << '\n';
         return false;
@@ -106,7 +127,6 @@ bool validateStatement(const ast::Block& block, const std::string& expected, con
 
     return true;
 }
-}  // namespace
 
 static bool testArithmeticOperatorsAndCasting() {
     const std::string expression = "8 - 4 + 6 * 2 // 5 % 3 * 2 * 2 / 7 as float32;";
@@ -532,15 +552,27 @@ static bool testImportsAndAliases() {
                                    "alias StringIntMap = std::HashMap@[string, Integer];\n"
                                    "let value: Integer = 42;\n";
 
-    const std::array<std::string, 6> expected
-        = {"",
-           "alias IntegerArray = (int32[5]);",
-           "alias pf64 = (ptr float64);",
+    // Only non-header AST statements expected in parsedFile.program
+    const std::array<std::string, 5> expected
+        = {"alias IntegerArray = (int32[5]);", "alias pf64 = (ptr float64);",
            "alias blah = (func(mut Integer, pf64, func(int64) -> int64) -> bool);",
-           "alias StringIntMap = (std::HashMap@[string, Integer]);",
-           "(let value: private Integer = 42);"};
+           "alias StringIntMap = (std::HashMap@[string, Integer]);", "(let value: private Integer = 42);"};
 
-    return validateStatements(getParserResults(expression), expected, "Import Statements and Type Aliases");
+    parser::ParsedFile parsedFile = getParserResults(expression);
+
+    // Verify module header metadata
+    if (!parsedFile.fileModule || parsedFile.fileModule->name != "dataprocessing") {
+        std::cerr << "ERROR: Module declaration not parsed correctly in testImportsAndAliases\n";
+        return false;
+    }
+
+    // Verify import metadata count
+    if (parsedFile.imports.size() != 3) {
+        std::cerr << "ERROR: Expected 3 imports, got " << parsedFile.imports.size() << " in testImportsAndAliases\n";
+        return false;
+    }
+
+    return validateStatements(parsedFile, expected, "Import Statements and Type Aliases");
 }
 
 static bool testParseFromFile() {
@@ -548,9 +580,8 @@ static bool testParseFromFile() {
     mnstl::chunk_allocator file_allocator{};
     parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
     auto x = p.parse();
-    if (!x.moduleName.empty()) { std::cout << "module " << x.moduleName << ";\n"; }
+    if (x.fileModule) { std::cout << x.fileModule->toString() << "\n"; }
     for (const auto& _import : x.imports) { std::cout << _import->toString() << "\n"; }
-
     for (const auto& element : x.program) { std::cout << element->toString(0) << "\n"; }
     return true;
 }
@@ -639,8 +670,8 @@ static bool testNamespaces() {
 
 static bool miscTests() {
     const std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
-    ast::Block x = getParserResults(expression);
-    std::cout << x[0]->toString(0) << "\n";
+    parser::ParsedFile x = getParserResults(expression);
+    std::cout << x.program[0]->toString(0) << "\n";
     return true;
 }
 

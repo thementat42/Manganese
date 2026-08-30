@@ -1,3 +1,4 @@
+#include "frontend/ast/ast_statements.hpp"
 #if MN_DEBUG  // only include dump methods in debug builds
 
 #include <core.hpp>
@@ -254,6 +255,13 @@ void ImportStatement::dump(std::ostream& os, std::size_t indent) const {
     os << "]\n";
 
     os << ind.next() << std::format("alias: {}\n", alias.value_or("none"));
+    os << ind << "}\n";
+}
+
+void ModuleDeclarationStatement::dump(std::ostream& os, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ModuleDeclarationStatement", *this);
+    os << ind.next() << "module name: " << name << "\n";
     os << ind << "}\n";
 }
 

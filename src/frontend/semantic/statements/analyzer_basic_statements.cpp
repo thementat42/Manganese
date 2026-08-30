@@ -4,6 +4,7 @@
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
 #include <utils/result.hpp>
+#include "frontend/ast/ast_statements.hpp"
 
 namespace Manganese::semantic {
 
@@ -21,6 +22,7 @@ auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
 
 auto Analyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
 
+auto Analyzer::visit(ast::ModuleDeclarationStatement*) -> stmtvisit_t { return stmtvisit_t::Success; }
 auto Analyzer::visit(ast::ImportStatement*) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 auto Analyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {

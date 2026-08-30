@@ -242,23 +242,27 @@ ast::Statement* Parser::parseImportStatement() {
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
     const lexer::Token temp = consumeToken();
-    const std::size_t startLine = temp.getLine();
-    const std::size_t startColumn = temp.getColumn();
     if (flags.hasParsedFileHeader) {
-        logging::logWarning(startLine, startColumn, "Module declarations should go at the top of the file");
-    }
-    const std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
-    expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
-    if (!this->moduleName.empty()) {
-        logError(
-            startLine, startColumn,
-            "A module name has previously been declared in this file. Files can only have one module declaration.");
-    } else {
-        this->moduleName = name;
+        logging::logWarning(temp.getLine(), temp.getColumn(), "Module declarations should go at the top of the file");
     }
 
-    // Dummy node since there's no need to semantically analyze module declarations (that happens here)
-    return ast::getEmptyStatement();
+    std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
+
+    while (peekTokenType() == TokenType::ScopeResolution) {
+        DISCARD(consumeToken());
+        name += "::" + expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme();
+    }
+
+    expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
+
+    if (flags.hasModuleDeclaration) {
+        logError(temp.getLine(), temp.getColumn(),
+                 "This file already has a module declaration. Files can only have one module declaration.");
+    } else {
+        flags.hasModuleDeclaration = true;
+    }
+
+    return makeNode<ast::ModuleDeclarationStatement>(temp, std::move(name));
 }
 
 ast::Statement* Parser::parseNamespace() {
@@ -540,7 +544,7 @@ std::vector<std::string> Parser::parseImportPath() {
     path.push_back(expectToken(TokenType::Identifier, "Expected a module name or path").getLexeme());
 
     while (peekTokenType() == TokenType::ScopeResolution) {
-        DISCARD(consumeToken()); // Consume '::'
+        DISCARD(consumeToken());  // Consume '::'
         path.push_back(expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme());
     }
 
@@ -549,7 +553,7 @@ std::vector<std::string> Parser::parseImportPath() {
 
 std::optional<std::string> Parser::parseImportAlias() {
     if (peekTokenType() == TokenType::As) {
-        DISCARD(consumeToken()); // Consume 'as'
+        DISCARD(consumeToken());  // Consume 'as'
         return expectToken(TokenType::Identifier, "Expected an identifier as an import alias").getLexeme();
     }
 
