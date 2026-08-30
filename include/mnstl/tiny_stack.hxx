@@ -23,13 +23,22 @@ class tiny_stack {
         _data.pop_back();
     }
 
-    T& top() noexcept {
+    [[nodiscard]] T& top() & noexcept {
         assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
         return _data.back();
     }
-    const T& top() const noexcept {
+    [[nodiscard]] const T& top() const & noexcept {
         assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
         return _data.back();
+    }
+
+    [[nodiscard]] T&& top() && noexcept {
+        assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
+        return std::move(_data.back());
+    }
+    [[nodiscard]] const T&& top() const && noexcept {
+        assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
+        return std::move(_data.back());
     }
 
     void reserve(std::size_t new_capacity) { _data.reserve(new_capacity); }
