@@ -23,8 +23,8 @@ enum class StatementKind : std::uint8_t {
 struct AggregateField {
     std::string name;
     Type* type;
-    bool isMutable;
     std::size_t line, column;
+    bool isMutable;
 };
 
 struct AggregateDeclarationStatement final : public Statement {
@@ -123,10 +123,10 @@ struct ForLoopStatement final : public Statement {
 struct FunctionParameter {
     std::string name;
     Type* type;
-    bool isMutable;
-    bool isVariadic;
     Expression* defaultValue;
     std::size_t line, column;
+    bool isMutable;
+    bool isVariadic;
 };
 
 struct FunctionDeclarationStatement final : public Statement {
@@ -217,18 +217,18 @@ struct SwitchStatement final : public Statement {
 };
 
 struct VariableDeclarationStatement final : public Statement {
+    Visibility visibility;
     bool isMutable;
     std::string name;
-    Visibility visibility;
     Expression* value;
     Type* type;
 
     VariableDeclarationStatement(bool _isMutable, std::string&& _name, Visibility _visibility, Expression* _value,
                                  Type* _type) noexcept :
         Statement(StatementKind::VariableDeclarationStatement),
+        visibility(_visibility),
         isMutable(_isMutable),
         name(std::move(_name)),
-        visibility(_visibility),
         value(_value),
         type(_type) {}
 

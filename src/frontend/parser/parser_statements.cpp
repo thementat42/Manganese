@@ -94,7 +94,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
                      name, duplicate->line, duplicate->column);
         } else {
             fields.push_back(ast::AggregateField{
-                .name = fieldName, .type = type, .isMutable = isMutable, .line = t.getLine(), .column = t.getColumn()});
+                .name = fieldName, .type = type, .line = t.getLine(), .column = t.getColumn(), .isMutable = isMutable});
         }
     }
 
@@ -313,11 +313,11 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         } else {
             params.push_back(ast::FunctionParameter{.name = paramName,
                                                     .type = param_type,
-                                                    .isMutable = isMutable,
-                                                    .isVariadic = isVariadic,
                                                     .defaultValue = defaultValue,
                                                     .line = t.getLine(),
-                                                    .column = t.getColumn()});
+                                                    .column = t.getColumn(),
+                                                    .isMutable = isMutable,
+                                                    .isVariadic = isVariadic});
         }
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
