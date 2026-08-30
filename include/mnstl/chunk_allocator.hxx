@@ -1,3 +1,4 @@
+#include <type_traits>
 #ifndef MNSTL_CHUNK_ALLOCATOR
 #define MNSTL_CHUNK_ALLOCATOR 1
 
@@ -17,9 +18,37 @@ class chunk_allocator {
         std::unique_ptr<std::byte[]> data;
         std::size_t used, capacity;
     };
-    constexpr static inline std::size_t _max(std::size_t a, std::size_t b) noexcept { return a > b ? a : b; }
+    struct destructor {
+        void (*destructor)(void*);
+        void* object;
+    };
 
     std::vector<chunk> _chunks;
+    std::vector<destructor> _destructors;
+
+   public:
+    chunk_allocator() { add_chunk(); }
+    ~chunk_allocator() noexcept {
+        // Destroy in reverse order
+        for (auto it = _destructors.rbegin(); it != _destructors.rend(); ++it) { it->destructor(it->object); }
+    }
+
+    template <class T, class... Args>
+        requires(std::is_constructible_v<T, Args...>)
+    T* emplace(Args&&... args) {
+        void* mem = allocate(sizeof(T), alignof(T));
+        T* ptr = new (mem) T(std::forward<Args>(args)...);
+
+        if constexpr (!std::is_trivially_destructible_v<T>) {
+            _destructors.push_back(
+                destructor{.destructor = [](void* obj) { static_cast<T*>(obj)->~T(); }, .object = ptr});
+        }
+        return ptr;
+    }
+
+   private:
+    constexpr static inline std::size_t _max(std::size_t a, std::size_t b) noexcept { return a > b ? a : b; }
+
     constexpr static std::uintptr_t align_up(std::uintptr_t ptr, std::uintptr_t alignment) noexcept {
         std::uintptr_t mask = alignment - 1;
         return (ptr + mask) & ~mask;
@@ -51,17 +80,6 @@ class chunk_allocator {
         c.used += size;
 
         return ptr;
-    }
-
-   public:
-    chunk_allocator() { add_chunk(); }
-    ~chunk_allocator() noexcept = default;
-
-    template <class T, class... Args>
-        requires(std::is_constructible_v<T, Args...>)
-    T* emplace(Args&&... args) {
-        void* mem = allocate(sizeof(T), alignof(T));
-        return new (mem) T(std::forward<Args>(args)...);
     }
 };
 
