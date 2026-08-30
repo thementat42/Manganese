@@ -15,18 +15,17 @@ namespace Manganese::io {
 class FileReader : public Reader {
    private:
     std::size_t _position, _line, _column;
-    std::string _source;
     std::FILE* _filePtr;
     std::size_t _bufferSize;
     std::size_t _bufferCapacity;
-    constexpr static inline int DEFAULT_BUFFER_CAPCITY = 64 * 1024;
+    constexpr static inline int DEFAULT_BUFFER_CAPACITY = 64 * 1024;
     std::unique_ptr<char[]> _buffer;
 
     void refillBuffer();
 
    public:
     FileReader() = default;
-    explicit FileReader(const std::string& filename, std::size_t bufferCapacity = DEFAULT_BUFFER_CAPCITY);
+    explicit FileReader(const std::string& filename, std::size_t bufferCapacity = DEFAULT_BUFFER_CAPACITY);
     ~FileReader() noexcept override {
         if (_filePtr != nullptr) { std::fclose(_filePtr); }
     }
@@ -37,11 +36,11 @@ class FileReader : public Reader {
     void setPosition(std::size_t newPosition) noexcept override {
         while (_position < newPosition && !done()) { DISCARD(consumeChar()); }
     }
-    constexpr std::size_t getPosition() const noexcept override { return _position; }
-    constexpr std::size_t getLine() const noexcept override { return _line; }
-    constexpr std::size_t getColumn() const noexcept override { return _column; }
+    std::size_t getPosition() const noexcept override { return _position; }
+    std::size_t getLine() const noexcept override { return _line; }
+    std::size_t getColumn() const noexcept override { return _column; }
 
-    constexpr bool done() const noexcept override { return (_position >= _bufferSize) && std::feof(_filePtr); }
+    bool done() const noexcept override { return (_position >= _bufferSize) && std::feof(_filePtr); }
 };
 }  // namespace Manganese::io
 #endif  // MANGANESE_INCLUDE_IO_FILEREADER_HPP
