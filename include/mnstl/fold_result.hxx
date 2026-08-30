@@ -43,6 +43,7 @@ class fold_result_t {
     fold_result_t& operator=(const std::string& string) noexcept {
         return *this = fold_result_t(std::string_view{string});
     }
+    fold_result_t& operator=(std::string&&) = delete;  // can't have a view into a temporary
     fold_result_t& operator=(std::string_view string_view) noexcept { return *this = fold_result_t(string_view); }
 
     fold_result_t(const fold_result_t&) noexcept = default;
