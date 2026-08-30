@@ -27,7 +27,7 @@ constexpr bool safe_less(T t, U u) noexcept {
     } else if constexpr (SignedIntegral<T>) {
         return t < 0 || mnstl_make_unsigned_t<T>(t) < u;
     } else {
-        return u < 0 || t < mnstl_make_unsigned_t<U>(u);
+        return u >= 0 || t < mnstl_make_unsigned_t<U>(u);
     }
 }
 template <Integral T, Integral U>
