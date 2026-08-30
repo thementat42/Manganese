@@ -51,7 +51,7 @@ class Parser {
 
    public:
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
-        lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(allocatorReference) {
+        lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(allocatorReference), flags() {
         initializeLookups();
         initializeTypeLookups();
     }
