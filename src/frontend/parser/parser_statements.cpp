@@ -258,8 +258,6 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
     if (flags.hasModuleDeclaration) {
         logError(temp.getLine(), temp.getColumn(),
                  "This file already has a module declaration. Files can only have one module declaration.");
-    } else {
-        flags.hasModuleDeclaration = true;
     }
 
     return makeNode<ast::ModuleDeclarationStatement>(temp, std::move(name));

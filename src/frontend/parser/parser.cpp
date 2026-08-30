@@ -15,6 +15,7 @@ ParsedFile Parser::parse() {
     // Parse the header (module declaration and imports)
     if (peekTokenType() == TokenType::Module) {
         fileModule = static_cast<ast::ModuleDeclarationStatement*>(parseModuleDeclarationStatement());
+        flags.hasModuleDeclaration = true;
     }
     while (peekTokenType() == TokenType::Import) {
         imports.push_back(static_cast<ast::ImportStatement*>(parseImportStatement()));
@@ -26,8 +27,9 @@ ParsedFile Parser::parse() {
         ast::Statement* stmt = parseStatement();
         if (stmt->kind == ast::StatementKind::ImportStatement) {
             imports.push_back(static_cast<ast::ImportStatement*>(stmt));
-        } else if (stmt->kind == ast::StatementKind::ModuleDeclarationStatement) {
+        } else if (stmt->kind == ast::StatementKind::ModuleDeclarationStatement && !flags.hasModuleDeclaration) {
             fileModule = static_cast<ast::ModuleDeclarationStatement*>(stmt);
+            flags.hasModuleDeclaration = true;
         } else {
             program.push_back(stmt);
         }
