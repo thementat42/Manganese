@@ -4,7 +4,6 @@
 #include <core.hpp>
 #include <cstddef>
 #include <io/reader.hpp>
-#include <string>
 #include <string_view>
 
 namespace Manganese::io {
@@ -16,7 +15,7 @@ class StringReader : public Reader {
 
    public:
     StringReader() = default;
-    explicit StringReader(const std::string& source) : _position(0), _line(1), _column(1), _source(source) {}
+    explicit StringReader(std::string_view source) : _position(0), _line(1), _column(1), _source(source) {}
     ~StringReader() noexcept override = default;
 
     void setPosition(std::size_t newPosition) noexcept override {
