@@ -8,6 +8,8 @@
 #include <utils/type_names.hpp>
 #include <vector>
 
+#include "frontend/parser/operators.hpp"
+
 namespace Manganese::parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
@@ -39,31 +41,21 @@ ast::Type* Parser::parseType(Precedence precedence) {
 // Specific type parsing methods
 
 ast::Type* Parser::parseAggregateType() {
-    const Token startToken = consumeToken();  // Consume the 'aggregate' token
+    const Token startToken = consumeToken(); // Consume 'aggregate'
     if (peekTokenType() == TokenType::Identifier) {
         logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
                             "Aggregate names are ignored in aggregate type declarations");
-        DISCARD(consumeToken());  // Skip the identifier token
+        DISCARD(consumeToken());
     }
 
     expectToken(TokenType::LeftBrace, "Expected a '{' to start aggregate type declaration");
-    std::vector<ast::Type*> fieldTypes;
 
-    while (peekTokenType() != TokenType::RightBrace) {
-        if (peekTokenType() == TokenType::Identifier) {
-            logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
-                                "Variable names are ignored in aggregate type declarations");
-            DISCARD(consumeToken());  // Skip the token
-            expectToken(TokenType::Colon, "Expected ':' after field name in aggregate type declaration");
-            continue;
-        }
-        fieldTypes.push_back(parseType(Precedence::Default));  // Parse the type of the field
-        if (peekTokenType() != TokenType::RightBrace) {
-            expectToken(TokenType::Comma,
-                        "Expected ',' to separate fields in aggregate type declaration or '}' to end the declaration");
-        }
-    }
-    expectToken(TokenType::RightBrace, "Expected '}' to end aggregate type declaration");
+    auto fieldTypes = parseCommaSeparatedList<ast::Type*>(
+        TokenType::RightBrace,
+        "Expected ',' to separate fields in aggregate type declaration or '}' to end the declaration",
+        [this]() { return parseAggregateTypeField(); }
+    );
+
     return makeNode<ast::AggregateType>(startToken, std::move(fieldTypes));
 }
 
@@ -82,55 +74,19 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence) {
 }
 
 ast::Type* Parser::parseFunctionType() {
-    const Token startToken = consumeToken();  // consume the 'func' token
+    const Token startToken = consumeToken(); // Consume 'func'
+    expectToken(TokenType::LeftParen, "Expected '(' after 'func' in a function type");
 
-    expectToken(TokenType::LeftParen, "Expected '( after 'func' in a function type");
-
-    std::vector<ast::FunctionParameterType> parameterTypes;
     bool seenVariadic = false;
-
-    while (!done()) {
-        if (peekTokenType() == TokenType::RightParen) { break; }
-
-        bool isMutable = false;
-        if (peekTokenType() == TokenType::Mut) {
-            isMutable = true;
-            DISCARD(consumeToken());
-        }
-
-        ast::Type* parameterType = parseType(Precedence::Default);
-
-        bool isVariadic = false;
-        if (peekTokenType() == TokenType::Ellipsis) {
-            DISCARD(consumeToken());
-            isVariadic = true;
-
-            if (seenVariadic) {
-                logError(peekToken().getLine(), peekToken().getColumn(),
-                         "A function type cannot have more than one variadic parameter");
-            }
-
-            seenVariadic = true;
-        }
-
-        parameterTypes.emplace_back(
-            ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType});
-
-        if (isVariadic && peekTokenType() != TokenType::RightParen) {
-            logError(peekToken().getLine(), peekToken().getColumn(), "A variadic parameter must be the last parameter");
-            // Let normal comma handling recover
-        }
-
-        if (peekTokenType() != TokenType::RightParen) {
-            expectToken(TokenType::Comma, "Expected ',' to separate parameter types or ')' to end parameter list");
-        }
-    }
-
-    expectToken(TokenType::RightParen, "Expected ')' to end parameter type list");
+    auto parameterTypes = parseCommaSeparatedList<ast::FunctionParameterType>(
+        TokenType::RightParen,
+        "Expected ',' to separate parameter types or ')' to end parameter list",
+        [this, &seenVariadic]() { return parseFunctionTypeParameter(seenVariadic); }
+    );
 
     ast::Type* returnType = nullptr;
     if (peekTokenType() == TokenType::Arrow) {
-        DISCARD(consumeToken());  // Consume the '->' token
+        DISCARD(consumeToken());
         returnType = parseType(Precedence::Default);
     }
 
@@ -140,18 +96,9 @@ ast::Type* Parser::parseFunctionType() {
 ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence) {
     const Token startToken = consumeToken();
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
-    std::vector<ast::Type*> typeParameters;
-    while (!done()) {
-        if (peekTokenType() == TokenType::RightSquare) {
-            break;  // Done with type parameters
-        }
-        auto nextPrecedence = static_cast<std::underlying_type_t<Precedence>>(Precedence::Assignment) + 1;
-        typeParameters.push_back(parseType(static_cast<Precedence>(nextPrecedence)));
-        if (peekTokenType() != TokenType::RightSquare) {
-            expectToken(TokenType::Comma, "Expected ',' to separate generic types");
-        }
-    }
-    expectToken(TokenType::RightSquare, "Expected ']' to end generic type parameters");
+    auto typeParameters
+        = parseCommaSeparatedList<ast::Type*>(TokenType::RightSquare, "Expected ',' to separate generic types",
+                                              [this]() { return parseType(precedenceAbove(Precedence::Assignment)); });
     return makeNode<ast::GenericInstantiationType>(startToken, left, std::move(typeParameters));
 }
 
@@ -235,6 +182,50 @@ ast::Type* Parser::parseTypeofType() {
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
     return makeNode<ast::TypeofType>(startToken, innerExpression);
+}
+
+// Helpers
+
+ast::Type* Parser::parseAggregateTypeField() {
+    if (peekTokenType() == TokenType::Identifier) {
+        logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
+                            "Variable names are ignored in aggregate type declarations");
+        DISCARD(consumeToken());
+        expectToken(TokenType::Colon, "Expected ':' after field name in aggregate type declaration");
+    }
+    return parseType(Precedence::Default);
+}
+
+ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic) {
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        isMutable = true;
+        DISCARD(consumeToken());
+    }
+
+    ast::Type* parameterType = parseType(Precedence::Default);
+
+    bool isVariadic = false;
+    if (peekTokenType() == TokenType::Ellipsis) {
+        DISCARD(consumeToken());
+        isVariadic = true;
+
+        if (seenVariadic) {
+            logError(peekToken().getLine(), peekToken().getColumn(),
+                     "A function type cannot have more than one variadic parameter");
+        }
+        seenVariadic = true;
+    }
+
+    if (isVariadic && peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::Comma) {
+        logError(peekToken().getLine(), peekToken().getColumn(), "A variadic parameter must be the last parameter");
+    }
+
+    return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
+}
+
+std::string Parser::parseGenericTypeParameter() {
+    return expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme();
 }
 
 }  // namespace Manganese::parser

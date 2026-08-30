@@ -126,6 +126,8 @@ class Parser {
     ast::Statement* parseVisibilityAffectedStatement();
     ast::Statement* parseWhileLoopStatement();
 
+    ast::EnumValue parseEnumMember();
+
     // Type Parsing
 
     ast::Type* parseType(Precedence precedence);
@@ -139,8 +141,25 @@ class Parser {
     ast::Type* parseSymbolType();
     ast::Type* parseTypeofType();
 
+    ast::Type* parseAggregateTypeField();
+    ast::FunctionParameterType parseFunctionTypeParameter(bool& seenVariadic);
+    std::string parseGenericTypeParameter();
+
     // ~ Helpers
     ast::Block parseBlock(const std::string& blockName);
+
+    template <class T, class ParseFunction>
+    std::vector<T> parseCommaSeparatedList(TokenType closeToken, const char* missingCommaMessage,
+                                           ParseFunction&& parseFunction) {
+        std::vector<T> items;
+        while (!done() && peekTokenType() != closeToken) {
+            items.push_back(parseFunction());
+            if (peekTokenType() != closeToken) { expectToken(TokenType::Comma, missingCommaMessage); }
+        }
+        expectToken(closeToken);
+        return items;
+    }
+
     template <class T, class... Args>
         requires(std::is_convertible_v<T*, ast::ASTNode*> && std::is_constructible_v<T, Args...>)
     T* makeNode(const Token& startToken, Args&&... args) {

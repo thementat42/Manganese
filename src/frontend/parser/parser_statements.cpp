@@ -48,22 +48,10 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
     std::string name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
 
     if (peekTokenType() == TokenType::LeftSquare) {
-        DISCARD(consumeToken());
-        while (!done() && peekTokenType() != TokenType::RightSquare) {
-            std::string genericName = (expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme());
-
-            if (std::ranges::find(genericTypes, genericName) != genericTypes.end()) {
-                logError(peekToken().getLine(), peekToken().getColumn(),
-                         "Generic type '{}' in aggregate '{}' was already declared", genericName, name);
-            } else {
-                genericTypes.push_back(genericName);
-            }
-            if (peekTokenType() != TokenType::RightSquare) {
-                expectToken(TokenType::Comma,
-                            "Expected a ',' to separate generic types, or a ']' to close the generic type list");
-            }
-        }
-        expectToken(TokenType::RightSquare, "Expected ']' to close generic type list");
+        DISCARD(consumeToken());  // Consume '['
+        genericTypes = parseCommaSeparatedList<std::string>(
+            TokenType::RightSquare, "Expected a ',' to separate generic types, or a ']' to close the generic type list",
+            [this]() { return expectToken(TokenType::Identifier, "Expected a generic type name").getLexeme(); });
     }
     expectToken(TokenType::LeftBrace, "Expected a '{'");
 
@@ -140,16 +128,12 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
 }
 
 ast::Statement* Parser::parseEnumDeclarationStatement() {
-    const Token startToken = consumeToken();  // consume 'enum'
+    const Token startToken = consumeToken();  // Consume 'enum'
     std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
-
     ast::Type* baseType = nullptr;
-    std::vector<ast::EnumValue> values;
 
     if (peekTokenType() == TokenType::Colon) {
-        DISCARD(consumeToken());  // consume ':'
-
-        // Parse any valid type expression (built-ins, aliases, qualified types, etc.)
+        DISCARD(consumeToken());
         baseType = parseType(Precedence::Default);
         if (!baseType) {
             logError(peekToken().getLine(), peekToken().getColumn(),
@@ -158,33 +142,9 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     }
 
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
-    while (!done() && peekTokenType() != TokenType::RightBrace) {
-        std::string valueName = expectToken(TokenType::Identifier, "Expected enum value name").getLexeme();
-        ast::Expression* valueExpression = nullptr;
 
-        if (peekTokenType() == TokenType::Assignment) {
-            DISCARD(consumeToken());
-            valueExpression = parseExpression(Precedence::Default);
-        }
-
-        if (auto duplicate = std::ranges::find(values, valueName, &ast::EnumValue::name); duplicate != values.end()) {
-            logError(peekToken().getLine(), peekToken().getColumn(),
-                     "Duplicate enum value '{}' in enum '{}' (previously declared at line {}, column {})", valueName,
-                     name, duplicate->line, duplicate->column);
-        } else {
-            values.push_back(ast::EnumValue{.name = std::move(valueName),
-                                            .value = valueExpression,
-                                            .line = peekToken().getLine(),
-                                            .column = peekToken().getColumn()});
-        }
-
-        if (peekTokenType() != TokenType::RightBrace) {
-            expectToken(TokenType::Comma, "Expected ',' to separate enum values");
-        }
-    }
-    expectToken(TokenType::RightBrace, "Expected '}' to end the enum body");
-
-    if (values.empty()) { logError(startToken.getLine(), startToken.getColumn(), "Enum '{}' has no values", name); }
+    auto values = parseCommaSeparatedList<ast::EnumValue>(TokenType::RightBrace, "Expected ',' between enum members",
+                                                          [this]() { return parseEnumMember(); });
 
     return makeNode<ast::EnumDeclarationStatement>(startToken, std::move(name), baseType, std::move(values));
 }
@@ -235,31 +195,13 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     bool hasVariadicParameter = false;
 
     if (peekTokenType() == TokenType::LeftSquare) {
-        // Generics
-        DISCARD(consumeToken());
-        while (!done()) {
-            if (peekTokenType() == TokenType::RightSquare) {
-                break;  // End of generics
-            }
-            if (peekTokenType() != TokenType::Identifier) {
-                logError(peekToken().getLine(), peekToken().getColumn(), "Expected a generic type name");
-                DISCARD(consumeToken());  // Skip the unexpected token to avoid infinite loop
-            }
-            Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
-            std::string genericName = genericToken.getLexeme();
-
-            if (std::ranges::find(genericTypes, genericName) != genericTypes.end()) {
-                logError(genericToken.getLine(), genericToken.getColumn(),
-                         "Duplicate generic type '{}' in function '{}'", genericName, name);
-            } else {
-                genericTypes.push_back(std::move(genericName));
-            }
-            if (peekTokenType() != TokenType::RightSquare) {
-                expectToken(TokenType::Comma,
-                            "Expected a ',' to separate generic types, or a ']' to close the generic type list");
-            }
+        if (peekTokenType() == TokenType::LeftSquare) {
+            DISCARD(consumeToken());  // Consume '['
+            genericTypes = parseCommaSeparatedList<std::string>(
+                TokenType::RightSquare,
+                "Expected a ',' to separate generic types, or a ']' to close the generic type list",
+                [this]() { return parseGenericTypeParameter(); });
         }
-        expectToken(TokenType::RightSquare, "Expected ']' to close generic type list");
     }
     expectToken(TokenType::LeftParen);
 
@@ -332,6 +274,8 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     return makeNode<ast::FunctionDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
                                                        std::move(params), returnType, parseBlock("function body"));
 }
+
+
 
 ast::Statement* Parser::parseIfStatement() {
     const Token startToken = consumeToken();
@@ -565,6 +509,24 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
 
     return makeNode<ast::VariableDeclarationStatement>(startToken, isMutable, std::move(name), visibility, value,
                                                        explicitType);
+}
+
+// Helpers
+
+ast::EnumValue Parser::parseEnumMember() {
+    auto valueToken = expectToken(TokenType::Identifier, "Expected enum value name");
+    std::string valueName = valueToken.getLexeme();
+    ast::Expression* valueExpression = nullptr;
+
+    if (peekTokenType() == TokenType::Assignment) {
+        DISCARD(consumeToken());
+        valueExpression = parseExpression(Precedence::Default);
+    }
+
+    return ast::EnumValue{.name = std::move(valueName),
+                          .value = valueExpression,
+                          .line = valueToken.getLine(),
+                          .column = valueToken.getColumn()};
 }
 
 }  // namespace Manganese::parser

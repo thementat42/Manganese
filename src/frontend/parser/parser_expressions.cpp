@@ -9,8 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/parser/operators.hpp"
-
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`
@@ -120,15 +118,9 @@ ast::Expression* Parser::parseAggregateLiteralExpression() {
 
     expectToken(TokenType::LeftBrace, "Expected '{' to start an aggregate literal");
 
-    std::vector<ast::Expression*> expressions;
-    while (peekTokenType() != TokenType::RightBrace) {
-        expressions.push_back(parseExpression(Precedence::Default));
-        if (peekTokenType() != TokenType::RightBrace) {
-            expectToken(TokenType::Comma,
-                        "Expected a ',' to separate aggregate literal fields, or a '}' to close the declaration");
-        }
-    }
-    expectToken(TokenType::RightBrace, "Expected a '}' to end an aggreagate literal");
+    auto expressions = parseCommaSeparatedList<ast::Expression*>(
+        TokenType::RightBrace, "Expected a ',' to separate aggregate literal fields, or a '}' to close the declaration",
+        [this]() { return parseExpression(Precedence::Default); });
     return makeNode<ast::AggregateLiteralExpression>(startToken, std::move(expressions));
 }
 
@@ -157,19 +149,9 @@ ast::Expression* Parser::parseAlignofExpression() {
 
 ast::Expression* Parser::parseArrayInstantiationExpression() {
     const Token startToken = consumeToken();  // Consume the left square bracket
-    std::vector<ast::Expression*> elements;
-    while (!done()) {
-        if (peekTokenType() == lexer::TokenType::RightSquare) {
-            break;  // Done instantiation
-        }
-        constexpr auto precedence = precedenceAbove(Precedence::Assignment);
-        elements.push_back(parseExpression(precedence));
-        if (peekTokenType() != lexer::TokenType::RightSquare) {
-            expectToken(lexer::TokenType::Comma, "Expected ',' to separate array elements");
-        }
-    }
-    expectToken(lexer::TokenType::RightSquare, "Expected ']' to end array instantiation");
-
+    auto elements
+        = parseCommaSeparatedList<ast::Expression*>(TokenType::RightSquare, "Expected ',' between array elements",
+                                                    [this]() { return parseExpression(Precedence::Default); });
     return makeNode<ast::ArrayLiteralExpression>(startToken, std::move(elements));
 }
 
@@ -191,35 +173,20 @@ ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence
 
 ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Precedence) {
     const Token startToken = consumeToken();
-    std::vector<ast::Expression*> arguments;
-
-    while (!done()) {
-        if (peekTokenType() == lexer::TokenType::RightParen) {
-            break;  // Done with arguments
-        }
-        arguments.push_back(parseExpression(Precedence::Assignment));
-        if (peekTokenType() != lexer::TokenType::RightParen && peekTokenType() != lexer::TokenType::EndOfFile) {
-            expectToken(lexer::TokenType::Comma, "Expected ',' to separate function arguments");
-        }
-    }
-    expectToken(lexer::TokenType::RightParen, "Expected ')' to end function call");
+    auto arguments
+        = parseCommaSeparatedList<ast::Expression*>(TokenType::RightParen, "Expected ',' between function arguments",
+                                                    [this]() { return parseExpression(Precedence::Assignment); });
     return makeNode<ast::FunctionCallExpression>(startToken, left, std::move(arguments));
 }
 
 ast::Expression* Parser::parseGenericInstantiationExpression(ast::Expression* left, Precedence) {
     const Token startToken = consumeToken();  // Consume the '@' token
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
-    std::vector<ast::Type*> typeParameters;
-    while (!done()) {
-        if (peekTokenType() == lexer::TokenType::RightSquare) {
-            break;  // Done with type parameters
-        }
-        typeParameters.push_back(parseType(Precedence::Default));
-        if (peekTokenType() != lexer::TokenType::RightSquare) {
-            expectToken(lexer::TokenType::Comma, "Expected ',' to separate generic types");
-        }
-    }
-    expectToken(lexer::TokenType::RightSquare, "Expected ']' to end generic type parameters");
+    auto typeParameters = parseCommaSeparatedList<ast::Type*>(
+        lexer::TokenType::RightSquare,
+        "Expected ',' to separate generic types",
+        [this]() { return parseType(Precedence::Default); }
+    );
     return makeNode<ast::GenericInstantiationExpression>(startToken, left, std::move(typeParameters));
 }
 
@@ -244,10 +211,9 @@ ast::Expression* Parser::parseParenthesizedExpression() {
     return expr;
 }
 
-ast::Expression* Parser::parsePostfixExpression(ast::Expression* left, Precedence precedence) {
+ast::Expression* Parser::parsePostfixExpression(ast::Expression* left, Precedence) {
     const Token startToken = consumeToken();
     TokenType op = startToken.getType();
-    DISCARD(precedence);  // Avoid unused variable warning
     return makeNode<ast::PostfixExpression>(startToken, left, op);
 }
 
