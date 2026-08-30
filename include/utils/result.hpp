@@ -7,7 +7,7 @@ namespace Manganese {
  * A way to consistently indicate success or failure on a return
  * instead of a per-function convention
  */
-enum class Result : bool {
+enum class [[nodiscard]] Result : bool {
     Failure,
     Success
 };
