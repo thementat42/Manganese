@@ -45,44 +45,44 @@ class Token {
     }
     ~Token() noexcept = default;
 
-    constexpr bool isKeyword() const noexcept {
+    bool isKeyword() const noexcept {
         return BETWEEN(_type, TokenType::_keywordStart, TokenType::_keywordEnd);
     }
-    constexpr bool isOperator() const noexcept {
+    bool isOperator() const noexcept {
         return BETWEEN(_type, TokenType::_operatorStart, TokenType::_operatorEnd);
     }
 
-    constexpr bool isInvalid() const noexcept { return _isInvalid; }
-    constexpr TokenType getType() const noexcept { return _type; }
-    constexpr std::string getLexeme() const noexcept { return _lexeme; }
-    constexpr std::size_t getLine() const noexcept { return _line; }
-    constexpr std::size_t getColumn() const noexcept { return _column; }
+    bool isInvalid() const noexcept { return _isInvalid; }
+    TokenType getType() const noexcept { return _type; }
+    std::string getLexeme() const noexcept { return _lexeme; }
+    std::size_t getLine() const noexcept { return _line; }
+    std::size_t getColumn() const noexcept { return _column; }
 
-    constexpr bool isPrefixOperator() const noexcept {
+    bool isPrefixOperator() const noexcept {
         using enum TokenType;
         return mnstl::enum_matches<TokenType>(_type, Inc, Dec, BitAnd, Mul, AddressOf, Dereference);
     }
-    constexpr bool isLiteral() const noexcept {
+    bool isLiteral() const noexcept {
         using enum TokenType;
         return mnstl::enum_matches<TokenType>(_type, IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True,
                                               False);
     }
-    constexpr bool isBracket() const noexcept {
+    bool isBracket() const noexcept {
         using enum TokenType;
         return mnstl::enum_matches<TokenType>(_type, LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare,
                                               RightSquare);
     }
-    constexpr bool isPrimitiveType() const noexcept {
+    bool isPrimitiveType() const noexcept {
         using enum TokenType;
         return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32,
                                               Float64, Int128, UInt128, Char, Bool, String);
     }
-    constexpr bool isInteger() const noexcept {
+    bool isInteger() const noexcept {
         using enum TokenType;
         return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128,
                                               UInt128);
     }
-    constexpr bool hasUnaryCounterpart() const noexcept {
+    bool hasUnaryCounterpart() const noexcept {
         using enum TokenType;
         return mnstl::enum_matches<TokenType>(_type, Plus,  // + can be addition or unary plus
                                               Minus,  // - can be subtraction or unary minus
