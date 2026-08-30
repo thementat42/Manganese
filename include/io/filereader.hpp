@@ -14,7 +14,7 @@ namespace Manganese::io {
  */
 class FileReader : public Reader {
    private:
-    std::size_t _position, _line, _column;
+    std::size_t _position = 0, _line = 1, _column = 1;
     std::FILE* _filePtr;
     std::size_t _bufferSize;
     std::size_t _bufferCapacity;
@@ -36,11 +36,11 @@ class FileReader : public Reader {
     void setPosition(std::size_t newPosition) noexcept override {
         while (_position < newPosition && !done()) { DISCARD(consumeChar()); }
     }
-    std::size_t getPosition() const noexcept override { return _position; }
-    std::size_t getLine() const noexcept override { return _line; }
-    std::size_t getColumn() const noexcept override { return _column; }
+    [[nodiscard]] std::size_t getPosition() const noexcept override { return _position; }
+    [[nodiscard]] std::size_t getLine() const noexcept override { return _line; }
+    [[nodiscard]] std::size_t getColumn() const noexcept override { return _column; }
 
-    bool done() const noexcept override { return (_position >= _bufferSize) && std::feof(_filePtr); }
+    [[nodiscard]] bool done() const noexcept override { return (_position >= _bufferSize) && std::feof(_filePtr); }
 };
 }  // namespace Manganese::io
 #endif  // MANGANESE_INCLUDE_IO_FILEREADER_HPP
