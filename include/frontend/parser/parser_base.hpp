@@ -127,6 +127,17 @@ class Parser {
     ast::Statement* parseWhileLoopStatement();
 
     ast::EnumValue parseEnumMember();
+    std::vector<std::string> parseGenericsList(std::string_view context_name);
+
+    std::optional<ast::AggregateField> parseAggregateField(const std::string& aggregateName,
+                                                           const std::vector<ast::AggregateField>& existingFields);
+
+    std::optional<ast::FunctionParameter> parseFunctionParameter(
+        const std::string& functionName, const std::vector<ast::FunctionParameter>& existingParams,
+        bool& hasDefaultParameter, bool& hasVariadicParameter);
+
+    ast::CaseClause parseCaseClause();
+    ast::Block parseDefaultClause();
 
     // Type Parsing
 
@@ -143,7 +154,7 @@ class Parser {
 
     ast::Type* parseAggregateTypeField();
     ast::FunctionParameterType parseFunctionTypeParameter(bool& seenVariadic);
-    std::string parseGenericTypeParameter(std::vector<std::string>& existingGenerics, const std::string& contextName);
+    std::string parseGenericTypeParameter(std::vector<std::string>& existingGenerics, std::string_view contextName);
 
     // ~ Helpers
     ast::Block parseBlock(const std::string& blockName);

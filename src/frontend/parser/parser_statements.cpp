@@ -43,52 +43,19 @@ ast::Statement* Parser::parseStatement() {
 
 ast::Statement* Parser::parseAggregateDeclarationStatement() {
     const Token startToken = consumeToken();
-    std::vector<std::string> genericTypes;
-    std::vector<ast::AggregateField> fields;
     std::string name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
 
-    if (peekTokenType() == TokenType::LeftSquare) {
-        DISCARD(consumeToken());  // Consume '['
-        genericTypes = parseCommaSeparatedList<std::string>(
-            TokenType::RightSquare, "Expected a ',' to separate generic types, or a ']' to close the generic type list",
-            [this, &genericTypes, &name]() { return parseGenericTypeParameter(genericTypes, name); });
-    }
+    std::vector<std::string> genericTypes = parseGenericsList(name);
+
     expectToken(TokenType::LeftBrace, "Expected a '{'");
 
-    while (!done()) {
-        if (peekTokenType() == TokenType::RightBrace) {
-            break;  // Done declaration
-        }
-        if (peekTokenType() != TokenType::Identifier) {
-            logError(peekToken().getLine(), peekToken().getColumn(),
-                     "Unexpected token '{}' in aggregate declaration. Expected field name.", peekToken().getLexeme());
-            DISCARD(consumeToken());  // Skip the unexpected token to avoid infinite loop
-        }
-        Token t = consumeToken();
-        std::string fieldName = t.getLexeme();
-        expectToken(TokenType::Colon, "Expected a ':' to declare an aggregate field type.");
-        bool isMutable = false;
-        if (peekTokenType() == TokenType::Mut) {
-            isMutable = true;
-            DISCARD(consumeToken());
-        }
-        ast::Type* type = parseType(Precedence::Default);
-        expectToken(TokenType::Semicolon, "Expected a ';'");
-
-        if (auto duplicate = std::ranges::find(fields, fieldName, &ast::AggregateField::name);
-            duplicate != fields.end()) {
-            logError(t.getLine(), t.getColumn(),
-                     "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})", fieldName,
-                     name, duplicate->line, duplicate->column);
-        } else {
-            fields.push_back(ast::AggregateField{
-                .name = fieldName, .type = type, .line = t.getLine(), .column = t.getColumn(), .isMutable = isMutable});
-        }
+    std::vector<ast::AggregateField> fields;
+    while (!done() && peekTokenType() != TokenType::RightBrace) {
+        if (auto field = parseAggregateField(name, fields)) { fields.push_back(std::move(*field)); }
     }
 
     expectToken(TokenType::RightBrace);
 
-    // Move since AggregateField contains a unique_ptr which is not copyable
     return makeNode<ast::AggregateDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
                                                         std::move(fields));
 }
@@ -147,11 +114,10 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     while (!done() && peekTokenType() != TokenType::RightBrace) {
         ast::EnumValue member = parseEnumMember();
 
-        if (auto duplicate = std::ranges::find(values, member.name, &ast::EnumValue::name);
-            duplicate != values.end()) {
+        if (auto duplicate = std::ranges::find(values, member.name, &ast::EnumValue::name); duplicate != values.end()) {
             logError(member.line, member.column,
-                     "Duplicate member '{}' in enum '{}' (previously declared at line {}, column {})",
-                     member.name, name, duplicate->line, duplicate->column);
+                     "Duplicate member '{}' in enum '{}' (previously declared at line {}, column {})", member.name,
+                     name, duplicate->line, duplicate->column);
         } else {
             values.push_back(std::move(member));
         }
@@ -204,90 +170,34 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     // TODO: Handle function attributes
     const Token startToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
+
+    std::vector<std::string> genericTypes = parseGenericsList(name);
+
+    expectToken(TokenType::LeftParen);
+
     std::vector<ast::FunctionParameter> params;
-    std::vector<std::string> genericTypes;
-    ast::Type* returnType = nullptr;
-    ast::Block body;
     bool hasDefaultParameter = false;
     bool hasVariadicParameter = false;
 
-    if (peekTokenType() == TokenType::LeftSquare) {
-        if (peekTokenType() == TokenType::LeftSquare) {
-            DISCARD(consumeToken());  // Consume '['
-            genericTypes = parseCommaSeparatedList<std::string>(
-                TokenType::RightSquare,
-                "Expected a ',' to separate generic types, or a ']' to close the generic type list",
-                [this, &genericTypes, &name]() { return parseGenericTypeParameter(genericTypes, name); });
-        }
-    }
-    expectToken(TokenType::LeftParen);
-
-    while (!done()) {
-        if (peekTokenType() == TokenType::RightParen) { break; }
-        bool isMutable = false;
-        bool isVariadic = false;
-        ast::Expression* defaultValue = nullptr;
-
-        Token t = expectToken(TokenType::Identifier, "Expected a variable name");
-        std::string paramName = t.getLexeme();
-        if (peekTokenType() == TokenType::Ellipsis) {
-            DISCARD(consumeToken());
-            if (hasVariadicParameter) {
-                logError(t.getLine(), t.getColumn(), "Only one variadic parameter is allowed in function '{}'", name);
-            } else {
-                isVariadic = true;
-                hasVariadicParameter = true;
-            }
-        } else if (hasVariadicParameter) {
-            logError(t.getLine(), t.getColumn(), "Parameter '{}' cannot follow a variadic parameter", paramName);
+    while (!done() && peekTokenType() != TokenType::RightParen) {
+        if (auto param = parseFunctionParameter(name, params, hasDefaultParameter, hasVariadicParameter)) {
+            params.push_back(std::move(*param));
         }
 
-        expectToken(TokenType::Colon);
-        if (peekTokenType() == TokenType::Mut) {
-            DISCARD(consumeToken());
-            isMutable = true;
-        }
-        ast::Type* param_type = parseType(Precedence::Default);
-
-        if (peekTokenType() == TokenType::Assignment) {
-            DISCARD(consumeToken());
-
-            hasDefaultParameter = true;
-            defaultValue = parseExpression(Precedence::Default);
-
-            if (isVariadic) {
-                logError(t.getLine(), t.getColumn(), "Variadic parameter '{}' cannot have a default value", paramName);
-            }
-
-        } else if (hasDefaultParameter) {
-            logError(t.getLine(), t.getColumn(), "Non-default parameter '{}' cannot follow a default parameter",
-                     paramName);
-        }
-
-        if (auto duplicate = std::ranges::find(params, paramName, &ast::FunctionParameter::name);
-            duplicate != params.end()) {
-            logError(t.getLine(), t.getColumn(),
-                     "Duplicate parameter '{}' in function '{}' (previously declared at line {}, column {})", paramName,
-                     name, duplicate->line, duplicate->column);
-        } else {
-            params.push_back(ast::FunctionParameter{.name = paramName,
-                                                    .type = param_type,
-                                                    .defaultValue = defaultValue,
-                                                    .line = t.getLine(),
-                                                    .column = t.getColumn(),
-                                                    .isMutable = isMutable,
-                                                    .isVariadic = isVariadic});
-        }
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
                         "Expected a ',' to separate function parameters, or a ) to close the parameter list");
         }
     }
+
     expectToken(TokenType::RightParen);
+
+    ast::Type* returnType = nullptr;
     if (peekTokenType() == TokenType::Arrow) {
         DISCARD(consumeToken());
         returnType = parseType(Precedence::Default);
     }
+
     return makeNode<ast::FunctionDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
                                                        std::move(params), returnType, parseBlock("function body"));
 }
@@ -315,15 +225,7 @@ ast::Statement* Parser::parseIfStatement() {
     if (peekTokenType() == TokenType::Else) {
         DISCARD(consumeToken());
         elseBody = parseBlock("else body");
-        if (elseBody.empty()) {
-            // If the body was empty, this means there's a dangling else
-            // We still want this printed out, but the toString method determines the presence of an else block
-            // by checking the the body is empty
-            // in this edge case, there is a body but it's empty, which makes the printing logic think there isn't one
-            // to get around this, add a dummy statement (doesn't print anything) so the empty else block is still
-            // printed
-            elseBody.push_back(ast::getEmptyStatement());
-        }
+        if (elseBody.empty()) { elseBody.push_back(ast::getEmptyStatement()); }
     }
     return makeNode<ast::IfStatement>(startToken, condition, std::move(body), std::move(elifs), std::move(elseBody));
 }
@@ -419,58 +321,29 @@ ast::Statement* Parser::parseReturnStatement() {
 
 ast::Statement* Parser::parseSwitchStatement() {
     const Token startToken = consumeToken();
-    std::size_t startLine = startToken.getLine(), startColumn = startToken.getColumn();
+    const std::size_t startLine = startToken.getLine();
+    const std::size_t startColumn = startToken.getColumn();
+
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
-
     ast::Expression* variable = parseExpression(Precedence::Default);
-
     expectToken(TokenType::RightParen, "Expected ')' to end switch variable");
+
     expectToken(TokenType::LeftBrace, "Expected '{' to start the switch body");
 
     std::vector<ast::CaseClause> cases;
+    while (peekTokenType() == TokenType::Case) { cases.push_back(parseCaseClause()); }
+
     ast::Block defaultBody;
     bool hasDefault = false;
-
-    while (peekTokenType() == TokenType::Case) {
-        DISCARD(consumeToken());  // consume 'case'
-        std::vector<ast::Expression*> caseValues;
-
-        do {
-            caseValues.push_back(parseExpression(Precedence::Default));
-            if (peekTokenType() == TokenType::Comma) {
-                DISCARD(consumeToken());  // consume ','
-            } else {
-                break;  // no more cases
-            }
-        } while (true);
-        ast::Block caseBody;
-        expectToken(TokenType::Colon,
-                    std::format("Expected ':' after case value{}", (caseValues.size() > 1 ? "s" : "")));
-
-        while (peekTokenType() != TokenType::Case && peekTokenType() != TokenType::Default
-               && peekTokenType() != TokenType::RightBrace) {
-            caseBody.push_back(parseStatement());
-        }
-        cases.push_back(ast::CaseClause{.values = std::move(caseValues), .body = std::move(caseBody)});
-    }
     if (peekTokenType() == TokenType::Default) {
         hasDefault = true;
-        DISCARD(consumeToken());
-        expectToken(TokenType::Colon, "Expected ':' after default case");
-        while (peekTokenType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
+        defaultBody = parseDefaultClause();
     }
-    if (cases.empty() && defaultBody.empty()) {
+
+    if (cases.empty() && !hasDefault) {
         logging::logWarning(startLine, startColumn, "Switch statement has no cases or default body");
     }
-    if (hasDefault && defaultBody.empty()) {
-        // This means there's a dangling default (i.e. nothing should happen in the default case)
-        // The printing logic determines the presence of a default statement by checking if the body is empty
-        // However in this edge case, there is a default statement with no body which makes the printing logic think
-        // there's no default statement (leading to a confusing printout)
-        // To get around this, push a dummy statement (doesn't print anything) so the printing logic recognizes
-        // there's a body but still prints nothing after it
-        defaultBody.push_back(ast::getEmptyStatement());
-    }
+
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
     return makeNode<ast::SwitchStatement>(startToken, variable, std::move(cases), std::move(defaultBody));
@@ -542,6 +415,158 @@ ast::EnumValue Parser::parseEnumMember() {
                           .value = valueExpression,
                           .line = valueToken.getLine(),
                           .column = valueToken.getColumn()};
+}
+
+std::vector<std::string> Parser::parseGenericsList(std::string_view contextName) {
+    if (peekTokenType() != TokenType::LeftSquare) { return {}; }
+    DISCARD(consumeToken());  // Consume '['
+
+    std::vector<std::string> genericTypes;
+    return parseCommaSeparatedList<std::string>(
+        TokenType::RightSquare, "Expected a ',' to separate generic types, or a ']' to close the generic type list",
+        [this, &genericTypes, contextName]() { return parseGenericTypeParameter(genericTypes, contextName); });
+}
+
+std::optional<ast::AggregateField> Parser::parseAggregateField(const std::string& aggregateName,
+                                                               const std::vector<ast::AggregateField>& existingFields) {
+    if (peekTokenType() != TokenType::Identifier) {
+        logError(peekToken().getLine(), peekToken().getColumn(),
+                 "Unexpected token '{}' in aggregate declaration. Expected field name.", peekToken().getLexeme());
+        DISCARD(consumeToken());  // Skip unexpected token to avoid an infinite loop
+        return std::nullopt;
+    }
+
+    Token fieldToken = consumeToken();
+    std::string fieldName = fieldToken.getLexeme();
+    expectToken(TokenType::Colon, "Expected a ':' to declare an aggregate field type.");
+
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        isMutable = true;
+        DISCARD(consumeToken());
+    }
+
+    ast::Type* type = parseType(Precedence::Default);
+    expectToken(TokenType::Semicolon, "Expected a ';'");
+
+    if (auto duplicate = std::ranges::find(existingFields, fieldName, &ast::AggregateField::name);
+        duplicate != existingFields.end()) {
+        logError(fieldToken.getLine(), fieldToken.getColumn(),
+                 "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})", fieldName,
+                 aggregateName, duplicate->line, duplicate->column);
+        return std::nullopt;
+    }
+
+    return ast::AggregateField{.name = std::move(fieldName),
+                               .type = type,
+                               .line = fieldToken.getLine(),
+                               .column = fieldToken.getColumn(),
+                               .isMutable = isMutable};
+}
+
+std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(
+    const std::string& functionName, const std::vector<ast::FunctionParameter>& existingParams,
+    bool& hasDefaultParameter, bool& hasVariadicParameter) {
+    Token t = expectToken(TokenType::Identifier, "Expected a variable name");
+    std::string paramName = t.getLexeme();
+
+    bool isMutable = false;
+    bool isVariadic = false;
+    ast::Expression* defaultValue = nullptr;
+
+    // Handle Variadic (...)
+    if (peekTokenType() == TokenType::Ellipsis) {
+        DISCARD(consumeToken());
+        if (hasVariadicParameter) {
+            logError(t.getLine(), t.getColumn(), "Only one variadic parameter is allowed in function '{}'",
+                     functionName);
+        } else {
+            isVariadic = true;
+            hasVariadicParameter = true;
+        }
+    } else if (hasVariadicParameter) {
+        logError(t.getLine(), t.getColumn(), "Parameter '{}' cannot follow a variadic parameter", paramName);
+    }
+
+    // Handle Type Annotations
+    expectToken(TokenType::Colon);
+    if (peekTokenType() == TokenType::Mut) {
+        DISCARD(consumeToken());
+        isMutable = true;
+    }
+    ast::Type* paramType = parseType(Precedence::Default);
+
+    // Handle Default Values
+    if (peekTokenType() == TokenType::Assignment) {
+        DISCARD(consumeToken());
+        hasDefaultParameter = true;
+        defaultValue = parseExpression(Precedence::Default);
+
+        if (isVariadic) {
+            logError(t.getLine(), t.getColumn(), "Variadic parameter '{}' cannot have a default value", paramName);
+        }
+    } else if (hasDefaultParameter) {
+        logError(t.getLine(), t.getColumn(), "Non-default parameter '{}' cannot follow a default parameter", paramName);
+    }
+
+    // Check Duplicates
+    if (auto duplicate = std::ranges::find(existingParams, paramName, &ast::FunctionParameter::name);
+        duplicate != existingParams.end()) {
+        logError(t.getLine(), t.getColumn(),
+                 "Duplicate parameter '{}' in function '{}' (previously declared at line {}, column {})", paramName,
+                 functionName, duplicate->line, duplicate->column);
+        return std::nullopt;
+    }
+
+    return ast::FunctionParameter{.name = std::move(paramName),
+                                  .type = paramType,
+                                  .defaultValue = defaultValue,
+                                  .line = t.getLine(),
+                                  .column = t.getColumn(),
+                                  .isMutable = isMutable,
+                                  .isVariadic = isVariadic};
+}
+
+ast::CaseClause Parser::parseCaseClause() {
+    DISCARD(consumeToken());  // consume 'case'
+    std::vector<ast::Expression*> caseValues;
+
+    do {
+        caseValues.push_back(parseExpression(Precedence::Default));
+        if (peekTokenType() == TokenType::Comma) {
+            DISCARD(consumeToken());
+        } else {
+            break;
+        }
+    } while (true);
+
+    expectToken(TokenType::Colon, std::format("Expected ':' after case value{}", (caseValues.size() > 1 ? "s" : "")));
+
+    ast::Block caseBody;
+    while (peekTokenType() != TokenType::Case && peekTokenType() != TokenType::Default
+           && peekTokenType() != TokenType::RightBrace) {
+        caseBody.push_back(parseStatement());
+    }
+
+    return ast::CaseClause{.values = std::move(caseValues), .body = std::move(caseBody)};
+}
+
+ast::Block Parser::parseDefaultClause() {
+    DISCARD(consumeToken());  // consume 'default'
+    expectToken(TokenType::Colon, "Expected ':' after default case");
+
+    ast::Block defaultBody;
+    while (peekTokenType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
+
+    // If the body was empty, this means there's a dangling else
+    // We still want this printed out, but the toString method determines the presence of an else block
+    // by checking the the body is empty
+    // in this edge case, there is a body but it's empty, which makes the printing logic think there isn't one
+    // to get around this, add a dummy statement (doesn't print anything) so the empty else block is still
+    // printed
+    if (defaultBody.empty()) { defaultBody.push_back(ast::getEmptyStatement()); }
+
+    return defaultBody;
 }
 
 }  // namespace Manganese::parser

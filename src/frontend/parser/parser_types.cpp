@@ -227,7 +227,7 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
     return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
 }
 
-std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics, const std::string& contextName) {
+std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics, std::string_view contextName) {
     Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
     std::string genericName = genericToken.getLexeme();
 
