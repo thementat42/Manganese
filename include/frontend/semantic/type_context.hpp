@@ -275,6 +275,8 @@ class TypeContext {
 
     TypeContext(const TypeContext&) = delete;
     TypeContext& operator=(const TypeContext&) = delete;
+    TypeContext(TypeContext&&) = delete;
+    TypeContext& operator=(TypeContext&&) = delete;
 
     const SemanticType* getArray(const SemanticType* elementType, std::size_t length);
 
