@@ -95,7 +95,7 @@ struct BinaryExpression final : public Expression {
 struct BoolLiteralExpression final : public Expression {
     const bool value;
 
-    constexpr explicit BoolLiteralExpression(bool _value) noexcept :
+    explicit BoolLiteralExpression(bool _value) noexcept :
         Expression(ExpressionKind::BoolLiteralExpression), value(_value) {}
 
     MN_AST_STANDARD_INTERFACE;
@@ -106,9 +106,9 @@ struct BoolLiteralExpression final : public Expression {
 struct CharLiteralExpression final : public Expression {
     const char32_t value;
 
-    constexpr explicit CharLiteralExpression(char32_t _value) noexcept :
+    explicit CharLiteralExpression(char32_t _value) noexcept :
         Expression(ExpressionKind::CharLiteralExpression), value(_value) {}
-    constexpr explicit CharLiteralExpression(char _value) noexcept :
+    explicit CharLiteralExpression(char _value) noexcept :
         Expression(ExpressionKind::CharLiteralExpression), value(static_cast<char32_t>(_value)) {}
 
     MN_AST_STANDARD_INTERFACE;
@@ -142,7 +142,7 @@ struct GenericInstantiationExpression final : public Expression {
 struct IdentifierExpression final : public Expression {
     const std::string name;
 
-    constexpr explicit IdentifierExpression(std::string&& _name) noexcept :
+    explicit IdentifierExpression(std::string&& _name) noexcept :
         Expression(ExpressionKind::IdentifierExpression), name(std::move(_name)) {}
 
     MN_AST_STANDARD_INTERFACE;
@@ -171,7 +171,7 @@ struct MemberAccessExpression final : public Expression {
 struct NumberLiteralExpression final : public Expression {
     const mnstl::number_t value;
 
-    constexpr explicit NumberLiteralExpression(mnstl::number_t _value) noexcept :
+    explicit NumberLiteralExpression(mnstl::number_t _value) noexcept :
         Expression(ExpressionKind::NumberLiteralExpression), value(_value) {}
 
     MN_AST_STANDARD_INTERFACE;
@@ -224,7 +224,7 @@ struct SizeofExpression final : public Expression {
 struct StringLiteralExpression final : public Expression {
     const std::string value;
 
-    constexpr explicit StringLiteralExpression(std::string&& _value) noexcept :
+    explicit StringLiteralExpression(std::string&& _value) noexcept :
         Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
 
     MN_AST_STANDARD_INTERFACE;

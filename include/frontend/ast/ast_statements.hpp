@@ -33,7 +33,7 @@ struct AggregateDeclarationStatement final : public Statement {
     std::vector<AggregateField> fields;
     Visibility visibility = Visibility::Private;
 
-    constexpr AggregateDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
+    AggregateDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
                                             std::vector<AggregateField>&& _fields) noexcept :
         Statement(StatementKind::AggregateDeclarationStatement),
         name(std::move(_name)),
@@ -54,19 +54,19 @@ struct AliasStatement final : public Statement {
 };
 
 struct BreakStatement final : public Statement {
-    constexpr explicit BreakStatement() noexcept : Statement(StatementKind::BreakStatement) {}
+    explicit BreakStatement() noexcept : Statement(StatementKind::BreakStatement) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
 
 struct ContinueStatement final : public Statement {
-    constexpr explicit ContinueStatement() noexcept : Statement(StatementKind::ContinueStatement) {}
+    explicit ContinueStatement() noexcept : Statement(StatementKind::ContinueStatement) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
 
 struct EmptyStatement final : public Statement {
-    constexpr explicit EmptyStatement() noexcept : Statement(StatementKind::EmptyStatement) {}
+    explicit EmptyStatement() noexcept : Statement(StatementKind::EmptyStatement) {}
     MN_AST_STANDARD_INTERFACE;
 };
 

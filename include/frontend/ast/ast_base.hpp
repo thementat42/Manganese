@@ -66,7 +66,7 @@ enum class Visibility : std::uint8_t {
 
 struct ASTNode {
     std::size_t line = 0, column = 0;
-    constexpr ASTNode() noexcept = default;
+    ASTNode() noexcept = default;
     virtual ~ASTNode() noexcept = default;
 
     virtual std::string toString(std::size_t indent = 0) const = 0;
@@ -83,14 +83,14 @@ struct Expression : public ASTNode {
     virtual mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
 
    protected:
-    constexpr explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}
+    explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}
 };
 
 struct Statement : public ASTNode {
     const StatementKind kind;
 
    protected:
-    constexpr explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}
+    explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}
 };
 
 struct Type : public ASTNode {
@@ -99,7 +99,7 @@ struct Type : public ASTNode {
     const semantic::SemanticType* semanticType = nullptr;
 
    protected:
-    constexpr explicit Type(TypeKind _kind, PrimitiveType_t _primitiveType = PrimitiveType_t::not_primitive) noexcept :
+    explicit Type(TypeKind _kind, PrimitiveType_t _primitiveType = PrimitiveType_t::not_primitive) noexcept :
         kind(_kind), primitiveType(_primitiveType) {}
 };
 
