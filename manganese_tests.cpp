@@ -82,7 +82,7 @@ int main(int argc, char const* argv[]) {
     auto end = std::chrono::high_resolution_clock::now();
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << ansi::PINK << std::format("Elapsed Time: {:3f} ms\n", (double)duration.count()) << ansi::RESET;
+    std::cout << ansi::PINK << std::format("Elapsed Time: {:.3f} ms\n", (double)duration.count()) << ansi::RESET;
 
     return runner.allTestsPassed() ? 0 : 1;
 }
