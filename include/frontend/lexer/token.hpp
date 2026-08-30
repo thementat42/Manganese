@@ -47,12 +47,8 @@ class Token {
     }
     ~Token() noexcept = default;
 
-    bool isKeyword() const noexcept {
-        return BETWEEN(_type, TokenType::_keywordStart, TokenType::_keywordEnd);
-    }
-    bool isOperator() const noexcept {
-        return BETWEEN(_type, TokenType::_operatorStart, TokenType::_operatorEnd);
-    }
+    bool isKeyword() const noexcept { return BETWEEN(_type, TokenType::_keywordStart, TokenType::_keywordEnd); }
+    bool isOperator() const noexcept { return BETWEEN(_type, TokenType::_operatorStart, TokenType::_operatorEnd); }
 
     bool isInvalid() const noexcept { return _isInvalid; }
     TokenType getType() const noexcept { return _type; }

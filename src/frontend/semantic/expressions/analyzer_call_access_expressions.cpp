@@ -9,6 +9,7 @@
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
+
 #include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese::semantic {

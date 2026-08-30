@@ -77,7 +77,6 @@ inline std::size_t utf8Length(std::string_view str) noexcept {
     return count;
 }
 
-
 }  // namespace
 
 // Statements

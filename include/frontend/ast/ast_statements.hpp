@@ -34,7 +34,7 @@ struct AggregateDeclarationStatement final : public Statement {
     Visibility visibility = Visibility::Private;
 
     AggregateDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
-                                            std::vector<AggregateField>&& _fields) noexcept :
+                                  std::vector<AggregateField>&& _fields) noexcept :
         Statement(StatementKind::AggregateDeclarationStatement),
         name(std::move(_name)),
         genericTypes(std::move(_genericTypes)),

@@ -37,7 +37,9 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
     std::string message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
         case LogLevel::Info: std::cerr << ansi::BLUE << "[Internal Info] " << message << ansi::RESET << "\n"; break;
-        case LogLevel::Warning: std::cerr << ansi::YELLOW << "[Internal Warning] " << message << ansi::RESET << "\n"; break;
+        case LogLevel::Warning:
+            std::cerr << ansi::YELLOW << "[Internal Warning] " << message << ansi::RESET << "\n";
+            break;
         case LogLevel::Error: std::cerr << ansi::RED << "[Internal Error] " << message << ansi::RESET << "\n"; break;
         case LogLevel::Critical:
             std::cerr << ansi::RED << "[Internal Critical Error] " << message << ansi::RESET << "\n";

@@ -165,7 +165,8 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
         ASSERT_UNREACHABLE(std::format("Function '{}' was not registered during symbol collection", statement->name));
     }
     if (!symbol->type) {
-        ASSERT_UNREACHABLE(std::format("Function '{}' was registered during symbol collection but had no type", statement->name));
+        ASSERT_UNREACHABLE(
+            std::format("Function '{}' was registered during symbol collection but had no type", statement->name));
     }
 
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }

@@ -2,7 +2,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 
-
 namespace Manganese::semantic {
 
 void SymbolTable::enterScope() {
@@ -61,15 +60,13 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
             logging::logInternal(logging::LogLevel::Error, "Failed to resolve namespace scope during pass");
             return;
         }
-        
+
         _currentScope = namespaceSymbol->scopeDefined;
     }
 }
 
 std::string Scope::getQualifiedName() const {
-    if (!parent || parent->namespaceName.empty()) {
-        return std::string(namespaceName);
-    }
+    if (!parent || parent->namespaceName.empty()) { return std::string(namespaceName); }
     return parent->getQualifiedName() + "::" + std::string(namespaceName);
 }
 

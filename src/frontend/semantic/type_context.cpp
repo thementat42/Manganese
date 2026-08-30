@@ -92,9 +92,7 @@ std::string Function::toString() const {
     return result;
 }
 
-std::string GenericInstantiation::toString() const {
-    return baseType->toStringWithTypeArguments(typeArguments);
-}
+std::string GenericInstantiation::toString() const { return baseType->toStringWithTypeArguments(typeArguments); }
 
 std::string Pointer::toString() const {
     return std::format("{}ptr {}", (isMutable ? "mut " : ""), baseType->toString());

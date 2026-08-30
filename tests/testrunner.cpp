@@ -10,8 +10,8 @@ void TestRunner::runTest(const std::string& testName, bool (*testFunction)()) {
     std::cout << "Running test: " << testName << "...\n";
 
     const bool result = testFunction();
-    std::cout << (result ? ansi::GREEN : ansi::RED) << std::format("Test '{}' {}", testName, (result ? "PASSED" : "FAILED"))
-              << ansi::RESET << "\n";
+    std::cout << (result ? ansi::GREEN : ansi::RED)
+              << std::format("Test '{}' {}", testName, (result ? "PASSED" : "FAILED")) << ansi::RESET << "\n";
 
     if (result) {
         ++passed;

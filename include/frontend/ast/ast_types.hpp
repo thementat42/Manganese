@@ -79,8 +79,7 @@ struct ScopedType final : public Type {
     Type* scope;
     Type* type;
 
-    ScopedType(Type* _qualifier, Type* _type) noexcept :
-        Type(TypeKind::ScopedType), scope(_qualifier), type(_type) {}
+    ScopedType(Type* _qualifier, Type* _type) noexcept : Type(TypeKind::ScopedType), scope(_qualifier), type(_type) {}
 
     MN_AST_STANDARD_INTERFACE
 };

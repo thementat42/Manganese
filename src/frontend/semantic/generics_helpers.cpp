@@ -307,9 +307,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
                 return nullptr;
             }
 
-            if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::TypeAlias) {
-                return symbol->type;
-            }
+            if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::TypeAlias) { return symbol->type; }
 
             logError(type, "Symbol '{}' is not a type", type->toString());
             return nullptr;
