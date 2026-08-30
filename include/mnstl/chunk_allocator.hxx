@@ -1,4 +1,3 @@
-#include <type_traits>
 #ifndef MNSTL_CHUNK_ALLOCATOR
 #define MNSTL_CHUNK_ALLOCATOR 1
 
@@ -6,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
