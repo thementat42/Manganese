@@ -97,6 +97,12 @@ class Lexer {
 
 std::optional<std::string> encodeUTF8(char32_t);
 
+inline std::string codepointToUTF8(char32_t codepoint) {
+    if (codepoint <= 0x7F) { return std::string(1, static_cast<char>(codepoint)); }
+    auto encoded = lexer::encodeUTF8(codepoint);
+    return encoded ? *encoded : "";
+}
+
 constexpr bool isbdigit(char c) noexcept { return c == '0' || c == '1'; }
 constexpr bool isdigit(char c) noexcept { return BETWEEN(c, '0', '9'); }
 constexpr bool isodigit(char c) { return BETWEEN(c, '0', '7'); }

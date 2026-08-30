@@ -77,11 +77,6 @@ inline std::size_t utf8Length(std::string_view str) noexcept {
     return count;
 }
 
-inline std::string codepointToUTF8(char32_t codepoint) {
-    if (codepoint <= 0x7F) { return std::string(1, static_cast<char>(codepoint)); }
-    auto encoded = lexer::encodeUTF8(codepoint);
-    return encoded ? *encoded : "";
-}
 
 }  // namespace
 
@@ -419,7 +414,7 @@ void BoolLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
 void CharLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "CharLiteralExpression", *this);
-    os << ind.next() << "value: '" << codepointToUTF8(value) << "'\n";
+    os << ind.next() << "value: '" << lexer::codepointToUTF8(value) << "'\n";
     os << ind.next() << "code point: " << static_cast<std::int32_t>(value) << "\n";
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";

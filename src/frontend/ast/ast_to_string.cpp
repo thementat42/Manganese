@@ -55,12 +55,6 @@ std::string genericsToString(const std::vector<Type*>& params, std::size_t inden
     return std::format("@[{}]", commaSeparatedList(params, indent));
 }
 
-inline std::string codepointToUTF8(char32_t codepoint) {
-    if (codepoint <= 0x7F) { return std::string(1, static_cast<char>(codepoint)); }
-    auto encoded = lexer::encodeUTF8(codepoint);
-    return encoded ? *encoded : "";
-}
-
 }  // namespace
 
 // Statements
@@ -261,7 +255,7 @@ std::string BinaryExpression::toString(std::size_t indent) const {
 
 std::string BoolLiteralExpression::toString(std::size_t) const { return value ? "true" : "false"; }
 
-std::string CharLiteralExpression::toString(std::size_t) const { return std::format("'{}'", codepointToUTF8(value)); }
+std::string CharLiteralExpression::toString(std::size_t) const { return std::format("'{}'", lexer::codepointToUTF8(value)); }
 
 std::string FunctionCallExpression::toString(std::size_t indent) const {
     std::string result = callee->toString(indent) + "(";
