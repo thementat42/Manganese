@@ -410,6 +410,106 @@ static bool testTypeCastExpression() {
     return analyzeSource(source, true, __func__);
 }
 
+static bool testGenericScopeResolution() {
+    // Valid generic aggregate defined inside a namespace and instantiated with a scoped type
+    std::string valid = R"(
+        namespace Data {
+            aggregate Pair[T] {
+                first: T;
+                second: T;
+            }
+            aggregate Point { x: int32; y: int32; }
+        }
+
+        func main() {
+            let p = Data::Point { x = 1, y = 2 };
+            let pair = Data::Pair@[Data::Point] { first = p, second = p };
+        }
+    )";
+    if (!analyzeSource(valid, true, __func__)) { return false; }
+
+    // Attempting to instantiate a generic type using an unbound parameter inside generic scope
+    std::string unboundGeneric = R"(
+        namespace Data {
+            aggregate Container[T] { item: T; }
+        }
+        func main() {
+            let c = Data::Container@[U] { item = 0 };
+        }
+    )";
+    return analyzeSource(unboundGeneric, false, __func__);
+}
+
+static bool testScopeResolutionMutability() {
+    // Valid mutation of a mutable variable in a scope
+    std::string valid = R"(
+        namespace Globals {
+            let mut counter: int32 = 0;
+            let maxCount: int32 = 100;
+        }
+
+        func main() {
+            Globals::counter = Globals::counter + 1;
+            Globals::counter++;
+        }
+    )";
+    if (!analyzeSource(valid, true, __func__)) { return false; }
+
+    // Assigning to an immutable variable inside a scope resolution expression must fail
+    std::string invalidAssign = R"(
+        namespace Globals {
+            let maxCount: int32 = 100;
+        }
+
+        func main() {
+            Globals::maxCount = 200;
+        }
+    )";
+    if (!analyzeSource(invalidAssign, false, __func__)) { return false; }
+
+    // Incrementing an immutable scoped variable must fail
+    std::string invalidInc = R"(
+        namespace Globals {
+            let maxCount: int32 = 100;
+        }
+
+        func main() {
+            Globals::maxCount++;
+        }
+    )";
+    return analyzeSource(invalidInc, false, __func__);
+}
+
+static bool testDeeplyNestedScopedType() {
+    // Arbitrary scoping depth (Outer::Middle::Inner::Target)
+    std::string valid = R"(
+        namespace Level1 {
+            namespace Level2 {
+                namespace Level3 {
+                    aggregate DeepType { value: int32; }
+                }
+            }
+        }
+
+        func main() {
+            let obj: Level1::Level2::Level3::DeepType = Level1::Level2::Level3::DeepType { value = 42 };
+        }
+    )";
+    if (!analyzeSource(valid, true, __func__)) { return false; }
+
+    // Breaking the chain midway through an invalid child scope
+    std::string invalidChain = R"(
+        namespace Level1 {
+            namespace Level2 {}
+        }
+
+        func main() {
+            let obj: Level1::Level2::NonExistent::DeepType = 0;
+        }
+    )";
+    return analyzeSource(invalidChain, false, __func__);
+}
+
 // Type Tests
 
 static bool testPointerTypeMutability() {
@@ -594,6 +694,9 @@ void runAnalyzerTests(TestRunner& runner) {
     runner.runTest("Switch Statement analysis", testSwitchStatement);
     runner.runTest("Variable Declaration Statement analysis", testVariableDeclarationStatement);
     runner.runTest("While Loop Statement analysis", testWhileLoopStatement);
+    runner.runTest("Generic Scope Resolution analysis", testGenericScopeResolution);
+    runner.runTest("Scope Resolution Mutability analysis", testScopeResolutionMutability);
+    runner.runTest("Deeply Nested Scoped Type analysis", testDeeplyNestedScopedType);
 
     // Expressions
     runner.runTest("Aggregate Instantiation & Literals analysis", testAggregateInstantiationAndLiteralExpression);
