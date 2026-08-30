@@ -4,22 +4,23 @@
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <format>  // Include format here so any files that use logging have it included
+#include <format>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 
 // ANSI color codes for terminal output
 namespace ansi {
-constexpr inline const char* GREEN = "\033[32m";
-constexpr inline const char* PINK = "\033[95m";
-constexpr inline const char* RED = "\033[31m";
-constexpr inline const char* YELLOW = "\033[33m";
-constexpr inline const char* BLUE = "\033[34m";
-constexpr inline const char* CYAN = "\033[36m";
-constexpr inline const char* CRITICAL = "\033[91;1m";
-constexpr inline const char* RESET = "\033[0m";
+constexpr inline std::string_view GREEN = "\033[32m";
+constexpr inline std::string_view PINK = "\033[95m";
+constexpr inline std::string_view RED = "\033[31m";
+constexpr inline std::string_view YELLOW = "\033[33m";
+constexpr inline std::string_view BLUE = "\033[34m";
+constexpr inline std::string_view CYAN = "\033[36m";
+constexpr inline std::string_view CRITICAL = "\033[91;1m";
+constexpr inline std::string_view RESET = "\033[0m";
 }  // namespace ansi
 
 namespace Manganese::logging {
