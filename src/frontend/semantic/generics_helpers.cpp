@@ -300,7 +300,18 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             return typeContext.getPointer(baseType, pointerType->isMutable);
         }
         case ScopedType: {
-            // TODO
+            // Qualified non-generic type resolution (e.g., foo::bar::MyStruct)
+            const Symbol* symbol = resolveTypeSymbol(type);
+            if (!symbol) {
+                logError(type, "Unknown scoped type '{}'", type->toString());
+                return nullptr;
+            }
+
+            if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::TypeAlias) {
+                return symbol->type;
+            }
+
+            logError(type, "Symbol '{}' is not a type", type->toString());
             return nullptr;
         }
         case SymbolType: {

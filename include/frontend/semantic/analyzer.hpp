@@ -112,6 +112,8 @@ class Analyzer final : public _analyzer_base_t {
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
     Result analyzePointerArithmetic(ast::BinaryExpression* expr) const;
     const SemanticType* resolveGenericType(const ast::Type* type);
+    const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
+    const Symbol* resolveScopeSymbol(const ast::Expression* expression);
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
