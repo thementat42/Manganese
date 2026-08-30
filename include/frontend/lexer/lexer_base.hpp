@@ -58,7 +58,7 @@ class Lexer {
 
     Token& peekToken();
     Token consumeToken();
-    inline bool done() const noexcept { return reader->done(); }
+    inline bool done() noexcept { return reader->done(); }
     bool hasError() const noexcept { return _hasError; }
 
    private:
@@ -86,7 +86,7 @@ class Lexer {
     Result processCharEscapeSequence(std::string_view charLiteral);
 
     //~ Reader wrapper functions
-    inline char peekChar(std::size_t offset = 0) const noexcept { return reader->peekChar(offset); }
+    inline char peekChar(std::size_t offset = 0) noexcept { return reader->peekChar(offset); }
     [[nodiscard]] inline char consumeChar() const noexcept { return reader->consumeChar(); }
     inline std::size_t getLine() const noexcept { return reader->getLine(); }
     inline std::size_t getCol() const noexcept { return reader->getColumn(); }
