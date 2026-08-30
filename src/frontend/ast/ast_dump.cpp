@@ -440,10 +440,10 @@ void FunctionCallExpression::dump(std::ostream& os, std::size_t indent) const {
 void GenericInstantiationExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "GenericInstantiationExpression", *this);
-    os << ind.next() << "identifier: " << toStringOr(identifier) << "\n";
+    os << ind.next() << "identifier: " << identifier << "\n";
     os << ind.next() << "generic types: [\n";
 
-    for (const Type* type : types) { os << ind.next(2) << toStringOr(type) << "\n"; }
+    for (const Type* type : types) { os << ind.next(2) << type << "\n"; }
 
     os << ind.next() << "]\n";
     dumpSemanticType(os, ind.next(), semanticType);

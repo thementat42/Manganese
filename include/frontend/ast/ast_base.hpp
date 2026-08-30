@@ -59,6 +59,8 @@ enum class PrimitiveType_t : std::uint8_t {
     not_primitive,
 };
 
+std::string_view primitiveTypeToString(PrimitiveType_t prim);
+
 enum class Visibility : std::uint8_t {
     Public = 0,
     Private = 2,
@@ -106,29 +108,6 @@ struct Type : public ASTNode {
 constexpr const char* visibilityToString(Visibility visibility) noexcept {
     return visibility == Visibility::Public ? "public" : "private";
 }
-
-/**
- * @param fallback The fallback string representation if the expression is a nullptr
- */
-inline std::string toStringOr(const Expression* expression, const char* fallback = "unknown expression") {
-    return expression ? expression->toString() : fallback;
-}
-
-/**
- * @param fallback The fallback string representation if the statement is a nullptr
- */
-inline std::string toStringOr(const Statement* statement, const char* fallback = "unknown statement") {
-    return statement ? statement->toString() : fallback;
-}
-
-/**
- * @param fallback The fallback string representation if the type is a nullptr
- */
-inline std::string toStringOr(const Type* type, const char* fallback = "no type") {
-    return type ? type->toString() : fallback;
-}
-
-std::string_view primitiveTypeToString(PrimitiveType_t prim);
 
 }  // namespace ast
 }  // namespace Manganese
