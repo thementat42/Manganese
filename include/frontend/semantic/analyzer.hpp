@@ -60,10 +60,10 @@ class Analyzer final : public _analyzer_base_t {
     std::unordered_map<std::string_view, std::size_t> activeGenericParams;
 
     struct {
-        bool inFunction = false;
         bool inIfCondition : 1 = false;
         bool inForLoopCondition : 1 = false;
         bool inWhileLoopCondition : 1 = false;
+        bool inFunction = false;
         std::uint8_t typeCastDepth = 0;
         std::uint8_t ifStatementDepth = 0;
         std::uint8_t forLoopDepth = 0;
