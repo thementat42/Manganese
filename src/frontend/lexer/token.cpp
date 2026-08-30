@@ -53,10 +53,9 @@ struct keyword_map_entry {
     std::string_view str;
     TokenType type;
 };
-}  // namespace
 
 // let template argument deduction figure out the size (more flexible for adding/removing keywords)
-constexpr std::array keywordTable = {
+constexpr std::array _keywordTableHelper = {
 #define TOKEN(name, text)
 #define OPERATOR(name, text)
 
@@ -74,9 +73,17 @@ constexpr std::array keywordTable = {
     // if no width is specified, default to a 32-bit unsigned integer
     keyword_map_entry{.str = "uint", .type = TokenType::UInt32},
 };
+}  // namespace
+
+// Sort the helper table to allow for binary search lookups
+constexpr auto keywordTable = []() {
+    auto arr = _keywordTableHelper;
+    std::ranges::sort(arr, {}, &keyword_map_entry::str);
+    return arr;
+}();
 
 TokenType keywordLookup(std::string_view s) noexcept {
-    if (auto entry = std::ranges::find(keywordTable, s, &keyword_map_entry::str); entry != keywordTable.end()) {
+    if (auto entry = std::ranges::lower_bound(keywordTable, s, {}, &keyword_map_entry::str); entry != keywordTable.end() && entry->str == s) {
         return entry->type;
     }
     return TokenType::Unknown;
