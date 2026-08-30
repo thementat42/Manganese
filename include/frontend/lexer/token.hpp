@@ -91,7 +91,7 @@ class Token {
     /**
      * @note Parser only: be careful
      */
-    void overrideType(TokenType newType, std::string newLexeme);
+    void overrideType(TokenType newType, std::string&& newLexeme);
 
     TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
     std::string toString() const;
