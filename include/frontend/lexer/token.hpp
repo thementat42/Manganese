@@ -35,12 +35,14 @@ class Token {
    public:
     Token() noexcept = default;
     Token(TokenType type, std::string&& lexeme, std::size_t line, std::size_t column, bool isInvalid = false) :
-        _isInvalid(isInvalid), _type(type), _lexeme(std::move(lexeme)), _line(line), _column(column) {
+        _isInvalid(isInvalid), _type(type), _line(line), _column(column) {
         // Special lexeme override cases
         if (_type == TokenType::Int32) {
             _lexeme = "int32";
         } else if (_type == TokenType::Float32) {
             _lexeme = "float32";
+        } else {
+            _lexeme = std::move(lexeme);
         }
     }
     ~Token() noexcept = default;
