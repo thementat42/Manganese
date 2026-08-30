@@ -1,9 +1,11 @@
 #ifndef MNSTL_TINY_STACK
 #define MNSTL_TINY_STACK 1
 
+#include <cassert>
 #include <cstddef>
 #include <utility>
 #include <vector>
+
 
 namespace mnstl {
 
@@ -22,8 +24,14 @@ class tiny_stack {
         _data.pop_back();
     }
 
-    T& top() noexcept { return _data.back(); }
-    const T& top() const noexcept { return _data.back(); }
+    T& top() noexcept {
+        assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
+        return _data.back();
+    }
+    const T& top() const noexcept {
+        assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
+        return _data.back();
+    }
 
     void reserve(std::size_t new_capacity) { _data.reserve(new_capacity); }
     [[nodiscard]] bool is_empty() const noexcept { return _data.empty(); }
