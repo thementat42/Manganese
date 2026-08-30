@@ -143,8 +143,25 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
 
     expectToken(TokenType::LeftBrace, "Expected '{' to start the enum body");
 
-    auto values = parseCommaSeparatedList<ast::EnumValue>(TokenType::RightBrace, "Expected ',' between enum members",
-                                                          [this]() { return parseEnumMember(); });
+    std::vector<ast::EnumValue> values;
+    while (!done() && peekTokenType() != TokenType::RightBrace) {
+        ast::EnumValue member = parseEnumMember();
+
+        if (auto duplicate = std::ranges::find(values, member.name, &ast::EnumValue::name);
+            duplicate != values.end()) {
+            logError(member.line, member.column,
+                     "Duplicate member '{}' in enum '{}' (previously declared at line {}, column {})",
+                     member.name, name, duplicate->line, duplicate->column);
+        } else {
+            values.push_back(std::move(member));
+        }
+
+        if (peekTokenType() != TokenType::RightBrace) {
+            expectToken(TokenType::Comma, "Expected ',' between enum members");
+        }
+    }
+
+    expectToken(TokenType::RightBrace, "Expected '}' to close the enum body");
 
     return makeNode<ast::EnumDeclarationStatement>(startToken, std::move(name), baseType, std::move(values));
 }

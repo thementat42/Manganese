@@ -75,11 +75,17 @@ ast::Type* Parser::parseFunctionType() {
     expectToken(TokenType::LeftParen, "Expected '(' after 'func' in a function type");
 
     bool seenVariadic = false;
-    auto parameterTypes = parseCommaSeparatedList<ast::FunctionParameterType>(
-        TokenType::RightParen,
-        "Expected ',' to separate parameter types or ')' to end parameter list",
-        [this, &seenVariadic]() { return parseFunctionTypeParameter(seenVariadic); }
-    );
+    std::vector<ast::FunctionParameterType> parameterTypes;
+
+    while (!done() && peekTokenType() != TokenType::RightParen) {
+        parameterTypes.push_back(parseFunctionTypeParameter(seenVariadic));
+
+        if (peekTokenType() != TokenType::RightParen) {
+            expectToken(TokenType::Comma, "Expected ',' to separate parameter types or ')' to end parameter list");
+        }
+    }
+
+    expectToken(TokenType::RightParen, "Expected ')' after function parameter type list");
 
     ast::Type* returnType = nullptr;
     if (peekTokenType() == TokenType::Arrow) {
@@ -221,16 +227,16 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
     return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
 }
 
-std::optional<std::string> Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics, const std::string& contextName) {
+std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics, const std::string& contextName) {
     Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
     std::string genericName = genericToken.getLexeme();
 
     if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
         logError(genericToken.getLine(), genericToken.getColumn(),
                  "Duplicate generic type '{}' in '{}'", genericName, contextName);
-        return std::nullopt;
+        return "";
     }
-    return std::make_optional(genericName);
+    return genericName;
 }
 
 }  // namespace Manganese::parser

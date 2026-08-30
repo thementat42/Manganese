@@ -447,7 +447,6 @@ static bool testEnumDeclarationStatement() {
     B,
     C,
     D,
-    C
 })"};
 
     return validateStatements(getParserResults(expression), expected, "Enum Declaration Statement");

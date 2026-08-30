@@ -1,7 +1,6 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 
-#include <concepts>
 #include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
@@ -19,17 +18,6 @@
 
 namespace Manganese::parser {
 using lexer::TokenType, lexer::Token;
-
-template <class ParseFunction, class T>
-concept ListParser = std::invocable<ParseFunction&> && []<class R = std::remove_cvref_t<std::invoke_result_t<ParseFunction&>>>() {
-    if constexpr (std::same_as<R, std::optional<T>>) {
-        return true;
-    } else if constexpr (std::is_pointer_v<R>) {
-        return std::convertible_to<R, T>;
-    } else {
-        return std::convertible_to<R, T>;
-    }
-}();
 
 struct Import {
     std::vector<std::string> path;
@@ -155,28 +143,21 @@ class Parser {
 
     ast::Type* parseAggregateTypeField();
     ast::FunctionParameterType parseFunctionTypeParameter(bool& seenVariadic);
-    std::optional<std::string> parseGenericTypeParameter(std::vector<std::string>& existingGenerics,
-                                                         const std::string& contextName);
+    std::string parseGenericTypeParameter(std::vector<std::string>& existingGenerics, const std::string& contextName);
 
     // ~ Helpers
     ast::Block parseBlock(const std::string& blockName);
 
-    template <class T, ListParser<T> ParseFunction>
+    template <class T, class ParseFunction>
     std::vector<T> parseCommaSeparatedList(TokenType closeToken, const char* missingCommaMessage,
                                            ParseFunction&& parseFunction) {
-        using ReturnType = std::remove_cvref_t<std::invoke_result_t<ParseFunction&>>;
         std::vector<T> items;
         while (!done() && peekTokenType() != closeToken) {
-            if constexpr (std::convertible_to<ReturnType, bool>) {
-                if (auto item = parseFunction()) {
-                    if constexpr (requires { *item; }) {
-                        items.push_back(std::move(*item));
-                    } else {
-                        items.push_back(std::move(item));
-                    }
-                }
+            auto item = parseFunction();
+            if constexpr (std::is_same_v<T, std::string>) {
+                if (!item.empty()) { items.push_back(std::move(item)); }
             } else {
-                items.push_back(parseFunction());
+                items.push_back(std::move(item));
             }
             if (peekTokenType() != closeToken) { expectToken(TokenType::Comma, missingCommaMessage); }
         }
