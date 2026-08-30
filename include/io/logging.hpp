@@ -33,7 +33,7 @@ enum class LogLevel : std::uint8_t {
 };
 
 template <class... Args>
-void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) NOEXCEPT_IF_RELEASE {
+void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
 #if MN_DEBUG
     std::string message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
@@ -56,7 +56,7 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
 }
 
 template <class... Args>
-void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) noexcept {
+void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) {
     std::string message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
         case LogLevel::Info: return;  // No user info
@@ -71,19 +71,19 @@ void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<A
 
 template <class... Args>
 FORCE_INLINE void logWarning(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
-                             Args&&... args) noexcept {
+                             Args&&... args) {
     log(LogLevel::Warning, line, col, fmt, std::forward<Args>(args)...);
 }
 
 template <class... Args>
 FORCE_INLINE void logError(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
-                           Args&&... args) noexcept {
+                           Args&&... args) {
     log(LogLevel::Error, line, col, fmt, std::forward<Args>(args)...);
 }
 
 template <class... Args>
 FORCE_INLINE void logCritical(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
-                              Args&&... args) noexcept {
+                              Args&&... args) {
     log(LogLevel::Critical, line, col, fmt, std::forward<Args>(args)...);
 }
 
