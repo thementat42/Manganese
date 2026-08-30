@@ -6,9 +6,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <string>
-#if __cplusplus >= 202302L
-#include <utility>  // C++ 23 for unreachable()
-#endif
+#include <utility>  // C++ 23 for unreachable() and its associated feature macro
 
 //~ Build type
 
@@ -48,17 +46,33 @@
 #define FORCE_INLINE inline
 #endif
 
-[[noreturn]] inline void manganese_unreachable() {
-#if __cplusplus >= 202302L
-    std::unreachable();  // compiler agnostic, but still allows for optimisation
-// If < C++23, use a compiler-specific implementation
-#elif defined(__GNUC__) || defined(__clang__) || (defined(__has_builtin) && __has_builtin(__builtin_unreachable))
+[[noreturn]] inline void manganese_unreachable(int) {
+    *(static_cast<volatile int*>(nullptr)) = 0;  // still invokes UB (and should crash on most platforms)
+    for (;;) {}  // mainly to satisfy the compiler around not returning
+}
+
+[[noreturn]] inline void manganese_unreachable(float) {
+#ifdef __has_builtin
+#if __has_builtin(__builtin_unreachable)
     __builtin_unreachable();
+#elif __has_builtin(__builtin_trap)
+    __builtin_trap();  // unreachable code shouldn't be hit anyways
+#else  // ^^ some kind of builtin vv no builtin
+    manganese_unreachable(0);
+#endif  // __has_builtin(__builtin_unreachable)
+#else  // ^^ builtins detectable vv no way to detect builtins, fallback
+    manganese_unreachable(0);
+#endif  // __has_builtin
+}
+
+[[noreturn]] inline void manganese_unreachable() {
+#ifdef __cpp_lib_unreachable
+    std::unreachable();
 #elif defined(_MSC_VER)
     __assume(false);
-#else
-    // still invokes UB
-#endif  // __cplusplus >= 202302L
+#else  // ^^ MSVC vv not MSVC
+    manganese_unreachable(0.0f);
+#endif  // __cpp_lib_unreachable
 }
 
 [[noreturn]] inline void panic(const char* message, const char* file, std::size_t line, const char* func) {
