@@ -1,16 +1,17 @@
 #include <chrono>
 #include <cstddef>
-#include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <frontend/lexer.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>
+#include <iostream>
 #include <utils/memory_tracking.hpp>
 
 #include "tests/testrunner.hpp"
 #include "tests/tests.hpp"
+
 
 static bool strneq(const char* a, const char* b, std::size_t max_count) {
     return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
@@ -47,7 +48,7 @@ int main(int argc, char const* argv[]) {
             codegen = true;
             break;
         } else {
-            fprintf(stderr, "Skipping unknown argument: %s\n", argv[i]);
+            std::cerr << std::format("Skipping unknown argument: {}\n", argv[i]);
         }
     }
     std::filesystem::create_directories("logs");
@@ -55,25 +56,25 @@ int main(int argc, char const* argv[]) {
     Manganese::tests::TestRunner runner;
 
     if (lexer) {
-        printf("%sLexer Tests%s\n", ansi::PINK, ansi::RESET);
+        std::cout << ansi::PINK << "Lexer Tests\n" << ansi::RESET;
         Manganese::tests::runLexerTests(runner);
-        printf("\n----------\n");
+        std::cout << ("\n----------\n");
     }
     if (parser) {
-        printf("%sParser Tests%s\n", ansi::PINK, ansi::RESET);
+        std::cout << ansi::PINK << "Parser Tests\n" << ansi::RESET;
         Manganese::tests::runParserTests(runner);
-        printf("\n----------\n");
+        std::cout << ("\n----------\n");
     }
     if (semantic) {
-        printf("%sSemantic Analyzer Tests%s\n", ansi::PINK, ansi::RESET);
+        std::cout << ansi::PINK << "Semantic Analyzer Tests\n" << ansi::RESET;
         Manganese::tests::runAnalyzerTests(runner);
-        printf("\n----------\n");
+        std::cout << ("\n----------\n");
     }
     if (codegen) {
-        printf("%sCodegen Tests%s\n", ansi::PINK, ansi::RESET);
+        std::cout << ansi::PINK << "Codegen Tests\n" << ansi::RESET;
         // TODO: Add once codegen has progress
-        printf("To be implemented.\n");
-        printf("\n----------\n");
+        std::cout << ("To be implemented.\n");
+        std::cout << ("\n----------\n");
     }
 
     logTotalAllocatedMemory();  // Only does something if memory tracking is enabled
@@ -81,7 +82,7 @@ int main(int argc, char const* argv[]) {
     auto end = std::chrono::high_resolution_clock::now();
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    printf("%sElapsed Time: %.3f ms%s\n", ansi::PINK, (double)duration.count(), ansi::RESET);
+    std::cout << ansi::PINK << std::format("Elapsed Time: {:3f} ms\n", (double)duration.count()) << ansi::RESET;
 
     return runner.allTestsPassed() ? 0 : 1;
 }
