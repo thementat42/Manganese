@@ -55,22 +55,22 @@ int main(int argc, char const* argv[]) {
     Manganese::tests::TestRunner runner;
 
     if (lexer) {
-        printf("%sLexer Tests%s\n", PINK, RESET);
+        printf("%sLexer Tests%s\n", ansi::PINK, ansi::RESET);
         Manganese::tests::runLexerTests(runner);
         printf("\n----------\n");
     }
     if (parser) {
-        printf("%sParser Tests%s\n", PINK, RESET);
+        printf("%sParser Tests%s\n", ansi::PINK, ansi::RESET);
         Manganese::tests::runParserTests(runner);
         printf("\n----------\n");
     }
     if (semantic) {
-        printf("%sSemantic Analyzer Tests%s\n", PINK, RESET);
+        printf("%sSemantic Analyzer Tests%s\n", ansi::PINK, ansi::RESET);
         Manganese::tests::runAnalyzerTests(runner);
         printf("\n----------\n");
     }
     if (codegen) {
-        printf("%sCodegen Tests%s\n", PINK, RESET);
+        printf("%sCodegen Tests%s\n", ansi::PINK, ansi::RESET);
         // TODO: Add once codegen has progress
         printf("To be implemented.\n");
         printf("\n----------\n");
@@ -81,7 +81,7 @@ int main(int argc, char const* argv[]) {
     auto end = std::chrono::high_resolution_clock::now();
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    printf("%sElapsed Time: %.3f ms%s\n", PINK, (double)duration.count(), RESET);
+    printf("%sElapsed Time: %.3f ms%s\n", ansi::PINK, (double)duration.count(), ansi::RESET);
 
     return runner.allTestsPassed() ? 0 : 1;
 }

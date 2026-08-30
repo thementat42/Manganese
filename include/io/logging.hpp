@@ -11,6 +11,7 @@
 #include <utility>
 
 // ANSI color codes for terminal output
+namespace ansi {
 constexpr inline const char* GREEN = "\033[32m";
 constexpr inline const char* PINK = "\033[95m";
 constexpr inline const char* RED = "\033[31m";
@@ -19,6 +20,7 @@ constexpr inline const char* BLUE = "\033[34m";
 constexpr inline const char* CYAN = "\033[36m";
 constexpr inline const char* CRITICAL = "\033[91;1m";
 constexpr inline const char* RESET = "\033[0m";
+}  // namespace ansi
 
 namespace Manganese::logging {
 
@@ -34,11 +36,11 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
 #if MN_DEBUG
     std::string message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
-        case LogLevel::Info: std::cerr << BLUE << "[Internal Info] " << message << RESET << "\n"; break;
-        case LogLevel::Warning: std::cerr << YELLOW << "[Internal Warning] " << message << RESET << "\n"; break;
-        case LogLevel::Error: std::cerr << RED << "[Internal Error] " << message << RESET << "\n"; break;
+        case LogLevel::Info: std::cerr << ansi::BLUE << "[Internal Info] " << message << ansi::RESET << "\n"; break;
+        case LogLevel::Warning: std::cerr << ansi::YELLOW << "[Internal Warning] " << message << ansi::RESET << "\n"; break;
+        case LogLevel::Error: std::cerr << ansi::RED << "[Internal Error] " << message << ansi::RESET << "\n"; break;
         case LogLevel::Critical:
-            std::cerr << RED << "[Internal Critical Error] " << message << RESET << "\n";
+            std::cerr << ansi::RED << "[Internal Critical Error] " << message << ansi::RESET << "\n";
             std::cerr << "Critical error encountered";
             throw std::runtime_error("Critical error");
     }
@@ -55,10 +57,10 @@ void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<A
     std::string message = std::format(fmt, std::forward<Args>(args)...);
     switch (level) {
         case LogLevel::Info: return;  // No user info
-        case LogLevel::Warning: std::cerr << YELLOW << "Warning: " << message << RESET; break;
-        case LogLevel::Error: std::cerr << RED << "Error: " << message << RESET; break;
+        case LogLevel::Warning: std::cerr << ansi::YELLOW << "Warning: " << message << ansi::RESET; break;
+        case LogLevel::Error: std::cerr << ansi::RED << "Error: " << message << ansi::RESET; break;
         case LogLevel::Critical:
-            std::cerr << CRITICAL << "Critical error: " << message << " Compilation aborted." << RESET;
+            std::cerr << ansi::CRITICAL << "Critical error: " << message << " Compilation aborted." << ansi::RESET;
             break;
     }
     std::cerr << " (line " << line << ", column " << col << ")\n";

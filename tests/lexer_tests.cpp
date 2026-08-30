@@ -20,7 +20,7 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true
         std::cout << "No tokens found." << '\n';
         return;
     }
-    std::cout << "Tokens:\n" << CYAN;
+    std::cout << "Tokens:\n" << ansi::CYAN;
     for (const Token& token : tokens) {
         if (verbose) {
             std::cout << token.toString() << "\n";
@@ -28,7 +28,7 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true
             std::cout << token.getLexeme() << "\n";
         }
     }
-    std::cout << RESET << '\n';
+    std::cout << ansi::RESET << '\n';
 }
 
 std::vector<Token> tokensFromString(const std::string& source) {
