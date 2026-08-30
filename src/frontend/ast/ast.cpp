@@ -35,7 +35,7 @@ mnstl::fold_result_t BinaryExpression::fold() const NOEXCEPT_IF_RELEASE {
     const mnstl::fold_result_t leftResult = left->fold();
     const mnstl::fold_result_t rightResult = right->fold();
 
-    if (!leftResult.has_value() || rightResult.has_value()) { return mnstl::fold_result_t{}; }
+    if (!leftResult.has_value() || !rightResult.has_value()) { return mnstl::fold_result_t{}; }
 
     switch (op) {
         case Plus: break;
