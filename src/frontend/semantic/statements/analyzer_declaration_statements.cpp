@@ -33,7 +33,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     fieldTypes.reserve(statement->fields.size());
 
     for (const ast::AggregateField& field : statement->fields) {
-        visit(field.type);
+        DISCARD(visit(field.type));
         const SemanticType* resolvedFieldType = field.type->semanticType;
         if (!resolvedFieldType) {
             logging::logError(field.line, field.column, "Unknown type for field '{}' in aggregate '{}'", field.name,
@@ -203,7 +203,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
 
         // Validate default arguments in local scope
         if (param.defaultValue) {
-            visit(param.defaultValue);
+            DISCARD(visit(param.defaultValue));
 
             const SemanticType* defaultType = param.defaultValue->semanticType;
 

@@ -98,7 +98,7 @@ auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     if (visit(statement->body) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
 
     for (ast::ElifClause& elif : statement->elifs) {
-        visit(elif.condition);
+        DISCARD(visit(elif.condition));
 
         if (!elif.condition->semanticType) {
             logError(statement, "Could not deduce type of condition {}", elif.condition->toString());

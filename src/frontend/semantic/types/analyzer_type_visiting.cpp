@@ -16,7 +16,7 @@ auto Analyzer::visit(ast::AggregateType* type) -> typevisit_t {
     resolvedFields.reserve(aggregateType->fieldTypes.size());
 
     for (ast::Type* fieldType : aggregateType->fieldTypes) {
-        visit(fieldType);
+        DISCARD(visit(fieldType));
         const SemanticType* resolvedFieldType = fieldType->semanticType;
         if (!resolvedFieldType) { return typevisit_t::Failure; }
         resolvedFields.push_back(resolvedFieldType);
@@ -31,7 +31,7 @@ auto Analyzer::visit(ast::ArrayType* type) -> typevisit_t {
     // for nested arrays
     const SemanticType* outerVarType = context.currentVariableDeclarationType;
     context.currentVariableDeclarationType = nullptr;
-    visit(arrayType->elementType);
+    DISCARD(visit(arrayType->elementType));
     context.currentVariableDeclarationType = outerVarType;
 
     const SemanticType* elementType = arrayType->elementType->semanticType;
@@ -81,7 +81,7 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
     const ast::FunctionType* functionType = static_cast<const ast::FunctionType*>(type);
     std::vector<Parameter> resolvedParameterTypes;
     for (const ast::FunctionParameterType& parameterType : functionType->parameterTypes) {
-        visit(parameterType.type);
+        DISCARD(visit(parameterType.type));
         const SemanticType* resolvedParameterType = parameterType.type->semanticType;
         if (!resolvedParameterType) { return typevisit_t::Failure; }
 
@@ -92,7 +92,7 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
     const SemanticType* returnType = typeContext.getVoid();
     if (functionType->returnType) {
         // function is not returning void
-        visit(functionType->returnType);
+        DISCARD(visit(functionType->returnType));
         returnType = functionType->returnType->semanticType;
         if (!returnType) { return typevisit_t::Failure; }
     }
@@ -109,7 +109,7 @@ auto Analyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t {
 
 auto Analyzer::visit(ast::PointerType* type) -> typevisit_t {
     const auto* pointerType = static_cast<const ast::PointerType*>(type);
-    visit(pointerType->baseType);
+    DISCARD(visit(pointerType->baseType));
     const SemanticType* baseType = pointerType->baseType->semanticType;
     if (!baseType) {
         logError(type, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString());

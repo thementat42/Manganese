@@ -27,14 +27,14 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
         Symbol* namespaceSymbol = _currentScope->lookup(name);
         // Declare the namespace in the current scope if it's not already declared
         if (namespaceSymbol == nullptr) {
-            _currentScope->insert(name,
-                                  Symbol{.type = nullptr,
-                                         .node = node,
-                                         .kind = SymbolKind::Namespace,
-                                         .visibility = ast::Visibility::Public,
-                                         .isMutable = false,
-                                         .status = ResolutionStatus::Success,
-                                         .hostScope = _currentScope});
+            DISCARD(_currentScope->insert(name,
+                                          Symbol{.type = nullptr,
+                                                 .node = node,
+                                                 .kind = SymbolKind::Namespace,
+                                                 .visibility = ast::Visibility::Public,
+                                                 .isMutable = false,
+                                                 .status = ResolutionStatus::Success,
+                                                 .hostScope = _currentScope}));
             namespaceSymbol = _currentScope->lookup(name);
         }
 

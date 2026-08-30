@@ -27,7 +27,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
     resolvedTypeArguments.reserve(expression->types.size());
 
     for (ast::Type* type : expression->types) {
-        visit(type);
+        DISCARD(visit(type));
         const SemanticType* resolved = type->semanticType;
         if (!resolved) {
             logError(type, "Failed to resolve generic type argument '{}' in generic expression", type->toString());

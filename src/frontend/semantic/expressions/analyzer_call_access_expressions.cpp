@@ -161,7 +161,7 @@ auto Analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
-    visit(expression->object);
+    DISCARD(visit(expression->object));
     const SemanticType* objectType = expression->object->semanticType;
     if (!objectType) {
         logError(expression->object, "Could not deduce type of expression {}", expression->object->toString());
