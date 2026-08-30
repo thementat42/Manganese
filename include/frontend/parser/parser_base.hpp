@@ -9,6 +9,7 @@
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -42,6 +43,8 @@ class Parser {
     std::vector<Import> imports;
     mnstl::chunk_allocator& arena;
 
+    static inline std::once_flag lookupsInitFlag;
+
     // Some flags
     struct {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
@@ -52,8 +55,10 @@ class Parser {
    public:
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
         lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(allocatorReference), flags() {
-        initializeLookups();
-        initializeTypeLookups();
+        std::call_once(lookupsInitFlag, []() {
+            initializeLookups();
+            initializeTypeLookups();
+        });
     }
 
     ~Parser() noexcept = default;
