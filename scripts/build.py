@@ -54,7 +54,7 @@ def check_cmake_installation():
     """
     cmake = shutil.which("cmake")
     if cmake is None:
-        print("\033[31mCMake is either not installed or not in the system PATH.\033[0m")
+        print("CMake is either not installed or not in the system PATH.")
         sys.exit(1)
 
 def ensure_project_root():
@@ -67,21 +67,21 @@ def ensure_project_root():
 
     if script_dir.name == "scripts":
         os.chdir(project_root)
-        print(f"\033[34mChanged working directory to project root: {project_root}\033[0m")
+        print(f"Changed working directory to project root: {project_root}")
 
     # Verify CMakeLists.txt exists in the current directory
     if not Path("CMakeLists.txt").exists():
-        print("\033[31mError: CMakeLists.txt not found in the current directory.")
-        print("This script must be run from the project root or scripts/ directory.\033[0m")
+        print("Error: CMakeLists.txt not found in the current directory.")
+        print("This script must be run from the project root or scripts/ directory.")
         sys.exit(1)
 
 def run_command(command: list[str]):
     """A wrapper around `subprocess.run`"""
-    print(f"\033[34mRunning: \"{' '.join(command)}\"\033[0m")
+    print(f"Running: \"{' '.join(command)}\"")
     try:
         subprocess.run(command, check = True)
     except subprocess.CalledProcessError as e:
-        print(f"\033[31mCommand failed with exit code {e.returncode}\033[0m")
+        print(f"Command failed with exit code {e.returncode}")
         sys.exit(e.returncode)
 
 check_cmake_installation()
@@ -219,60 +219,60 @@ OUT_NAME = "manganese" + (".exe" if os.name == "nt" else "")
 
 if args.clean and args.no_move:
     print(
-        "\033[33mWarning: --clean supersedes --no-move.",
-        "The output will be moved to the root directory.\033[0m"
+        "Warning: --clean supersedes --no-move.",
+        "The output will be moved to the root directory."
     )
     args.no_move = False
 
 if args.exec_with:
     if not args.run:
         print(
-            "\033[33mWarning: positional arguments",
+            "Warning: positional arguments",
             f"({', '.join(args.exec_with)})",
             "were passed to the script but the run flag (-r) was not specified"
         )
     else:
         print(
-            "\033[34mRunning with positional arguments:", *args.exec_with, "\033[0m"
+            "Running with positional arguments:", *args.exec_with, ""
         )
 
 if args.memory_tracking:
     if not args.debug:
         print(
-            "\033[33mWarning: --memory-tracking only has an effect in debug mode\033[0m"
+            "Warning: --memory-tracking only has an effect in debug mode"
         )
     else:
         print(
-            "\033[34mTracking cumulative memory usage\033[0m"
+            "Tracking cumulative memory usage"
         )
 
 if args.memory_tracking_continuous:
     if not args.memory_tracking:
         print(
-            "\033[33mWarning: --memory-tracking-continuous has no effect if --memory-tracking is off\033[0m"
+            "Warning: --memory-tracking-continuous has no effect if --memory-tracking is off"
         )
     else:
         print(
-            "\033[34mTracking estimated continuous memory usage\033[0m"
+            "Tracking estimated continuous memory usage"
         )
     print(
-        "\033[33mWarning: --memory-tracking-continuous may not be completely accurate and can vary depending on the compiler \033[0m"
+        "Warning: --memory-tracking-continuous may not be completely accurate and can vary depending on the compiler "
     )
 
 if args.tests and not args.debug:
     print(
-        "\033[33mWarning: --tests will compile in debug mode",
+        "Warning: --tests will compile in debug mode",
          "even if the debug flag (-d or --debug) is not set"
     )
 
 if args.fresh_build and BUILD_DIR.exists():
-    print(f"\033[34mCleaning build directory before building ({BUILD_DIR})\033[0m")
+    print(f"Cleaning build directory before building ({BUILD_DIR})")
     try:
         shutil.rmtree(BUILD_DIR)
     except PermissionError:
-        print(f"\033[31mPermission denied while cleaning {BUILD_DIR}\033[0m")
+        print(f"Permission denied while cleaning {BUILD_DIR}")
         sys.exit(1)
-    print(f"\033[34mCleaned build directory ({BUILD_DIR})\033[0m")
+    print(f"Cleaned build directory ({BUILD_DIR})")
 
 os.makedirs(BUILD_DIR, exist_ok=True)
 os.chdir(BUILD_DIR)
@@ -331,17 +331,17 @@ if not args.no_move:
     if bin_dir.exists() and output_file.exists():
         dest_file = Path(OUT_NAME)
         if dest_file.exists():
-            print(f"\033[33mWarning: {OUT_NAME} already exists in the root directory and will be overwritten\033[0m")
-        print(f"\033[34mMoving {OUT_NAME} from {bin_dir} to the root directory")
+            print(f"Warning: {OUT_NAME} already exists in the root directory and will be overwritten")
+        print(f"Moving {OUT_NAME} from {bin_dir} to the root directory")
         # Move the output file to the root directory
         shutil.move(output_file, dest_file)
-        print(f"\033[32mSuccessfully moved {OUT_NAME} to the root directory\033[0m")
+        print(f"Successfully moved {OUT_NAME} to the root directory")
     else:
-        print(f"\033[33mCould not find {OUT_NAME} in {bin_dir.resolve()}\033[0m")
+        print(f"Could not find {OUT_NAME} in {bin_dir.resolve()}")
 
 if args.clean:
     # Remove all files and folders in the build directory except the executable in bin
-    print(f"\033[34mRemoving extra files from the build directory ({BUILD_DIR})\033[0m")
+    print(f"Removing extra files from the build directory ({BUILD_DIR})")
     for item in BUILD_DIR.glob("**/*"):
         # Skip the output executable
         if item == output_file:
@@ -352,10 +352,10 @@ if args.clean:
             elif item.is_dir():
                 shutil.rmtree(item)
         except Exception as e:
-            print(f"\033[33mWarning: Could not remove {item}: {e}\033[0m")
-    print("\033[34mCleaned build directory\033[0m")
+            print(f"Warning: Could not remove {item}: {e}")
+    print("Cleaned build directory")
 
-print(f"\033[95mBuild completed in {build_time:.2f} seconds\033[0m")
+print(f"Build completed in {build_time:.2f} seconds")
 
 if args.run:
     # If we chose not to move the file, it should be executed from the build/bin directory
