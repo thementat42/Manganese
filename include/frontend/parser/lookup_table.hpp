@@ -117,8 +117,8 @@ consteval void initializeLookups(LookupTable& table) noexcept {
     registerLedHandler_binary(table, BitXor, Precedence::BitwiseXor, &Parser::parseBinaryExpression);
 
     //~ Relational
-    registerLedHandler_binary(table, Equal, Precedence::Relational, &Parser::parseBinaryExpression);
-    registerLedHandler_binary(table, NotEqual, Precedence::Relational, &Parser::parseBinaryExpression);
+    registerLedHandler_binary(table, Equal, Precedence::Equality, &Parser::parseBinaryExpression);
+    registerLedHandler_binary(table, NotEqual, Precedence::Equality, &Parser::parseBinaryExpression);
     registerLedHandler_binary(table, GreaterThan, Precedence::Relational, &Parser::parseBinaryExpression);
     registerLedHandler_binary(table, GreaterThanOrEqual, Precedence::Relational, &Parser::parseBinaryExpression);
     registerLedHandler_binary(table, LessThan, Precedence::Relational, &Parser::parseBinaryExpression);
