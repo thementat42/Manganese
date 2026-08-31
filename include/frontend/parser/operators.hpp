@@ -33,11 +33,11 @@ enum class Precedence : char {
 struct Operator {
     Precedence leftBindingPower, rightBindingPower;
 
-    constexpr static Operator prefix(Precedence _rightBindingPower = Precedence::Default) noexcept {
+    constexpr static Operator prefix(Precedence _rightBindingPower) noexcept {
         return Operator{.leftBindingPower = Precedence::Unary, .rightBindingPower = _rightBindingPower};
     }
 
-    constexpr static Operator postfix(Precedence _leftBindingPower = Precedence::Default) noexcept {
+    constexpr static Operator postfix(Precedence _leftBindingPower) noexcept {
         return Operator{.leftBindingPower = _leftBindingPower, .rightBindingPower = Precedence::Postfix};
     }
 

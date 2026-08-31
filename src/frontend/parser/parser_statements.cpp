@@ -29,7 +29,7 @@ ast::Statement* Parser::parseStatement() {
     }
     const std::size_t index = tokenToIndex(type);
 
-    const statementHandler_t handler = statementLookup[index];
+    const statementHandler_t handler = lookupTable.statementLookup[index];
     if (handler) { return (this->*handler)(); }
 
     // Parse out an expression then convert it to a statement

@@ -58,7 +58,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
     TokenType type = token.getType();
     const std::size_t index = tokenToIndex(type);
 
-    const nudHandler_t nudHandler = nudLookup[index];
+    const nudHandler_t nudHandler = lookupTable.nudLookup[index];
     if (!nudHandler) {
         ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
@@ -74,11 +74,11 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
         }
         type = token.getType();
         const std::size_t idx = tokenToIndex(type);
-        const Operator& op = operatorPrecedenceMap[idx];
+        const Operator& op = lookupTable.operatorPrecedenceMap[idx];
 
         if (op.leftBindingPower <= precedence) { break; }
 
-        const ledHandler_t handler = ledLookup[idx];
+        const ledHandler_t handler = lookupTable.ledLookup[idx];
         if (!handler) {
             ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }

@@ -9,7 +9,6 @@
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
-#include <mutex>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -32,46 +31,24 @@ class Parser {
     std::optional<Token> previousToken;
     mnstl::chunk_allocator& arena;
 
-    static inline std::once_flag lookupsInitFlag;
-
     // Some flags
     struct {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
         bool parsingAliasStatement : 1 = false;
-        bool hasModuleDeclaration: 1 = false;
+        bool hasModuleDeclaration : 1 = false;
     } flags;
 
    public:
-    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
-        lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(allocatorReference), flags() {
-        std::call_once(lookupsInitFlag, []() {
-            initializeLookups();
-            initializeTypeLookups();
-        });
-    }
+    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference);
 
     ~Parser() noexcept = default;
 
     ParsedFile parse();
 
    private:  // private methods
-    using statementHandler_t = ast::Statement* (Parser::*)();
-    using nudHandler_t = ast::Expression* (Parser::*)();
-    using nudHandler_types_t = ast::Type* (Parser::*)();
-    using ledHandler_t = ast::Expression* (Parser::*)(ast::Expression*, Precedence);
-    using ledHandler_types_t = ast::Type* (Parser::*)(ast::Type*, Precedence);
-
-    //~ Lookups
-    constexpr static inline auto _lookupSize = static_cast<std::size_t>(TokenType::_tokenCount);
-    static inline std::array<statementHandler_t, _lookupSize> statementLookup{};
-    static inline std::array<nudHandler_t, _lookupSize> nudLookup{};
-    static inline std::array<ledHandler_t, _lookupSize> ledLookup{};
-    static inline std::array<Operator, _lookupSize> operatorPrecedenceMap{};
-
-    static inline std::array<nudHandler_types_t, _lookupSize> nudLookup_types{};
-    static inline std::array<ledHandler_types_t, _lookupSize> ledLookup_types{};
-    static inline std::array<Operator, _lookupSize> operatorPrecedenceMap_type{};
+    friend consteval void initializeLookups(struct LookupTable&) noexcept;
+    friend consteval void initializeTypeLookups(struct LookupTable&) noexcept;
 
     //~ Parsing functions
 
@@ -198,26 +175,6 @@ class Parser {
     }
 
     inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
-
-    // ~ Helpers for lookups
-    constexpr static std::size_t tokenToIndex(TokenType t) noexcept { return static_cast<std::size_t>(t); }
-    consteval static Precedence precedenceAbove(Precedence p) noexcept {
-        return static_cast<Precedence>(static_cast<std::underlying_type_t<Precedence>>(p) + 1);
-    }
-
-    static void registerLedHandler_binary(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
-    static void registerLedHandler_postfix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
-    static void registerLedHandler_prefix(TokenType type, Precedence precedence, ledHandler_t handler) noexcept;
-    static void registerLedHandler_type(TokenType type, Precedence precedence, ledHandler_types_t handler) noexcept;
-
-    static void registerNudHandler_binary(TokenType type, nudHandler_t handler) noexcept;
-    static void registerNudHandler_prefix(TokenType type, nudHandler_t handler) noexcept;
-    static void registerNudHandler_type(TokenType type, nudHandler_types_t handler) noexcept;
-
-    static void registerStmtHandler(TokenType type, statementHandler_t handler) noexcept;
-
-    static void initializeLookups() noexcept;
-    static void initializeTypeLookups() noexcept;
 };
 
 }  // namespace Manganese::parser

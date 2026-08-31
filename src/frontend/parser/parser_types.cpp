@@ -13,7 +13,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
     TokenType type = peekTokenType();
     const std::size_t index = tokenToIndex(type);
 
-    const nudHandler_types_t nudHandler = nudLookup_types[index];
+    const nudHandler_types_t nudHandler = lookupTable.nudLookup_types[index];
     if (!nudHandler) {
         ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
     }
@@ -23,10 +23,10 @@ ast::Type* Parser::parseType(Precedence precedence) {
         type = peekTokenType();
         const std::size_t idx = tokenToIndex(type);
 
-        const Operator& op = operatorPrecedenceMap_type[idx];
+        const Operator& op = lookupTable.operatorPrecedenceMap_type[idx];
         if (op.leftBindingPower <= precedence) { break; }
 
-        const ledHandler_types_t handler = ledLookup_types[idx];
+        const ledHandler_types_t handler = lookupTable.ledLookup_types[idx];
         if (!handler) {
             ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer::tokenTypeToString(type));
         }
