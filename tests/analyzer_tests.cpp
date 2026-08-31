@@ -685,6 +685,22 @@ static bool testPointerDereferenceAndMutability() {
     return analyzeSource(addressOfRValue, false, __func__);
 }
 
+static bool miscTests() {
+    std::string code = R"(
+        func foo[T](x: T) -> T {
+            return x + 3;
+        }
+
+        func blah() {
+            let a = foo@[int32](10);
+            let b = foo@[string]("hello");
+
+        }
+    )";
+    DISCARD(analyzeSource(code, true, __func__));
+    return true;
+}
+
 void runAnalyzerTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
@@ -725,7 +741,8 @@ void runAnalyzerTests(TestRunner& runner) {
 
     // Other
     runner.runTest("Analysis from file", testAnalyzeFromFile);
-    runner.runTest("Dereference & Immutability", testPointerDereferenceAndMutability);
+    runner.runTest("Dereference & Immutability analysis", testPointerDereferenceAndMutability);
+    runner.runTest("Misc analyzer tests", miscTests);
 }
 
 }  // namespace Manganese::tests
