@@ -205,10 +205,7 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
         logError(expression, "Unknown scope");
         return exprvisit_t::Failure;
     }
-    if (!scopeSymbol->scopeDefined) {
-        logError(expression, "'{}' is not a namespace or module", scopeSymbol->node->toString());
-        return exprvisit_t::Failure;
-    }
+
     if (expression->element->kind != ast::ExpressionKind::IdentifierExpression) {
         logError(expression->element, "Expected an identifier in a scope resolution expression");
         return exprvisit_t::Failure;
@@ -220,11 +217,16 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
         for (const auto& variant : enumType->variants) {
             if (variant.name == memberName) {
                 expression->semanticType = enumType;
-                context.nestedScopeResolutionCurrentSymbol = scopeSymbol; 
+                context.nestedScopeResolutionCurrentSymbol = scopeSymbol;
                 return exprvisit_t::Success;
             }
         }
         logError(expression->element, "No variant named '{}' in enum '{}'", memberName, scopeSymbol->type->toString());
+        return exprvisit_t::Failure;
+    }
+
+    if (!scopeSymbol->scopeDefined) {
+        logError(expression, "'{}' is not a namespace, module or enum", scopeSymbol->node->toString());
         return exprvisit_t::Failure;
     }
 
