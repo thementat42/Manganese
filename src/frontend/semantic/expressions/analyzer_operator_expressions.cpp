@@ -5,6 +5,7 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/number.hxx>
+#include <mnstl/enum_matches.hxx>
 #include <utils/result.hpp>
 
 namespace Manganese::semantic {
@@ -241,6 +242,26 @@ auto Analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
     if (visit(expression->targetType) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+
+    const SemanticType* fromType = expression->originalValue->semanticType;
+    const SemanticType* toType = expression->targetType->semanticType;
+
+    bool isValidCast = false;
+    if (fromType == toType) {
+        isValidCast = true;
+    } else if (fromType->isPrimitive() && toType->isPrimitive()) {
+        isValidCast = !mnstl::enum_matches(ast::PrimitiveType_t::str, fromType->primitiveType, toType->primitiveType);
+    } else if (fromType->isEnum() && toType->isInteger()) {
+        isValidCast = true;
+    } else if (fromType->isInteger() && toType->isEnum()) {
+        isValidCast = true;
+    }
+
+    if (!isValidCast) {
+        logError(expression, "Invalid type cast from '{}' to '{}'", fromType->toString(), toType->toString());
+        return exprvisit_t::Failure;
+    }
+
     expression->semanticType = expression->targetType->semanticType;
 
     return result;
