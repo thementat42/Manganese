@@ -215,7 +215,7 @@ arg_parser.add_argument (
 args = arg_parser.parse_args()
 
 BUILD_DIR = Path(args.build_dir)
-OUT_NAME = "manganese" #+ (".exe" if os.name == "nt" else "")
+OUT_NAME = "manganese" + (".exe" if os.name == "nt" else "")
 
 if args.clean and args.no_move:
     print(
