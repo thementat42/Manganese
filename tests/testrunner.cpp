@@ -29,7 +29,6 @@ void TestRunner::printSummary() const noexcept {
 
     std::cout << ansi::GREEN << std::format("Tests Passed ({}):\n", passed) << passedTests << "\n";
     std::cout << ansi::RED << std::format("Tests Failed ({}):\n", failed) << failedTests << ansi::RESET << "\n";
-    if (failed == 0) { std::cout << ansi::GREEN << "All tests passed!" << ansi::RESET << '\n'; }
 
     const float percentPassed = static_cast<float>(passed) / static_cast<float>(total) * 100.0F;
     const float percentFailed = static_cast<float>(failed) / static_cast<float>(total) * 100.0F;
@@ -38,5 +37,6 @@ void TestRunner::printSummary() const noexcept {
     std::cout << ansi::GREEN << std::format("Passed: {}/{} ({:.2f}%)\n", passed, total, percentPassed) << ansi::RESET;
     std::cout << ansi::RED << std::format("Failed: {}/{} ({:.2f}%)\n", failed, total, percentFailed) << ansi::RESET;
     std::cout << ansi::PINK << "Total: " << total << ansi::RESET << '\n';
+    if (failed == 0) { std::cout << ansi::GREEN << "All tests passed!" << ansi::RESET << '\n'; }
 }
 }  // namespace Manganese::tests
