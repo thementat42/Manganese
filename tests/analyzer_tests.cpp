@@ -104,7 +104,10 @@ static bool testBreakAndContinueStatement() {
 
 static bool testEnumDeclarationStatement() {
     std::string source = R"(
-        enum Color : int32 { Red, Green, Blue }
+        enum Colour : int32 { Red, Green, Blue }
+        func main() {
+            let c = Colour::Red;
+        }
     )";
     return analyzeSource(source, true, __func__);
 }

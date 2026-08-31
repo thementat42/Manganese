@@ -215,6 +215,19 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
     }
     const std::string_view memberName = static_cast<ast::IdentifierExpression*>(expression->element)->name;
 
+    if (scopeSymbol->type && scopeSymbol->type->isEnum()) {
+        const auto* enumType = static_cast<const Enum*>(scopeSymbol->type);
+        for (const auto& variant : enumType->variants) {
+            if (variant.name == memberName) {
+                expression->semanticType = enumType;
+                context.nestedScopeResolutionCurrentSymbol = scopeSymbol; 
+                return exprvisit_t::Success;
+            }
+        }
+        logError(expression->element, "No variant named '{}' in enum '{}'", memberName, scopeSymbol->type->toString());
+        return exprvisit_t::Failure;
+    }
+
     Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
     if (!memberSymbol) {
         logError(expression->element, "No member named '{}' in scope", memberName);

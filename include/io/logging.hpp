@@ -19,7 +19,7 @@
 #define ANSI_VAL(val) val
 #endif
 
-// ANSI color codes for terminal output
+// ANSI colour codes for terminal output
 namespace ansi {
 constexpr inline std::string_view GREEN = ANSI_VAL("\033[32m");
 constexpr inline std::string_view PINK = ANSI_VAL("\033[95m");

@@ -21,7 +21,7 @@ endif()
 option(BUILD_TESTS "Build the test suite" OFF)
 option(MEMORY_TRACKING "Enable memory allocation tracking" OFF)
 option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory tracking" OFF)
-option(DISABLE_ANSI_COLOURS "Disable ANSI terminal colors" OFF)
+option(DISABLE_ANSI_COLOURS "Disable ANSI terminal colours" OFF)
 
 # Memory tracking configuration
 
