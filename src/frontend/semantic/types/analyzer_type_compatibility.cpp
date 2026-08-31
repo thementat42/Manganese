@@ -150,7 +150,12 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                                           arrFrom->elementType->toString(), arrTo->elementType->toString())};
             }
             return baseCompatible;
-        } break;
+        } 
+        case Kind::Enum: {
+            // the check that pointers are equal should have caught the case where the enums are the same
+            return typeCompatibilityResult{.result = Compatible_t::Error,
+                                           .message = conversionError + " (cannot convert between different enums)"};
+        } 
 
         case Kind::Function: {
             const auto* funcFrom = static_cast<const Function*>(from);
@@ -191,7 +196,7 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                 return {.result = Compatible_t::Valid};
             }
             return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
-        } break;
+        } 
 
         case Kind::Generic: {
             const auto* genericFrom = static_cast<const GenericInstantiation*>(from);
@@ -226,11 +231,11 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                         .message = conversionError + " (cannot convert an immutable pointer to a mutable pointer)."};
             }
             return areTypesCompatible(ptrFrom->baseType, ptrTo->baseType);
-        }; break;
+        };
 
         case Kind::Primitive: {
             return arePrimitivesCompatible(from, to);
-        }; break;
+        };
         case Kind::Void:
             return {.result = Compatible_t::Error, .message = "Cannot use 'void' expression in this context"};
 

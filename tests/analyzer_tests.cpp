@@ -109,7 +109,17 @@ static bool testEnumDeclarationStatement() {
             let c = Colour::Red;
         }
     )";
-    return analyzeSource(source, true, __func__);
+    std::string invalid = R"(
+        enum Colour : int32 { Red, Green, Blue }
+        enum Colour2 : int32 { Red, Green, Blue }
+        func main() {
+            let mut c = Colour::Red;
+            let c2 = Colour2::Red;
+            c = Colour::Green;
+            c2 = Colour::Blue;
+        }
+    )";
+    return analyzeSource(source, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
 static bool testForLoopStatement() {
