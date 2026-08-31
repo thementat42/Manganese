@@ -13,6 +13,7 @@ Options:
     --compile-commands                                     Generate compile_commands.json in the build directory.
     -cxx, -cpp, --cxxcompiler, --cppcompiler CXXCOMPILER   Specify a C++ compiler to use for the build instead of the default for the system
     -d, --debug                                            Build the compiler in debug mode instead of release mode.
+    --disable-ansi                                          Disable ANSI terminal colours in compiler output.
     -f, --fresh-build                                       Run a fresh build by clearing the build directory before running CMake
     -g, --generator                                        Set a generator for CMake's build files.
     -h, --help                                             Print this help message and exit
@@ -125,6 +126,12 @@ arg_parser.add_argument(
     "-d", "--debug",
     action = "store_true",
     help = "Build the compiler in debug mode instead of release mode"
+)
+
+arg_parser.add_argument(
+    "--disable-ansi",
+    action="store_true",
+    help="Disable ANSI terminal colours in compiler output"
 )
 
 arg_parser.add_argument(
@@ -278,6 +285,7 @@ cmake_args = [
     f"-DMEMORY_TRACKING={"ON" if args.memory_tracking else "OFF"}",
     f"-DCONTINUOUS_MEMORY_TRACKING={"ON" if args.memory_tracking_continuous else "OFF"}",
     f"-DCMAKE_EXPORT_COMPILE_COMMANDS={"ON" if args.compile_commands else "OFF"}",
+    f"-DDISABLE_ANSI_COLOURS={"ON" if args.disable_ansi else "OFF"}",
 ]
 
 build_args = [

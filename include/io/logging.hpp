@@ -11,16 +11,24 @@
 #include <string_view>
 #include <utility>
 
+// defined in CMake; if a terminal doesn't support ANSI colour sequences
+// This macro can disable them
+#if NO_ANSI_COLOURS
+#define ANSI_VAL(val) ""
+#else
+#define ANSI_VAL(val) val
+#endif
+
 // ANSI color codes for terminal output
 namespace ansi {
-constexpr inline std::string_view GREEN = "\033[32m";
-constexpr inline std::string_view PINK = "\033[95m";
-constexpr inline std::string_view RED = "\033[31m";
-constexpr inline std::string_view YELLOW = "\033[33m";
-constexpr inline std::string_view BLUE = "\033[34m";
-constexpr inline std::string_view CYAN = "\033[36m";
-constexpr inline std::string_view CRITICAL = "\033[91;1m";
-constexpr inline std::string_view RESET = "\033[0m";
+constexpr inline std::string_view GREEN = ANSI_VAL("\033[32m");
+constexpr inline std::string_view PINK = ANSI_VAL("\033[95m");
+constexpr inline std::string_view RED = ANSI_VAL("\033[31m");
+constexpr inline std::string_view YELLOW = ANSI_VAL("\033[33m");
+constexpr inline std::string_view BLUE = ANSI_VAL("\033[34m");
+constexpr inline std::string_view CYAN = ANSI_VAL("\033[36m");
+constexpr inline std::string_view CRITICAL = ANSI_VAL("\033[91;1m");
+constexpr inline std::string_view RESET = ANSI_VAL("\033[0m");
 }  // namespace ansi
 
 namespace Manganese::logging {

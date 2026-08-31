@@ -21,6 +21,7 @@ endif()
 option(BUILD_TESTS "Build the test suite" OFF)
 option(MEMORY_TRACKING "Enable memory allocation tracking" OFF)
 option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory tracking" OFF)
+option(DISABLE_ANSI_COLOURS "Disable ANSI terminal colors" OFF)
 
 # Memory tracking configuration
 
@@ -85,6 +86,7 @@ set_target_properties(manganese PROPERTIES
 target_compile_definitions(manganese PRIVATE
     MN_DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
     MNSTL_USE_COMPILER_EXTENDED_TYPES=0
+    NO_ANSI_COLOURS=$<BOOL:${DISABLE_ANSI_COLOURS}>
 )
 
 # Flags
