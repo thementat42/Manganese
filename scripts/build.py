@@ -1,5 +1,5 @@
 """
-A small script that automates using CMake to build the manganese compiler.
+A small script that wraps the CMake build script for the project.
 This script creates the cmake commands and runs them using Python's subprocess library
 Usage:
     python build.py [options] [-- exec_with...]
@@ -87,7 +87,7 @@ def run_command(command: list[str]):
 check_cmake_installation()
 ensure_project_root()
 
-arg_parser = argparse.ArgumentParser(description = "Runs CMake to build the manganese compiler")
+arg_parser = argparse.ArgumentParser(description = "Wraps the CMake build script")
 
 arg_parser.add_argument(
     "-b", "--build-dir",
@@ -215,7 +215,7 @@ arg_parser.add_argument (
 args = arg_parser.parse_args()
 
 BUILD_DIR = Path(args.build_dir)
-OUT_NAME = "manganese" + (".exe" if os.name == "nt" else "")
+OUT_NAME = "manganese" #+ (".exe" if os.name == "nt" else "")
 
 if args.clean and args.no_move:
     print(
