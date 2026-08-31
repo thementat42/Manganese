@@ -36,16 +36,9 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
         resolvedTypeArguments.push_back(resolved);
     }
 
-    ast::Expression* targetDeclaration = unwrapBaseDeclaration(expression->identifier);
-    if (!targetDeclaration || targetDeclaration->kind != ast::ExpressionKind::IdentifierExpression) {
-        logError(expression->identifier,
-                 "Target of generic expression must be a named function or aggregate declaration");
-        return exprvisit_t::Failure;
-    }
-    auto* identifier = static_cast<ast::IdentifierExpression*>(targetDeclaration);
-    const Symbol* symbol = symbolTable.lookup(identifier->name);
+    const Symbol* symbol = resolveScopeSymbol(expression->identifier);
     if (!symbol || !symbol->node) {
-        logError(identifier, "Use of undeclared symbol '{}'", identifier->name);
+        logError(expression->identifier, "Use of undeclared symbol '{}'", expression->identifier->toString());
         return exprvisit_t::Failure;
     }
     StackGuard guard{genericsStack, std::move(resolvedTypeArguments)};
@@ -65,7 +58,17 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
             activeGenericParams[functionDeclaration->genericTypes[i]] = i;
         }
 
-        stmtvisit_t visitRes = visit(functionDeclaration, generic_tag);
+        stmtvisit_t visitRes;
+        {
+            // If we don't do this, the analyzer will think that any instantiation of a generic function inside another function body is a nested function declaration, which is wrong
+            ContextGuard<bool> instantiationNestingGuard{context.inFunction, false};
+            Scope* previousScope = symbolTable.getCurrentScope();
+            if (symbol->hostScope) { symbolTable.setCurrentScope(symbol->hostScope); }
+
+            visitRes = visit(functionDeclaration, generic_tag);
+
+            if (symbol->hostScope) { symbolTable.setCurrentScope(previousScope); }
+        }
         const SemanticType* concreteType = nullptr;
         if (visitRes != stmtvisit_t::Failure) {
             concreteType = getInstantiatedFunctionType(functionDeclaration, genericsStack.top());
@@ -98,8 +101,14 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
             activeGenericParams[aggregateDecl->genericTypes[i]] = i;
         }
 
-        // Instantiate the generic aggregate definition
+        // Instantiate the generic aggregate definition with host scope restored
+        Scope* previousScope = symbolTable.getCurrentScope();
+        if (symbol->hostScope) { symbolTable.setCurrentScope(symbol->hostScope); }
+
         stmtvisit_t visitRes = visit(aggregateDecl, generic_tag);
+
+        if (symbol->hostScope) { symbolTable.setCurrentScope(previousScope); }
+
         const SemanticType* concreteType = nullptr;
         if (visitRes != stmtvisit_t::Failure) {
             concreteType = getInstantiatedAggregateType(aggregateDecl, genericsStack.top());
@@ -117,10 +126,9 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
         return exprvisit_t::Success;
     }
 
-    logError(identifier, "Symbol '{}' is neither a generic function nor a generic aggregate", identifier->name);
+    logError(expression->identifier, "Symbol '{}' is neither a generic function nor a generic aggregate", expression->identifier->toString());
     return exprvisit_t::Failure;
 }
-
 
 auto Analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }

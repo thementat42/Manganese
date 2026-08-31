@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 namespace Manganese::semantic {
+struct Scope;
 
 struct generic_tag_t {
     constexpr explicit generic_tag_t() noexcept {}

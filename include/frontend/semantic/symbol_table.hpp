@@ -78,6 +78,7 @@ class SymbolTable {
     Scope* _currentScope;
     struct {
         bool _isFirstPass : 1 = true;  // Toggles table from allocation mode to tree-tracking mode
+        bool _isInsideGenericInstantiation : 1 = true;
     } _flags;
 
     inline bool noScopeAvailable() const noexcept { return _currentScope == nullptr; }
@@ -101,10 +102,17 @@ class SymbolTable {
         _currentScope = _root;
     }
 
+    void enterGenericCheckingMode() noexcept { _flags._isInsideGenericInstantiation = true; }
+    void exitGenericCheckingMode() noexcept { _flags._isInsideGenericInstantiation = false; }
+
     void enterScope();
     void enterNamespace(std::string_view name, ast::ASTNode* node);
     void exitScope() noexcept;
     void FORCE_INLINE exitNamespace() noexcept { exitScope(); }
+
+    Scope* getCurrentScope() noexcept { return _currentScope; }
+    const Scope* getCurrentScope() const noexcept { return _currentScope; }
+    void setCurrentScope(Scope* scope) noexcept { _currentScope = scope; }
 
     Result declare(std::string_view name, Symbol&& symbol) {
         if (noScopeAvailable()) [[unlikely]] {

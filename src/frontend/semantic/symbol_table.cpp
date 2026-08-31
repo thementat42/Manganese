@@ -5,7 +5,7 @@
 namespace Manganese::semantic {
 
 void SymbolTable::enterScope() {
-    if (_flags._isFirstPass) {
+    if (_flags._isFirstPass || _flags._isInsideGenericInstantiation) {
         // Allocate memory to build a new scope
         auto* newScope = _arena.emplace<Scope>();
         newScope->parent = _currentScope;

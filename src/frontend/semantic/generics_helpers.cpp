@@ -24,6 +24,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) ->
     activeGenericParams.clear();
 
     for (std::size_t i = 0; i < stmt->genericTypes.size(); ++i) { activeGenericParams[stmt->genericTypes[i]] = i; }
+
     bool success = true;
     for (const auto& field : stmt->fields) {
         const SemanticType* fieldType = resolveGenericType(field.type);
@@ -33,6 +34,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) ->
         }
     }
     activeGenericParams = std::move(oldParams);
+
     if (success) {
         instantiationCache.markAsSuccess(key, nullptr);
     } else {
@@ -77,6 +79,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
         }
     }
 
+    symbolTable.enterGenericCheckingMode();
     symbolTable.enterScope();
     const SemanticType* previousFunctionReturnType = context.currentFunctionReturnType;
     context.currentFunctionReturnType = resolvedReturnType;
@@ -116,6 +119,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
     }
 
     context.currentFunctionReturnType = previousFunctionReturnType;
+    symbolTable.exitGenericCheckingMode();
     symbolTable.exitScope();
     activeGenericParams = std::move(oldParams);
 
@@ -271,13 +275,14 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             }
 
             const Symbol* symbol = nullptr;
-            if (genericType->baseType->kind == SymbolType) {
+            if (genericType->baseType->kind == ast::TypeKind::SymbolType) {
                 const auto* symbolType = static_cast<const ast::SymbolType*>(genericType->baseType);
                 symbol = symbolTable.lookup(symbolType->name);
-            } else if (genericType->baseType->kind == ScopedType) {
-                // const auto* scopedType = static_cast<const ast::ScopedType*>(genericType->baseType);
-                symbol = nullptr;  // symbolTable.scopedLookup(scopedType->qualifier, scopedType->baseType);
+            } else if (genericType->baseType->kind == ast::TypeKind::ScopedType) {
+                // Properly resolve namespace-qualified base types (e.g., Data::Pair)
+                symbol = resolveTypeSymbol(genericType->baseType);
             }
+
             if (!symbol || !symbol->node) {
                 logError(type, "Unknown generic base declaration");
                 return nullptr;
@@ -286,7 +291,19 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
                 auto* aggregate = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
                 StackGuard guard{genericsStack, std::move(resolvedTypes)};
-                if (visit(aggregate, generic_tag) == stmtvisit_t::Failure) { return nullptr; }
+
+                Scope* previousScope = symbolTable.getCurrentScope();
+                if (symbol->hostScope) {
+                    symbolTable.setCurrentScope(symbol->hostScope);
+                }
+
+                auto visitResult = visit(aggregate, generic_tag);
+
+                if (symbol->hostScope) {
+                    symbolTable.setCurrentScope(previousScope);
+                }
+
+                if (visitResult == stmtvisit_t::Failure) { return nullptr; }
                 return getInstantiatedAggregateType(aggregate, genericsStack.top());
             }
 
