@@ -175,7 +175,8 @@ struct ImportStatement final : public Statement {
     std::vector<std::string> path;
     std::optional<std::string> alias;
 
-    ImportStatement(std::vector<std::string>&& _path, std::optional<std::string>&& _alias) noexcept : Statement(StatementKind::ImportStatement), path(std::move(_path)), alias(std::move(_alias)) {}
+    ImportStatement(std::vector<std::string>&& _path, std::optional<std::string>&& _alias) noexcept :
+        Statement(StatementKind::ImportStatement), path(std::move(_path)), alias(std::move(_alias)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -186,7 +187,7 @@ struct ModuleDeclarationStatement final : public Statement {
     explicit ModuleDeclarationStatement(std::string&& _name) noexcept :
         Statement(StatementKind::ModuleDeclarationStatement), name(std::move(_name)) {}
 
-    MN_AST_STANDARD_INTERFACE; 
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct NamespaceStatement final : public Statement {

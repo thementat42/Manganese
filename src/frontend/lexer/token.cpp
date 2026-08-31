@@ -83,7 +83,8 @@ constexpr auto keywordTable = []() {
 }();
 
 TokenType keywordLookup(std::string_view s) noexcept {
-    if (auto entry = std::ranges::lower_bound(keywordTable, s, {}, &keyword_map_entry::str); entry != keywordTable.end() && entry->str == s) {
+    if (auto entry = std::ranges::lower_bound(keywordTable, s, {}, &keyword_map_entry::str);
+        entry != keywordTable.end() && entry->str == s) {
         return entry->type;
     }
     return TokenType::Unknown;

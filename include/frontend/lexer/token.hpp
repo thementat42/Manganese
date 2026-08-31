@@ -27,10 +27,10 @@ std::string tokenTypeToString(TokenType type);
 
 class Token {
    private:
-   std::string _lexeme;
-   std::size_t _line, _column;
-   TokenType _type;
-   bool _isInvalid;
+    std::string _lexeme;
+    std::size_t _line, _column;
+    TokenType _type;
+    bool _isInvalid;
 
    public:
     Token() noexcept = default;

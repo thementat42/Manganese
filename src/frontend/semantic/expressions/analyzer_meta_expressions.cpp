@@ -60,7 +60,8 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
 
         stmtvisit_t visitRes;
         {
-            // If we don't do this, the analyzer will think that any instantiation of a generic function inside another function body is a nested function declaration, which is wrong
+            // If we don't do this, the analyzer will think that any instantiation of a generic function inside another
+            // function body is a nested function declaration, which is wrong
             ContextGuard<bool> instantiationNestingGuard{context.inFunction, false};
             Scope* previousScope = symbolTable.getCurrentScope();
             if (symbol->hostScope) { symbolTable.setCurrentScope(symbol->hostScope); }
@@ -126,7 +127,8 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
         return exprvisit_t::Success;
     }
 
-    logError(expression->identifier, "Symbol '{}' is neither a generic function nor a generic aggregate", expression->identifier->toString());
+    logError(expression->identifier, "Symbol '{}' is neither a generic function nor a generic aggregate",
+             expression->identifier->toString());
     return exprvisit_t::Failure;
 }
 

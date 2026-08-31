@@ -78,20 +78,17 @@ void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<A
 }
 
 template <class... Args>
-FORCE_INLINE void logWarning(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
-                             Args&&... args) {
+FORCE_INLINE void logWarning(std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) {
     log(LogLevel::Warning, line, col, fmt, std::forward<Args>(args)...);
 }
 
 template <class... Args>
-FORCE_INLINE void logError(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
-                           Args&&... args) {
+FORCE_INLINE void logError(std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) {
     log(LogLevel::Error, line, col, fmt, std::forward<Args>(args)...);
 }
 
 template <class... Args>
-FORCE_INLINE void logCritical(std::size_t line, std::size_t col, std::format_string<Args...> fmt,
-                              Args&&... args) {
+FORCE_INLINE void logCritical(std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) {
     log(LogLevel::Critical, line, col, fmt, std::forward<Args>(args)...);
 }
 

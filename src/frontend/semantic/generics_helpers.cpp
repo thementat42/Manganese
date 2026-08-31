@@ -293,15 +293,11 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
                 StackGuard guard{genericsStack, std::move(resolvedTypes)};
 
                 Scope* previousScope = symbolTable.getCurrentScope();
-                if (symbol->hostScope) {
-                    symbolTable.setCurrentScope(symbol->hostScope);
-                }
+                if (symbol->hostScope) { symbolTable.setCurrentScope(symbol->hostScope); }
 
                 auto visitResult = visit(aggregate, generic_tag);
 
-                if (symbol->hostScope) {
-                    symbolTable.setCurrentScope(previousScope);
-                }
+                if (symbol->hostScope) { symbolTable.setCurrentScope(previousScope); }
 
                 if (visitResult == stmtvisit_t::Failure) { return nullptr; }
                 return getInstantiatedAggregateType(aggregate, genericsStack.top());

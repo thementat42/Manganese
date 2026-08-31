@@ -55,15 +55,13 @@ constexpr void registerLedHandler_prefix(LookupTable& table, lexer::TokenType ty
     table.ledLookup[index] = handler;
 }
 
-constexpr void registerNudHandler_binary(LookupTable& table, lexer::TokenType type,
-                                         nudHandler_t handler) noexcept {
+constexpr void registerNudHandler_binary(LookupTable& table, lexer::TokenType type, nudHandler_t handler) noexcept {
     const std::size_t index = tokenToIndex(type);
     table.operatorPrecedenceMap[index] = Operator::prefix(Precedence::Default);
     table.nudLookup[index] = handler;
 }
 
-constexpr void registerNudHandler_prefix(LookupTable& table, lexer::TokenType type,
-                                         nudHandler_t handler) noexcept {
+constexpr void registerNudHandler_prefix(LookupTable& table, lexer::TokenType type, nudHandler_t handler) noexcept {
     const std::size_t index = tokenToIndex(type);
     table.operatorPrecedenceMap[index] = Operator::prefix(Precedence::Default);
     table.nudLookup[index] = handler;
@@ -76,16 +74,14 @@ constexpr void registerLedHandler_type(LookupTable& table, lexer::TokenType type
     table.ledLookup_types[index] = handler;
 }
 
-constexpr void registerNudHandler_type(LookupTable& table, lexer::TokenType type,
-                                       nudHandler_types_t handler) noexcept {
+constexpr void registerNudHandler_type(LookupTable& table, lexer::TokenType type, nudHandler_types_t handler) noexcept {
     const std::size_t index = tokenToIndex(type);
     table.operatorPrecedenceMap_type[index]
         = Operator{.leftBindingPower = Precedence::Primary, .rightBindingPower = Precedence::Default};
     table.nudLookup_types[index] = handler;
 }
 
-constexpr void registerStmtHandler(LookupTable& table, lexer::TokenType type,
-                                   statementHandler_t handler) noexcept {
+constexpr void registerStmtHandler(LookupTable& table, lexer::TokenType type, statementHandler_t handler) noexcept {
     const std::size_t index = tokenToIndex(type);
 
     table.operatorPrecedenceMap[index]

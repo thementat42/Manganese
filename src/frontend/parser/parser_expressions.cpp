@@ -182,11 +182,9 @@ ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Prec
 ast::Expression* Parser::parseGenericInstantiationExpression(ast::Expression* left, Precedence) {
     const Token startToken = consumeToken();  // Consume the '@' token
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
-    auto typeParameters = parseCommaSeparatedList<ast::Type*>(
-        lexer::TokenType::RightSquare,
-        "Expected ',' to separate generic types",
-        [this]() { return parseType(Precedence::Default); }
-    );
+    auto typeParameters
+        = parseCommaSeparatedList<ast::Type*>(lexer::TokenType::RightSquare, "Expected ',' to separate generic types",
+                                              [this]() { return parseType(Precedence::Default); });
     return makeNode<ast::GenericInstantiationExpression>(startToken, left, std::move(typeParameters));
 }
 

@@ -38,7 +38,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
 // Specific type parsing methods
 
 ast::Type* Parser::parseAggregateType() {
-    const Token startToken = consumeToken(); // Consume 'aggregate'
+    const Token startToken = consumeToken();  // Consume 'aggregate'
     if (peekTokenType() == TokenType::Identifier) {
         logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
                             "Aggregate names are ignored in aggregate type declarations");
@@ -50,8 +50,7 @@ ast::Type* Parser::parseAggregateType() {
     auto fieldTypes = parseCommaSeparatedList<ast::Type*>(
         TokenType::RightBrace,
         "Expected ',' to separate fields in aggregate type declaration or '}' to end the declaration",
-        [this]() { return parseAggregateTypeField(); }
-    );
+        [this]() { return parseAggregateTypeField(); });
 
     return makeNode<ast::AggregateType>(startToken, std::move(fieldTypes));
 }
@@ -71,7 +70,7 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence) {
 }
 
 ast::Type* Parser::parseFunctionType() {
-    const Token startToken = consumeToken(); // Consume 'func'
+    const Token startToken = consumeToken();  // Consume 'func'
     expectToken(TokenType::LeftParen, "Expected '(' after 'func' in a function type");
 
     bool seenVariadic = false;
@@ -227,13 +226,14 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
     return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
 }
 
-std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics, std::string_view contextName) {
+std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics,
+                                              std::string_view contextName) {
     Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
     std::string genericName = genericToken.getLexeme();
 
     if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
-        logError(genericToken.getLine(), genericToken.getColumn(),
-                 "Duplicate generic type '{}' in '{}'", genericName, contextName);
+        logError(genericToken.getLine(), genericToken.getColumn(), "Duplicate generic type '{}' in '{}'", genericName,
+                 contextName);
         return "";
     }
     return genericName;

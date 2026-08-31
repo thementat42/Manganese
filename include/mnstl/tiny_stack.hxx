@@ -27,7 +27,7 @@ class tiny_stack {
         assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
         return _data.back();
     }
-    [[nodiscard]] const T& top() const & noexcept {
+    [[nodiscard]] const T& top() const& noexcept {
         assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
         return _data.back();
     }
@@ -36,7 +36,7 @@ class tiny_stack {
         assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
         return std::move(_data.back());
     }
-    [[nodiscard]] const T&& top() const && noexcept {
+    [[nodiscard]] const T&& top() const&& noexcept {
         assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
         return std::move(_data.back());
     }
