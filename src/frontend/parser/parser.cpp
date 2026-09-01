@@ -70,7 +70,7 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
                       lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(tok.getType()));
     flags.hasError = true;
 
-    return flags.hasError ? lexer::Token{} : consumeToken();
+    return lexer::Token{};
 }
 
 ast::Block Parser::parseBlock(const std::string& blockName) {
