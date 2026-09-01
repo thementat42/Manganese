@@ -37,6 +37,8 @@ struct [[nodiscard]] ContextGuard {
 
     ContextGuard(const ContextGuard&) = delete;
     ContextGuard& operator=(const ContextGuard&) = delete;
+    ContextGuard(ContextGuard&&) = delete;
+    ContextGuard& operator=(ContextGuard&&) = delete;
 };
 
 template <class T>
@@ -46,6 +48,11 @@ struct [[nodiscard]] StackGuard {
         stack.push(std::move(_new_element));
     }
     ~StackGuard() noexcept { stack.pop(); }
+
+    StackGuard(const StackGuard&) = delete;
+    StackGuard& operator=(const StackGuard&) = delete;
+    StackGuard(StackGuard&&) = delete;
+    StackGuard& operator=(StackGuard&&) = delete;
 };
 
 using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
