@@ -58,7 +58,7 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
 #else  // ^^ MN_DEBUG vv !MN_DEBUG
     DISCARD(level);
     DISCARD(fmt);
-    ((void)(args),...);
+    ((void)(args), ...);
     return;  // No internal logging in non-debug builds
 #endif  // MN_DEBUG
 }

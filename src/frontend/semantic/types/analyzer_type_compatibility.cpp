@@ -150,12 +150,12 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                                           arrFrom->elementType->toString(), arrTo->elementType->toString())};
             }
             return baseCompatible;
-        } 
+        }
         case Kind::Enum: {
             // the check that pointers are equal should have caught the case where the enums are the same
             return typeCompatibilityResult{.result = Compatible_t::Error,
                                            .message = conversionError + " (cannot convert between different enums)"};
-        } 
+        }
 
         case Kind::Function: {
             const auto* funcFrom = static_cast<const Function*>(from);
@@ -196,7 +196,7 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
                 return {.result = Compatible_t::Valid};
             }
             return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
-        } 
+        }
 
         case Kind::Generic: {
             const auto* genericFrom = static_cast<const GenericInstantiation*>(from);

@@ -67,8 +67,7 @@ static bool testAggregateDeclarationStatement() {
         aggregate Node { next: Node; }
     )";
 
-    return analyzeSource(validSource, true, __func__) && 
-           analyzeSource(invalidSource, false, __func__);
+    return analyzeSource(validSource, true, __func__) && analyzeSource(invalidSource, false, __func__);
 }
 
 static bool testAliasStatement() {
@@ -100,8 +99,7 @@ static bool testBreakAndContinueStatement() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(invalid, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
 static bool testEnumDeclarationStatement() {
@@ -121,8 +119,7 @@ static bool testEnumDeclarationStatement() {
             c2 = Colour::Blue;
         }
     )";
-    return analyzeSource(source, true, __func__) && 
-           analyzeSource(invalid, false, __func__);
+    return analyzeSource(source, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
 static bool testForLoopStatement() {
@@ -159,9 +156,8 @@ static bool testFunctionDeclarationAndReturnStatement() {
         }
     )";
 
-    return analyzeSource(missingReturn, false, __func__) && 
-           analyzeSource(valueInVoid, false, __func__) && 
-           analyzeSource(valid, true, __func__);
+    return analyzeSource(missingReturn, false, __func__) && analyzeSource(valueInVoid, false, __func__)
+        && analyzeSource(valid, true, __func__);
 }
 
 static bool testIfStatement() {
@@ -178,8 +174,7 @@ static bool testIfStatement() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(valid2, true, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(valid2, true, __func__);
 }
 
 static bool testNamespaceStatement() {
@@ -213,8 +208,7 @@ static bool testNamespaceStatement() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(duplicateSymbol, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(duplicateSymbol, false, __func__);
 }
 
 static bool testSwitchStatement() {
@@ -246,8 +240,7 @@ static bool testVariableDeclarationStatement() {
         }
     )";
 
-    return analyzeSource(mismatch, false, __func__) && 
-           analyzeSource(voidAssign, false, __func__);
+    return analyzeSource(mismatch, false, __func__) && analyzeSource(voidAssign, false, __func__);
 }
 
 static bool testWhileLoopStatement() {
@@ -288,8 +281,7 @@ static bool testArrayLiteralAndIndexExpression() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(invalid, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
 static bool testAssignmentExpression() {
@@ -332,8 +324,7 @@ static bool testFunctionCallExpression() {
         }
     )";
 
-    return analyzeSource(voidArg, false, __func__) && 
-           analyzeSource(valid, true, __func__);
+    return analyzeSource(voidArg, false, __func__) && analyzeSource(valid, true, __func__);
 }
 
 static bool testGenericInstantiationExpression() {
@@ -375,8 +366,7 @@ static bool testPrefixPostfixPointerOperators() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(invalid, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
 static bool testScopeResolutionExpression() {
@@ -416,9 +406,8 @@ static bool testScopeResolutionExpression() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(missingMember, false, __func__) && 
-           analyzeSource(invalidScope, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(missingMember, false, __func__)
+        && analyzeSource(invalidScope, false, __func__);
 }
 
 static bool testSizeofAndAlignofExpression() {
@@ -468,8 +457,7 @@ static bool testGenericScopeResolution() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(unboundGeneric, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(unboundGeneric, false, __func__);
 }
 
 static bool testScopeResolutionMutability() {
@@ -508,9 +496,8 @@ static bool testScopeResolutionMutability() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(invalidAssign, false, __func__) && 
-           analyzeSource(invalidInc, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidAssign, false, __func__)
+        && analyzeSource(invalidInc, false, __func__);
 }
 
 static bool testDeeplyNestedScopedType() {
@@ -540,8 +527,7 @@ static bool testDeeplyNestedScopedType() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(invalidChain, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidChain, false, __func__);
 }
 
 // Type Tests
@@ -564,8 +550,7 @@ static bool testPointerTypeMutability() {
         }
     )";
 
-    return analyzeSource(invalid, false, __func__) && 
-           analyzeSource(valid, true, __func__);
+    return analyzeSource(invalid, false, __func__) && analyzeSource(valid, true, __func__);
 }
 
 static bool testArrayOfVoidDisallowed() {
@@ -626,8 +611,7 @@ static bool testScopedType() {
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && 
-           analyzeSource(nonTypeAsType, false, __func__);
+    return analyzeSource(valid, true, __func__) && analyzeSource(nonTypeAsType, false, __func__);
 }
 
 // Other
@@ -709,10 +693,8 @@ static bool testPointerDereferenceAndMutability() {
         }
     )";
 
-    return analyzeSource(validSource, true, __func__) && 
-           analyzeSource(assignThroughConstPtr, false, __func__) && 
-           analyzeSource(incImmutable, false, __func__) && 
-           analyzeSource(addressOfRValue, false, __func__);
+    return analyzeSource(validSource, true, __func__) && analyzeSource(assignThroughConstPtr, false, __func__)
+        && analyzeSource(incImmutable, false, __func__) && analyzeSource(addressOfRValue, false, __func__);
 }
 
 static bool miscTests() {

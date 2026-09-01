@@ -69,7 +69,6 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
     logging::logError(tok.getLine(), tok.getColumn(), "{} (expected '{}' but got '{}')", errorMessage,
                       lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(tok.getType()));
     flags.hasError = true;
-
     return lexer::Token{};
 }
 
