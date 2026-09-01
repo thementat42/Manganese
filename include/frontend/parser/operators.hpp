@@ -44,6 +44,16 @@ struct Operator {
     constexpr static Operator binary(Precedence bindingPower) noexcept {
         return Operator{.leftBindingPower = bindingPower, .rightBindingPower = bindingPower};
     }
+
+    constexpr static Operator statement() noexcept {
+        return Operator{.leftBindingPower = Precedence::Default, .rightBindingPower = Precedence::Default};
+    }
+
+    // a helper just to make initialization clearer in the lookup tables
+    constexpr static Operator binaryType(Precedence bindingPower) noexcept { return binary(bindingPower); }
+    constexpr static Operator type() noexcept {
+        return Operator{.leftBindingPower = Precedence::Primary, .rightBindingPower = Precedence::Default};
+    }
 };
 }  // namespace Manganese::parser
 

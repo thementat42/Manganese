@@ -70,22 +70,20 @@ constexpr void registerNudHandler_prefix(LookupTable& table, lexer::TokenType ty
 constexpr void registerLedHandler_type(LookupTable& table, lexer::TokenType type, Precedence precedence,
                                        ledHandler_types_t handler) noexcept {
     const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap_type[index] = Operator::binary(precedence);
+    table.operatorPrecedenceMap_type[index] = Operator::binaryType(precedence);
     table.ledLookup_types[index] = handler;
 }
 
 constexpr void registerNudHandler_type(LookupTable& table, lexer::TokenType type, nudHandler_types_t handler) noexcept {
     const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap_type[index]
-        = Operator{.leftBindingPower = Precedence::Primary, .rightBindingPower = Precedence::Default};
+    table.operatorPrecedenceMap_type[index] = Operator::type();
     table.nudLookup_types[index] = handler;
 }
 
 constexpr void registerStmtHandler(LookupTable& table, lexer::TokenType type, statementHandler_t handler) noexcept {
     const std::size_t index = tokenToIndex(type);
 
-    table.operatorPrecedenceMap[index]
-        = Operator{.leftBindingPower = Precedence::Default, .rightBindingPower = Precedence::Default};
+    table.operatorPrecedenceMap[index] = Operator::statement();
     table.statementLookup[index] = handler;
 }
 
