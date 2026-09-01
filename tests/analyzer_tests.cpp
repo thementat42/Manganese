@@ -61,13 +61,14 @@ static bool testAggregateDeclarationStatement() {
         aggregate Point { x: int32; y: int32; }
         aggregate Line { start: Point; end: Point; }
     )";
-    if (!analyzeSource(validSource, true, __func__)) { return false; }
 
     // Self-referential aggregate (infinite size layout) must fail
     std::string invalidSource = R"(
         aggregate Node { next: Node; }
     )";
-    return analyzeSource(invalidSource, false, __func__);
+
+    return analyzeSource(validSource, true, __func__) && 
+           analyzeSource(invalidSource, false, __func__);
 }
 
 static bool testAliasStatement() {
@@ -91,7 +92,6 @@ static bool testBreakAndContinueStatement() {
             }
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // break outside of a loop must fail
     std::string invalid = R"(
@@ -99,7 +99,9 @@ static bool testBreakAndContinueStatement() {
             break;
         }
     )";
-    return analyzeSource(invalid, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(invalid, false, __func__);
 }
 
 static bool testEnumDeclarationStatement() {
@@ -119,7 +121,8 @@ static bool testEnumDeclarationStatement() {
             c2 = Colour::Blue;
         }
     )";
-    return analyzeSource(source, true, __func__) && analyzeSource(invalid, false, __func__);
+    return analyzeSource(source, true, __func__) && 
+           analyzeSource(invalid, false, __func__);
 }
 
 static bool testForLoopStatement() {
@@ -138,7 +141,6 @@ static bool testFunctionDeclarationAndReturnStatement() {
             return;
         }
     )";
-    if (!analyzeSource(missingReturn, false, __func__)) { return false; }
 
     // Returning a value in a void/empty-return function
     std::string valueInVoid = R"(
@@ -146,7 +148,6 @@ static bool testFunctionDeclarationAndReturnStatement() {
             return 100;
         }
     )";
-    if (!analyzeSource(valueInVoid, false, __func__)) { return false; }
 
     // Valid void and non-void functions
     std::string valid = R"(
@@ -157,7 +158,10 @@ static bool testFunctionDeclarationAndReturnStatement() {
             return 42; 
         }
     )";
-    return analyzeSource(valid, true, __func__);
+
+    return analyzeSource(missingReturn, false, __func__) && 
+           analyzeSource(valueInVoid, false, __func__) && 
+           analyzeSource(valid, true, __func__);
 }
 
 static bool testIfStatement() {
@@ -167,14 +171,15 @@ static bool testIfStatement() {
             if ("not a bool") {}
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return true; }
 
     std::string valid2 = R"(
         func main() {
             if (1 < 2) {} else {}
         }
     )";
-    return analyzeSource(valid2, true, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(valid2, true, __func__);
 }
 
 static bool testNamespaceStatement() {
@@ -199,7 +204,6 @@ static bool testNamespaceStatement() {
             }
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // Duplicate symbol declaration within the same namespace must fail
     std::string duplicateSymbol = R"(
@@ -208,7 +212,9 @@ static bool testNamespaceStatement() {
             let x: int32 = 20;
         }
     )";
-    return analyzeSource(duplicateSymbol, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(duplicateSymbol, false, __func__);
 }
 
 static bool testSwitchStatement() {
@@ -231,7 +237,6 @@ static bool testVariableDeclarationStatement() {
             let a: int32 = "hello";
         }
     )";
-    if (!analyzeSource(mismatch, false, __func__)) { return false; }
 
     // Cannot initialize variable with void function result
     std::string voidAssign = R"(
@@ -240,7 +245,9 @@ static bool testVariableDeclarationStatement() {
             let a = foo();
         }
     )";
-    return analyzeSource(voidAssign, false, __func__);
+
+    return analyzeSource(mismatch, false, __func__) && 
+           analyzeSource(voidAssign, false, __func__);
 }
 
 static bool testWhileLoopStatement() {
@@ -272,7 +279,6 @@ static bool testArrayLiteralAndIndexExpression() {
             let elem = arr[0];
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // Indexing with a non-integer must fail
     std::string invalid = R"(
@@ -281,7 +287,9 @@ static bool testArrayLiteralAndIndexExpression() {
             let elem = arr["index"];
         }
     )";
-    return analyzeSource(invalid, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(invalid, false, __func__);
 }
 
 static bool testAssignmentExpression() {
@@ -314,7 +322,6 @@ static bool testFunctionCallExpression() {
             takeInt(getNothing());
         }
     )";
-    if (!analyzeSource(voidArg, false, __func__)) { return false; }
 
     std::string valid = R"(
         func add(a: int32, b: int32) -> int32 { 
@@ -324,7 +331,9 @@ static bool testFunctionCallExpression() {
             let res = add(1, 2);
         }
     )";
-    return analyzeSource(valid, true, __func__);
+
+    return analyzeSource(voidArg, false, __func__) && 
+           analyzeSource(valid, true, __func__);
 }
 
 static bool testGenericInstantiationExpression() {
@@ -357,7 +366,6 @@ static bool testPrefixPostfixPointerOperators() {
             val++;
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // Dereferencing a non-pointer must fail
     std::string invalid = R"(
@@ -366,7 +374,9 @@ static bool testPrefixPostfixPointerOperators() {
             let deref = *val;
         }
     )";
-    return analyzeSource(invalid, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(invalid, false, __func__);
 }
 
 static bool testScopeResolutionExpression() {
@@ -389,7 +399,6 @@ static bool testScopeResolutionExpression() {
             let b = Outer::Inner::number;
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // Accessing a symbol that does not exist in the namespace
     std::string missingMember = R"(
@@ -398,7 +407,6 @@ static bool testScopeResolutionExpression() {
             let x = Math::doesNotExist;
         }
     )";
-    if (!analyzeSource(missingMember, false, __func__)) { return false; }
 
     // Using a non-namespace/non-module variable as a scope
     std::string invalidScope = R"(
@@ -407,7 +415,10 @@ static bool testScopeResolutionExpression() {
             let x = notAScope::member;
         }
     )";
-    return analyzeSource(invalidScope, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(missingMember, false, __func__) && 
+           analyzeSource(invalidScope, false, __func__);
 }
 
 static bool testSizeofAndAlignofExpression() {
@@ -446,7 +457,6 @@ static bool testGenericScopeResolution() {
             let pair = Data::Pair@[Data::Point] { first = p, second = p };
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // Attempting to instantiate a generic type using an unbound parameter inside generic scope
     std::string unboundGeneric = R"(
@@ -457,7 +467,9 @@ static bool testGenericScopeResolution() {
             let c = Data::Container@[U] { item = 0 };
         }
     )";
-    return analyzeSource(unboundGeneric, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(unboundGeneric, false, __func__);
 }
 
 static bool testScopeResolutionMutability() {
@@ -473,7 +485,6 @@ static bool testScopeResolutionMutability() {
             Globals::counter++;
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // Assigning to an immutable variable inside a scope resolution expression must fail
     std::string invalidAssign = R"(
@@ -485,7 +496,6 @@ static bool testScopeResolutionMutability() {
             Globals::maxCount = 200;
         }
     )";
-    if (!analyzeSource(invalidAssign, false, __func__)) { return false; }
 
     // Incrementing an immutable scoped variable must fail
     std::string invalidInc = R"(
@@ -497,7 +507,10 @@ static bool testScopeResolutionMutability() {
             Globals::maxCount++;
         }
     )";
-    return analyzeSource(invalidInc, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(invalidAssign, false, __func__) && 
+           analyzeSource(invalidInc, false, __func__);
 }
 
 static bool testDeeplyNestedScopedType() {
@@ -515,7 +528,6 @@ static bool testDeeplyNestedScopedType() {
             let obj: Level1::Level2::Level3::DeepType = Level1::Level2::Level3::DeepType { value = 42 };
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // Breaking the chain midway through an invalid child scope
     std::string invalidChain = R"(
@@ -527,7 +539,9 @@ static bool testDeeplyNestedScopedType() {
             let obj: Level1::Level2::NonExistent::DeepType = 0;
         }
     )";
-    return analyzeSource(invalidChain, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(invalidChain, false, __func__);
 }
 
 // Type Tests
@@ -540,7 +554,6 @@ static bool testPointerTypeMutability() {
             let mutPtr: ptr mut int32 = constPtr;
         }
     )";
-    if (!analyzeSource(invalid, false, __func__)) { return false; }
 
     // Coercing mutable pointer to immutable pointer is valid
     std::string valid = R"(
@@ -550,7 +563,9 @@ static bool testPointerTypeMutability() {
             let constPtr: ptr int32 = mutPtr;
         }
     )";
-    return analyzeSource(valid, true, __func__);
+
+    return analyzeSource(invalid, false, __func__) && 
+           analyzeSource(valid, true, __func__);
 }
 
 static bool testArrayOfVoidDisallowed() {
@@ -599,7 +614,6 @@ static bool testScopedType() {
             let c: Graphics::_2D::Canvas = Graphics::_2D::Canvas { width = 800, height = 600 };
         }
     )";
-    if (!analyzeSource(valid, true, __func__)) { return false; }
 
     // Using a function or non-type symbol as a scoped type
     std::string nonTypeAsType = R"(
@@ -611,7 +625,9 @@ static bool testScopedType() {
             let x: Math::calculate = 42;
         }
     )";
-    return analyzeSource(nonTypeAsType, false, __func__);
+
+    return analyzeSource(valid, true, __func__) && 
+           analyzeSource(nonTypeAsType, false, __func__);
 }
 
 // Other
@@ -667,7 +683,6 @@ static bool testPointerDereferenceAndMutability() {
             --mutPtr;
         }
     )";
-    if (!analyzeSource(validSource, true, __func__)) { return false; }
 
     // Assigning through a dereference of an immutable pointer (`ptr int32`) is invalid
     std::string assignThroughConstPtr = R"(
@@ -677,7 +692,6 @@ static bool testPointerDereferenceAndMutability() {
             *constPtr = 200;
         }
     )";
-    if (!analyzeSource(assignThroughConstPtr, false, __func__)) { return false; }
 
     // Incrementing/decrementing an immutable variable and an rvalue is invalid
     std::string incImmutable = R"(
@@ -687,7 +701,6 @@ static bool testPointerDereferenceAndMutability() {
             --3;
         }
     )";
-    if (!analyzeSource(incImmutable, false, __func__)) { return false; }
 
     // Taking address of an r-value (or assigning to an r-value) is invalid
     std::string addressOfRValue = R"(
@@ -695,7 +708,11 @@ static bool testPointerDereferenceAndMutability() {
             let ptrVal = &42;
         }
     )";
-    return analyzeSource(addressOfRValue, false, __func__);
+
+    return analyzeSource(validSource, true, __func__) && 
+           analyzeSource(assignThroughConstPtr, false, __func__) && 
+           analyzeSource(incImmutable, false, __func__) && 
+           analyzeSource(addressOfRValue, false, __func__);
 }
 
 static bool miscTests() {
@@ -710,8 +727,7 @@ static bool miscTests() {
 
         }
     )";
-    DISCARD(analyzeSource(code, true, __func__));
-    return true;
+    return analyzeSource(code, false, __func__);
 }
 
 void runAnalyzerTests(TestRunner& runner) {
