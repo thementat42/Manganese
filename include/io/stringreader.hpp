@@ -10,12 +10,12 @@ namespace Manganese::io {
 
 class StringReader : public Reader {
    private:
-    std::size_t _position, _line, _column;
+    std::size_t _position = 0, _line = 0, _column = 1;
     std::string_view _source;
 
    public:
     StringReader() = default;
-    explicit StringReader(std::string_view source) : _position(0), _line(1), _column(1), _source(source) {}
+    explicit StringReader(std::string_view source) : _source(source) {}
     ~StringReader() noexcept override = default;
 
     void setPosition(std::size_t newPosition) noexcept override {
