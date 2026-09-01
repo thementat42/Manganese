@@ -54,7 +54,7 @@ std::optional<char32_t> parseHexCodePoint(std::string_view digits, std::size_t l
     for (char c : digits) {
         std::uint32_t value;
 
-        if (!isxdigit(c)) {
+        if (!is_xdigit(c)) {
             logging::logError(line, col, "Invalid hexadecimal digit '{}'", c);
             return std::nullopt;
         }
@@ -112,13 +112,13 @@ std::optional<char32_t> parseEscapeSequence(std::string_view input, std::size_t&
 
     const char escapeChar = input[index];
 
-    if (tolower(escapeChar) == 'u') {
+    if (to_lowercase(escapeChar) == 'u') {
         ++index;  // skip the u
         const std::size_t digitsStart = index;
         std::size_t digitCount = 0;
 
         while (index < input.size() && digitCount < 9) {
-            if (!isxdigit(input[index])) { break; }
+            if (!is_xdigit(input[index])) { break; }
             ++index;
             ++digitCount;
         }

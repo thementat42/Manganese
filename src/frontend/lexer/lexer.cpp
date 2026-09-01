@@ -37,9 +37,9 @@ void Lexer::lex(std::size_t numTokens) {
             advance();  // Skip the newline
         } else if (currentChar == '/' && peekChar(1) == '*') {
             result = skipBlockComment();
-        } else if (isspace(currentChar)) {
+        } else if (is_whitespace(currentChar)) {
             advance();  // Skip whitespace
-        } else if (isalpha(currentChar) || currentChar == '_') {
+        } else if (is_alpha(currentChar) || currentChar == '_') {
             result = tokenizeKeywordOrIdentifier();
             ++numTokensMade;
         } else if (currentChar == '\'') {
@@ -49,7 +49,7 @@ void Lexer::lex(std::size_t numTokens) {
             // TODO: Add raw string literals (r"stuff" -- maybe r""text"")
             result = tokenizeStringLiteral();
             ++numTokensMade;
-        } else if (isdigit(currentChar)) {
+        } else if (is_digit(currentChar)) {
             result = tokenizeNumber();
             ++numTokensMade;
         } else {
@@ -137,7 +137,7 @@ Result Lexer::tokenizeCharLiteral() {
 
 Result Lexer::tokenizeKeywordOrIdentifier() {
     std::string lexeme;
-    while (!done() && (isalnum(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
+    while (!done() && (is_alphanumeric(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
     const TokenType t = keywordLookup(lexeme);
 
     // if type is unknown, assume it's an identifier, otherwise use the given keyword type
@@ -181,10 +181,10 @@ Result Lexer::tokenizeNumber() {
             continue;
         }
 
-        if (!isalnum(currentChar)) { break; }
+        if (!is_alphanumeric(currentChar)) { break; }
 
         if (!isValidBaseChar(currentChar)) {
-            const char lowerChar = tolower(currentChar);
+            const char lowerChar = to_lowercase(currentChar);
 
             if (lowerChar == 'i' || lowerChar == 'f' || lowerChar == 'u' || lowerChar == 'e') { break; }
             logError("Invalid digit '{}' in numeric constant", currentChar);
@@ -194,7 +194,7 @@ Result Lexer::tokenizeNumber() {
         }
         numberLiteral += consumeChar();
     }
-    if (base == mnstl::Base::Decimal && tolower(peekChar()) == 'e') {
+    if (base == mnstl::Base::Decimal && to_lowercase(peekChar()) == 'e') {
         if (processScientificNotation(numberLiteral) == Result::Failure) { result = Result::Failure; }
 
         isFloat = true;
@@ -495,7 +495,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
     char currentChar = peekChar();
     if (currentChar != '0') {
         // Decimal number
-        return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = isdigit, .prefix = ""};
+        return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
     }
     // Could be a base indicator (0x, 0b, 0o) -- check next char
     switch (peekChar(1)) {
@@ -503,39 +503,39 @@ NumberPrefixResult Lexer::processNumberPrefix() {
         case 'X':
             // Hexadecimal number
             advance(2);
-            return NumberPrefixResult{.base = mnstl::Base::Hexadecimal, .isValidBaseChar = isxdigit, .prefix = "0x"};
+            return NumberPrefixResult{.base = mnstl::Base::Hexadecimal, .isValidBaseChar = is_xdigit, .prefix = "0x"};
         case 'b':
         case 'B':
             // Binary number
             advance(2);
-            return NumberPrefixResult{.base = mnstl::Base::Binary, .isValidBaseChar = isbdigit, .prefix = "0b"};
+            return NumberPrefixResult{.base = mnstl::Base::Binary, .isValidBaseChar = is_bdigit, .prefix = "0b"};
         case 'o':
         case 'O':
             // Octal number
             advance(2);
-            return NumberPrefixResult{.base = mnstl::Base::Octal, .isValidBaseChar = isodigit, .prefix = "0o"};
+            return NumberPrefixResult{.base = mnstl::Base::Octal, .isValidBaseChar = is_odigit, .prefix = "0o"};
         default:
             // Not a valid base indicator -- just treat it as a decimal number
-            if (isdigit(peekChar(1))) {  // if the literal is 0, that's fine
+            if (is_digit(peekChar(1))) {  // if the literal is 0, that's fine
                 logging::logWarning(getLine(), getCol(),
                                     "Leading zeros in numeric literals are treated as decimal numbers."
                                     "Use a 0o prefix for octal numbers.");
             }
-            return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = isdigit, .prefix = ""};
+            return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
     }
 }
 
 Result Lexer::processScientificNotation(std::string& numberLiteral) {
     // Caller guarantees next character is an 'e'
-    numberLiteral += tolower(consumeChar());
+    numberLiteral += to_lowercase(consumeChar());
     if (peekChar() == '+' || peekChar() == '-') { numberLiteral += consumeChar(); }
 
-    if (!isdigit(peekChar())) {
+    if (!is_digit(peekChar())) {
         logError("Invalid exponent: must be a number");
         return Result::Failure;
     }
 
-    while (!done() && isdigit(peekChar())) { numberLiteral += consumeChar(); }
+    while (!done() && is_digit(peekChar())) { numberLiteral += consumeChar(); }
 
     return Result::Success;
 }
@@ -549,7 +549,7 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
         NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
         */
 
-    const char suffix = tolower(peekChar());
+    const char suffix = to_lowercase(peekChar());
 
     if (suffix != 'i' && suffix != 'u' && suffix != 'f') { return Result::Success; }
 
@@ -557,7 +557,7 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
 
     std::string width;
 
-    while (!done() && isdigit(peekChar())) { width += consumeChar(); }
+    while (!done() && is_digit(peekChar())) { width += consumeChar(); }
 
     if (width.empty()) { logError("Numeric suffix '{}' must specify a bit width", suffix); }
 

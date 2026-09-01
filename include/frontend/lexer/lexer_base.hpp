@@ -73,10 +73,6 @@ class Lexer {
     Result tokenizeSymbol();
 
     //~ Helper functions
-    template <class... Args>
-    void logError(std::format_string<Args...> message, Args&&... args) const {
-        logging::logError(getLine(), getCol(), message, std::forward<Args>(args)...);
-    }
     void emitToken(TokenType type, std::string&& lexeme, bool invalid);
     NumberPrefixResult processNumberPrefix();
     Result processScientificNotation(std::string& numberLiteral);
@@ -85,6 +81,10 @@ class Lexer {
     static std::optional<DecodedUTF8> decodeUTF8(std::string_view input, std::size_t offset);
     Result processCharEscapeSequence(std::string_view charLiteral);
 
+    template <class... Args>
+    void logError(std::format_string<Args...> message, Args&&... args) const {
+        logging::logError(getLine(), getCol(), message, std::forward<Args>(args)...);
+    }
     //~ Reader wrapper functions
     inline char peekChar(std::size_t offset = 0) noexcept { return reader->peekChar(offset); }
     [[nodiscard]] inline char consumeChar() const noexcept { return reader->consumeChar(); }
@@ -103,16 +103,16 @@ inline std::string codepointToUTF8(char32_t codepoint) {
     return encoded ? *encoded : "";
 }
 
-constexpr bool isbdigit(char c) noexcept { return c == '0' || c == '1'; }
-constexpr bool isdigit(char c) noexcept { return BETWEEN(c, '0', '9'); }
-constexpr bool isodigit(char c) { return BETWEEN(c, '0', '7'); }
-constexpr bool isxdigit(char c) noexcept { return isdigit(c) || BETWEEN(c, 'a', 'f') || BETWEEN(c, 'A', 'F'); }
-constexpr bool isalpha(char c) noexcept { return BETWEEN(c, 'a', 'z') || BETWEEN(c, 'A', 'Z'); }
-constexpr bool isalnum(char c) noexcept { return isalpha(c) || isdigit(c); }
-constexpr bool isspace(char c) noexcept {
+constexpr bool is_bdigit(char c) noexcept { return c == '0' || c == '1'; }
+constexpr bool is_digit(char c) noexcept { return BETWEEN(c, '0', '9'); }
+constexpr bool is_odigit(char c) { return BETWEEN(c, '0', '7'); }
+constexpr bool is_xdigit(char c) noexcept { return is_digit(c) || BETWEEN(c, 'a', 'f') || BETWEEN(c, 'A', 'F'); }
+constexpr bool is_alpha(char c) noexcept { return BETWEEN(c, 'a', 'z') || BETWEEN(c, 'A', 'Z'); }
+constexpr bool is_alphanumeric(char c) noexcept { return is_alpha(c) || is_digit(c); }
+constexpr bool is_whitespace(char c) noexcept {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
 }
-constexpr char tolower(char c) noexcept { return BETWEEN(c, 'A', 'Z') ? (c + 32) : c; }
+constexpr char to_lowercase(char c) noexcept { return BETWEEN(c, 'A', 'Z') ? (c + 32) : c; }
 
 }  // namespace Manganese::lexer
 
