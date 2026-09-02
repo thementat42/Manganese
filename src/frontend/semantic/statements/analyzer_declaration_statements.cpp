@@ -126,7 +126,7 @@ auto Analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     for (ast::EnumValue& variant : statement->values) {
         if (variant.value) {
             if (visit(variant.value) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-            auto explicitVal = variant.value->fold();
+            auto explicitVal = variant.value->fold(typeContext.getTargetInfo());
             if (!explicitVal.has_value()) {
                 logging::logError(variant.line, variant.column,
                                   "Variant {} (in enum {}) must have a compile-time value", variant.name,

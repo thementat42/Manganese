@@ -147,7 +147,7 @@ auto Analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
         for (ast::Expression* val : caseClause.values) {
             const bool visitSuccess = visit(val) == exprvisit_t::Success;
             if (!visitSuccess) { result = stmtvisit_t::Failure; }
-            if (!val->fold().has_value()) {
+            if (!val->fold(typeContext.getTargetInfo()).has_value()) {
                 logError(val, "case value must be a constant expression");
                 result = stmtvisit_t::Failure;
             }

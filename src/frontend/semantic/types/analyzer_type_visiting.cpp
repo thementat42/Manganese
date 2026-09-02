@@ -45,7 +45,7 @@ auto Analyzer::visit(ast::ArrayType* type) -> typevisit_t {
     std::size_t length;
     if (arrayType->lengthExpression) {
         if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
-        const mnstl::fold_result_t fold = arrayType->lengthExpression->fold();
+        const mnstl::fold_result_t fold = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
         if (!fold.is_number()) {
             logError(arrayType->lengthExpression, "Array length ({}) must be a constant expression",
                      arrayType->lengthExpression->toString());

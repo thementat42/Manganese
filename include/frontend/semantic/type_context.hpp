@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <utils/target_info.hpp>
 #include <vector>
 
 namespace Manganese::semantic {
@@ -50,6 +51,11 @@ struct SemanticType {
 
     virtual ~SemanticType() noexcept = default;
 
+    virtual std::string toString() const { return std::string(ast::primitiveTypeToString(primitiveType)); }
+    virtual std::string toStringWithTypeArguments(const TypeList& typeArguments) const;
+    virtual std::size_t size(const TargetInfo& target) const noexcept;
+    virtual std::size_t alignment(const TargetInfo& target) const noexcept;
+
     constexpr bool isAggregate() const noexcept { return kind == Kind::Aggregate; }
     constexpr bool isArray() const noexcept { return kind == Kind::Array; }
     constexpr bool isEnum() const noexcept { return kind == Kind::Enum; }
@@ -79,9 +85,6 @@ struct SemanticType {
 
     constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }
 
-    virtual std::string toString() const { return std::string(ast::primitiveTypeToString(primitiveType)); }
-    virtual std::string toStringWithTypeArguments(const TypeList& typeArguments) const;
-
    private:
     constexpr SemanticType() noexcept : kind(Kind::Primitive), primitiveType(ast::PrimitiveType_t::not_primitive) {}
 
@@ -93,6 +96,9 @@ struct AggregateField {
     const SemanticType* type;
 
     friend bool operator==(const AggregateField&, const AggregateField&) noexcept = default;
+
+    std::size_t size(const TargetInfo& target) const noexcept { return type->size(target); }
+    std::size_t alignment(const TargetInfo& target) const noexcept { return type->alignment(target); }
 };
 
 struct Aggregate final : public SemanticType {
@@ -128,6 +134,8 @@ struct Aggregate final : public SemanticType {
 
     std::string toString() const override;
     std::string toStringWithTypeArguments(const TypeList& typeArguments) const override;
+    std::size_t size(const TargetInfo& target) const noexcept override;
+    std::size_t alignment(const TargetInfo& target) const noexcept override;
 };
 
 struct Array final : public SemanticType {
@@ -137,7 +145,10 @@ struct Array final : public SemanticType {
     Array(const SemanticType* baseType, std::size_t len) noexcept :
         SemanticType(Kind::Array), elementType(baseType), length(len) {}
     ~Array() override = default;
+
     std::string toString() const override;
+    std::size_t size(const TargetInfo& target) const noexcept override;
+    std::size_t alignment(const TargetInfo& target) const noexcept override;
 };
 
 struct Variant {
@@ -162,7 +173,10 @@ struct Enum final : public SemanticType {
     }
 
     ~Enum() override = default;
+
     std::string toString() const override;
+    std::size_t size(const TargetInfo& target) const noexcept override;
+    std::size_t alignment(const TargetInfo& target) const noexcept override;
 };
 
 struct Parameter {
@@ -178,6 +192,9 @@ struct Parameter {
         if (isMutable) { result = "mut " + result; }
         return result;
     }
+
+    std::size_t size(const TargetInfo& target) const noexcept { return type->size(target); }
+    std::size_t alignment(const TargetInfo& target) const noexcept { return type->alignment(target); }
 };
 
 struct Function final : public SemanticType {
@@ -190,7 +207,10 @@ struct Function final : public SemanticType {
         parameterTypes(std::move(params)) {}
 
     ~Function() override = default;
+
     std::string toString() const override;
+    std::size_t size(const TargetInfo& target) const noexcept override;
+    std::size_t alignment(const TargetInfo& target) const noexcept override;
 };
 
 struct GenericInstantiation final : public SemanticType {
@@ -201,7 +221,10 @@ struct GenericInstantiation final : public SemanticType {
         SemanticType(Kind::Generic), baseType(base), typeArguments(std::move(args)) {}
 
     ~GenericInstantiation() override = default;
+
     std::string toString() const override;
+    std::size_t size(const TargetInfo& target) const noexcept override;
+    std::size_t alignment(const TargetInfo& target) const noexcept override;
 };
 
 struct Pointer final : public SemanticType {
@@ -211,7 +234,10 @@ struct Pointer final : public SemanticType {
     Pointer(const SemanticType* base, bool isMut) noexcept :
         SemanticType(Kind::Pointer), baseType(base), isMutable(isMut) {}
     ~Pointer() override = default;
+
     std::string toString() const override;
+    std::size_t size(const TargetInfo& target) const noexcept override;
+    std::size_t alignment(const TargetInfo& target) const noexcept override;
 };
 
 struct PrimitiveInfo {
@@ -232,7 +258,10 @@ PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type);
 struct Void final : public SemanticType {
     Void() noexcept : SemanticType(Kind::Void) {};
     ~Void() override = default;
+
     std::string toString() const override;
+    std::size_t size(const TargetInfo& target) const noexcept override;
+    std::size_t alignment(const TargetInfo& target) const noexcept override;
 };
 
 struct TypeLookup {
@@ -257,6 +286,7 @@ inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
 class TypeContext {
    private:
     mnstl::chunk_allocator& _allocator;
+    TargetInfo _targetInfo;
     constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType_t::boolean) + 1;
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
@@ -269,10 +299,14 @@ class TypeContext {
     }
 
    public:
-    explicit TypeContext(mnstl::chunk_allocator& allocator) noexcept :
-        _allocator(allocator), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
+    explicit TypeContext(mnstl::chunk_allocator& allocator, TargetInfo target) noexcept :
+        _allocator(allocator),
+        _targetInfo(target),
+        _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
+
     ~TypeContext() = default;
 
+    const TargetInfo& getTargetInfo() const noexcept { return _targetInfo; }
     TypeContext(const TypeContext&) = delete;
     TypeContext& operator=(const TypeContext&) = delete;
     TypeContext(TypeContext&&) = delete;

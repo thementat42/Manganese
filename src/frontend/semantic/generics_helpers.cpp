@@ -227,7 +227,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             const auto* arrayType = static_cast<const ast::ArrayType*>(type);
             const SemanticType* elementType = resolveGenericType(arrayType->elementType);
             if (!elementType) { return nullptr; }
-            mnstl::fold_result_t length = arrayType->lengthExpression->fold();
+            mnstl::fold_result_t length = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
             if (!length.has_value()) {
                 logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
                 return nullptr;

@@ -10,6 +10,8 @@
 
 namespace Manganese::semantic {
 
+// String conversions
+
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
     using enum ast::PrimitiveType_t;
     using Cat = PrimitiveInfo::Category;
@@ -99,6 +101,89 @@ std::string Pointer::toString() const {
 }
 
 std::string Void::toString() const { return "void"; }
+
+// Size & Alignment
+std::size_t SemanticType::size(const TargetInfo&) const noexcept {
+    if (isPrimitive()) {
+        PrimitiveInfo info = getPrimitiveInfo(primitiveType);
+        return static_cast<std::size_t>(info.bitWidth / 8);
+    }
+    return 0;
+}
+
+std::size_t SemanticType::alignment(const TargetInfo&) const noexcept {
+    if (isPrimitive()) {
+        PrimitiveInfo info = getPrimitiveInfo(primitiveType);
+        std::size_t s = static_cast<std::size_t>(info.bitWidth / 8);
+        return std::max<std::size_t>(1, s);
+    }
+    return 1;
+}
+
+std::size_t Aggregate::size(const TargetInfo& target) const noexcept {
+    std::size_t currentSize = 0;
+    std::size_t maxAlign = alignment(target);
+
+    for (const auto& field : fields) {
+        std::size_t fieldAlign = field.alignment(target);
+        std::size_t fieldSize = field.size(target);
+
+        if (fieldAlign > 0) {
+            std::size_t remainder = currentSize % fieldAlign;
+            if (remainder != 0) { currentSize += (fieldAlign - remainder); }
+        }
+        currentSize += fieldSize;
+    }
+
+    if (maxAlign > 0) {
+        std::size_t remainder = currentSize % maxAlign;
+        if (remainder != 0) { currentSize += (maxAlign - remainder); }
+    }
+
+    return currentSize;
+}
+
+std::size_t Aggregate::alignment(const TargetInfo& target) const noexcept {
+    std::size_t maxAlign = 1;
+    for (const auto& field : fields) { maxAlign = std::max(maxAlign, field.alignment(target)); }
+    return maxAlign;
+}
+
+std::size_t Array::size(const TargetInfo& target) const noexcept { return elementType->size(target) * length; }
+
+std::size_t Array::alignment(const TargetInfo& target) const noexcept { return elementType->alignment(target); }
+
+std::size_t Enum::size(const TargetInfo& target) const noexcept {
+    if (underlyingType != nullptr) { return underlyingType->size(target); }
+    return 4;
+}
+
+std::size_t Enum::alignment(const TargetInfo& target) const noexcept {
+    if (underlyingType != nullptr) { return underlyingType->alignment(target); }
+    return 4;
+}
+
+std::size_t Function::size(const TargetInfo& target) const noexcept { return target.pointerSize; }
+
+std::size_t Function::alignment(const TargetInfo& target) const noexcept { return target.pointerAlignment; }
+
+std::size_t GenericInstantiation::size(const TargetInfo& target) const noexcept {
+    if (baseType != nullptr) { return baseType->size(target); }
+    return 0;
+}
+
+std::size_t GenericInstantiation::alignment(const TargetInfo& target) const noexcept {
+    if (baseType != nullptr) { return baseType->alignment(target); }
+    return 1;
+}
+
+std::size_t Pointer::size(const TargetInfo& target) const noexcept { return target.pointerSize; }
+
+std::size_t Pointer::alignment(const TargetInfo& target) const noexcept { return target.pointerAlignment; }
+
+std::size_t Void::size(const TargetInfo&) const noexcept { return 0; }
+
+std::size_t Void::alignment(const TargetInfo&) const noexcept { return 1; }
 
 std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
     if (!t) { return 0; }
@@ -281,27 +366,13 @@ const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) co
 const SemanticType* TypeContext::getVoid() const noexcept { return &_voidInstance; }
 
 const SemanticType* TypeContext::getUSizeType() const noexcept {
-#if UINTPTR_MAX == 0xFFFFFFFF
-    // 32-bit Host Architecture
-    return getPrimitive(ast::PrimitiveType_t::u32);
-#elif UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF
-    // 64-bit Host Architecture
-    return getPrimitive(ast::PrimitiveType_t::u64);
-#else
-#error "Unsupported pointer width / host architecture"
-#endif
+    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType_t::u32)
+                                        : getPrimitive(ast::PrimitiveType_t::u64);
 }
 
 const SemanticType* TypeContext::getSSizeType() const noexcept {
-#if UINTPTR_MAX == 0xFFFFFFFF
-    // 32-bit Host Architecture
-    return getPrimitive(ast::PrimitiveType_t::i32);
-#elif UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF
-    // 64-bit Host Architecture
-    return getPrimitive(ast::PrimitiveType_t::i64);
-#else
-#error "Unsupported pointer width / host architecture"
-#endif
+    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType_t::i32)
+                                        : getPrimitive(ast::PrimitiveType_t::i64);
 }
 
 }  // namespace Manganese::semantic
