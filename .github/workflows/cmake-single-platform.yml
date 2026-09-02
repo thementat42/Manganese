@@ -36,4 +36,4 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build and run test suite
-      run: python scripts/build.py -c -d -f -m -r -t --exec-with --all
+      run: python scripts/build.py -c -d -f -r -t --exec-with --all
