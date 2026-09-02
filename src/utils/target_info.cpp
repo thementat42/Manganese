@@ -13,7 +13,6 @@ TargetInfo TargetInfo::fromTriple(std::string_view tripleString) {
     if (triple.isArch16Bit()) { return TargetInfo{.pointerSize = 2, .pointerAlignment = 2}; }
 
     logging::logCritical(0, 0, "Unsupported target architecture in triple: {}", tripleString);
-    // critical logging aborts so this won't be reached
     return TargetInfo{.pointerSize = 0, .pointerAlignment = 0};
 }
 

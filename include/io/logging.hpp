@@ -75,7 +75,6 @@ void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<A
             break;
     }
     std::cerr << " (line " << line << ", column " << col << ")\n";
-    if (level == LogLevel::Critical) { std::abort(); }
 }
 
 template <class... Args>
