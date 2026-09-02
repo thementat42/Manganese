@@ -145,8 +145,8 @@ auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
             return exprvisit_t::Failure;
         }
         case held_t::none: break;
+        default: ASSERT_UNREACHABLE("In analyzer: Number literal expression had no parser-deduced type");
     }
-    ASSERT_UNREACHABLE("In analyzer: Number literal expression had no parser-deduced type");
     return exprvisit_t::Success;
 }
 
