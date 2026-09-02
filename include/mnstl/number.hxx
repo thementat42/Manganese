@@ -119,8 +119,8 @@ class number_t {
             case uint128: return std::forward<F>(f)(_u128);
             case error: return std::forward<F>(f)(_err);
             case none: ASSERT_UNREACHABLE("Attempted to read a number_t with no stored value");
-            default: ASSERT_UNREACHABLE("In number_t::visit: unknown underlying type");
         }
+        ASSERT_UNREACHABLE("In number_t::visit: unknown underlying type");
     }
 
    public:

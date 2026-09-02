@@ -354,8 +354,8 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             if (visit(nestedExpression) == exprvisit_t::Failure) { return nullptr; }
             return nestedExpression->semanticType;
         }
-        default: ASSERT_UNREACHABLE("Unknown ast::TypeKind in resolveGenericType");
     }
+    ASSERT_UNREACHABLE("Unknown ast::TypeKind in resolveGenericType");
 }
 
 }  // namespace Manganese::semantic

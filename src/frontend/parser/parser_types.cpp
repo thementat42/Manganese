@@ -167,9 +167,9 @@ ast::Type* Parser::parseSymbolType() {
         prim_t = character;
     } else if (lexeme == bool_str) {
         prim_t = boolean;
-    } else {
-        ASSERT_UNREACHABLE("Unknown primitive type " + lexeme);
     }
+    ASSERT_UNREACHABLE("Unknown primitive type " + lexeme);
+
     return makeNode<ast::SymbolType>(startToken, startToken.getLexeme(), prim_t);
 }
 

@@ -22,11 +22,9 @@ std::string tokenTypeToString(TokenType type) {
 #undef TOKEN
 #undef KEYWORD
 #undef OPERATOR
-
-        default:
-            ASSERT_UNREACHABLE("No string representation for TokenType: "
-                               + std ::to_string(static_cast<std ::underlying_type<TokenType>::type>(type)));
     }
+    ASSERT_UNREACHABLE("No string representation for TokenType: "
+                       + std ::to_string(static_cast<std ::underlying_type<TokenType>::type>(type)));
 }
 
 TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {

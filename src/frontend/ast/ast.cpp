@@ -45,7 +45,8 @@ mnstl::fold_result_t BinaryExpression::fold() const NOEXCEPT_IF_RELEASE {
         case BitXor: break;
         case BitLShift: break;
         case BitRShift: break;
-        default: ASSERT_UNREACHABLE(std::format("Unknown binary operator {}", lexer::tokenTypeToString(op)));
+        default:
+            ASSERT_UNREACHABLE(std::format("Unknown binary operator {}", lexer::tokenTypeToString(op)));
     }
     return mnstl::fold_result_t{};
 };

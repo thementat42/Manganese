@@ -164,8 +164,8 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             // Since each primitive value is unique we can just hash the enum type
             return hash_combine(hash, std::hash<prim_int_t>{}(static_cast<prim_int_t>(t->primitiveType)));
         case Kind::Void: return hash;  // no extra logic neexex
-        default: ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup hash");
     }
+    ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup hash");
 }
 
 bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) const noexcept {
@@ -210,8 +210,8 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
         case Kind::Void: {
             return true;
         }
-        default: ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
     }
+    ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
 }
 
 const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::size_t length) {
