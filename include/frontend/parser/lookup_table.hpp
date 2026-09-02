@@ -193,22 +193,22 @@ consteval void initializeLookups(LookupTable& table) noexcept {
 consteval void initializeTypeLookups(LookupTable& table) noexcept {
     using enum lexer::TokenType;
     //~ Variable declarations with primitive types
-    registerNudHandler_type(table, Identifier, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Int8, &Parser::parseSymbolType);
-    registerNudHandler_type(table, UInt8, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Int16, &Parser::parseSymbolType);
-    registerNudHandler_type(table, UInt16, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Int32, &Parser::parseSymbolType);
-    registerNudHandler_type(table, UInt32, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Int64, &Parser::parseSymbolType);
-    registerNudHandler_type(table, UInt64, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Float32, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Float64, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Int128, &Parser::parseSymbolType);
-    registerNudHandler_type(table, UInt128, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Char, &Parser::parseSymbolType);
-    registerNudHandler_type(table, Bool, &Parser::parseSymbolType);
-    registerNudHandler_type(table, String, &Parser::parseSymbolType);
+    registerNudHandler_type(table, Identifier, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Int8, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, UInt8, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Int16, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, UInt16, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Int32, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, UInt32, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Int64, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, UInt64, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Float32, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Float64, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Int128, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, UInt128, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Char, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Bool, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, String, &Parser::parseIdentifierType);
     registerNudHandler_type(table, Ptr, &Parser::parsePointerType);
 
     //~ Complex types

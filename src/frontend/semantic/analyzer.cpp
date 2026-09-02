@@ -17,9 +17,9 @@ Result Analyzer::analyze() {
 const Symbol* Analyzer::resolveTypeSymbol(const ast::Type* typeNode) {
     if (!typeNode) return nullptr;
 
-    if (typeNode->kind == ast::TypeKind::SymbolType) {
-        const auto* symbolType = static_cast<const ast::SymbolType*>(typeNode);
-        return symbolTable.lookup(symbolType->name);
+    if (typeNode->kind == ast::TypeKind::IdentifierType) {
+        const auto* IdentifierType = static_cast<const ast::IdentifierType*>(typeNode);
+        return symbolTable.lookup(IdentifierType->name);
     }
 
     if (typeNode->kind == ast::TypeKind::ScopedType) {
@@ -29,12 +29,12 @@ const Symbol* Analyzer::resolveTypeSymbol(const ast::Type* typeNode) {
             return nullptr;  // Parent symbol wasn't found or doesn't have a scope
         }
 
-        if (scopedType->type->kind != ast::TypeKind::SymbolType) {
+        if (scopedType->type->kind != ast::TypeKind::IdentifierType) {
             ASSERT_UNREACHABLE(
                 "In resolveTypeSymbol: base case for recursion of a scoped type resolution should be an identifier");
         }
-        const auto* memberSymbolType = static_cast<const ast::SymbolType*>(scopedType->type);
-        return symbolTable.scopedLookup(parentSymbol->scopeDefined, memberSymbolType->name);
+        const auto* memberIdentifierType = static_cast<const ast::IdentifierType*>(scopedType->type);
+        return symbolTable.scopedLookup(parentSymbol->scopeDefined, memberIdentifierType->name);
     }
 
     return nullptr;

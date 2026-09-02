@@ -115,10 +115,10 @@ class Parser {
     ast::Type* parseAggregateType();
     ast::Type* parseFunctionType();
     ast::Type* parseGenericInstantiationType(ast::Type* left, Precedence precedence);
+    ast::Type* parseIdentifierType();
     ast::Type* parsePointerType();
     ast::Type* parseParenthesizedType();
     ast::Type* parseScopedType(ast::Type* left, Precedence precedence);
-    ast::Type* parseSymbolType();
     ast::Type* parseTypeofType();
 
     ast::Type* parseAggregateTypeField();

@@ -126,9 +126,9 @@ auto Analyzer::visit(ast::PointerType* type) -> typevisit_t {
 auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
     const Symbol* scopeSymbol = nullptr;
 
-    if (type->scope->kind == ast::TypeKind::SymbolType) {
+    if (type->scope->kind == ast::TypeKind::IdentifierType) {
         // regular identifier (e.g. Foo::Bar)
-        scopeSymbol = symbolTable.lookup(static_cast<ast::SymbolType*>(type->scope)->name);
+        scopeSymbol = symbolTable.lookup(static_cast<ast::IdentifierType*>(type->scope)->name);
     } else if (type->scope->kind == ast::TypeKind::ScopedType) {
         // chained resolution (e.g. Foo::Bar::Baz): recursively resolve it
         if (visit(type->scope) == typevisit_t::Failure) { return typevisit_t::Failure; }
@@ -143,11 +143,11 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
         logError(type, "'{}' is not a namespace or module", type->scope->toString());
         return typevisit_t::Failure;
     }
-    if (type->type->kind != ast::TypeKind::SymbolType) {
+    if (type->type->kind != ast::TypeKind::IdentifierType) {
         logError(type->type, "Expected an identifier in a scope resolution expression");
         return typevisit_t::Failure;
     }
-    const std::string_view memberName = static_cast<ast::SymbolType*>(type->type)->name;
+    const std::string_view memberName = static_cast<ast::IdentifierType*>(type->type)->name;
 
     Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
     if (!memberSymbol) {
@@ -169,15 +169,15 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::SymbolType* type) -> typevisit_t {
-    const auto* symbolType = static_cast<const ast::SymbolType*>(type);
-    if (symbolType->primitiveType != ast::PrimitiveType_t::not_primitive) {
-        type->semanticType = typeContext.getPrimitive(symbolType->primitiveType);
+auto Analyzer::visit(ast::IdentifierType* type) -> typevisit_t {
+    const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
+    if (IdentifierType->primitiveType != ast::PrimitiveType_t::not_primitive) {
+        type->semanticType = typeContext.getPrimitive(IdentifierType->primitiveType);
         return typevisit_t::Success;
     }
-    Symbol* symbol = symbolTable.lookup(symbolType->name);
+    Symbol* symbol = symbolTable.lookup(IdentifierType->name);
     if (!symbol) {
-        logError(type, "Unknown type '{}'", symbolType->name);
+        logError(type, "Unknown type '{}'", IdentifierType->name);
         return typevisit_t::Failure;
     }
     if (symbol->kind == SymbolKind::TypeAlias && symbol->status != ResolutionStatus::Success) {
@@ -185,7 +185,7 @@ auto Analyzer::visit(ast::SymbolType* type) -> typevisit_t {
         if (visit(aliasStatement) == typevisit_t::Failure) { return typevisit_t::Failure; }
     }
     if (!symbol->type) {
-        logError(type, "'{}' is not a valid type", symbolType->name);
+        logError(type, "'{}' is not a valid type", IdentifierType->name);
         return typevisit_t::Failure;
     }
     type->semanticType = symbol->type;

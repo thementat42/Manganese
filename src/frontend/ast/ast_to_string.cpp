@@ -362,6 +362,8 @@ std::string GenericInstantiationType::toString(std::size_t indent) const {
     return baseType->toString(indent) + genericsToString(typeParameters, indent);
 }
 
+std::string IdentifierType::toString(std::size_t) const { return name; }
+
 std::string PointerType::toString(std::size_t indent) const {
     return std::format("ptr {}{}", (isMutable ? "mut " : ""), baseType->toString(indent));
 }
@@ -369,8 +371,6 @@ std::string PointerType::toString(std::size_t indent) const {
 std::string ScopedType::toString(std::size_t) const {
     return std::format("{}::{}", scope->toString(), type->toString());
 }
-
-std::string SymbolType::toString(std::size_t) const { return name; }
 
 std::string TypeofType::toString(std::size_t indent) const {
     return std::format("typeof({})", expression->toString(indent));
