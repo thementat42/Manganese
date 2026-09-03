@@ -35,8 +35,8 @@ struct Expression;
 struct Statement;
 struct Type;
 
-enum class ExpressionKind : std::uint8_t;
 enum class StatementKind : std::uint8_t;
+enum class ExpressionKind : std::uint8_t;
 enum class TypeKind : std::uint8_t;
 
 using Block = std::vector<Statement*>;
@@ -83,6 +83,13 @@ struct ASTNode {
 #endif  // MN_DEBUG
 };
 
+struct Statement : public ASTNode {
+    const StatementKind kind;
+
+   protected:
+    explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}
+};
+
 struct Expression : public ASTNode {
     const ExpressionKind kind;
     const semantic::SemanticType* semanticType = nullptr;
@@ -91,13 +98,6 @@ struct Expression : public ASTNode {
 
    protected:
     explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}
-};
-
-struct Statement : public ASTNode {
-    const StatementKind kind;
-
-   protected:
-    explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}
 };
 
 struct Type : public ASTNode {
