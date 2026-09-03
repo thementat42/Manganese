@@ -5,8 +5,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-import time
-from io import TextIOWrapper
 
 DIRECTORIES = ["include", "src", "tests"]
 
@@ -77,13 +75,13 @@ def get_files():
     return sorted(files)
 
 
-def run_clang_tidy(clang_tidy, file: Path, report: TextIOWrapper, index: int, total: int):
+def run_clang_tidy(clang_tidy, file: Path, report):
 
     report.write("X" * 80 + "\n")
     report.write(f"{file}\n")
     report.write("X" * 80 + "\n")
 
-    process = subprocess.Popen(
+    result = subprocess.run(
         [
             clang_tidy,
             str(file),
@@ -96,20 +94,7 @@ def run_clang_tidy(clang_tidy, file: Path, report: TextIOWrapper, index: int, to
         text=True,
     )
 
-    spinner = ["|", "/", "-", "\\"]
-    spin_index = 0
-    while process.poll() is None:
-        char = spinner[spin_index := (spin_index + 1) % len(spinner)]
-        sys.stdout.write(f"\r[{index}/{total}] Linting {file} {char}")
-        sys.stdout.flush()
-        time.sleep(0.25)
-
-    stdout, _ = process.communicate()
-
-    sys.stdout.write(f"\r\033[K[{index}/{total}] Linting {file}... Done\n")
-    sys.stdout.flush()
-
-    report.write(stdout)
+    report.write(result.stdout)
     report.write("\n\n")
 
 
@@ -136,7 +121,8 @@ def main():
         total = len(files)
 
         for index, file in enumerate(files, start=1):
-            run_clang_tidy(clang_tidy, file, report, index, total)
+            print(f"[{index}/{total}] Checking {file}")
+            run_clang_tidy(clang_tidy, file, report)
 
     print(f"\nDone. Checked {total} file(s).")
     print(f"Report written to {REPORT_FILE}")
