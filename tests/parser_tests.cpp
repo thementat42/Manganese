@@ -657,6 +657,44 @@ static bool testNamespaces() {
     return validateStatements(getParserResults(expression), expected, "Namespace Declaration");
 }
 
+static bool testPathologicalExpressionRecovery() {
+    // Pathological cases mixing missing expressions, corrupted binary setups, and invalid types
+    const std::string expression = "let x = + * 5;\n"
+                                   "let y = (3 + ) * 2;\n"
+                                   "let z: ptr * int32 = foo@[, ](,,);\n";
+
+    const std::array<std::string, 3> expected = {
+        "(let x: private auto = (+ <error>));",
+        "(let y: private auto = ((3 + <error>) * 2));",
+        "(let z: private ptr<error_type> = foo@[<error_type>, <error_type>](<error>, <error>, <error>));"
+    };
+
+    return validateStatements(getParserResults(expression), expected, "Pathological Expression Recovery");
+}
+
+static bool testCascadingSyntaxFailures() {
+    const std::string expression = "if () { print(,,); } else { let a = *; }";
+    
+    std::string expected = R"(if (<error>) {
+    print(<error>, <error>);
+} else {
+    (let a: private auto = (<error>));
+})";
+
+    return validateStatement(getParserResults(expression), expected, "Cascading Syntax Failures");
+}
+
+static bool testPathologicalErrorRecovery() {
+    const std::string expression = "let x = *** + / 5;\n"
+                                   "let y: ptr ptr ... int32 = 42;\n"
+                                   "let z = a + (b * );\n";
+
+    // Expected outputs will depend on how toString() formats PoisonedExpression/PoisonedType,
+    // but this verifies the parser successfully recovers, builds nodes, and doesn't crash.
+    parser::ParsedFile file = getParserResults(expression);
+    return file.program.size() == 3;
+}
+
 static bool miscTests() {
     const std::string expression = "int x = aggregate{1, \"asdf\", 3.1f32};";
     parser::ParsedFile x = getParserResults(expression);
@@ -691,6 +729,9 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Sizeof, Typeof & Alignof", testSizeofTypeofAlignof);
     runner.runTest("Nested Blocks", testNestedBlocks);
     runner.runTest("Namespaces", testNamespaces);
+    runner.runTest("Cascading Syntax Failures", testCascadingSyntaxFailures);
+    runner.runTest("Pathological Expression Recovery", testPathologicalExpressionRecovery);
+    runner.runTest("Pathological Error Recovery", testPathologicalErrorRecovery);
     runner.runTest("Miscellaneous Tests", miscTests);
 }
 }  // namespace Manganese::tests
