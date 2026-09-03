@@ -208,7 +208,7 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             if (!expression->right->semanticType->isPointer()) {
                 logError(expression, "Dereferencing cannot be applied to a non-pointer type");
                 // dummy (figure out a better option later)
-                expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::u8);
+                expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::uint8);
                 return exprvisit_t::Failure;
             }
             expression->semanticType = static_cast<const Pointer*>(expression->right->semanticType)->baseType;
