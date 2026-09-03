@@ -127,18 +127,18 @@ auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     using held_t = mnstl::number_t::held_type;
     using prim_t = ast::PrimitiveType;
     switch (expression->value.underlying_type()) {
-        case held_t::int8: expression->semanticType = typeContext.getPrimitive(prim_t::i8); break;
-        case held_t::int16: expression->semanticType = typeContext.getPrimitive(prim_t::i16); break;
-        case held_t::int32: expression->semanticType = typeContext.getPrimitive(prim_t::i32); break;
-        case held_t::int64: expression->semanticType = typeContext.getPrimitive(prim_t::i64); break;
-        case held_t::int128: expression->semanticType = typeContext.getPrimitive(prim_t::i128); break;
-        case held_t::uint8: expression->semanticType = typeContext.getPrimitive(prim_t::u8); break;
-        case held_t::uint16: expression->semanticType = typeContext.getPrimitive(prim_t::u16); break;
-        case held_t::uint32: expression->semanticType = typeContext.getPrimitive(prim_t::u32); break;
-        case held_t::uint64: expression->semanticType = typeContext.getPrimitive(prim_t::u64); break;
-        case held_t::uint128: expression->semanticType = typeContext.getPrimitive(prim_t::u128); break;
-        case held_t::float32: expression->semanticType = typeContext.getPrimitive(prim_t::f32); break;
-        case held_t::float64: expression->semanticType = typeContext.getPrimitive(prim_t::f64); break;
+        case held_t::int8: expression->semanticType = typeContext.getPrimitive(prim_t::int8); break;
+        case held_t::int16: expression->semanticType = typeContext.getPrimitive(prim_t::int16); break;
+        case held_t::int32: expression->semanticType = typeContext.getPrimitive(prim_t::int32); break;
+        case held_t::int64: expression->semanticType = typeContext.getPrimitive(prim_t::int64); break;
+        case held_t::int128: expression->semanticType = typeContext.getPrimitive(prim_t::int128); break;
+        case held_t::uint8: expression->semanticType = typeContext.getPrimitive(prim_t::uint8); break;
+        case held_t::uint16: expression->semanticType = typeContext.getPrimitive(prim_t::uint16); break;
+        case held_t::uint32: expression->semanticType = typeContext.getPrimitive(prim_t::uint32); break;
+        case held_t::uint64: expression->semanticType = typeContext.getPrimitive(prim_t::uint64); break;
+        case held_t::uint128: expression->semanticType = typeContext.getPrimitive(prim_t::uint128); break;
+        case held_t::float32: expression->semanticType = typeContext.getPrimitive(prim_t::floata32); break;
+        case held_t::float64: expression->semanticType = typeContext.getPrimitive(prim_t::float64); break;
         case held_t::error: {
             logError(expression, "{}", expression->value.error_unchecked());
             expression->semanticType = nullptr;
@@ -151,7 +151,7 @@ auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
-    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::str);
+    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::string);
     return exprvisit_t::Success;
 }
 

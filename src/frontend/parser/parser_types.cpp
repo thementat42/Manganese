@@ -115,31 +115,31 @@ ast::Type* Parser::parseIdentifierType() {
     const std::string lexeme = startToken.getLexeme();
     ast::PrimitiveType prim_t = not_primitive;
     if (lexeme == int8_str) {
-        prim_t = i8;
+        prim_t = int8;
     } else if (lexeme == int16_str) {
-        prim_t = i16;
+        prim_t = int16;
     } else if (lexeme == int32_str) {
-        prim_t = i32;
+        prim_t = int32;
     } else if (lexeme == int64_str) {
-        prim_t = i64;
+        prim_t = int64;
     } else if (lexeme == int128_str) {
-        prim_t = i128;
+        prim_t = int128;
     } else if (lexeme == uint8_str) {
-        prim_t = u8;
+        prim_t = uint8;
     } else if (lexeme == uint16_str) {
-        prim_t = u16;
+        prim_t = uint16;
     } else if (lexeme == uint32_str) {
-        prim_t = u32;
+        prim_t = uint32;
     } else if (lexeme == uint64_str) {
-        prim_t = u64;
+        prim_t = uint64;
     } else if (lexeme == uint128_str) {
-        prim_t = u128;
+        prim_t = uint128;
     } else if (lexeme == float32_str) {
-        prim_t = f32;
+        prim_t = floata32;
     } else if (lexeme == float64_str) {
-        prim_t = f64;
+        prim_t = float64;
     } else if (lexeme == string_str) {
-        prim_t = str;
+        prim_t = string;
     } else if (lexeme == char_str) {
         prim_t = character;
     } else if (lexeme == bool_str) {

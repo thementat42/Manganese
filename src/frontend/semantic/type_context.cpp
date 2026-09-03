@@ -17,19 +17,19 @@ PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type) {
     using Cat = PrimitiveInfo::Category;
 
     switch (type) {
-        case i8: return {.category = Cat::Int, .bitWidth = 8};
-        case i16: return {.category = Cat::Int, .bitWidth = 16};
-        case i32: return {.category = Cat::Int, .bitWidth = 32};
+        case int8: return {.category = Cat::Int, .bitWidth = 8};
+        case int16: return {.category = Cat::Int, .bitWidth = 16};
+        case int32: return {.category = Cat::Int, .bitWidth = 32};
         case i64: return {.category = Cat::Int, .bitWidth = 64};
-        case i128: return {.category = Cat::Int, .bitWidth = 128};
+        case int128: return {.category = Cat::Int, .bitWidth = 128};
 
-        case u8: return {.category = Cat::UInt, .bitWidth = 8};
-        case u16: return {.category = Cat::UInt, .bitWidth = 16};
+        case uint8: return {.category = Cat::UInt, .bitWidth = 8};
+        case uint16: return {.category = Cat::UInt, .bitWidth = 16};
         case u32: return {.category = Cat::UInt, .bitWidth = 32};
         case u64: return {.category = Cat::UInt, .bitWidth = 64};
-        case u128: return {.category = Cat::UInt, .bitWidth = 128};
+        case uint128: return {.category = Cat::UInt, .bitWidth = 128};
 
-        case f32: return {.category = Cat::Float, .bitWidth = 32};
+        case floata32: return {.category = Cat::Float, .bitWidth = 32};
         case f64: return {.category = Cat::Float, .bitWidth = 64};
 
         case character: return {.category = Cat::Char, .bitWidth = 8};
@@ -366,13 +366,13 @@ const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType primitive) cons
 const SemanticType* TypeContext::getVoid() const noexcept { return &_voidInstance; }
 
 const SemanticType* TypeContext::getUSizeType() const noexcept {
-    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType::u32)
-                                        : getPrimitive(ast::PrimitiveType::u64);
+    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType::uint32)
+                                        : getPrimitive(ast::PrimitiveType::uint64);
 }
 
 const SemanticType* TypeContext::getSSizeType() const noexcept {
-    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType::i32)
-                                        : getPrimitive(ast::PrimitiveType::i64);
+    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType::int32)
+                                        : getPrimitive(ast::PrimitiveType::int64);
 }
 
 }  // namespace Manganese::semantic

@@ -71,16 +71,16 @@ struct SemanticType {
 
     constexpr bool isUnsignedInteger() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, u8, u16, u32, u64, u128);
+        return isPrimitive() && mnstl::enum_matches(primitiveType, uint8, uint16, uint32, uint64, uint128);
     }
     constexpr bool isSignedInteger() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, i8, i16, i32, i64, i128);
+        return isPrimitive() && mnstl::enum_matches(primitiveType, int8, int16, int32, int64, int128);
     }
     constexpr bool isInteger() const noexcept { return isSignedInteger() || isUnsignedInteger(); }
     constexpr bool isFloat() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, f32, f64);
+        return isPrimitive() && mnstl::enum_matches(primitiveType, floata32, float64);
     }
 
     constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }
