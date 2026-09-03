@@ -63,8 +63,8 @@ enum class PrimitiveType_t : std::uint8_t {
 std::string_view primitiveTypeToString(PrimitiveType_t prim);
 
 enum class Visibility : std::uint8_t {
-    Public = 0,
-    Private = 2,
+    Public,
+    Private,
 };
 
 constexpr const char* visibilityToString(Visibility visibility) noexcept {
