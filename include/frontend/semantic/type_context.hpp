@@ -65,9 +65,7 @@ struct SemanticType {
     constexpr bool isPrimitive() const noexcept { return kind == Kind::Primitive; }
     constexpr bool isVoid() const noexcept { return kind == Kind::Void; }
 
-    constexpr bool isBoolean() const noexcept {
-        return isPrimitive() && primitiveType == ast::PrimitiveType::boolean;
-    }
+    constexpr bool isBoolean() const noexcept { return isPrimitive() && primitiveType == ast::PrimitiveType::boolean; }
 
     constexpr bool isUnsignedInteger() const noexcept {
         using enum ast::PrimitiveType;

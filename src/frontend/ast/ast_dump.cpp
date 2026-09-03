@@ -685,19 +685,19 @@ void TypeofType::dump(std::ostream& os, std::size_t indent) const {
 void PoisonedStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "PoisonedStatement", *this);
-    os << ind.next() << "offending token: " << offendingToken.toString()  << "\n";
+    os << ind.next() << "offending token: " << offendingToken.toString() << "\n";
     os << ind << "}\n";
 }
 void PoisonedExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "PoisonedExpression", *this);
-    os << ind.next() << "offending token: " << offendingToken.toString()  << "\n";
+    os << ind.next() << "offending token: " << offendingToken.toString() << "\n";
     os << ind << "}\n";
 }
 void PoisonedType::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "PoisonedType", *this);
-    os << ind.next() << "offending token: " << offendingToken.toString()  << "\n";
+    os << ind.next() << "offending token: " << offendingToken.toString() << "\n";
     os << ind << "}\n";
 }
 

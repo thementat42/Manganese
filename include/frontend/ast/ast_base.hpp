@@ -125,7 +125,6 @@ struct Expression : public ASTNode {
     virtual mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
     constexpr bool isPoisoned() const noexcept { return kind == ExpressionKind::PoisonedExpression; };
 
-
    protected:
     explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}
 };

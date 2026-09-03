@@ -5,7 +5,6 @@
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/fold_result.hxx>
 
-
 namespace Manganese::ast {
 
 std::string_view primitiveTypeToString(PrimitiveType prim) {
