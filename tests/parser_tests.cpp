@@ -658,7 +658,7 @@ static bool testNamespaces() {
 }
 
 static bool miscTests() {
-    const std::string expression = "let x = aggregate{1, \"asdf\", 3.1f32};";
+    const std::string expression = "int x = aggregate{1, \"asdf\", 3.1f32};";
     parser::ParsedFile x = getParserResults(expression);
     std::cout << x.program[0]->toString(0) << "\n";
     return true;

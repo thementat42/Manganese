@@ -17,15 +17,13 @@ ast::Statement* Parser::parseStatement() {
     const TokenType type = peekTokenType();
 
     if (type == TokenType::LeftBrace) {
-        // don't need to move thanks to copy elision
         return makeNode<ast::NestedBlockStatement>(startToken, parseBlock("nested block"));
     }
 
     // Handle bare semicolons
     if (type == TokenType::Semicolon) {
-        DISCARD(consumeToken());
         // still want line and column information for these
-        return makeNode<ast::EmptyStatement>(startToken);
+        return makeNode<ast::EmptyStatement>(consumeToken());
     }
     const std::size_t index = tokenToIndex(type);
 

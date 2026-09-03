@@ -10,12 +10,16 @@
 namespace Manganese::parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
+    Token token = peekToken();
     TokenType type = peekTokenType();
     const std::size_t index = tokenToIndex(type);
 
     const nudHandler_types_t nudHandler = lookupTable.nudLookup_types[index];
     if (!nudHandler) {
-        ASSERT_UNREACHABLE("No type null denotation handler for token type: " + lexer::tokenTypeToString(type));
+        logError(token.getLine(), token.getColumn(), "Expected a type, got '{}'", lexer::tokenTypeToString(type));
+        Token t = consumeToken();
+        Token tCopy = t;  // needed because PoisonedType needs to own a token
+        return makeNode<ast::PoisonedType>(t, std::move(tCopy));
     }
     ast::Type* left = (this->*nudHandler)();
 
@@ -28,7 +32,11 @@ ast::Type* Parser::parseType(Precedence precedence) {
 
         const ledHandler_types_t handler = lookupTable.ledLookup_types[idx];
         if (!handler) {
-            ASSERT_UNREACHABLE("No type left denotation handler for token type: " + lexer::tokenTypeToString(type));
+            logError(token.getLine(), token.getColumn(), "Expected type operator, got '{}'",
+                     lexer::tokenTypeToString(type));
+            Token t = consumeToken();
+            Token tCopy = t;  // needed because PoisonedType needs to own a token
+            return makeNode<ast::PoisonedType>(t, std::move(tCopy));
         }
         left = (this->*handler)(left, op.rightBindingPower);
     }

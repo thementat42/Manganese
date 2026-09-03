@@ -60,7 +60,11 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
 
     const nudHandler_t nudHandler = lookupTable.nudLookup[index];
     if (!nudHandler) {
-        ASSERT_UNREACHABLE("No null denotation handler for token type: " + lexer::tokenTypeToString(type));
+        logError(token.getLine(), token.getColumn(), "Expected expression to the left of '{}'",
+                 lexer::tokenTypeToString(type));
+        Token t = consumeToken();
+        Token tCopy = t;  // needed because PoisonedExpression needs to own a token
+        return makeNode<ast::PoisonedExpression>(t, std::move(tCopy));
     }
     // ast::Expression* left = nudIterator->second(this);
     ast::Expression* left = (this->*nudHandler)();
@@ -80,7 +84,11 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
 
         const ledHandler_t handler = lookupTable.ledLookup[idx];
         if (!handler) {
-            ASSERT_UNREACHABLE("No left denotation handler for token type: " + lexer::tokenTypeToString(type));
+            logError(token.getLine(), token.getColumn(), "Expected binary operator, got '{}'",
+                     lexer::tokenTypeToString(type));
+            Token t = consumeToken();
+            Token tCopy = t;  // needed since PoisonedExpression needs to own a token
+            return makeNode<ast::PoisonedExpression>(t, std::move(tCopy));
         }
 
         left = (this->*handler)(left, op.rightBindingPower);
