@@ -100,6 +100,8 @@ std::string Pointer::toString() const {
     return std::format("{}ptr {}", (isMutable ? "mut " : ""), baseType->toString());
 }
 
+std::string Poison::toString() const { return "<error_type>"; }
+
 std::string Void::toString() const { return "void"; }
 
 // Size & Alignment
@@ -181,6 +183,10 @@ std::size_t Pointer::size(const TargetInfo& target) const noexcept { return targ
 
 std::size_t Pointer::alignment(const TargetInfo& target) const noexcept { return target.pointerAlignment; }
 
+std::size_t Poison::size(const TargetInfo&) const noexcept { return 0; }
+
+std::size_t Poison::alignment(const TargetInfo&) const noexcept { return 1; }
+
 std::size_t Void::size(const TargetInfo&) const noexcept { return 0; }
 
 std::size_t Void::alignment(const TargetInfo&) const noexcept { return 1; }
@@ -190,7 +196,7 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
     // start by hashing the type kind (isolates primitives, pointers, etc)
     std::size_t hash = std::hash<kind_int_t>{}(static_cast<kind_int_t>(t->kind));
     switch (t->kind) {
-        case Kind::Aggregate: {
+        case SemanticTypeKind::Aggregate: {
             const auto* aggregate = static_cast<const Aggregate*>(t);
             // For an anonymous aggregate, hash the fields
             // Use the Boost Hash Combine algorithm
@@ -207,18 +213,18 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             }
             return hash;
         }
-        case Kind::Array: {
+        case SemanticTypeKind::Array: {
             // Since array types have a fixed structure we can just hash the member types
             const auto* array = static_cast<const Array*>(t);
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(array->elementType));
             return hash_combine(hash, std::hash<std::size_t>{}(array->length));
         }
 
-        case Kind::Enum: {
+        case SemanticTypeKind::Enum: {
             const auto* enumeration = static_cast<const Enum*>(t);
             return std::hash<std::string_view>{}(enumeration->name);
         }
-        case Kind::Function: {
+        case SemanticTypeKind::Function: {
             const auto* function = static_cast<const Function*>(t);
             // Mix the return type first to establish the base function signature
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(function->returnType));
@@ -230,7 +236,7 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             }
             return hash;
         }
-        case Kind::Generic: {
+        case SemanticTypeKind::Generic: {
             const auto* generic = static_cast<const GenericInstantiation*>(t);
             // Mix the base generic template type (e.g., the List in List@[int])
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(generic->baseType));
@@ -239,16 +245,21 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             }
             return hash;
         }
-        case Kind::Pointer: {
+        case SemanticTypeKind::Pointer: {
             // like arrays, just hash the fields
             const auto* pointer = static_cast<const Pointer*>(t);
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(pointer->baseType));
             return hash_combine(hash, std::hash<bool>{}(pointer->isMutable));
         }
-        case Kind::Primitive:
+        case SemanticTypeKind::Poison: {
+            return hash;
+        }
+        case SemanticTypeKind::Primitive:
             // Since each primitive value is unique we can just hash the enum type
             return hash_combine(hash, std::hash<prim_int_t>{}(static_cast<prim_int_t>(t->primitiveType)));
-        case Kind::Void: return hash;  // no extra logic neexex
+        case SemanticTypeKind::Void: {
+            return hash;
+        }  // no extra logic neexex
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup hash");
 }
@@ -259,40 +270,43 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
     if (lhs->kind != rhs->kind) { return false; }
 
     switch (lhs->kind) {
-        case Kind::Primitive: return lhs->primitiveType == rhs->primitiveType;
-        case Kind::Pointer: {
+        case SemanticTypeKind::Primitive: return lhs->primitiveType == rhs->primitiveType;
+        case SemanticTypeKind::Pointer: {
             const auto* left = static_cast<const Pointer*>(lhs);
             const auto* right = static_cast<const Pointer*>(rhs);
             return (left->baseType == right->baseType) && (left->isMutable == right->isMutable);
         }
-        case Kind::Array: {
+        case SemanticTypeKind::Array: {
             const auto* left = static_cast<const Array*>(lhs);
             const auto* right = static_cast<const Array*>(rhs);
             return (left->elementType == right->elementType) && (left->length == right->length);
         }
-        case Kind::Aggregate: {
+        case SemanticTypeKind::Aggregate: {
             const auto* left = static_cast<const Aggregate*>(lhs);
             const auto* right = static_cast<const Aggregate*>(rhs);
             // For named aggregates, we can immediately distinguish by names
             // Only for anonymous aggregates do we need to check fields
             return (left->name == right->name) && (left->fields == right->fields);
         }
-        case Kind::Enum: {
+        case SemanticTypeKind::Enum: {
             const auto* left = static_cast<const Enum*>(lhs);
             const auto* right = static_cast<const Enum*>(rhs);
             return left->name == right->name;
         }
-        case Kind::Function: {
+        case SemanticTypeKind::Function: {
             const auto* left = static_cast<const Function*>(lhs);
             const auto* right = static_cast<const Function*>(rhs);
             return (left->returnType == right->returnType) && (left->parameterTypes == right->parameterTypes);
         }
-        case Kind::Generic: {
+        case SemanticTypeKind::Generic: {
             const auto* left = static_cast<const GenericInstantiation*>(lhs);
             const auto* right = static_cast<const GenericInstantiation*>(rhs);
             return (left->baseType == right->baseType) && (left->typeArguments == right->typeArguments);
         }
-        case Kind::Void: {
+        case SemanticTypeKind::Poison: {
+            return true;
+        }
+        case SemanticTypeKind::Void: {
             return true;
         }
     }
@@ -355,6 +369,8 @@ const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool i
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
+
+const SemanticType* TypeContext::getPoison() const noexcept { return &_poisonInstance; }
 
 const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType primitive) const noexcept {
     if (primitive == ast::PrimitiveType::not_primitive) {

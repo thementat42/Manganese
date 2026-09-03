@@ -30,6 +30,7 @@ enum class SemanticTypeKind : std::uint8_t {
     Function,
     Generic,
     Pointer,
+    Poison,
     Primitive,
     Void,
 };
@@ -42,10 +43,10 @@ enum class ResolutionStatus : std::int8_t {
 };
 
 struct SemanticType {
-    const Kind kind;
+    const SemanticTypeKind kind;
     const ast::PrimitiveType primitiveType;
 
-    constexpr explicit SemanticType(Kind _kind,
+    constexpr explicit SemanticType(SemanticTypeKind _kind,
                                     ast::PrimitiveType primitive = ast::PrimitiveType::not_primitive) noexcept :
         kind(_kind), primitiveType(primitive) {}
 
@@ -56,14 +57,14 @@ struct SemanticType {
     virtual std::size_t size(const TargetInfo& target) const noexcept;
     virtual std::size_t alignment(const TargetInfo& target) const noexcept;
 
-    constexpr bool isAggregate() const noexcept { return kind == Kind::Aggregate; }
-    constexpr bool isArray() const noexcept { return kind == Kind::Array; }
-    constexpr bool isEnum() const noexcept { return kind == Kind::Enum; }
-    constexpr bool isFunction() const noexcept { return kind == Kind::Function; }
-    constexpr bool isGeneric() const noexcept { return kind == Kind::Generic; }
-    constexpr bool isPointer() const noexcept { return kind == Kind::Pointer; }
-    constexpr bool isPrimitive() const noexcept { return kind == Kind::Primitive; }
-    constexpr bool isVoid() const noexcept { return kind == Kind::Void; }
+    constexpr bool isAggregate() const noexcept { return kind == SemanticTypeKind::Aggregate; }
+    constexpr bool isArray() const noexcept { return kind == SemanticTypeKind::Array; }
+    constexpr bool isEnum() const noexcept { return kind == SemanticTypeKind::Enum; }
+    constexpr bool isFunction() const noexcept { return kind == SemanticTypeKind::Function; }
+    constexpr bool isGeneric() const noexcept { return kind == SemanticTypeKind::Generic; }
+    constexpr bool isPointer() const noexcept { return kind == SemanticTypeKind::Pointer; }
+    constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
+    constexpr bool isVoid() const noexcept { return kind == SemanticTypeKind::Void; }
 
     constexpr bool isBoolean() const noexcept { return isPrimitive() && primitiveType == ast::PrimitiveType::boolean; }
 
@@ -84,7 +85,8 @@ struct SemanticType {
     constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }
 
    private:
-    constexpr SemanticType() noexcept : kind(Kind::Primitive), primitiveType(ast::PrimitiveType::not_primitive) {}
+    constexpr SemanticType() noexcept :
+        kind(SemanticTypeKind::Primitive), primitiveType(ast::PrimitiveType::not_primitive) {}
 
     friend class TypeContext;
 };
@@ -105,13 +107,14 @@ struct Aggregate final : public SemanticType {
     mutable ResolutionStatus status;
 
     Aggregate(std::vector<AggregateField>&& fieldTypes, std::string&& aggregateName = "") noexcept :
-        SemanticType(Kind::Aggregate),
+        SemanticType(SemanticTypeKind::Aggregate),
         fields(std::move(fieldTypes)),
         name(std::move(aggregateName)),
         status(ResolutionStatus::NotStarted) {}
 
     // For anonymous aggregates
-    Aggregate(TypeList&& rawTypes) noexcept : SemanticType(Kind::Aggregate), name(), status(ResolutionStatus::Success) {
+    Aggregate(TypeList&& rawTypes) noexcept :
+        SemanticType(SemanticTypeKind::Aggregate), name(), status(ResolutionStatus::Success) {
         fields.reserve(rawTypes.size());
         for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
     }
@@ -141,7 +144,7 @@ struct Array final : public SemanticType {
     const std::size_t length;
 
     Array(const SemanticType* baseType, std::size_t len) noexcept :
-        SemanticType(Kind::Array), elementType(baseType), length(len) {}
+        SemanticType(SemanticTypeKind::Array), elementType(baseType), length(len) {}
     ~Array() override = default;
 
     std::string toString() const override;
@@ -161,7 +164,7 @@ struct Enum final : public SemanticType {
     mutable ResolutionStatus status = ResolutionStatus::NotStarted;
 
     explicit Enum(std::string_view enumName, const SemanticType* defaultUnderlying = nullptr) noexcept :
-        SemanticType(Kind::Enum), name(enumName), underlyingType(defaultUnderlying) {}
+        SemanticType(SemanticTypeKind::Enum), name(enumName), underlyingType(defaultUnderlying) {}
 
     bool hasVariant(std::string_view variantName) const noexcept {
         for (const auto& v : variants) {
@@ -200,7 +203,7 @@ struct Function final : public SemanticType {
     std::vector<Parameter> parameterTypes;
 
     Function(std::vector<Parameter>&& params, const SemanticType* ret) noexcept :
-        SemanticType(Kind::Function, static_cast<ast::PrimitiveType>(0)),
+        SemanticType(SemanticTypeKind::Function, static_cast<ast::PrimitiveType>(0)),
         returnType(ret),
         parameterTypes(std::move(params)) {}
 
@@ -216,7 +219,7 @@ struct GenericInstantiation final : public SemanticType {
     TypeList typeArguments;
 
     GenericInstantiation(const SemanticType* base, TypeList&& args) noexcept :
-        SemanticType(Kind::Generic), baseType(base), typeArguments(std::move(args)) {}
+        SemanticType(SemanticTypeKind::Generic), baseType(base), typeArguments(std::move(args)) {}
 
     ~GenericInstantiation() override = default;
 
@@ -230,8 +233,17 @@ struct Pointer final : public SemanticType {
     const bool isMutable;
 
     Pointer(const SemanticType* base, bool isMut) noexcept :
-        SemanticType(Kind::Pointer), baseType(base), isMutable(isMut) {}
+        SemanticType(SemanticTypeKind::Pointer), baseType(base), isMutable(isMut) {}
     ~Pointer() override = default;
+
+    std::string toString() const override;
+    std::size_t size(const TargetInfo& target) const noexcept override;
+    std::size_t alignment(const TargetInfo& target) const noexcept override;
+};
+
+struct Poison final : public SemanticType {
+    Poison() noexcept : SemanticType(SemanticTypeKind::Poison) {}
+    ~Poison() noexcept override = default;
 
     std::string toString() const override;
     std::size_t size(const TargetInfo& target) const noexcept override;
@@ -254,7 +266,7 @@ struct PrimitiveInfo {
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type);
 
 struct Void final : public SemanticType {
-    Void() noexcept : SemanticType(Kind::Void) {};
+    Void() noexcept : SemanticType(SemanticTypeKind::Void) {};
     ~Void() override = default;
 
     std::string toString() const override;
@@ -264,7 +276,7 @@ struct Void final : public SemanticType {
 
 struct TypeLookup {
     using is_transparent = void;  // enables heterogenous lookup inside std::unordered_set
-    using kind_int_t = std::underlying_type_t<Kind>;
+    using kind_int_t = std::underlying_type_t<SemanticTypeKind>;
     using prim_int_t = std::underlying_type_t<ast::PrimitiveType>;
 
     // Hashing
@@ -290,17 +302,20 @@ class TypeContext {
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
     std::array<SemanticType, NUM_PRIMITIVES> _primitives;
     Void _voidInstance;
+    Poison _poisonInstance;
 
     template <std::size_t... Is>
     constexpr static std::array<SemanticType, sizeof...(Is)> _makePrimitives(std::index_sequence<Is...>) noexcept {
-        return {SemanticType(Kind::Primitive, static_cast<ast::PrimitiveType>(Is))...};
+        return {SemanticType(SemanticTypeKind::Primitive, static_cast<ast::PrimitiveType>(Is))...};
     }
 
    public:
     explicit TypeContext(mnstl::chunk_allocator& allocator, TargetInfo target) noexcept :
         _allocator(allocator),
         _targetInfo(target),
-        _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
+        _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})),
+        _voidInstance(),
+        _poisonInstance() {}
 
     ~TypeContext() = default;
 
@@ -323,6 +338,8 @@ class TypeContext {
     const SemanticType* getGenericInstance(const SemanticType* baseType, TypeList&& typeArguments);
 
     const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
+
+    const SemanticType* getPoison() const noexcept;
 
     const SemanticType* getPrimitive(ast::PrimitiveType primitive) const noexcept;
 
