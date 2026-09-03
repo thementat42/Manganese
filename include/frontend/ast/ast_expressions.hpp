@@ -3,7 +3,6 @@
 
 #include <core.hpp>
 #include <cstddef>
-#include <cstdint>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <mnstl/fold_result.hxx>
@@ -14,16 +13,6 @@
 #include <vector>
 
 namespace Manganese::ast {
-
-enum class ExpressionKind : std::uint8_t {
-#define STMT(name)
-#define EXPR(name) name,
-#define TYPE(name)
-#include <frontend/ast/ast.def>
-#undef STMT
-#undef EXPR
-#undef TYPE
-};
 
 struct AggregateInstantiationField {
     std::string name;

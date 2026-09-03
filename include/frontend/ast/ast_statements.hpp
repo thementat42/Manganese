@@ -2,7 +2,6 @@
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 
 #include <cstddef>
-#include <cstdint>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <string>
@@ -10,16 +9,6 @@
 #include <vector>
 
 namespace Manganese::ast {
-
-enum class StatementKind : std::uint8_t {
-#define STMT(name) name,
-#define EXPR(name)
-#define TYPE(name)
-#include <frontend/ast/ast.def>
-#undef STMT
-#undef EXPR
-#undef TYPE
-};
 
 struct AggregateField {
     std::string name;

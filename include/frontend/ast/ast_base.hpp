@@ -8,8 +8,8 @@
 #include <ostream>
 #include <string>
 #include <string_view>
-#include <utils/type_names.hpp>
 #include <utils/target_info.hpp>
+#include <utils/type_names.hpp>
 #include <vector>
 
 #if MN_DEBUG
@@ -35,9 +35,36 @@ struct Expression;
 struct Statement;
 struct Type;
 
-enum class StatementKind : std::uint8_t;
-enum class ExpressionKind : std::uint8_t;
-enum class TypeKind : std::uint8_t;
+enum class StatementKind : std::uint8_t {
+#define STMT(name) name,
+#define EXPR(name)
+#define TYPE(name)
+#include <frontend/ast/ast.def>
+#undef STMT
+#undef EXPR
+#undef TYPE
+};
+
+enum class ExpressionKind : std::uint8_t {
+#define STMT(name)
+#define EXPR(name) name,
+#define TYPE(name)
+#include <frontend/ast/ast.def>
+#undef STMT
+#undef EXPR
+#undef TYPE
+};
+
+enum class TypeKind : std::uint8_t {
+#define STMT(name)
+#define EXPR(name)
+#define TYPE(name) name,
+#include <frontend/ast/ast.def>
+#undef STMT
+#undef EXPR
+#undef TYPE
+};
+
 
 using Block = std::vector<Statement*>;
 

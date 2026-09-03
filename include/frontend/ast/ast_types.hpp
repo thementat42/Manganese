@@ -1,7 +1,6 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 
-#include <cstdint>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <string>
@@ -9,17 +8,6 @@
 #include <vector>
 
 namespace Manganese::ast {
-
-enum class TypeKind : std::uint8_t {
-#define STMT(name)
-#define EXPR(name)
-#define TYPE(name) name,
-#include <frontend/ast/ast.def>
-#undef STMT
-#undef EXPR
-#undef TYPE
-};
-
 struct AggregateType final : public Type {
     std::vector<Type*> fieldTypes;
 
