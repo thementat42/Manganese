@@ -65,7 +65,6 @@ enum class TypeKind : std::uint8_t {
 #undef TYPE
 };
 
-
 using Block = std::vector<Statement*>;
 
 enum class PrimitiveType : std::uint8_t {
@@ -113,6 +112,8 @@ struct ASTNode {
 struct Statement : public ASTNode {
     const StatementKind kind;
 
+    constexpr bool isPoisoned() const noexcept { return kind == StatementKind::PoisonedStatement; };
+
    protected:
     explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}
 };
@@ -122,6 +123,8 @@ struct Expression : public ASTNode {
     const semantic::SemanticType* semanticType = nullptr;
 
     virtual mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
+    constexpr bool isPoisoned() const noexcept { return kind == ExpressionKind::PoisonedExpression; };
+
 
    protected:
     explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}
@@ -131,6 +134,8 @@ struct Type : public ASTNode {
     const TypeKind kind;
     const PrimitiveType primitiveType;
     const semantic::SemanticType* semanticType = nullptr;
+
+    constexpr bool isPoisoned() const noexcept { return kind == TypeKind::PoisonedType; };
 
    protected:
     explicit Type(TypeKind _kind, PrimitiveType _primitiveType = PrimitiveType::not_primitive) noexcept :
