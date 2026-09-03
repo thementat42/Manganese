@@ -84,9 +84,9 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         return result;
     } else if (isArithmeticOp(op)) {
         if (lhsType->isPointer() || rhsType->isPointer()) { return analyzePointerArithmetic(expression); }
-        if (op == lexer::TokenType::Plus && lhsType->primitiveType == ast::PrimitiveType::str
-            && rhsType->primitiveType == ast::PrimitiveType::str) {
-            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::str);
+        if (op == lexer::TokenType::Plus && lhsType->primitiveType == ast::PrimitiveType::string
+            && rhsType->primitiveType == ast::PrimitiveType::string) {
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::string);
             return exprvisit_t::Success;
         }
         const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
@@ -250,7 +250,7 @@ auto Analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     if (fromType == toType) {
         isValidCast = true;
     } else if (fromType->isPrimitive() && toType->isPrimitive()) {
-        isValidCast = !mnstl::enum_matches(ast::PrimitiveType::str, fromType->primitiveType, toType->primitiveType);
+        isValidCast = !mnstl::enum_matches(ast::PrimitiveType::string, fromType->primitiveType, toType->primitiveType);
     } else if (fromType->isEnum() && toType->isInteger()) {
         isValidCast = true;
     } else if (fromType->isInteger() && toType->isEnum()) {
