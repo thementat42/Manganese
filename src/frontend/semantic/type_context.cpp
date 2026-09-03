@@ -20,21 +20,21 @@ PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type) {
         case int8: return {.category = Cat::Int, .bitWidth = 8};
         case int16: return {.category = Cat::Int, .bitWidth = 16};
         case int32: return {.category = Cat::Int, .bitWidth = 32};
-        case i64: return {.category = Cat::Int, .bitWidth = 64};
+        case int64: return {.category = Cat::Int, .bitWidth = 64};
         case int128: return {.category = Cat::Int, .bitWidth = 128};
 
         case uint8: return {.category = Cat::UInt, .bitWidth = 8};
         case uint16: return {.category = Cat::UInt, .bitWidth = 16};
-        case u32: return {.category = Cat::UInt, .bitWidth = 32};
-        case u64: return {.category = Cat::UInt, .bitWidth = 64};
+        case uint32: return {.category = Cat::UInt, .bitWidth = 32};
+        case uint64: return {.category = Cat::UInt, .bitWidth = 64};
         case uint128: return {.category = Cat::UInt, .bitWidth = 128};
 
         case floata32: return {.category = Cat::Float, .bitWidth = 32};
-        case f64: return {.category = Cat::Float, .bitWidth = 64};
+        case float64: return {.category = Cat::Float, .bitWidth = 64};
 
         case character: return {.category = Cat::Char, .bitWidth = 8};
         case boolean: return {.category = Cat::Bool, .bitWidth = 1};
-        case str: return {.category = Cat::String, .bitWidth = 0};
+        case string: return {.category = Cat::String, .bitWidth = 0};
         default: break;
     }
     return {Cat::Int, 0};

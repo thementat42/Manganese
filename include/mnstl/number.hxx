@@ -67,19 +67,19 @@ constexpr const char* baseToString(Base b) noexcept {
 class number_t {
    public:
     enum class held_type : std::uint8_t {
-        int8,
-        int16,
-        int32,
-        int64,
-        uint8,
-        uint16,
-        uint32,
-        uint64,
-        int128,
-        uint128,
-        float32,
-        float64,
-        error,
+        i8,
+        i16,
+        i32,
+        i64,
+        i128,
+        u8,
+        u16,
+        u32,
+        u64,
+        u128,
+        f32,
+        f64,
+        err,
         none
     };
 
@@ -105,19 +105,19 @@ class number_t {
     decltype(auto) _visit(F&& f) const NOEXCEPT_IF_RELEASE {
         using enum held_type;
         switch (_underlying) {
-            case int8: return std::forward<F>(f)(_i8);
-            case int16: return std::forward<F>(f)(_i16);
-            case int32: return std::forward<F>(f)(_i32);
-            case int64: return std::forward<F>(f)(_i64);
-            case uint8: return std::forward<F>(f)(_u8);
-            case uint16: return std::forward<F>(f)(_u16);
-            case uint32: return std::forward<F>(f)(_u32);
-            case uint64: return std::forward<F>(f)(_u64);
-            case float32: return std::forward<F>(f)(_f32);
-            case float64: return std::forward<F>(f)(_f64);
-            case int128: return std::forward<F>(f)(_i128);
-            case uint128: return std::forward<F>(f)(_u128);
-            case error: return std::forward<F>(f)(_err);
+            case i8: return std::forward<F>(f)(_i8);
+            case i16: return std::forward<F>(f)(_i16);
+            case i32: return std::forward<F>(f)(_i32);
+            case i64: return std::forward<F>(f)(_i64);
+            case u8: return std::forward<F>(f)(_u8);
+            case u16: return std::forward<F>(f)(_u16);
+            case u32: return std::forward<F>(f)(_u32);
+            case u64: return std::forward<F>(f)(_u64);
+            case f32: return std::forward<F>(f)(_f32);
+            case f64: return std::forward<F>(f)(_f64);
+            case i128: return std::forward<F>(f)(_i128);
+            case u128: return std::forward<F>(f)(_u128);
+            case err: return std::forward<F>(f)(_err);
             case none: ASSERT_UNREACHABLE("Attempted to read a number_t with no stored value");
         }
         ASSERT_UNREACHABLE("In number_t::visit: unknown underlying type");
@@ -125,36 +125,35 @@ class number_t {
 
    public:
     constexpr number_t() noexcept : _underlying(held_type::none) {}
-    constexpr number_t(std::int8_t i8) noexcept : _i8(i8), _underlying(held_type::int8) {}
-    constexpr number_t(std::int16_t i16) noexcept : _i16(i16), _underlying(held_type::int16) {}
-    constexpr number_t(std::int32_t i32) noexcept : _i32(i32), _underlying(held_type::int32) {}
-    constexpr number_t(std::int64_t i64) noexcept : _i64(i64), _underlying(held_type::int64) {}
-    constexpr number_t(int128_t i128) noexcept : _i128(i128), _underlying(held_type::int128) {}
+    constexpr number_t(std::int8_t i8) noexcept : _i8(i8), _underlying(held_type::i8) {}
+    constexpr number_t(std::int16_t i16) noexcept : _i16(i16), _underlying(held_type::i16) {}
+    constexpr number_t(std::int32_t i32) noexcept : _i32(i32), _underlying(held_type::i32) {}
+    constexpr number_t(std::int64_t i64) noexcept : _i64(i64), _underlying(held_type::i64) {}
+    constexpr number_t(int128_t i128) noexcept : _i128(i128), _underlying(held_type::i128) {}
 
-    constexpr number_t(std::uint8_t u8) noexcept : _u8(u8), _underlying(held_type::uint8) {}
-    constexpr number_t(std::uint16_t u16) noexcept : _u16(u16), _underlying(held_type::uint16) {}
-    constexpr number_t(std::uint32_t u32) noexcept : _u32(u32), _underlying(held_type::uint32) {}
-    constexpr number_t(std::uint64_t u64) noexcept : _u64(u64), _underlying(held_type::uint64) {}
-    constexpr number_t(uint128_t u128) noexcept : _u128(u128), _underlying(held_type::uint128) {}
+    constexpr number_t(std::uint8_t u8) noexcept : _u8(u8), _underlying(held_type::u8) {}
+    constexpr number_t(std::uint16_t u16) noexcept : _u16(u16), _underlying(held_type::u16) {}
+    constexpr number_t(std::uint32_t u32) noexcept : _u32(u32), _underlying(held_type::u32) {}
+    constexpr number_t(std::uint64_t u64) noexcept : _u64(u64), _underlying(held_type::u64) {}
+    constexpr number_t(uint128_t u128) noexcept : _u128(u128), _underlying(held_type::u128) {}
 
-    constexpr number_t(float32_t f32) noexcept : _f32(f32), _underlying(held_type::float32) {}
-    constexpr number_t(float64_t f64) noexcept : _f64(f64), _underlying(held_type::float64) {}
-    constexpr number_t(const char* error_message) noexcept : _err(error_message), _underlying(held_type::error) {}
+    constexpr number_t(float32_t f32) noexcept : _f32(f32), _underlying(held_type::f32) {}
+    constexpr number_t(float64_t f64) noexcept : _f64(f64), _underlying(held_type::f64) {}
+    constexpr number_t(const char* error_message) noexcept : _err(error_message), _underlying(held_type::err) {}
 
-    constexpr bool is_error() const noexcept { return _underlying == held_type::error; }
+    constexpr bool is_error() const noexcept { return _underlying == held_type::err; }
     constexpr const char* error_unchecked() const noexcept { return _err; }
 
     constexpr held_type underlying_type() const noexcept { return _underlying; }
 
     constexpr bool is_integer() const noexcept {
         using enum held_type;
-        return enum_matches<held_type>(_underlying, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64,
-                                       uint128);
+        return enum_matches<held_type>(_underlying, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
     }
 
     constexpr bool is_float() const noexcept {
         using enum held_type;
-        return enum_matches<held_type>(_underlying, float32, float64);
+        return enum_matches<held_type>(_underlying, f32, f64);
     }
 
     template <Numeric T>
@@ -559,40 +558,40 @@ inline string_conversion_result_t<number_t> str_to_num(std::string_view str, boo
     number_t::held_type t;
     if (str.ends_with("i8") || str.ends_with("I8")) {
         parsing_end -= 2;
-        t = number_t::held_type::int8;
+        t = number_t::held_type::i8;
     } else if (str.ends_with("i16") || str.ends_with("I16")) {
         parsing_end -= 3;
-        t = number_t::held_type::int16;
+        t = number_t::held_type::i16;
     } else if (str.ends_with("i32") || str.ends_with("I32")) {
         parsing_end -= 3;
-        t = number_t::held_type::int32;
+        t = number_t::held_type::i32;
     } else if (str.ends_with("i64") || str.ends_with("I64")) {
         parsing_end -= 3;
-        t = number_t::held_type::int64;
+        t = number_t::held_type::i64;
     } else if (str.ends_with("i128") || str.ends_with("I128")) {
         parsing_end -= 4;
-        t = number_t::held_type::int128;
+        t = number_t::held_type::i128;
     } else if (str.ends_with("u8") || str.ends_with("U8")) {
         parsing_end -= 2;
-        t = number_t::held_type::uint8;
+        t = number_t::held_type::u8;
     } else if (str.ends_with("u16") || str.ends_with("U16")) {
         parsing_end -= 3;
-        t = number_t::held_type::uint16;
+        t = number_t::held_type::u16;
     } else if (str.ends_with("u32") || str.ends_with("U32")) {
         parsing_end -= 3;
-        t = number_t::held_type::uint32;
+        t = number_t::held_type::u32;
     } else if (str.ends_with("u64") || str.ends_with("U64")) {
         parsing_end -= 3;
-        t = number_t::held_type::uint64;
+        t = number_t::held_type::u64;
     } else if (str.ends_with("u128") || str.ends_with("U128")) {
         parsing_end -= 4;
-        t = number_t::held_type::uint128;
+        t = number_t::held_type::u128;
     } else if ((str.ends_with("f32") || str.ends_with("F32")) && isFloat) {
         parsing_end -= 3;
-        t = number_t::held_type::float32;
+        t = number_t::held_type::f32;
     } else if ((str.ends_with("f64") || str.ends_with("F64")) && isFloat) {
         parsing_end -= 3;
-        t = number_t::held_type::float64;
+        t = number_t::held_type::f64;
     } else {
         t = number_t::held_type::none;
     }
@@ -600,7 +599,7 @@ inline string_conversion_result_t<number_t> str_to_num(std::string_view str, boo
     if (parsing_end <= base_ptr) { return {.exists = false}; }
 
     if (isFloat) {
-        if (t == number_t::held_type::float32) {
+        if (t == number_t::held_type::f32) {
             return wrap_result(detail::_stox<float32_t>(parsing_start, parsing_end, base, is_negative));
         } else if (t == number_t::held_type::none) {
             auto result32 = detail::_stox<float32_t>(parsing_start, parsing_end, base, is_negative);
@@ -610,25 +609,25 @@ inline string_conversion_result_t<number_t> str_to_num(std::string_view str, boo
         }
         // default to 64-bit float
         return wrap_result(detail::_stox<float64_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::int8) {
+    } else if (t == number_t::held_type::i8) {
         return wrap_result(detail::_stox<std::int8_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::int16) {
+    } else if (t == number_t::held_type::i16) {
         return wrap_result(detail::_stox<std::int16_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::int32) {
+    } else if (t == number_t::held_type::i32) {
         return wrap_result(detail::_stox<std::int32_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::int64) {
+    } else if (t == number_t::held_type::i64) {
         return wrap_result(detail::_stox<std::int64_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::int128) {
+    } else if (t == number_t::held_type::i128) {
         return wrap_result(detail::_stox<int128_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::uint8) {
+    } else if (t == number_t::held_type::u8) {
         return wrap_result(detail::_stox<std::uint8_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::uint16) {
+    } else if (t == number_t::held_type::u16) {
         return wrap_result(detail::_stox<std::uint16_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::uint32) {
+    } else if (t == number_t::held_type::u32) {
         return wrap_result(detail::_stox<std::uint32_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::uint64) {
+    } else if (t == number_t::held_type::u64) {
         return wrap_result(detail::_stox<std::uint64_t>(parsing_start, parsing_end, base, is_negative));
-    } else if (t == number_t::held_type::uint128) {
+    } else if (t == number_t::held_type::u128) {
         return wrap_result(detail::_stox<uint128_t>(parsing_start, parsing_end, base, is_negative));
     } else {
         auto result32 = detail::_stox<std::int32_t>(parsing_start, parsing_end, base, is_negative);
