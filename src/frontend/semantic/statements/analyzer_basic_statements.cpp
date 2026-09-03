@@ -63,4 +63,7 @@ auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
+auto Analyzer::visit(ast::PoisonedStatement*) -> stmtvisit_t { return stmtvisit_t::Failure; }
+
+
 }  // namespace Manganese::semantic

@@ -155,4 +155,6 @@ auto Analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
+auto Analyzer::visit(ast::PoisonedExpression*) -> exprvisit_t { return exprvisit_t::Failure; }
+
 }  // namespace Manganese::semantic

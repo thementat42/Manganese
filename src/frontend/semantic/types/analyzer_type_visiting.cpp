@@ -199,4 +199,6 @@ auto Analyzer::visit(ast::TypeofType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
+auto Analyzer::visit(ast::PoisonedType*) -> typevisit_t { return typevisit_t::Failure; }
+
 }  // namespace Manganese::semantic
