@@ -171,7 +171,7 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
 
 auto Analyzer::visit(ast::IdentifierType* type) -> typevisit_t {
     const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
-    if (IdentifierType->primitiveType != ast::PrimitiveType_t::not_primitive) {
+    if (IdentifierType->primitiveType != ast::PrimitiveType::not_primitive) {
         type->semanticType = typeContext.getPrimitive(IdentifierType->primitiveType);
         return typevisit_t::Success;
     }

@@ -105,7 +105,7 @@ ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence) {
 }
 
 ast::Type* Parser::parseIdentifierType() {
-    using enum ast::PrimitiveType_t;
+    using enum ast::PrimitiveType;
     const Token startToken = peekToken();
     if (!startToken.isPrimitiveType()) {
         return makeNode<ast::IdentifierType>(startToken, expectToken(TokenType::Identifier).getLexeme());
@@ -113,7 +113,7 @@ ast::Type* Parser::parseIdentifierType() {
     // If the token is a primitive type, we can directly create a IdentifierType
     DISCARD(consumeToken());
     const std::string lexeme = startToken.getLexeme();
-    ast::PrimitiveType_t prim_t = not_primitive;
+    ast::PrimitiveType prim_t = not_primitive;
     if (lexeme == int8_str) {
         prim_t = i8;
     } else if (lexeme == int16_str) {

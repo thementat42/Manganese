@@ -12,8 +12,8 @@ namespace Manganese::semantic {
 
 // String conversions
 
-PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type) {
-    using enum ast::PrimitiveType_t;
+PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type) {
+    using enum ast::PrimitiveType;
     using Cat = PrimitiveInfo::Category;
 
     switch (type) {
@@ -356,8 +356,8 @@ const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool i
     return heapAlloc;
 }
 
-const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) const noexcept {
-    if (primitive == ast::PrimitiveType_t::not_primitive) {
+const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType primitive) const noexcept {
+    if (primitive == ast::PrimitiveType::not_primitive) {
         ASSERT_UNREACHABLE("Attempted to get a primitive type corresponding to a non-primitive value!");
     }
     return &_primitives[static_cast<unsigned>(primitive)];
@@ -366,13 +366,13 @@ const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType_t primitive) co
 const SemanticType* TypeContext::getVoid() const noexcept { return &_voidInstance; }
 
 const SemanticType* TypeContext::getUSizeType() const noexcept {
-    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType_t::u32)
-                                        : getPrimitive(ast::PrimitiveType_t::u64);
+    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType::u32)
+                                        : getPrimitive(ast::PrimitiveType::u64);
 }
 
 const SemanticType* TypeContext::getSSizeType() const noexcept {
-    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType_t::i32)
-                                        : getPrimitive(ast::PrimitiveType_t::i64);
+    return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType::i32)
+                                        : getPrimitive(ast::PrimitiveType::i64);
 }
 
 }  // namespace Manganese::semantic

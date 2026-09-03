@@ -101,11 +101,11 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
-    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
+    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
     return exprvisit_t::Success;
 }
 auto Analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
-    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::character);
+    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::character);
     return exprvisit_t::Success;
 }
 
@@ -125,7 +125,7 @@ auto Analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
 
 auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     using held_t = mnstl::number_t::held_type;
-    using prim_t = ast::PrimitiveType_t;
+    using prim_t = ast::PrimitiveType;
     switch (expression->value.underlying_type()) {
         case held_t::int8: expression->semanticType = typeContext.getPrimitive(prim_t::i8); break;
         case held_t::int16: expression->semanticType = typeContext.getPrimitive(prim_t::i16); break;
@@ -151,7 +151,7 @@ auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
-    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
+    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::str);
     return exprvisit_t::Success;
 }
 

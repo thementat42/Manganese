@@ -57,7 +57,7 @@ struct GenericInstantiationType final : public Type {
 struct IdentifierType final : public Type {
     std::string name;
 
-    explicit IdentifierType(std::string&& _name, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
+    explicit IdentifierType(std::string&& _name, PrimitiveType prim = PrimitiveType::not_primitive) noexcept :
         Type(TypeKind::IdentifierType, prim), name(std::move(_name)) {}
     MN_AST_STANDARD_INTERFACE;
 };
@@ -85,7 +85,7 @@ struct TypeofType final : public Type {
     Expression* expression;
 
     explicit TypeofType(Expression* expr) noexcept :
-        Type(TypeKind::TypeofType, PrimitiveType_t::not_primitive), expression(expr) {}
+        Type(TypeKind::TypeofType, PrimitiveType::not_primitive), expression(expr) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

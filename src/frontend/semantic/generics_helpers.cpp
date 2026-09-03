@@ -205,7 +205,7 @@ const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDec
 
 const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
     if (!type) [[unlikely]] { return nullptr; }
-    if (type->primitiveType != ast::PrimitiveType_t::not_primitive) {
+    if (type->primitiveType != ast::PrimitiveType::not_primitive) {
         return typeContext.getPrimitive(type->primitiveType);
     }
     using enum ast::TypeKind;

@@ -49,7 +49,7 @@ auto Analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
             result = stmtvisit_t::Failure;
         } else {
             const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
-                statement->stopCondition->semanticType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+                statement->stopCondition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
 
             if (!conditionCanBeBool) {
                 logError(statement,
@@ -83,7 +83,7 @@ auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         result = stmtvisit_t::Failure;
     } else {
         const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
-            statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+            statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
 
         if (!conditionCanBeBool) {
             logError(statement,
@@ -105,7 +105,7 @@ auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
             result = stmtvisit_t::Failure;
         } else {
             const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
-                elif.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+                elif.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
 
             if (!conditionCanBeBool) {
                 logError(statement,
@@ -183,7 +183,7 @@ auto Analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
         return stmtvisit_t::Failure;
     } else {
         const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
-            statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+            statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
 
         if (!conditionCanBeBool) {
             logError(statement, "While loop condition must be a boolean value or implicitly convertible to it, not {}",

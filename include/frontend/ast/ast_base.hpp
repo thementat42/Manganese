@@ -68,7 +68,7 @@ enum class TypeKind : std::uint8_t {
 
 using Block = std::vector<Statement*>;
 
-enum class PrimitiveType_t : std::uint8_t {
+enum class PrimitiveType : std::uint8_t {
     i8,
     u8,
     i16,
@@ -87,7 +87,7 @@ enum class PrimitiveType_t : std::uint8_t {
     not_primitive,
 };
 
-std::string_view primitiveTypeToString(PrimitiveType_t prim);
+std::string_view primitiveTypeToString(PrimitiveType prim);
 
 enum class Visibility : std::uint8_t {
     Public,
@@ -129,11 +129,11 @@ struct Expression : public ASTNode {
 
 struct Type : public ASTNode {
     const TypeKind kind;
-    const PrimitiveType_t primitiveType;
+    const PrimitiveType primitiveType;
     const semantic::SemanticType* semanticType = nullptr;
 
    protected:
-    explicit Type(TypeKind _kind, PrimitiveType_t _primitiveType = PrimitiveType_t::not_primitive) noexcept :
+    explicit Type(TypeKind _kind, PrimitiveType _primitiveType = PrimitiveType::not_primitive) noexcept :
         kind(_kind), primitiveType(_primitiveType) {}
 };
 

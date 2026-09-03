@@ -64,7 +64,7 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
                      lhsType->toString(), rhsType->toString());
             result = exprvisit_t::Failure;
         }
-        expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
+        expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
         return result;
     } else if (isBitwiseOp(op)) {
         if (!lhsType->isInteger() || !rhsType->isInteger()) {
@@ -80,13 +80,13 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
                      rhsType->toString());
             result = exprvisit_t::Failure;
         }
-        expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
+        expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
         return result;
     } else if (isArithmeticOp(op)) {
         if (lhsType->isPointer() || rhsType->isPointer()) { return analyzePointerArithmetic(expression); }
-        if (op == lexer::TokenType::Plus && lhsType->primitiveType == ast::PrimitiveType_t::str
-            && rhsType->primitiveType == ast::PrimitiveType_t::str) {
-            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::str);
+        if (op == lexer::TokenType::Plus && lhsType->primitiveType == ast::PrimitiveType::str
+            && rhsType->primitiveType == ast::PrimitiveType::str) {
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::str);
             return exprvisit_t::Success;
         }
         const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
@@ -208,7 +208,7 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             if (!expression->right->semanticType->isPointer()) {
                 logError(expression, "Dereferencing cannot be applied to a non-pointer type");
                 // dummy (figure out a better option later)
-                expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::u8);
+                expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::u8);
                 return exprvisit_t::Failure;
             }
             expression->semanticType = static_cast<const Pointer*>(expression->right->semanticType)->baseType;
@@ -216,7 +216,7 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
 
         case Not: {
             const typeCompatibilityResult canBeBool
-                = areTypesCompatible(rhsType, typeContext.getPrimitive(ast::PrimitiveType_t::boolean));
+                = areTypesCompatible(rhsType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
 
             if (!canBeBool) {
                 logError(expression, "Operator '!' requires a boolean operand, got '{}'", rhsType->toString());
@@ -224,7 +224,7 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             } else if (canBeBool.result == Compatible_t::Warning) {
                 logWarning(expression, "{}", canBeBool.message);
             }
-            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType_t::boolean);
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
         } break;
 
         default:
@@ -250,7 +250,7 @@ auto Analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     if (fromType == toType) {
         isValidCast = true;
     } else if (fromType->isPrimitive() && toType->isPrimitive()) {
-        isValidCast = !mnstl::enum_matches(ast::PrimitiveType_t::str, fromType->primitiveType, toType->primitiveType);
+        isValidCast = !mnstl::enum_matches(ast::PrimitiveType::str, fromType->primitiveType, toType->primitiveType);
     } else if (fromType->isEnum() && toType->isInteger()) {
         isValidCast = true;
     } else if (fromType->isInteger() && toType->isEnum()) {

@@ -8,7 +8,7 @@
 
 namespace Manganese::ast {
 
-std::string_view primitiveTypeToString(PrimitiveType_t prim) {
+std::string_view primitiveTypeToString(PrimitiveType prim) {
     constexpr static std::array<std::string_view, 17> primitiveNames
         = {"not primitive", int8_str,   int16_str,   int32_str,   int64_str,   int128_str, uint8_str,  uint16_str,
            uint32_str,      uint64_str, uint128_str, float32_str, float64_str, char_str,   string_str, bool_str};

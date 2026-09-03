@@ -43,10 +43,10 @@ enum class ResolutionStatus : std::int8_t {
 
 struct SemanticType {
     const Kind kind;
-    const ast::PrimitiveType_t primitiveType;
+    const ast::PrimitiveType primitiveType;
 
     constexpr explicit SemanticType(Kind _kind,
-                                    ast::PrimitiveType_t primitive = ast::PrimitiveType_t::not_primitive) noexcept :
+                                    ast::PrimitiveType primitive = ast::PrimitiveType::not_primitive) noexcept :
         kind(_kind), primitiveType(primitive) {}
 
     virtual ~SemanticType() noexcept = default;
@@ -66,27 +66,27 @@ struct SemanticType {
     constexpr bool isVoid() const noexcept { return kind == Kind::Void; }
 
     constexpr bool isBoolean() const noexcept {
-        return isPrimitive() && primitiveType == ast::PrimitiveType_t::boolean;
+        return isPrimitive() && primitiveType == ast::PrimitiveType::boolean;
     }
 
     constexpr bool isUnsignedInteger() const noexcept {
-        using enum ast::PrimitiveType_t;
+        using enum ast::PrimitiveType;
         return isPrimitive() && mnstl::enum_matches(primitiveType, u8, u16, u32, u64, u128);
     }
     constexpr bool isSignedInteger() const noexcept {
-        using enum ast::PrimitiveType_t;
+        using enum ast::PrimitiveType;
         return isPrimitive() && mnstl::enum_matches(primitiveType, i8, i16, i32, i64, i128);
     }
     constexpr bool isInteger() const noexcept { return isSignedInteger() || isUnsignedInteger(); }
     constexpr bool isFloat() const noexcept {
-        using enum ast::PrimitiveType_t;
+        using enum ast::PrimitiveType;
         return isPrimitive() && mnstl::enum_matches(primitiveType, f32, f64);
     }
 
     constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }
 
    private:
-    constexpr SemanticType() noexcept : kind(Kind::Primitive), primitiveType(ast::PrimitiveType_t::not_primitive) {}
+    constexpr SemanticType() noexcept : kind(Kind::Primitive), primitiveType(ast::PrimitiveType::not_primitive) {}
 
     friend class TypeContext;
 };
@@ -202,7 +202,7 @@ struct Function final : public SemanticType {
     std::vector<Parameter> parameterTypes;
 
     Function(std::vector<Parameter>&& params, const SemanticType* ret) noexcept :
-        SemanticType(Kind::Function, static_cast<ast::PrimitiveType_t>(0)),
+        SemanticType(Kind::Function, static_cast<ast::PrimitiveType>(0)),
         returnType(ret),
         parameterTypes(std::move(params)) {}
 
@@ -253,7 +253,7 @@ struct PrimitiveInfo {
     int bitWidth = 0;
 };
 
-PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType_t type);
+PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type);
 
 struct Void final : public SemanticType {
     Void() noexcept : SemanticType(Kind::Void) {};
@@ -267,7 +267,7 @@ struct Void final : public SemanticType {
 struct TypeLookup {
     using is_transparent = void;  // enables heterogenous lookup inside std::unordered_set
     using kind_int_t = std::underlying_type_t<Kind>;
-    using prim_int_t = std::underlying_type_t<ast::PrimitiveType_t>;
+    using prim_int_t = std::underlying_type_t<ast::PrimitiveType>;
 
     // Hashing
     std::size_t operator()(const SemanticType* t) const noexcept;
@@ -287,7 +287,7 @@ class TypeContext {
    private:
     mnstl::chunk_allocator& _allocator;
     TargetInfo _targetInfo;
-    constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType_t::boolean) + 1;
+    constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::boolean) + 1;
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
     std::array<SemanticType, NUM_PRIMITIVES> _primitives;
@@ -295,7 +295,7 @@ class TypeContext {
 
     template <std::size_t... Is>
     constexpr static std::array<SemanticType, sizeof...(Is)> _makePrimitives(std::index_sequence<Is...>) noexcept {
-        return {SemanticType(Kind::Primitive, static_cast<ast::PrimitiveType_t>(Is))...};
+        return {SemanticType(Kind::Primitive, static_cast<ast::PrimitiveType>(Is))...};
     }
 
    public:
@@ -326,7 +326,7 @@ class TypeContext {
 
     const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
 
-    const SemanticType* getPrimitive(ast::PrimitiveType_t primitive) const noexcept;
+    const SemanticType* getPrimitive(ast::PrimitiveType primitive) const noexcept;
 
     const SemanticType* getVoid() const noexcept;
 
