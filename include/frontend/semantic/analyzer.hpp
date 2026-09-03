@@ -97,8 +97,8 @@ class Analyzer final : public _analyzer_base_t {
     };
 
    public:
-    Analyzer(parser::ParsedFile& file, mnstl::chunk_allocator& arena) :
-        symbolTable(arena), typeContext(arena), parsedFile(file), genericsStack() {}
+    Analyzer(parser::ParsedFile& file, const TargetInfo& target, mnstl::chunk_allocator& arena) :
+        symbolTable(arena), typeContext(arena, target), parsedFile(file), genericsStack() {}
 
     Result analyze();
 

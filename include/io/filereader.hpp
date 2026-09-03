@@ -18,7 +18,7 @@ class FileReader : public Reader {
     std::FILE* _filePtr;
     std::size_t _bufferSize;
     std::size_t _bufferCapacity;
-    constexpr static inline int DEFAULT_BUFFER_CAPACITY = 64 * 1024;
+    constexpr static inline std::size_t DEFAULT_BUFFER_CAPACITY = 64 * 1024;
     std::unique_ptr<char[]> _buffer;
 
     void refillBuffer();

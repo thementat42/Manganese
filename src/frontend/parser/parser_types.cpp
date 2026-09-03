@@ -104,36 +104,13 @@ ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence) {
     return makeNode<ast::GenericInstantiationType>(startToken, left, std::move(typeParameters));
 }
 
-ast::Type* Parser::parseParenthesizedType() {
-    const Token startToken = consumeToken();  // Skip the '('
-    ast::Type* innerType = parseType(Precedence::Default);
-    expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
-    return innerType;
-}
-
-ast::Type* Parser::parsePointerType() {
-    const Token startToken = consumeToken();  // Consume `ptr`
-    bool isMutable = false;
-    if (peekTokenType() == TokenType::Mut) {
-        isMutable = true;
-        DISCARD(consumeToken());  // Consume `mut`
-    }
-    return makeNode<ast::PointerType>(startToken, parseType(Precedence::Default), isMutable);
-}
-
-ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
-    const Token startToken = consumeToken();  // consume the `::`
-    ast::Type* type = parseType(precedence);
-    return makeNode<ast::ScopedType>(startToken, left, type);
-}
-
-ast::Type* Parser::parseSymbolType() {
+ast::Type* Parser::parseIdentifierType() {
     using enum ast::PrimitiveType_t;
     const Token startToken = peekToken();
     if (!startToken.isPrimitiveType()) {
-        return makeNode<ast::SymbolType>(startToken, expectToken(TokenType::Identifier).getLexeme());
+        return makeNode<ast::IdentifierType>(startToken, expectToken(TokenType::Identifier).getLexeme());
     }
-    // If the token is a primitive type, we can directly create a SymbolType
+    // If the token is a primitive type, we can directly create a IdentifierType
     DISCARD(consumeToken());
     const std::string lexeme = startToken.getLexeme();
     ast::PrimitiveType_t prim_t = not_primitive;
@@ -170,7 +147,30 @@ ast::Type* Parser::parseSymbolType() {
     } else {
         ASSERT_UNREACHABLE("Unknown primitive type " + lexeme);
     }
-    return makeNode<ast::SymbolType>(startToken, startToken.getLexeme(), prim_t);
+    return makeNode<ast::IdentifierType>(startToken, startToken.getLexeme(), prim_t);
+}
+
+ast::Type* Parser::parseParenthesizedType() {
+    const Token startToken = consumeToken();  // Skip the '('
+    ast::Type* innerType = parseType(Precedence::Default);
+    expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
+    return innerType;
+}
+
+ast::Type* Parser::parsePointerType() {
+    const Token startToken = consumeToken();  // Consume `ptr`
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        isMutable = true;
+        DISCARD(consumeToken());  // Consume `mut`
+    }
+    return makeNode<ast::PointerType>(startToken, parseType(Precedence::Default), isMutable);
+}
+
+ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
+    const Token startToken = consumeToken();  // consume the `::`
+    ast::Type* type = parseType(precedence);
+    return makeNode<ast::ScopedType>(startToken, left, type);
 }
 
 ast::Type* Parser::parseTypeofType() {

@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 #include <utils/type_names.hpp>
+#include <utils/target_info.hpp>
 #include <vector>
 
 #if MN_DEBUG
@@ -62,8 +63,8 @@ enum class PrimitiveType_t : std::uint8_t {
 std::string_view primitiveTypeToString(PrimitiveType_t prim);
 
 enum class Visibility : std::uint8_t {
-    Public = 0,
-    Private = 2,
+    Public,
+    Private,
 };
 
 constexpr const char* visibilityToString(Visibility visibility) noexcept {
@@ -86,7 +87,7 @@ struct Expression : public ASTNode {
     const ExpressionKind kind;
     const semantic::SemanticType* semanticType = nullptr;
 
-    virtual mnstl::fold_result_t fold() const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
+    virtual mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
 
    protected:
     explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}

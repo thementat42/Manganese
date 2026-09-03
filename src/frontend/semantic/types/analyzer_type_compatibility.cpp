@@ -238,9 +238,8 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         };
         case Kind::Void:
             return {.result = Compatible_t::Error, .message = "Cannot use 'void' expression in this context"};
-
-        default: ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
     }
+    ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
 }
 
 auto Analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const

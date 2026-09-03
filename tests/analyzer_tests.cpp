@@ -15,13 +15,14 @@ namespace Manganese::tests {
 
 constexpr static const char* logFileName = "logs/analyzer_tests.log";
 static mnstl::chunk_allocator arena;
+static TargetInfo target = TargetInfo::fromHostTriple();
 
 // Helper: Parses and runs full semantic analysis on source code
 static bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena);
     parser::ParsedFile parsedFile = parser.parse();
 
-    semantic::Analyzer analyzer(parsedFile, arena);
+    semantic::Analyzer analyzer(parsedFile, target, arena);
     Result result = analyzer.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -623,7 +624,7 @@ static bool testAnalyzeFromFile() {
     parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
     parser::ParsedFile parsedFile = parser.parse();
 
-    semantic::Analyzer Analyzer(parsedFile, file_allocator);
+    semantic::Analyzer Analyzer(parsedFile, target, file_allocator);
 
     std::ofstream logFile(logFileName, std::ios::app);
     Result result = Analyzer.analyze();

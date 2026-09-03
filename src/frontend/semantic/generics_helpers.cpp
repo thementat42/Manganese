@@ -227,7 +227,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             const auto* arrayType = static_cast<const ast::ArrayType*>(type);
             const SemanticType* elementType = resolveGenericType(arrayType->elementType);
             if (!elementType) { return nullptr; }
-            mnstl::fold_result_t length = arrayType->lengthExpression->fold();
+            mnstl::fold_result_t length = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
             if (!length.has_value()) {
                 logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
                 return nullptr;
@@ -275,9 +275,9 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             }
 
             const Symbol* symbol = nullptr;
-            if (genericType->baseType->kind == ast::TypeKind::SymbolType) {
-                const auto* symbolType = static_cast<const ast::SymbolType*>(genericType->baseType);
-                symbol = symbolTable.lookup(symbolType->name);
+            if (genericType->baseType->kind == ast::TypeKind::IdentifierType) {
+                const auto* IdentifierType = static_cast<const ast::IdentifierType*>(genericType->baseType);
+                symbol = symbolTable.lookup(IdentifierType->name);
             } else if (genericType->baseType->kind == ast::TypeKind::ScopedType) {
                 // Properly resolve namespace-qualified base types (e.g., Data::Pair)
                 symbol = resolveTypeSymbol(genericType->baseType);
@@ -325,28 +325,28 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             logError(type, "Symbol '{}' is not a type", type->toString());
             return nullptr;
         }
-        case SymbolType: {
-            const auto* symbolType = static_cast<const ast::SymbolType*>(type);
+        case IdentifierType: {
+            const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
 
             // some symbol type (e.g. T)
-            if (auto it = activeGenericParams.find(symbolType->name); it != activeGenericParams.end()) {
+            if (auto it = activeGenericParams.find(IdentifierType->name); it != activeGenericParams.end()) {
                 std::size_t index = it->second;
                 if (!genericsStack.is_empty() && index < genericsStack.top().size()) {
                     return genericsStack.top()[index];
                 }
-                logError(type, "Unbound generic parameter '{}'", symbolType->name);
+                logError(type, "Unbound generic parameter '{}'", IdentifierType->name);
                 return nullptr;
             }
 
             // Lookup named, non-generic type in symbolt able
-            const Symbol* symbol = symbolTable.lookup(symbolType->name);
+            const Symbol* symbol = symbolTable.lookup(IdentifierType->name);
             if (!symbol) {
-                logError(type, "Unknown type name '{}'", symbolType->name);
+                logError(type, "Unknown type name '{}'", IdentifierType->name);
                 return nullptr;
             }
             if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::TypeAlias) { return symbol->type; }
 
-            logError(type, "Symbol '{}' is not a type", symbolType->name);
+            logError(type, "Symbol '{}' is not a type", IdentifierType->name);
             return nullptr;
         }
         case TypeofType: {
@@ -354,8 +354,8 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             if (visit(nestedExpression) == exprvisit_t::Failure) { return nullptr; }
             return nestedExpression->semanticType;
         }
-        default: ASSERT_UNREACHABLE("Unknown ast::TypeKind in resolveGenericType");
     }
+    ASSERT_UNREACHABLE("Unknown ast::TypeKind in resolveGenericType");
 }
 
 }  // namespace Manganese::semantic

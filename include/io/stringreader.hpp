@@ -10,7 +10,7 @@ namespace Manganese::io {
 
 class StringReader : public Reader {
    private:
-    std::size_t _position = 0, _line = 0, _column = 1;
+    std::size_t _position = 0, _line = 1, _column = 1;
     std::string_view _source;
 
    public:

@@ -590,6 +590,7 @@ void AggregateType::dump(std::ostream& os, std::size_t indent) const {
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
+
 void ArrayType::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ArrayType", *this);
@@ -603,6 +604,7 @@ void ArrayType::dump(std::ostream& os, std::size_t indent) const {
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
+
 void FunctionType::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "FunctionType", *this);
@@ -624,6 +626,16 @@ void FunctionType::dump(std::ostream& os, std::size_t indent) const {
 
     os << ind << "}\n";
 }
+
+void IdentifierType::dump(std::ostream& os, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "IdentifierType", *this);
+    os << ind.next() << "name: " << name << "\n";
+    os << ind.next() << "primitive type: " << primitiveTypeToString(primitiveType) << "\n";
+    dumpSemanticType(os, ind.next(), semanticType);
+    os << ind << "}\n";
+}
+
 void GenericInstantiationType::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "GenericInstantiationType", *this);
@@ -639,6 +651,7 @@ void GenericInstantiationType::dump(std::ostream& os, std::size_t indent) const 
     os << ind.next() << "]\n";
     os << ind << "}\n";
 }
+
 void PointerType::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "PointerType", *this);
@@ -658,14 +671,6 @@ void ScopedType::dump(std::ostream& os, std::size_t indent) const {
     os << ind << "}\n";
 }
 
-void SymbolType::dump(std::ostream& os, std::size_t indent) const {
-    const Indent ind{indent};
-    dumpHeader(os, ind, "SymbolType", *this);
-    os << ind.next() << "name: " << name << "\n";
-    os << ind.next() << "primitive type: " << primitiveTypeToString(primitiveType) << "\n";
-    dumpSemanticType(os, ind.next(), semanticType);
-    os << ind << "}\n";
-}
 void TypeofType::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "TypeofType", *this);

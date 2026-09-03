@@ -65,6 +65,14 @@ struct GenericInstantiationType final : public Type {
     MN_AST_STANDARD_INTERFACE;
 };
 
+struct IdentifierType final : public Type {
+    std::string name;
+
+    explicit IdentifierType(std::string&& _name, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
+        Type(TypeKind::IdentifierType, prim), name(std::move(_name)) {}
+    MN_AST_STANDARD_INTERFACE;
+};
+
 struct PointerType final : public Type {
     Type* baseType;
     bool isMutable;
@@ -82,14 +90,6 @@ struct ScopedType final : public Type {
     ScopedType(Type* _qualifier, Type* _type) noexcept : Type(TypeKind::ScopedType), scope(_qualifier), type(_type) {}
 
     MN_AST_STANDARD_INTERFACE
-};
-
-struct SymbolType final : public Type {
-    std::string name;
-
-    explicit SymbolType(std::string&& _name, PrimitiveType_t prim = PrimitiveType_t::not_primitive) noexcept :
-        Type(TypeKind::SymbolType, prim), name(std::move(_name)) {}
-    MN_AST_STANDARD_INTERFACE;
 };
 
 struct TypeofType final : public Type {
