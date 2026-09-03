@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <frontend/ast/ast_base.hpp>
+#include <frontend/lexer/token.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -97,6 +98,15 @@ struct TypeofType final : public Type {
 
     explicit TypeofType(Expression* expr) noexcept :
         Type(TypeKind::TypeofType, PrimitiveType_t::not_primitive), expression(expr) {}
+
+    MN_AST_STANDARD_INTERFACE;
+};
+
+struct PoisonedType final : public Type {
+    lexer::Token offendingToken;
+
+    PoisonedType(lexer::Token&& _offendingToken) :
+        Type(TypeKind::PoisonedType), offendingToken(std::move(_offendingToken)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

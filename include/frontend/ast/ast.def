@@ -52,3 +52,8 @@ TYPE(PointerType)
 TYPE(ScopedType)
 TYPE(IdentifierType)
 TYPE(TypeofType)
+
+// Errors
+STMT(PoisonedStatement)
+EXPR(PoisonedExpression)
+TYPE(PoisonedType)

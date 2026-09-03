@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <frontend/ast/ast_base.hpp>
+#include <frontend/lexer/token.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -203,7 +204,8 @@ struct NamespaceStatement final : public Statement {
 struct NestedBlockStatement final : public Statement {
     Block block;
 
-    NestedBlockStatement(Block&& _block) noexcept : Statement(StatementKind::NestedBlockStatement), block(std::move(_block)) {}
+    NestedBlockStatement(Block&& _block) noexcept :
+        Statement(StatementKind::NestedBlockStatement), block(std::move(_block)) {}
     MN_AST_STANDARD_INTERFACE;
 };
 
@@ -264,6 +266,15 @@ struct WhileLoopStatement final : public Statement {
         body(std::move(_body)),
         condition(_condition),
         isDoWhile(_isDoWhile) {}
+
+    MN_AST_STANDARD_INTERFACE;
+};
+
+struct PoisonedStatement final : public Statement {
+    lexer::Token offendingToken;
+
+    PoisonedStatement(lexer::Token&& _offendingToken) :
+        Statement(StatementKind::PoisonedStatement), offendingToken(std::move(_offendingToken)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

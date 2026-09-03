@@ -376,5 +376,16 @@ std::string TypeofType::toString(std::size_t indent) const {
     return std::format("typeof({})", expression->toString(indent));
 }
 
+// Errors
+std::string PoisonedStatement::toString(std::size_t) const {
+    return std::format("Unexpected token: '{}'", offendingToken.toString());
+}
+std::string PoisonedExpression::toString(std::size_t) const {
+    return std::format("Unexpected token: '{}'", offendingToken.toString());
+}
+std::string PoisonedType::toString(std::size_t) const {
+    return std::format("Unexpected token: '{}'", offendingToken.toString());
+}
+
 }  // namespace ast
 }  // namespace Manganese

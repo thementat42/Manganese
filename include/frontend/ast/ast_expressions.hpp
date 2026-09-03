@@ -101,7 +101,9 @@ struct BoolLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE override {
+        return mnstl::fold_result_t{value};
+    }
 };
 
 struct CharLiteralExpression final : public Expression {
@@ -114,7 +116,9 @@ struct CharLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE override {
+        return mnstl::fold_result_t{value};
+    }
 };
 
 struct FunctionCallExpression final : public Expression {
@@ -177,7 +181,9 @@ struct NumberLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE override {
+        return mnstl::fold_result_t{value};
+    }
 };
 
 struct PostfixExpression final : public Expression {
@@ -229,7 +235,9 @@ struct StringLiteralExpression final : public Expression {
         Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
 
     MN_AST_STANDARD_INTERFACE;
-    mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE override { return mnstl::fold_result_t{value}; }
+    mnstl::fold_result_t fold(const TargetInfo&) const NOEXCEPT_IF_RELEASE override {
+        return mnstl::fold_result_t{value};
+    }
 };
 
 struct TypeCastExpression final : public Expression {
@@ -238,6 +246,15 @@ struct TypeCastExpression final : public Expression {
 
     TypeCastExpression(Expression* _originalValue, Type* _targetType) noexcept :
         Expression(ExpressionKind::TypeCastExpression), originalValue(_originalValue), targetType(_targetType) {}
+
+    MN_AST_STANDARD_INTERFACE;
+};
+
+struct PoisonedExpression final : public Expression {
+    lexer::Token offendingToken;
+
+    PoisonedExpression(lexer::Token&& _offendingToken) :
+        Expression(ExpressionKind::PoisonedExpression), offendingToken(std::move(_offendingToken)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
