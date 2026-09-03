@@ -203,7 +203,7 @@ struct NamespaceStatement final : public Statement {
 struct NestedBlockStatement final : public Statement {
     Block block;
 
-    NestedBlockStatement(Block&& _block) : Statement(StatementKind::NestedBlockStatement), block(std::move(_block)) {}
+    NestedBlockStatement(Block&& _block) noexcept : Statement(StatementKind::NestedBlockStatement), block(std::move(_block)) {}
     MN_AST_STANDARD_INTERFACE;
 };
 
