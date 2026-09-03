@@ -23,7 +23,7 @@ class TypeContext;
 
 using TypeList = std::vector<const SemanticType*>;
 
-enum class Kind : std::uint8_t {
+enum class SemanticTypeKind : std::uint8_t {
     Aggregate,
     Array,
     Enum,

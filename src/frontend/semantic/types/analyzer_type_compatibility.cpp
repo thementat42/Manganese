@@ -131,10 +131,10 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
 
     // Same structure but different instances (e.g. pointers to different types)
     switch (from->kind) {
-        case Kind::Aggregate:
+        case SemanticTypeKind::Aggregate:
             return {.result = Compatible_t::Error,
                     .message = conversionError + " (aggregates cannot be converted to other types)."};
-        case Kind::Array: {
+        case SemanticTypeKind::Array: {
             const auto* arrFrom = static_cast<const Array*>(from);
             const auto* arrTo = static_cast<const Array*>(to);
             if (arrFrom->length != arrTo->length) {
@@ -151,13 +151,13 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
             }
             return baseCompatible;
         }
-        case Kind::Enum: {
+        case SemanticTypeKind::Enum: {
             // the check that pointers are equal should have caught the case where the enums are the same
             return typeCompatibilityResult{.result = Compatible_t::Error,
                                            .message = conversionError + " (cannot convert between different enums)"};
         }
 
-        case Kind::Function: {
+        case SemanticTypeKind::Function: {
             const auto* funcFrom = static_cast<const Function*>(from);
             const auto* funcTo = static_cast<const Function*>(to);
 
@@ -198,7 +198,7 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
             return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
         }
 
-        case Kind::Generic: {
+        case SemanticTypeKind::Generic: {
             const auto* genericFrom = static_cast<const GenericInstantiation*>(from);
             const auto* genericTo = static_cast<const GenericInstantiation*>(to);
 
@@ -220,7 +220,7 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
             return {.result = Compatible_t::Valid};
         };
 
-        case Kind::Pointer: {
+        case SemanticTypeKind::Pointer: {
             const auto* ptrFrom = static_cast<const Pointer*>(from);
             const auto* ptrTo = static_cast<const Pointer*>(to);
 
@@ -233,10 +233,10 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
             return areTypesCompatible(ptrFrom->baseType, ptrTo->baseType);
         };
 
-        case Kind::Primitive: {
+        case SemanticTypeKind::Primitive: {
             return arePrimitivesCompatible(from, to);
         };
-        case Kind::Void:
+        case SemanticTypeKind::Void:
             return {.result = Compatible_t::Error, .message = "Cannot use 'void' expression in this context"};
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
