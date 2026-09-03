@@ -14,10 +14,10 @@ auto Analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
 }
 
 auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
-    if (visit(statement->expression) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
-
-    // Crucial distinction:
-    if (!statement->expression->semanticType) { return stmtvisit_t::Failure; }
+    if (visit(statement->expression) == exprvisit_t::Failure || !statement->expression->semanticType) {
+        statement->expression->semanticType = typeContext.getPoison();
+        return stmtvisit_t::Failure;
+    }
     return stmtvisit_t::Success;
 }
 
