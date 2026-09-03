@@ -92,7 +92,7 @@ struct EnumDeclarationStatement final : public Statement {
 };
 
 /**
- * Wrapper struct to final convert an expression into a statement
+ * Wrapper struct to convert an expression into a statement
  */
 struct ExpressionStatement final : public Statement {
     Expression* expression;
