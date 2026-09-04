@@ -137,7 +137,7 @@ auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
         case u32: expression->semanticType = typeContext.getPrimitive(uint32); break;
         case u64: expression->semanticType = typeContext.getPrimitive(uint64); break;
         case u128: expression->semanticType = typeContext.getPrimitive(uint128); break;
-        case f32: expression->semanticType = typeContext.getPrimitive(floata32); break;
+        case f32: expression->semanticType = typeContext.getPrimitive(float32); break;
         case f64: expression->semanticType = typeContext.getPrimitive(float64); break;
         case err: {
             logError(expression, "{}", expression->value.error_unchecked());

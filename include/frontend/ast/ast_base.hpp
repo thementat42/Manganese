@@ -78,7 +78,7 @@ enum class PrimitiveType : std::uint8_t {
     uint64,
     int128,
     uint128,
-    floata32,
+    float32,
     float64,
     character,
     string,

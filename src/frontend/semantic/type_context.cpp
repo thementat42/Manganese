@@ -29,7 +29,7 @@ PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type) {
         case uint64: return {.category = Cat::UInt, .bitWidth = 64};
         case uint128: return {.category = Cat::UInt, .bitWidth = 128};
 
-        case floata32: return {.category = Cat::Float, .bitWidth = 32};
+        case float32: return {.category = Cat::Float, .bitWidth = 32};
         case float64: return {.category = Cat::Float, .bitWidth = 64};
 
         case character: return {.category = Cat::Char, .bitWidth = 8};

@@ -140,7 +140,7 @@ ast::Type* Parser::parseIdentifierType() {
     } else if (lexeme == uint128_str) {
         prim_t = uint128;
     } else if (lexeme == float32_str) {
-        prim_t = floata32;
+        prim_t = float32;
     } else if (lexeme == float64_str) {
         prim_t = float64;
     } else if (lexeme == string_str) {
