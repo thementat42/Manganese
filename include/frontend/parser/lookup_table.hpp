@@ -10,81 +10,86 @@
 
 namespace Manganese::parser {
 
+constexpr std::size_t tokenToIndex(lexer::TokenType t) noexcept { return static_cast<std::size_t>(t); }
+consteval Precedence precedenceAbove(Precedence p) noexcept {
+    return static_cast<Precedence>(static_cast<std::underlying_type_t<Precedence>>(p) + 1);
+}
+
 using statementHandler_t = ast::Statement* (Parser::*)();
 using nudHandler_t = ast::Expression* (Parser::*)();
 using nudHandler_types_t = ast::Type* (Parser::*)();
 using ledHandler_t = ast::Expression* (Parser::*)(ast::Expression*, Precedence);
 using ledHandler_types_t = ast::Type* (Parser::*)(ast::Type*, Precedence);
 
+struct LookupTableEntry {
+    Operator expressionOperator;
+    Operator typeOperator;
+    statementHandler_t statementHandler = nullptr;
+    nudHandler_t nudHandler = nullptr;
+    nudHandler_types_t nudHandlerType = nullptr;
+    ledHandler_t ledHandler = nullptr;
+    ledHandler_types_t ledHandlerType = nullptr;
+};
+
 struct LookupTable {
     constexpr static inline auto _lookupSize = static_cast<std::size_t>(lexer::TokenType::_tokenCount);
-    std::array<statementHandler_t, _lookupSize> statementLookup{};
-    std::array<nudHandler_t, _lookupSize> nudLookup{};
-    std::array<ledHandler_t, _lookupSize> ledLookup{};
-    std::array<Operator, _lookupSize> operatorPrecedenceMap{};
-
-    std::array<nudHandler_types_t, _lookupSize> nudLookup_types{};
-    std::array<ledHandler_types_t, _lookupSize> ledLookup_types{};
-    std::array<Operator, _lookupSize> operatorPrecedenceMap_type{};
+    std::array<LookupTableEntry, _lookupSize> entries{};
+    constexpr LookupTableEntry& operator[](lexer::TokenType t) noexcept { return entries[tokenToIndex(t)]; }
+    constexpr const LookupTableEntry& operator[](lexer::TokenType t) const noexcept { return entries[tokenToIndex(t)]; }
 };
 
 // ~ Helpers for lookups
-constexpr std::size_t tokenToIndex(lexer::TokenType t) noexcept { return static_cast<std::size_t>(t); }
-consteval Precedence precedenceAbove(Precedence p) noexcept {
-    return static_cast<Precedence>(static_cast<std::underlying_type_t<Precedence>>(p) + 1);
-}
 
 constexpr void registerLedHandler_binary(LookupTable& table, lexer::TokenType type, Precedence precedence,
                                          ledHandler_t handler) noexcept {
-    const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap[index] = Operator::binary(precedence);
-    table.ledLookup[index] = handler;
+    auto& entry = table[type];
+    entry.expressionOperator = Operator::binary(precedence);
+    entry.ledHandler = handler;
 }
 
 constexpr void registerLedHandler_postfix(LookupTable& table, lexer::TokenType type, Precedence precedence,
                                           ledHandler_t handler) noexcept {
-    const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap[index] = Operator::postfix(precedence);
-    table.ledLookup[index] = handler;
+    auto& entry = table[type];
+    entry.expressionOperator = Operator::postfix(precedence);
+    entry.ledHandler = handler;
 }
 
 constexpr void registerLedHandler_prefix(LookupTable& table, lexer::TokenType type, Precedence precedence,
                                          ledHandler_t handler) noexcept {
-    const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap[index] = Operator::prefix(precedence);
-    table.ledLookup[index] = handler;
+    auto& entry = table[type];
+    entry.expressionOperator = Operator::prefix(precedence);
+    entry.ledHandler = handler;
 }
 
 constexpr void registerNudHandler_binary(LookupTable& table, lexer::TokenType type, nudHandler_t handler) noexcept {
-    const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap[index] = Operator::prefix(Precedence::Default);
-    table.nudLookup[index] = handler;
+    auto& entry = table[type];
+    entry.expressionOperator = Operator::prefix(Precedence::Default);
+    entry.nudHandler = handler;
 }
 
 constexpr void registerNudHandler_prefix(LookupTable& table, lexer::TokenType type, nudHandler_t handler) noexcept {
-    const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap[index] = Operator::prefix(Precedence::Default);
-    table.nudLookup[index] = handler;
+    auto& entry = table[type];
+    entry.expressionOperator = Operator::prefix(Precedence::Default);
+    entry.nudHandler = handler;
 }
 
 constexpr void registerLedHandler_type(LookupTable& table, lexer::TokenType type, Precedence precedence,
                                        ledHandler_types_t handler) noexcept {
-    const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap_type[index] = Operator::binaryType(precedence);
-    table.ledLookup_types[index] = handler;
+    auto& entry = table[type];
+    entry.typeOperator = Operator::binaryType(precedence);
+    entry.ledHandlerType = handler;
 }
 
 constexpr void registerNudHandler_type(LookupTable& table, lexer::TokenType type, nudHandler_types_t handler) noexcept {
-    const std::size_t index = tokenToIndex(type);
-    table.operatorPrecedenceMap_type[index] = Operator::type();
-    table.nudLookup_types[index] = handler;
+    auto& entry = table[type];
+    entry.typeOperator = Operator::type();
+    entry.nudHandlerType = handler;
 }
 
 constexpr void registerStmtHandler(LookupTable& table, lexer::TokenType type, statementHandler_t handler) noexcept {
-    const std::size_t index = tokenToIndex(type);
-
-    table.operatorPrecedenceMap[index] = Operator::statement();
-    table.statementLookup[index] = handler;
+    auto& entry = table[type];
+    entry.expressionOperator = Operator::statement();
+    entry.statementHandler = handler;
 }
 
 consteval void initializeLookups(LookupTable& table) noexcept {

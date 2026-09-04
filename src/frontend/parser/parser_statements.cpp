@@ -25,9 +25,8 @@ ast::Statement* Parser::parseStatement() {
         // still want line and column information for these
         return makeNode<ast::EmptyStatement>(consumeToken());
     }
-    const std::size_t index = tokenToIndex(type);
 
-    const statementHandler_t handler = lookupTable.statementLookup[index];
+    const statementHandler_t handler = lookupTable[type].statementHandler;
     if (handler) { return (this->*handler)(); }
 
     // Parse out an expression then convert it to a statement

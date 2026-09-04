@@ -1,5 +1,4 @@
 #include <core.hpp>
-#include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
@@ -56,9 +55,8 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
 
     Token token = peekToken();
     TokenType type = token.getType();
-    const std::size_t index = tokenToIndex(type);
 
-    const nudHandler_t nudHandler = lookupTable.nudLookup[index];
+    const nudHandler_t nudHandler = lookupTable[type].nudHandler;
     if (!nudHandler) {
         logError(token.getLine(), token.getColumn(), "Expected expression to the left of '{}'",
                  lexer::tokenTypeToString(type));
@@ -77,12 +75,11 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
             precedence = Precedence::Unary;
         }
         type = token.getType();
-        const std::size_t idx = tokenToIndex(type);
-        const Operator& op = lookupTable.operatorPrecedenceMap[idx];
+        const Operator& op = lookupTable[type].expressionOperator;
 
         if (op.leftBindingPower <= precedence) { break; }
 
-        const ledHandler_t handler = lookupTable.ledLookup[idx];
+        const ledHandler_t handler = lookupTable[type].ledHandler;
         if (!handler) {
             logError(token.getLine(), token.getColumn(), "Expected binary operator, got '{}'",
                      lexer::tokenTypeToString(type));

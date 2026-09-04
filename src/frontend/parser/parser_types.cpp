@@ -1,5 +1,4 @@
 #include <core.hpp>
-#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <mnstl/number.hxx>
@@ -12,9 +11,8 @@ namespace Manganese::parser {
 ast::Type* Parser::parseType(Precedence precedence) {
     Token token = peekToken();
     TokenType type = peekTokenType();
-    const std::size_t index = tokenToIndex(type);
 
-    const nudHandler_types_t nudHandler = lookupTable.nudLookup_types[index];
+    const nudHandler_types_t nudHandler = lookupTable[type].nudHandlerType;
     if (!nudHandler) {
         logError(token.getLine(), token.getColumn(), "Expected a type, got '{}'", lexer::tokenTypeToString(type));
         Token t = consumeToken();
@@ -25,12 +23,11 @@ ast::Type* Parser::parseType(Precedence precedence) {
 
     while (!done()) {
         type = peekTokenType();
-        const std::size_t idx = tokenToIndex(type);
 
-        const Operator& op = lookupTable.operatorPrecedenceMap_type[idx];
+        const Operator& op = lookupTable[type].typeOperator;
         if (op.leftBindingPower <= precedence) { break; }
 
-        const ledHandler_types_t handler = lookupTable.ledLookup_types[idx];
+        const ledHandler_types_t handler = lookupTable[type].ledHandlerType;
         if (!handler) {
             logError(token.getLine(), token.getColumn(), "Expected type operator, got '{}'",
                      lexer::tokenTypeToString(type));
