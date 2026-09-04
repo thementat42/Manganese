@@ -146,7 +146,9 @@ ast::Expression* Parser::parseAlignofExpression() {
         // If we successfully skipped to the closing parenthesis, consume it
         if (peekTokenType() == lexer::TokenType::RightParen) { DISCARD(consumeToken()); }
 
-        return makeNode<ast::AlignofExpression>(startToken, makeNode<ast::IdentifierType>(startToken, "dummy"));
+        Token tmp = startToken;
+
+        return makeNode<ast::AlignofExpression>(startToken, makeNode<ast::PoisonedType>(startToken, std::move(tmp)));
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to enclose alignof");
     return makeNode<ast::AlignofExpression>(startToken, type);
@@ -298,7 +300,8 @@ ast::Expression* Parser::parseSizeofExpression() {
         // If we successfully skipped to the closing parenthesis, consume it
         if (peekTokenType() == lexer::TokenType::RightParen) { DISCARD(consumeToken()); }
 
-        return makeNode<ast::SizeofExpression>(startToken, makeNode<ast::IdentifierType>(startToken, "dummy"));
+        Token tmp = startToken;
+        return makeNode<ast::SizeofExpression>(startToken, makeNode<ast::PoisonedType>(startToken, std::move(tmp)));
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to enclose sizeof");
     return makeNode<ast::SizeofExpression>(startToken, type);

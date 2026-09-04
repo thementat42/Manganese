@@ -185,7 +185,8 @@ ast::Type* Parser::parseTypeofType() {
     if (!innerExpression) {
         logError(peekToken().getLine(), peekToken().getColumn(), "Expected a valid expression inside 'typeof(...)'.");
         // Error recovery: give it a safe dummy fallback expression
-        innerExpression = makeNode<ast::NumberLiteralExpression>(startToken, mnstl::number_t{std::int32_t{0}});
+        Token tmp = startToken;
+        innerExpression = makeNode<ast::PoisonedExpression>(startToken, std::move(tmp));
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
     return makeNode<ast::TypeofType>(startToken, innerExpression);
