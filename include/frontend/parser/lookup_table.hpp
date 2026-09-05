@@ -7,6 +7,7 @@
 #include <frontend/lexer/token.hpp>
 #include <frontend/parser/operators.hpp>
 #include <frontend/parser/parser_base.hpp>
+#include <type_traits>
 
 namespace Manganese::parser {
 

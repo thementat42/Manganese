@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <mnstl/chunk_allocator.hxx>
 
 #include "testrunner.hpp"
 
@@ -35,7 +36,7 @@ parser::ParsedFile getParserResults(const std::string& source, lexer::Mode mode 
 }
 
 void dumpStatement(const ast::Statement* stmt, std::ostream* logFile) {
-    if (stmt == nullptr) return;
+    if (stmt == nullptr) { return; }
 
     const std::string stmtStr = stmt->toString(0);
     std::cout << stmtStr << '\n';
@@ -669,7 +670,7 @@ static bool testPathologicalExpressionRecovery() {
 
 static bool testCascadingSyntaxFailures() {
     const std::string expression = "if () { print(,,); } else { let a = *; }";
-    
+
     parser::ParsedFile file = getParserResults(expression);
     return file.program.size() == 1;
 }

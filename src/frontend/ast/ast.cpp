@@ -1,16 +1,21 @@
+#include <array>
 #include <core.hpp>
+#include <cstddef>
 #include <format>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/fold_result.hxx>
+#include <string_view>
+#include <utils/type_names.hpp>
+#include <utils/target_info.hpp>
 
 namespace Manganese::ast {
 
 std::string_view primitiveTypeToString(PrimitiveType prim) {
     constexpr static std::array<std::string_view, 17> primitiveNames
-        = {"not primitive", int8_str,   int16_str,   int32_str,   int64_str,   int128_str, uint8_str,  uint16_str,
-           uint32_str,      uint64_str, uint128_str, float32_str, float64_str, char_str,   string_str, bool_str};
+        = {int8_str,   int16_str,   int32_str,   int64_str,   int128_str, uint8_str,  uint16_str, uint32_str,
+           uint64_str, uint128_str, float32_str, float64_str, char_str,   string_str, bool_str,   "not primitive"};
     const auto index = static_cast<std::size_t>(prim);
     if (index >= primitiveNames.size()) { ASSERT_UNREACHABLE("Invalid primitive type"); }
     return primitiveNames[index];

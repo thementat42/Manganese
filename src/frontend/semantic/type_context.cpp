@@ -1,11 +1,14 @@
+#include <algorithm>
 #include <core.hpp>
 #include <cstddef>
+#include <format>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic.hpp>
 #include <functional>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <utils/target_info.hpp>
 #include <vector>
 
 namespace Manganese::semantic {
@@ -192,7 +195,7 @@ std::size_t Void::size(const TargetInfo&) const noexcept { return 0; }
 std::size_t Void::alignment(const TargetInfo&) const noexcept { return 1; }
 
 std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
-    if (t == nullptr)[[unlikely]] { return 0; }
+    if (t == nullptr) [[unlikely]] { return 0; }
     // start by hashing the type kind (isolates primitives, pointers, etc)
     std::size_t hash = std::hash<kind_int_t>{}(static_cast<kind_int_t>(t->kind));
     switch (t->kind) {

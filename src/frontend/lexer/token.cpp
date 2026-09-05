@@ -3,6 +3,8 @@
 #include <io/logging.hpp>
 #include <string>
 #include <utility>
+#include <format>
+#include <type_traits>
 
 namespace Manganese::lexer {
 

@@ -8,6 +8,8 @@
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
+#include <mnstl/number.hxx>
+#include <cstddef>
 
 namespace Manganese::semantic {
 

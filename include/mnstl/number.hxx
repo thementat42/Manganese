@@ -2,6 +2,7 @@
 #define MNSTL_NUMBER 1
 
 #include <cmath>
+#include <compare>
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>

@@ -3,8 +3,12 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
+#include <memory>
+#include <mnstl/chunk_allocator.hxx>
 #include <string>
 #include <utility>
+#include <vector>
+#include <mnstl/enum_matches.hxx>
 
 namespace Manganese::parser {
 

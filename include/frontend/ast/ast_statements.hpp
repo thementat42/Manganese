@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>

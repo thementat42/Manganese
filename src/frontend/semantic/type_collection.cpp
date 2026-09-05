@@ -5,6 +5,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <utility>
 #include <utils/result.hpp>
+#include <vector>
 
 namespace Manganese::semantic {
 

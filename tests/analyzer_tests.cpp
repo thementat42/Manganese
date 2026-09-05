@@ -36,8 +36,8 @@ static bool analyzeSource(const std::string& source, bool expectSuccess, std::st
         logFile << "Analyzed " << testName << " AST:\n";
 
         // Helper lambda to write statement string rep and dump to log
-        auto logStatement = [&logFile](const ast::Statement* stmt) {
-            if (!stmt) return;
+        auto logStatement = [&logFile](const ast::Statement* stmt) -> void {
+            if (!stmt) { return; }
             logFile << "String representation: " << stmt->toString(0) << '\n';
             logFile << "Dumping statement:\n";
             stmt->dump(logFile);  // Node dump includes semanticType when available

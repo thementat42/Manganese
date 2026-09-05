@@ -10,6 +10,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <optional>
 
 namespace Manganese::parser {
 
@@ -88,7 +89,7 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
     expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
-    return makeNode<ast::WhileLoopStatement>(startToken, std::move(body), std::move(condition), /*isDoWhile=*/true);
+    return makeNode<ast::WhileLoopStatement>(startToken, std::move(body),condition, /*isDoWhile=*/true);
 }
 
 ast::Statement* Parser::parseEnumDeclarationStatement() {

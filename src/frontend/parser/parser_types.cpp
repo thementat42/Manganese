@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>

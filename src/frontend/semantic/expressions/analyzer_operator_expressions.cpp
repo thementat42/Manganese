@@ -7,6 +7,7 @@
 #include <mnstl/enum_matches.hxx>
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
+#include <format>
 
 namespace Manganese::semantic {
 auto Analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {

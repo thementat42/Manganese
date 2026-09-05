@@ -13,6 +13,7 @@
 #include <mnstl/number.hxx>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <utils/result.hpp>
 

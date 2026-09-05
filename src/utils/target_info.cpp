@@ -2,7 +2,9 @@
 #include <llvm/TargetParser/Triple.h>
 
 #include <io/logging.hpp>
+#include <string_view>
 #include <utils/target_info.hpp>
+
 
 namespace Manganese {
 TargetInfo TargetInfo::fromTriple(std::string_view tripleString) {

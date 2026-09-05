@@ -1,3 +1,4 @@
+#include <vector>
 #include <core.hpp>
 #include <cstdint>
 #include <format>
@@ -5,6 +6,8 @@
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
 #include <utils/result.hpp>
+#include <utility>
+#include <cstddef>
 
 namespace Manganese::semantic {
 

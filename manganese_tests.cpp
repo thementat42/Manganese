@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstring>
 #include <filesystem>
+#include <format>
 #include <frontend/lexer.hpp>
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
@@ -18,7 +19,7 @@ static bool strneq(const char* a, const char* b, std::size_t max_count) {
 
 int main(int argc, char const* argv[]) {
     if (argc == 1) {
-        fprintf(stderr, "Usage: %s [--lexer] [--parser] [--semantic] [--codegen] [--all]\n", argv[0]);
+        std::cerr << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--codegen] [--all]\n", argv[0]);
         return 1;
     }
 

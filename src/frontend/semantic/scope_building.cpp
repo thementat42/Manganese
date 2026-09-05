@@ -1,3 +1,4 @@
+#include <string>
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>

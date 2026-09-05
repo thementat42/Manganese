@@ -12,6 +12,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <utils/result.hpp>
+#include <string>
 #include <vector>
 
 namespace Manganese::semantic {
@@ -120,7 +121,7 @@ class SymbolTable {
             return Result::Failure;
         }
         symbol.hostScope = _currentScope;
-        return _currentScope->insert(name, std::move(symbol));
+        return _currentScope->insert(name, symbol);
     }
 
     Symbol* lookup(std::string_view name) noexcept;

@@ -7,6 +7,8 @@
 #include <mnstl/number.hxx>
 #include <utility>
 #include <vector>
+#include <mnstl/fold_result.hxx>
+#include <string_view>
 
 namespace Manganese::semantic {
 
