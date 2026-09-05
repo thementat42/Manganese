@@ -240,10 +240,7 @@ struct TypeCastExpression final : public Expression {
 };
 
 struct PoisonedExpression final : public Expression {
-    lexer::Token offendingToken;
-
-    PoisonedExpression(lexer::Token&& _offendingToken) :
-        Expression(ExpressionKind::PoisonedExpression), offendingToken(std::move(_offendingToken)) {}
+    PoisonedExpression() noexcept : Expression(ExpressionKind::PoisonedExpression) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

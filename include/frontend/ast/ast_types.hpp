@@ -91,10 +91,7 @@ struct TypeofType final : public Type {
 };
 
 struct PoisonedType final : public Type {
-    lexer::Token offendingToken;
-
-    PoisonedType(lexer::Token&& _offendingToken) :
-        Type(TypeKind::PoisonedType), offendingToken(std::move(_offendingToken)) {}
+    PoisonedType() noexcept : Type(TypeKind::PoisonedType) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

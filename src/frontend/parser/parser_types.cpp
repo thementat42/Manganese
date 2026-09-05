@@ -15,9 +15,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
     const nudHandler_types_t nudHandler = lookupTable[type].nudHandlerType;
     if (!nudHandler) {
         logError(token.getLine(), token.getColumn(), "Expected a type, got '{}'", lexer::tokenTypeToString(type));
-        Token t = consumeToken();
-        Token tCopy = t;  // needed because PoisonedType needs to own a token
-        return makeNode<ast::PoisonedType>(t, std::move(tCopy));
+        return makeNode<ast::PoisonedType>(consumeToken());
     }
     ast::Type* left = (this->*nudHandler)();
 
@@ -31,9 +29,8 @@ ast::Type* Parser::parseType(Precedence precedence) {
         if (!handler) {
             logError(token.getLine(), token.getColumn(), "Expected type operator, got '{}'",
                      lexer::tokenTypeToString(type));
-            Token t = consumeToken();
-            Token tCopy = t;  // needed because PoisonedType needs to own a token
-            return makeNode<ast::PoisonedType>(t, std::move(tCopy));
+
+            return makeNode<ast::PoisonedType>(consumeToken());
         }
         left = (this->*handler)(left, op.rightBindingPower);
     }
@@ -184,9 +181,7 @@ ast::Type* Parser::parseTypeofType() {
     ast::Expression* innerExpression = parseExpression(Precedence::Default);
     if (!innerExpression) {
         logError(peekToken().getLine(), peekToken().getColumn(), "Expected a valid expression inside 'typeof(...)'.");
-        // Error recovery: give it a safe dummy fallback expression
-        Token tmp = startToken;
-        innerExpression = makeNode<ast::PoisonedExpression>(startToken, std::move(tmp));
+        innerExpression = makeNode<ast::PoisonedExpression>(startToken);
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
     return makeNode<ast::TypeofType>(startToken, innerExpression);

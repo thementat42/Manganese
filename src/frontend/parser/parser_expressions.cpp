@@ -60,9 +60,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
     if (!nudHandler) {
         logError(token.getLine(), token.getColumn(), "Expected expression to the left of '{}'",
                  lexer::tokenTypeToString(type));
-        Token t = consumeToken();
-        Token tCopy = t;  // needed because PoisonedExpression needs to own a token
-        return makeNode<ast::PoisonedExpression>(t, std::move(tCopy));
+        return makeNode<ast::PoisonedExpression>(consumeToken());
     }
     // ast::Expression* left = nudIterator->second(this);
     ast::Expression* left = (this->*nudHandler)();
@@ -83,9 +81,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
         if (!handler) {
             logError(token.getLine(), token.getColumn(), "Expected binary operator, got '{}'",
                      lexer::tokenTypeToString(type));
-            Token t = consumeToken();
-            Token tCopy = t;  // needed since PoisonedExpression needs to own a token
-            return makeNode<ast::PoisonedExpression>(t, std::move(tCopy));
+            return makeNode<ast::PoisonedExpression>(consumeToken());
         }
 
         left = (this->*handler)(left, op.rightBindingPower);
@@ -146,9 +142,7 @@ ast::Expression* Parser::parseAlignofExpression() {
         // If we successfully skipped to the closing parenthesis, consume it
         if (peekTokenType() == lexer::TokenType::RightParen) { DISCARD(consumeToken()); }
 
-        Token tmp = startToken;
-
-        return makeNode<ast::AlignofExpression>(startToken, makeNode<ast::PoisonedType>(startToken, std::move(tmp)));
+        return makeNode<ast::AlignofExpression>(startToken, makeNode<ast::PoisonedType>(startToken));
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to enclose alignof");
     return makeNode<ast::AlignofExpression>(startToken, type);
@@ -300,8 +294,7 @@ ast::Expression* Parser::parseSizeofExpression() {
         // If we successfully skipped to the closing parenthesis, consume it
         if (peekTokenType() == lexer::TokenType::RightParen) { DISCARD(consumeToken()); }
 
-        Token tmp = startToken;
-        return makeNode<ast::SizeofExpression>(startToken, makeNode<ast::PoisonedType>(startToken, std::move(tmp)));
+        return makeNode<ast::SizeofExpression>(startToken, makeNode<ast::PoisonedType>(startToken));
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to enclose sizeof");
     return makeNode<ast::SizeofExpression>(startToken, type);

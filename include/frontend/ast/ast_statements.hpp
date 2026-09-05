@@ -260,10 +260,7 @@ struct WhileLoopStatement final : public Statement {
 };
 
 struct PoisonedStatement final : public Statement {
-    lexer::Token offendingToken;
-
-    PoisonedStatement(lexer::Token&& _offendingToken) :
-        Statement(StatementKind::PoisonedStatement), offendingToken(std::move(_offendingToken)) {}
+    PoisonedStatement() noexcept : Statement(StatementKind::PoisonedStatement) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
