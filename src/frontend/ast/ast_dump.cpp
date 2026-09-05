@@ -33,15 +33,13 @@ inline void dumpHeader(std::ostream& os, Indent indent, std::string_view classNa
 
 inline void dumpBlock(std::ostream& os, Indent indent, std::string_view label, const ast::Block& block) {
     os << indent << label << ": [\n";
-    for (const ast::Statement* stmt : block) {
-        if (stmt) { stmt->dump(os, indent.next()); }
-    }
+    for (const ast::Statement* stmt : block) { stmt->dump(os, indent.next()); }
     os << indent << "]\n";
 }
 
 void dumpSemanticType(std::ostream& os, Indent ind, const semantic::SemanticType* semanticType) {
     os << ind << "semantic type: ";
-    if (semanticType) {
+    if (semanticType != nullptr) {
         os << semanticType->toString();
     } else {
         os << "not yet deduced";
@@ -195,7 +193,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
         param.type->dump(os, ind.next(4));
 
         os << ind.next(3) << "default value: ";
-        if (param.defaultValue) {
+        if (param.defaultValue != nullptr) {
             os << "\n";
             param.defaultValue->dump(os, ind.next(4));
         } else {
@@ -206,7 +204,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
     os << ind.next() << "]\n";
 
     os << ind.next() << "returnType: ";
-    if (returnType) {
+    if (returnType != nullptr) {
         os << "\n";
         returnType->dump(os, ind.next(2));
     } else {
@@ -283,7 +281,7 @@ void NestedBlockStatement::dump(std::ostream& os, std::size_t indent) const {
 void ReturnStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ReturnStatement", *this);
-    if (value) {
+    if (value != nullptr) {
         os << ind.next() << "value: \n";
         value->dump(os, ind.next(2));
     } else {
@@ -320,14 +318,14 @@ void VariableDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
     os << ind.next() << "visibility: " << (visibility == Visibility::Public ? "Public" : "Private") << "\n";
 
     os << ind.next() << "value: \n";
-    if (value) {
+    if (value != nullptr) {
         value->dump(os, ind.next(2));
     } else {
         os << ind.next(2) << "null\n";
     }
 
     os << ind.next() << "type: \n";
-    if (type) {
+    if (type != nullptr) {
         type->dump(os, ind.next(2));
     } else {
         os << ind.next(2) << "auto\n";
@@ -597,7 +595,7 @@ void ArrayType::dump(std::ostream& os, std::size_t indent) const {
     os << ind.next() << "elementType:\n";
     elementType->dump(os, ind.next(2));
 
-    if (lengthExpression) {
+    if (lengthExpression != nullptr) {
         os << ind.next() << "length:\n";
         lengthExpression->dump(os, ind.next(2));
     }
@@ -616,7 +614,7 @@ void FunctionType::dump(std::ostream& os, std::size_t indent) const {
     os << ind.next() << "]\n";
 
     os << ind.next() << "return type: ";
-    if (returnType) {
+    if (returnType != nullptr) {
         os << "\n";
         returnType->dump(os, ind.next(2));
     } else {

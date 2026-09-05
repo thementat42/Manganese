@@ -28,7 +28,7 @@ ast::Statement* Parser::parseStatement() {
     }
 
     const statementHandler_t handler = lookupTable[type].statementHandler;
-    if (handler) { return (this->*handler)(); }
+    if (handler != nullptr) { return (this->*handler)(); }
 
     // Parse out an expression then convert it to a statement
     ast::Expression* expr = parseExpression(Precedence::Default);
@@ -99,9 +99,11 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());
         baseType = parseType(Precedence::Default);
-        if (!baseType) {
-            logError(peekToken().getLine(), peekToken().getColumn(),
+        if (baseType == nullptr) {
+            Token& tmp = peekToken();
+            logError(tmp.getLine(), tmp.getColumn(),
                      "Expected valid underlying type after ':' for enum '{}'", name);
+            baseType = makeNode<ast::PoisonedType>(tmp);
         }
     }
 

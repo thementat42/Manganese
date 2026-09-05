@@ -87,7 +87,7 @@ std::string EnumDeclarationStatement::toString(std::size_t indent) const {
     for (std::size_t i = 0; i < values.size(); ++i) {
         const EnumValue& value = values[i];
         result += getIndent(indent + 1) + value.name;
-        if (value.value) { result += std::format(" = {}", value.value->toString(indent + 1)); }
+        if (value.value != nullptr) { result += std::format(" = {}", value.value->toString(indent + 1)); }
         if (i != values.size() - 1) { result += ","; }
         result += '\n';
     }
@@ -101,19 +101,19 @@ std::string ExpressionStatement::toString(std::size_t indent) const {
 
 std::string ForLoopStatement::toString(std::size_t indent) const {
     std::string result = getIndent(indent) + "for (";
-    if (initializationStep) {
+    if (initializationStep != nullptr) {
         // Strip leading indentation from statement parts inside loop clauses if they add it
         std::string init = initializationStep->toString(0);
         result += init + " ";
     } else {
         result += ";";
     }
-    if (stopCondition) {
+    if (stopCondition != nullptr) {
         result += stopCondition->toString(0) + "; ";
     } else {
         result += ";";
     }
-    if (postExpression) { result += postExpression->toString(0); }
+    if (postExpression != nullptr) { result += postExpression->toString(0); }
     result += ") ";
     result += blockToString(body, indent);
     return result;
@@ -131,12 +131,12 @@ std::string FunctionDeclarationStatement::toString(std::size_t indent) const {
         if (param.isVariadic) { result += "..."; }
         result += std::format(": {}{}", (param.isMutable ? "mut " : ""), param.type->toString());
 
-        if (param.defaultValue) { result += std::format(" = {}", param.defaultValue->toString()); }
+        if (param.defaultValue != nullptr) { result += std::format(" = {}", param.defaultValue->toString()); }
 
         if (i < parameters.size() - 1) { result += ", "; }
     }
     result += ')';
-    if (returnType) { result += std::format(" -> {}", returnType->toString(indent)); }
+    if (returnType != nullptr) { result += std::format(" -> {}", returnType->toString(indent)); }
     result += ' ';
     result += blockToString(body, indent);
     return result;
@@ -178,7 +178,7 @@ std::string NestedBlockStatement::toString(std::size_t indent) const {
 }
 
 std::string ReturnStatement::toString(std::size_t indent) const {
-    std::string valStr = value ? value->toString(indent) : "";
+    std::string valStr = (value != nullptr) ? value->toString(indent) : "";
     return getIndent(indent) + std::format("return {};", valStr);
 }
 
@@ -198,15 +198,15 @@ std::string SwitchStatement::toString(std::size_t indent) const {
 
 std::string VariableDeclarationStatement::toString(std::size_t indent) const {
     std::string typeName;
-    if (type) {
+    if (type != nullptr) {
         typeName = type->toString();
-    } else if (value && value->semanticType) {
+    } else if ((value != nullptr) && (value->semanticType != nullptr)) {
         typeName = value->semanticType->toString();
     } else {
         typeName = "auto";
     }
     std::string typeStr = std::format("{} {}", visibilityToString(visibility), typeName);
-    std::string valueStr = value ? " = " + value->toString(0) : "";
+    std::string valueStr = (value == nullptr) ? "" : " = " + value->toString(0);
 
     return getIndent(indent) + std::format("({} {}: {}{});", isMutable ? "let mut" : "let", name, typeStr, valueStr);
 }
@@ -338,9 +338,9 @@ std::string AggregateType::toString(std::size_t indent) const {
 
 std::string ArrayType::toString(std::size_t indent) const {
     std::string lengthStr;
-    if (lengthExpression) {
+    if (lengthExpression != nullptr) {
         lengthStr = lengthExpression->toString();
-    } else if (semanticType && semanticType->isArray()) {
+    } else if ((semanticType != nullptr) && semanticType->isArray()) {
         lengthStr = std::to_string(static_cast<const semantic::Array*>(semanticType)->length);
     }
     return std::format("{}[{}]", elementType->toString(indent), lengthStr);
@@ -354,7 +354,7 @@ std::string FunctionType::toString(std::size_t indent) const {
         if (i != parameterTypes.size() - 1) { result += ", "; }
     }
     result += ")";
-    if (returnType) { result += std::format(" -> {}", returnType->toString(indent)); }
+    if (returnType != nullptr) { result += std::format(" -> {}", returnType->toString(indent)); }
     return result;
 }
 
@@ -377,15 +377,9 @@ std::string TypeofType::toString(std::size_t indent) const {
 }
 
 // Errors
-std::string PoisonedStatement::toString(std::size_t) const {
-    return std::format("<invalid expression>");
-}
-std::string PoisonedExpression::toString(std::size_t) const {
-    return std::format("<invalid statement>");
-}
-std::string PoisonedType::toString(std::size_t) const {
-    return std::format("<invalid type>");
-}
+std::string PoisonedStatement::toString(std::size_t) const { return std::format("<invalid expression>"); }
+std::string PoisonedExpression::toString(std::size_t) const { return std::format("<invalid statement>"); }
+std::string PoisonedType::toString(std::size_t) const { return std::format("<invalid type>"); }
 
 }  // namespace ast
 }  // namespace Manganese

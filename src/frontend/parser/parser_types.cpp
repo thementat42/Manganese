@@ -13,7 +13,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
     TokenType type = peekTokenType();
 
     const nudHandler_types_t nudHandler = lookupTable[type].nudHandlerType;
-    if (!nudHandler) {
+    if (nudHandler == nullptr) {
         logError(token.getLine(), token.getColumn(), "Expected a type, got '{}'", lexer::tokenTypeToString(type));
         return makeNode<ast::PoisonedType>(consumeToken());
     }
@@ -26,7 +26,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
         if (op.leftBindingPower <= precedence) { break; }
 
         const ledHandler_types_t handler = lookupTable[type].ledHandlerType;
-        if (!handler) {
+        if (handler == nullptr) {
             logError(token.getLine(), token.getColumn(), "Expected type operator, got '{}'",
                      lexer::tokenTypeToString(type));
 
@@ -179,7 +179,7 @@ ast::Type* Parser::parseTypeofType() {
     const Token startToken = consumeToken();  // skip typeof
     expectToken(lexer::TokenType::LeftParen, "Expected '(' after typeof");
     ast::Expression* innerExpression = parseExpression(Precedence::Default);
-    if (!innerExpression) {
+    if (innerExpression == nullptr) {
         logError(peekToken().getLine(), peekToken().getColumn(), "Expected a valid expression inside 'typeof(...)'.");
         innerExpression = makeNode<ast::PoisonedExpression>(startToken);
     }

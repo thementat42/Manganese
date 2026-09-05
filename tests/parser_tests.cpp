@@ -26,7 +26,7 @@ parser::ParsedFile getParserResults(const std::string& source, lexer::Mode mode 
     parser::Parser parser(source, mode, allocator);
     parser::ParsedFile file = parser.parse();
 
-    if (file.fileModule) { std::cout << file.fileModule->toString() << "\n"; }
+    if (file.fileModule != nullptr) { std::cout << file.fileModule->toString() << "\n"; }
     if (!file.imports.empty()) {
         for (const auto& _import : file.imports) { std::cout << _import->toString() << "\n"; }
     }
@@ -35,11 +35,11 @@ parser::ParsedFile getParserResults(const std::string& source, lexer::Mode mode 
 }
 
 void dumpStatement(const ast::Statement* stmt, std::ostream* logFile) {
-    if (!stmt) return;
+    if (stmt == nullptr) return;
 
     const std::string stmtStr = stmt->toString(0);
     std::cout << stmtStr << '\n';
-    if (logFile && *logFile) {
+    if (logFile != nullptr && *logFile) {
         *logFile << "String representation: " << stmtStr << '\n';
         *logFile << "Dumping statement:\n";
         stmt->dump(*logFile);
@@ -95,7 +95,7 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
     }
 
     std::cout << "Parsed " << testName << " AST:" << '\n';
-    if (parsedFile.fileModule) { dumpStatement(parsedFile.fileModule, logFile ? &logFile : nullptr); }
+    if (parsedFile.fileModule != nullptr) { dumpStatement(parsedFile.fileModule, logFile ? &logFile : nullptr); }
     for (const auto* importStmt : parsedFile.imports) { dumpStatement(importStmt, logFile ? &logFile : nullptr); }
     for (const auto& stmt : parsedFile.program) { dumpStatement(stmt, logFile ? &logFile : nullptr); }
 
@@ -551,7 +551,7 @@ static bool testImportsAndAliases() {
     parser::ParsedFile parsedFile = getParserResults(expression);
 
     // Verify module header metadata
-    if (!parsedFile.fileModule || parsedFile.fileModule->name != "dataprocessing") {
+    if (parsedFile.fileModule == nullptr || parsedFile.fileModule->name != "dataprocessing") {
         std::cerr << "ERROR: Module declaration not parsed correctly in testImportsAndAliases\n";
         return false;
     }
@@ -570,7 +570,7 @@ static bool testParseFromFile() {
     mnstl::chunk_allocator file_allocator{};
     parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
     auto x = p.parse();
-    if (x.fileModule) { std::cout << x.fileModule->toString() << "\n"; }
+    if (x.fileModule != nullptr) { std::cout << x.fileModule->toString() << "\n"; }
     for (const auto& _import : x.imports) { std::cout << _import->toString() << "\n"; }
     for (const auto& element : x.program) { std::cout << element->toString(0) << "\n"; }
     return true;

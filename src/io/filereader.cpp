@@ -14,7 +14,7 @@ namespace Manganese::io {
 FileReader::FileReader(const std::string& filename, std::size_t bufferCapacity) :
     _filePtr(nullptr), _bufferSize(0), _bufferCapacity(bufferCapacity) {
     _filePtr = std::fopen(filename.c_str(), "r");
-    if (!_filePtr) {
+    if (_filePtr == nullptr) {
         logging::logCritical(0, 0, "Could not open file {}", filename);
         throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
         return;
@@ -35,7 +35,7 @@ FileReader::FileReader(const std::string& filename, std::size_t bufferCapacity) 
 
 void FileReader::refillBuffer() {
     const std::size_t unreadBytes = _bufferSize - _position;
-    if (unreadBytes) {
+    if (unreadBytes != 0u) {
         // Move any unread data to the beginning of the buffer
         // This way, if we are near the end of a chunk and try to read into the next chunk
         // unread data can still be read later

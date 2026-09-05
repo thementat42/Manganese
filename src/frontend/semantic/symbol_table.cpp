@@ -46,17 +46,17 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
         }
 
         // first time seeing this namespace; register it
-        if (!namespaceScope) {
+        if (namespaceScope == nullptr) {
             namespaceScope = _arena.emplace<Scope>();
             namespaceScope->parent = _currentScope;
             namespaceScope->namespaceName = name;
             _currentScope->children.push_back(namespaceScope);
         }
-        if (namespaceSymbol) { namespaceSymbol->scopeDefined = namespaceScope; }
+        if (namespaceSymbol != nullptr) { namespaceSymbol->scopeDefined = namespaceScope; }
         _currentScope = namespaceScope;
     } else {
         Symbol* namespaceSymbol = _currentScope->lookup(name);
-        if (!namespaceSymbol || !namespaceSymbol->scopeDefined) {
+        if (namespaceSymbol == nullptr || namespaceSymbol->scopeDefined == nullptr) {
             logging::logInternal(logging::LogLevel::Error, "Failed to resolve namespace scope during pass");
             return;
         }
@@ -66,12 +66,12 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
 }
 
 std::string Scope::getQualifiedName() const {
-    if (!parent || parent->namespaceName.empty()) { return std::string(namespaceName); }
+    if (parent == nullptr || parent->namespaceName.empty()) { return std::string(namespaceName); }
     return parent->getQualifiedName() + "::" + std::string(namespaceName);
 }
 
 void SymbolTable::exitScope() noexcept {
-    if (noScopeAvailable() || !_currentScope->parent) [[unlikely]] {
+    if (noScopeAvailable() || _currentScope->parent == nullptr) [[unlikely]] {
         logging::logInternal(logging::LogLevel::Warning, "Attempted to exit scope when no parent scope was available");
         return;
     }
@@ -80,9 +80,9 @@ void SymbolTable::exitScope() noexcept {
 
 Symbol* SymbolTable::lookup(std::string_view name) noexcept {
     Scope* probe = _currentScope;
-    while (probe) {
+    while (probe != nullptr) {
         Symbol* symbol = probe->lookup(name);
-        if (symbol) { return symbol; }
+        if (symbol != nullptr) { return symbol; }
         probe = probe->parent;
     }
 
@@ -92,9 +92,9 @@ Symbol* SymbolTable::lookup(std::string_view name) noexcept {
 
 const Symbol* SymbolTable::lookup(std::string_view name) const noexcept {
     const Scope* probe = _currentScope;
-    while (probe) {
+    while (probe != nullptr) {
         const Symbol* symbol = probe->lookup(name);
-        if (symbol) { return symbol; }
+        if (symbol != nullptr) { return symbol; }
         probe = probe->parent;
     }
 

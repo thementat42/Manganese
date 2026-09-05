@@ -57,7 +57,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
     TokenType type = token.getType();
 
     const nudHandler_t nudHandler = lookupTable[type].nudHandler;
-    if (!nudHandler) {
+    if (nudHandler == nullptr) {
         logError(token.getLine(), token.getColumn(), "Expected expression to the left of '{}'",
                  lexer::tokenTypeToString(type));
         return makeNode<ast::PoisonedExpression>(consumeToken());
@@ -78,7 +78,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
         if (op.leftBindingPower <= precedence) { break; }
 
         const ledHandler_t handler = lookupTable[type].ledHandler;
-        if (!handler) {
+        if (handler == nullptr) {
             logError(token.getLine(), token.getColumn(), "Expected binary operator, got '{}'",
                      lexer::tokenTypeToString(type));
             return makeNode<ast::PoisonedExpression>(consumeToken());

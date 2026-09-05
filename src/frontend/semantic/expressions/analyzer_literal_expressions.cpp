@@ -18,7 +18,7 @@ auto Analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
 
     for (ast::Expression* element : expression->elements) {
         if (visit(element) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
-        if (!element->semanticType) {
+        if (element->semanticType == nullptr) {
             result = exprvisit_t::Failure;
         } else if (element->semanticType->isVoid()) {
             logError(element, "Cannot use 'void' expression in aggregate literal");
@@ -38,7 +38,7 @@ auto Analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
 
 auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     if (expression->elements.empty()) {
-        if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
+        if (context.currentVariableDeclarationType != nullptr && context.currentVariableDeclarationType->isArray()) {
             expression->semanticType = context.currentVariableDeclarationType;
             return exprvisit_t::Success;
         }
@@ -47,7 +47,7 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
 
     auto result = exprvisit_t::Success;
     const SemanticType* expectedElementType = nullptr;
-    if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
+    if (context.currentVariableDeclarationType != nullptr && context.currentVariableDeclarationType->isArray()) {
         expectedElementType = static_cast<const Array*>(context.currentVariableDeclarationType)->elementType;
     }
 
@@ -58,7 +58,7 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             result = exprvisit_t::Failure;
             continue;
         }
-        if (!element->semanticType) {
+        if (element->semanticType == nullptr) {
             result = exprvisit_t::Failure;
             continue;
         }
@@ -68,7 +68,7 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             continue;
         }
         // top-down type deduction
-        if (expectedElementType) {
+        if (expectedElementType != nullptr) {
             const auto canConvertElementType = areTypesCompatible(expectedElementType, element->semanticType);
             if (!canConvertElementType) {
                 logError(element, "Array element of type '{}' is not compatible with expected array element type '{}'",
@@ -80,7 +80,7 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             continue;
         }
         // use the first element to set the type
-        if (!synthesizedElementType) {
+        if (synthesizedElementType == nullptr) {
             synthesizedElementType = element->semanticType;
             continue;
         }
@@ -95,7 +95,7 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     }
     if (result == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
-    const SemanticType* elementType = expectedElementType ? expectedElementType : synthesizedElementType;
+    const SemanticType* elementType = (expectedElementType != nullptr) ? expectedElementType : synthesizedElementType;
     expression->semanticType = typeContext.getArray(elementType, expression->elements.size());
     return exprvisit_t::Success;
 }
@@ -115,7 +115,7 @@ auto Analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
         logError(expression, "Identifier '{}' was not found in the current scope", expression->name);
         return exprvisit_t::Failure;
     }
-    if (!symbol->type) [[unlikely]] {
+    if (symbol->type == nullptr) [[unlikely]] {
         logError(expression, "Identifier '{}' used before its type could be determined", expression->name);
         return exprvisit_t::Failure;
     }

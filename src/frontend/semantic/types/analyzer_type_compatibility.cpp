@@ -53,12 +53,12 @@ Result Analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
         const auto* lhsBase = static_cast<const Pointer*>(lhsType)->baseType;
         const auto* rhsBase = static_cast<const Pointer*>(rhsType)->baseType;
 
-        if (!lhsBase) {
+        if (lhsBase == nullptr) {
             logError(expr, "Could not deduce type of pointer '{}'", expr->left->toString());
             return Result::Failure;
         }
 
-        if (!rhsBase) {
+        if (rhsBase == nullptr) {
             logError(expr, "Could not deduce type of pointer '{}'", expr->right->toString());
             return Result::Failure;
         }
@@ -72,7 +72,7 @@ Result Analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
 }
 
 const SemanticType* Analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
-    if (!lhs || !rhs) { return nullptr; }
+    if (lhs == nullptr || rhs == nullptr) { return nullptr; }
     // direct match, don't need to promote
     if (lhs == rhs) { return lhs; }
 
@@ -114,7 +114,7 @@ const SemanticType* Analyzer::promoteNumericTypes(const SemanticType* lhs, const
 
 auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
     // Null pointer means something went wrong in type deduction
-    if (!from || !to) { return {.result = Compatible_t::Error, .message = "Could not deduce types"}; }
+    if (from == nullptr || to == nullptr) { return {.result = Compatible_t::Error, .message = "Could not deduce types"}; }
 
     if (from->isVoid() || to->isVoid()) {
         return {.result = Compatible_t::Error,

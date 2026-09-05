@@ -16,7 +16,7 @@ auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
     if (visit(expression->base) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
     const SemanticType* baseType = expression->base->semanticType;
-    if (!baseType) {
+    if (baseType == nullptr) {
         logError(expression->base, "Cannot instantiate unresolvable aggregate type");
         return exprvisit_t::Failure;
     }
@@ -51,7 +51,7 @@ auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         }
 
         const SemanticType* expectedFieldType = aggregateType->getFieldType(fieldInit.name);
-        if (!expectedFieldType) {
+        if (expectedFieldType == nullptr) {
             logError(expression, "Aggregate '{}' has no field named '{}'", aggregateType->toString(), fieldInit.name);
             result = exprvisit_t::Failure;
             continue;
@@ -82,7 +82,7 @@ auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
 auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     if (visit(expression->callee) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* calleeType = expression->callee->semanticType;
-    if (!calleeType) {
+    if (calleeType == nullptr) {
         logError(expression->callee, "Cannot call expression with unresolvable type");
         return exprvisit_t::Failure;
     }
@@ -111,7 +111,7 @@ auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
         const SemanticType* expectedType = functionType->parameterTypes[i].type;
         const SemanticType* actualType = argExpr->semanticType;
 
-        if (actualType && actualType->isVoid()) {
+        if ((actualType != nullptr) && actualType->isVoid()) {
             logError(argExpr, "Cannot pass expression returning 'void' as argument {} to function", i + 1);
             result = exprvisit_t::Failure;
             continue;
@@ -133,11 +133,11 @@ auto Analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     if (visit(expression->variable) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->index) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
-    if (!expression->variable->semanticType) {
+    if (expression->variable->semanticType == nullptr) {
         logError(expression->variable, "Could not deduce type of expression {}", expression->variable->toString());
         return exprvisit_t::Failure;
     }
-    if (!expression->index->semanticType) {
+    if (expression->index->semanticType == nullptr) {
         logError(expression->index, "Could not deduce type of expression {}", expression->index->toString());
         return exprvisit_t::Failure;
     }
@@ -161,7 +161,7 @@ auto Analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
 auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     DISCARD(visit(expression->object));
     const SemanticType* objectType = expression->object->semanticType;
-    if (!objectType) {
+    if (objectType == nullptr) {
         logError(expression->object, "Could not deduce type of expression {}", expression->object->toString());
         return exprvisit_t::Failure;
     }
@@ -201,7 +201,7 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
         scopeSymbol = context.nestedScopeResolutionCurrentSymbol;
     }
 
-    if (!scopeSymbol) {
+    if (scopeSymbol == nullptr) {
         logError(expression, "Unknown scope");
         return exprvisit_t::Failure;
     }
@@ -212,7 +212,7 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
     }
     const std::string_view memberName = static_cast<ast::IdentifierExpression*>(expression->element)->name;
 
-    if (scopeSymbol->type && scopeSymbol->type->isEnum()) {
+    if ((scopeSymbol->type != nullptr) && scopeSymbol->type->isEnum()) {
         const auto* enumType = static_cast<const Enum*>(scopeSymbol->type);
         for (const auto& variant : enumType->variants) {
             if (variant.name == memberName) {
@@ -225,13 +225,13 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
         return exprvisit_t::Failure;
     }
 
-    if (!scopeSymbol->scopeDefined) {
+    if (scopeSymbol->scopeDefined == nullptr) {
         logError(expression, "'{}' is not a namespace, module or enum", scopeSymbol->node->toString());
         return exprvisit_t::Failure;
     }
 
     Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
-    if (!memberSymbol) {
+    if (memberSymbol == nullptr) {
         logError(expression->element, "No member named '{}' in scope", memberName);
         return exprvisit_t::Failure;
     }

@@ -14,7 +14,7 @@ namespace Manganese::semantic {
 auto Analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
-    if (!targetSemanticType) {
+    if (targetSemanticType == nullptr) {
         logError(expression, "Invalid type in alignof expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
@@ -29,7 +29,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
     for (ast::Type* type : expression->types) {
         DISCARD(visit(type));
         const SemanticType* resolved = type->semanticType;
-        if (!resolved) {
+        if (resolved == nullptr) {
             logError(type, "Failed to resolve generic type argument '{}' in generic expression", type->toString());
             return exprvisit_t::Failure;
         }
@@ -37,7 +37,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
     }
 
     const Symbol* symbol = resolveScopeSymbol(expression->identifier);
-    if (!symbol || !symbol->node) {
+    if (symbol == nullptr || symbol->node == nullptr) {
         logError(expression->identifier, "Use of undeclared symbol '{}'", expression->identifier->toString());
         return exprvisit_t::Failure;
     }
@@ -64,11 +64,11 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
             // function body is a nested function declaration, which is wrong
             ContextGuard<bool> instantiationNestingGuard{context.inFunction, false};
             Scope* previousScope = symbolTable.getCurrentScope();
-            if (symbol->hostScope) { symbolTable.setCurrentScope(symbol->hostScope); }
+            if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
             visitRes = visit(functionDeclaration, generic_tag);
 
-            if (symbol->hostScope) { symbolTable.setCurrentScope(previousScope); }
+            if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
         }
         const SemanticType* concreteType = nullptr;
         if (visitRes != stmtvisit_t::Failure) {
@@ -104,11 +104,11 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
 
         // Instantiate the generic aggregate definition with host scope restored
         Scope* previousScope = symbolTable.getCurrentScope();
-        if (symbol->hostScope) { symbolTable.setCurrentScope(symbol->hostScope); }
+        if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
         stmtvisit_t visitRes = visit(aggregateDecl, generic_tag);
 
-        if (symbol->hostScope) { symbolTable.setCurrentScope(previousScope); }
+        if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
 
         const SemanticType* concreteType = nullptr;
         if (visitRes != stmtvisit_t::Failure) {
@@ -117,7 +117,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
 
         activeGenericParams = std::move(oldParams);
 
-        if (!concreteType) {
+        if (concreteType == nullptr) {
             logError(expression, "Failed to materialize instantiated aggregate type for '{}'", aggregateDecl->name);
             return exprvisit_t::Failure;
         }
@@ -135,7 +135,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
 auto Analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
-    if (!targetSemanticType) {
+    if (targetSemanticType == nullptr) {
         logError(expression, "Invalid type in sizeof expression {}", expression->toString());
         return exprvisit_t::Failure;
     }

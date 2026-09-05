@@ -36,14 +36,14 @@ auto Analyzer::visit(ast::ArrayType* type) -> typevisit_t {
 
     const SemanticType* elementType = arrayType->elementType->semanticType;
 
-    if (!elementType) {
+    if (elementType == nullptr) {
         logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
         return typevisit_t::Failure;
     }
     if (elementType->isVoid()) { logError(type, "Cannot form an array of 'void'"); }
 
     std::size_t length;
-    if (arrayType->lengthExpression) {
+    if (arrayType->lengthExpression != nullptr) {
         if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
         const mnstl::fold_result_t fold = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
         if (!fold.is_number()) {
@@ -66,7 +66,7 @@ auto Analyzer::visit(ast::ArrayType* type) -> typevisit_t {
             return typevisit_t::Failure;
         }
         length = lengthValue.value_as<std::size_t>();
-    } else if (context.currentVariableDeclarationType && context.currentVariableDeclarationType->isArray()) {
+    } else if (context.currentVariableDeclarationType != nullptr && context.currentVariableDeclarationType->isArray()) {
         length = static_cast<const Array*>(context.currentVariableDeclarationType)->length;
     } else [[unlikely]] {
         logError(type, "Cannot infer array length; explicitly specify length or provide an initializer");
@@ -83,18 +83,18 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
     for (const ast::FunctionParameterType& parameterType : functionType->parameterTypes) {
         DISCARD(visit(parameterType.type));
         const SemanticType* resolvedParameterType = parameterType.type->semanticType;
-        if (!resolvedParameterType) { return typevisit_t::Failure; }
+        if (resolvedParameterType == nullptr) { return typevisit_t::Failure; }
 
         resolvedParameterTypes.push_back({.type = resolvedParameterType,
                                           .isMutable = parameterType.isMutable,
                                           .isVariadic = parameterType.isVariadic});
     }
     const SemanticType* returnType = typeContext.getVoid();
-    if (functionType->returnType) {
+    if (functionType->returnType != nullptr) {
         // function is not returning void
         DISCARD(visit(functionType->returnType));
         returnType = functionType->returnType->semanticType;
-        if (!returnType) { return typevisit_t::Failure; }
+        if (returnType == nullptr) { return typevisit_t::Failure; }
     }
     type->semanticType = typeContext.getFunction(std::move(resolvedParameterTypes), returnType);
     return typevisit_t::Success;
@@ -102,7 +102,7 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
 
 auto Analyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t {
     const SemanticType* resolved = resolveGenericType(type);
-    if (!resolved) { return typevisit_t::Failure; }
+    if (resolved == nullptr) { return typevisit_t::Failure; }
     type->semanticType = resolved;
     return typevisit_t::Success;
 }
@@ -135,11 +135,11 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
         scopeSymbol = context.nestedScopeResolutionCurrentSymbol;
     }
 
-    if (!scopeSymbol) {
+    if (scopeSymbol == nullptr) {
         logError(type, "Unknown scope");
         return typevisit_t::Failure;
     }
-    if (!scopeSymbol->scopeDefined) {
+    if (scopeSymbol->scopeDefined == nullptr) {
         logError(type, "'{}' is not a namespace or module", type->scope->toString());
         return typevisit_t::Failure;
     }
@@ -150,7 +150,7 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
     const std::string_view memberName = static_cast<ast::IdentifierType*>(type->type)->name;
 
     Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
-    if (!memberSymbol) {
+    if (memberSymbol == nullptr) {
         logError(type->type, "No member named '{}' in scope", memberName);
         return typevisit_t::Failure;
     }
@@ -176,7 +176,7 @@ auto Analyzer::visit(ast::IdentifierType* type) -> typevisit_t {
         return typevisit_t::Success;
     }
     Symbol* symbol = symbolTable.lookup(IdentifierType->name);
-    if (!symbol) {
+    if (symbol == nullptr) {
         logError(type, "Unknown type '{}'", IdentifierType->name);
         return typevisit_t::Failure;
     }
@@ -184,7 +184,7 @@ auto Analyzer::visit(ast::IdentifierType* type) -> typevisit_t {
         auto* aliasStatement = static_cast<ast::AliasStatement*>(symbol->node);
         if (visit(aliasStatement) == typevisit_t::Failure) { return typevisit_t::Failure; }
     }
-    if (!symbol->type) {
+    if (symbol->type == nullptr) {
         logError(type, "'{}' is not a valid type", IdentifierType->name);
         return typevisit_t::Failure;
     }

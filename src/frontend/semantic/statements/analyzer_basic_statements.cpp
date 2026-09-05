@@ -14,7 +14,7 @@ auto Analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
 }
 
 auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
-    if (visit(statement->expression) == exprvisit_t::Failure || !statement->expression->semanticType) {
+    if (visit(statement->expression) == exprvisit_t::Failure || statement->expression->semanticType == nullptr) {
         statement->expression->semanticType = typeContext.getPoison();
         return stmtvisit_t::Failure;
     }
@@ -43,7 +43,7 @@ auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     }
 
     // void return
-    if (!statement->value) {
+    if (statement->value == nullptr) {
         if (context.currentFunctionReturnType != typeContext.getVoid()) {
             logError(statement, "Non-void function must return a value");
             return stmtvisit_t::Failure;
@@ -52,12 +52,15 @@ auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     }
 
     if (visit(statement->value) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
-    if (!statement->value->semanticType) { logError(statement->value, "Could not deduce type of return expression"); }
+    if (statement->value->semanticType == nullptr) {
+        logError(statement->value, "Could not deduce type of return expression");
+    }
 
     if (!areTypesCompatible(statement->value->semanticType, context.currentFunctionReturnType)) {
-        logError(statement, "Function returns '{}' but expression in return statement has type '{}'",
-                 (context.currentFunctionReturnType ? context.currentFunctionReturnType->toString() : "void"),
-                 statement->value->semanticType->toString());
+        logError(
+            statement, "Function returns '{}' but expression in return statement has type '{}'",
+            (context.currentFunctionReturnType != nullptr ? context.currentFunctionReturnType->toString() : "void"),
+            statement->value->semanticType->toString());
         return stmtvisit_t::Failure;
     }
     return stmtvisit_t::Success;

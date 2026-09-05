@@ -14,7 +14,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     Symbol* symbol = symbolTable.lookup(statement->name);
-    if (!symbol) {
+    if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
     }
 
@@ -35,7 +35,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     for (const ast::AggregateField& field : statement->fields) {
         DISCARD(visit(field.type));
         const SemanticType* resolvedFieldType = field.type->semanticType;
-        if (!resolvedFieldType) {
+        if (resolvedFieldType == nullptr) {
             logging::logError(field.line, field.column, "Unknown type for field '{}' in aggregate '{}'", field.name,
                               statement->name);
             return stmtvisit_t::Failure;
@@ -44,7 +44,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
         if (resolvedFieldType->isAggregate()) {
             const auto* nestedAggregateType = static_cast<const Aggregate*>(resolvedFieldType);
             Symbol* nestedSymbol = symbolTable.lookup(nestedAggregateType->name);
-            if (nestedSymbol && nestedSymbol->node) {
+            if (nestedSymbol != nullptr && nestedSymbol->node != nullptr) {
                 // Cast to non-const ast::Statement* so visit() can accept it
                 auto* nestedStmt = static_cast<ast::Statement*>(nestedSymbol->node);
 
@@ -64,7 +64,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
 
 auto Analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     Symbol* symbol = symbolTable.lookup(statement->alias);
-    if (!symbol) {
+    if (symbol == nullptr) {
         ASSERT_UNREACHABLE(
             std::format("Alias symbol '{}' was not registered during type collection", statement->alias));
     }
@@ -92,7 +92,7 @@ auto Analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
 auto Analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     stmtvisit_t result = stmtvisit_t::Success;
     Symbol* symbol = symbolTable.lookup(statement->name);
-    if (!symbol) {
+    if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Enum {} was not registered during type initalization", statement->name));
     }
 
@@ -103,7 +103,7 @@ auto Analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
 
     // Default to an int32 if no type is given (or if there's an error)
     const SemanticType* underlyingType = typeContext.getPrimitive(ast::PrimitiveType::int32);
-    if (statement->baseType) {
+    if (statement->baseType != nullptr) {
         if (visit(statement->baseType) == stmtvisit_t::Failure) {
             symbol->status = ResolutionStatus::Failure;
             result = stmtvisit_t::Failure;
@@ -124,7 +124,7 @@ auto Analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     std::vector<Variant> variants;
 
     for (ast::EnumValue& variant : statement->values) {
-        if (variant.value) {
+        if (variant.value != nullptr) {
             if (visit(variant.value) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
             auto explicitVal = variant.value->fold(typeContext.getTargetInfo());
             if (!explicitVal.has_value()) {
@@ -161,10 +161,10 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     Symbol* symbol = symbolTable.lookup(statement->name);
-    if (!symbol) {
+    if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Function '{}' was not registered during symbol collection", statement->name));
     }
-    if (!symbol->type) {
+    if (symbol->type == nullptr) {
         ASSERT_UNREACHABLE(
             std::format("Function '{}' was registered during symbol collection but had no type", statement->name));
     }
@@ -205,17 +205,17 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
         if (param.defaultValue) {
             DISCARD(visit(param.defaultValue));
 
-            const SemanticType* defaultType = param.defaultValue->semanticType;
+            const SemanticType* defaultValueType = param.defaultValue->semanticType;
 
-            if (!defaultType) {
+            if (defaultValueType != nullptr) {
                 logError(statement, "Unable to determine type of default value for parameter '{}' in function '{}'",
                          param.name, statement->name);
                 signatureResult = stmtvisit_t::Failure;
-            } else if (resolvedParamType && !areTypesCompatible(resolvedParamType, defaultType)) {
+            } else if (resolvedParamType != nullptr && !areTypesCompatible(resolvedParamType, defaultValueType)) {
                 logError(statement,
                          "Default value for parameter '{}' in function '{}' has type '{}', "
                          "but '{}' was expected",
-                         param.name, statement->name, defaultType->toString(), resolvedParamType->toString());
+                         param.name, statement->name, defaultValueType->toString(), resolvedParamType->toString());
                 signatureResult = stmtvisit_t::Failure;
             }
         }
@@ -235,7 +235,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
 auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     const SemanticType* variableType = nullptr;
 
-    if (statement->type) {
+    if (statement->type != nullptr) {
         // User has an explicit type
         if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
         variableType = statement->type->semanticType;
@@ -246,12 +246,12 @@ auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
         const SemanticType* initializerType = statement->value->semanticType;
 
         // Catch missing or void initializer types immediately
-        if (!initializerType || initializerType->isVoid()) {
+        if (initializerType == nullptr || initializerType->isVoid()) {
             logError(statement->value, "Cannot initialize variable '{}' with a void expression", statement->name);
             return stmtvisit_t::Failure;
         }
 
-        if (!variableType) {
+        if (variableType == nullptr) {
             // Deduce type from initializer
             variableType = initializerType;
         } else {
@@ -270,7 +270,7 @@ auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
         return stmtvisit_t::Failure;
     }
 
-    if (!variableType) {
+    if (variableType == nullptr) {
         logError(statement, "Variable '{}' must either have an explicit type or an initial value", statement->name);
         return stmtvisit_t::Failure;
     }

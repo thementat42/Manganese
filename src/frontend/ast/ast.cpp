@@ -17,7 +17,7 @@ std::string_view primitiveTypeToString(PrimitiveType prim) {
 }
 
 mnstl::fold_result_t AlignofExpression::fold(const TargetInfo& target) const NOEXCEPT_IF_RELEASE {
-    if (!type->semanticType) { return mnstl::fold_result_t{}; }
+    if (type->semanticType == nullptr) { return mnstl::fold_result_t{}; }
     return mnstl::fold_result_t{mnstl::number_t{type->semanticType->alignment(target)}};
 }
 
@@ -149,7 +149,7 @@ mnstl::fold_result_t PostfixExpression::fold(const TargetInfo& target) const NOE
 }
 
 mnstl::fold_result_t SizeofExpression::fold(const TargetInfo& target) const NOEXCEPT_IF_RELEASE {
-    if (!type->semanticType) { return mnstl::fold_result_t{}; }
+    if (type->semanticType == nullptr) { return mnstl::fold_result_t{}; }
     return mnstl::fold_result_t{mnstl::number_t{type->semanticType->size(target)}};
 }
 

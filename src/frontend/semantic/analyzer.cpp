@@ -15,8 +15,6 @@ Result Analyzer::analyze() {
 }
 
 const Symbol* Analyzer::resolveTypeSymbol(const ast::Type* typeNode) {
-    if (!typeNode) return nullptr;
-
     if (typeNode->kind == ast::TypeKind::IdentifierType) {
         const auto* IdentifierType = static_cast<const ast::IdentifierType*>(typeNode);
         return symbolTable.lookup(IdentifierType->name);
@@ -25,7 +23,7 @@ const Symbol* Analyzer::resolveTypeSymbol(const ast::Type* typeNode) {
     if (typeNode->kind == ast::TypeKind::ScopedType) {
         const auto* scopedType = static_cast<const ast::ScopedType*>(typeNode);
         const Symbol* parentSymbol = resolveTypeSymbol(scopedType->scope);
-        if (!parentSymbol || !parentSymbol->scopeDefined) {
+        if ((parentSymbol == nullptr) || (parentSymbol->scopeDefined == nullptr)) {
             return nullptr;  // Parent symbol wasn't found or doesn't have a scope
         }
 
@@ -41,7 +39,6 @@ const Symbol* Analyzer::resolveTypeSymbol(const ast::Type* typeNode) {
 }
 
 const Symbol* Analyzer::resolveScopeSymbol(const ast::Expression* expr) {
-    if (!expr) { return nullptr; }
     if (expr->kind == ast::ExpressionKind::IdentifierExpression) {
         const auto* id = static_cast<const ast::IdentifierExpression*>(expr);
         return symbolTable.lookup(id->name);
@@ -51,7 +48,7 @@ const Symbol* Analyzer::resolveScopeSymbol(const ast::Expression* expr) {
 
         // recursively check the left hand side
         const Symbol* parentSymbol = resolveScopeSymbol(scopeExpr->scope);
-        if (!parentSymbol || !parentSymbol->scopeDefined) { return nullptr; }
+        if ((parentSymbol == nullptr) || (parentSymbol->scopeDefined == nullptr)) { return nullptr; }
 
         if (scopeExpr->element->kind != ast::ExpressionKind::IdentifierExpression) { return nullptr; }
         const auto* memberId = static_cast<const ast::IdentifierExpression*>(scopeExpr->element);
@@ -62,20 +59,19 @@ const Symbol* Analyzer::resolveScopeSymbol(const ast::Expression* expr) {
 }
 
 bool Analyzer::isMutableExpression(const ast::Expression* expr) {
-    if (!expr) { return false; }
     using enum ast::ExpressionKind;
     switch (expr->kind) {
         case IdentifierExpression: {
             const auto* id = static_cast<const ast::IdentifierExpression*>(expr);
             const Symbol* symbol = symbolTable.lookup(id->name);
-            return symbol ? symbol->isMutable : false;
+            return (symbol != nullptr) ? symbol->isMutable : false;
         }
         case PrefixExpression: {
             const auto* prefix = static_cast<const ast::PrefixExpression*>(expr);
             if (prefix->op == lexer::TokenType::Dereference) {
-                const SemanticType* opType = prefix->right->semanticType;
-                if (!opType || !opType->isPointer()) { return false; }
-                return static_cast<const Pointer*>(opType)->isMutable;
+                const SemanticType* operandType = prefix->right->semanticType;
+                if ((operandType == nullptr) || !operandType->isPointer()) { return false; }
+                return static_cast<const Pointer*>(operandType)->isMutable;
             }
             return false;
         }
@@ -90,11 +86,11 @@ bool Analyzer::isMutableExpression(const ast::Expression* expr) {
         case ScopeResolutionExpression: {
             const auto* scope = static_cast<const ast::ScopeResolutionExpression*>(expr);
             const Symbol* scopeSymbol = resolveScopeSymbol(scope->scope);
-            if (!scopeSymbol || !scopeSymbol->scopeDefined) { return false; }
+            if ((scopeSymbol == nullptr) || (scopeSymbol->scopeDefined == nullptr)) { return false; }
             if (scope->element->kind != ast::ExpressionKind::IdentifierExpression) { return false; }
             const auto* memberId = static_cast<const ast::IdentifierExpression*>(scope->element);
             const Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberId->name);
-            return memberSymbol ? memberSymbol->isMutable : false;
+            return (memberSymbol != nullptr) ? memberSymbol->isMutable : false;
         }
         default: return false;
     }

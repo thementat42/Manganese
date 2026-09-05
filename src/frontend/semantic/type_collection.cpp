@@ -55,7 +55,7 @@ Result Analyzer::_collectGlobalsInStatement(ast::Statement* statement, ast::Stat
 Result Analyzer::collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate) {
     // Skip uninstantiated generics
     Symbol* symbol = symbolTable.lookup(aggregate->name);
-    if (!symbol) {
+    if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not recorded during type collection", aggregate->name));
     }
 
@@ -96,7 +96,7 @@ Result Analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* functi
     if (!function->genericTypes.empty()) { return Result::Success; }
 
     Symbol* symbol = symbolTable.lookup(function->name);
-    if (!symbol) {
+    if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Function '{}' was not recorded during type collection", function->name));
     }
 
@@ -133,7 +133,7 @@ Result Analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* functi
     }
 
     const SemanticType* resolvedReturnType = typeContext.getVoid();
-    if (function->returnType) {
+    if (function->returnType != nullptr) {
         const typevisit_t returnResult = visit(function->returnType);
         if (returnResult == typevisit_t::Failure) {
             logError(function, "Unknown return type '{}' in function '{}'", function->returnType->toString(),

@@ -14,7 +14,9 @@ auto Analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     if (visit(expression->assignee) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->value) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
-    if (!expression->assignee->semanticType || !expression->value->semanticType) { return exprvisit_t::Failure; }
+    if (expression->assignee->semanticType == nullptr || expression->value->semanticType == nullptr) {
+        return exprvisit_t::Failure;
+    }
 
     if (!isLvalue(expression->assignee)) {
         logError(expression->assignee, "Cannot assign a value to expression '{}'", expression->assignee->toString());
@@ -45,11 +47,11 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
 
     if (visit(expression->left) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->right) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
-    if (!expression->left->semanticType) {
+    if (expression->left->semanticType == nullptr) {
         logError(expression, "Could not deduce type of expression {}", expression->left->toString());
         return exprvisit_t::Failure;
     }
-    if (!expression->right->semanticType) {
+    if (expression->right->semanticType == nullptr) {
         logError(expression, "Could not deduce type of expression {}", expression->right->toString());
         return exprvisit_t::Failure;
     }
@@ -90,7 +92,7 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
             return exprvisit_t::Success;
         }
         const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
-        if (!commonType) {
+        if (commonType == nullptr) {
             logError(expression, "Invalid operands for arithmetic operator '{}': {} and {}",
                      lexer::tokenTypeToString(op), lhsType->toString(), rhsType->toString());
             return exprvisit_t::Failure;
@@ -107,7 +109,7 @@ auto Analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     exprvisit_t result = visit(expression->left);
     if (result == exprvisit_t::Failure) { return result; }
     // the only postfix operators are ++ and -- so the expression must be an integer
-    if (!expression->left->semanticType) {
+    if (expression->left->semanticType == nullptr) {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
@@ -137,7 +139,7 @@ auto Analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
 
 auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
-    if (!expression->right->semanticType) {
+    if (expression->right->semanticType == nullptr) {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
@@ -178,18 +180,18 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         case UnaryPlus:
         case UnaryMinus: {
             if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
-            const SemanticType* opType = expression->right->semanticType;
-            if (!opType) { return exprvisit_t::Failure; }
-            if (!opType->isNumeric()) {
+            const SemanticType* operandType = expression->right->semanticType;
+            if (operandType == nullptr) { return exprvisit_t::Failure; }
+            if (!operandType->isNumeric()) {
                 logError(expression, "Operator '{}' can only be applied to numeric types (got '{}')",
-                         lexer::tokenTypeToString(expression->op), opType->toString());
+                         lexer::tokenTypeToString(expression->op), operandType->toString());
                 return exprvisit_t::Failure;
             }
-            if (expression->op == UnaryMinus && opType->isUnsignedInteger()) {
+            if (expression->op == UnaryMinus && operandType->isUnsignedInteger()) {
                 logWarning(expression, "Applying a '-' to an unsigned integer type  ('{}') causes wrapping",
-                           opType->toString());
+                           operandType->toString());
             }
-            expression->semanticType = opType;
+            expression->semanticType = operandType;
         } break;
 
         case AddressOf: {
@@ -237,7 +239,7 @@ auto Analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     auto result = exprvisit_t::Success;
     ContextGuard guard(context.typeCastDepth, static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
     if (visit(expression->originalValue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
-    if (!expression->originalValue->semanticType) {
+    if (expression->originalValue->semanticType == nullptr) {
         logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString());
         return exprvisit_t::Failure;
     }

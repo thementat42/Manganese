@@ -40,7 +40,7 @@ class FileReader : public Reader {
     [[nodiscard]] std::size_t getLine() const noexcept override { return _line; }
     [[nodiscard]] std::size_t getColumn() const noexcept override { return _column; }
 
-    [[nodiscard]] bool done() const noexcept override { return (_position >= _bufferSize) && std::feof(_filePtr); }
+    [[nodiscard]] bool done() const noexcept override { return (_position >= _bufferSize) && (std::feof(_filePtr) != 0); }
 };
 }  // namespace Manganese::io
 #endif  // MANGANESE_INCLUDE_IO_FILEREADER_HPP

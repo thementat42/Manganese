@@ -192,7 +192,7 @@ std::size_t Void::size(const TargetInfo&) const noexcept { return 0; }
 std::size_t Void::alignment(const TargetInfo&) const noexcept { return 1; }
 
 std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
-    if (!t) { return 0; }
+    if (t == nullptr)[[unlikely]] { return 0; }
     // start by hashing the type kind (isolates primitives, pointers, etc)
     std::size_t hash = std::hash<kind_int_t>{}(static_cast<kind_int_t>(t->kind));
     switch (t->kind) {
@@ -265,7 +265,7 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
 }
 
 bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) const noexcept {
-    if (!lhs || !rhs) { return false; }  // no deduced type; can't be equal
+    if (lhs == nullptr || rhs == nullptr) { return false; }  // no deduced type; can't be equal
     if (lhs == rhs) { return true; }
     if (lhs->kind != rhs->kind) { return false; }
 

@@ -58,7 +58,7 @@
 #elif __has_builtin(__builtin_trap)
     __builtin_trap();  // unreachable code shouldn't be hit anyways
 #else  // ^^ some kind of builtin vv no builtin
-    manganese_unreachable(0);
+    manganese_unreachable(42);
 #endif  // __has_builtin(__builtin_unreachable)
 #else  // ^^ builtins detectable vv no way to detect builtins, fallback
     manganese_unreachable(0);
@@ -71,7 +71,7 @@
 #elif defined(_MSC_VER)
     __assume(false);
 #else  // ^^ MSVC vv not MSVC
-    manganese_unreachable(0.0f);
+    manganese_unreachable(42.0F);
 #endif  // __cpp_lib_unreachable
 }
 

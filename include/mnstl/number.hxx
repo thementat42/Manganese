@@ -362,9 +362,9 @@ namespace detail {
     if (std::is_constant_evaluated()) {
         double result = 1.0;
         if (exp > 0) {
-            while (exp--) { result *= 10; }
+            while ((exp--) != 0) { result *= 10; }
         } else {
-            while (exp++) { result /= 10; }
+            while ((exp++) != 0) { result /= 10; }
         }
         return result;
     } else {

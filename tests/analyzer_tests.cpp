@@ -44,7 +44,7 @@ static bool analyzeSource(const std::string& source, bool expectSuccess, std::st
             logFile << "---------------------\n";
         };
 
-        if (parsedFile.fileModule) { logStatement(parsedFile.fileModule); }
+        if (parsedFile.fileModule != nullptr) { logStatement(parsedFile.fileModule); }
         for (const auto* importStmt : parsedFile.imports) { logStatement(importStmt); }
         for (const auto& stmt : parsedFile.program) { logStatement(stmt); }
 
