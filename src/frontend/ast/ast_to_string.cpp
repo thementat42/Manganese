@@ -378,13 +378,13 @@ std::string TypeofType::toString(std::size_t indent) const {
 
 // Errors
 std::string PoisonedStatement::toString(std::size_t) const {
-    return std::format("Unexpected token: '{}'", offendingToken.toString());
+    return std::format("<invalid expression>");
 }
 std::string PoisonedExpression::toString(std::size_t) const {
-    return std::format("Unexpected token: '{}'", offendingToken.toString());
+    return std::format("<invalid statement>");
 }
 std::string PoisonedType::toString(std::size_t) const {
-    return std::format("Unexpected token: '{}'", offendingToken.toString());
+    return std::format("<invalid type>");
 }
 
 }  // namespace ast

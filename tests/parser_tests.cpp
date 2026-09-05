@@ -591,9 +591,9 @@ static bool testSizeofTypeofAlignof() {
                                    "let y : typeof(foo@[int,char]((p as int32)) + (bar + baz as typeof(3u128)));";
     const std::array<std::string, 6> expected
         = {"(sizeof(int32));",
-           "(sizeof(dummy));",
+           "(sizeof(<invalid type>));",
            "(alignof(char));",
-           "(alignof(dummy));",
+           "(alignof(<invalid type>));",
            "(let x: private typeof((x + 1)) = 3);",
            "(let y: private typeof((foo@[int32, char]((p as int32)) + ((bar + baz) as typeof(3)))));"};
     return validateStatements(getParserResults(expression), expected, "Sizeof, Typeof & Alignof");
