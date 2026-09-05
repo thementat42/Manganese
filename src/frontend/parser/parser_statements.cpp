@@ -6,6 +6,7 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -393,7 +394,7 @@ std::vector<std::string> Parser::parseGenericsList(std::string_view contextName)
 }
 
 std::optional<ast::AggregateField> Parser::parseAggregateField(const std::string& aggregateName,
-                                                               const std::vector<ast::AggregateField>& existingFields) {
+                                                               std::span<ast::AggregateField> existingFields) {
     if (peekTokenType() != TokenType::Identifier) {
         logError(peekToken().getLine(), peekToken().getColumn(),
                  "Unexpected token '{}' in aggregate declaration. Expected field name.", peekToken().getLexeme());
@@ -429,9 +430,10 @@ std::optional<ast::AggregateField> Parser::parseAggregateField(const std::string
                                .isMutable = isMutable};
 }
 
-std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(
-    const std::string& functionName, const std::vector<ast::FunctionParameter>& existingParams,
-    bool& hasDefaultParameter, bool& hasVariadicParameter) {
+std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(const std::string& functionName,
+                                                                     std::span<ast::FunctionParameter> existingParams,
+                                                                     bool& hasDefaultParameter,
+                                                                     bool& hasVariadicParameter) {
     Token t = expectToken(TokenType::Identifier, "Expected a variable name");
     std::string paramName = t.getLexeme();
 

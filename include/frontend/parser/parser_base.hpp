@@ -10,6 +10,7 @@
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
 #include <optional>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -96,10 +97,10 @@ class Parser {
     ast::EnumValue parseEnumMember();
     std::vector<std::string> parseGenericsList(std::string_view context_name);
     std::optional<ast::AggregateField> parseAggregateField(const std::string& aggregateName,
-                                                           const std::vector<ast::AggregateField>& existingFields);
+                                                           std::span<ast::AggregateField> existingFields);
 
     std::optional<ast::FunctionParameter> parseFunctionParameter(
-        const std::string& functionName, const std::vector<ast::FunctionParameter>& existingParams,
+        const std::string& functionName, std::span<ast::FunctionParameter> existingParams,
         bool& hasDefaultParameter, bool& hasVariadicParameter);
 
     ast::CaseClause parseCaseClause();
