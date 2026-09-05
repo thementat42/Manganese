@@ -97,11 +97,11 @@ class Parser {
 
     ast::EnumValue parseEnumMember();
     std::vector<std::string> parseGenericsList(std::string_view context_name);
-    std::optional<ast::AggregateField> parseAggregateField(const std::string& aggregateName,
+    std::optional<ast::AggregateField> parseAggregateField(std::string_view aggregateName,
                                                            std::span<ast::AggregateField> existingFields);
 
     std::optional<ast::FunctionParameter> parseFunctionParameter(
-        const std::string& functionName, std::span<ast::FunctionParameter> existingParams,
+        std::string_view functionName, std::span<ast::FunctionParameter> existingParams,
         bool& hasDefaultParameter, bool& hasVariadicParameter);
 
     ast::CaseClause parseCaseClause();
@@ -128,7 +128,7 @@ class Parser {
     std::string parseGenericTypeParameter(std::vector<std::string>& existingGenerics, std::string_view contextName);
 
     // ~ Helpers
-    ast::Block parseBlock(const std::string& blockName);
+    ast::Block parseBlock(std::string_view blockName);
 
     template <class T, class ParseFunction>
     std::vector<T> parseCommaSeparatedList(TokenType closeToken, const char* missingCommaMessage,
@@ -167,7 +167,7 @@ class Parser {
     }
 
     Token expectToken(TokenType expectedType);
-    Token expectToken(TokenType expectedType, const std::string& errorMessage);
+    Token expectToken(TokenType expectedType, std::string_view errorMessage);
 
     template <class... Args>
     inline void logError(std::size_t line, std::size_t col, std::format_string<Args...> message,

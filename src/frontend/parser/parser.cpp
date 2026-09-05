@@ -68,7 +68,7 @@ bool Parser::isUnaryContext() const noexcept {
 
 Token Parser::expectToken(TokenType expectedType) { return expectToken(expectedType, "Unexpected token: "); }
 
-Token Parser::expectToken(TokenType expectedType, const std::string& errorMessage) {
+Token Parser::expectToken(TokenType expectedType, std::string_view errorMessage) {
     Token tok = peekToken();
     if (tok.getType() == expectedType) { return consumeToken(); }
     logging::logError(tok.getLine(), tok.getColumn(), "{} (expected '{}' but got '{}')", errorMessage,
@@ -77,8 +77,8 @@ Token Parser::expectToken(TokenType expectedType, const std::string& errorMessag
     return lexer::Token{};
 }
 
-ast::Block Parser::parseBlock(const std::string& blockName) {
-    expectToken(TokenType::LeftBrace, "Expected a '{' to start " + blockName);
+ast::Block Parser::parseBlock(std::string_view blockName) {
+    expectToken(TokenType::LeftBrace, std::format("Expected a '{{' to start {}", blockName));
     ast::Block block;
     while (!done() && peekTokenType() != TokenType::RightBrace) {
         if (peekTokenType() == TokenType::Semicolon) {
@@ -88,7 +88,7 @@ ast::Block Parser::parseBlock(const std::string& blockName) {
         }
         block.push_back(parseStatement());
     }
-    expectToken(TokenType::RightBrace, "Expected '}' to end " + blockName);
+    expectToken(TokenType::RightBrace, std::format("Expected '}}' to end {}", blockName));
     if (block.empty()) {
         logging::logWarning(peekToken().getLine(), peekToken().getColumn(), "{} is empty", blockName);
     }

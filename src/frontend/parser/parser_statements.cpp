@@ -396,7 +396,7 @@ std::vector<std::string> Parser::parseGenericsList(std::string_view contextName)
         [this, &genericTypes, contextName]() { return parseGenericTypeParameter(genericTypes, contextName); });
 }
 
-std::optional<ast::AggregateField> Parser::parseAggregateField(const std::string& aggregateName,
+std::optional<ast::AggregateField> Parser::parseAggregateField(std::string_view aggregateName,
                                                                std::span<ast::AggregateField> existingFields) {
     if (peekTokenType() != TokenType::Identifier) {
         logError(peekToken().getLine(), peekToken().getColumn(),
@@ -433,7 +433,7 @@ std::optional<ast::AggregateField> Parser::parseAggregateField(const std::string
                                .isMutable = isMutable};
 }
 
-std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(const std::string& functionName,
+std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(std::string_view functionName,
                                                                      std::span<ast::FunctionParameter> existingParams,
                                                                      bool& hasDefaultParameter,
                                                                      bool& hasVariadicParameter) {
