@@ -65,8 +65,8 @@ std::string Aggregate::toString() const {
 }
 
 std::string Aggregate::toStringWithTypeArguments(const TypeList& typeArguments) const {
-    std::string aggName = name.empty() ? "aggregate" : name;
-    std::string result = aggName + "@[";
+    const std::string aggregateName = name.empty() ? "aggregate" : name;
+    std::string result = aggregateName + "@[";
     for (std::size_t i = 0; i < typeArguments.size(); ++i) {
         result += typeArguments[i]->toString();
         if (i != typeArguments.size() - 1) [[likely]] { result += ", "; }
@@ -110,31 +110,29 @@ std::string Void::toString() const { return "void"; }
 // Size & Alignment
 std::size_t SemanticType::size(const TargetInfo&) const noexcept {
     if (isPrimitive()) {
-        PrimitiveInfo info = getPrimitiveInfo(primitiveType);
-        return static_cast<std::size_t>(info.bitWidth / 8);
+        return static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8);
     }
     return 0;
 }
 
 std::size_t SemanticType::alignment(const TargetInfo&) const noexcept {
     if (isPrimitive()) {
-        PrimitiveInfo info = getPrimitiveInfo(primitiveType);
-        std::size_t s = static_cast<std::size_t>(info.bitWidth / 8);
-        return std::max<std::size_t>(1, s);
+        const std::size_t align = static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8);
+        return std::max<std::size_t>(1, align);
     }
     return 1;
 }
 
 std::size_t Aggregate::size(const TargetInfo& target) const noexcept {
     std::size_t currentSize = 0;
-    std::size_t maxAlign = alignment(target);
+    const std::size_t maxAlign = alignment(target);
 
     for (const auto& field : fields) {
-        std::size_t fieldAlign = field.alignment(target);
-        std::size_t fieldSize = field.size(target);
+        const std::size_t fieldAlign = field.alignment(target);
+        const std::size_t fieldSize = field.size(target);
 
         if (fieldAlign > 0) {
-            std::size_t remainder = currentSize % fieldAlign;
+            const std::size_t remainder = currentSize % fieldAlign;
             if (remainder != 0) { currentSize += (fieldAlign - remainder); }
         }
         currentSize += fieldSize;

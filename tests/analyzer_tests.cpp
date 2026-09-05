@@ -23,7 +23,7 @@ static bool analyzeSource(const std::string& source, bool expectSuccess, std::st
     parser::ParsedFile parsedFile = parser.parse();
 
     semantic::Analyzer analyzer(parsedFile, target, arena);
-    Result result = analyzer.analyze();
+const     Result result = analyzer.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
@@ -58,13 +58,13 @@ static bool analyzeSource(const std::string& source, bool expectSuccess, std::st
 
 static bool testAggregateDeclarationStatement() {
     // Basic aggregate declaration and recursive layout prevention
-    std::string validSource = R"(
+const     std::string validSource = R"(
         aggregate Point { x: int32; y: int32; }
         aggregate Line { start: Point; end: Point; }
     )";
 
     // Self-referential aggregate (infinite size layout) must fail
-    std::string invalidSource = R"(
+    const std::string invalidSource = R"(
         aggregate Node { next: Node; }
     )";
 
@@ -72,7 +72,7 @@ static bool testAggregateDeclarationStatement() {
 }
 
 static bool testAliasStatement() {
-    std::string source = R"(
+    const std::string source = R"(
         alias MyInt = int32;
         func main() {
             let x: MyInt = 42;
@@ -82,7 +82,7 @@ static bool testAliasStatement() {
 }
 
 static bool testBreakAndContinueStatement() {
-    std::string valid = R"(
+    const std::string valid = R"(
         func main() {
             while (true) {
                 if (false) { 
@@ -94,7 +94,7 @@ static bool testBreakAndContinueStatement() {
     )";
 
     // break outside of a loop must fail
-    std::string invalid = R"(
+    const std::string invalid = R"(
         func main() {
             break;
         }
@@ -104,13 +104,13 @@ static bool testBreakAndContinueStatement() {
 }
 
 static bool testEnumDeclarationStatement() {
-    std::string source = R"(
+    const std::string source = R"(
         enum Colour : int32 { Red, Green, Blue }
         func main() {
             let c = Colour::Red;
         }
     )";
-    std::string invalid = R"(
+    const std::string invalid = R"(
         enum Colour : int32 { Red, Green, Blue }
         enum Colour2 : int32 { Red, Green, Blue }
         func main() {
@@ -124,7 +124,7 @@ static bool testEnumDeclarationStatement() {
 }
 
 static bool testForLoopStatement() {
-    std::string source = R"(
+    const std::string source = R"(
         func main() {
             for (let mut i: int32 = 0; i < 10; i = i + 1) {}
         }
@@ -134,21 +134,21 @@ static bool testForLoopStatement() {
 
 static bool testFunctionDeclarationAndReturnStatement() {
     // Missing return expression in typed function
-    std::string missingReturn = R"(
+    const std::string missingReturn = R"(
         func getValue() -> int32 {
             return;
         }
     )";
 
     // Returning a value in a void/empty-return function
-    std::string valueInVoid = R"(
+    const std::string valueInVoid = R"(
         func doNothing() {
             return 100;
         }
     )";
 
     // Valid void and non-void functions
-    std::string valid = R"(
+    const std::string valid = R"(
         func doNothing() { 
             return; 
         }
@@ -163,13 +163,13 @@ static bool testFunctionDeclarationAndReturnStatement() {
 
 static bool testIfStatement() {
     // Non-boolean condition must fail
-    std::string valid = R"(
+    const std::string valid = R"(
         func main() {
             if ("not a bool") {}
         }
     )";
 
-    std::string valid2 = R"(
+    const std::string valid2 = R"(
         func main() {
             if (1 < 2) {} else {}
         }
@@ -180,7 +180,7 @@ static bool testIfStatement() {
 
 static bool testNamespaceStatement() {
     // Valid namespace declarations, reopening, and nested namespaces
-    std::string valid = R"(
+    const std::string valid = R"(
         namespace Math {
             func add(a: int32, b: int32) -> int32 {
                 return a + b;
@@ -202,7 +202,7 @@ static bool testNamespaceStatement() {
     )";
 
     // Duplicate symbol declaration within the same namespace must fail
-    std::string duplicateSymbol = R"(
+    const std::string duplicateSymbol = R"(
         namespace Math {
             let x: int32 = 10;
             let x: int32 = 20;
@@ -213,7 +213,7 @@ static bool testNamespaceStatement() {
 }
 
 static bool testSwitchStatement() {
-    std::string source = R"(
+    const std::string source = R"(
         func main() {
             let x: int32 = 1;
             switch (x) {
@@ -227,14 +227,14 @@ static bool testSwitchStatement() {
 
 static bool testVariableDeclarationStatement() {
     // Type mismatch on initialization
-    std::string mismatch = R"(
+    const std::string mismatch = R"(
         func main() {
             let a: int32 = "hello";
         }
     )";
 
     // Cannot initialize variable with void function result
-    std::string voidAssign = R"(
+    const std::string voidAssign = R"(
         func foo() {}
         func main() {
             let a = foo();
@@ -245,7 +245,7 @@ static bool testVariableDeclarationStatement() {
 }
 
 static bool testWhileLoopStatement() {
-    std::string source = R"(
+    const std::string source = R"(
         func main() {
             while (true) {}
             do {} while (true);
@@ -257,7 +257,7 @@ static bool testWhileLoopStatement() {
 // Expression Tests
 
 static bool testAggregateInstantiationAndLiteralExpression() {
-    std::string source = R"(
+    const std::string source = R"(
         aggregate Point { x: int32; y: int32; }
         func main() {
             let p = Point { x = 10, y = 20 };
@@ -267,7 +267,7 @@ static bool testAggregateInstantiationAndLiteralExpression() {
 }
 
 static bool testArrayLiteralAndIndexExpression() {
-    std::string valid = R"(
+    const std::string valid = R"(
         func main() {
             let arr = [1, 2, 3];
             let elem = arr[0];
@@ -275,7 +275,7 @@ static bool testArrayLiteralAndIndexExpression() {
     )";
 
     // Indexing with a non-integer must fail
-    std::string invalid = R"(
+    const std::string invalid = R"(
         func main() {
             let arr = [1, 2, 3];
             let elem = arr["index"];
@@ -286,7 +286,7 @@ static bool testArrayLiteralAndIndexExpression() {
 }
 
 static bool testAssignmentExpression() {
-    std::string source = R"(
+    const std::string source = R"(
         func main() {
             let mut x: int32 = 5;
             x = 10;
@@ -296,7 +296,7 @@ static bool testAssignmentExpression() {
 }
 
 static bool testBinaryAndUnaryExpressions() {
-    std::string source = R"(
+    const std::string source = R"(
         func main() {
             let a = 10 + 20 * 30;
             let b = !false;
@@ -308,7 +308,7 @@ static bool testBinaryAndUnaryExpressions() {
 
 static bool testFunctionCallExpression() {
     // Passing void expression as an argument must fail
-    std::string voidArg = R"(
+    const std::string voidArg = R"(
         func takeInt(x: int32) {}
         func getNothing() {}
         func main() {
@@ -316,7 +316,7 @@ static bool testFunctionCallExpression() {
         }
     )";
 
-    std::string valid = R"(
+    const std::string valid = R"(
         func add(a: int32, b: int32) -> int32 { 
             return a + b; 
         }
@@ -329,7 +329,7 @@ static bool testFunctionCallExpression() {
 }
 
 static bool testGenericInstantiationExpression() {
-    std::string source = R"(
+    const std::string source = R"(
         aggregate Container[T]{ value: T; }
         func main() {
             let c = Container@[int32] { value = 42 };
@@ -339,7 +339,7 @@ static bool testGenericInstantiationExpression() {
 }
 
 static bool testMemberAccessExpression() {
-    std::string source = R"(
+    const std::string source = R"(
         aggregate Point { x: int32; y: int32; }
         func main() {
             let p = Point { x = 1, y = 2 };
@@ -350,7 +350,7 @@ static bool testMemberAccessExpression() {
 }
 
 static bool testPrefixPostfixPointerOperators() {
-    std::string valid = R"(
+    const std::string valid = R"(
         func main() {
             let mut val: int32 = 10;
             let pointer: ptr int32 = &val;
@@ -360,7 +360,7 @@ static bool testPrefixPostfixPointerOperators() {
     )";
 
     // Dereferencing a non-pointer must fail
-    std::string invalid = R"(
+    const std::string invalid = R"(
         func main() {
             let val: int32 = 10;
             let deref = *val;
@@ -372,7 +372,7 @@ static bool testPrefixPostfixPointerOperators() {
 
 static bool testScopeResolutionExpression() {
     // Valid scope resolution calls and chained lookups
-    std::string valid = R"(
+    const std::string valid = R"(
         namespace Math {
             func getFortyTwo() -> int32 {
                 return 42;
@@ -392,7 +392,7 @@ static bool testScopeResolutionExpression() {
     )";
 
     // Accessing a symbol that does not exist in the namespace
-    std::string missingMember = R"(
+   const  std::string missingMember = R"(
         namespace Math {}
         func main() {
             let x = Math::doesNotExist;
@@ -400,7 +400,7 @@ static bool testScopeResolutionExpression() {
     )";
 
     // Using a non-namespace/non-module variable as a scope
-    std::string invalidScope = R"(
+    const std::string invalidScope = R"(
         func main() {
             let notAScope: int32 = 5;
             let x = notAScope::member;
@@ -412,7 +412,7 @@ static bool testScopeResolutionExpression() {
 }
 
 static bool testSizeofAndAlignofExpression() {
-    std::string source = R"(
+    const std::string source = R"(
         func main() {
             let s = sizeof(int32);
             let a = alignof(int64);
@@ -422,7 +422,7 @@ static bool testSizeofAndAlignofExpression() {
 }
 
 static bool testTypeCastExpression() {
-    std::string source = R"(
+    const std::string source = R"(
         func main() {
             let x: int32 = 10;
             let y = x as int64;
@@ -433,7 +433,7 @@ static bool testTypeCastExpression() {
 
 static bool testGenericScopeResolution() {
     // Valid generic aggregate defined inside a namespace and instantiated with a scoped type
-    std::string valid = R"(
+    const std::string valid = R"(
         namespace Data {
             aggregate Pair[T] {
                 first: T;
@@ -449,7 +449,7 @@ static bool testGenericScopeResolution() {
     )";
 
     // Attempting to instantiate a generic type using an unbound parameter inside generic scope
-    std::string unboundGeneric = R"(
+    const std::string unboundGeneric = R"(
         namespace Data {
             aggregate Container[T] { item: T; }
         }
@@ -463,7 +463,7 @@ static bool testGenericScopeResolution() {
 
 static bool testScopeResolutionMutability() {
     // Valid mutation of a mutable variable in a scope
-    std::string valid = R"(
+    const std::string valid = R"(
         namespace Globals {
             let mut counter: int32 = 0;
             let maxCount: int32 = 100;
@@ -476,7 +476,7 @@ static bool testScopeResolutionMutability() {
     )";
 
     // Assigning to an immutable variable inside a scope resolution expression must fail
-    std::string invalidAssign = R"(
+    const std::string invalidAssign = R"(
         namespace Globals {
             let maxCount: int32 = 100;
         }
@@ -487,7 +487,7 @@ static bool testScopeResolutionMutability() {
     )";
 
     // Incrementing an immutable scoped variable must fail
-    std::string invalidInc = R"(
+    const std::string invalidInc = R"(
         namespace Globals {
             let maxCount: int32 = 100;
         }
@@ -503,7 +503,7 @@ static bool testScopeResolutionMutability() {
 
 static bool testDeeplyNestedScopedType() {
     // Arbitrary scoping depth (Outer::Middle::Inner::Target)
-    std::string valid = R"(
+    const std::string valid = R"(
         namespace Level1 {
             namespace Level2 {
                 namespace Level3 {
@@ -518,7 +518,7 @@ static bool testDeeplyNestedScopedType() {
     )";
 
     // Breaking the chain midway through an invalid child scope
-    std::string invalidChain = R"(
+    const std::string invalidChain = R"(
         namespace Level1 {
             namespace Level2 {}
         }
@@ -534,7 +534,7 @@ static bool testDeeplyNestedScopedType() {
 // Type Tests
 
 static bool testPointerTypeMutability() {
-    std::string invalid = R"(
+    const std::string invalid = R"(
         func main() {
             let val: int32 = 10;
             let constPtr: ptr int32 = &val;
@@ -543,7 +543,7 @@ static bool testPointerTypeMutability() {
     )";
 
     // Coercing mutable pointer to immutable pointer is valid
-    std::string valid = R"(
+    const std::string valid = R"(
         func main() {
             let mut val: int32 = 10;
             let mutPtr: ptr mut int32 = &val;
@@ -556,7 +556,7 @@ static bool testPointerTypeMutability() {
 
 static bool testArrayOfVoidDisallowed() {
     // Array of void elements is invalid
-    std::string source = R"(
+    const std::string source = R"(
         func getVoid() {}
         func main() {
             let arr = [getVoid(), getVoid()];
@@ -566,7 +566,7 @@ static bool testArrayOfVoidDisallowed() {
 }
 
 static bool testFunctionTypeAsValue() {
-    std::string source = R"(
+    const std::string source = R"(
         func add(a: int32, b: int32) -> int32 { 
             return a + b; 
         }
@@ -582,7 +582,7 @@ static bool testFunctionTypeAsValue() {
 
 static bool testScopedType() {
     // Valid scoped types (aggregates and aliases inside namespaces)
-    std::string valid = R"(
+    const std::string valid = R"(
         namespace Geometry {
             aggregate Point { x: int32; y: int32; }
             alias Distance = int32;
@@ -602,7 +602,7 @@ static bool testScopedType() {
     )";
 
     // Using a function or non-type symbol as a scoped type
-    std::string nonTypeAsType = R"(
+    const std::string nonTypeAsType = R"(
         namespace Math {
             func calculate() {}
         }
@@ -618,7 +618,7 @@ static bool testScopedType() {
 // Other
 
 static bool testAnalyzeFromFile() {
-    std::filesystem::path fullPath = std::filesystem::current_path() / "tests/analyzer_tests.mn";
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/analyzer_tests.mn";
 
     mnstl::chunk_allocator file_allocator{};
     parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
@@ -627,7 +627,7 @@ static bool testAnalyzeFromFile() {
     semantic::Analyzer Analyzer(parsedFile, target, file_allocator);
 
     std::ofstream logFile(logFileName, std::ios::app);
-    Result result = Analyzer.analyze();
+    const Result result = Analyzer.analyze();
 
     if (!logFile) {
         std::cerr << "ERROR: Could not open log file for writing.\n";
@@ -649,7 +649,7 @@ static bool testAnalyzeFromFile() {
 }
 
 static bool testPointerDereferenceAndMutability() {
-    std::string validSource = R"(
+    const std::string validSource = R"(
         func main() {
             let mut target: int32 = 100;
             let immutableTarget: int32 = 50;
@@ -670,7 +670,7 @@ static bool testPointerDereferenceAndMutability() {
     )";
 
     // Assigning through a dereference of an immutable pointer (`ptr int32`) is invalid
-    std::string assignThroughConstPtr = R"(
+    const std::string assignThroughConstPtr = R"(
         func main() {
             let target: int32 = 100;
             let constPtr: ptr int32 = &target;
@@ -688,7 +688,7 @@ static bool testPointerDereferenceAndMutability() {
     )";
 
     // Taking address of an r-value (or assigning to an r-value) is invalid
-    std::string addressOfRValue = R"(
+    const std::string addressOfRValue = R"(
         func main() {
             let ptrVal = &42;
         }
@@ -699,7 +699,7 @@ static bool testPointerDereferenceAndMutability() {
 }
 
 static bool miscTests() {
-    std::string code = R"(
+    const std::string code = R"(
         func foo[T](x: T) -> T {
             return x + 3;
         }

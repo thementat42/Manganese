@@ -390,7 +390,7 @@ template <FloatingPoint T>
     bool hasDigits = false;
     while (ptr != end && isdigit(*ptr)) {
         hasDigits = true;
-        int d = _chtoi(*ptr);
+        const int d = _chtoi(*ptr);
         if (!BETWEEN(d, 0, 9)) {
             result.exists = false;
             return result;
@@ -405,7 +405,7 @@ template <FloatingPoint T>
         ++ptr;
         while (ptr != end && isdigit(*ptr)) {
             hasDigits = true;
-            int d = _chtoi(*ptr);
+            const int d = _chtoi(*ptr);
             if (!BETWEEN(d, 0, 9)) {
                 result.exists = false;
                 return result;
@@ -480,7 +480,7 @@ string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b, bo
     const U max_before_mul = static_cast<U>(std::numeric_limits<U>::max() / static_cast<unsigned>(radix));
 
     for (; ptr != end; ++ptr) {
-        int d = _chtoi(*ptr);
+        const int d = _chtoi(*ptr);
         if (d < 0 || d >= radix) {
             result.exists = false;
             return result;

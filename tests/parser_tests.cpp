@@ -75,7 +75,7 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
 
     bool success = true;
     for (std::size_t i = 0; i < N; ++i) {
-        std::string actual = block[i]->toString(0);
+        const std::string actual = block[i]->toString(0);
         if (actual != expected[i]) {
             std::cerr << "ERROR: Statement " << (i + 1) << " does not match expected in test: " << testName << '\n';
             std::cerr << "Expected: " << "\n" << expected[i] << '\n';
@@ -108,7 +108,7 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
         return false;
     }
 
-    std::string actual = block[0]->toString(0);
+    const std::string actual = block[0]->toString(0);
     if (actual != expected) {
         std::cerr << "ERROR: Statement does not match expected in test: " << testName << '\n';
         std::cerr << "Expected: " << "\n" << expected << '\n';
@@ -121,7 +121,7 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
 
 static bool testArithmeticOperatorsAndCasting() {
     const std::string expression = "8 - 4 + 6 * 2 // 5 % 3 * 2 * 2 / 7 as float32;";
-    std::string expected = "(((8 - 4) + ((((((6 * 2) // 5) % 3) * 2) * 2) / 7)) as float32);";
+    const std::string expected = "(((8 - 4) + ((((((6 * 2) // 5) % 3) * 2) * 2) / 7)) as float32);";
 
     return validateStatement(getParserResults(expression), expected, "Arithmetic Operators and Casting");
 }
@@ -410,7 +410,7 @@ static bool testIfElseStatements() {
                                    "    print(\"Equal\");\n"
                                    "}";
 
-    std::string expected = R"(if ((a < b)) {
+    const std::string expected = R"(if ((a < b)) {
     (let result: private auto = (a + b));
     print(result);
 } elif ((a > b)) {
@@ -474,7 +474,7 @@ static bool testSwitchStatement() {
                                    "default:"
                                    "    print(\"Default case\");"
                                    "}";
-    std::string expected = R"(switch (variable) {
+    const std::string expected = R"(switch (variable) {
     case 1:
         print("One");
         (++i);
@@ -549,7 +549,7 @@ static bool testImportsAndAliases() {
            "alias blah = (func(mut Integer, pf64, func(int64) -> int64) -> bool);",
            "alias StringIntMap = (std::HashMap@[string, Integer]);", "(let value: private Integer = 42);"};
 
-    parser::ParsedFile parsedFile = getParserResults(expression);
+    const parser::ParsedFile parsedFile = getParserResults(expression);
 
     // Verify module header metadata
     if (parsedFile.fileModule == nullptr || parsedFile.fileModule->name != "dataprocessing") {
@@ -567,7 +567,7 @@ static bool testImportsAndAliases() {
 }
 
 static bool testParseFromFile() {
-    std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
     mnstl::chunk_allocator file_allocator{};
     parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
     auto x = p.parse();
@@ -603,7 +603,7 @@ static bool testSizeofTypeofAlignof() {
 static bool testNestedBlocks() {
     const std::string expression
         = "func foo() {let x = 10; {let x = 20;} if (x == 10) {{let x = 10;}} else {{let x = 20;}}}";
-    std::string expected = R"(private func foo() {
+    const std::string expected = R"(private func foo() {
     (let x: private auto = 10);
     {
         (let x: private auto = 20);
@@ -664,14 +664,14 @@ static bool testPathologicalExpressionRecovery() {
                                    "let y = (3 + ) * 2;\n"
                                    "let z: ptr * int32 = foo@[, ](,,);\n";
 
-    parser::ParsedFile file = getParserResults(expression);
+    const parser::ParsedFile file = getParserResults(expression);
     return file.program.size() == 3;
 }
 
 static bool testCascadingSyntaxFailures() {
     const std::string expression = "if () { print(,,); } else { let a = *; }";
 
-    parser::ParsedFile file = getParserResults(expression);
+    const parser::ParsedFile file = getParserResults(expression);
     return file.program.size() == 1;
 }
 static bool testPathologicalExpressionRecovery2() {
@@ -679,9 +679,7 @@ static bool testPathologicalExpressionRecovery2() {
                                    "let y: ptr ptr ... int32 = 42;\n"
                                    "let z = a + (b * );\n";
 
-    // Expected outputs will depend on how toString() formats PoisonedExpression/PoisonedType,
-    // but this verifies the parser successfully recovers, builds nodes, and doesn't crash.
-    parser::ParsedFile file = getParserResults(expression);
+    const parser::ParsedFile file = getParserResults(expression);
     return file.program.size() == 3;
 }
 

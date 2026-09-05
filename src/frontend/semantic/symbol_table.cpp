@@ -58,7 +58,7 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
         if (namespaceSymbol != nullptr) { namespaceSymbol->scopeDefined = namespaceScope; }
         _currentScope = namespaceScope;
     } else {
-        Symbol* namespaceSymbol = _currentScope->lookup(name);
+        const Symbol* namespaceSymbol = _currentScope->lookup(name);
         if (namespaceSymbol == nullptr || namespaceSymbol->scopeDefined == nullptr) {
             logging::logInternal(logging::LogLevel::Error, "Failed to resolve namespace scope during pass");
             return;

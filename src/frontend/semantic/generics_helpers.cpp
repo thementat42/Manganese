@@ -5,6 +5,10 @@
 #include <frontend/semantic/generics_helpers.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/fold_result.hxx>
+#include <utility>
+#include <utils/result.hpp>
+#include <vector>
+#include <string>
 
 namespace Manganese::semantic {
 
@@ -61,7 +65,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
         return stmtvisit_t::Failure;
     }
 
-    ContextGuard<bool> guard{context.inFunction, true};
+    const ContextGuard<bool> guard{context.inFunction, true};
 
     instantiationCache.markAsInProgress(key);
     auto oldParams = activeGenericParams;
@@ -134,7 +138,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
 
 const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
                                                            const TypeList& typeArgs) {
-    InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
+    const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
     if (cachedResult == nullptr || cachedResult->state != ResolutionStatus::Success) {
         return nullptr;  // Not instantiated or failed
@@ -170,7 +174,7 @@ const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateD
 
 const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
                                                           const TypeList& typeArgs) {
-    InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
+    const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
     if (cachedResult == nullptr || cachedResult->state != ResolutionStatus::Success) {
         return nullptr;  // Not instantiated or failed
@@ -224,7 +228,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             const auto* arrayType = static_cast<const ast::ArrayType*>(type);
             const SemanticType* elementType = resolveGenericType(arrayType->elementType);
             if (elementType == nullptr) { return nullptr; }
-            mnstl::fold_result_t length = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
+            const mnstl::fold_result_t length = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
             if (!length.has_value()) {
                 logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
                 return nullptr;
@@ -287,7 +291,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
 
             if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
                 auto* aggregate = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
-                StackGuard guard{genericsStack, std::move(resolvedTypes)};
+                const StackGuard guard{genericsStack, std::move(resolvedTypes)};
 
                 Scope* previousScope = symbolTable.getCurrentScope();
                 if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
@@ -327,7 +331,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
 
             // some symbol type (e.g. T)
             if (auto it = activeGenericParams.find(IdentifierType->name); it != activeGenericParams.end()) {
-                std::size_t index = it->second;
+                const std::size_t index = it->second;
                 if (!genericsStack.is_empty() && index < genericsStack.top().size()) {
                     return genericsStack.top()[index];
                 }

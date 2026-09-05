@@ -43,7 +43,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
         logError(expression->identifier, "Use of undeclared symbol '{}'", expression->identifier->toString());
         return exprvisit_t::Failure;
     }
-    StackGuard guard{genericsStack, std::move(resolvedTypeArguments)};
+    const StackGuard guard{genericsStack, std::move(resolvedTypeArguments)};
 
     if (symbol->kind == SymbolKind::Function) {
         auto* functionDeclaration = static_cast<ast::FunctionDeclarationStatement*>(symbol->node);
@@ -64,7 +64,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
         {
             // If we don't do this, the analyzer will think that any instantiation of a generic function inside another
             // function body is a nested function declaration, which is wrong
-            ContextGuard<bool> instantiationNestingGuard{context.inFunction, false};
+            const ContextGuard<bool> instantiationNestingGuard{context.inFunction, false};
             Scope* previousScope = symbolTable.getCurrentScope();
             if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
@@ -108,7 +108,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
         Scope* previousScope = symbolTable.getCurrentScope();
         if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
-        stmtvisit_t visitRes = visit(aggregateDecl, generic_tag);
+        const stmtvisit_t visitRes = visit(aggregateDecl, generic_tag);
 
         if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
 

@@ -8,7 +8,7 @@
 
 namespace Manganese {
 TargetInfo TargetInfo::fromTriple(std::string_view tripleString) {
-    llvm::Triple triple(tripleString);
+    const llvm::Triple triple{tripleString};
     if (triple.isArch64Bit()) { return TargetInfo{.pointerSize = 8, .pointerAlignment = 8}; }
     if (triple.isArch32Bit()) { return TargetInfo{.pointerSize = 4, .pointerAlignment = 4}; }
     if (triple.isArch16Bit()) { return TargetInfo{.pointerSize = 2, .pointerAlignment = 2}; }

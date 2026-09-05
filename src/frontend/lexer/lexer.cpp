@@ -85,7 +85,7 @@ Token Lexer::consumeToken() {
     if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
     // check if queue is still empty if it is, we are done tokenizing
     if (tokenStream.empty()) { return Token(TokenType::EndOfFile, "EOF", getLine(), getCol()); }
-    Token token = tokenStream.front();
+    const Token token = tokenStream.front();
     tokenStream.pop_front();  // get rid of the token
     return token;
 }
@@ -494,7 +494,7 @@ void Lexer::emitToken(TokenType type, std::string&& lexeme, bool invalid) {
 }
 
 NumberPrefixResult Lexer::processNumberPrefix() {
-    char currentChar = peekChar();
+    const char currentChar = peekChar();
     if (currentChar != '0') {
         // Decimal number
         return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};

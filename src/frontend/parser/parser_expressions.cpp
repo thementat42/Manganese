@@ -99,7 +99,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
     while (!done()) {
         if (peekTokenType() == lexer::TokenType::RightBrace) { break; }
         Token token = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation");
-        std::string propertyName = token.getLexeme();
+        const std::string propertyName = token.getLexeme();
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
         constexpr auto precedence = precedenceAbove(Precedence::Assignment);
         ast::Expression* value = parseExpression(precedence);

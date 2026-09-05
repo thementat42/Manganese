@@ -238,7 +238,7 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
 
 auto Analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     auto result = exprvisit_t::Success;
-    ContextGuard guard(context.typeCastDepth, static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
+    const ContextGuard guard(context.typeCastDepth, static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
     if (visit(expression->originalValue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (expression->originalValue->semanticType == nullptr) {
         logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString());

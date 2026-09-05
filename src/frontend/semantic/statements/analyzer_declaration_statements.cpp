@@ -1,13 +1,14 @@
-#include <vector>
 #include <core.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
-#include <utils/result.hpp>
 #include <utility>
-#include <cstddef>
+#include <utils/result.hpp>
+#include <vector>
+
 
 namespace Manganese::semantic {
 
@@ -16,7 +17,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
-    Symbol* symbol = symbolTable.lookup(statement->name);
+    const Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
     }
@@ -46,7 +47,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
 
         if (resolvedFieldType->isAggregate()) {
             const auto* nestedAggregateType = static_cast<const Aggregate*>(resolvedFieldType);
-            Symbol* nestedSymbol = symbolTable.lookup(nestedAggregateType->name);
+            const Symbol* nestedSymbol = symbolTable.lookup(nestedAggregateType->name);
             if (nestedSymbol != nullptr && nestedSymbol->node != nullptr) {
                 // Cast to non-const ast::Statement* so visit() can accept it
                 auto* nestedStmt = static_cast<ast::Statement*>(nestedSymbol->node);
@@ -191,7 +192,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
         const SemanticType* resolvedParamType = functionType->parameterTypes[i].type;
 
         // Register parameter in local function scope
-        stmtvisit_t paramDeclaration = symbolTable.declare(
+        const stmtvisit_t paramDeclaration = symbolTable.declare(
             param.name,
             Symbol{.type = resolvedParamType,
                    .node = statement,

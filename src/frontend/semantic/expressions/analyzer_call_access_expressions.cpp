@@ -230,7 +230,7 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
         return exprvisit_t::Failure;
     }
 
-    Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
+    const Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
     if (memberSymbol == nullptr) {
         logError(expression->element, "No member named '{}' in scope", memberName);
         return exprvisit_t::Failure;

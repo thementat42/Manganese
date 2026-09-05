@@ -49,7 +49,7 @@ std::vector<Token> tokensFromString(const std::string& source) {
 }
 
 std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
-    std::filesystem::path fullPath = std::filesystem::current_path() / filename;
+    const std::filesystem::path fullPath = std::filesystem::current_path() / filename;
     lexer::Lexer lexer(fullPath.string(), lexer::Mode::File);
     std::vector<Token> tokens;
 
@@ -94,13 +94,13 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
 }  // namespace
 
 static bool testEmptyString() {
-    std::vector<Token> tokens = tokensFromString("");
+    const std::vector<Token> tokens = tokensFromString("");
     printAllTokens(tokens);
     return tokens.empty();
 }
 
 static bool testWhitespace() {
-    std::vector<Token> tokens = tokensFromString("  \t\n\r  ");
+    const std::vector<Token> tokens = tokensFromString("  \t\n\r  ");
     printAllTokens(tokens);
     return tokens.empty();
 }

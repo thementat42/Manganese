@@ -151,7 +151,7 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
     }
     const std::string_view memberName = static_cast<ast::IdentifierType*>(type->type)->name;
 
-    Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
+const     Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
     if (memberSymbol == nullptr) {
         logError(type->type, "No member named '{}' in scope", memberName);
         return typevisit_t::Failure;
@@ -177,7 +177,7 @@ auto Analyzer::visit(ast::IdentifierType* type) -> typevisit_t {
         type->semanticType = typeContext.getPrimitive(IdentifierType->primitiveType);
         return typevisit_t::Success;
     }
-    Symbol* symbol = symbolTable.lookup(IdentifierType->name);
+    const Symbol* symbol = symbolTable.lookup(IdentifierType->name);
     if (symbol == nullptr) {
         logError(type, "Unknown type '{}'", IdentifierType->name);
         return typevisit_t::Failure;

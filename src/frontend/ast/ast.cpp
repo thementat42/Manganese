@@ -95,8 +95,8 @@ mnstl::fold_result_t BinaryExpression::fold(const TargetInfo& target) const NOEX
         case And:
         case Or: {
             if (!leftResult.is_bool() || !rightResult.is_bool()) { return mnstl::fold_result_t{}; }
-            bool l = leftResult.boolean_unchecked();
-            bool r = rightResult.boolean_unchecked();
+            const bool l = leftResult.boolean_unchecked();
+            const bool r = rightResult.boolean_unchecked();
             if (op == And) { return mnstl::fold_result_t{l && r}; }
             if (op == Or) { return mnstl::fold_result_t{l || r}; }
             break;
@@ -116,7 +116,7 @@ mnstl::fold_result_t PrefixExpression::fold(const TargetInfo& target) const NOEX
         case Inc:
         case Dec: return mnstl::fold_result_t{};
         default: {
-            mnstl::fold_result_t result = right->fold(target);
+           const  mnstl::fold_result_t result = right->fold(target);
             if (!result.has_value()) { return mnstl::fold_result_t{}; }
 
             switch (op) {

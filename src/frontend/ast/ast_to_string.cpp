@@ -103,8 +103,7 @@ std::string ForLoopStatement::toString(std::size_t indent) const {
     std::string result = getIndent(indent) + "for (";
     if (initializationStep != nullptr) {
         // Strip leading indentation from statement parts inside loop clauses if they add it
-        std::string init = initializationStep->toString(0);
-        result += init + " ";
+        result += initializationStep->toString(0) + " ";
     } else {
         result += ";";
     }

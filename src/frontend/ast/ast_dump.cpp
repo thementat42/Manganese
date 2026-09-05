@@ -69,7 +69,7 @@ std::string_view getNumberTypeName(const mnstl::number_t& value) {
 
 inline std::size_t utf8Length(std::string_view str) noexcept {
     std::size_t count = 0;
-    for (char c : str) {
+    for (const char c : str) {
         if ((static_cast<unsigned char>(c) & 0xC0) != 0x80) { ++count; }
     }
     return count;

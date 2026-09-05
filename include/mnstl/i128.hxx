@@ -808,7 +808,7 @@ constexpr divmod_u128_result _divmod_u128(uint128_t numerator, uint128_t denomin
     // shortcut for powers of two
     // division by 2^N is the same as a right shift
     if ((denominator & (denominator - 1)) == 0) {
-        unsigned shift = uint128_t(_ctz_u128(denominator));
+        const unsigned shift = uint128_t(_ctz_u128(denominator));
         return divmod_u128_result{.quotient = numerator >> shift, .remainder = numerator & (denominator - 1)};
     }
 

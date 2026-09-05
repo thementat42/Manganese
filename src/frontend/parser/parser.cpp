@@ -5,10 +5,11 @@
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
+#include <mnstl/enum_matches.hxx>
 #include <string>
 #include <utility>
 #include <vector>
-#include <mnstl/enum_matches.hxx>
+
 
 namespace Manganese::parser {
 
@@ -103,7 +104,9 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
             ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
                                + lexer ::tokenTypeToString(peekTokenType()));
     }
-    std::size_t startLine = peekToken().getLine(), startColumn = peekToken().getColumn();
+
+    const std::size_t startLine = peekToken().getLine();
+    const std::size_t startColumn = peekToken().getColumn();
     switch (peekTokenType()) {
         case TokenType::Alias: {
             auto* tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement());

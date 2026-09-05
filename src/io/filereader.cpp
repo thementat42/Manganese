@@ -42,7 +42,7 @@ void FileReader::refillBuffer() {
         std::memmove(_buffer.get(), _buffer.get() + _position, unreadBytes);
     }
     const std::size_t remainingCapacity = _bufferCapacity - unreadBytes;
-    std::size_t bytesRead = std::fread(_buffer.get() + unreadBytes, sizeof(char), remainingCapacity, _filePtr);
+    const std::size_t bytesRead = std::fread(_buffer.get() + unreadBytes, sizeof(char), remainingCapacity, _filePtr);
 
     _bufferSize = unreadBytes + bytesRead;
     _position = 0;  // We moved any remaining data to the front, so reset position to 0
