@@ -54,12 +54,13 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
 
     const SemanticType* synthesizedElementType = nullptr;
 
-    for (ast::Expression* element : expression->elements) {
+    for (std::size_t i = 0; i < expression->elements.size(); ++i) {
+        ast::Expression* element = expression->elements[i];
         const SemanticType* outerVarType = context.currentVariableDeclarationType;
         context.currentVariableDeclarationType = expectedElementType;
 
         auto elemVisitResult = visit(element);
-        
+
         context.currentVariableDeclarationType = outerVarType;
 
         if (elemVisitResult == exprvisit_t::Failure) {
@@ -76,38 +77,16 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             continue;
         }
 
-        if (expectedElementType != nullptr) {
-            const auto canConvertElementType = areTypesCompatible(expectedElementType, element->semanticType);
-            if (!canConvertElementType) {
-                logError(element, "Array element of type '{}' is not compatible with expected array element type '{}'",
-                         element->semanticType->toString(), expectedElementType->toString());
-                result = exprvisit_t::Failure;
-            } else if (canConvertElementType.result == Compatible_t::Warning) {
-                logWarning(element, "{}", canConvertElementType.message);
-            }
-        } else {
-            if (synthesizedElementType == nullptr) {
-                synthesizedElementType = element->semanticType;
-            } else {
-                const auto canConvertElementType = areTypesCompatible(synthesizedElementType, element->semanticType);
-                if (!canConvertElementType) {
-                    logError(element, "Mismatched element types in array literal: expected '{}', got '{}'",
-                             synthesizedElementType->toString(), element->semanticType->toString());
-                    result = exprvisit_t::Failure;
-                } else if (canConvertElementType.result == Compatible_t::Warning) {
-                    logWarning(element, "{}", canConvertElementType.message);
-                }
-            }
+        if (checkArrayElementCompatibility(expectedElementType, synthesizedElementType, i, element) == Result::Failure) {
+            result = Result::Failure;
         }
     }
 
-    if (result == exprvisit_t::Failure) { 
-        return exprvisit_t::Failure; 
-    }
+    if (result == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
     const SemanticType* elementType = (expectedElementType != nullptr) ? expectedElementType : synthesizedElementType;
     expression->semanticType = typeContext.getArray(elementType, expression->elements.size());
-    return typevisit_t::Success;
+    return exprvisit_t::Success;
 }
 
 auto Analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {

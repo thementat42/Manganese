@@ -155,6 +155,9 @@ class Analyzer final : public _analyzer_base_t {
 #undef EXPR
 #undef TYPE
 
+    Result checkArrayElementCompatibility(const SemanticType* expectedElementType, const SemanticType* synthesizedElementType,
+               std::size_t i, ast::Expression* element);
+
     static Result visit(std::nullptr_t) {
         logging::logInternal(logging::LogLevel::Warning, "visit() called on nullptr in analyzer");
         return Result::Failure;
