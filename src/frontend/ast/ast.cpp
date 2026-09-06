@@ -7,15 +7,18 @@
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/fold_result.hxx>
 #include <string_view>
-#include <utils/type_names.hpp>
 #include <utils/target_info.hpp>
+#include <utils/type_names.hpp>
+
 
 namespace Manganese::ast {
 
 std::string_view primitiveTypeToString(PrimitiveType prim) {
-    constexpr static std::array<std::string_view, 17> primitiveNames
-        = {int8_str,   int16_str,   int32_str,   int64_str,   int128_str, uint8_str,  uint16_str, uint32_str,
-           uint64_str, uint128_str, float32_str, float64_str, char_str,   string_str, bool_str,   "not primitive"};
+    constexpr static std::array primitiveNames
+        = {int8_str,   uint8_str,   int16_str,   uint16_str,
+           int32_str,  uint32_str,  int64_str,   uint64_str,
+           int128_str, uint128_str, float32_str, float64_str,
+           char_str,   string_str,  bool_str,    decltype(bool_str){"not primitive"}};
     const auto index = static_cast<std::size_t>(prim);
     if (index >= primitiveNames.size()) { ASSERT_UNREACHABLE("Invalid primitive type"); }
     return primitiveNames[index];
@@ -116,7 +119,7 @@ mnstl::fold_result_t PrefixExpression::fold(const TargetInfo& target) const NOEX
         case Inc:
         case Dec: return mnstl::fold_result_t{};
         default: {
-           const  mnstl::fold_result_t result = right->fold(target);
+            const mnstl::fold_result_t result = right->fold(target);
             if (!result.has_value()) { return mnstl::fold_result_t{}; }
 
             switch (op) {
