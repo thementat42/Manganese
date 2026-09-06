@@ -378,8 +378,8 @@ Result Analyzer::checkArrayElementCompatibility(const SemanticType* targetType, 
     const auto compat = areTypesCompatible(targetType, element->semanticType);
     if (!compat) {
         logError(element,
-                 "Array element '{}' (index {} in literal) of type '{}' is not compatible with expected type '{}'",
-                 element->toString(), i, element->semanticType->toString(), targetType->toString());
+                 "Array element '{}' (position {} in literal) of type '{}' is not compatible with expected type '{}'",
+                 element->toString(), i + 1, element->semanticType->toString(), targetType->toString());
         return exprvisit_t::Failure;
     }
     if (compat.result == Compatible_t::Warning) { logWarning(element, "{}", compat.message); }
