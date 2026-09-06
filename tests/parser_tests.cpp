@@ -5,10 +5,11 @@
 #include <frontend/parser.hpp>
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <mnstl/chunk_allocator.hxx>
+#include <string>
 
 #include "testrunner.hpp"
+
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
@@ -47,7 +48,6 @@ void dumpStatement(const ast::Statement* stmt, std::ostream* logFile) {
         *logFile << "---------------------\n";
     }
 }
-}  // namespace
 
 template <std::size_t N>
 bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<std::string, N>& expected,
@@ -118,15 +118,17 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
 
     return true;
 }
+}  // namespace
+namespace parser_tests {
 
-static bool testArithmeticOperatorsAndCasting() {
+bool testArithmeticOperatorsAndCasting() {
     const std::string expression = "8 - 4 + 6 * 2 // 5 % 3 * 2 * 2 / 7 as float32;";
     const std::string expected = "(((8 - 4) + ((((((6 * 2) // 5) % 3) * 2) * 2) / 7)) as float32);";
 
     return validateStatement(getParserResults(expression), expected, "Arithmetic Operators and Casting");
 }
 
-static bool testVariableDeclaration() {
+bool testVariableDeclaration() {
     const std::string expression = "let mut foo = 45.5a;"
                                    "let mut bar = foo * 10;"
                                    "let baz : public uint32 = foo + 10 * 2 * bar + foo % 7 + foo*2;"
@@ -140,7 +142,7 @@ static bool testVariableDeclaration() {
     return validateStatements(getParserResults(expression), expected, "Variable Declaration");
 }
 
-static bool testAssignmentExpressions() {
+bool testAssignmentExpressions() {
     const std::string expression = "a = 5;\n"
                                    "b += 3;\n"
                                    "c -= 2 * b;\n"
@@ -170,7 +172,7 @@ static bool testAssignmentExpressions() {
     return validateStatements(getParserResults(expression), expected, "Assignment Expressions");
 }
 
-static bool testPrefixOperators() {
+bool testPrefixOperators() {
     const std::string expression = "++x;\n"
                                    "--y;\n"
                                    "-z;\n"
@@ -185,7 +187,7 @@ static bool testPrefixOperators() {
     return validateStatements(getParserResults(expression), expected, "Prefix Operators");
 }
 
-static bool testParenthesizedExpressions() {
+bool testParenthesizedExpressions() {
     const std::string expression = "(2 + 3) * 4;\n"
                                    "2 * (3 + 4);\n"
                                    "((5 + 2) * (8 - 3)) / 2;\n"
@@ -198,7 +200,7 @@ static bool testParenthesizedExpressions() {
     return validateStatements(getParserResults(expression), expected, "Parenthesized Expressions");
 }
 
-static bool testPointerOperators() {
+bool testPointerOperators() {
     const std::string expression = "&variable;\n"
                                    "*pointer;\n"
                                    "**doublePointer;\n"
@@ -211,7 +213,7 @@ static bool testPointerOperators() {
     return validateStatements(getParserResults(expression), expected, "Pointer Operators");
 }
 
-static bool testTypedVariableDeclaration() {
+bool testTypedVariableDeclaration() {
     const std::string expression = "let mut x: int32 = 42;\n"
                                    "let y: public float64 = 3.14159;\n"
                                    "let mut z: char = 'A';\n"
@@ -225,7 +227,7 @@ static bool testTypedVariableDeclaration() {
     return validateStatements(getParserResults(expression), expected, "Typed Variable Declarations");
 }
 
-static bool testPostfixOperators() {
+bool testPostfixOperators() {
     const std::string expression = "x++;\n"
                                    "y--;\n"
                                    "(a + b)++;\n"
@@ -239,7 +241,7 @@ static bool testPostfixOperators() {
     return validateStatements(getParserResults(expression), expected, "Postfix Operators");
 }
 
-static bool testBitwiseOperators() {
+bool testBitwiseOperators() {
     const std::string expression = "a & b;\n"
                                    "c | d;\n"
                                    "e ^ f;\n"
@@ -265,7 +267,7 @@ static bool testBitwiseOperators() {
     return validateStatements(getParserResults(expression), expected, "Bitwise Operators");
 }
 
-static bool testAggregateDeclarationAndInstantiation() {
+bool testAggregateDeclarationAndInstantiation() {
     const std::string expression = "public aggregate Point {\n"
                                    "    x: uint128;\n"
                                    "    y: int128;\n"
@@ -301,7 +303,7 @@ static bool testAggregateDeclarationAndInstantiation() {
     return validateStatements(getParserResults(expression), expected, "Aggregate Declaration and Instantiation");
 }
 
-static bool testFunctionDeclarationAndCall() {
+bool testFunctionDeclarationAndCall() {
     const std::string expression = "public func add(a: int32, b: int32) -> int32 {\n"
                                    "    return a + b;\n"
                                    "}\n"
@@ -350,7 +352,7 @@ static bool testFunctionDeclarationAndCall() {
     return validateStatements(getParserResults(expression), expected, "Function Declaration and Call");
 }
 
-static bool testLoops() {
+bool testLoops() {
     const std::string expression = "let i = 0;"
                                    "do {++i; print(i); } while (i < 5);"
                                    "let j: int32 = 10;"
@@ -399,7 +401,7 @@ static bool testLoops() {
     return validateStatements(getParserResults(expression), expected, "Loops");
 }
 
-static bool testIfElseStatements() {
+bool testIfElseStatements() {
     const std::string expression = "if (a < b) {\n"
                                    "    let result = a + b;\n"
                                    "    print(result);\n"
@@ -423,7 +425,7 @@ static bool testIfElseStatements() {
     return validateStatement(getParserResults(expression), expected, "If/Else If/Else Statements");
 }
 
-static bool testEnumDeclarationStatement() {
+bool testEnumDeclarationStatement() {
     const std::string expression = "public enum Colour: int8 {\n"
                                    "    Red,\n"
                                    "    Green,\n"
@@ -463,7 +465,7 @@ static bool testEnumDeclarationStatement() {
     return validateStatements(getParserResults(expression), expected, "Enum Declaration Statement");
 }
 
-static bool testSwitchStatement() {
+bool testSwitchStatement() {
     const std::string expression = "switch (variable) {"
                                    "case 1:"
                                    "    print(\"One\");"
@@ -487,7 +489,7 @@ static bool testSwitchStatement() {
     return validateStatement(getParserResults(expression), expected, "Switch Statement");
 }
 
-static bool testAccessExpressions() {
+bool testAccessExpressions() {
     const std::string expression = "let mut point = Point{x = 10, y = 20};\n"
                                    "let mut xCoord = point.x;\n"
                                    "let mut yCoord = point.y;\n"
@@ -507,7 +509,7 @@ static bool testAccessExpressions() {
     return validateStatements(getParserResults(expression), expected, "Member Access Expression");
 }
 
-static bool testGenerics() {
+bool testGenerics() {
     const std::string expression = "func genericFunction[T, U, V](valueT: T, valueU: U, valueV: V) -> V {\n"
                                    "    return 3 + valueT + valueU * valueV;\n"
                                    "}\n"
@@ -532,7 +534,7 @@ static bool testGenerics() {
     return validateStatements(getParserResults(expression), expected, "Generic Function Declaration");
 }
 
-static bool testImportsAndAliases() {
+bool testImportsAndAliases() {
     const std::string expression = "import math::vector;\n"
                                    "import graphics::rendering as render;\n"
                                    "import std::collections::map;\n"
@@ -566,7 +568,7 @@ static bool testImportsAndAliases() {
     return validateStatements(parsedFile, expected, "Import Statements and Type Aliases");
 }
 
-static bool testParseFromFile() {
+bool testParseFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
     mnstl::chunk_allocator file_allocator{};
     parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
@@ -577,13 +579,13 @@ static bool testParseFromFile() {
     return true;
 }
 
-static bool testRedundantSemicolons() {
+bool testRedundantSemicolons() {
     const std::string expression = "let x = 1 + 2;;;;;";
     const std::array<std::string, 5> expected = {"(let x: private auto = (1 + 2));", "", "", "", ""};
     return validateStatements(getParserResults(expression), expected, "Redundant Semicolons");
 }
 
-static bool testSizeofTypeofAlignof() {
+bool testSizeofTypeofAlignof() {
     const std::string expression = "sizeof(int);\n"
                                    "sizeof(x+1);\n"
                                    "alignof(char);\n"
@@ -600,7 +602,7 @@ static bool testSizeofTypeofAlignof() {
     return validateStatements(getParserResults(expression), expected, "Sizeof, Typeof & Alignof");
 }
 
-static bool testNestedBlocks() {
+bool testNestedBlocks() {
     const std::string expression
         = "func foo() {let x = 10; {let x = 20;} if (x == 10) {{let x = 10;}} else {{let x = 20;}}}";
     const std::string expected = R"(private func foo() {
@@ -622,7 +624,7 @@ static bool testNestedBlocks() {
     return validateStatement(getParserResults(expression), expected, "Nested Blocks");
 }
 
-static bool testNamespaces() {
+bool testNamespaces() {
     const std::string expression = "namespace Graphics {\n"
                                    "    public func drawPixel(x: int32, y: int32) {\n"
                                    "        print(\"Drawing pixel\");\n"
@@ -659,7 +661,7 @@ static bool testNamespaces() {
     return validateStatements(getParserResults(expression), expected, "Namespace Declaration");
 }
 
-static bool testPathologicalExpressionRecovery() {
+bool testPathologicalExpressionRecovery() {
     const std::string expression = "let x = + / 5;\n"
                                    "let y = (3 + ) * 2;\n"
                                    "let z: ptr * int32 = foo@[, ](,,);\n";
@@ -668,13 +670,13 @@ static bool testPathologicalExpressionRecovery() {
     return file.program.size() == 3;
 }
 
-static bool testCascadingSyntaxFailures() {
+bool testCascadingSyntaxFailures() {
     const std::string expression = "if () { print(,,); } else { let a = *; }";
 
     const parser::ParsedFile file = getParserResults(expression);
     return file.program.size() == 1;
 }
-static bool testPathologicalExpressionRecovery2() {
+bool testPathologicalExpressionRecovery2() {
     const std::string expression = "let x = *** + / 5;\n"
                                    "let y: ptr ptr ... int32 = 42;\n"
                                    "let z = a + (b * );\n";
@@ -683,43 +685,44 @@ static bool testPathologicalExpressionRecovery2() {
     return file.program.size() == 3;
 }
 
-static bool miscTests() {
+bool miscTests() {
     const std::string expression = "int x = aggregate{1, \"asdf\", 3.1f32};";
     parser::ParsedFile x = getParserResults(expression);
     std::cout << x.program[0]->toString(0) << "\n";
     return true;
 }
+}  // namespace parser_tests
 
 void runParserTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
 
-    runner.runTest("Arithmetic Expression and Casting", testArithmeticOperatorsAndCasting);
-    runner.runTest("Variable Declaration", testVariableDeclaration);
-    runner.runTest("Assignment Expressions", testAssignmentExpressions);
-    runner.runTest("Prefix Operators", testPrefixOperators);
-    runner.runTest("Parenthesized Expressions", testParenthesizedExpressions);
-    runner.runTest("Address and Dereference Operators", testPointerOperators);
-    runner.runTest("Typed Variable Declaration", testTypedVariableDeclaration);
-    runner.runTest("Postfix Operators", testPostfixOperators);
-    runner.runTest("Bitwise Operators", testBitwiseOperators);
-    runner.runTest("Aggregate Declaration and Instantiation", testAggregateDeclarationAndInstantiation);
-    runner.runTest("Function Declaration and Call", testFunctionDeclarationAndCall);
-    runner.runTest("Loops", testLoops);
-    runner.runTest("If/Elif/Else Statements", testIfElseStatements);
-    runner.runTest("Enum Declaration Statement", testEnumDeclarationStatement);
-    runner.runTest("Switch Statement", testSwitchStatement);
-    runner.runTest("Access Expressions", testAccessExpressions);
-    runner.runTest("Generics", testGenerics);
-    runner.runTest("Imports and Type Aliases", testImportsAndAliases);
-    runner.runTest("Parsing from file", testParseFromFile);
-    runner.runTest("Redundant Semicolons", testRedundantSemicolons);
-    runner.runTest("Sizeof, Typeof & Alignof", testSizeofTypeofAlignof);
-    runner.runTest("Nested Blocks", testNestedBlocks);
-    runner.runTest("Namespaces", testNamespaces);
-    runner.runTest("Cascading Syntax Failures", testCascadingSyntaxFailures);
-    runner.runTest("Pathological Expression Recovery", testPathologicalExpressionRecovery);
-    runner.runTest("Pathological Error Recovery", testPathologicalExpressionRecovery2);
-    runner.runTest("Miscellaneous Tests", miscTests);
+    runner.runTest("Arithmetic Expression and Casting", parser_tests::testArithmeticOperatorsAndCasting);
+    runner.runTest("Variable Declaration", parser_tests::testVariableDeclaration);
+    runner.runTest("Assignment Expressions", parser_tests::testAssignmentExpressions);
+    runner.runTest("Prefix Operators", parser_tests::testPrefixOperators);
+    runner.runTest("Parenthesized Expressions", parser_tests::testParenthesizedExpressions);
+    runner.runTest("Address and Dereference Operators", parser_tests::testPointerOperators);
+    runner.runTest("Typed Variable Declaration", parser_tests::testTypedVariableDeclaration);
+    runner.runTest("Postfix Operators", parser_tests::testPostfixOperators);
+    runner.runTest("Bitwise Operators", parser_tests::testBitwiseOperators);
+    runner.runTest("Aggregate Declaration and Instantiation", parser_tests::testAggregateDeclarationAndInstantiation);
+    runner.runTest("Function Declaration and Call", parser_tests::testFunctionDeclarationAndCall);
+    runner.runTest("Loops", parser_tests::testLoops);
+    runner.runTest("If/Elif/Else Statements", parser_tests::testIfElseStatements);
+    runner.runTest("Enum Declaration Statement", parser_tests::testEnumDeclarationStatement);
+    runner.runTest("Switch Statement", parser_tests::testSwitchStatement);
+    runner.runTest("Access Expressions", parser_tests::testAccessExpressions);
+    runner.runTest("Generics", parser_tests::testGenerics);
+    runner.runTest("Imports and Type Aliases", parser_tests::testImportsAndAliases);
+    runner.runTest("Parsing from file", parser_tests::testParseFromFile);
+    runner.runTest("Redundant Semicolons", parser_tests::testRedundantSemicolons);
+    runner.runTest("Sizeof, Typeof & Alignof", parser_tests::testSizeofTypeofAlignof);
+    runner.runTest("Nested Blocks", parser_tests::testNestedBlocks);
+    runner.runTest("Namespaces", parser_tests::testNamespaces);
+    runner.runTest("Cascading Syntax Failures", parser_tests::testCascadingSyntaxFailures);
+    runner.runTest("Pathological Expression Recovery", parser_tests::testPathologicalExpressionRecovery);
+    runner.runTest("Pathological Error Recovery", parser_tests::testPathologicalExpressionRecovery2);
+    runner.runTest("Miscellaneous Tests", parser_tests::miscTests);
 }
 }  // namespace Manganese::tests

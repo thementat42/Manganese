@@ -18,7 +18,7 @@ static mnstl::chunk_allocator arena;
 static TargetInfo target = TargetInfo::fromHostTriple();
 
 // Helper: Parses and runs full semantic analysis on source code
-static bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {
+bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena);
     parser::ParsedFile parsedFile = parser.parse();
 
@@ -53,10 +53,10 @@ const     Result result = analyzer.analyze();
 
     return expectSuccess ? result == Result::Success : result == Result::Failure;
 }
-
+namespace analyzer_tests {
 // Statement Tests
 
-static bool testAggregateDeclarationStatement() {
+bool testAggregateDeclarationStatement() {
     // Basic aggregate declaration and recursive layout prevention
 const     std::string validSource = R"(
         aggregate Point { x: int32; y: int32; }
@@ -71,7 +71,7 @@ const     std::string validSource = R"(
     return analyzeSource(validSource, true, __func__) && analyzeSource(invalidSource, false, __func__);
 }
 
-static bool testAliasStatement() {
+bool testAliasStatement() {
     const std::string source = R"(
         alias MyInt = int32;
         func main() {
@@ -81,7 +81,7 @@ static bool testAliasStatement() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testBreakAndContinueStatement() {
+bool testBreakAndContinueStatement() {
     const std::string valid = R"(
         func main() {
             while (true) {
@@ -103,7 +103,7 @@ static bool testBreakAndContinueStatement() {
     return analyzeSource(valid, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
-static bool testEnumDeclarationStatement() {
+bool testEnumDeclarationStatement() {
     const std::string source = R"(
         enum Colour : int32 { Red, Green, Blue }
         func main() {
@@ -123,7 +123,7 @@ static bool testEnumDeclarationStatement() {
     return analyzeSource(source, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
-static bool testForLoopStatement() {
+bool testForLoopStatement() {
     const std::string source = R"(
         func main() {
             for (let mut i: int32 = 0; i < 10; i = i + 1) {}
@@ -132,7 +132,7 @@ static bool testForLoopStatement() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testFunctionDeclarationAndReturnStatement() {
+bool testFunctionDeclarationAndReturnStatement() {
     // Missing return expression in typed function
     const std::string missingReturn = R"(
         func getValue() -> int32 {
@@ -161,7 +161,7 @@ static bool testFunctionDeclarationAndReturnStatement() {
         && analyzeSource(valid, true, __func__);
 }
 
-static bool testIfStatement() {
+bool testIfStatement() {
     // Non-boolean condition must fail
     const std::string valid = R"(
         func main() {
@@ -178,7 +178,7 @@ static bool testIfStatement() {
     return analyzeSource(valid, true, __func__) && analyzeSource(valid2, true, __func__);
 }
 
-static bool testNamespaceStatement() {
+bool testNamespaceStatement() {
     // Valid namespace declarations, reopening, and nested namespaces
     const std::string valid = R"(
         namespace Math {
@@ -212,7 +212,7 @@ static bool testNamespaceStatement() {
     return analyzeSource(valid, true, __func__) && analyzeSource(duplicateSymbol, false, __func__);
 }
 
-static bool testSwitchStatement() {
+bool testSwitchStatement() {
     const std::string source = R"(
         func main() {
             let x: int32 = 1;
@@ -225,7 +225,7 @@ static bool testSwitchStatement() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testVariableDeclarationStatement() {
+bool testVariableDeclarationStatement() {
     // Type mismatch on initialization
     const std::string mismatch = R"(
         func main() {
@@ -244,7 +244,7 @@ static bool testVariableDeclarationStatement() {
     return analyzeSource(mismatch, false, __func__) && analyzeSource(voidAssign, false, __func__);
 }
 
-static bool testWhileLoopStatement() {
+bool testWhileLoopStatement() {
     const std::string source = R"(
         func main() {
             while (true) {}
@@ -256,7 +256,7 @@ static bool testWhileLoopStatement() {
 
 // Expression Tests
 
-static bool testAggregateInstantiationAndLiteralExpression() {
+bool testAggregateInstantiationAndLiteralExpression() {
     const std::string source = R"(
         aggregate Point { x: int32; y: int32; }
         func main() {
@@ -266,7 +266,7 @@ static bool testAggregateInstantiationAndLiteralExpression() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testArrayLiteralAndIndexExpression() {
+bool testArrayLiteralAndIndexExpression() {
     const std::string valid = R"(
         func main() {
             let arr = [1, 2, 3];
@@ -285,7 +285,7 @@ static bool testArrayLiteralAndIndexExpression() {
     return analyzeSource(valid, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
-static bool testAssignmentExpression() {
+bool testAssignmentExpression() {
     const std::string source = R"(
         func main() {
             let mut x: int32 = 5;
@@ -295,7 +295,7 @@ static bool testAssignmentExpression() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testBinaryAndUnaryExpressions() {
+bool testBinaryAndUnaryExpressions() {
     const std::string source = R"(
         func main() {
             let a = 10 + 20 * 30;
@@ -306,7 +306,7 @@ static bool testBinaryAndUnaryExpressions() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testFunctionCallExpression() {
+bool testFunctionCallExpression() {
     // Passing void expression as an argument must fail
     const std::string voidArg = R"(
         func takeInt(x: int32) {}
@@ -328,7 +328,7 @@ static bool testFunctionCallExpression() {
     return analyzeSource(voidArg, false, __func__) && analyzeSource(valid, true, __func__);
 }
 
-static bool testGenericInstantiationExpression() {
+bool testGenericInstantiationExpression() {
     const std::string source = R"(
         aggregate Container[T]{ value: T; }
         func main() {
@@ -338,7 +338,7 @@ static bool testGenericInstantiationExpression() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testMemberAccessExpression() {
+bool testMemberAccessExpression() {
     const std::string source = R"(
         aggregate Point { x: int32; y: int32; }
         func main() {
@@ -349,7 +349,7 @@ static bool testMemberAccessExpression() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testPrefixPostfixPointerOperators() {
+bool testPrefixPostfixPointerOperators() {
     const std::string valid = R"(
         func main() {
             let mut val: int32 = 10;
@@ -370,7 +370,7 @@ static bool testPrefixPostfixPointerOperators() {
     return analyzeSource(valid, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
-static bool testScopeResolutionExpression() {
+bool testScopeResolutionExpression() {
     // Valid scope resolution calls and chained lookups
     const std::string valid = R"(
         namespace Math {
@@ -411,7 +411,7 @@ static bool testScopeResolutionExpression() {
         && analyzeSource(invalidScope, false, __func__);
 }
 
-static bool testSizeofAndAlignofExpression() {
+bool testSizeofAndAlignofExpression() {
     const std::string source = R"(
         func main() {
             let s = sizeof(int32);
@@ -421,7 +421,7 @@ static bool testSizeofAndAlignofExpression() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testTypeCastExpression() {
+bool testTypeCastExpression() {
     const std::string source = R"(
         func main() {
             let x: int32 = 10;
@@ -431,7 +431,7 @@ static bool testTypeCastExpression() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testGenericScopeResolution() {
+bool testGenericScopeResolution() {
     // Valid generic aggregate defined inside a namespace and instantiated with a scoped type
     const std::string valid = R"(
         namespace Data {
@@ -461,7 +461,7 @@ static bool testGenericScopeResolution() {
     return analyzeSource(valid, true, __func__) && analyzeSource(unboundGeneric, false, __func__);
 }
 
-static bool testScopeResolutionMutability() {
+bool testScopeResolutionMutability() {
     // Valid mutation of a mutable variable in a scope
     const std::string valid = R"(
         namespace Globals {
@@ -501,7 +501,7 @@ static bool testScopeResolutionMutability() {
         && analyzeSource(invalidInc, false, __func__);
 }
 
-static bool testDeeplyNestedScopedType() {
+bool testDeeplyNestedScopedType() {
     // Arbitrary scoping depth (Outer::Middle::Inner::Target)
     const std::string valid = R"(
         namespace Level1 {
@@ -533,7 +533,7 @@ static bool testDeeplyNestedScopedType() {
 
 // Type Tests
 
-static bool testPointerTypeMutability() {
+bool testPointerTypeMutability() {
     const std::string invalid = R"(
         func main() {
             let val: int32 = 10;
@@ -554,7 +554,7 @@ static bool testPointerTypeMutability() {
     return analyzeSource(invalid, false, __func__) && analyzeSource(valid, true, __func__);
 }
 
-static bool testArrayOfVoidDisallowed() {
+bool testArrayOfVoidDisallowed() {
     // Array of void elements is invalid
     const std::string source = R"(
         func getVoid() {}
@@ -565,7 +565,7 @@ static bool testArrayOfVoidDisallowed() {
     return analyzeSource(source, false, __func__);
 }
 
-static bool testFunctionTypeAsValue() {
+bool testFunctionTypeAsValue() {
     const std::string source = R"(
         func add(a: int32, b: int32) -> int32 { 
             return a + b; 
@@ -580,7 +580,7 @@ static bool testFunctionTypeAsValue() {
     return analyzeSource(source, true, __func__);
 }
 
-static bool testScopedType() {
+bool testScopedType() {
     // Valid scoped types (aggregates and aliases inside namespaces)
     const std::string valid = R"(
         namespace Geometry {
@@ -617,7 +617,7 @@ static bool testScopedType() {
 
 // Other
 
-static bool testAnalyzeFromFile() {
+bool testAnalyzeFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/analyzer_tests.mn";
 
     mnstl::chunk_allocator file_allocator{};
@@ -648,7 +648,7 @@ static bool testAnalyzeFromFile() {
     return result == Result::Success;
 }
 
-static bool testPointerDereferenceAndMutability() {
+bool testPointerDereferenceAndMutability() {
     const std::string validSource = R"(
         func main() {
             let mut target: int32 = 100;
@@ -698,7 +698,7 @@ static bool testPointerDereferenceAndMutability() {
         && analyzeSource(incImmutable, false, __func__) && analyzeSource(addressOfRValue, false, __func__);
 }
 
-static bool miscTests() {
+bool miscTests() {
     const std::string code = R"(
         func foo[T](x: T) -> T {
             return x + 3;
@@ -712,49 +712,50 @@ static bool miscTests() {
     )";
     return analyzeSource(code, false, __func__);
 }
+} //
 
 void runAnalyzerTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
     // Statements
-    runner.runTest("Aggregate Declaration Statement analysis", testAggregateDeclarationStatement);
-    runner.runTest("Alias Statement analysis", testAliasStatement);
-    runner.runTest("Break and Continue Statements analysis", testBreakAndContinueStatement);
-    runner.runTest("Enum Declaration Statement analysis", testEnumDeclarationStatement);
-    runner.runTest("For Loop Statement analysis", testForLoopStatement);
-    runner.runTest("Function Declaration & Returns analysis", testFunctionDeclarationAndReturnStatement);
-    runner.runTest("If Statement Conditions analysis", testIfStatement);
-    runner.runTest("Namespace Statement analysis", testNamespaceStatement);
-    runner.runTest("Scope Resolution Expression analysis", testScopeResolutionExpression);
-    runner.runTest("Switch Statement analysis", testSwitchStatement);
-    runner.runTest("Variable Declaration Statement analysis", testVariableDeclarationStatement);
-    runner.runTest("While Loop Statement analysis", testWhileLoopStatement);
-    runner.runTest("Generic Scope Resolution analysis", testGenericScopeResolution);
-    runner.runTest("Scope Resolution Mutability analysis", testScopeResolutionMutability);
-    runner.runTest("Deeply Nested Scoped Type analysis", testDeeplyNestedScopedType);
+    runner.runTest("Aggregate Declaration Statement analysis", analyzer_tests::testAggregateDeclarationStatement);
+    runner.runTest("Alias Statement analysis", analyzer_tests::testAliasStatement);
+    runner.runTest("Break and Continue Statements analysis", analyzer_tests::testBreakAndContinueStatement);
+    runner.runTest("Enum Declaration Statement analysis", analyzer_tests::testEnumDeclarationStatement);
+    runner.runTest("For Loop Statement analysis", analyzer_tests::testForLoopStatement);
+    runner.runTest("Function Declaration & Returns analysis", analyzer_tests::testFunctionDeclarationAndReturnStatement);
+    runner.runTest("If Statement Conditions analysis", analyzer_tests::testIfStatement);
+    runner.runTest("Namespace Statement analysis", analyzer_tests::testNamespaceStatement);
+    runner.runTest("Scope Resolution Expression analysis", analyzer_tests::testScopeResolutionExpression);
+    runner.runTest("Switch Statement analysis", analyzer_tests::testSwitchStatement);
+    runner.runTest("Variable Declaration Statement analysis", analyzer_tests::testVariableDeclarationStatement);
+    runner.runTest("While Loop Statement analysis", analyzer_tests::testWhileLoopStatement);
+    runner.runTest("Generic Scope Resolution analysis", analyzer_tests::testGenericScopeResolution);
+    runner.runTest("Scope Resolution Mutability analysis", analyzer_tests::testScopeResolutionMutability);
+    runner.runTest("Deeply Nested Scoped Type analysis", analyzer_tests::testDeeplyNestedScopedType);
 
     // Expressions
-    runner.runTest("Aggregate Instantiation & Literals analysis", testAggregateInstantiationAndLiteralExpression);
-    runner.runTest("Array Literals & Indexing analysis", testArrayLiteralAndIndexExpression);
-    runner.runTest("Assignment Expression analysis", testAssignmentExpression);
-    runner.runTest("Unary & Binary Expressions analysis", testBinaryAndUnaryExpressions);
-    runner.runTest("Function Calls & Void Args analysis", testFunctionCallExpression);
-    runner.runTest("Generic Expressions analysis", testGenericInstantiationExpression);
-    runner.runTest("Member Access Expression analysis", testMemberAccessExpression);
-    runner.runTest("Pointer Operators (& and *) analysis", testPrefixPostfixPointerOperators);
-    runner.runTest("Sizeof & Alignof Expressions analysis", testSizeofAndAlignofExpression);
-    runner.runTest("TypeCast Expression analysis", testTypeCastExpression);
+    runner.runTest("Aggregate Instantiation & Literals analysis", analyzer_tests::testAggregateInstantiationAndLiteralExpression);
+    runner.runTest("Array Literals & Indexing analysis", analyzer_tests::testArrayLiteralAndIndexExpression);
+    runner.runTest("Assignment Expression analysis", analyzer_tests::testAssignmentExpression);
+    runner.runTest("Unary & Binary Expressions analysis", analyzer_tests::testBinaryAndUnaryExpressions);
+    runner.runTest("Function Calls & Void Args analysis", analyzer_tests::testFunctionCallExpression);
+    runner.runTest("Generic Expressions analysis", analyzer_tests::testGenericInstantiationExpression);
+    runner.runTest("Member Access Expression analysis", analyzer_tests::testMemberAccessExpression);
+    runner.runTest("Pointer Operators (& and *) analysis", analyzer_tests::testPrefixPostfixPointerOperators);
+    runner.runTest("Sizeof & Alignof Expressions analysis", analyzer_tests::testSizeofAndAlignofExpression);
+    runner.runTest("TypeCast Expression analysis", analyzer_tests::testTypeCastExpression);
 
     // Types
-    runner.runTest("Pointer Mutability Rules analysis", testPointerTypeMutability);
-    runner.runTest("Disallow Array of Void analysis", testArrayOfVoidDisallowed);
-    runner.runTest("First-class Function Types analysis", testFunctionTypeAsValue);
-    runner.runTest("Scoped Type analysis", testScopedType);
+    runner.runTest("Pointer Mutability Rules analysis", analyzer_tests::testPointerTypeMutability);
+    runner.runTest("Disallow Array of Void analysis", analyzer_tests::testArrayOfVoidDisallowed);
+    runner.runTest("First-class Function Types analysis", analyzer_tests::testFunctionTypeAsValue);
+    runner.runTest("Scoped Type analysis", analyzer_tests::testScopedType);
 
     // Other
-    runner.runTest("Analysis from file", testAnalyzeFromFile);
-    runner.runTest("Dereference & Immutability analysis", testPointerDereferenceAndMutability);
-    runner.runTest("Misc analyzer tests", miscTests);
+    runner.runTest("Analysis from file", analyzer_tests::testAnalyzeFromFile);
+    runner.runTest("Dereference & Immutability analysis", analyzer_tests::testPointerDereferenceAndMutability);
+    runner.runTest("Misc analyzer tests", analyzer_tests::miscTests);
 }
 
 }  // namespace Manganese::tests

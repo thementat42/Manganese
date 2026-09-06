@@ -93,19 +93,21 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
 }
 }  // namespace
 
-static bool testEmptyString() {
+namespace lexer_tests {
+
+bool testEmptyString() {
     const std::vector<Token> tokens = tokensFromString("");
     printAllTokens(tokens);
     return tokens.empty();
 }
 
-static bool testWhitespace() {
+bool testWhitespace() {
     const std::vector<Token> tokens = tokensFromString("  \t\n\r  ");
     printAllTokens(tokens);
     return tokens.empty();
 }
 
-static bool testComments() {
+bool testComments() {
     std::vector<Token> tokens = tokensFromString("# This is a comment\nint x; /*This is\n a\n multiline comment!*/");
     printAllTokens(tokens);
     if (tokens.size() != 3) {
@@ -117,7 +119,7 @@ static bool testComments() {
         && checkToken(tokens[2], TokenType::Semicolon, ";");
 }
 
-static bool testIdentifiers() {
+bool testIdentifiers() {
     std::vector<Token> tokens = tokensFromString("foo bar baz _var var123");
     printAllTokens(tokens);
     if (tokens.size() != 5) {
@@ -130,7 +132,7 @@ static bool testIdentifiers() {
         && checkToken(tokens[4], TokenType::Identifier, "var123");
 }
 
-static bool testKeywords() {
+bool testKeywords() {
     std::vector<Token> tokens
         = tokensFromString("alias as uint128 bool break aggregate case char mut foo while string");
 
@@ -148,7 +150,7 @@ static bool testKeywords() {
         && checkToken(tokens[10], TokenType::While, "while") && checkToken(tokens[11], TokenType::String, "string");
 }
 
-static bool testIntegerLiterals() {
+bool testIntegerLiterals() {
     std::vector<Token> tokens = tokensFromString("0 123 123u64 456789i8 1i128 "
                                                  "0xFFF 0xABCD_DEFE "
                                                  "0b1001 0b1010_0101 "
@@ -174,7 +176,7 @@ static bool testIntegerLiterals() {
         && checkToken(tokens[10], TokenType::IntegerLiteral, "0o755");
 }
 
-static bool testFloatLiterals() {
+bool testFloatLiterals() {
     std::vector<Token> tokens = tokensFromString("0.0 0.0f32 1.23f64 456.789 "
                                                  "1.23e4 1.23e-4 1.23e+4 "
                                                  "1.23e4f32 1.23e4f64");
@@ -197,7 +199,7 @@ static bool testFloatLiterals() {
         && checkToken(tokens[8], TokenType::FloatLiteral, "1.23e4f64");
 }
 
-static bool testInvalidNumberLiterals() {
+bool testInvalidNumberLiterals() {
     std::vector<Token> tokens = tokensFromString("0x1.23 "
                                                  "1.2.3 "
                                                  "1e "
@@ -230,7 +232,7 @@ static bool testInvalidNumberLiterals() {
         && checkToken(tokens[10], TokenType::IntegerLiteral, "0o7", true);
 }
 
-static bool testCharLiterals() {
+bool testCharLiterals() {
     const std::vector<Token> tokens = tokensFromString("'a' "
                                                        "'\\n' "
                                                        "'\\'' "
@@ -259,7 +261,7 @@ static bool testCharLiterals() {
         && checkToken(tokens[7], TokenType::CharLiteral, expectedEmoji);
 }
 
-static bool testStringLiterals() {
+bool testStringLiterals() {
     const std::vector<Token> tokens = tokensFromString("\"hello\" "
                                                        "\"world\" "
                                                        "\"escaped \\\"quote\\\"\" "
@@ -284,7 +286,7 @@ static bool testStringLiterals() {
         && checkToken(tokens[6], TokenType::StrLiteral, "literal \xCE\xBB \xF0\x9F\x98\x80");
 }
 
-static bool testInvalidCharLiterals() {
+bool testInvalidCharLiterals() {
     const std::vector<Token> tokens = tokensFromString("'' "
                                                        "'ab' "
                                                        "'\\x' "
@@ -313,7 +315,7 @@ static bool testInvalidCharLiterals() {
         && checkToken(tokens[8], TokenType::CharLiteral, "\\xFF", true);
 }
 
-static bool testInvalidStringLiterals() {
+bool testInvalidStringLiterals() {
     const std::vector<Token> tokens = tokensFromString("\"unterminated\\n\" "
                                                        "\"bad escape \\x\" "
                                                        "\"bad unicode \\u123\" "
@@ -336,7 +338,7 @@ static bool testInvalidStringLiterals() {
         && checkToken(tokens[5], TokenType::StrLiteral, "bad unicode \\u123456789", true);
 }
 
-static bool testOperators() {
+bool testOperators() {
     std::vector<Token> tokens = tokensFromString(
         "+ - * / // % ++ -- += -= *= /= //= %= == != && || ! & | ~ ^ &= |= ... ^= . : :: = -> ... @ < <= > >= << >> <<= >>=");
 
@@ -372,7 +374,7 @@ static bool testOperators() {
         && checkToken(tokens[41], TokenType::BitRShiftAssign, ">>=");
 }
 
-static bool testBrackets() {
+bool testBrackets() {
     std::vector<Token> tokens = tokensFromString("( ) { } [ ]");
     printAllTokens(tokens);
     if (tokens.size() != 6) {
@@ -385,7 +387,7 @@ static bool testBrackets() {
         && checkToken(tokens[4], TokenType::LeftSquare, "[") && checkToken(tokens[5], TokenType::RightSquare, "]");
 }
 
-static bool testPunctuation() {
+bool testPunctuation() {
     std::vector<Token> tokens = tokensFromString("; , . : ::");
     printAllTokens(tokens);
     if (tokens.size() != 5) {
@@ -398,7 +400,7 @@ static bool testPunctuation() {
         && checkToken(tokens[4], TokenType::ScopeResolution, "::");
 }
 
-static bool testCompleteProgram() {
+bool testCompleteProgram() {
     std::vector<Token> tokens = tokensFromFile("tests/lexer_tests.mn");
     printAllTokens(tokens);
     if (tokens.empty()) {
@@ -421,7 +423,7 @@ static bool testCompleteProgram() {
         && checkToken(tokens[26], TokenType::Semicolon, ";") && checkToken(tokens[27], TokenType::RightBrace, "}");
 }
 
-static bool testNestedBrackets() {
+bool testNestedBrackets() {
     std::vector<Token> tokens = tokensFromString("arr@[arr@[int16]] foo");
     printAllTokens(tokens);
     if (tokens.size() != 10) {
@@ -436,7 +438,7 @@ static bool testNestedBrackets() {
         && checkToken(tokens[8], TokenType::RightSquare, "]") && checkToken(tokens[9], TokenType::Identifier, "foo");
 }
 
-static bool testInvalidChar() {
+bool testInvalidChar() {
     std::vector<Token> tokens = tokensFromString("'too long' '\\z' '\\u9Z99' ");
     printAllTokens(tokens);
     if (tokens.size() != 3) {
@@ -449,7 +451,7 @@ static bool testInvalidChar() {
         && tokens[2].getType() == TokenType::CharLiteral && tokens[2].isInvalid();
 }
 
-static bool testInvalidEscapeSequence() {
+bool testInvalidEscapeSequence() {
     std::vector<Token> tokens = tokensFromString("'\\z'");
     printAllTokens(tokens);
     if (tokens.size() != 1) {
@@ -460,34 +462,35 @@ static bool testInvalidEscapeSequence() {
     return tokens[0].getType() == TokenType::CharLiteral;
 }
 
-static bool testBadFileAccess() {
+bool testBadFileAccess() {
     try {
         tokensFromFile("__nonexistentfile.mn");
     } catch (const std::runtime_error& e) { return true; }
     return false;
 }
+}
 
 void runLexerTests(TestRunner& runner) {
     // Register all tests
-    runner.runTest("Empty String", testEmptyString);
-    runner.runTest("Whitespace", testWhitespace);
-    runner.runTest("Comments", testComments);
-    runner.runTest("Identifiers", testIdentifiers);
-    runner.runTest("Keywords", testKeywords);
-    runner.runTest("Operators", testOperators);
-    runner.runTest("Integer Literals", testIntegerLiterals);
-    runner.runTest("Float Literals", testFloatLiterals);
-    runner.runTest("Invalid Number Literals", testInvalidNumberLiterals);
-    runner.runTest("Character Literals", testCharLiterals);
-    runner.runTest("String Literals", testStringLiterals);
-    runner.runTest("Invalid Character Literals", testInvalidCharLiterals);
-    runner.runTest("Invalid String Literals", testInvalidStringLiterals);
-    runner.runTest("Brackets", testBrackets);
-    runner.runTest("Punctuation", testPunctuation);
-    runner.runTest("Nested Brackets", testNestedBrackets);
-    runner.runTest("Invalid Character", testInvalidChar);
-    runner.runTest("Invalid Escape Sequence", testInvalidEscapeSequence);
-    runner.runTest("Complete Program", testCompleteProgram);
-    runner.runTest("Invalid File", testBadFileAccess);
+    runner.runTest("Empty String", lexer_tests::testEmptyString);
+    runner.runTest("Whitespace", lexer_tests::testWhitespace);
+    runner.runTest("Comments", lexer_tests::testComments);
+    runner.runTest("Identifiers", lexer_tests::testIdentifiers);
+    runner.runTest("Keywords", lexer_tests::testKeywords);
+    runner.runTest("Operators", lexer_tests::testOperators);
+    runner.runTest("Integer Literals", lexer_tests::testIntegerLiterals);
+    runner.runTest("Float Literals", lexer_tests::testFloatLiterals);
+    runner.runTest("Invalid Number Literals", lexer_tests::testInvalidNumberLiterals);
+    runner.runTest("Character Literals", lexer_tests::testCharLiterals);
+    runner.runTest("String Literals", lexer_tests::testStringLiterals);
+    runner.runTest("Invalid Character Literals", lexer_tests::testInvalidCharLiterals);
+    runner.runTest("Invalid String Literals", lexer_tests::testInvalidStringLiterals);
+    runner.runTest("Brackets", lexer_tests::testBrackets);
+    runner.runTest("Punctuation", lexer_tests::testPunctuation);
+    runner.runTest("Nested Brackets", lexer_tests::testNestedBrackets);
+    runner.runTest("Invalid Character", lexer_tests::testInvalidChar);
+    runner.runTest("Invalid Escape Sequence", lexer_tests::testInvalidEscapeSequence);
+    runner.runTest("Complete Program", lexer_tests::testCompleteProgram);
+    runner.runTest("Invalid File", lexer_tests::testBadFileAccess);
 }
 }  // namespace Manganese::tests
