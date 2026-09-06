@@ -46,28 +46,24 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
 
-    auto result = exprvisit_t::Success;
     const SemanticType* expectedElementType = nullptr;
     if (context.currentVariableDeclarationType != nullptr && context.currentVariableDeclarationType->isArray()) {
         expectedElementType = static_cast<const Array*>(context.currentVariableDeclarationType)->elementType;
     }
 
+    auto result = exprvisit_t::Success;
     const SemanticType* synthesizedElementType = nullptr;
+    const SemanticType* targetElementType = expectedElementType;
 
-    for (std::size_t i = 0; i < expression->elements.size(); ++i) {
-        ast::Expression* element = expression->elements[i];
+    for (std::size_t elementIndex = 0; elementIndex < expression->elements.size(); ++elementIndex) {
+        ast::Expression* element = expression->elements[elementIndex];
+
         const SemanticType* outerVarType = context.currentVariableDeclarationType;
         context.currentVariableDeclarationType = expectedElementType;
-
         auto elemVisitResult = visit(element);
-
         context.currentVariableDeclarationType = outerVarType;
 
-        if (elemVisitResult == exprvisit_t::Failure) {
-            result = exprvisit_t::Failure;
-            continue;
-        }
-        if (element->semanticType == nullptr) {
+        if (elemVisitResult == exprvisit_t::Failure || element->semanticType == nullptr) {
             result = exprvisit_t::Failure;
             continue;
         }
@@ -77,15 +73,23 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             continue;
         }
 
-        if (checkArrayElementCompatibility(expectedElementType, synthesizedElementType, i, element) == Result::Failure) {
-            result = Result::Failure;
+        // If no explicit type annotation exists, use the first element as the type of the array
+        if (targetElementType == nullptr && elementIndex == 0) {
+            synthesizedElementType = element->semanticType;
+            targetElementType = synthesizedElementType;
+            continue;
+        }
+
+        if (checkArrayElementCompatibility(targetElementType, elementIndex, element) == exprvisit_t::Failure) {
+            result = exprvisit_t::Failure;
         }
     }
 
     if (result == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
-    const SemanticType* elementType = (expectedElementType != nullptr) ? expectedElementType : synthesizedElementType;
-    expression->semanticType = typeContext.getArray(elementType, expression->elements.size());
+    const SemanticType* finalElementType
+        = (expectedElementType != nullptr) ? expectedElementType : synthesizedElementType;
+    expression->semanticType = typeContext.getArray(finalElementType, expression->elements.size());
     return exprvisit_t::Success;
 }
 

@@ -374,37 +374,17 @@ const SemanticType* Analyzer::unifyArrayInference(const SemanticType* declared, 
     return areTypesCompatible(initializer, declared) ? declared : nullptr;
 }
 
-Result Analyzer::checkArrayElementCompatibility(const SemanticType* expectedElementType, const SemanticType* synthesizedElementType,
-                           std::size_t i, ast::Expression* element) {
-    Result result = Result::Success;
-    if (expectedElementType != nullptr) {
-        const auto canConvertElementType = areTypesCompatible(expectedElementType, element->semanticType);
-        if (!canConvertElementType) {
-            logError(
-                element,
-                "Array element '{}' (index {} in literal) of type '{}' is not compatible with expected array element type '{}'",
-                element->toString(), i, element->semanticType->toString(), expectedElementType->toString());
-            result = exprvisit_t::Failure;
-        } else if (canConvertElementType.result == Compatible_t::Warning) {
-            logWarning(element, "{}", canConvertElementType.message);
-        }
-    } else {
-        if (synthesizedElementType == nullptr) {
-            synthesizedElementType = element->semanticType;
-        } else {
-            const auto canConvertElementType = areTypesCompatible(synthesizedElementType, element->semanticType);
-            if (!canConvertElementType) {
-                logError(
-                    element,
-                    "Mismatched element '{}' (index {} in literal) types in array literal: expected '{}', got '{}'",
-                    element->toString(), i, synthesizedElementType->toString(), element->semanticType->toString());
-                result = exprvisit_t::Failure;
-            } else if (canConvertElementType.result == Compatible_t::Warning) {
-                logWarning(element, "{}", canConvertElementType.message);
-            }
-        }
+Result Analyzer::checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element) {
+    const auto compat = areTypesCompatible(targetType, element->semanticType);
+    if (!compat) {
+        logError(element, "Array element '{}' (index {} in literal) of type '{}' is not compatible with expected type '{}'",
+                 element->toString(), i, element->semanticType->toString(), targetType->toString());
+        return exprvisit_t::Failure;
     }
-    return result;
+    if (compat.result == Compatible_t::Warning) {
+        logWarning(element, "{}", compat.message);
+    }
+    return exprvisit_t::Success;
 }
 
 }  // namespace Manganese::semantic

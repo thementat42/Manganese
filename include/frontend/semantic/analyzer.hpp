@@ -20,10 +20,8 @@
 #include <unordered_map>
 #include <utility>
 #include <utils/result.hpp>
-#include <mnstl/chunk_allocator.hxx>
 #include <utils/target_info.hpp>
-#include <string_view>
-#include <utils/result.hpp>
+
 
 namespace Manganese::semantic {
 
@@ -126,6 +124,8 @@ class Analyzer final : public _analyzer_base_t {
     typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
     Result analyzePointerArithmetic(ast::BinaryExpression* expr) const;
+    Result checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element);
+
     const SemanticType* resolveGenericType(const ast::Type* type);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression);
@@ -154,9 +154,6 @@ class Analyzer final : public _analyzer_base_t {
 #undef STMT
 #undef EXPR
 #undef TYPE
-
-    Result checkArrayElementCompatibility(const SemanticType* expectedElementType, const SemanticType* synthesizedElementType,
-               std::size_t i, ast::Expression* element);
 
     static Result visit(std::nullptr_t) {
         logging::logInternal(logging::LogLevel::Warning, "visit() called on nullptr in analyzer");
