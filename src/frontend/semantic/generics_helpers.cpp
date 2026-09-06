@@ -71,12 +71,14 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
     auto oldParams = activeGenericParams;
     activeGenericParams.clear();
 
-    for (std::size_t i = 0; i < stmt->genericTypes.size(); ++i) { activeGenericParams[stmt->genericTypes[i]] = i; }
+    for (std::size_t i = 0; i < stmt->genericTypes.size(); ++i) { 
+        activeGenericParams[stmt->genericTypes[i]] = i; 
+    }
 
     const SemanticType* resolvedReturnType = typeContext.getVoid();
     if (stmt->returnType != nullptr) {
         resolvedReturnType = resolveGenericType(stmt->returnType);
-        if (resolvedReturnType->isPoison()) {
+        if (resolvedReturnType == nullptr || resolvedReturnType->isPoison()) {
             activeGenericParams = std::move(oldParams);
             instantiationCache.markAsFailure(key);
             return stmtvisit_t::Failure;
@@ -92,24 +94,42 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
 
     for (const auto& param : stmt->parameters) {
         const SemanticType* paramType = resolveGenericType(param.type);
-        if (paramType->isPoison()) {
+        if (param.isVariadic) {
+            paramType = typeContext.getArray(paramType, std::nullopt);
+        }
+
+        if (paramType == nullptr || paramType->isPoison()) {
             success = false;
             break;
         }
 
         const bool declarationResult
             = symbolTable.declare(
-                  param.name,
-                  Symbol{.type = paramType,
-                         .node = stmt,
-                         .kind = (param.isMutable ? SymbolKind::Parameter : SymbolKind::ConstantParameter),
-                         .isMutable = param.isMutable,
-                         .status = ResolutionStatus::Success})
+                param.name,
+                Symbol{.type = paramType,
+                       .node = stmt,
+                       .kind = (param.isMutable ? SymbolKind::Parameter : SymbolKind::ConstantParameter),
+                       .isMutable = param.isMutable,
+                       .status = ResolutionStatus::Success})
             == Result::Failure;
+            
         if (declarationResult) {
             logError(stmt, "Redefinition of parameter '{}' in generic function '{}'", param.name, stmt->name);
             success = false;
             break;
+        }
+
+        if (param.defaultValue) {
+            if (visit(param.defaultValue) == exprvisit_t::Failure) {
+                success = false;
+                break;
+            }
+            const SemanticType* defaultValueType = param.defaultValue->semanticType;
+            if (defaultValueType == nullptr || defaultValueType->isPoison() || !areTypesCompatible(defaultValueType, paramType)) {
+                logError(stmt, "Invalid default value type for parameter '{}'", param.name);
+                success = false;
+                break;
+            }
         }
     }
 

@@ -164,18 +164,13 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     Symbol* symbol = symbolTable.lookup(statement->name);
-    if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(std::format("Function '{}' was not registered during symbol collection", statement->name));
-    }
-    if (symbol->type == nullptr) {
+    if (symbol == nullptr || symbol->type == nullptr) {
         ASSERT_UNREACHABLE(
-            std::format("Function '{}' was registered during symbol collection but had no type", statement->name));
+            std::format("Function '{}' was not properly registered during symbol collection", statement->name));
     }
 
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
     if (symbol->status == ResolutionStatus::Failure) { return stmtvisit_t::Failure; }
-
-    // Re-entrancy check: allow recursive calls inside the body
     if (symbol->status == ResolutionStatus::InProgress) { return stmtvisit_t::Success; }
 
     symbol->status = ResolutionStatus::InProgress;
@@ -190,7 +185,6 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
         const auto& param = statement->parameters[i];
         const SemanticType* resolvedParamType = functionType->parameterTypes[i].type;
 
-        // Register parameter in local function scope
         const stmtvisit_t paramDeclaration = symbolTable.declare(
             param.name,
             Symbol{.type = resolvedParamType,
@@ -204,18 +198,18 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
             signatureResult = stmtvisit_t::Failure;
         }
 
-        // Validate default arguments in local scope
         if (param.defaultValue) {
-            DISCARD(visit(param.defaultValue));
+            if (visit(param.defaultValue) == exprvisit_t::Failure) {
+                signatureResult = stmtvisit_t::Failure;
+                continue;
+            }
 
             const SemanticType* defaultValueType = param.defaultValue->semanticType;
-
-            if (defaultValueType->isPoison()) {
-                logError(statement,
-                         "Unable to determine type of default value ({}) for parameter '{}' in function '{}'",
-                         param.defaultValue->toString(), param.name, statement->name);
+            if (defaultValueType == nullptr || defaultValueType->isPoison()) {
+                logError(statement, "Unable to determine type of default value for parameter '{}' in function '{}'",
+                         param.name, statement->name);
                 signatureResult = stmtvisit_t::Failure;
-            } else if (!areTypesCompatible(resolvedParamType, defaultValueType)) {
+            } else if (!areTypesCompatible(defaultValueType, resolvedParamType)) {
                 logError(statement,
                          "Default value for parameter '{}' in function '{}' has type '{}', "
                          "but '{}' was expected",
@@ -225,7 +219,6 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
         }
     }
 
-    // Type-check the body
     context.currentFunctionReturnType = functionType->returnType;
     const stmtvisit_t bodyResult = visit(statement->body, false);
     context.currentFunctionReturnType = nullptr;

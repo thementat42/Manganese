@@ -698,6 +698,30 @@ bool testPointerDereferenceAndMutability() {
         && analyzeSource(incImmutable, false, __func__) && analyzeSource(addressOfRValue, false, __func__);
 }
 
+bool testVariadicAndDefaults() {
+    const std::string code = R"(
+        # Function with default parameters
+        func configure(timeout: int = 30, retries: int = 3) -> int {
+            return timeout + retries;
+        }
+
+        # Variadic function accessing arguments via indexing
+        func sumFirstTwo(args...: int) -> int {
+            return args[0] + args[1];
+        }
+
+        func main() -> int {
+            let a = configure();         # Should use both defaults (30 + 3 = 33)
+            let b = configure(60);       # Should use default retries (60 + 3 = 63)
+            let c = configure(10, 5);    # Should override both (10 + 5 = 15)
+            
+            let total = sumFirstTwo(10, 20, 30, 40); # Variadic invocation
+            return 0;
+        }
+    )";
+    return analyzeSource(code, true, __func__);
+}
+
 bool miscTests() {
     const std::string code = R"(
         func foo[T](x: T) -> T {
@@ -737,6 +761,7 @@ void runAnalyzerTests(TestRunner& runner) {
     runner.runTest("Generic Scope Resolution analysis", analyzer_tests::testGenericScopeResolution);
     runner.runTest("Scope Resolution Mutability analysis", analyzer_tests::testScopeResolutionMutability);
     runner.runTest("Deeply Nested Scoped Type analysis", analyzer_tests::testDeeplyNestedScopedType);
+    runner.runTest("Variadic and Default Function analysis", analyzer_tests::testVariadicAndDefaults);
 
     // Expressions
     runner.runTest("Aggregate Instantiation & Literals analysis",
