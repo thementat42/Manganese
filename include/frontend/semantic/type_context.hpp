@@ -119,7 +119,7 @@ struct Aggregate final : public SemanticType {
         for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
     }
 
-    const SemanticType* getFieldType(std::string_view&fieldName) const noexcept {
+    const SemanticType* getFieldType(std::string_view fieldName) const noexcept {
         for (const AggregateField& field : fields) {
             if (field.name == fieldName) { return field.type; }
         }
