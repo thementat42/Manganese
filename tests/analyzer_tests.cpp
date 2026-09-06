@@ -23,7 +23,7 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
     parser::ParsedFile parsedFile = parser.parse();
 
     semantic::Analyzer analyzer(parsedFile, target, arena);
-const     Result result = analyzer.analyze();
+    const Result result = analyzer.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
@@ -58,7 +58,7 @@ namespace analyzer_tests {
 
 bool testAggregateDeclarationStatement() {
     // Basic aggregate declaration and recursive layout prevention
-const     std::string validSource = R"(
+    const std::string validSource = R"(
         aggregate Point { x: int32; y: int32; }
         aggregate Line { start: Point; end: Point; }
     )";
@@ -392,7 +392,7 @@ bool testScopeResolutionExpression() {
     )";
 
     // Accessing a symbol that does not exist in the namespace
-   const  std::string missingMember = R"(
+    const std::string missingMember = R"(
         namespace Math {}
         func main() {
             let x = Math::doesNotExist;
@@ -707,12 +707,15 @@ bool miscTests() {
         func blah() {
             let a = foo@[int32](10);
             let b = foo@[string]("hello");
-
+            let w: int[2][2] = [[1,2], [3,4]];
+            let x: int[][2] = [[1,2], [3,4], [5,6]];
+            let y: int[2][] = [[1,2, 3], [4, 5, 6], [7, 8, 9], 10];
+            let z: int[][] = [[1,2, 4, 5], [5, 6, 8, 8], [9, 10, 0xA, 0xB]];
         }
     )";
     return analyzeSource(code, false, __func__);
 }
-} //
+}  // namespace analyzer_tests
 
 void runAnalyzerTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
@@ -723,7 +726,8 @@ void runAnalyzerTests(TestRunner& runner) {
     runner.runTest("Break and Continue Statements analysis", analyzer_tests::testBreakAndContinueStatement);
     runner.runTest("Enum Declaration Statement analysis", analyzer_tests::testEnumDeclarationStatement);
     runner.runTest("For Loop Statement analysis", analyzer_tests::testForLoopStatement);
-    runner.runTest("Function Declaration & Returns analysis", analyzer_tests::testFunctionDeclarationAndReturnStatement);
+    runner.runTest("Function Declaration & Returns analysis",
+                   analyzer_tests::testFunctionDeclarationAndReturnStatement);
     runner.runTest("If Statement Conditions analysis", analyzer_tests::testIfStatement);
     runner.runTest("Namespace Statement analysis", analyzer_tests::testNamespaceStatement);
     runner.runTest("Scope Resolution Expression analysis", analyzer_tests::testScopeResolutionExpression);
@@ -735,7 +739,8 @@ void runAnalyzerTests(TestRunner& runner) {
     runner.runTest("Deeply Nested Scoped Type analysis", analyzer_tests::testDeeplyNestedScopedType);
 
     // Expressions
-    runner.runTest("Aggregate Instantiation & Literals analysis", analyzer_tests::testAggregateInstantiationAndLiteralExpression);
+    runner.runTest("Aggregate Instantiation & Literals analysis",
+                   analyzer_tests::testAggregateInstantiationAndLiteralExpression);
     runner.runTest("Array Literals & Indexing analysis", analyzer_tests::testArrayLiteralAndIndexExpression);
     runner.runTest("Assignment Expression analysis", analyzer_tests::testAssignmentExpression);
     runner.runTest("Unary & Binary Expressions analysis", analyzer_tests::testBinaryAndUnaryExpressions);
