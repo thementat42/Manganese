@@ -9,10 +9,10 @@
 #include <functional>
 #include <io/logging.hpp>
 #include <mnstl/chunk_allocator.hxx>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utils/result.hpp>
-#include <string>
 #include <vector>
 
 namespace Manganese::semantic {

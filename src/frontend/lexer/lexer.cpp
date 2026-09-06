@@ -1,6 +1,6 @@
+#include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <core.hpp>
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/filereader.hpp>

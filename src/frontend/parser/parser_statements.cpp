@@ -6,11 +6,11 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
+#include <optional>
 #include <span>
 #include <string>
 #include <utility>
 #include <vector>
-#include <optional>
 
 namespace Manganese::parser {
 
@@ -89,7 +89,7 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
     expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
-    return makeNode<ast::WhileLoopStatement>(startToken, std::move(body),condition, /*isDoWhile=*/true);
+    return makeNode<ast::WhileLoopStatement>(startToken, std::move(body), condition, /*isDoWhile=*/true);
 }
 
 ast::Statement* Parser::parseEnumDeclarationStatement() {
@@ -102,8 +102,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
         baseType = parseType(Precedence::Default);
         if (baseType == nullptr) {
             Token& tmp = peekToken();
-            logError(tmp.getLine(), tmp.getColumn(),
-                     "Expected valid underlying type after ':' for enum '{}'", name);
+            logError(tmp.getLine(), tmp.getColumn(), "Expected valid underlying type after ':' for enum '{}'", name);
             baseType = makeNode<ast::PoisonedType>(tmp);
         }
     }

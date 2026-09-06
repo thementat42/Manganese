@@ -100,9 +100,9 @@ class Parser {
     std::optional<ast::AggregateField> parseAggregateField(std::string_view aggregateName,
                                                            std::span<ast::AggregateField> existingFields);
 
-    std::optional<ast::FunctionParameter> parseFunctionParameter(
-        std::string_view functionName, std::span<ast::FunctionParameter> existingParams,
-        bool& hasDefaultParameter, bool& hasVariadicParameter);
+    std::optional<ast::FunctionParameter> parseFunctionParameter(std::string_view functionName,
+                                                                 std::span<ast::FunctionParameter> existingParams,
+                                                                 bool& hasDefaultParameter, bool& hasVariadicParameter);
 
     ast::CaseClause parseCaseClause();
     ast::Block parseDefaultClause();

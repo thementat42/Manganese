@@ -10,7 +10,6 @@
 #include <utils/target_info.hpp>
 #include <utils/type_names.hpp>
 
-
 namespace Manganese::ast {
 
 std::string_view primitiveTypeToString(PrimitiveType prim) {

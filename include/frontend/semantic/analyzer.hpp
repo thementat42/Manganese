@@ -22,7 +22,6 @@
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
 
-
 namespace Manganese::semantic {
 
 /**

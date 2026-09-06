@@ -5,7 +5,6 @@
 #include <string_view>
 #include <utils/target_info.hpp>
 
-
 namespace Manganese {
 TargetInfo TargetInfo::fromTriple(std::string_view tripleString) {
     const llvm::Triple triple{tripleString};

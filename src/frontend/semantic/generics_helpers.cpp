@@ -10,7 +10,6 @@
 #include <utils/result.hpp>
 #include <vector>
 
-
 namespace Manganese::semantic {
 
 auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {

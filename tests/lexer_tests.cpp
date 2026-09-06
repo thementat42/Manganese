@@ -1,13 +1,13 @@
 #include <cassert>
 #include <filesystem>
+#include <format>
 #include <frontend/lexer.hpp>
 #include <io/logging.hpp>
 #include <iostream>
-#include <string>
-#include <vector>
-#include <string_view>
-#include <format>
 #include <stdexcept>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "testrunner.hpp"
 
@@ -468,7 +468,7 @@ bool testBadFileAccess() {
     } catch (const std::runtime_error& e) { return true; }
     return false;
 }
-}
+}  // namespace lexer_tests
 
 void runLexerTests(TestRunner& runner) {
     // Register all tests

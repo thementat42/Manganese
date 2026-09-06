@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace Manganese::parser {
 
 Parser::Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :

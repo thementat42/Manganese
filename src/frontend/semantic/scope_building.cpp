@@ -1,8 +1,8 @@
-#include <string>
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
+#include <string>
 #include <string_view>
 #include <utils/result.hpp>
 

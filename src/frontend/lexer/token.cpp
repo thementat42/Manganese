@@ -1,10 +1,10 @@
 #include <algorithm>
+#include <format>
 #include <frontend/lexer/token.hpp>
 #include <io/logging.hpp>
 #include <string>
-#include <utility>
-#include <format>
 #include <type_traits>
+#include <utility>
 
 namespace Manganese::lexer {
 
