@@ -120,7 +120,7 @@ auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
         const auto& paramInfo = functionType->parameterTypes[i];
         if (paramInfo.isVariadic) {
             hasVariadic = true;
-            // paramInfo.type is already 'int32[]', so get its element type
+            // paramInfo.type is already T[], so get its element type
             if (paramInfo.type->isArray()) {
                 variadicElementType = static_cast<const Array*>(paramInfo.type)->elementType;
             } else {
@@ -137,11 +137,13 @@ auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
         if (!hasDefault) { minRequiredArgs++; }
     }
 
+    // size_t(-1) is a sentinel for "basically unlimited"
+    // on any practical system, the compiler would run out of memory long before hitting that value
     const std::size_t maxPossibleArgs
         = hasVariadic ? static_cast<std::size_t>(-1) : functionType->parameterTypes.size();
     const std::size_t providedArgs = expression->arguments.size();
 
-    if (providedArgs < minRequiredArgs || providedArgs > maxPossibleArgs) {
+    if (!BETWEEN(providedArgs, minRequiredArgs, maxPossibleArgs)) {
         logError(expression, "Function expected between {} and {} arguments, but got {}", minRequiredArgs,
                  (hasVariadic ? "unlimited" : std::to_string(maxPossibleArgs)), providedArgs);
         return exprvisit_t::Failure;
