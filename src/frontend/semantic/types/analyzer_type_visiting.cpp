@@ -4,11 +4,11 @@
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <mnstl/fold_result.hxx>
 #include <mnstl/number.hxx>
+#include <string_view>
 #include <utility>
 #include <vector>
-#include <mnstl/fold_result.hxx>
-#include <string_view>
 
 namespace Manganese::semantic {
 
@@ -30,49 +30,41 @@ auto Analyzer::visit(ast::AggregateType* type) -> typevisit_t {
 auto Analyzer::visit(ast::ArrayType* type) -> typevisit_t {
     const auto* arrayType = static_cast<const ast::ArrayType*>(type);
 
-    // for nested arrays
     const SemanticType* outerVarType = context.currentVariableDeclarationType;
-    context.currentVariableDeclarationType = nullptr;
-    DISCARD(visit(arrayType->elementType));
+    const SemanticType* innerVarType = nullptr;
+    if (outerVarType != nullptr && outerVarType->isArray()) {
+        innerVarType = static_cast<const Array*>(outerVarType)->elementType;
+    }
+
+    context.currentVariableDeclarationType = innerVarType;
+    auto visitResult = visit(arrayType->elementType);
     context.currentVariableDeclarationType = outerVarType;
 
-    const SemanticType* elementType = arrayType->elementType->semanticType;
+    if (visitResult == typevisit_t::Failure) { return typevisit_t::Failure; }
 
+    const SemanticType* elementType = arrayType->elementType->semanticType;
     if (elementType == nullptr) {
         logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
         return typevisit_t::Failure;
     }
     if (elementType->isVoid()) { logError(type, "Cannot form an array of 'void'"); }
 
-    std::size_t length;
+    std::optional<std::size_t> length = std::nullopt;
     if (arrayType->lengthExpression != nullptr) {
         if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
         const mnstl::fold_result_t fold = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
-        if (!fold.is_number()) {
-            logError(arrayType->lengthExpression, "Array length ({}) must be a constant expression",
-                     arrayType->lengthExpression->toString());
+        if (!fold.is_number() || !fold.number_unchecked().is_integer()) {
+            logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
             return typevisit_t::Failure;
         }
-        const mnstl::number_t lengthValue = fold.number_unchecked();
-        if (lengthValue.is_error()) {
-            logError(arrayType->lengthExpression, "{}", lengthValue.error_unchecked());
+        const auto lengthVal = fold.number_unchecked();
+        if (lengthVal <= 0) {
+            logError(arrayType->lengthExpression, "Array length must be greater than 0");
             return typevisit_t::Failure;
         }
-        if (!lengthValue.is_integer()) {
-            logError(arrayType->lengthExpression, "Array length must be an integer value");
-            return typevisit_t::Failure;
-        }
-        if (lengthValue <= 0) {
-            logError(arrayType->lengthExpression, "Array length must be greater than 0 (got {})",
-                     lengthValue.to_string());
-            return typevisit_t::Failure;
-        }
-        length = lengthValue.value_as<std::size_t>();
-    } else if (context.currentVariableDeclarationType != nullptr && context.currentVariableDeclarationType->isArray()) {
-        length = static_cast<const Array*>(context.currentVariableDeclarationType)->length;
-    } else [[unlikely]] {
-        logError(type, "Cannot infer array length; explicitly specify length or provide an initializer");
-        return typevisit_t::Failure;
+        length = lengthVal.value_as<std::size_t>();
+    } else if (outerVarType != nullptr && outerVarType->isArray()) {
+        length = static_cast<const Array*>(outerVarType)->length;
     }
 
     type->semanticType = typeContext.getArray(elementType, length);
@@ -151,7 +143,7 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
     }
     const std::string_view memberName = static_cast<ast::IdentifierType*>(type->type)->name;
 
-const     Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
+    const Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
     if (memberSymbol == nullptr) {
         logError(type->type, "No member named '{}' in scope", memberName);
         return typevisit_t::Failure;

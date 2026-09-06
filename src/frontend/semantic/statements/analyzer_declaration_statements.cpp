@@ -240,33 +240,29 @@ auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
     const SemanticType* variableType = nullptr;
 
     if (statement->type != nullptr) {
-        // User has an explicit type
         if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
         variableType = statement->type->semanticType;
     }
 
     if (statement->value) {
+        context.currentVariableDeclarationType = variableType;
         if (visit(statement->value) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
         const SemanticType* initializerType = statement->value->semanticType;
 
-        // Catch missing or void initializer types immediately
         if (initializerType == nullptr || initializerType->isVoid()) {
             logError(statement->value, "Cannot initialize variable '{}' with a void expression", statement->name);
             return stmtvisit_t::Failure;
         }
 
         if (variableType == nullptr) {
-            // Deduce type from initializer
             variableType = initializerType;
         } else {
-            // Check explicit type against initializer type
-            const typeCompatibilityResult compat = areTypesCompatible(initializerType, variableType);
-            if (!compat) {
-                logError(statement, "Cannot assign value of type {} to variable '{}' of type {}",
-                         initializerType->toString(), statement->name, variableType->toString());
+            // If the declared type used `[]`, unify/fill its length using the initializer's dimensions
+            variableType = unifyArrayInference(variableType, initializerType);
+            if (variableType == nullptr) {
+                logError(statement, "Initializer type '{}' is incompatible with declared type",
+                         initializerType->toString());
                 return stmtvisit_t::Failure;
-            } else if (compat.result == Compatible_t::Warning) {
-                logWarning(statement, "{}", compat.message);
             }
         }
     } else if (!statement->isMutable) {
@@ -274,8 +270,9 @@ auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
         return stmtvisit_t::Failure;
     }
 
-    if (variableType == nullptr) {
-        logError(statement, "Variable '{}' must either have an explicit type or an initial value", statement->name);
+    if (variableType == nullptr
+        || (variableType->isArray() && static_cast<const Array*>(variableType)->hasUnspecifiedLength())) {
+        logError(statement, "Cannot infer array length; explicitly specify length or provide an initializer");
         return stmtvisit_t::Failure;
     }
 

@@ -43,6 +43,7 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             return exprvisit_t::Success;
         }
         logError(expression, "Cannot infer element type for empty array literal without type annotation");
+        return exprvisit_t::Failure;
     }
 
     auto result = exprvisit_t::Success;
@@ -54,7 +55,14 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     const SemanticType* synthesizedElementType = nullptr;
 
     for (ast::Expression* element : expression->elements) {
-        if (visit(element) == exprvisit_t::Failure) {
+        const SemanticType* outerVarType = context.currentVariableDeclarationType;
+        context.currentVariableDeclarationType = expectedElementType;
+
+        auto elemVisitResult = visit(element);
+        
+        context.currentVariableDeclarationType = outerVarType;
+
+        if (elemVisitResult == exprvisit_t::Failure) {
             result = exprvisit_t::Failure;
             continue;
         }
@@ -67,7 +75,7 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             result = exprvisit_t::Failure;
             continue;
         }
-        // top-down type deduction
+
         if (expectedElementType != nullptr) {
             const auto canConvertElementType = areTypesCompatible(expectedElementType, element->semanticType);
             if (!canConvertElementType) {
@@ -77,27 +85,29 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
             } else if (canConvertElementType.result == Compatible_t::Warning) {
                 logWarning(element, "{}", canConvertElementType.message);
             }
-            continue;
-        }
-        // use the first element to set the type
-        if (synthesizedElementType == nullptr) {
-            synthesizedElementType = element->semanticType;
-            continue;
-        }
-        const auto canConvertElementType = areTypesCompatible(synthesizedElementType, element->semanticType);
-        if (!canConvertElementType) {
-            logError(element, "Mismatched element types in array literal: expected '{}', got '{}'",
-                     synthesizedElementType->toString(), element->semanticType->toString());
-            result = exprvisit_t::Failure;
-        } else if (canConvertElementType.result == Compatible_t::Warning) {
-            logWarning(element, "{}", canConvertElementType.message);
+        } else {
+            if (synthesizedElementType == nullptr) {
+                synthesizedElementType = element->semanticType;
+            } else {
+                const auto canConvertElementType = areTypesCompatible(synthesizedElementType, element->semanticType);
+                if (!canConvertElementType) {
+                    logError(element, "Mismatched element types in array literal: expected '{}', got '{}'",
+                             synthesizedElementType->toString(), element->semanticType->toString());
+                    result = exprvisit_t::Failure;
+                } else if (canConvertElementType.result == Compatible_t::Warning) {
+                    logWarning(element, "{}", canConvertElementType.message);
+                }
+            }
         }
     }
-    if (result == exprvisit_t::Failure) { return exprvisit_t::Failure; }
+
+    if (result == exprvisit_t::Failure) { 
+        return exprvisit_t::Failure; 
+    }
 
     const SemanticType* elementType = (expectedElementType != nullptr) ? expectedElementType : synthesizedElementType;
     expression->semanticType = typeContext.getArray(elementType, expression->elements.size());
-    return exprvisit_t::Success;
+    return typevisit_t::Success;
 }
 
 auto Analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {

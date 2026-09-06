@@ -129,6 +129,7 @@ class Analyzer final : public _analyzer_base_t {
     const SemanticType* resolveGenericType(const ast::Type* type);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression);
+    const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {

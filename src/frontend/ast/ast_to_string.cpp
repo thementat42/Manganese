@@ -340,7 +340,8 @@ std::string ArrayType::toString(std::size_t indent) const {
     if (lengthExpression != nullptr) {
         lengthStr = lengthExpression->toString();
     } else if ((semanticType != nullptr) && semanticType->isArray()) {
-        lengthStr = std::to_string(static_cast<const semantic::Array*>(semanticType)->length);
+        const auto* arrayType = static_cast<const semantic::Array*>(semanticType);
+        lengthStr = arrayType->hasUnspecifiedLength() ? "" : std::to_string(*arrayType->length);
     }
     return std::format("{}[{}]", elementType->toString(indent), lengthStr);
 }

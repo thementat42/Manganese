@@ -81,7 +81,10 @@ std::string Aggregate::toStringWithTypeArguments(const TypeList& typeArguments) 
     return result;
 }
 
-std::string Array::toString() const { return std::format("{}[{}]", elementType->toString(), length); }
+std::string Array::toString() const {
+    if (hasUnspecifiedLength()) { return std::format("{}[]", elementType->toString()); }
+    return std::format("{}[{}]", elementType->toString(), *length);
+}
 
 std::string Enum::toString() const { return std::string(name); }
 
@@ -109,9 +112,7 @@ std::string Void::toString() const { return "void"; }
 
 // Size & Alignment
 std::size_t SemanticType::size(const TargetInfo&) const noexcept {
-    if (isPrimitive()) {
-        return static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8);
-    }
+    if (isPrimitive()) { return static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8); }
     return 0;
 }
 
@@ -152,7 +153,9 @@ std::size_t Aggregate::alignment(const TargetInfo& target) const noexcept {
     return maxAlign;
 }
 
-std::size_t Array::size(const TargetInfo& target) const noexcept { return elementType->size(target) * length; }
+std::size_t Array::size(const TargetInfo& target) const noexcept {
+    return elementType->size(target) * (length.value_or(0));  //? log error?
+}
 
 std::size_t Array::alignment(const TargetInfo& target) const noexcept { return elementType->alignment(target); }
 
@@ -218,7 +221,9 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             // Since array types have a fixed structure we can just hash the member types
             const auto* array = static_cast<const Array*>(t);
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(array->elementType));
-            return hash_combine(hash, std::hash<std::size_t>{}(array->length));
+            const std::size_t lengthHash = std::hash<std::size_t>{}(array->length.value_or(0));
+            hash = hash_combine(hash, std::hash<bool>{}(array->hasUnspecifiedLength()));
+            return hash_combine(hash, std::hash<std::size_t>{}(lengthHash));
         }
 
         case SemanticTypeKind::Enum: {
@@ -314,12 +319,16 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
     ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
 }
 
-const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::size_t length) {
+const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::optional<std::size_t> length) {
     Array tmp(elementType, length);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
     auto* heapAlloc = _allocator.emplace<Array>(elementType, length);
     _cache.insert(heapAlloc);
     return heapAlloc;
+}
+
+const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::size_t length) {
+    return getArray(elementType, std::optional<std::size_t>(length));
 }
 
 const SemanticType* TypeContext::getAnonymousAggregate(TypeList&& fieldTypes) {

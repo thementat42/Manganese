@@ -141,11 +141,16 @@ struct Aggregate final : public SemanticType {
 
 struct Array final : public SemanticType {
     const SemanticType* elementType;
-    const std::size_t length;
+    const std::optional<std::size_t> length;
 
     Array(const SemanticType* baseType, std::size_t len) noexcept :
         SemanticType(SemanticTypeKind::Array), elementType(baseType), length(len) {}
+
+    Array(const SemanticType* baseType, std::optional<std::size_t> optionalLength) noexcept :
+        SemanticType(SemanticTypeKind::Array), elementType(baseType), length(optionalLength) {}
     ~Array() override = default;
+
+    bool hasUnspecifiedLength() const noexcept { return !length.has_value(); }
 
     std::string toString() const override;
     std::size_t size(const TargetInfo& target) const noexcept override;
@@ -325,6 +330,7 @@ class TypeContext {
     TypeContext(TypeContext&&) = delete;
     TypeContext& operator=(TypeContext&&) = delete;
 
+    const SemanticType* getArray(const SemanticType* elementType, std::optional<std::size_t> length);
     const SemanticType* getArray(const SemanticType* elementType, std::size_t length);
 
     const SemanticType* getAnonymousAggregate(TypeList&& fieldTypes);

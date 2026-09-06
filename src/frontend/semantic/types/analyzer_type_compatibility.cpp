@@ -344,4 +344,34 @@ auto Analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* r
         .message = std::format("Incompatible types for comparison: '{}' and '{}'", lhs->toString(), rhs->toString())};
 }
 
+const SemanticType* Analyzer::unifyArrayInference(const SemanticType* declared, const SemanticType* initializer) {
+    if (declared == nullptr || initializer == nullptr) {
+        return nullptr;
+    }
+
+    // If both are arrays, we need to unify their lengths and element types
+    if (declared->isArray() && initializer->isArray()) {
+        const auto* decArray = static_cast<const Array*>(declared);
+        const auto* initArray = static_cast<const Array*>(initializer);
+
+        // Take length from initializer if declared length is unspecified
+        std::optional<std::size_t> unifiedLength = decArray->length.has_value() 
+            ? decArray->length 
+            : initArray->length;
+
+        // If declared had a length and initializer has a length, they should ideally match, 
+        // but compatibility checks will catch mismatches elsewhere.
+        
+        const SemanticType* unifiedElementType = unifyArrayInference(decArray->elementType, initArray->elementType);
+        if (unifiedElementType == nullptr) {
+            return nullptr;
+        }
+
+        return typeContext.getArray(unifiedElementType, unifiedLength);
+    }
+
+    // For non-array types, just return the declared type (or verify compatibility)
+    return areTypesCompatible(initializer, declared) ? declared : nullptr;
+}
+
 }  // namespace Manganese::semantic
