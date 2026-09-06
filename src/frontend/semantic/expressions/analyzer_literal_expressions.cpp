@@ -12,13 +12,14 @@
 namespace Manganese::semantic {
 
 auto Analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
     TypeList elementTypes;
     elementTypes.reserve(expression->elements.size());
 
     for (ast::Expression* element : expression->elements) {
         if (visit(element) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
-        if (element->semanticType == nullptr) {
+        if (element->semanticType->isPoison()) {
             result = exprvisit_t::Failure;
         } else if (element->semanticType->isVoid()) {
             logError(element, "Cannot use 'void' expression in aggregate literal");
@@ -37,6 +38,7 @@ auto Analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
 }
 
 auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     if (expression->elements.empty()) {
         if (context.currentVariableDeclarationType != nullptr && context.currentVariableDeclarationType->isArray()) {
             expression->semanticType = context.currentVariableDeclarationType;
@@ -94,21 +96,24 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
     return exprvisit_t::Success;
 }
 auto Analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::character);
     return exprvisit_t::Success;
 }
 
 auto Analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     const Symbol* symbol = symbolTable.lookup(expression->name);
     if (!symbol) {
         logError(expression, "Identifier '{}' was not found in the current scope", expression->name);
         return exprvisit_t::Failure;
     }
-    if (symbol->type == nullptr) [[unlikely]] {
+    if (symbol->type->isPoison()) [[unlikely]] {
         logError(expression, "Identifier '{}' used before its type could be determined", expression->name);
         return exprvisit_t::Failure;
     }
@@ -117,6 +122,7 @@ auto Analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     using enum mnstl::number_t::held_type;
     using enum ast::PrimitiveType;
     switch (expression->value.underlying_type()) {
@@ -134,7 +140,7 @@ auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
         case f64: expression->semanticType = typeContext.getPrimitive(float64); break;
         case err: {
             logError(expression, "{}", expression->value.error_unchecked());
-            expression->semanticType = nullptr;
+            expression->semanticType = typeContext.getPoison();
             return exprvisit_t::Failure;
         }
         case none: break;
@@ -144,10 +150,14 @@ auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::string);
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::PoisonedExpression*) -> exprvisit_t { return exprvisit_t::Failure; }
+auto Analyzer::visit(ast::PoisonedExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
+    return exprvisit_t::Failure;
+}
 
 }  // namespace Manganese::semantic

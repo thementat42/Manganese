@@ -1,4 +1,5 @@
 #include <core.hpp>
+#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/analyzer.hpp>
@@ -8,15 +9,14 @@
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
-#include <mnstl/number.hxx>
-#include <cstddef>
 
 namespace Manganese::semantic {
 
 auto Analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
-    if (targetSemanticType == nullptr) {
+    if (targetSemanticType->isPoison()) {
         logError(expression, "Invalid type in alignof expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
@@ -25,13 +25,14 @@ auto Analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     TypeList resolvedTypeArguments;
     resolvedTypeArguments.reserve(expression->types.size());
 
     for (ast::Type* type : expression->types) {
-        DISCARD(visit(type));
+        if (visit(type) == typevisit_t::Failure) { return exprvisit_t::Failure; }
         const SemanticType* resolved = type->semanticType;
-        if (resolved == nullptr) {
+        if (resolved->isPoison()) {
             logError(type, "Failed to resolve generic type argument '{}' in generic expression", type->toString());
             return exprvisit_t::Failure;
         }
@@ -79,7 +80,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
 
         activeGenericParams = std::move(oldParams);
 
-        if (!concreteType) {
+        if (concreteType == nullptr || concreteType->isPoison()) {
             logError(expression, "Failed to materialize instantiated function type for '{}'",
                      functionDeclaration->name);
             return exprvisit_t::Failure;
@@ -119,7 +120,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
 
         activeGenericParams = std::move(oldParams);
 
-        if (concreteType == nullptr) {
+        if (concreteType == nullptr || concreteType->isPoison()) {
             logError(expression, "Failed to materialize instantiated aggregate type for '{}'", aggregateDecl->name);
             return exprvisit_t::Failure;
         }
@@ -135,9 +136,10 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
 }
 
 auto Analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
-    if (targetSemanticType == nullptr) {
+    if (targetSemanticType->isPoison()) {
         logError(expression, "Invalid type in sizeof expression {}", expression->toString());
         return exprvisit_t::Failure;
     }

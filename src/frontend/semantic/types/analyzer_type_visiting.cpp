@@ -20,7 +20,7 @@ auto Analyzer::visit(ast::AggregateType* type) -> typevisit_t {
     for (ast::Type* fieldType : aggregateType->fieldTypes) {
         DISCARD(visit(fieldType));
         const SemanticType* resolvedFieldType = fieldType->semanticType;
-        if (!resolvedFieldType) { return typevisit_t::Failure; }
+        if (resolvedFieldType->isPoison()) { return typevisit_t::Failure; }
         resolvedFields.push_back(resolvedFieldType);
     }
     type->semanticType = typeContext.getAnonymousAggregate(std::move(resolvedFields));
@@ -43,7 +43,7 @@ auto Analyzer::visit(ast::ArrayType* type) -> typevisit_t {
     if (visitResult == typevisit_t::Failure) { return typevisit_t::Failure; }
 
     const SemanticType* elementType = arrayType->elementType->semanticType;
-    if (elementType == nullptr) {
+    if (elementType->isPoison()) {
         logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
         return typevisit_t::Failure;
     }
@@ -77,7 +77,7 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
     for (const ast::FunctionParameterType& parameterType : functionType->parameterTypes) {
         DISCARD(visit(parameterType.type));
         const SemanticType* resolvedParameterType = parameterType.type->semanticType;
-        if (resolvedParameterType == nullptr) { return typevisit_t::Failure; }
+        if (resolvedParameterType->isPoison()) { return typevisit_t::Failure; }
 
         resolvedParameterTypes.push_back({.type = resolvedParameterType,
                                           .isMutable = parameterType.isMutable,
@@ -88,7 +88,7 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
         // function is not returning void
         DISCARD(visit(functionType->returnType));
         returnType = functionType->returnType->semanticType;
-        if (returnType == nullptr) { return typevisit_t::Failure; }
+        if (returnType->isPoison()) { return typevisit_t::Failure; }
     }
     type->semanticType = typeContext.getFunction(std::move(resolvedParameterTypes), returnType);
     return typevisit_t::Success;
@@ -105,7 +105,7 @@ auto Analyzer::visit(ast::PointerType* type) -> typevisit_t {
     const auto* pointerType = static_cast<const ast::PointerType*>(type);
     DISCARD(visit(pointerType->baseType));
     const SemanticType* baseType = pointerType->baseType->semanticType;
-    if (!baseType) {
+    if (baseType->isPoison()) {
         logError(type, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString());
         return typevisit_t::Failure;
     }

@@ -12,10 +12,18 @@ auto Analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
 }
 
 auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
-    if (visit(statement->expression) == exprvisit_t::Failure || statement->expression->semanticType == nullptr) {
+    if (visit(statement->expression) == exprvisit_t::Failure) {
         statement->expression->semanticType = typeContext.getPoison();
         return stmtvisit_t::Failure;
     }
+#if MN_DEBUG
+    if (statement->expression->semanticType == nullptr) {
+        logging::logInternal(logging::LogLevel::Warning, "Expression '{}' did not have its semantic type set",
+                             statement->expression->toString());
+        statement->expression->semanticType = typeContext.getPoison();
+        return stmtvisit_t::Failure;
+    }
+#endif
     return stmtvisit_t::Success;
 }
 
@@ -50,7 +58,7 @@ auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     }
 
     if (visit(statement->value) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
-    if (statement->value->semanticType == nullptr) {
+    if (statement->value->semanticType->isPoison()) {
         logError(statement->value, "Could not deduce type of return expression");
     }
 

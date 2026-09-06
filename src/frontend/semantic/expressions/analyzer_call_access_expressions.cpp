@@ -13,10 +13,11 @@
 namespace Manganese::semantic {
 
 auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     if (visit(expression->base) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
     const SemanticType* baseType = expression->base->semanticType;
-    if (baseType == nullptr) {
+    if (baseType->isPoison()) {
         logError(expression->base, "Cannot instantiate unresolvable aggregate type");
         return exprvisit_t::Failure;
     }
@@ -51,7 +52,7 @@ auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
         }
 
         const SemanticType* expectedFieldType = aggregateType->getFieldType(fieldInit.name);
-        if (expectedFieldType == nullptr) {
+        if (expectedFieldType->isPoison()) {
             logError(expression, "Aggregate '{}' has no field named '{}'", aggregateType->toString(), fieldInit.name);
             result = exprvisit_t::Failure;
             continue;
@@ -80,9 +81,10 @@ auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
 }
 
 auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     if (visit(expression->callee) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* calleeType = expression->callee->semanticType;
-    if (calleeType == nullptr) {
+    if (calleeType->isPoison()) {
         logError(expression->callee, "Cannot call expression with unresolvable type");
         return exprvisit_t::Failure;
     }
@@ -111,7 +113,7 @@ auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
         const SemanticType* expectedType = functionType->parameterTypes[i].type;
         const SemanticType* actualType = argExpr->semanticType;
 
-        if ((actualType != nullptr) && actualType->isVoid()) {
+        if (actualType->isVoid()) {
             logError(argExpr, "Cannot pass expression returning 'void' as argument {} to function", i + 1);
             result = exprvisit_t::Failure;
             continue;
@@ -129,15 +131,16 @@ auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
     if (visit(expression->variable) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->index) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
-    if (expression->variable->semanticType == nullptr) {
+    if (expression->variable->semanticType->isPoison()) {
         logError(expression->variable, "Could not deduce type of expression {}", expression->variable->toString());
         return exprvisit_t::Failure;
     }
-    if (expression->index->semanticType == nullptr) {
+    if (expression->index->semanticType->isPoison()) {
         logError(expression->index, "Could not deduce type of expression {}", expression->index->toString());
         return exprvisit_t::Failure;
     }
@@ -159,9 +162,10 @@ auto Analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     DISCARD(visit(expression->object));
     const SemanticType* objectType = expression->object->semanticType;
-    if (objectType == nullptr) {
+    if (objectType->isPoison()) {
         logError(expression->object, "Could not deduce type of expression {}", expression->object->toString());
         return exprvisit_t::Failure;
     }
@@ -190,6 +194,7 @@ auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     const Symbol* scopeSymbol = nullptr;
 
     if (expression->scope->kind == ast::ExpressionKind::IdentifierExpression) {
@@ -212,7 +217,7 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
     }
     const std::string_view memberName = static_cast<ast::IdentifierExpression*>(expression->element)->name;
 
-    if ((scopeSymbol->type != nullptr) && scopeSymbol->type->isEnum()) {
+    if (scopeSymbol->type != nullptr && scopeSymbol->type->isEnum()) {
         const auto* enumType = static_cast<const Enum*>(scopeSymbol->type);
         for (const auto& variant : enumType->variants) {
             if (variant.name == memberName) {

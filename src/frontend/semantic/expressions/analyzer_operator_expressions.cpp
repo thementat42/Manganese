@@ -1,4 +1,5 @@
 #include <core.hpp>
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/analyzer.hpp>
@@ -7,15 +8,15 @@
 #include <mnstl/enum_matches.hxx>
 #include <mnstl/number.hxx>
 #include <utils/result.hpp>
-#include <format>
 
 namespace Manganese::semantic {
 auto Analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
     if (visit(expression->assignee) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->value) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
-    if (expression->assignee->semanticType == nullptr || expression->value->semanticType == nullptr) {
+    if (expression->assignee->semanticType->isPoison() || expression->value->semanticType->isPoison()) {
         return exprvisit_t::Failure;
     }
 
@@ -44,15 +45,16 @@ auto Analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
 
     if (visit(expression->left) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->right) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
-    if (expression->left->semanticType == nullptr) {
+    if (expression->left->semanticType->isPoison()) {
         logError(expression, "Could not deduce type of expression {}", expression->left->toString());
         return exprvisit_t::Failure;
     }
-    if (expression->right->semanticType == nullptr) {
+    if (expression->right->semanticType->isPoison()) {
         logError(expression, "Could not deduce type of expression {}", expression->right->toString());
         return exprvisit_t::Failure;
     }
@@ -93,7 +95,7 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
             return exprvisit_t::Success;
         }
         const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
-        if (commonType == nullptr) {
+        if (commonType->isPoison()) {
             logError(expression, "Invalid operands for arithmetic operator '{}': {} and {}",
                      lexer::tokenTypeToString(op), lhsType->toString(), rhsType->toString());
             return exprvisit_t::Failure;
@@ -107,10 +109,11 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
 };
 
 auto Analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     exprvisit_t result = visit(expression->left);
     if (result == exprvisit_t::Failure) { return result; }
     // the only postfix operators are ++ and -- so the expression must be an integer
-    if (expression->left->semanticType == nullptr) {
+    if (expression->left->semanticType->isPoison()) {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
@@ -139,8 +142,9 @@ auto Analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
-    if (expression->right->semanticType == nullptr) {
+    if (expression->right->semanticType->isPoison()) {
         logError(expression, "Could not deduce type of expression {}", expression->toString());
         return exprvisit_t::Failure;
     }
@@ -182,7 +186,7 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         case UnaryMinus: {
             if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
             const SemanticType* operandType = expression->right->semanticType;
-            if (operandType == nullptr) { return exprvisit_t::Failure; }
+            if (operandType->isPoison()) { return exprvisit_t::Failure; }
             if (!operandType->isNumeric()) {
                 logError(expression, "Operator '{}' can only be applied to numeric types (got '{}')",
                          lexer::tokenTypeToString(expression->op), operandType->toString());
@@ -210,8 +214,7 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         case Dereference: {
             if (!expression->right->semanticType->isPointer()) {
                 logError(expression, "Dereferencing cannot be applied to a non-pointer type");
-                // dummy (figure out a better option later)
-                expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::uint8);
+                expression->semanticType = typeContext.getPoison();
                 return exprvisit_t::Failure;
             }
             expression->semanticType = static_cast<const Pointer*>(expression->right->semanticType)->baseType;
@@ -237,10 +240,12 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
 }
 
 auto Analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
-    const ContextGuard guard(context.typeCastDepth, static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
+    const ContextGuard guard(context.typeCastDepth,
+                             static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
     if (visit(expression->originalValue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
-    if (expression->originalValue->semanticType == nullptr) {
+    if (expression->originalValue->semanticType->isPoison()) {
         logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString());
         return exprvisit_t::Failure;
     }

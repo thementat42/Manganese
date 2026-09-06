@@ -5,10 +5,11 @@
 #include <frontend/semantic/generics_helpers.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/fold_result.hxx>
+#include <string>
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
-#include <string>
+
 
 namespace Manganese::semantic {
 
@@ -32,7 +33,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) ->
     bool success = true;
     for (const auto& field : stmt->fields) {
         const SemanticType* fieldType = resolveGenericType(field.type);
-        if (fieldType == nullptr) {
+        if (fieldType->isPoison()) {
             success = false;
             break;
         }
@@ -76,7 +77,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
     const SemanticType* resolvedReturnType = typeContext.getVoid();
     if (stmt->returnType != nullptr) {
         resolvedReturnType = resolveGenericType(stmt->returnType);
-        if (resolvedReturnType == nullptr) {
+        if (resolvedReturnType->isPoison()) {
             activeGenericParams = std::move(oldParams);
             instantiationCache.markAsFailure(key);
             return stmtvisit_t::Failure;
@@ -92,7 +93,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
 
     for (const auto& param : stmt->parameters) {
         const SemanticType* paramType = resolveGenericType(param.type);
-        if (paramType == nullptr) {
+        if (paramType->isPoison()) {
             success = false;
             break;
         }
@@ -101,7 +102,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
             = symbolTable.declare(
                   param.name,
                   Symbol{.type = paramType,
-                         .node = nullptr,
+                         .node = stmt,
                          .kind = (param.isMutable ? SymbolKind::Parameter : SymbolKind::ConstantParameter),
                          .isMutable = param.isMutable,
                          .status = ResolutionStatus::Success})
@@ -141,7 +142,7 @@ const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateD
     const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
     if (cachedResult == nullptr || cachedResult->state != ResolutionStatus::Success) {
-        return nullptr;  // Not instantiated or failed
+        return typeContext.getPoison();  // Not instantiated or failed
     }
 
     // Temporarily bind generic parameters for field type resolution
@@ -154,9 +155,9 @@ const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateD
 
     for (const ast::AggregateField& fieldNode : decl->fields) {
         const SemanticType* fieldType = resolveGenericType(fieldNode.type);
-        if (fieldType == nullptr) {
+        if (fieldType->isPoison()) {
             activeGenericParams = std::move(oldParams);
-            return nullptr;
+            return typeContext.getPoison();
         }
         instantiatedFields.push_back(AggregateField{.name = fieldNode.name, .type = fieldType});
     }
@@ -177,7 +178,7 @@ const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDec
     const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
     if (cachedResult == nullptr || cachedResult->state != ResolutionStatus::Success) {
-        return nullptr;  // Not instantiated or failed
+        return typeContext.getPoison();  // Not instantiated or failed
     }
 
     const SemanticType* resolvedReturnType = cachedResult->returnType;
@@ -192,9 +193,9 @@ const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDec
 
     for (const ast::FunctionParameter& paramNode : decl->parameters) {
         const SemanticType* paramType = resolveGenericType(paramNode.type);
-        if (paramType == nullptr) {
+        if (paramType->isPoison()) {
             activeGenericParams = std::move(oldParams);
-            return nullptr;
+            return typeContext.getPoison();
         }
         instantiatedParams.push_back(
             Parameter{.type = paramType, .isMutable = paramNode.isMutable, .isVariadic = paramNode.isVariadic});
@@ -212,6 +213,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
     using enum ast::TypeKind;
 
     switch (type->kind) {
+        case PoisonedType: return typeContext.getPoison();
         case AggregateType: {
             const auto* aggregateType = static_cast<const ast::AggregateType*>(type);
             TypeList fields;
@@ -219,7 +221,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
 
             for (const ast::Type* field : aggregateType->fieldTypes) {
                 const SemanticType* fieldType = resolveGenericType(field);
-                if (fieldType == nullptr) { return nullptr; }
+                if (fieldType->isPoison()) { return typeContext.getPoison(); }
                 fields.push_back(fieldType);
             }
             return typeContext.getAnonymousAggregate(std::move(fields));
@@ -227,24 +229,24 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
         case ArrayType: {
             const auto* arrayType = static_cast<const ast::ArrayType*>(type);
             const SemanticType* elementType = resolveGenericType(arrayType->elementType);
-            if (elementType == nullptr) { return nullptr; }
+            if (elementType->isPoison()) { return typeContext.getPoison(); }
             const mnstl::fold_result_t length = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
             if (!length.has_value()) {
                 logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
-                return nullptr;
+                return typeContext.getPoison();
             }
             if (!length.is_number()) {
                 logError(arrayType->lengthExpression, "Array length must be an integer value");
-                return nullptr;
+                return typeContext.getPoison();
             }
             const auto lengthValue = length.number_unchecked();
             if (lengthValue.is_error()) {
                 logError(arrayType->lengthExpression, "{}", lengthValue.error_unchecked());
-                return nullptr;
+                return typeContext.getPoison();
             }
             if (!lengthValue.is_integer()) {
                 logError(arrayType->lengthExpression, "Array length must be an integer value");
-                return nullptr;
+                return typeContext.getPoison();
             }
             return typeContext.getArray(elementType, length.number_unchecked().value_as<std::size_t>());
         }
@@ -255,13 +257,13 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
 
             for (const auto& param : functionType->parameterTypes) {
                 const SemanticType* paramType = resolveGenericType(param.type);
-                if (paramType == nullptr) { return nullptr; }
+                if (paramType->isPoison()) { return typeContext.getPoison(); }
                 params.push_back(
                     Parameter{.type = paramType, .isMutable = param.isMutable, .isVariadic = param.isVariadic});
             }
 
             const SemanticType* returnType = resolveGenericType(functionType->returnType);
-            if (returnType == nullptr) { return nullptr; }
+            if (returnType->isPoison()) { return typeContext.getPoison(); }
             return typeContext.getFunction(std::move(params), returnType);
         }
         case GenericInstantiationType: {
@@ -271,7 +273,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
 
             for (const ast::Type* param : genericType->typeParameters) {
                 const SemanticType* paramType = resolveGenericType(param);
-                if (paramType == nullptr) { return nullptr; }
+                if (paramType->isPoison()) { return typeContext.getPoison(); }
                 resolvedTypes.push_back(paramType);
             }
 
@@ -286,7 +288,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
 
             if (symbol == nullptr || symbol->node == nullptr) {
                 logError(type, "Unknown generic base declaration");
-                return nullptr;
+                return typeContext.getPoison();
             }
 
             if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
@@ -300,17 +302,17 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
 
                 if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
 
-                if (visitResult == stmtvisit_t::Failure) { return nullptr; }
+                if (visitResult == stmtvisit_t::Failure) { return typeContext.getPoison(); }
                 return getInstantiatedAggregateType(aggregate, genericsStack.top());
             }
 
             logError(type, "Symbol '{}' is not a generic type", genericType->baseType->toString());
-            return nullptr;
+            return typeContext.getPoison();
         }
         case PointerType: {
             const auto* pointerType = static_cast<const ast::PointerType*>(type);
             const SemanticType* baseType = resolveGenericType(pointerType->baseType);
-            if (baseType == nullptr) { return nullptr; }
+            if (baseType->isPoison()) { return typeContext.getPoison(); }
             return typeContext.getPointer(baseType, pointerType->isMutable);
         }
         case ScopedType: {
@@ -318,13 +320,13 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             const Symbol* symbol = resolveTypeSymbol(type);
             if (symbol == nullptr) {
                 logError(type, "Unknown scoped type '{}'", type->toString());
-                return nullptr;
+                return typeContext.getPoison();
             }
 
             if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::TypeAlias) { return symbol->type; }
 
             logError(type, "Symbol '{}' is not a type", type->toString());
-            return nullptr;
+            return typeContext.getPoison();
         }
         case IdentifierType: {
             const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
@@ -336,23 +338,23 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
                     return genericsStack.top()[index];
                 }
                 logError(type, "Unbound generic parameter '{}'", IdentifierType->name);
-                return nullptr;
+                return typeContext.getPoison();
             }
 
             // Lookup named, non-generic type in symbolt able
             const Symbol* symbol = symbolTable.lookup(IdentifierType->name);
             if (symbol == nullptr) {
                 logError(type, "Unknown type name '{}'", IdentifierType->name);
-                return nullptr;
+                return typeContext.getPoison();
             }
             if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::TypeAlias) { return symbol->type; }
 
             logError(type, "Symbol '{}' is not a type", IdentifierType->name);
-            return nullptr;
+            return typeContext.getPoison();
         }
         case TypeofType: {
             auto* nestedExpression = static_cast<const ast::TypeofType*>(type)->expression;
-            if (visit(nestedExpression) == exprvisit_t::Failure) { return nullptr; }
+            if (visit(nestedExpression) == exprvisit_t::Failure) { return typeContext.getPoison(); }
             return nestedExpression->semanticType;
         }
     }

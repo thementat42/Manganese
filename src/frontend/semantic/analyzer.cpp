@@ -71,7 +71,7 @@ bool Analyzer::isMutableExpression(const ast::Expression* expr) {
             const auto* prefix = static_cast<const ast::PrefixExpression*>(expr);
             if (prefix->op == lexer::TokenType::Dereference) {
                 const SemanticType* operandType = prefix->right->semanticType;
-                if ((operandType == nullptr) || !operandType->isPointer()) { return false; }
+                if (!operandType->isPointer()) { return false; }
                 return static_cast<const Pointer*>(operandType)->isMutable;
             }
             return false;

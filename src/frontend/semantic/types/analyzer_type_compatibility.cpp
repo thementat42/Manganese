@@ -53,12 +53,12 @@ Result Analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
         const auto* lhsBase = static_cast<const Pointer*>(lhsType)->baseType;
         const auto* rhsBase = static_cast<const Pointer*>(rhsType)->baseType;
 
-        if (lhsBase == nullptr) {
+        if (lhsBase->isPoison()) {
             logError(expr, "Could not deduce type of pointer '{}'", expr->left->toString());
             return Result::Failure;
         }
 
-        if (rhsBase == nullptr) {
+        if (rhsBase->isPoison()) {
             logError(expr, "Could not deduce type of pointer '{}'", expr->right->toString());
             return Result::Failure;
         }
@@ -72,7 +72,7 @@ Result Analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
 }
 
 const SemanticType* Analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
-    if (lhs == nullptr || rhs == nullptr) { return nullptr; }
+    if (lhs->isPoison() || rhs->isPoison()) { return typeContext.getPoison(); }
     // direct match, don't need to promote
     if (lhs == rhs) { return lhs; }
 
@@ -109,16 +109,16 @@ const SemanticType* Analyzer::promoteNumericTypes(const SemanticType* lhs, const
         if (signedInfo.bitWidth > unsignedInfo.bitWidth) { return signedType; }
         return unsignedType;
     }
-    return nullptr;
+    return typeContext.getPoison();
 }
 
 auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
-    // Null pointer means something went wrong in type deduction
-    if (from == nullptr || to == nullptr) { return {.result = Compatible_t::Error, .message = "Could not deduce types"}; }
-
     if (from->isVoid() || to->isVoid()) {
         return {.result = Compatible_t::Error,
                 .message = "Cannot use an expression that evaluates to 'void' in this context"};
+    }
+    if (from->isPoison() || to->isPoison()) {
+        return {.result = Compatible_t::Error, .message = "Could not deduce types"};
     }
 
     // Duplicated types point to the same underlying value so we can just do a fast pointer comparison
@@ -238,6 +238,7 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
         };
         case SemanticTypeKind::Void:
             return {.result = Compatible_t::Error, .message = "Cannot use 'void' expression in this context"};
+        case SemanticTypeKind::Poison: return {.result = Compatible_t::Error, .message = "Could not deduce types"};
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
 }
@@ -315,6 +316,10 @@ auto Analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* r
     if (lhs->isVoid() || rhs->isVoid()) {
         return {.result = Compatible_t::Error, .message = "Cannot compare void types"};
     }
+    if (lhs->isPoison() || rhs->isPoison()) {
+        return {.result = Compatible_t::Error, .message = "Unable to deduce types in comparison"};
+    }
+
     if (lhs == rhs) { return {.result = Compatible_t::Valid}; }
 
     if (lhs->isNumeric() && rhs->isNumeric()) { return {.result = Compatible_t::Valid}; }
@@ -345,9 +350,7 @@ auto Analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* r
 }
 
 const SemanticType* Analyzer::unifyArrayInference(const SemanticType* declared, const SemanticType* initializer) {
-    if (declared == nullptr || initializer == nullptr) {
-        return nullptr;
-    }
+    if (declared->isPoison() || initializer->isPoison()) { return typeContext.getPoison(); }
 
     // If both are arrays, we need to unify their lengths and element types
     if (declared->isArray() && initializer->isArray()) {
@@ -355,17 +358,13 @@ const SemanticType* Analyzer::unifyArrayInference(const SemanticType* declared, 
         const auto* initArray = static_cast<const Array*>(initializer);
 
         // Take length from initializer if declared length is unspecified
-        std::optional<std::size_t> unifiedLength = decArray->length.has_value() 
-            ? decArray->length 
-            : initArray->length;
+        std::optional<std::size_t> unifiedLength = decArray->length.has_value() ? decArray->length : initArray->length;
 
-        // If declared had a length and initializer has a length, they should ideally match, 
+        // If declared had a length and initializer has a length, they should ideally match,
         // but compatibility checks will catch mismatches elsewhere.
-        
+
         const SemanticType* unifiedElementType = unifyArrayInference(decArray->elementType, initArray->elementType);
-        if (unifiedElementType == nullptr) {
-            return nullptr;
-        }
+        if (unifiedElementType == nullptr) { return typeContext.getPoison(); }
 
         return typeContext.getArray(unifiedElementType, unifiedLength);
     }
@@ -374,16 +373,16 @@ const SemanticType* Analyzer::unifyArrayInference(const SemanticType* declared, 
     return areTypesCompatible(initializer, declared) ? declared : nullptr;
 }
 
-Result Analyzer::checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element) {
+Result Analyzer::checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i,
+                                                ast::Expression* element) {
     const auto compat = areTypesCompatible(targetType, element->semanticType);
     if (!compat) {
-        logError(element, "Array element '{}' (index {} in literal) of type '{}' is not compatible with expected type '{}'",
+        logError(element,
+                 "Array element '{}' (index {} in literal) of type '{}' is not compatible with expected type '{}'",
                  element->toString(), i, element->semanticType->toString(), targetType->toString());
         return exprvisit_t::Failure;
     }
-    if (compat.result == Compatible_t::Warning) {
-        logWarning(element, "{}", compat.message);
-    }
+    if (compat.result == Compatible_t::Warning) { logWarning(element, "{}", compat.message); }
     return exprvisit_t::Success;
 }
 

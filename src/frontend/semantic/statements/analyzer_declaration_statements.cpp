@@ -9,7 +9,6 @@
 #include <utils/result.hpp>
 #include <vector>
 
-
 namespace Manganese::semantic {
 
 auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
@@ -39,7 +38,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     for (const ast::AggregateField& field : statement->fields) {
         DISCARD(visit(field.type));
         const SemanticType* resolvedFieldType = field.type->semanticType;
-        if (resolvedFieldType == nullptr) {
+        if (resolvedFieldType->isPoison()) {
             logging::logError(field.line, field.column, "Unknown type for field '{}' in aggregate '{}'", field.name,
                               statement->name);
             return stmtvisit_t::Failure;
@@ -211,11 +210,12 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
 
             const SemanticType* defaultValueType = param.defaultValue->semanticType;
 
-            if (defaultValueType != nullptr) {
-                logError(statement, "Unable to determine type of default value for parameter '{}' in function '{}'",
-                         param.name, statement->name);
+            if (defaultValueType->isPoison()) {
+                logError(statement,
+                         "Unable to determine type of default value ({}) for parameter '{}' in function '{}'",
+                         param.defaultValue->toString(), param.name, statement->name);
                 signatureResult = stmtvisit_t::Failure;
-            } else if (resolvedParamType != nullptr && !areTypesCompatible(resolvedParamType, defaultValueType)) {
+            } else if (!areTypesCompatible(resolvedParamType, defaultValueType)) {
                 logError(statement,
                          "Default value for parameter '{}' in function '{}' has type '{}', "
                          "but '{}' was expected",
@@ -242,6 +242,10 @@ auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
     if (statement->type != nullptr) {
         if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
         variableType = statement->type->semanticType;
+        if (variableType == typeContext.getVoid()) {
+            logError(statement, "Variable '{}' cannot be declared with type void", statement->name);
+            return stmtvisit_t::Failure;
+        }
     }
 
     if (statement->value) {
@@ -249,7 +253,12 @@ auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
         if (visit(statement->value) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
         const SemanticType* initializerType = statement->value->semanticType;
 
-        if (initializerType == nullptr || initializerType->isVoid()) {
+        if (initializerType->isPoison()) {
+            logError(statement->value, "Could not determine type of initializer '{}' for variable '{}'",
+                     statement->value->toString(), statement->name);
+            return stmtvisit_t::Failure;
+        }
+        if (initializerType->isVoid()) {
             logError(statement->value, "Cannot initialize variable '{}' with a void expression", statement->name);
             return stmtvisit_t::Failure;
         }

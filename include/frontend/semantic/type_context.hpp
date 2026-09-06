@@ -63,6 +63,7 @@ struct SemanticType {
     constexpr bool isFunction() const noexcept { return kind == SemanticTypeKind::Function; }
     constexpr bool isGeneric() const noexcept { return kind == SemanticTypeKind::Generic; }
     constexpr bool isPointer() const noexcept { return kind == SemanticTypeKind::Pointer; }
+    constexpr bool isPoison() const noexcept { return kind == SemanticTypeKind::Poison; }
     constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
     constexpr bool isVoid() const noexcept { return kind == SemanticTypeKind::Void; }
 

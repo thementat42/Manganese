@@ -61,7 +61,7 @@ Result Analyzer::collectGlobalAggregate(ast::AggregateDeclarationStatement* aggr
     }
 
     // Skip if already processed
-    if (symbol->status != ResolutionStatus::NotStarted && symbol->type != nullptr) { return Result::Success; }
+    if (symbol->status != ResolutionStatus::NotStarted && !symbol->type->isPoison()) { return Result::Success; }
 
     // If it has generic parameters, register it as an uninstantiated generic template
     if (!aggregate->genericTypes.empty()) {
@@ -82,7 +82,7 @@ Result Analyzer::collectGlobalAggregate(ast::AggregateDeclarationStatement* aggr
         }
 
         const SemanticType* fieldType
-            = (fieldResult == typevisit_t::Failure ? typeContext.getVoid() : field.type->semanticType);
+            = (fieldResult == typevisit_t::Failure ? typeContext.getPoison() : field.type->semanticType);
         fields.push_back(AggregateField{.name = field.name, .type = fieldType});
     }
 
@@ -128,7 +128,7 @@ Result Analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* functi
         }
 
         const SemanticType* paramType
-            = (paramResult == typevisit_t::Failure ? typeContext.getVoid() : param.type->semanticType);
+            = (paramResult == typevisit_t::Failure ? typeContext.getPoison() : param.type->semanticType);
         paramTypes.push_back(
             Parameter{.type = paramType, .isMutable = param.isMutable, .isVariadic = param.isVariadic});
     }
@@ -140,6 +140,7 @@ Result Analyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* functi
             logError(function, "Unknown return type '{}' in function '{}'", function->returnType->toString(),
                      function->name);
             funcResult = Result::Failure;
+            resolvedReturnType = typeContext.getPoison();
         } else {
             resolvedReturnType = function->returnType->semanticType;
         }

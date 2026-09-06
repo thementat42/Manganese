@@ -43,7 +43,7 @@ auto Analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
         if (visit(statement->stopCondition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
         context.inForLoopCondition = false;
 
-        if (statement->stopCondition->semanticType == nullptr) {
+        if (statement->stopCondition->semanticType->isPoison()) {
             logError(statement->stopCondition, "Could not deduce type of for loop stop condition {}",
                      statement->stopCondition->toString());
             result = stmtvisit_t::Failure;
@@ -78,7 +78,7 @@ auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     context.inIfCondition = false;
 
-    if (statement->condition->semanticType == nullptr) {
+    if (statement->condition->semanticType->isPoison()) {
         logError(statement, "Could not deduce type of condition {}", statement->condition->toString());
         result = stmtvisit_t::Failure;
     } else {
@@ -100,7 +100,7 @@ auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     for (ast::ElifClause& elif : statement->elifs) {
         DISCARD(visit(elif.condition));
 
-        if (elif.condition->semanticType == nullptr) {
+        if (elif.condition->semanticType->isPoison()) {
             logError(statement, "Could not deduce type of condition {}", elif.condition->toString());
             result = stmtvisit_t::Failure;
         } else {
@@ -134,11 +134,11 @@ auto Analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
     }
     if (visit(statement->target) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
     const SemanticType* targetType = statement->target->semanticType;
-    if (targetType == nullptr) {
+    if (targetType->isPoison()) {
         logError(statement, "Could not determine type of switch target expression");
         return stmtvisit_t::Failure;
     }
-    if (targetType != nullptr && targetType->isVoid()) {
+    if (targetType->isVoid()) {
         logError(statement->target, "Switch target expression cannot evaluate to 'void'");
         return stmtvisit_t::Failure;
     }
@@ -153,7 +153,7 @@ auto Analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
             }
             if (visitSuccess) {
                 const SemanticType* valType = val->semanticType;
-                if (valType != nullptr && !areTypesComparable(targetType, valType)) {
+                if (!areTypesComparable(targetType, valType)) {
                     logError(val, "Type mismatch in switch case: target has type '{}', but case value has type '{}'",
                              targetType->toString(), valType->toString());
                     result = stmtvisit_t::Failure;
@@ -178,7 +178,7 @@ auto Analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     context.inWhileLoopCondition = false;
 
-    if (statement->condition->semanticType == nullptr) {
+    if (statement->condition->semanticType->isPoison()) {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
         return stmtvisit_t::Failure;
     } else {
