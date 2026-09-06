@@ -58,7 +58,7 @@ struct [[nodiscard]] StackGuard {
     StackGuard& operator=(StackGuard&&) = delete;
 };
 
-using _analyzer_base_t = ast::Visitor<Result, Result, Result>;
+using _analyzer_base_t = ast::Visitor<Result, Result, Result, false>;
 
 class Analyzer final : public _analyzer_base_t {
    private:

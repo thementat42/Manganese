@@ -10,7 +10,7 @@
 
 namespace Manganese::ast {
 
-template <class ExpressionResult, class StatementResult, class TypeResult>
+template <class ExpressionResult, class StatementResult, class TypeResult, bool IsConstVisitor>
 class Visitor {
    public:
     virtual ~Visitor() noexcept = default;
@@ -18,10 +18,13 @@ class Visitor {
     using stmtvisit_t = StatementResult;
     using typevisit_t = TypeResult;
 
+    template <class U>
+    using NodePointer = std::conditional_t<IsConstVisitor, const U*, U*>;
+
    protected:
-#define STMT(name) virtual stmtvisit_t visit(ast::name*) = 0;
-#define EXPR(name) virtual exprvisit_t visit(ast::name*) = 0;
-#define TYPE(name) virtual typevisit_t visit(ast::name*) = 0;
+#define STMT(name) virtual stmtvisit_t visit(NodePointer<ast::name>) = 0;
+#define EXPR(name) virtual exprvisit_t visit(NodePointer<ast::name>) = 0;
+#define TYPE(name) virtual typevisit_t visit(NodePointer<ast::name>) = 0;
 #include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR
@@ -29,26 +32,10 @@ class Visitor {
 
     // Dispatch for the different kinds of nodes
 
-    exprvisit_t visit(ast::Expression* expr) {
-        switch (expr->kind) {
-#define STMT(name)
-#define EXPR(name) \
-    case ast::ExpressionKind::name: return visit(static_cast<ast::name*>(expr));
-
-#define TYPE(name)
-#include <frontend/ast/ast.def>
-        }
-
-        ASSERT_UNREACHABLE(std::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind)));
-#undef STMT
-#undef EXPR
-#undef TYPE
-    }
-
-    stmtvisit_t visit(ast::Statement* stmt) {
+    stmtvisit_t visit(NodePointer<ast::Statement> stmt) {
         switch (stmt->kind) {
 #define STMT(name) \
-    case ast::StatementKind::name: return visit(static_cast<ast::name*>(stmt));
+    case ast::StatementKind::name: return visit(static_cast<NodePointer<ast::name>>(stmt));
 
 #define EXPR(name)
 #define TYPE(name)
@@ -61,13 +48,30 @@ class Visitor {
 #undef EXPR
 #undef TYPE
     }
-    typevisit_t visit(ast::Type* type) {
+
+    exprvisit_t visit(NodePointer<ast::Expression> expr) {
+        switch (expr->kind) {
+#define STMT(name)
+#define EXPR(name) \
+    case ast::ExpressionKind::name: return visit(static_cast<NodePointer<ast::name>>(expr));
+
+#define TYPE(name)
+#include <frontend/ast/ast.def>
+        }
+
+        ASSERT_UNREACHABLE(std::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind)));
+#undef STMT
+#undef EXPR
+#undef TYPE
+    }
+
+    typevisit_t visit(NodePointer<ast::Type> type) {
         switch (type->kind) {
 #define STMT(name)
 #define EXPR(name)
 
 #define TYPE(name) \
-    case ast::TypeKind::name: return visit(static_cast<ast::name*>(type));
+    case ast::TypeKind::name: return visit(static_cast<NodePointer<ast::name>>(type));
 
 #include <frontend/ast/ast.def>
         }
