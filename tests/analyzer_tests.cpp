@@ -710,16 +710,33 @@ bool testVariadicAndDefaults() {
             return args[0] + args[1];
         }
 
+        # Generic variadic function
+        func firstOf[T](args...: T) -> T {
+            return args[0];
+        }
+
         func main() -> int {
             let a = configure();         # Should use both defaults (30 + 3 = 33)
             let b = configure(60);       # Should use default retries (60 + 3 = 63)
             let c = configure(10, 5);    # Should override both (10 + 5 = 15)
             
             let total = sumFirstTwo(10, 20, 30, 40); # Variadic invocation
+            let val = firstOf@[float64](42.12321, 100.01293483910);              # Generic variadic invocation
             return 0;
         }
     )";
-    return analyzeSource(code, true, __func__);
+    const std::string invalid = R"(
+
+        func firstOf[T](args...: T) -> T {
+            return args[0];
+        }
+
+        func main() -> int {
+            let val = firstOf@[string](42.12321, 100.01293483910, "blah");
+            return "hello!";
+        }
+    )";
+    return analyzeSource(code, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
 bool miscTests() {
