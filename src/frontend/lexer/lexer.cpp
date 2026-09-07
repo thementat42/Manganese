@@ -15,7 +15,6 @@
 
 #include "frontend/lexer/lexer_base.hpp"
 
-
 namespace Manganese::lexer {
 
 //~ Core Lexer Functions
@@ -65,7 +64,7 @@ void Lexer::lex(std::size_t numTokens) {
         currentChar = peekChar();
         tokenStartLine = getLine();
         tokenStartCol = getCol();
-        _hasError = _hasError || (result == Result::Failure);
+        if (result == Result::Failure) { flags.hasError = true; }
     }
     if (done()) {
         // Just finished tokenizing
@@ -565,9 +564,8 @@ NumberPrefixResult Lexer::processNumberPrefix() {
         default:
             // Not a valid base indicator -- just treat it as a decimal number
             if (is_digit(peekChar(1))) {  // if the literal is 0, that's fine
-                logging::logWarning(getLine(), getCol(),
-                                    "Leading zeros in numeric literals are treated as decimal numbers."
-                                    "Use a 0o prefix for octal numbers.");
+                logWarning("Leading zeros in numeric literals are treated as decimal numbers."
+                           "Use a 0o prefix for octal numbers.");
             }
             return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
     }

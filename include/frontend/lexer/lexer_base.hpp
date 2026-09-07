@@ -44,8 +44,12 @@ class Lexer {
     std::unique_ptr<io::Reader> reader;
     std::size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
     constexpr static std::size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
-    bool _hasError = false;
     std::deque<Token> tokenStream;
+
+    struct {
+        bool hasError : 1 = false;
+        bool hasWarning : 1 = false;
+    } flags;
 
    public:
     explicit Lexer(const std::string& source, Mode mode = Mode::File);
@@ -60,7 +64,8 @@ class Lexer {
     Token& peekToken();
     Token consumeToken();
     inline bool done() noexcept { return reader->done(); }
-    bool hasError() const noexcept { return _hasError; }
+    bool hasError() const noexcept { return flags.hasError; }
+    bool hasWarning() const noexcept { return flags.hasWarning; }
 
    private:
     //~ Main tokenization functions
@@ -84,9 +89,16 @@ class Lexer {
     Result processCharEscapeSequence(std::string_view charLiteral);
 
     template <class... Args>
-    void logError(std::format_string<Args...> message, Args&&... args) const {
+    void logError(std::format_string<Args...> message, Args&&... args) {
         logging::logError(getLine(), getCol(), message, std::forward<Args>(args)...);
+        flags.hasError = true;
     }
+    template <class... Args>
+    void logWarning(std::format_string<Args...> message, Args&&... args) {
+        logging::logWarning(getLine(), getCol(), message, std::forward<Args>(args)...);
+        flags.hasWarning = true;
+    }
+
     //~ Reader wrapper functions
     inline char peekChar(std::size_t offset = 0) noexcept { return reader->peekChar(offset); }
     [[nodiscard]] inline char consumeChar() const noexcept { return reader->consumeChar(); }
