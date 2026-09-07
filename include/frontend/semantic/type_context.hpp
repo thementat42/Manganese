@@ -173,10 +173,7 @@ struct Enum final : public SemanticType {
         SemanticType(SemanticTypeKind::Enum), name(enumName), underlyingType(defaultUnderlying) {}
 
     bool hasVariant(std::string_view variantName) const noexcept {
-        for (const auto& v : variants) {
-            if (v.name == variantName) { return true; }
-        }
-        return false;
+        return std::ranges::find(variants, variantName, &Variant::name) != variants.end();
     }
 
     ~Enum() override = default;
