@@ -9,7 +9,7 @@
 #include <string_view>
 #include <vector>
 
-#include "testrunner.hpp"
+#include "tests.hpp"
 
 namespace Manganese::tests {
 using lexer::Token, lexer::TokenType;
@@ -94,6 +94,7 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
 }  // namespace
 
 namespace lexer_tests {
+namespace {
 
 bool testEmptyString() {
     const std::vector<Token> tokens = tokensFromString("");
@@ -468,6 +469,7 @@ bool testBadFileAccess() {
     } catch (const std::runtime_error& e) { return true; }
     return false;
 }
+}  // namespace
 }  // namespace lexer_tests
 
 void runLexerTests(TestRunner& runner) {

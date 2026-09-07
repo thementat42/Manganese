@@ -17,6 +17,7 @@ class TestRunner {
     void printSummary() const noexcept;
     bool allTestsPassed() const noexcept { return failed == 0; }
 };
+
 }  // namespace Manganese::tests
 
 #endif  // MANGANESE_TESTS_TEST_RUNNER_HPP

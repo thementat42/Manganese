@@ -10,12 +10,14 @@
 #include <string>
 
 #include "testrunner.hpp"
+#include "tests.hpp"
 
 namespace Manganese::tests {
 
-constexpr static const char* logFileName = "logs/analyzer_tests.log";
-static mnstl::chunk_allocator arena;
-static utils::TargetInfo target = utils::TargetInfo{.pointerSize = sizeof(void*), .pointerAlignment = alignof(void*)};
+namespace {
+constexpr const char* logFileName = "logs/analyzer_tests.log";
+mnstl::chunk_allocator arena;
+utils::TargetInfo target = utils::TargetInfo{.pointerSize = sizeof(void*), .pointerAlignment = alignof(void*)};
 
 // Helper: Parses and runs full semantic analysis on source code
 bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {
@@ -53,7 +55,10 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
 
     return expectSuccess ? result == Result::Success : result == Result::Failure;
 }
+}  // namespace
 namespace analyzer_tests {
+namespace {
+
 // Statement Tests
 
 bool testAggregateDeclarationStatement() {
@@ -755,6 +760,7 @@ bool miscTests() {
         }
     )";
     return analyzeSource(code, false, __func__);
+}
 }
 }  // namespace analyzer_tests
 

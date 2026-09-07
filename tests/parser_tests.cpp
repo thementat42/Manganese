@@ -8,7 +8,7 @@
 #include <mnstl/chunk_allocator.hxx>
 #include <string>
 
-#include "testrunner.hpp"
+#include "tests.hpp"
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
@@ -16,12 +16,10 @@
 
 namespace Manganese::tests {
 
-constexpr static const char* logFileName = "logs/parser_tests.log";
-static mnstl::chunk_allocator allocator;
-
-// Helpers
-
 namespace {
+// Helpers
+constexpr inline const char* logFileName = "logs/parser_tests.log";
+mnstl::chunk_allocator allocator;
 
 parser::ParsedFile getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
     parser::Parser parser(source, mode, allocator);
@@ -119,6 +117,7 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
 }
 }  // namespace
 namespace parser_tests {
+namespace {
 
 bool testArithmeticOperatorsAndCasting() {
     const std::string expression = "8 - 4 + 6 * 2 // 5 % 3 * 2 * 2 / 7 as float32;";
@@ -690,6 +689,7 @@ bool miscTests() {
     std::cout << x.program[0]->toString(0) << "\n";
     return true;
 }
+}  // namespace
 }  // namespace parser_tests
 
 void runParserTests(TestRunner& runner) {
