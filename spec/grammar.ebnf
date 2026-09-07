@@ -34,10 +34,10 @@ decimal_digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 hexadecimal_digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 
                     'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f'
 
-binary_integer_literal = "0b" binary_digit+
-octal_integer_literal = "0o" octal_digit+
+binary_integer_literal = ("0b" | "0B") binary_digit+
+octal_integer_literal = ("0o" | "0O") octal_digit+
 decimal_integer_literal = decimal_digit+
-hexadecimal_integer_literal = "0x" hexadecimal_digit+
+hexadecimal_integer_literal = ("0x" | "0X") hexadecimal_digit+
 
 integer_suffix = "i8" | "i16" | "i32" | "i64" | "i128" | "u8" | "u16" | "u32" | "u64" | "u128" | 
                  "I8" | "I16" | "I32" | "I64" | "I128" | "U8" | "U16" | "U32" | "U64" | "U128"
@@ -74,13 +74,17 @@ array_literal = ("[" expression ("," expression)* "]") | ("[" "]")
 
 identifier = (letter | "_") (letter | decimal_digit | "_")*
 
-whitespace = " " | "\t" | "\r" | "\n"
+whitespace = " " | "\t" | "\r" | "\n" | "\v" | "\f"
 
 character = [^'\\\n\r] | escape_sequence
 string_character = [^"\\\n\r] | escape_sequence
+raw_string_character = [^\n\r]
 
 character_literal = "'" character "'"
 string_literal = '"' string_character* '"'
+
+# closing number of backticks must match the opening number of backticks
+raw_string_literal = "r" "`"+ raw_string_character "`"+
 
 access_modifier = "public" | "private"
 
@@ -140,7 +144,7 @@ expression =
     | sizeof_expression
     | alignof_expression
     | identifier_expression
-    | number_literal_expression
+    | numeric_literal_expression
     | bool_literal_expression
     | char_literal_expression
     | string_literal_expression
@@ -172,7 +176,7 @@ index_expression = expression "[" expression "]"
 
 member_access_expression = expression "." identifier
 
-number_literal_expression = integer_literal | floating_point_literal
+numeric_literal_expression = integer_literal | floating_point_literal
 
 scope_resolution_expression = expression "::" identifier
 
@@ -182,7 +186,7 @@ alignof_expression = "alignof" "(" type ")"
 
 identifier_expression = identifier
 
-string_literal_expression = string_literal
+string_literal_expression = string_literal | raw_string_literal
 
 array_literal_expression = array_literal
 
