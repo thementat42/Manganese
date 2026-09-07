@@ -70,6 +70,7 @@ class Lexer {
     Result tokenizeKeywordOrIdentifier();
     Result tokenizeNumber();
     Result skipBlockComment();
+    Result tokenizeRawStringLiteral();
     Result tokenizeStringLiteral();
     Result tokenizeSymbol();
 

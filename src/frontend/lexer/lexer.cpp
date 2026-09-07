@@ -41,6 +41,8 @@ void Lexer::lex(std::size_t numTokens) {
             result = skipBlockComment();
         } else if (is_whitespace(currentChar)) {
             advance();  // Skip whitespace
+        } else if (currentChar == 'r' && peekChar(1) == '`') {
+            result = tokenizeRawStringLiteral();
         } else if (is_alpha(currentChar) || currentChar == '_') {
             result = tokenizeKeywordOrIdentifier();
             ++numTokensMade;
@@ -48,7 +50,6 @@ void Lexer::lex(std::size_t numTokens) {
             result = tokenizeCharLiteral();
             ++numTokensMade;
         } else if (currentChar == '"') {
-            // TODO: Add raw string literals (r"stuff" -- maybe r""text"")
             result = tokenizeStringLiteral();
             ++numTokensMade;
         } else if (is_digit(currentChar)) {
@@ -65,14 +66,14 @@ void Lexer::lex(std::size_t numTokens) {
     }
     if (done()) {
         // Just finished tokenizing
-        tokenStream.emplace_back(TokenType::EndOfFile, "EOF", getLine(), getCol());
+        emitToken(TokenType::EndOfFile, "EOF", false);
     }
 }
 
 Token& Lexer::peekToken() {
     if (tokenStream.empty()) {
         if (done()) {
-            tokenStream.emplace_back(TokenType::EndOfFile, "EOF", getLine(), getCol());
+            emitToken(TokenType::EndOfFile, "EOF", false);
         } else {
             lex(QUEUE_LOOKAHEAD_AMOUNT);
         }
@@ -232,6 +233,42 @@ Result Lexer::skipBlockComment() {
         return Result::Failure;
     }
     return Result::Success;
+}
+
+Result Lexer::tokenizeRawStringLiteral() {
+    DISCARD(consumeChar());  // skip the 'r'
+    std::size_t backtickCount = 0;
+    while (peekChar() == '`') {
+        ++backtickCount;
+        DISCARD(consumeChar());
+    }
+    //* we've passed the opening backticks now; start reading text
+    std::string rawStringLiteral;
+    while (!done()) {
+        if (peekChar() != '`') {
+            // regular character
+            rawStringLiteral += consumeChar();
+            continue;
+        }
+        // seen a '`', this could be the end of the string
+        std::size_t closingBacktickCount = 0;
+
+        while (peekChar() == '`') {
+            ++closingBacktickCount;
+            DISCARD(consumeChar());
+            if (closingBacktickCount == backtickCount) {
+                // end of string literal
+                emitToken(TokenType::StrLiteral, std::move(rawStringLiteral), false);
+                return Result::Success;
+            }
+        }
+        // we didn't see the same number of closing backticks, so these are just backticks inside the string
+        rawStringLiteral.append(closingBacktickCount, '`');
+    }
+    logError("Unterminated raw string literal {} (expected {} backticks to close the string)", rawStringLiteral,
+             backtickCount);
+    emitToken(TokenType::StrLiteral, std::move(rawStringLiteral), true);
+    return Result::Failure;
 }
 
 Result Lexer::tokenizeStringLiteral() {
