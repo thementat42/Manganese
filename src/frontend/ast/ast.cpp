@@ -23,12 +23,12 @@ std::string_view primitiveTypeToString(PrimitiveType prim) {
     return primitiveNames[index];
 }
 
-mnstl::fold_result_t AlignofExpression::fold(const TargetInfo& target) const NOEXCEPT_IF_RELEASE {
+mnstl::fold_result_t AlignofExpression::fold(const utils::TargetInfo& target) const NOEXCEPT_IF_RELEASE {
     if (type->semanticType == nullptr) { return mnstl::fold_result_t{}; }
     return mnstl::fold_result_t{mnstl::number_t{type->semanticType->alignment(target)}};
 }
 
-mnstl::fold_result_t BinaryExpression::fold(const TargetInfo& target) const NOEXCEPT_IF_RELEASE {
+mnstl::fold_result_t BinaryExpression::fold(const utils::TargetInfo& target) const NOEXCEPT_IF_RELEASE {
     using enum lexer::TokenType;
     const mnstl::fold_result_t leftResult = left->fold(target);
     const mnstl::fold_result_t rightResult = right->fold(target);
@@ -109,7 +109,7 @@ mnstl::fold_result_t BinaryExpression::fold(const TargetInfo& target) const NOEX
     return mnstl::fold_result_t{};
 }
 
-mnstl::fold_result_t PrefixExpression::fold(const TargetInfo& target) const NOEXCEPT_IF_RELEASE {
+mnstl::fold_result_t PrefixExpression::fold(const utils::TargetInfo& target) const NOEXCEPT_IF_RELEASE {
     using enum lexer::TokenType;
 
     switch (op) {
@@ -143,7 +143,7 @@ mnstl::fold_result_t PrefixExpression::fold(const TargetInfo& target) const NOEX
     return mnstl::fold_result_t{};
 }
 
-mnstl::fold_result_t PostfixExpression::fold(const TargetInfo& target) const NOEXCEPT_IF_RELEASE {
+mnstl::fold_result_t PostfixExpression::fold(const utils::TargetInfo& target) const NOEXCEPT_IF_RELEASE {
     using enum lexer::TokenType;
     const mnstl::fold_result_t result = left->fold(target);
     if (!result.has_value()) { return mnstl::fold_result_t{}; }
@@ -155,7 +155,7 @@ mnstl::fold_result_t PostfixExpression::fold(const TargetInfo& target) const NOE
     }
 }
 
-mnstl::fold_result_t SizeofExpression::fold(const TargetInfo& target) const NOEXCEPT_IF_RELEASE {
+mnstl::fold_result_t SizeofExpression::fold(const utils::TargetInfo& target) const NOEXCEPT_IF_RELEASE {
     if (type->semanticType == nullptr) { return mnstl::fold_result_t{}; }
     return mnstl::fold_result_t{mnstl::number_t{type->semanticType->size(target)}};
 }

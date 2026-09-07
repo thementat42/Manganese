@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <string_view>
 
-namespace Manganese {
+namespace Manganese::utils {
 struct TargetInfo {
     std::size_t pointerSize;
     std::size_t pointerAlignment;

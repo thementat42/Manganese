@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <frontend/ast.hpp>
 #include <mnstl/chunk_allocator.hxx>
-#include <utils/enum_matches.hpp>
+#include <mnstl/enum_matches.hxx>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -54,8 +54,8 @@ struct SemanticType {
 
     virtual std::string toString() const { return std::string(ast::primitiveTypeToString(primitiveType)); }
     virtual std::string toStringWithTypeArguments(const TypeList& typeArguments) const;
-    virtual std::size_t size(const TargetInfo& target) const noexcept;
-    virtual std::size_t alignment(const TargetInfo& target) const noexcept;
+    virtual std::size_t size(const utils::TargetInfo& target) const noexcept;
+    virtual std::size_t alignment(const utils::TargetInfo& target) const noexcept;
 
     constexpr bool isAggregate() const noexcept { return kind == SemanticTypeKind::Aggregate; }
     constexpr bool isArray() const noexcept { return kind == SemanticTypeKind::Array; }
@@ -71,16 +71,16 @@ struct SemanticType {
 
     constexpr bool isUnsignedInteger() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && utils::enum_matches(primitiveType, uint8, uint16, uint32, uint64, uint128);
+        return isPrimitive() && mnstl::enum_matches(primitiveType, uint8, uint16, uint32, uint64, uint128);
     }
     constexpr bool isSignedInteger() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && utils::enum_matches(primitiveType, int8, int16, int32, int64, int128);
+        return isPrimitive() && mnstl::enum_matches(primitiveType, int8, int16, int32, int64, int128);
     }
     constexpr bool isInteger() const noexcept { return isSignedInteger() || isUnsignedInteger(); }
     constexpr bool isFloat() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && utils::enum_matches(primitiveType, float32, float64);
+        return isPrimitive() && mnstl::enum_matches(primitiveType, float32, float64);
     }
 
     constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }
@@ -98,8 +98,8 @@ struct AggregateField {
 
     friend bool operator==(const AggregateField&, const AggregateField&) noexcept = default;
 
-    std::size_t size(const TargetInfo& target) const noexcept { return type->size(target); }
-    std::size_t alignment(const TargetInfo& target) const noexcept { return type->alignment(target); }
+    std::size_t size(const utils::TargetInfo& target) const noexcept { return type->size(target); }
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept { return type->alignment(target); }
 };
 
 struct Aggregate final : public SemanticType {
@@ -136,8 +136,8 @@ struct Aggregate final : public SemanticType {
 
     std::string toString() const override;
     std::string toStringWithTypeArguments(const TypeList& typeArguments) const override;
-    std::size_t size(const TargetInfo& target) const noexcept override;
-    std::size_t alignment(const TargetInfo& target) const noexcept override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
 struct Array final : public SemanticType {
@@ -154,8 +154,8 @@ struct Array final : public SemanticType {
     bool hasUnspecifiedLength() const noexcept { return !length.has_value(); }
 
     std::string toString() const override;
-    std::size_t size(const TargetInfo& target) const noexcept override;
-    std::size_t alignment(const TargetInfo& target) const noexcept override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
 struct Variant {
@@ -182,8 +182,8 @@ struct Enum final : public SemanticType {
     ~Enum() override = default;
 
     std::string toString() const override;
-    std::size_t size(const TargetInfo& target) const noexcept override;
-    std::size_t alignment(const TargetInfo& target) const noexcept override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
 struct Parameter {
@@ -200,8 +200,8 @@ struct Parameter {
         return result;
     }
 
-    std::size_t size(const TargetInfo& target) const noexcept { return type->size(target); }
-    std::size_t alignment(const TargetInfo& target) const noexcept { return type->alignment(target); }
+    std::size_t size(const utils::TargetInfo& target) const noexcept { return type->size(target); }
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept { return type->alignment(target); }
 };
 
 struct Function final : public SemanticType {
@@ -216,8 +216,8 @@ struct Function final : public SemanticType {
     ~Function() override = default;
 
     std::string toString() const override;
-    std::size_t size(const TargetInfo& target) const noexcept override;
-    std::size_t alignment(const TargetInfo& target) const noexcept override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
 struct GenericInstantiation final : public SemanticType {
@@ -230,8 +230,8 @@ struct GenericInstantiation final : public SemanticType {
     ~GenericInstantiation() override = default;
 
     std::string toString() const override;
-    std::size_t size(const TargetInfo& target) const noexcept override;
-    std::size_t alignment(const TargetInfo& target) const noexcept override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
 struct Pointer final : public SemanticType {
@@ -243,8 +243,8 @@ struct Pointer final : public SemanticType {
     ~Pointer() override = default;
 
     std::string toString() const override;
-    std::size_t size(const TargetInfo& target) const noexcept override;
-    std::size_t alignment(const TargetInfo& target) const noexcept override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
 struct Poison final : public SemanticType {
@@ -252,8 +252,8 @@ struct Poison final : public SemanticType {
     ~Poison() noexcept override = default;
 
     std::string toString() const override;
-    std::size_t size(const TargetInfo& target) const noexcept override;
-    std::size_t alignment(const TargetInfo& target) const noexcept override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
 struct PrimitiveInfo {
@@ -276,8 +276,8 @@ struct Void final : public SemanticType {
     ~Void() override = default;
 
     std::string toString() const override;
-    std::size_t size(const TargetInfo& target) const noexcept override;
-    std::size_t alignment(const TargetInfo& target) const noexcept override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
 struct TypeLookup {
@@ -302,7 +302,7 @@ inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
 class TypeContext {
    private:
     mnstl::chunk_allocator& _allocator;
-    TargetInfo _targetInfo;
+    utils::TargetInfo _targetInfo;
     constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::boolean) + 1;
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
@@ -316,7 +316,7 @@ class TypeContext {
     }
 
    public:
-    explicit TypeContext(mnstl::chunk_allocator& allocator, TargetInfo target) noexcept :
+    explicit TypeContext(mnstl::chunk_allocator& allocator, utils::TargetInfo target) noexcept :
         _allocator(allocator),
         _targetInfo(target),
         _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})),
@@ -325,7 +325,7 @@ class TypeContext {
 
     ~TypeContext() = default;
 
-    const TargetInfo& getTargetInfo() const noexcept { return _targetInfo; }
+    const utils::TargetInfo& getTargetInfo() const noexcept { return _targetInfo; }
     TypeContext(const TypeContext&) = delete;
     TypeContext& operator=(const TypeContext&) = delete;
     TypeContext(TypeContext&&) = delete;

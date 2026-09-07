@@ -5,7 +5,7 @@
 #include <io/logging.hpp>
 #include <memory>
 #include <mnstl/chunk_allocator.hxx>
-#include <utils/enum_matches.hpp>
+#include <mnstl/enum_matches.hxx>
 #include <string>
 #include <utility>
 #include <vector>
@@ -54,7 +54,7 @@ bool Parser::isUnaryContext() const noexcept {
     const TokenType lastType = previousToken->getType();
 
     // Statement or expression delimiters
-    if (utils::enum_matches(lastType, TokenType::Semicolon, TokenType::LeftParen, TokenType::LeftBrace,
+    if (mnstl::enum_matches(lastType, TokenType::Semicolon, TokenType::LeftParen, TokenType::LeftBrace,
                             TokenType::LeftSquare, TokenType::Comma, TokenType::Colon, TokenType::Assignment)) {
         return true;
     }

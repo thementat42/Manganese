@@ -111,12 +111,12 @@ std::string Poison::toString() const { return "<error_type>"; }
 std::string Void::toString() const { return "void"; }
 
 // Size & Alignment
-std::size_t SemanticType::size(const TargetInfo&) const noexcept {
+std::size_t SemanticType::size(const utils::TargetInfo&) const noexcept {
     if (isPrimitive()) { return static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8); }
     return 0;
 }
 
-std::size_t SemanticType::alignment(const TargetInfo&) const noexcept {
+std::size_t SemanticType::alignment(const utils::TargetInfo&) const noexcept {
     if (isPrimitive()) {
         const std::size_t align = static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8);
         return std::max<std::size_t>(1, align);
@@ -124,7 +124,7 @@ std::size_t SemanticType::alignment(const TargetInfo&) const noexcept {
     return 1;
 }
 
-std::size_t Aggregate::size(const TargetInfo& target) const noexcept {
+std::size_t Aggregate::size(const utils::TargetInfo& target) const noexcept {
     std::size_t currentSize = 0;
     const std::size_t maxAlign = alignment(target);
 
@@ -147,53 +147,53 @@ std::size_t Aggregate::size(const TargetInfo& target) const noexcept {
     return currentSize;
 }
 
-std::size_t Aggregate::alignment(const TargetInfo& target) const noexcept {
+std::size_t Aggregate::alignment(const utils::TargetInfo& target) const noexcept {
     std::size_t maxAlign = 1;
     for (const auto& field : fields) { maxAlign = std::max(maxAlign, field.alignment(target)); }
     return maxAlign;
 }
 
-std::size_t Array::size(const TargetInfo& target) const noexcept {
+std::size_t Array::size(const utils::TargetInfo& target) const noexcept {
     return elementType->size(target) * (length.value_or(0));  //? log error?
 }
 
-std::size_t Array::alignment(const TargetInfo& target) const noexcept { return elementType->alignment(target); }
+std::size_t Array::alignment(const utils::TargetInfo& target) const noexcept { return elementType->alignment(target); }
 
-std::size_t Enum::size(const TargetInfo& target) const noexcept {
+std::size_t Enum::size(const utils::TargetInfo& target) const noexcept {
     if (underlyingType != nullptr) { return underlyingType->size(target); }
     return 4;
 }
 
-std::size_t Enum::alignment(const TargetInfo& target) const noexcept {
+std::size_t Enum::alignment(const utils::TargetInfo& target) const noexcept {
     if (underlyingType != nullptr) { return underlyingType->alignment(target); }
     return 4;
 }
 
-std::size_t Function::size(const TargetInfo& target) const noexcept { return target.pointerSize; }
+std::size_t Function::size(const utils::TargetInfo& target) const noexcept { return target.pointerSize; }
 
-std::size_t Function::alignment(const TargetInfo& target) const noexcept { return target.pointerAlignment; }
+std::size_t Function::alignment(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment; }
 
-std::size_t GenericInstantiation::size(const TargetInfo& target) const noexcept {
+std::size_t GenericInstantiation::size(const utils::TargetInfo& target) const noexcept {
     if (baseType != nullptr) { return baseType->size(target); }
     return 0;
 }
 
-std::size_t GenericInstantiation::alignment(const TargetInfo& target) const noexcept {
+std::size_t GenericInstantiation::alignment(const utils::TargetInfo& target) const noexcept {
     if (baseType != nullptr) { return baseType->alignment(target); }
     return 1;
 }
 
-std::size_t Pointer::size(const TargetInfo& target) const noexcept { return target.pointerSize; }
+std::size_t Pointer::size(const utils::TargetInfo& target) const noexcept { return target.pointerSize; }
 
-std::size_t Pointer::alignment(const TargetInfo& target) const noexcept { return target.pointerAlignment; }
+std::size_t Pointer::alignment(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment; }
 
-std::size_t Poison::size(const TargetInfo&) const noexcept { return 0; }
+std::size_t Poison::size(const utils::TargetInfo&) const noexcept { return 0; }
 
-std::size_t Poison::alignment(const TargetInfo&) const noexcept { return 1; }
+std::size_t Poison::alignment(const utils::TargetInfo&) const noexcept { return 1; }
 
-std::size_t Void::size(const TargetInfo&) const noexcept { return 0; }
+std::size_t Void::size(const utils::TargetInfo&) const noexcept { return 0; }
 
-std::size_t Void::alignment(const TargetInfo&) const noexcept { return 1; }
+std::size_t Void::alignment(const utils::TargetInfo&) const noexcept { return 1; }
 
 std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
     if (t == nullptr) [[unlikely]] { return 0; }

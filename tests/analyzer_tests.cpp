@@ -15,7 +15,7 @@ namespace Manganese::tests {
 
 constexpr static const char* logFileName = "logs/analyzer_tests.log";
 static mnstl::chunk_allocator arena;
-static TargetInfo target = TargetInfo::fromHostTriple();
+static utils::TargetInfo target = utils::TargetInfo::fromHostTriple();
 
 // Helper: Parses and runs full semantic analysis on source code
 bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {

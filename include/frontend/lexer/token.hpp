@@ -4,7 +4,7 @@
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <utils/enum_matches.hpp>
+#include <mnstl/enum_matches.hxx>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -58,31 +58,31 @@ class Token {
 
     bool isPrefixOperator() const noexcept {
         using enum TokenType;
-        return utils::enum_matches<TokenType>(_type, Inc, Dec, BitAnd, Mul, AddressOf, Dereference);
+        return mnstl::enum_matches<TokenType>(_type, Inc, Dec, BitAnd, Mul, AddressOf, Dereference);
     }
     bool isLiteral() const noexcept {
         using enum TokenType;
-        return utils::enum_matches<TokenType>(_type, IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True,
+        return mnstl::enum_matches<TokenType>(_type, IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True,
                                               False);
     }
     bool isBracket() const noexcept {
         using enum TokenType;
-        return utils::enum_matches<TokenType>(_type, LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare,
+        return mnstl::enum_matches<TokenType>(_type, LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare,
                                               RightSquare);
     }
     bool isPrimitiveType() const noexcept {
         using enum TokenType;
-        return utils::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32,
+        return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32,
                                               Float64, Int128, UInt128, Char, Bool, String);
     }
     bool isInteger() const noexcept {
         using enum TokenType;
-        return utils::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128,
+        return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128,
                                               UInt128);
     }
     bool hasUnaryCounterpart() const noexcept {
         using enum TokenType;
-        return utils::enum_matches<TokenType>(_type, Plus,  // + can be addition or unary plus
+        return mnstl::enum_matches<TokenType>(_type, Plus,  // + can be addition or unary plus
                                               Minus,  // - can be subtraction or unary minus
                                               BitAnd,  // & can be bitwise AND or address-of operator
                                               Mul);  // * can be multiplication or dereference operator

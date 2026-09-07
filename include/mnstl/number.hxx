@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <utils/enum_matches.hpp>
+#include <mnstl/enum_matches.hxx>
 #include <mnstl/i128.hxx>
 #include <mnstl/safe_cmp.hxx>
 #include <string>
