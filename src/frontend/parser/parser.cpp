@@ -45,6 +45,7 @@ ParsedFile Parser::parse() {
         previousToken.reset();
     }
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
+    if (lexer->hasError()) { flags.hasError = true; }
     return ParsedFile{.fileModule = fileModule, .imports = std::move(imports), .program = std::move(program)};
 }
 
