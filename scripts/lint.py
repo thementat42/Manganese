@@ -27,24 +27,6 @@ EXTENSIONS = {
     ".hxx",
 }
 
-CHECKS = ",".join([
-    "clang-analyzer-*",
-    "bugprone-*",
-    "performance-*",
-    "portability-*",
-    "readability-*",
-    "modernize-*",
-    "misc-*",
-
-    "-readability-magic-numbers",
-    "-readability-identifier-length",
-    "-modernize-use-trailing-return-type",
-    "-misc-non-private-member-variables-in-classes",
-    "-misc-confusable-identifiers",
-    "-modernize-use-nodiscard",
-    "-readability-redundant-inline-specifier",
-])
-
 
 def find_files(base_dir: Path):
     for root, _, files in os.walk(base_dir):
@@ -77,17 +59,14 @@ def get_files():
 
 def run_clang_tidy(clang_tidy, file: Path, report):
 
-    report.write("X" * 80 + "\n")
-    report.write(f"{file}\n")
-    report.write("X" * 80 + "\n")
+    report.write(f"     {file}     \n")
+    report.write("-" * (len(str(file)) + 10) + "\n")
 
     result = subprocess.run(
         [
             clang_tidy,
             str(file),
             f"-p={BUILD_DIR}",
-            f"-checks={CHECKS}",
-            "-header-filter=^$",  # don't report diagnostics from included headers
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
