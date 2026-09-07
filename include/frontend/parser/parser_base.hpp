@@ -181,6 +181,16 @@ class Parser {
         flags.hasError = true;
     }
 
+    template <class T, class... Args>
+        requires(requires(const T& t) {
+            { t.line } -> std::convertible_to<std::size_t>;
+            { t.column } -> std::convertible_to<std::size_t>;
+        })
+    inline void logError(const T& t, std::format_string<Args...> message, Args&&... args) {
+        logging::logError(t.line, t.column, message, std::forward<Args>(args)...);
+        flags.hasError = true;
+    }
+
     inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
 };
 
