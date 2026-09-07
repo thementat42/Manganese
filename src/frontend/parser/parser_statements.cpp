@@ -102,7 +102,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
         baseType = parseType(Precedence::Default);
         if (baseType == nullptr) {
             Token& tmp = peekToken();
-            logError(tmp.getLine(), tmp.getColumn(), "Expected valid underlying type after ':' for enum '{}'", name);
+            logError(tmp, "Expected valid underlying type after ':' for enum '{}'", name);
             baseType = makeNode<ast::PoisonedType>(tmp);
         }
     }
@@ -114,9 +114,8 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
         ast::EnumValue member = parseEnumMember();
 
         if (auto duplicate = std::ranges::find(values, member.name, &ast::EnumValue::name); duplicate != values.end()) {
-            logError(member.line, member.column,
-                     "Duplicate member '{}' in enum '{}' (previously declared at line {}, column {})", member.name,
-                     name, duplicate->line, duplicate->column);
+            logError(member, "Duplicate member '{}' in enum '{}' (previously declared at line {}, column {})",
+                     member.name, name, duplicate->line, duplicate->column);
         } else {
             values.push_back(std::move(member));
         }
@@ -243,7 +242,7 @@ ast::Statement* Parser::parseImportStatement() {
 ast::Statement* Parser::parseModuleDeclarationStatement() {
     const lexer::Token temp = consumeToken();
     if (flags.hasParsedFileHeader) {
-        logging::logWarning(temp.getLine(), temp.getColumn(), "Module declarations should go at the top of the file");
+        logging::logWarning(temp, "Module declarations should go at the top of the file");
     }
 
     std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
@@ -256,8 +255,7 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
     expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
 
     if (flags.hasModuleDeclaration) {
-        logError(temp.getLine(), temp.getColumn(),
-                 "This file already has a module declaration. Files can only have one module declaration.");
+        logError(temp, "This file already has a module declaration. Files can only have one module declaration.");
     }
 
     return makeNode<ast::ModuleDeclarationStatement>(temp, std::move(name));
@@ -398,8 +396,8 @@ std::vector<std::string> Parser::parseGenericsList(std::string_view contextName)
 std::optional<ast::AggregateField> Parser::parseAggregateField(std::string_view aggregateName,
                                                                std::span<ast::AggregateField> existingFields) {
     if (peekTokenType() != TokenType::Identifier) {
-        logError(peekToken().getLine(), peekToken().getColumn(),
-                 "Unexpected token '{}' in aggregate declaration. Expected field name.", peekToken().getLexeme());
+        logError(peekToken(), "Unexpected token '{}' in aggregate declaration. Expected field name.",
+                 peekToken().getLexeme());
         DISCARD(consumeToken());  // Skip unexpected token to avoid an infinite loop
         return std::nullopt;
     }
@@ -419,9 +417,8 @@ std::optional<ast::AggregateField> Parser::parseAggregateField(std::string_view 
 
     if (auto duplicate = std::ranges::find(existingFields, fieldName, &ast::AggregateField::name);
         duplicate != existingFields.end()) {
-        logError(fieldToken.getLine(), fieldToken.getColumn(),
-                 "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})", fieldName,
-                 aggregateName, duplicate->line, duplicate->column);
+        logError(fieldToken, "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})",
+                 fieldName, aggregateName, duplicate->line, duplicate->column);
         return std::nullopt;
     }
 
@@ -447,14 +444,13 @@ std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(std::string
     if (peekTokenType() == TokenType::Ellipsis) {
         DISCARD(consumeToken());
         if (hasVariadicParameter) {
-            logError(t.getLine(), t.getColumn(), "Only one variadic parameter is allowed in function '{}'",
-                     functionName);
+            logError(t, "Only one variadic parameter is allowed in function '{}'", functionName);
         } else {
             isVariadic = true;
             hasVariadicParameter = true;
         }
     } else if (hasVariadicParameter) {
-        logError(t.getLine(), t.getColumn(), "Parameter '{}' cannot follow a variadic parameter", paramName);
+        logError(t, "Parameter '{}' cannot follow a variadic parameter", paramName);
     }
 
     // Handle Type Annotations
@@ -471,18 +467,15 @@ std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(std::string
         hasDefaultParameter = true;
         defaultValue = parseExpression(Precedence::Default);
 
-        if (isVariadic) {
-            logError(t.getLine(), t.getColumn(), "Variadic parameter '{}' cannot have a default value", paramName);
-        }
+        if (isVariadic) { logError(t, "Variadic parameter '{}' cannot have a default value", paramName); }
     } else if (hasDefaultParameter) {
-        logError(t.getLine(), t.getColumn(), "Non-default parameter '{}' cannot follow a default parameter", paramName);
+        logError(t, "Non-default parameter '{}' cannot follow a default parameter", paramName);
     }
 
     // Check Duplicates
     if (auto duplicate = std::ranges::find(existingParams, paramName, &ast::FunctionParameter::name);
         duplicate != existingParams.end()) {
-        logError(t.getLine(), t.getColumn(),
-                 "Duplicate parameter '{}' in function '{}' (previously declared at line {}, column {})", paramName,
+        logError(t, "Duplicate parameter '{}' in function '{}' (previously declared at line {}, column {})", paramName,
                  functionName, duplicate->line, duplicate->column);
         return std::nullopt;
     }

@@ -15,7 +15,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
 
     const nudHandler_types_t nudHandler = lookupTable[type].nudHandlerType;
     if (nudHandler == nullptr) {
-        logError(token.getLine(), token.getColumn(), "Expected a type, got '{}'", lexer::tokenTypeToString(type));
+        logError(token, "Expected a type, got '{}'", lexer::tokenTypeToString(type));
         return makeNode<ast::PoisonedType>(consumeToken());
     }
     ast::Type* left = (this->*nudHandler)();
@@ -28,8 +28,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
 
         const ledHandler_types_t handler = lookupTable[type].ledHandlerType;
         if (handler == nullptr) {
-            logError(token.getLine(), token.getColumn(), "Expected type operator, got '{}'",
-                     lexer::tokenTypeToString(type));
+            logError(token, "Expected type operator, got '{}'", lexer::tokenTypeToString(type));
 
             return makeNode<ast::PoisonedType>(consumeToken());
         }
@@ -43,8 +42,7 @@ ast::Type* Parser::parseType(Precedence precedence) {
 ast::Type* Parser::parseAggregateType() {
     const Token startToken = consumeToken();  // Consume 'aggregate'
     if (peekTokenType() == TokenType::Identifier) {
-        logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
-                            "Aggregate names are ignored in aggregate type declarations");
+        logWarning(peekToken(), "Aggregate names are ignored in aggregate type declarations");
         DISCARD(consumeToken());
     }
 
@@ -66,7 +64,7 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence) {
         lengthExpression = parseExpression(Precedence::Default);
     }
     if (flags.parsingAliasStatement && lengthExpression == nullptr) {
-        logError(left->line, left->column, "Arrays in alias statements must have an explicit length expression");
+        logError(left, "Arrays in alias statements must have an explicit length expression");
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
     return makeNode<ast::ArrayType>(startToken, left, lengthExpression);
@@ -181,7 +179,7 @@ ast::Type* Parser::parseTypeofType() {
     expectToken(lexer::TokenType::LeftParen, "Expected '(' after typeof");
     ast::Expression* innerExpression = parseExpression(Precedence::Default);
     if (innerExpression == nullptr) {
-        logError(peekToken().getLine(), peekToken().getColumn(), "Expected a valid expression inside 'typeof(...)'.");
+        logError(peekToken(), "Expected a valid expression inside 'typeof(...)'.");
         innerExpression = makeNode<ast::PoisonedExpression>(startToken);
     }
     expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
@@ -192,7 +190,7 @@ ast::Type* Parser::parseTypeofType() {
 
 ast::Type* Parser::parseAggregateTypeField() {
     if (peekTokenType() == TokenType::Identifier) {
-        logging::logWarning(peekToken().getLine(), peekToken().getColumn(),
+        logWarning(peekToken(),
                             "Variable names are ignored in aggregate type declarations");
         DISCARD(consumeToken());
         expectToken(TokenType::Colon, "Expected ':' after field name in aggregate type declaration");
@@ -215,14 +213,14 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
         isVariadic = true;
 
         if (seenVariadic) {
-            logError(peekToken().getLine(), peekToken().getColumn(),
+            logError(peekToken(),
                      "A function type cannot have more than one variadic parameter");
         }
         seenVariadic = true;
     }
 
     if (isVariadic && peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::Comma) {
-        logError(peekToken().getLine(), peekToken().getColumn(), "A variadic parameter must be the last parameter");
+        logError(peekToken(), "A variadic parameter must be the last parameter");
     }
 
     return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
@@ -234,7 +232,7 @@ std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existing
     std::string genericName = genericToken.getLexeme();
 
     if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
-        logError(genericToken.getLine(), genericToken.getColumn(), "Duplicate generic type '{}' in '{}'", genericName,
+        logError(genericToken, "Duplicate generic type '{}' in '{}'", genericName,
                  contextName);
         return "";
     }

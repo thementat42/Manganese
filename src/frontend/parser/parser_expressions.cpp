@@ -58,8 +58,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
 
     const nudHandler_t nudHandler = lookupTable[type].nudHandler;
     if (nudHandler == nullptr) {
-        logError(token.getLine(), token.getColumn(), "Expected expression to the left of '{}'",
-                 lexer::tokenTypeToString(type));
+        logError(token, "Expected expression to the left of '{}'", lexer::tokenTypeToString(type));
         return makeNode<ast::PoisonedExpression>(consumeToken());
     }
     // ast::Expression* left = nudIterator->second(this);
@@ -79,8 +78,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
 
         const ledHandler_t handler = lookupTable[type].ledHandler;
         if (handler == nullptr) {
-            logError(token.getLine(), token.getColumn(), "Expected binary operator, got '{}'",
-                     lexer::tokenTypeToString(type));
+            logError(token, "Expected binary operator, got '{}'", lexer::tokenTypeToString(type));
             return makeNode<ast::PoisonedExpression>(consumeToken());
         }
 
@@ -131,7 +129,7 @@ ast::Expression* Parser::parseAlignofExpression() {
     ast::Type* type = parseType(Precedence::Default);
     if (peekTokenType() != lexer::TokenType::RightParen) {
         logError(
-            peekToken().getLine(), peekToken().getColumn(),
+            peekToken(),
             "alignof expects a type as its argument. If you are trying to take the type of an expression, use alignof(typeof(...))");
 
         while (peekTokenType() != lexer::TokenType::RightParen && peekTokenType() != lexer::TokenType::Semicolon
@@ -244,22 +242,20 @@ ast::Expression* Parser::parsePrimaryExpression() {
         case TokenType::FloatLiteral: {
             const mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, true);
             if (!value.exists) {
-                logError(startToken.getLine(), startToken.getColumn(), "Invalid float literal '{}'", lexeme);
+                logError(startToken, "Invalid float literal '{}'", lexeme);
                 return makeNode<ast::NumberLiteralExpression>(startToken, 0.0);
             } else if (value.overflowed) {
-                logError(startToken.getLine(), startToken.getColumn(),
-                         "Float literal {} cannot fit in its assigned type", lexeme);
+                logError(startToken, "Float literal {} cannot fit in its assigned type", lexeme);
             }
             return makeNode<ast::NumberLiteralExpression>(startToken, value.value);
         }
         case TokenType::IntegerLiteral: {
             const mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, false);
             if (!value.exists) {
-                logError(startToken.getLine(), startToken.getColumn(), "Invalid integer literal '{}'", lexeme);
+                logError(startToken, "Invalid integer literal '{}'", lexeme);
                 return makeNode<ast::NumberLiteralExpression>(startToken, 0);
             } else if (value.overflowed) {
-                logError(startToken.getLine(), startToken.getColumn(),
-                         "Integer literal {} cannot fit in its assigned type", lexeme);
+                logError(startToken, "Integer literal {} cannot fit in its assigned type", lexeme);
             }
             return makeNode<ast::NumberLiteralExpression>(startToken, value.value);
         }
@@ -271,9 +267,7 @@ ast::Expression* Parser::parsePrimaryExpression() {
 
 ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left, Precedence) {
     const Token startToken = consumeToken();  // Consume the scope resolution operator (::)
-    if (peekTokenType() != lexer::TokenType::Identifier) {
-        logError(peekToken().getLine(), peekToken().getColumn(), "Expected identifier after '::'");
-    }
+    if (peekTokenType() != lexer::TokenType::Identifier) { logError(peekToken(), "Expected identifier after '::'"); }
     return makeNode<ast::ScopeResolutionExpression>(startToken, left, parseExpression(Precedence::ScopeResolution));
 }
 
@@ -283,7 +277,7 @@ ast::Expression* Parser::parseSizeofExpression() {
     ast::Type* type = parseType(Precedence::Default);
     if (peekTokenType() != lexer::TokenType::RightParen) {
         logError(
-            peekToken().getLine(), peekToken().getColumn(),
+            peekToken(),
             "sizeof expects a type as its argument. If you are trying to take the type of an expression, use sizeof(typeof(...))");
 
         while (peekTokenType() != lexer::TokenType::RightParen && peekTokenType() != lexer::TokenType::Semicolon

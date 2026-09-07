@@ -1,6 +1,7 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 
+#include <concepts>
 #include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
@@ -175,9 +176,8 @@ class Parser {
     Token expectToken(TokenType expectedType, std::string_view errorMessage);
 
     template <class... Args>
-    inline void logError(std::size_t line, std::size_t col, std::format_string<Args...> message,
-                         Args&&... args) noexcept {
-        logging::logError(line, col, message, std::forward<Args>(args)...);
+    inline void logError(const Token& token, std::format_string<Args...> message, Args&&... args) {
+        logging::logError(token.getLine(), token.getColumn(), message, std::forward<Args>(args)...);
         flags.hasError = true;
     }
 

@@ -1,5 +1,4 @@
 #include <core.hpp>
-#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
@@ -71,9 +70,8 @@ Token Parser::expectToken(TokenType expectedType) { return expectToken(expectedT
 Token Parser::expectToken(TokenType expectedType, std::string_view errorMessage) {
     Token tok = peekToken();
     if (tok.getType() == expectedType) { return consumeToken(); }
-    logging::logError(tok.getLine(), tok.getColumn(), "{} (expected '{}' but got '{}')", errorMessage,
+    logError(tok, "{} (expected '{}' but got '{}')", errorMessage,
                       lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(tok.getType()));
-    flags.hasError = true;
     return lexer::Token{};
 }
 
@@ -105,8 +103,6 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
                                + lexer ::tokenTypeToString(peekTokenType()));
     }
 
-    const std::size_t startLine = peekToken().getLine();
-    const std::size_t startColumn = peekToken().getColumn();
     switch (peekTokenType()) {
         case TokenType::Alias: {
             auto* tempAlias = static_cast<ast::AliasStatement*>(parseAliasStatement());
@@ -130,7 +126,7 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
             return tempFunction;
         }
         default:
-            logError(startLine, startColumn, "{} cannot follow a visibility modifier",
+            logError(peekToken(), "{} cannot follow a visibility modifier",
                      lexer::tokenTypeToString(peekTokenType()));
             // Parse the statement as if it had no visibility modifier
             return parseStatement();
