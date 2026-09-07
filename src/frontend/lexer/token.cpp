@@ -59,7 +59,7 @@ constexpr std::array _keywordTableHelper = {
 #define TOKEN(name, text)
 #define OPERATOR(name, text)
 
-#define KEYWORD(name, text) keyword_map_entry{.str = text, .type = TokenType::name},
+#define KEYWORD(name, text) keyword_map_entry{.str = (text), .type = TokenType::name},
 
 #include <frontend/lexer/tokens.def>
 
@@ -83,7 +83,7 @@ constexpr auto keywordTable = []() {
 }();
 
 TokenType keywordLookup(std::string_view s) noexcept {
-    if (auto entry = std::ranges::lower_bound(keywordTable, s, {}, &keyword_map_entry::str);
+    if (const auto* entry = std::ranges::lower_bound(keywordTable, s, {}, &keyword_map_entry::str);
         entry != keywordTable.end() && entry->str == s) {
         return entry->type;
     }

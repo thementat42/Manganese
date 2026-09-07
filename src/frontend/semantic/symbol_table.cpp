@@ -73,7 +73,7 @@ std::string Scope::getQualifiedName() const {
     return parent->getQualifiedName() + "::" + std::string(namespaceName);
 }
 
-void SymbolTable::exitScope() noexcept {
+void SymbolTable::exitScope() NOEXCEPT_IF_RELEASE {
     if (noScopeAvailable() || _currentScope->parent == nullptr) [[unlikely]] {
         logging::logInternal(logging::LogLevel::Warning, "Attempted to exit scope when no parent scope was available");
         return;
@@ -81,7 +81,7 @@ void SymbolTable::exitScope() noexcept {
     _currentScope = _currentScope->parent;
 }
 
-Symbol* SymbolTable::lookup(std::string_view name) noexcept {
+Symbol* SymbolTable::lookup(std::string_view name) NOEXCEPT_IF_RELEASE {
     Scope* probe = _currentScope;
     while (probe != nullptr) {
         Symbol* symbol = probe->lookup(name);
@@ -93,7 +93,7 @@ Symbol* SymbolTable::lookup(std::string_view name) noexcept {
     return nullptr;
 }
 
-const Symbol* SymbolTable::lookup(std::string_view name) const noexcept {
+const Symbol* SymbolTable::lookup(std::string_view name) const NOEXCEPT_IF_RELEASE {
     const Scope* probe = _currentScope;
     while (probe != nullptr) {
         const Symbol* symbol = probe->lookup(name);

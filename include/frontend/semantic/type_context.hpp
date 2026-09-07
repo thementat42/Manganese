@@ -115,7 +115,7 @@ struct Aggregate final : public SemanticType {
 
     // For anonymous aggregates
     Aggregate(TypeList&& rawTypes) noexcept :
-        SemanticType(SemanticTypeKind::Aggregate), name(), status(ResolutionStatus::Success) {
+        SemanticType(SemanticTypeKind::Aggregate), status(ResolutionStatus::Success) {
         fields.reserve(rawTypes.size());
         for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
     }
@@ -257,7 +257,7 @@ struct Poison final : public SemanticType {
 };
 
 struct PrimitiveInfo {
-    enum class Category {
+    enum class Category : std::uint8_t {
         Int,
         UInt,
         Float,
@@ -311,7 +311,8 @@ class TypeContext {
     Poison _poisonInstance;
 
     template <std::size_t... Is>
-    constexpr static std::array<SemanticType, sizeof...(Is)> _makePrimitives(std::index_sequence<Is...>) noexcept {
+    constexpr static std::array<SemanticType, sizeof...(Is)> _makePrimitives(
+        std::index_sequence<Is...> /*unused*/) noexcept {
         return {SemanticType(SemanticTypeKind::Primitive, static_cast<ast::PrimitiveType>(Is))...};
     }
 
@@ -319,9 +320,7 @@ class TypeContext {
     explicit TypeContext(mnstl::chunk_allocator& allocator, utils::TargetInfo target) noexcept :
         _allocator(allocator),
         _targetInfo(target),
-        _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})),
-        _voidInstance(),
-        _poisonInstance() {}
+        _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
 
     ~TypeContext() = default;
 

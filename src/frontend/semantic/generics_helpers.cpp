@@ -12,10 +12,10 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
+auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
-    if (auto* cached = instantiationCache.find(key)) {
+    if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::InProgress) {
             logError(stmt, "Decursive aggregate layout dependency in '{}'", stmt->name);
             return stmtvisit_t::Failure;
@@ -48,10 +48,10 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t) ->
     return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> stmtvisit_t {
+auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
-    if (auto* cached = instantiationCache.find(key)) {
+    if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::InProgress) {
             logError(stmt, "Recursive generic function instantiation dependency in '{}'", stmt->name);
             return stmtvisit_t::Failure;
@@ -115,7 +115,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t) -> 
             break;
         }
 
-        if (param.defaultValue) {
+        if (param.defaultValue != nullptr) {
             if (visit(param.defaultValue) == exprvisit_t::Failure) {
                 success = false;
                 break;
@@ -267,7 +267,7 @@ const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
             return typeContext.getArray(elementType, length.number_unchecked().value_as<std::size_t>());
         }
         case FunctionType: {
-            auto* functionType = static_cast<const ast::FunctionType*>(type);
+            const auto* functionType = static_cast<const ast::FunctionType*>(type);
             std::vector<Parameter> params;
             params.reserve(functionType->parameterTypes.size());
 

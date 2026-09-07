@@ -33,7 +33,7 @@ const Symbol* Analyzer::resolveTypeSymbol(const ast::Type* typeNode) {
                 "In resolveTypeSymbol: base case for recursion of a scoped type resolution should be an identifier");
         }
         const auto* memberIdentifierType = static_cast<const ast::IdentifierType*>(scopedType->type);
-        return symbolTable.scopedLookup(parentSymbol->scopeDefined, memberIdentifierType->name);
+        return decltype(symbolTable)::scopedLookup(parentSymbol->scopeDefined, memberIdentifierType->name);
     }
 
     return nullptr;
@@ -54,7 +54,7 @@ const Symbol* Analyzer::resolveScopeSymbol(const ast::Expression* expr) {
         if (scopeExpr->element->kind != ast::ExpressionKind::IdentifierExpression) { return nullptr; }
         const auto* memberId = static_cast<const ast::IdentifierExpression*>(scopeExpr->element);
 
-        return symbolTable.scopedLookup(parentSymbol->scopeDefined, memberId->name);
+        return decltype(symbolTable)::scopedLookup(parentSymbol->scopeDefined, memberId->name);
     }
     return nullptr;
 }
@@ -90,7 +90,7 @@ bool Analyzer::isMutableExpression(const ast::Expression* expr) {
             if ((scopeSymbol == nullptr) || (scopeSymbol->scopeDefined == nullptr)) { return false; }
             if (scope->element->kind != ast::ExpressionKind::IdentifierExpression) { return false; }
             const auto* memberId = static_cast<const ast::IdentifierExpression*>(scope->element);
-            const Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberId->name);
+            const Symbol* memberSymbol = decltype(symbolTable)::scopedLookup(scopeSymbol->scopeDefined, memberId->name);
             return (memberSymbol != nullptr) ? memberSymbol->isMutable : false;
         }
         default: return false;

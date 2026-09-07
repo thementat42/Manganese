@@ -56,7 +56,7 @@ ast::Type* Parser::parseAggregateType() {
     return makeNode<ast::AggregateType>(startToken, std::move(fieldTypes));
 }
 
-ast::Type* Parser::parseArrayType(ast::Type* left, Precedence) {
+ast::Type* Parser::parseArrayType(ast::Type* left, Precedence /*unused*/) {
     ast::Expression* lengthExpression = nullptr;
     const Token startToken = consumeToken();  // Consume the left square bracket '['
     if (peekTokenType() != TokenType::RightSquare) {
@@ -96,7 +96,7 @@ ast::Type* Parser::parseFunctionType() {
     return makeNode<ast::FunctionType>(startToken, std::move(parameterTypes), returnType);
 }
 
-ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence) {
+ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();
     expectToken(TokenType::LeftSquare, "Expected a '[' to start generic type parameters");
     auto typeParameters

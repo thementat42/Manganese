@@ -58,23 +58,23 @@ int main(int argc, char const* argv[]) {
     if (lexer) {
         std::cout << ansi::PINK << "Lexer Tests\n" << ansi::RESET;
         Manganese::tests::runLexerTests(runner);
-        std::cout << ("\n----------\n");
+        std::cout << "\n----------\n";
     }
     if (parser) {
         std::cout << ansi::PINK << "Parser Tests\n" << ansi::RESET;
         Manganese::tests::runParserTests(runner);
-        std::cout << ("\n----------\n");
+        std::cout << "\n----------\n";
     }
     if (semantic) {
         std::cout << ansi::PINK << "Semantic Analyzer Tests\n" << ansi::RESET;
         Manganese::tests::runAnalyzerTests(runner);
-        std::cout << ("\n----------\n");
+        std::cout << "\n----------\n";
     }
     if (codegen) {
         std::cout << ansi::PINK << "Codegen Tests\n" << ansi::RESET;
         // TODO: Add once codegen has progress
         std::cout << ("To be implemented.\n");
-        std::cout << ("\n----------\n");
+        std::cout << "\n----------\n";
     }
 
     logTotalAllocatedMemory();  // Only does something if memory tracking is enabled
@@ -82,7 +82,8 @@ int main(int argc, char const* argv[]) {
     auto end = std::chrono::high_resolution_clock::now();
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << ansi::PINK << std::format("Elapsed Time: {:.3f} ms\n", (double)duration.count()) << ansi::RESET;
+    std::cout << ansi::PINK << std::format("Elapsed Time: {:.3f} ms\n", static_cast<double>(duration.count()))
+              << ansi::RESET;
 
     return runner.allTestsPassed() ? 0 : 1;
 }

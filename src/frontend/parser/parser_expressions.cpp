@@ -89,7 +89,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
 
 // Specific expression parsing methods
 
-ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* left, Precedence) {
+ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = peekToken();
     expectToken(lexer::TokenType::LeftBrace, "Expected '{' to start aggregate instantiation");
     std::vector<ast::AggregateInstantiationField> fields;
@@ -170,7 +170,7 @@ ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence
     return makeNode<ast::BinaryExpression>(startToken, left, op, right);
 }
 
-ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Precedence) {
+ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();
     auto arguments
         = parseCommaSeparatedList<ast::Expression*>(TokenType::RightParen, "Expected ',' between function arguments",
@@ -178,7 +178,7 @@ ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Prec
     return makeNode<ast::FunctionCallExpression>(startToken, left, std::move(arguments));
 }
 
-ast::Expression* Parser::parseGenericInstantiationExpression(ast::Expression* left, Precedence) {
+ast::Expression* Parser::parseGenericInstantiationExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();  // Consume the '@' token
     expectToken(lexer::TokenType::LeftSquare, "Expected '[' to start generic type parameters");
     auto typeParameters
@@ -187,7 +187,7 @@ ast::Expression* Parser::parseGenericInstantiationExpression(ast::Expression* le
     return makeNode<ast::GenericInstantiationExpression>(startToken, left, std::move(typeParameters));
 }
 
-ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence) {
+ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();  // Consume the left square bracket
     constexpr auto precedence = precedenceAbove(Precedence::Assignment);
     ast::Expression* index = parseExpression(precedence);
@@ -195,7 +195,7 @@ ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Preceden
     return makeNode<ast::IndexExpression>(startToken, left, index);
 }
 
-ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence) {
+ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();  // Consume the member access operator (.)
     return makeNode<ast::MemberAccessExpression>(
         startToken, left, expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
@@ -208,7 +208,7 @@ ast::Expression* Parser::parseParenthesizedExpression() {
     return expr;
 }
 
-ast::Expression* Parser::parsePostfixExpression(ast::Expression* left, Precedence) {
+ast::Expression* Parser::parsePostfixExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();
     TokenType op = startToken.getType();
     return makeNode<ast::PostfixExpression>(startToken, left, op);
@@ -244,9 +244,8 @@ ast::Expression* Parser::parsePrimaryExpression() {
             if (!value.exists) {
                 logError(startToken, "Invalid float literal '{}'", lexeme);
                 return makeNode<ast::NumberLiteralExpression>(startToken, 0.0);
-            } else if (value.overflowed) {
-                logError(startToken, "Float literal {} cannot fit in its assigned type", lexeme);
             }
+            if (value.overflowed) { logError(startToken, "Float literal {} cannot fit in its assigned type", lexeme); }
             return makeNode<ast::NumberLiteralExpression>(startToken, value.value);
         }
         case TokenType::IntegerLiteral: {
@@ -254,7 +253,8 @@ ast::Expression* Parser::parsePrimaryExpression() {
             if (!value.exists) {
                 logError(startToken, "Invalid integer literal '{}'", lexeme);
                 return makeNode<ast::NumberLiteralExpression>(startToken, 0);
-            } else if (value.overflowed) {
+            }
+            if (value.overflowed) {
                 logError(startToken, "Integer literal {} cannot fit in its assigned type", lexeme);
             }
             return makeNode<ast::NumberLiteralExpression>(startToken, value.value);
@@ -265,7 +265,7 @@ ast::Expression* Parser::parsePrimaryExpression() {
     }
 }
 
-ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left, Precedence) {
+ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();  // Consume the scope resolution operator (::)
     if (peekTokenType() != lexer::TokenType::Identifier) { logError(peekToken(), "Expected identifier after '::'"); }
     return makeNode<ast::ScopeResolutionExpression>(startToken, left, parseExpression(Precedence::ScopeResolution));

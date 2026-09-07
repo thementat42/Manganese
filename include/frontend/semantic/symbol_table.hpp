@@ -108,8 +108,8 @@ class SymbolTable {
 
     void enterScope();
     void enterNamespace(std::string_view name, ast::ASTNode* node);
-    void exitScope() noexcept;
-    void FORCE_INLINE exitNamespace() noexcept { exitScope(); }
+    void exitScope() NOEXCEPT_IF_RELEASE;
+    void FORCE_INLINE exitNamespace() NOEXCEPT_IF_RELEASE { exitScope(); }
 
     Scope* getCurrentScope() noexcept { return _currentScope; }
     const Scope* getCurrentScope() const noexcept { return _currentScope; }
@@ -124,12 +124,14 @@ class SymbolTable {
         return _currentScope->insert(name, symbol);
     }
 
-    Symbol* lookup(std::string_view name) noexcept;
-    const Symbol* lookup(std::string_view name) const noexcept;
+    Symbol* lookup(std::string_view name) NOEXCEPT_IF_RELEASE;
+    const Symbol* lookup(std::string_view name) const NOEXCEPT_IF_RELEASE;
 
-    Symbol* scopedLookup(Scope* targetScope, std::string_view member) noexcept { return targetScope->lookup(member); }
+    static Symbol* scopedLookup(Scope* targetScope, std::string_view member) noexcept {
+        return targetScope->lookup(member);
+    }
 
-    const Symbol* scopedLookup(const Scope* targetScope, std::string_view member) const noexcept {
+    static const Symbol* scopedLookup(const Scope* targetScope, std::string_view member) noexcept {
         return targetScope->lookup(member);
     }
 };

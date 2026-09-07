@@ -143,7 +143,7 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
     }
     const std::string_view memberName = static_cast<ast::IdentifierType*>(type->type)->name;
 
-    const Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
+    const Symbol* memberSymbol = decltype(symbolTable)::scopedLookup(scopeSymbol->scopeDefined, memberName);
     if (memberSymbol == nullptr) {
         logError(type->type, "No member named '{}' in scope", memberName);
         return typevisit_t::Failure;
@@ -193,6 +193,6 @@ auto Analyzer::visit(ast::TypeofType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::PoisonedType*) -> typevisit_t { return typevisit_t::Failure; }
+auto Analyzer::visit(ast::PoisonedType* /*unused*/) -> typevisit_t { return typevisit_t::Failure; }
 
 }  // namespace Manganese::semantic

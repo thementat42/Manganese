@@ -128,7 +128,7 @@ auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
 }
 
 auto Analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
-    if (!statement->target) {
+    if (statement->target == nullptr) {
         logError(statement, "Switch statement is missing a target expression");
         return stmtvisit_t::Failure;
     }
@@ -181,16 +181,15 @@ auto Analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
     if (statement->condition->semanticType->isPoison()) {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
         return stmtvisit_t::Failure;
-    } else {
-        const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
-            statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
+    }
+    const typeCompatibilityResult conditionCanBeBool
+        = areTypesCompatible(statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
 
-        if (!conditionCanBeBool) {
-            logError(statement, "While loop condition must be a boolean value or implicitly convertible to it, not {}",
-                     statement->condition->semanticType->toString());
-        } else if (conditionCanBeBool.result == Compatible_t::Warning) {
-            logWarning(statement, "{}", conditionCanBeBool.message);
-        }
+    if (!conditionCanBeBool) {
+        logError(statement, "While loop condition must be a boolean value or implicitly convertible to it, not {}",
+                 statement->condition->semanticType->toString());
+    } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+        logWarning(statement, "{}", conditionCanBeBool.message);
     }
 
     if (visit(statement->body) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }

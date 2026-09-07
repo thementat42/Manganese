@@ -281,7 +281,7 @@ constexpr uint128_t operator>>(uint128_t l, uint128_t r) noexcept {
 constexpr uint128_t operator+(uint128_t i) noexcept { return i; }
 constexpr uint128_t operator-(uint128_t i) noexcept {
     const std::uint64_t result_lower = ~i._lower + 1;
-    const std::uint64_t result_higher = ~i._upper + (result_lower == 0);
+    const std::uint64_t result_higher = ~i._upper + static_cast<uint128_t::upper_t>(result_lower == 0);
     return uint128_t{result_higher, result_lower};
 }
 
@@ -314,14 +314,16 @@ constexpr uint128_t operator--(uint128_t& i, int) noexcept {
 constexpr uint128_t operator+(uint128_t l, uint128_t r) noexcept {
     uint128_t out;
     out._lower = l._lower + r._lower;
-    out._upper = l._upper + r._upper + (out._lower < l._lower);  // carry if overflow occured
+    out._upper
+        = l._upper + r._upper + static_cast<uint128_t::upper_t>(out._lower < l._lower);  // carry if overflow occured
     return out;
 }
 
 constexpr uint128_t operator-(uint128_t l, uint128_t r) noexcept {
     uint128_t out;
     out._lower = l._lower - r._lower;
-    out._upper = l._upper - r._upper - (out._lower > l._lower);  // borrow 1 if underflow ocuured in lower bits
+    out._upper = l._upper - r._upper
+        - static_cast<uint128_t::upper_t>(out._lower > l._lower);  // borrow 1 if underflow ocuured in lower bits
     return out;
 }
 constexpr uint128_t operator*(uint128_t l, uint128_t r) noexcept { return i128_detail::_mul_u128(l, r); }
@@ -357,7 +359,8 @@ constexpr int128_t operator>>(int128_t l, int128_t r) noexcept {
 constexpr int128_t operator+(int128_t i) noexcept { return i; }
 constexpr int128_t operator-(int128_t i) noexcept {
     std::uint64_t result_lower = ~i._lower + 1;
-    std::int64_t result_upper = ~i._upper + (result_lower == 0);  // if result low is 0, overflow occured, carry
+    std::int64_t result_upper
+        = ~i._upper + static_cast<int128_t::upper_t>(result_lower == 0);  // if result low is 0, overflow occured, carry
     return int128_t{result_upper, result_lower};
 }
 
@@ -387,13 +390,15 @@ constexpr int128_t operator--(int128_t& i, int) noexcept {
 constexpr int128_t operator+(int128_t l, int128_t r) noexcept {
     int128_t out;
     out._lower = l._lower + r._lower;
-    out._upper = l._upper + r._upper + (out._lower < l._lower);  // carry if overflow occured
+    out._upper
+        = l._upper + r._upper + static_cast<int128_t::upper_t>(out._lower < l._lower);  // carry if overflow occured
     return out;
 }
 constexpr int128_t operator-(int128_t l, int128_t r) noexcept {
     int128_t out;
     out._lower = l._lower - r._lower;
-    out._upper = l._upper - r._upper - (out._lower > l._lower);  // borrow 1 if underflow ocuured in lower bits
+    out._upper = l._upper - r._upper
+        - static_cast<int128_t::upper_t>(out._lower > l._lower);  // borrow 1 if underflow ocuured in lower bits
     return out;
 }
 
@@ -771,7 +776,7 @@ constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
     std::uint64_t carry = ll._upper;
 
     const std::uint64_t mid_low = lh._lower + hl._lower;
-    std::uint64_t mid_carry = mid_low < lh._lower;
+    auto mid_carry = static_cast<std::uint64_t>(mid_low < lh._lower);
     carry += mid_low;
 
     if (carry < mid_low) { ++mid_carry; }

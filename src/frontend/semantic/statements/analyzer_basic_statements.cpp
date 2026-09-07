@@ -7,7 +7,7 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::EmptyStatement*) -> stmtvisit_t {
+auto Analyzer::visit(ast::EmptyStatement* /*unused*/) -> stmtvisit_t {
     return stmtvisit_t::Success;  // nothing to check
 }
 
@@ -29,8 +29,8 @@ auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
 
 auto Analyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
 
-auto Analyzer::visit(ast::ModuleDeclarationStatement*) -> stmtvisit_t { return stmtvisit_t::Success; }
-auto Analyzer::visit(ast::ImportStatement*) -> stmtvisit_t { return stmtvisit_t::Success; }
+auto Analyzer::visit(ast::ModuleDeclarationStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
+auto Analyzer::visit(ast::ImportStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 auto Analyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {
     symbolTable.enterNamespace(statement->name, statement);
@@ -72,6 +72,6 @@ auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::PoisonedStatement*) -> stmtvisit_t { return stmtvisit_t::Failure; }
+auto Analyzer::visit(ast::PoisonedStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Failure; }
 
 }  // namespace Manganese::semantic

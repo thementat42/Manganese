@@ -198,7 +198,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
             signatureResult = stmtvisit_t::Failure;
         }
 
-        if (param.defaultValue) {
+        if (param.defaultValue != nullptr) {
             if (visit(param.defaultValue) == exprvisit_t::Failure) {
                 signatureResult = stmtvisit_t::Failure;
                 continue;
@@ -241,7 +241,7 @@ auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_
         }
     }
 
-    if (statement->value) {
+    if (statement->value != nullptr) {
         context.currentVariableDeclarationType = variableType;
         if (visit(statement->value) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
         const SemanticType* initializerType = statement->value->semanticType;

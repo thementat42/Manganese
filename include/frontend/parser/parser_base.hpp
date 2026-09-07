@@ -98,7 +98,7 @@ class Parser {
     ast::Statement* parseWhileLoopStatement();
 
     ast::EnumValue parseEnumMember();
-    std::vector<std::string> parseGenericsList(std::string_view context_name);
+    std::vector<std::string> parseGenericsList(std::string_view contextName);
     std::optional<ast::AggregateField> parseAggregateField(std::string_view aggregateName,
                                                            std::span<ast::AggregateField> existingFields);
 

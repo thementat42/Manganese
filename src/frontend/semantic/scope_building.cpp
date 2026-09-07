@@ -89,7 +89,7 @@ Result Analyzer::_buildStatementScope(ast::Statement* stmt) {
             if (result == Result::Failure) { _reportRedeclaration(funcStmt->name, funcStmt); }
 
             // Process the internal block statements
-            Result bodyResult = _buildBodyScope(funcStmt->body);
+            const Result bodyResult = _buildBodyScope(funcStmt->body);
             return (result == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
         }
         case IfStatement: {
@@ -132,12 +132,12 @@ Result Analyzer::_buildStatementScope(ast::Statement* stmt) {
     }
 }
 
-Result Analyzer::_buildBodyScope(const ast::Block& body) {
+Result Analyzer::_buildBodyScope(const ast::Block& block) {
     symbolTable.enterScope();
     Result result = Result::Success;
 
-    for (ast::Statement* subStatement : body) {
-        if (_buildStatementScope(subStatement) == Result::Failure) { result = Result::Failure; }
+    for (ast::Statement* statement : block) {
+        if (_buildStatementScope(statement) == Result::Failure) { result = Result::Failure; }
     }
 
     symbolTable.exitScope();

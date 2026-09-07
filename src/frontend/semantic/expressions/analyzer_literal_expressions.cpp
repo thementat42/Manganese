@@ -109,7 +109,7 @@ auto Analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
 auto Analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     const Symbol* symbol = symbolTable.lookup(expression->name);
-    if (!symbol) {
+    if (symbol == nullptr) {
         logError(expression, "Identifier '{}' was not found in the current scope", expression->name);
         return exprvisit_t::Failure;
     }

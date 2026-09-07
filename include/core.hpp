@@ -46,12 +46,12 @@
 #define FORCE_INLINE inline
 #endif
 
-[[noreturn]] inline void manganese_unreachable(int) {
+[[noreturn]] inline void manganese_unreachable(int /*unused*/) {
     *(static_cast<volatile int*>(nullptr)) = 0;  // still invokes UB (and should crash on most platforms)
     for (;;) {}  // mainly to satisfy the compiler around not returning
 }
 
-[[noreturn]] inline void manganese_unreachable(float) {
+[[noreturn]] inline void manganese_unreachable(float /*unused*/) {
 #ifdef __has_builtin
 #if __has_builtin(__builtin_unreachable)
     __builtin_unreachable();

@@ -320,9 +320,7 @@ class number_t {
     std::partial_ordering operator<=>(const number_t& other) const noexcept {
         return _visit([&](auto l) {
             return other._visit([&](auto r) {
-                if constexpr (std ::is_same_v<decltype(l), const char*>) {
-                    return std::partial_ordering::unordered;
-                } else if constexpr (std ::is_same_v<decltype(r), const char*>) {
+                if constexpr (std::is_same_v<decltype(l), const char*> || std::is_same_v<decltype(r), const char*>) {
                     return std::partial_ordering::unordered;
                 } else if constexpr (Integral<decltype(l)> && Integral<decltype(r)>) {
                     return safe_less(l, r)

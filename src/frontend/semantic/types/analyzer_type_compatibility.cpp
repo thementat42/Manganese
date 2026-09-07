@@ -358,7 +358,8 @@ const SemanticType* Analyzer::unifyArrayInference(const SemanticType* declared, 
         const auto* initArray = static_cast<const Array*>(initializer);
 
         // Take length from initializer if declared length is unspecified
-        std::optional<std::size_t> unifiedLength = decArray->length.has_value() ? decArray->length : initArray->length;
+        const std::optional<std::size_t> unifiedLength
+            = decArray->length.has_value() ? decArray->length : initArray->length;
 
         // If declared had a length and initializer has a length, they should ideally match,
         // but compatibility checks will catch mismatches elsewhere.

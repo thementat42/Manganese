@@ -71,7 +71,8 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         }
         expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
         return result;
-    } else if (isBitwiseOp(op)) {
+    }
+    if (isBitwiseOp(op)) {
         if (!lhsType->isInteger() || !rhsType->isInteger()) {
             logError(expression, "Bitwise operators require integer operands, got {} and {}", lhsType->toString(),
                      rhsType->toString());
@@ -79,7 +80,8 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         }
         expression->semanticType = promoteNumericTypes(lhsType, rhsType);
         return result;
-    } else if (isRelationalOp(op)) {
+    }
+    if (isRelationalOp(op)) {
         if (!areTypesComparable(lhsType, rhsType)) {
             logError(expression, "Cannot compare incompatible types {} and {}", lhsType->toString(),
                      rhsType->toString());
@@ -87,7 +89,8 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         }
         expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
         return result;
-    } else if (isArithmeticOp(op)) {
+    }
+    if (isArithmeticOp(op)) {
         if (lhsType->isPointer() || rhsType->isPointer()) { return analyzePointerArithmetic(expression); }
         if (op == lexer::TokenType::Plus && lhsType->primitiveType == ast::PrimitiveType::string
             && rhsType->primitiveType == ast::PrimitiveType::string) {
@@ -227,9 +230,8 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             if (!canBeBool) {
                 logError(expression, "Operator '!' requires a boolean operand, got '{}'", rhsType->toString());
                 return exprvisit_t::Failure;
-            } else if (canBeBool.result == Compatible_t::Warning) {
-                logWarning(expression, "{}", canBeBool.message);
             }
+            if (canBeBool.result == Compatible_t::Warning) { logWarning(expression, "{}", canBeBool.message); }
             expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
         } break;
 

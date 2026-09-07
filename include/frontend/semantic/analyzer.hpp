@@ -179,7 +179,6 @@ class Analyzer final : public _analyzer_base_t {
                                                      const TypeList& typeArgs);
 
     static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
-        if (!expr) [[unlikely]] { return nullptr; }
         using enum ast::ExpressionKind;
         switch (expr->kind) {
             case GenericInstantiationExpression:

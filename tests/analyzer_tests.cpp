@@ -679,7 +679,7 @@ bool testPointerDereferenceAndMutability() {
     )";
 
     // Incrementing/decrementing an immutable variable and an rvalue is invalid
-    std::string incImmutable = R"(
+    const std::string incImmutable = R"(
         func main() {
             let immutableVal: int32 = 10;
             immutableVal++;

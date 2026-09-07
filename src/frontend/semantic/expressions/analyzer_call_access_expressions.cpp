@@ -101,7 +101,8 @@ auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     // Look up the original AST function declaration node to check for default parameters
     const ast::FunctionDeclarationStatement* baseDeclaration = nullptr;
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
-        if (Symbol* symbol = symbolTable.lookup(static_cast<ast::IdentifierExpression*>(expression->callee)->name);
+        if (const Symbol* symbol
+            = symbolTable.lookup(static_cast<ast::IdentifierExpression*>(expression->callee)->name);
             symbol != nullptr) {
             if (symbol->node != nullptr
                 && static_cast<ast::FunctionDeclarationStatement*>(symbol->node)->kind
@@ -130,7 +131,7 @@ auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
         }
 
         bool hasDefault = false;
-        if (baseDeclaration && i < baseDeclaration->parameters.size()) {
+        if ((baseDeclaration != nullptr) && i < baseDeclaration->parameters.size()) {
             hasDefault = (baseDeclaration->parameters[i].defaultValue != nullptr);
         }
 
@@ -295,7 +296,7 @@ auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t 
         return exprvisit_t::Failure;
     }
 
-    const Symbol* memberSymbol = symbolTable.scopedLookup(scopeSymbol->scopeDefined, memberName);
+    const Symbol* memberSymbol = decltype(symbolTable)::scopedLookup(scopeSymbol->scopeDefined, memberName);
     if (memberSymbol == nullptr) {
         logError(expression->element, "No member named '{}' in scope", memberName);
         return exprvisit_t::Failure;

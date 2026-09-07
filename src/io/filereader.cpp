@@ -35,7 +35,7 @@ FileReader::FileReader(const std::string& filename, std::size_t bufferCapacity) 
 
 void FileReader::refillBuffer() {
     const std::size_t unreadBytes = _bufferSize - _position;
-    if (unreadBytes != 0u) {
+    if (unreadBytes != 0U) {
         // Move any unread data to the beginning of the buffer
         // This way, if we are near the end of a chunk and try to read into the next chunk
         // unread data can still be read later

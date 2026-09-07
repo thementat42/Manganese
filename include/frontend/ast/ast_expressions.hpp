@@ -44,7 +44,7 @@ struct AlignofExpression final : public Expression {
 
     AlignofExpression(Type* t) noexcept : Expression(ExpressionKind::AlignofExpression), type(t) {}
 
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override;
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override;
 
     MN_AST_STANDARD_INTERFACE
 };
@@ -79,7 +79,7 @@ struct BinaryExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override;
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override;
 };
 
 struct BoolLiteralExpression final : public Expression {
@@ -90,7 +90,7 @@ struct BoolLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override {
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override {
         return mnstl::fold_result_t{value};
     }
 };
@@ -105,7 +105,7 @@ struct CharLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override {
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override {
         return mnstl::fold_result_t{value};
     }
 };
@@ -170,7 +170,7 @@ struct NumberLiteralExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override {
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override {
         return mnstl::fold_result_t{value};
     }
 };
@@ -183,7 +183,7 @@ struct PostfixExpression final : public Expression {
         Expression(ExpressionKind::PostfixExpression), left(_left), op(_op) {}
 
     MN_AST_STANDARD_INTERFACE;
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override;
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override;
 };
 
 struct PrefixExpression final : public Expression {
@@ -195,7 +195,7 @@ struct PrefixExpression final : public Expression {
 
     MN_AST_STANDARD_INTERFACE;
 
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override;
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override;
 };
 
 struct ScopeResolutionExpression final : public Expression {
@@ -212,7 +212,7 @@ struct SizeofExpression final : public Expression {
     Type* type;
 
     SizeofExpression(Type* t) noexcept : Expression(ExpressionKind::SizeofExpression), type(t) {}
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override;
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override;
 
     MN_AST_STANDARD_INTERFACE
 };
@@ -224,7 +224,7 @@ struct StringLiteralExpression final : public Expression {
         Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
 
     MN_AST_STANDARD_INTERFACE;
-    mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE override {
+    mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE override {
         return mnstl::fold_result_t{value};
     }
 };

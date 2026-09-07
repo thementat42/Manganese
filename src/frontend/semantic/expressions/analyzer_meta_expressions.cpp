@@ -88,8 +88,8 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
         expression->semanticType = concreteType;
         expression->identifier->semanticType = concreteType;  // Attach to base for parent visitors
         return exprvisit_t::Success;
-
-    } else if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
+    }
+    if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
         auto* aggregateDecl = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
 
         if (aggregateDecl->genericTypes.size() != genericsStack.top().size()) {

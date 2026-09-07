@@ -111,12 +111,12 @@ std::string Poison::toString() const { return "<error_type>"; }
 std::string Void::toString() const { return "void"; }
 
 // Size & Alignment
-std::size_t SemanticType::size(const utils::TargetInfo&) const noexcept {
+std::size_t SemanticType::size(const utils::TargetInfo& /*unused*/) const noexcept {
     if (isPrimitive()) { return static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8); }
     return 0;
 }
 
-std::size_t SemanticType::alignment(const utils::TargetInfo&) const noexcept {
+std::size_t SemanticType::alignment(const utils::TargetInfo& /*unused*/) const noexcept {
     if (isPrimitive()) {
         const std::size_t align = static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8);
         return std::max<std::size_t>(1, align);
@@ -140,7 +140,7 @@ std::size_t Aggregate::size(const utils::TargetInfo& target) const noexcept {
     }
 
     if (maxAlign > 0) {
-        std::size_t remainder = currentSize % maxAlign;
+        const std::size_t remainder = currentSize % maxAlign;
         if (remainder != 0) { currentSize += (maxAlign - remainder); }
     }
 
@@ -187,13 +187,13 @@ std::size_t Pointer::size(const utils::TargetInfo& target) const noexcept { retu
 
 std::size_t Pointer::alignment(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment; }
 
-std::size_t Poison::size(const utils::TargetInfo&) const noexcept { return 0; }
+std::size_t Poison::size(const utils::TargetInfo& /*target*/) const noexcept { return 0; }
 
-std::size_t Poison::alignment(const utils::TargetInfo&) const noexcept { return 1; }
+std::size_t Poison::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
 
-std::size_t Void::size(const utils::TargetInfo&) const noexcept { return 0; }
+std::size_t Void::size(const utils::TargetInfo& /*target*/) const noexcept { return 0; }
 
-std::size_t Void::alignment(const utils::TargetInfo&) const noexcept { return 1; }
+std::size_t Void::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
 
 std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
     if (t == nullptr) [[unlikely]] { return 0; }
@@ -309,12 +309,8 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             const auto* right = static_cast<const GenericInstantiation*>(rhs);
             return (left->baseType == right->baseType) && (left->typeArguments == right->typeArguments);
         }
-        case SemanticTypeKind::Poison: {
-            return true;
-        }
-        case SemanticTypeKind::Void: {
-            return true;
-        }
+        case SemanticTypeKind::Poison: return true;
+        case SemanticTypeKind::Void: return true;
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
 }

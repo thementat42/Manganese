@@ -13,13 +13,12 @@
 #define WRAP(str) str
 #endif  // MN_DEBUG
 
-namespace Manganese {
-namespace ast {
+namespace Manganese::ast {
 
 // Helpers
 namespace {
 
-static inline std::string getIndent(std::size_t indent) { return std::string(indent * 4, ' '); }
+inline std::string getIndent(std::size_t indent) { return std::string(indent * 4, ' '); }
 
 std::string blockToString(const Block& block, std::size_t indent) {
     std::string result = "{\n";
@@ -78,7 +77,7 @@ std::string BreakStatement::toString(std::size_t indent) const { return getInden
 
 std::string ContinueStatement::toString(std::size_t indent) const { return getIndent(indent) + "continue;"; }
 
-std::string EmptyStatement::toString(std::size_t) const { return ""; }
+std::string EmptyStatement::toString(std::size_t /*indent*/) const { return ""; }
 
 std::string EnumDeclarationStatement::toString(std::size_t indent) const {
     std::string result = getIndent(indent)
@@ -157,11 +156,9 @@ std::string ImportStatement::toString(std::size_t indent) const {
         pathStr += path[i];
         if (i != path.size() - 1) [[likely]] { pathStr += "::"; }
     }
-    if (alias.has_value()) {
-        return getIndent(indent) + std::format("import {} as {};", pathStr, *alias);
-    } else {
-        return getIndent(indent) + std::format("import {};", pathStr);
-    }
+    const std::string aliasStr = alias.has_value() ? std::format("as {}", *alias) : "";
+
+    return getIndent(indent) + std::format("import {} {};", pathStr, aliasStr);
 }
 
 std::string NamespaceStatement::toString(std::size_t indent) const {
@@ -269,9 +266,9 @@ std::string BinaryExpression::toString(std::size_t indent) const {
     return std::format(WRAP("{} {} {}"), left->toString(indent), lexer::tokenTypeToString(op), right->toString(indent));
 }
 
-std::string BoolLiteralExpression::toString(std::size_t) const { return value ? "true" : "false"; }
+std::string BoolLiteralExpression::toString(std::size_t /*indent*/) const { return value ? "true" : "false"; }
 
-std::string CharLiteralExpression::toString(std::size_t) const {
+std::string CharLiteralExpression::toString(std::size_t /*indent*/) const {
     return std::format("'{}'", lexer::codepointToUTF8(value));
 }
 
@@ -289,7 +286,7 @@ std::string GenericInstantiationExpression::toString(std::size_t indent) const {
     return identifier->toString(indent) + genericsToString(types, indent);
 }
 
-std::string IdentifierExpression::toString(std::size_t) const { return name; }
+std::string IdentifierExpression::toString(std::size_t /*indent*/) const { return name; }
 
 std::string IndexExpression::toString(std::size_t indent) const {
     return std::format("{}[{}]", variable->toString(indent), index->toString(indent));
@@ -299,7 +296,7 @@ std::string MemberAccessExpression::toString(std::size_t indent) const {
     return std::format("{}.{}", object->toString(indent), property);
 }
 
-std::string NumberLiteralExpression::toString(std::size_t) const { return value.to_string(true); }
+std::string NumberLiteralExpression::toString(std::size_t /*indent*/) const { return value.to_string(true); }
 
 std::string PostfixExpression::toString(std::size_t indent) const {
     return std::format(WRAP("{}{}"), left->toString(indent), lexer::tokenTypeToString(op));
@@ -317,7 +314,7 @@ std::string SizeofExpression::toString(std::size_t indent) const {
     return std::format(WRAP("sizeof({})"), type->toString(indent));
 }
 
-std::string StringLiteralExpression::toString(std::size_t) const { return std::format("\"{}\"", value); }
+std::string StringLiteralExpression::toString(std::size_t /*indent*/) const { return std::format("\"{}\"", value); }
 
 std::string TypeCastExpression::toString(std::size_t indent) const {
     return std::format(WRAP("{} as {}"), originalValue->toString(indent), targetType->toString(indent));
@@ -362,13 +359,13 @@ std::string GenericInstantiationType::toString(std::size_t indent) const {
     return baseType->toString(indent) + genericsToString(typeParameters, indent);
 }
 
-std::string IdentifierType::toString(std::size_t) const { return name; }
+std::string IdentifierType::toString(std::size_t /*indent*/) const { return name; }
 
 std::string PointerType::toString(std::size_t indent) const {
     return std::format("ptr {}{}", (isMutable ? "mut " : ""), baseType->toString(indent));
 }
 
-std::string ScopedType::toString(std::size_t) const {
+std::string ScopedType::toString(std::size_t /*indent*/) const {
     return std::format("{}::{}", scope->toString(), type->toString());
 }
 
@@ -377,9 +374,8 @@ std::string TypeofType::toString(std::size_t indent) const {
 }
 
 // Errors
-std::string PoisonedStatement::toString(std::size_t) const { return std::format("<invalid expression>"); }
-std::string PoisonedExpression::toString(std::size_t) const { return std::format("<invalid statement>"); }
-std::string PoisonedType::toString(std::size_t) const { return std::format("<invalid type>"); }
+std::string PoisonedStatement::toString(std::size_t /*indent*/) const { return std::format("<invalid expression>"); }
+std::string PoisonedExpression::toString(std::size_t /*indent*/) const { return std::format("<invalid statement>"); }
+std::string PoisonedType::toString(std::size_t /*indent*/) const { return std::format("<invalid type>"); }
 
-}  // namespace ast
-}  // namespace Manganese
+}  // namespace Manganese::ast

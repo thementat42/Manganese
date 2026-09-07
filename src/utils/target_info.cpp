@@ -6,7 +6,7 @@
 #include <utils/target_info.hpp>
 
 namespace Manganese::utils {
-TargetInfo TargetInfo::fromTriple(std::string_view tripleString) {
+TargetInfo TargetInfo::fromTriple(std::string_view tripleString) noexcept {
     const llvm::Triple triple{tripleString};
     if (triple.isArch64Bit()) { return TargetInfo{.pointerSize = 8, .pointerAlignment = 8}; }
     if (triple.isArch32Bit()) { return TargetInfo{.pointerSize = 4, .pointerAlignment = 4}; }
@@ -16,6 +16,6 @@ TargetInfo TargetInfo::fromTriple(std::string_view tripleString) {
     return TargetInfo{.pointerSize = 0, .pointerAlignment = 0};
 }
 
-TargetInfo TargetInfo::fromHostTriple() { return fromTriple(llvm::sys::getDefaultTargetTriple()); }
+TargetInfo TargetInfo::fromHostTriple() noexcept { return fromTriple(llvm::sys::getDefaultTargetTriple()); }
 
 }  // namespace Manganese::utils
