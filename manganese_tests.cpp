@@ -19,7 +19,8 @@ static bool strneq(const char* a, const char* b, std::size_t max_count) {
 
 int main(int argc, char const* argv[]) {
     if (argc == 1) {
-        std::cerr << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--codegen] [--all]\n", argv[0]);
+        std::cerr << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--all]\n",
+                                 argv[0]);
         return 1;
     }
 
@@ -28,6 +29,7 @@ int main(int argc, char const* argv[]) {
     bool lexer = false;
     bool parser = false;
     bool semantic = false;
+    bool controlflow = false;
     bool codegen = false;
 
     // TODO: Replace this with proper argument parser later (when working on argparser for main executable)
@@ -41,10 +43,13 @@ int main(int argc, char const* argv[]) {
             semantic = true;
         } else if (strneq(argv[i], "--codegen", 9)) {
             codegen = true;
+        } else if (strneq(argv[i], "--controlflow", 13)) {
+            controlflow = true;
         } else if (strneq(argv[i], "--all", 5)) {
             lexer = true;
             parser = true;
             semantic = true;
+            controlflow = true;
             codegen = true;
             break;
         } else {
@@ -70,10 +75,16 @@ int main(int argc, char const* argv[]) {
         Manganese::tests::runAnalyzerTests(runner);
         std::cout << "\n----------\n";
     }
+    if (controlflow) {
+        std::cout << ansi::PINK << "Control Flow Analysis Tests\n" << ansi::RESET;
+        // TODO: Add once control flow analysis has progress
+        std::cout << "To be implemented.\n";
+        std::cout << "\n----------\n";
+    }
     if (codegen) {
         std::cout << ansi::PINK << "Codegen Tests\n" << ansi::RESET;
         // TODO: Add once codegen has progress
-        std::cout << ("To be implemented.\n");
+        std::cout << "To be implemented.\n";
         std::cout << "\n----------\n";
     }
 
