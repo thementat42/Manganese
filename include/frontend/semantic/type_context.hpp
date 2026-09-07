@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <frontend/ast.hpp>
 #include <mnstl/chunk_allocator.hxx>
-#include <mnstl/enum_matches.hxx>
+#include <utils/enum_matches.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -71,16 +71,16 @@ struct SemanticType {
 
     constexpr bool isUnsignedInteger() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, uint8, uint16, uint32, uint64, uint128);
+        return isPrimitive() && utils::enum_matches(primitiveType, uint8, uint16, uint32, uint64, uint128);
     }
     constexpr bool isSignedInteger() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, int8, int16, int32, int64, int128);
+        return isPrimitive() && utils::enum_matches(primitiveType, int8, int16, int32, int64, int128);
     }
     constexpr bool isInteger() const noexcept { return isSignedInteger() || isUnsignedInteger(); }
     constexpr bool isFloat() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, float32, float64);
+        return isPrimitive() && utils::enum_matches(primitiveType, float32, float64);
     }
 
     constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }

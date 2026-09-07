@@ -1,5 +1,6 @@
 #ifndef MNSTL_SAFE_CMP
 #define MNSTL_SAFE_CMP 1
+
 #include <mnstl/ext_num_config.hxx>
 
 namespace mnstl {

@@ -13,7 +13,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
 #include <mnstl/chunk_allocator.hxx>
-#include <mnstl/enum_matches.hxx>
+#include <utils/enum_matches.hpp>
 #include <mnstl/tiny_stack.hxx>
 #include <string>
 #include <string_view>
@@ -195,22 +195,22 @@ class Analyzer final : public _analyzer_base_t {
 
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches(t, And, Or, Not);
+    return utils::enum_matches(t, And, Or, Not);
 }
 
 constexpr bool isArithmeticOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches(t, Plus, Minus, Mul, Div, FloorDiv, Mod);
+    return utils::enum_matches(t, Plus, Minus, Mul, Div, FloorDiv, Mod);
 }
 
 constexpr bool isRelationalOp(lexer::TokenType t) {
     using enum lexer::TokenType;
-    return mnstl::enum_matches(t, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual);
+    return utils::enum_matches(t, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual);
 }
 
 constexpr bool isBitwiseOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
+    return utils::enum_matches(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
 }
 
 constexpr bool isLvalue(const ast::Expression* expr) noexcept {
@@ -219,7 +219,7 @@ constexpr bool isLvalue(const ast::Expression* expr) noexcept {
     if (k == PrefixExpression) {
         return static_cast<const ast::PrefixExpression*>(expr)->op == lexer::TokenType::Dereference;
     }
-    return mnstl::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression,
+    return utils::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression,
                                ScopeResolutionExpression);
 }
 
