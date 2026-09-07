@@ -544,6 +544,11 @@ inline string_conversion_result_t<number_t> str_to_num(std::string_view str, boo
             case 'B': base = Base::Binary; break;
             case 'o': [[fallthrough]];
             case 'O': base = Base::Octal; break;
+            case 'd': [[fallthrough]];
+            case 'D':  // explicit decimal prefix
+                base = Base::Decimal;
+                parsing_start += 2;
+                break;
             default:  // Not a base prefix (just leading zero), assume decimal
                 base = Base::Decimal;
                 break;

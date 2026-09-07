@@ -13,6 +13,9 @@
 #include <utility>
 #include <utils/result.hpp>
 
+#include "frontend/lexer/lexer_base.hpp"
+
+
 namespace Manganese::lexer {
 
 //~ Core Lexer Functions
@@ -553,6 +556,12 @@ NumberPrefixResult Lexer::processNumberPrefix() {
             // Octal number
             advance(2);
             return NumberPrefixResult{.base = mnstl::Base::Octal, .isValidBaseChar = is_odigit, .prefix = "0o"};
+        case 'd':
+        case 'D':
+            advance(2);
+            return NumberPrefixResult{.base = mnstl::Base::Octal, .isValidBaseChar = is_digit, .prefix = "0d"};
+
+            // explicit decimal prefix (optional)
         default:
             // Not a valid base indicator -- just treat it as a decimal number
             if (is_digit(peekChar(1))) {  // if the literal is 0, that's fine

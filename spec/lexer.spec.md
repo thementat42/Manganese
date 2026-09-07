@@ -42,9 +42,10 @@ Character and string literals support the following escape sequences:
 - Numeric literals can begin with one of the following (case-insensitive) prefixes:
   - 0b for binary (the digits following this must be either `0` or `1`)
   - 0o for octal (the digits following this must be between `0` and `7`, inclusive)
-  - 0x for hexadecimal (the digits must be between `0` and `9` or `a` and `f` or `A` and `F`)
+  - 0d for decimal (the digits following this must be between `0` and `9`, inclusive)
+  - 0x for hexadecimal (the digits must be between `0` and `9` or `a` and `f` or `A` and `F`, inclusive)
   - A leading zero does not imply an octal literal
-- If no prefix is specified, the literal is treated as an ordinary decimal literal
+- If no prefix is specified, the literal is treated as a decimal literal
 - Numeric literals can contain underscores (`_`) as digit separators; these are ignored
 
 ## Keywords and Identifiers
