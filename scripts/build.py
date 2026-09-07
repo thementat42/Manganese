@@ -42,11 +42,12 @@ Requirements:
 
 import argparse
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import time
+from pathlib import Path
+
 
 def check_cmake_installation():
     """Check that cmake is installed before running
@@ -309,12 +310,12 @@ if args.linker:
 if args.cmake_arg:
     # appended arguments are a list of list of strings (each sub-list contains 1 item)
     # so collect all those items
-    cmake_args.extend(list(arg[0] for arg in args.cmake_arg))
+    cmake_args.extend([arg[0] for arg in args.cmake_arg])
 if args.build_arg:
     build_args.append("--")  # tells cmake to treat all subsequent arguments as arguments to the build system
     # appended arguments are a list of list of strings (each sub-list contains 1 item)
     # so collect all those items
-    build_args.extend(list(arg[0] for arg in args.build_arg))
+    build_args.extend([arg[0] for arg in args.build_arg])
 
 build_start = time.perf_counter()
 
