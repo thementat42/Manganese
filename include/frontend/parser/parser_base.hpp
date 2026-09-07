@@ -150,6 +150,11 @@ class Parser {
     template <class T, class... Args>
         requires(std::is_convertible_v<T*, ast::ASTNode*> && std::is_constructible_v<T, Args...>)
     T* makeNode(const Token& startToken, Args&&... args) {
+        if constexpr (std::is_same_v<T, ast::PoisonedExpression> || std::is_same_v<T, ast::PoisonedStatement>
+                      || std::is_same_v<T, ast::PoisonedType>) {
+            // any poisoned node should be treated as having an error
+            flags.hasError = true;
+        }
         T* const node = arena.emplace<T>(std::forward<Args>(args)...);
         node->line = startToken.getLine();
         node->column = startToken.getColumn();
