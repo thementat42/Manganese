@@ -38,6 +38,7 @@ class Parser {
     struct {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
+        bool hasWarning: 1 = false;
         bool parsingAliasStatement : 1 = false;
         bool hasModuleDeclaration : 1 = false;
     } flags;
@@ -189,6 +190,12 @@ class Parser {
     inline void logError(const T& t, std::format_string<Args...> message, Args&&... args) {
         logging::logError(t.line, t.column, message, std::forward<Args>(args)...);
         flags.hasError = true;
+    }
+
+    template <class... Args>
+    inline void logWarning(const Token& token, std::format_string<Args...> message, Args&&... args) {
+        logging::logWarning(token.getLine(), token.getColumn(), message, std::forward<Args>(args)...);
+        flags.hasWarning = true;
     }
 
     inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }

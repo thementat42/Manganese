@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <core.hpp>
-#include <cstddef>
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
@@ -242,7 +241,7 @@ ast::Statement* Parser::parseImportStatement() {
 ast::Statement* Parser::parseModuleDeclarationStatement() {
     const lexer::Token temp = consumeToken();
     if (flags.hasParsedFileHeader) {
-        logging::logWarning(temp, "Module declarations should go at the top of the file");
+        logWarning(temp, "Module declarations should go at the top of the file");
     }
 
     std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
@@ -287,8 +286,6 @@ ast::Statement* Parser::parseReturnStatement() {
 
 ast::Statement* Parser::parseSwitchStatement() {
     const Token startToken = consumeToken();
-    const std::size_t startLine = startToken.getLine();
-    const std::size_t startColumn = startToken.getColumn();
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce switch variable");
     ast::Expression* variable = parseExpression(Precedence::Default);
@@ -307,7 +304,7 @@ ast::Statement* Parser::parseSwitchStatement() {
     }
 
     if (cases.empty() && !hasDefault) {
-        logging::logWarning(startLine, startColumn, "Switch statement has no cases or default body");
+        logWarning(startToken, "Switch statement has no cases or default body");
     }
 
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");

@@ -64,7 +64,7 @@ ast::Type* Parser::parseArrayType(ast::Type* left, Precedence) {
         lengthExpression = parseExpression(Precedence::Default);
     }
     if (flags.parsingAliasStatement && lengthExpression == nullptr) {
-        logError(left, "Arrays in alias statements must have an explicit length expression");
+        logError(*left, "Arrays in alias statements must have an explicit length expression");
     }
     expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
     return makeNode<ast::ArrayType>(startToken, left, lengthExpression);
