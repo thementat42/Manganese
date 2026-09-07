@@ -88,9 +88,6 @@ ast::Block Parser::parseBlock(std::string_view blockName) {
         block.push_back(parseStatement());
     }
     expectToken(TokenType::RightBrace, std::format("Expected '}}' to end {}", blockName));
-    if (block.empty()) {
-        logWarning(peekToken(), "{} is empty", blockName);
-    }
     return block;
 }
 
