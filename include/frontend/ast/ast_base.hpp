@@ -122,7 +122,9 @@ struct Expression : public ASTNode {
     const ExpressionKind kind;
     const semantic::SemanticType* semanticType = nullptr;
 
-    virtual mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE { return mnstl::fold_result_t{}; }
+    virtual mnstl::fold_result_t fold(const utils::TargetInfo&) const NOEXCEPT_IF_RELEASE {
+        return mnstl::fold_result_t{};
+    }
     constexpr bool isPoisoned() const noexcept { return kind == ExpressionKind::PoisonedExpression; };
 
    protected:

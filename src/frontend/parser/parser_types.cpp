@@ -190,8 +190,7 @@ ast::Type* Parser::parseTypeofType() {
 
 ast::Type* Parser::parseAggregateTypeField() {
     if (peekTokenType() == TokenType::Identifier) {
-        logWarning(peekToken(),
-                            "Variable names are ignored in aggregate type declarations");
+        logWarning(peekToken(), "Variable names are ignored in aggregate type declarations");
         DISCARD(consumeToken());
         expectToken(TokenType::Colon, "Expected ':' after field name in aggregate type declaration");
     }
@@ -212,10 +211,7 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
         DISCARD(consumeToken());
         isVariadic = true;
 
-        if (seenVariadic) {
-            logError(peekToken(),
-                     "A function type cannot have more than one variadic parameter");
-        }
+        if (seenVariadic) { logError(peekToken(), "A function type cannot have more than one variadic parameter"); }
         seenVariadic = true;
     }
 
@@ -232,8 +228,7 @@ std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existing
     std::string genericName = genericToken.getLexeme();
 
     if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
-        logError(genericToken, "Duplicate generic type '{}' in '{}'", genericName,
-                 contextName);
+        logError(genericToken, "Duplicate generic type '{}' in '{}'", genericName, contextName);
         return "";
     }
     return genericName;

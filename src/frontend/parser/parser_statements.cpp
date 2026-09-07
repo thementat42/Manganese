@@ -240,9 +240,7 @@ ast::Statement* Parser::parseImportStatement() {
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
     const lexer::Token temp = consumeToken();
-    if (flags.hasParsedFileHeader) {
-        logWarning(temp, "Module declarations should go at the top of the file");
-    }
+    if (flags.hasParsedFileHeader) { logWarning(temp, "Module declarations should go at the top of the file"); }
 
     std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
 
@@ -303,9 +301,7 @@ ast::Statement* Parser::parseSwitchStatement() {
         defaultBody = parseDefaultClause();
     }
 
-    if (cases.empty() && !hasDefault) {
-        logWarning(startToken, "Switch statement has no cases or default body");
-    }
+    if (cases.empty() && !hasDefault) { logWarning(startToken, "Switch statement has no cases or default body"); }
 
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 

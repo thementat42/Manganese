@@ -12,6 +12,6 @@ struct TargetInfo {
     static TargetInfo fromTriple(std::string_view triple);
     static TargetInfo fromHostTriple();
 };
-}  // namespace Manganese
+}  // namespace Manganese::utils
 
 #endif  // MANGANESE_INCLUDE_UTILS_TARGET_INFO_HPP

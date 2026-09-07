@@ -38,7 +38,7 @@ class Parser {
     struct {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
-        bool hasWarning: 1 = false;
+        bool hasWarning : 1 = false;
         bool parsingAliasStatement : 1 = false;
         bool hasModuleDeclaration : 1 = false;
     } flags;

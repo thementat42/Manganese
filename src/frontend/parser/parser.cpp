@@ -71,8 +71,8 @@ Token Parser::expectToken(TokenType expectedType) { return expectToken(expectedT
 Token Parser::expectToken(TokenType expectedType, std::string_view errorMessage) {
     Token tok = peekToken();
     if (tok.getType() == expectedType) { return consumeToken(); }
-    logError(tok, "{} (expected '{}' but got '{}')", errorMessage,
-                      lexer::tokenTypeToString(expectedType), lexer::tokenTypeToString(tok.getType()));
+    logError(tok, "{} (expected '{}' but got '{}')", errorMessage, lexer::tokenTypeToString(expectedType),
+             lexer::tokenTypeToString(tok.getType()));
     return lexer::Token{};
 }
 
@@ -124,8 +124,7 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
             return tempFunction;
         }
         default:
-            logError(peekToken(), "{} cannot follow a visibility modifier",
-                     lexer::tokenTypeToString(peekTokenType()));
+            logError(peekToken(), "{} cannot follow a visibility modifier", lexer::tokenTypeToString(peekTokenType()));
             // Parse the statement as if it had no visibility modifier
             return parseStatement();
     }
