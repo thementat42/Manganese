@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <frontend/semantic/analyzer.hpp>
+#include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <fstream>
 #include <iostream>
@@ -764,7 +764,7 @@ bool miscTests() {
 }
 }  // namespace analyzer_tests
 
-void runAnalyzerTests(TestRunner& runner) {
+void runSemanticAnalyzerTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
     // Statements

@@ -1,6 +1,6 @@
 #include <core.hpp>
 #include <frontend/lexer/token.hpp>
-#include <frontend/semantic/analyzer.hpp>
+#include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>

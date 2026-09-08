@@ -72,7 +72,7 @@ int main(int argc, char const* argv[]) {
     }
     if (semantic) {
         std::cout << ansi::PINK << "Semantic Analyzer Tests\n" << ansi::RESET;
-        Manganese::tests::runAnalyzerTests(runner);
+        Manganese::tests::runSemanticAnalyzerTests(runner);
         std::cout << "\n----------\n";
     }
     if (controlflow) {
