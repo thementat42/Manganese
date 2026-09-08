@@ -59,7 +59,7 @@ struct [[nodiscard]] StackGuard {
     StackGuard& operator=(StackGuard&&) = delete;
 };
 
-using _analyzer_base_t = ast::Visitor<Result, Result, Result, false>;
+using _analyzer_base_t = ast::Visitor<Result, Result, Result, true>;
 
 class SemanticAnalyzer final : public _analyzer_base_t {
    private:

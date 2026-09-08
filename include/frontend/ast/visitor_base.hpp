@@ -10,7 +10,7 @@
 
 namespace Manganese::ast {
 
-template <class ExpressionResult, class StatementResult, class TypeResult, bool IsConstVisitor>
+template <class ExpressionResult, class StatementResult, class TypeResult, bool AltersNodes>
 class Visitor {
    public:
     virtual ~Visitor() noexcept = default;
@@ -19,7 +19,7 @@ class Visitor {
     using typevisit_t = TypeResult;
 
     template <class U>
-    using NodePointer = std::conditional_t<IsConstVisitor, const U*, U*>;
+    using NodePointer = std::conditional_t<AltersNodes, U*, const U*>;
 
    protected:
 #define STMT(name) virtual stmtvisit_t visit(NodePointer<ast::name>) = 0;
