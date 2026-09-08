@@ -12,7 +12,7 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
     if (const auto* cached = instantiationCache.find(key)) {
@@ -48,7 +48,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t /*u
     return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
     if (const auto* cached = instantiationCache.find(key)) {
@@ -153,7 +153,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t /*un
     return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
+const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
                                                            const TypeList& typeArgs) {
     const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
@@ -189,7 +189,7 @@ const SemanticType* Analyzer::getInstantiatedAggregateType(const ast::AggregateD
     return typeContext.getNamedAggregate(std::string(instantiatedName), std::move(instantiatedFields));
 }
 
-const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
+const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
                                                           const TypeList& typeArgs) {
     const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
@@ -222,7 +222,7 @@ const SemanticType* Analyzer::getInstantiatedFunctionType(const ast::FunctionDec
     return typeContext.getFunction(std::move(instantiatedParams), resolvedReturnType);
 }
 
-const SemanticType* Analyzer::resolveGenericType(const ast::Type* type) {
+const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type) {
     if (type->primitiveType != ast::PrimitiveType::not_primitive) {
         return typeContext.getPrimitive(type->primitiveType);
     }

@@ -10,7 +10,7 @@
 #include <utils/result.hpp>
 
 namespace Manganese::semantic {
-auto Analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
     if (visit(expression->assignee) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
@@ -44,7 +44,7 @@ auto Analyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
 
@@ -111,7 +111,7 @@ auto Analyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         std::format("Unhandled binary operator {} in visit(BinaryExpression)", lexer::tokenTypeToString(op)));
 };
 
-auto Analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     exprvisit_t result = visit(expression->left);
     if (result == exprvisit_t::Failure) { return result; }
@@ -144,7 +144,7 @@ auto Analyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     if (expression->right->semanticType->isPoison()) {
@@ -241,7 +241,7 @@ auto Analyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
     const ContextGuard guard(context.typeCastDepth,

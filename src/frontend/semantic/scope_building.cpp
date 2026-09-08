@@ -11,7 +11,7 @@ namespace Manganese::semantic {
 // Note: all types are nullptr for the moment since this is just meant to collect names
 // Types are set later on
 
-Result Analyzer::buildScopeTree() {
+Result SemanticAnalyzer::buildScopeTree() {
     // first pass -- collect all user-defined types
     Result result = Result::Success;
     for (ast::Statement* stmt : parsedFile.program) {
@@ -24,7 +24,7 @@ static FORCE_INLINE void _reportRedeclaration(std::string_view redeclaredSymbolN
     logging::logError(node->line, node->column, "'{}' was already declared in this scope", redeclaredSymbolName);
 }
 
-Result Analyzer::_buildStatementScope(ast::Statement* stmt) {
+Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
     using enum ast::StatementKind;
 
     switch (stmt->kind) {
@@ -132,7 +132,7 @@ Result Analyzer::_buildStatementScope(ast::Statement* stmt) {
     }
 }
 
-Result Analyzer::_buildBodyScope(const ast::Block& block) {
+Result SemanticAnalyzer::_buildBodyScope(const ast::Block& block) {
     symbolTable.enterScope();
     Result result = Result::Success;
 
@@ -144,7 +144,7 @@ Result Analyzer::_buildBodyScope(const ast::Block& block) {
     return result;
 }
 
-Result Analyzer::_buildNamespaceScope(ast::NamespaceStatement* node) {
+Result SemanticAnalyzer::_buildNamespaceScope(ast::NamespaceStatement* node) {
     symbolTable.enterNamespace(node->name, node);
     Result result = Result::Success;
 

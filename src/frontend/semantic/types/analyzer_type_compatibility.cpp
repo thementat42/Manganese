@@ -17,7 +17,7 @@ namespace Manganese::semantic {
 constexpr static inline std::uint8_t f32MantissaWidth = 24;
 constexpr static inline std::uint8_t f64MantissaWidth = 53;
 
-Result Analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
+Result SemanticAnalyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
     const SemanticType* lhsType = expr->left->semanticType;
     const SemanticType* rhsType = expr->right->semanticType;
 
@@ -71,7 +71,7 @@ Result Analyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) const {
     return Result::Failure;
 }
 
-const SemanticType* Analyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
+const SemanticType* SemanticAnalyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
     if (lhs->isPoison() || rhs->isPoison()) { return typeContext.getPoison(); }
     // direct match, don't need to promote
     if (lhs == rhs) { return lhs; }
@@ -112,7 +112,7 @@ const SemanticType* Analyzer::promoteNumericTypes(const SemanticType* lhs, const
     return typeContext.getPoison();
 }
 
-auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
+auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const -> typeCompatibilityResult {
     if (from->isVoid() || to->isVoid()) {
         return {.result = Compatible_t::Error,
                 .message = "Cannot use an expression that evaluates to 'void' in this context"};
@@ -243,7 +243,7 @@ auto Analyzer::areTypesCompatible(const SemanticType* from, const SemanticType* 
     ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
 }
 
-auto Analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
+auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
     -> typeCompatibilityResult {
     using Cat = PrimitiveInfo::Category;
     if (from->primitiveType == to->primitiveType) { return {.result = Compatible_t::Valid}; }
@@ -312,7 +312,7 @@ auto Analyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticT
     return {.result = Compatible_t::Valid};  // Widening conversion is fine
 }
 
-auto Analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const -> typeCompatibilityResult {
+auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const -> typeCompatibilityResult {
     if (lhs->isVoid() || rhs->isVoid()) {
         return {.result = Compatible_t::Error, .message = "Cannot compare void types"};
     }
@@ -349,7 +349,7 @@ auto Analyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* r
         .message = std::format("Incompatible types for comparison: '{}' and '{}'", lhs->toString(), rhs->toString())};
 }
 
-const SemanticType* Analyzer::unifyArrayInference(const SemanticType* declared, const SemanticType* initializer) {
+const SemanticType* SemanticAnalyzer::unifyArrayInference(const SemanticType* declared, const SemanticType* initializer) {
     if (declared->isPoison() || initializer->isPoison()) { return typeContext.getPoison(); }
 
     // If both are arrays, we need to unify their lengths and element types
@@ -374,7 +374,7 @@ const SemanticType* Analyzer::unifyArrayInference(const SemanticType* declared, 
     return areTypesCompatible(initializer, declared) ? declared : nullptr;
 }
 
-Result Analyzer::checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i,
+Result SemanticAnalyzer::checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i,
                                                 ast::Expression* element) {
     const auto compat = areTypesCompatible(targetType, element->semanticType);
     if (!compat) {

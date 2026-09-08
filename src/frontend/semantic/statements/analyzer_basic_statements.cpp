@@ -7,11 +7,11 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::EmptyStatement* /*unused*/) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::EmptyStatement* /*unused*/) -> stmtvisit_t {
     return stmtvisit_t::Success;  // nothing to check
 }
 
-auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
     if (visit(statement->expression) == exprvisit_t::Failure) {
         statement->expression->semanticType = typeContext.getPoison();
         return stmtvisit_t::Failure;
@@ -27,12 +27,12 @@ auto Analyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
+auto SemanticAnalyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
 
-auto Analyzer::visit(ast::ModuleDeclarationStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
-auto Analyzer::visit(ast::ImportStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
+auto SemanticAnalyzer::visit(ast::ModuleDeclarationStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
+auto SemanticAnalyzer::visit(ast::ImportStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
 
-auto Analyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {
     symbolTable.enterNamespace(statement->name, statement);
     stmtvisit_t result = stmtvisit_t::Success;
     for (ast::Statement* stmt : statement->block) {
@@ -42,7 +42,7 @@ auto Analyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     if (!context.inFunction) {
         logError(statement, "'return' can only be used in a function");
         return stmtvisit_t::Failure;
@@ -72,6 +72,6 @@ auto Analyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::PoisonedStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Failure; }
+auto SemanticAnalyzer::visit(ast::PoisonedStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Failure; }
 
 }  // namespace Manganese::semantic

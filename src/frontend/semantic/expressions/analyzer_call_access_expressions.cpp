@@ -14,7 +14,7 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     if (visit(expression->base) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
@@ -82,7 +82,7 @@ auto Analyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprv
     return result;
 }
 
-auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     if (visit(expression->callee) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* calleeType = expression->callee->semanticType;
@@ -191,7 +191,7 @@ auto Analyzer::visit(ast::FunctionCallExpression* expression) -> exprvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
     if (visit(expression->variable) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
@@ -222,7 +222,7 @@ auto Analyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     DISCARD(visit(expression->object));
     const SemanticType* objectType = expression->object->semanticType;
@@ -254,7 +254,7 @@ auto Analyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     return exprvisit_t::Failure;
 }
 
-auto Analyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::ScopeResolutionExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     const Symbol* scopeSymbol = nullptr;
 

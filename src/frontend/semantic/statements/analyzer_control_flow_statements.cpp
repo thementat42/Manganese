@@ -7,7 +7,7 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
     if ((context.whileLoopDepth == 0U) && (context.forLoopDepth == 0U)) {
         logError(statement, "'break' can only be used in loops ");
         return stmtvisit_t::Failure;
@@ -15,7 +15,7 @@ auto Analyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
     if ((context.whileLoopDepth == 0U) && (context.forLoopDepth == 0U)) {
         logError(statement, "'continue' can only be used in loops");
         return stmtvisit_t::Failure;
@@ -23,7 +23,7 @@ auto Analyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
     const ContextGuard guard{context.forLoopDepth,
                              static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1)};
@@ -69,7 +69,7 @@ auto Analyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
     const ContextGuard guard{context.ifStatementDepth,
                              static_cast<decltype(context.ifStatementDepth)>(context.ifStatementDepth + 1)};
@@ -127,7 +127,7 @@ auto Analyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
     if (statement->target == nullptr) {
         logError(statement, "Switch statement is missing a target expression");
         return stmtvisit_t::Failure;
@@ -168,7 +168,7 @@ auto Analyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
     const ContextGuard guard{context.whileLoopDepth,
                              static_cast<decltype(context.whileLoopDepth)>(context.whileLoopDepth + 1)};
 

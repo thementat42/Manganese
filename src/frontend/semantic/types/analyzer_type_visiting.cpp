@@ -12,7 +12,7 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::AggregateType* type) -> typevisit_t {
+auto SemanticAnalyzer::visit(ast::AggregateType* type) -> typevisit_t {
     const auto* aggregateType = static_cast<const ast::AggregateType*>(type);
     TypeList resolvedFields;
     resolvedFields.reserve(aggregateType->fieldTypes.size());
@@ -27,7 +27,7 @@ auto Analyzer::visit(ast::AggregateType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::ArrayType* type) -> typevisit_t {
+auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
     const auto* arrayType = static_cast<const ast::ArrayType*>(type);
 
     const SemanticType* outerVarType = context.currentVariableDeclarationType;
@@ -71,7 +71,7 @@ auto Analyzer::visit(ast::ArrayType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
+auto SemanticAnalyzer::visit(ast::FunctionType* type) -> typevisit_t {
     const ast::FunctionType* functionType = static_cast<const ast::FunctionType*>(type);
     std::vector<Parameter> resolvedParameterTypes;
     for (const ast::FunctionParameterType& parameterType : functionType->parameterTypes) {
@@ -94,14 +94,14 @@ auto Analyzer::visit(ast::FunctionType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t {
+auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t {
     const SemanticType* resolved = resolveGenericType(type);
     if (resolved == nullptr) { return typevisit_t::Failure; }
     type->semanticType = resolved;
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::PointerType* type) -> typevisit_t {
+auto SemanticAnalyzer::visit(ast::PointerType* type) -> typevisit_t {
     const auto* pointerType = static_cast<const ast::PointerType*>(type);
     DISCARD(visit(pointerType->baseType));
     const SemanticType* baseType = pointerType->baseType->semanticType;
@@ -117,7 +117,7 @@ auto Analyzer::visit(ast::PointerType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
+auto SemanticAnalyzer::visit(ast::ScopedType* type) -> typevisit_t {
     const Symbol* scopeSymbol = nullptr;
 
     if (type->scope->kind == ast::TypeKind::IdentifierType) {
@@ -163,7 +163,7 @@ auto Analyzer::visit(ast::ScopedType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::IdentifierType* type) -> typevisit_t {
+auto SemanticAnalyzer::visit(ast::IdentifierType* type) -> typevisit_t {
     const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
     if (IdentifierType->primitiveType != ast::PrimitiveType::not_primitive) {
         type->semanticType = typeContext.getPrimitive(IdentifierType->primitiveType);
@@ -186,13 +186,13 @@ auto Analyzer::visit(ast::IdentifierType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::TypeofType* type) -> typevisit_t {
+auto SemanticAnalyzer::visit(ast::TypeofType* type) -> typevisit_t {
     const auto* typeofType = static_cast<const ast::TypeofType*>(type);
     if (visit(typeofType->expression) == typevisit_t::Failure) { return typevisit_t::Failure; }
     type->semanticType = typeofType->expression->semanticType;
     return typevisit_t::Success;
 }
 
-auto Analyzer::visit(ast::PoisonedType* /*unused*/) -> typevisit_t { return typevisit_t::Failure; }
+auto SemanticAnalyzer::visit(ast::PoisonedType* /*unused*/) -> typevisit_t { return typevisit_t::Failure; }
 
 }  // namespace Manganese::semantic

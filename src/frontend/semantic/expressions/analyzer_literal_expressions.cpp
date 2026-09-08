@@ -11,7 +11,7 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
     TypeList elementTypes;
@@ -37,7 +37,7 @@ auto Analyzer::visit(ast::AggregateLiteralExpression* expression) -> exprvisit_t
     return result;
 }
 
-auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     if (expression->elements.empty()) {
         if (context.currentVariableDeclarationType != nullptr && context.currentVariableDeclarationType->isArray()) {
@@ -95,18 +95,18 @@ auto Analyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::BoolLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
     return exprvisit_t::Success;
 }
-auto Analyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::CharLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::character);
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     const Symbol* symbol = symbolTable.lookup(expression->name);
     if (symbol == nullptr) {
@@ -121,7 +121,7 @@ auto Analyzer::visit(ast::IdentifierExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     using enum mnstl::number_t::held_type;
     using enum ast::PrimitiveType;
@@ -149,13 +149,13 @@ auto Analyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::StringLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::string);
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::PoisonedExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::PoisonedExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     return exprvisit_t::Failure;
 }

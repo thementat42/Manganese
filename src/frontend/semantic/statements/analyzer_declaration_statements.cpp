@@ -11,7 +11,7 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
     // We don't know the generic types at declaration so we can't check them
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
@@ -65,7 +65,7 @@ auto Analyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit
     return stmtvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     Symbol* symbol = symbolTable.lookup(statement->alias);
     if (symbol == nullptr) {
         ASSERT_UNREACHABLE(
@@ -92,7 +92,7 @@ auto Analyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     stmtvisit_t result = stmtvisit_t::Success;
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
@@ -153,7 +153,7 @@ auto Analyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     return result;
 }
 
-auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
     if (context.inFunction) {
         logError(statement,
                  "Nested functions are not supported: function '{}' cannot be declared inside another function",
@@ -229,7 +229,7 @@ auto Analyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_
     return isSuccess ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-auto Analyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     const SemanticType* variableType = nullptr;
 
     if (statement->type != nullptr) {

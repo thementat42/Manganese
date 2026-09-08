@@ -12,7 +12,7 @@
 
 namespace Manganese::semantic {
 
-auto Analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;
@@ -24,7 +24,7 @@ auto Analyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     TypeList resolvedTypeArguments;
     resolvedTypeArguments.reserve(expression->types.size());
@@ -135,7 +135,7 @@ auto Analyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvis
     return exprvisit_t::Failure;
 }
 
-auto Analyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
+auto SemanticAnalyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     if (visit(expression->type) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* targetSemanticType = expression->type->semanticType;

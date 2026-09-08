@@ -24,7 +24,7 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
     parser::Parser parser(source, lexer::Mode::String, arena);
     parser::ParsedFile parsedFile = parser.parse();
 
-    semantic::Analyzer analyzer(parsedFile, target, arena);
+    semantic::SemanticAnalyzer analyzer(parsedFile, target, arena);
     const Result result = analyzer.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -629,10 +629,10 @@ bool testAnalyzeFromFile() {
     parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
     parser::ParsedFile parsedFile = parser.parse();
 
-    semantic::Analyzer Analyzer(parsedFile, target, file_allocator);
+    semantic::SemanticAnalyzer analyzer(parsedFile, target, file_allocator);
 
     std::ofstream logFile(logFileName, std::ios::app);
-    const Result result = Analyzer.analyze();
+    const Result result = analyzer.analyze();
 
     if (!logFile) {
         std::cerr << "ERROR: Could not open log file for writing.\n";

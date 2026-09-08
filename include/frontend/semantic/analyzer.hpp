@@ -24,6 +24,8 @@
 
 namespace Manganese::semantic {
 
+class SemanticAnalyzer;
+
 /**
  * Makes updating context flags easier
  * the destructor handles resetting a value rather than having to manually reset it everywhere
@@ -59,7 +61,7 @@ struct [[nodiscard]] StackGuard {
 
 using _analyzer_base_t = ast::Visitor<Result, Result, Result, false>;
 
-class Analyzer final : public _analyzer_base_t {
+class SemanticAnalyzer final : public _analyzer_base_t {
    private:
     SymbolTable symbolTable;
     TypeContext typeContext;
@@ -99,12 +101,12 @@ class Analyzer final : public _analyzer_base_t {
     };
 
    public:
-    Analyzer(parser::ParsedFile& file, const utils::TargetInfo& target, mnstl::chunk_allocator& arena) :
+    SemanticAnalyzer(parser::ParsedFile& file, const utils::TargetInfo& target, mnstl::chunk_allocator& arena) :
         symbolTable(arena), typeContext(arena, target), parsedFile(file), genericsStack() {}
 
     Result analyze();
 
-    ~Analyzer() override = default;
+    ~SemanticAnalyzer() override = default;
 
    private:
     Result buildScopeTree();
