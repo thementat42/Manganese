@@ -2,6 +2,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_FRONTEND_HPP
 
 #include <frontend/ast.hpp>
+#include <frontend/cfg.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic.hpp>
