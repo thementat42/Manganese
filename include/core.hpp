@@ -33,7 +33,7 @@
 #endif
 
 #ifndef DISCARD
-#define DISCARD(value) (void)(value)  // Explicitly discard a value
+#define DISCARD(value) (static_cast<void>((value)))  // Explicitly discard a value
 #endif  // DISCARD
 
 //~ Force inline
