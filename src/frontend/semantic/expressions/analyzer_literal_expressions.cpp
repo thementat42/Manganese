@@ -4,7 +4,6 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
-
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
@@ -123,29 +122,39 @@ auto SemanticAnalyzer::visit(ast::IdentifierExpression* expression) -> exprvisit
 
 auto SemanticAnalyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
-    using enum mnstl::number_t::held_type;
+    const std::string_view lexeme = expression->value;
     using enum ast::PrimitiveType;
-    switch (expression->value.underlying_type()) {
-        case i8: expression->semanticType = typeContext.getPrimitive(int8); break;
-        case i16: expression->semanticType = typeContext.getPrimitive(int16); break;
-        case i32: expression->semanticType = typeContext.getPrimitive(int32); break;
-        case i64: expression->semanticType = typeContext.getPrimitive(int64); break;
-        case i128: expression->semanticType = typeContext.getPrimitive(int128); break;
-        case u8: expression->semanticType = typeContext.getPrimitive(uint8); break;
-        case u16: expression->semanticType = typeContext.getPrimitive(uint16); break;
-        case u32: expression->semanticType = typeContext.getPrimitive(uint32); break;
-        case u64: expression->semanticType = typeContext.getPrimitive(uint64); break;
-        case u128: expression->semanticType = typeContext.getPrimitive(uint128); break;
-        case f32: expression->semanticType = typeContext.getPrimitive(float32); break;
-        case f64: expression->semanticType = typeContext.getPrimitive(float64); break;
-        case err: {
-            logError(expression, "{}", expression->value.error_unchecked());
-            expression->semanticType = typeContext.getPoison();
-            return exprvisit_t::Failure;
-        }
-        case none: break;
-        default: ASSERT_UNREACHABLE("In analyzer: Number literal expression had no parser-deduced type");
+    ast::PrimitiveType deducedPrimitiveType;
+
+    if (lexeme.ends_with("i128") || lexeme.ends_with("I128")) {
+        deducedPrimitiveType = int128;
+    } else if (lexeme.ends_with("i64") || lexeme.ends_with("I64")) {
+        deducedPrimitiveType = int64;
+    } else if (lexeme.ends_with("i32") || lexeme.ends_with("I32")) {
+        deducedPrimitiveType = int32;
+    } else if (lexeme.ends_with("i16") || lexeme.ends_with("I16")) {
+        deducedPrimitiveType = int16;
+    } else if (lexeme.ends_with("i8") || lexeme.ends_with("I8")) {
+        deducedPrimitiveType = int8;
+    } else if (lexeme.ends_with("u128") || lexeme.ends_with("U128")) {
+        deducedPrimitiveType = uint128;
+    } else if (lexeme.ends_with("u64") || lexeme.ends_with("U64")) {
+        deducedPrimitiveType = uint64;
+    } else if (lexeme.ends_with("u32") || lexeme.ends_with("U32")) {
+        deducedPrimitiveType = uint32;
+    } else if (lexeme.ends_with("u16") || lexeme.ends_with("U16")) {
+        deducedPrimitiveType = uint16;
+    } else if (lexeme.ends_with("u8") || lexeme.ends_with("U8")) {
+        deducedPrimitiveType = uint8;
+    } else if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
+        deducedPrimitiveType = float32;
+    } else if (lexeme.ends_with("f64") || lexeme.ends_with("F64")) {
+        deducedPrimitiveType = float64;
+    } else {
+        // TODO: need to dynamically adjust int32 based on literal
+        deducedPrimitiveType = expression->isFloat ? float64 : int32;
     }
+    expression->semanticType = typeContext.getPrimitive(deducedPrimitiveType);
     return exprvisit_t::Success;
 }
 
