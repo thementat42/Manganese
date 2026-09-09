@@ -3,7 +3,7 @@
 
 # Builds and compiled code
 build/
-.cache/*
+.cache/
 *.exe
 *.o
 *.obj
@@ -19,11 +19,6 @@ compile_commands.json
 # logs
 *.log
 
-# Convention: use files with the format x.* (e.g., x.py, x.something.cpp) for
-# temporary files, user files (e.g. helper scripts), etc. 
+# Convention: use files with the format x.* (e.g., x.py, x.something.cpp) to hide something 
 x.*
-
-# random other stuff, not directly related to the compiler
-planning/
-misc/
 sandbox/
