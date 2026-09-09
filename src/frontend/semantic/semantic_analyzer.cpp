@@ -8,29 +8,22 @@
 namespace Manganese::semantic {
 
 Result SemanticAnalyzer::analyze() {
-    Result scopeTreeResult = Result::Failure;
-    Result globalCollectionResult = Result::Failure;
-    Result semanticAnalysisResult = Result::Failure;
+    auto runPass = [this](auto passFunction) {
+        Result passResult = Result::Success;
 
-    for (parser::ParsedFile& file : parsedFiles) {
-        // Don't want errors cascading because of conflicting redeclarations
-        if (buildScopeTree(file) == Result::Failure) { scopeTreeResult = Result::Failure; }
-    }
-
-    if (scopeTreeResult == Result::Failure) { return scopeTreeResult; }
+        for (parser::ParsedFile& file : parsedFiles) {
+            if (std::invoke(passFunction, file) == Result::Failure) { passResult = Result::Failure; }
+        }
+        return passResult;
+    };
+    if (runPass([this](auto& f) { return buildScopeTree(f); }) == Result::Failure) { return Result::Failure; }
 
     symbolTable.switchToCheckingMode();
-    for (parser::ParsedFile& file : parsedFiles) {
-        if (collectGlobals(file) == Result::Failure) { globalCollectionResult = Result::Failure; }
-    }
 
-    if (globalCollectionResult == Result::Failure) { return globalCollectionResult; }
+    if (runPass([this](auto& f) { return collectGlobals(f); }) == Result::Failure) { return Result::Failure; }
+    if (runPass([this](auto& f) { return checkStatements(f); }) == Result::Failure) { return Result::Failure; }
 
-
-    for (parser::ParsedFile& file : parsedFiles) {
-        if (checkStatements(file) == Result::Failure) { semanticAnalysisResult = Result::Failure; }
-    }
-    return semanticAnalysisResult;
+    return Result::Success;
 }
 
 const Symbol* SemanticAnalyzer::resolveTypeSymbol(const ast::Type* typeNode) {
