@@ -5,8 +5,6 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-
-
 #include <string>
 #include <utility>
 #include <utils/target_info.hpp>
@@ -43,6 +41,7 @@ struct AlignofExpression final : public Expression {
     Type* type;
 
     AlignofExpression(Type* t) noexcept : Expression(ExpressionKind::AlignofExpression), type(t) {}
+    bool canFold() const noexcept override { return true; }
 
     MN_AST_STANDARD_INTERFACE
 };
@@ -74,6 +73,7 @@ struct BinaryExpression final : public Expression {
 
     BinaryExpression(Expression* _left, lexer::TokenType _op, Expression* _right) noexcept :
         Expression(ExpressionKind::BinaryExpression), left(_left), right(_right), op(_op) {}
+    bool canFold() const noexcept override { return left->canFold() && right->canFold(); }
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -83,9 +83,9 @@ struct BoolLiteralExpression final : public Expression {
 
     explicit BoolLiteralExpression(bool _value) noexcept :
         Expression(ExpressionKind::BoolLiteralExpression), value(_value) {}
+    bool canFold() const noexcept override { return true; }
 
     MN_AST_STANDARD_INTERFACE;
-
 };
 
 struct CharLiteralExpression final : public Expression {
@@ -96,9 +96,9 @@ struct CharLiteralExpression final : public Expression {
     explicit CharLiteralExpression(char _value) noexcept :
         Expression(ExpressionKind::CharLiteralExpression), value(static_cast<char32_t>(_value)) {}
 
+    bool canFold() const noexcept override { return true; }
+
     MN_AST_STANDARD_INTERFACE;
-
-
 };
 
 struct FunctionCallExpression final : public Expression {
@@ -160,9 +160,9 @@ struct NumberLiteralExpression final : public Expression {
     explicit NumberLiteralExpression(std::string&& _value, bool _isFloat) noexcept :
         Expression(ExpressionKind::NumberLiteralExpression), value(std::move(_value)), isFloat(_isFloat) {}
 
+    bool canFold() const noexcept override { return true; }
+
     MN_AST_STANDARD_INTERFACE;
-
-
 };
 
 struct PostfixExpression final : public Expression {
@@ -171,6 +171,8 @@ struct PostfixExpression final : public Expression {
 
     PostfixExpression(Expression* _left, lexer::TokenType _op) noexcept :
         Expression(ExpressionKind::PostfixExpression), left(_left), op(_op) {}
+
+    bool canFold() const noexcept override { return left->canFold(); }
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -182,8 +184,9 @@ struct PrefixExpression final : public Expression {
     PrefixExpression(lexer::TokenType _op, Expression* _right) noexcept :
         Expression(ExpressionKind::PrefixExpression), op(_op), right(_right) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    bool canFold() const noexcept override { return right->canFold(); }
 
+    MN_AST_STANDARD_INTERFACE;
 };
 
 struct ScopeResolutionExpression final : public Expression {
@@ -200,6 +203,7 @@ struct SizeofExpression final : public Expression {
     Type* type;
 
     SizeofExpression(Type* t) noexcept : Expression(ExpressionKind::SizeofExpression), type(t) {}
+    bool canFold() const noexcept override { return true; }
 
     MN_AST_STANDARD_INTERFACE
 };
@@ -209,9 +213,9 @@ struct StringLiteralExpression final : public Expression {
 
     explicit StringLiteralExpression(std::string&& _value) noexcept :
         Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
+    bool canFold() const noexcept override { return true; }
 
     MN_AST_STANDARD_INTERFACE;
-
 };
 
 struct TypeCastExpression final : public Expression {
@@ -220,6 +224,8 @@ struct TypeCastExpression final : public Expression {
 
     TypeCastExpression(Expression* _originalValue, Type* _targetType) noexcept :
         Expression(ExpressionKind::TypeCastExpression), originalValue(_originalValue), targetType(_targetType) {}
+    bool canFold() const noexcept override { return originalValue->canFold(); }
+    
 
     MN_AST_STANDARD_INTERFACE;
 };
