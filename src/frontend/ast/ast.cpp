@@ -1,7 +1,6 @@
 #include <array>
 #include <core.hpp>
 #include <cstddef>
-#include <format>
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/type_context.hpp>
