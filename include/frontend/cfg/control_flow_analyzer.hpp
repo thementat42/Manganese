@@ -47,7 +47,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     }
 
     template <class... Args>
-    void logWarning(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
+    void logWarning(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logWarning(node->line, node->column, message, std::forward<Args>(args)...);
         flags.hasWarning = true;
     }
@@ -70,6 +70,9 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 #undef STMT
 #undef EXPR
 #undef TYPE
+
+    FlowStatus visit(const ast::Block&);
+    
 };
 
 }  // namespace Manganese::cfg

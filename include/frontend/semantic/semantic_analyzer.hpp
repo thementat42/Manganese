@@ -142,7 +142,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 
     template <class... Args>
-    static void logWarning(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
+    static void logWarning(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logWarning(node->line, node->column, message, std::forward<Args>(args)...);
     }
 
