@@ -296,7 +296,7 @@ bool testAggregateDeclarationAndInstantiation() {
     colour: uint32;
 })",
         "(let mut p1: private auto = Point {x = 10, y = 20});", "(let mut p2: private Point = Point {x = 30, y = 40});",
-        "(let rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, colour = 16711680});"};
+        "(let rect: private auto = Rectangle {topLeft = Point {x = 0, y = 0}, bottomRight = p2, colour = 0xFF0000});"};
 
     return validateStatements(getParserResults(expression), expected, "Aggregate Declaration and Instantiation");
 }
@@ -341,9 +341,9 @@ bool testFunctionDeclarationAndCall() {
         R"(private func sum(first: int32, numbers...: int32) -> int32 {
     return first;
 })",
-        "(let sum: private auto = add(5, 3));",
+        "(let sum: private auto = add(5u32, 3i16));",
         "greet(\"World\");",
-        "(let product: private auto = calculate(2.5, 3.01));",
+        "(let product: private auto = calculate(2.5f64, 3.01));",
         "(let incremented: private auto = increment(10));",
         "(let total: private auto = sum(1, 2, 3, 4));"};
 
@@ -596,7 +596,7 @@ bool testSizeofTypeofAlignof() {
            "(alignof(char));",
            "(alignof(<invalid type>));",
            "(let x: private typeof((x + 1)) = 3);",
-           "(let y: private typeof((foo@[int32, char]((p as int32)) + ((bar + baz) as typeof(3)))));"};
+           "(let y: private typeof((foo@[int32, char]((p as int32)) + ((bar + baz) as typeof(3u128)))));"};
     return validateStatements(getParserResults(expression), expected, "Sizeof, Typeof & Alignof");
 }
 
