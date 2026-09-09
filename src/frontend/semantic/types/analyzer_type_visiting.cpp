@@ -4,11 +4,10 @@
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
-
-
 #include <string_view>
 #include <utility>
 #include <vector>
+
 
 namespace Manganese::semantic {
 
@@ -52,16 +51,20 @@ auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
     std::optional<std::size_t> length = std::nullopt;
     if (arrayType->lengthExpression != nullptr) {
         if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
-        if (!arrayType->lengthExpression->canFold()) {
+        if (!arrayType->lengthExpression->semanticType->isInteger() || !arrayType->lengthExpression->canFold()) {
             logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
             return typevisit_t::Failure;
         }
-        const auto lengthVal = fold.number_unchecked();
-        if (lengthVal <= 0) {
+        const auto lengthVal = computeExplicitArrayLength(arrayType->lengthExpression);
+        if (!lengthVal.has_value()) {
+            logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
+            return typevisit_t::Failure;
+        }
+        if (*lengthVal <= 0) {
             logError(arrayType->lengthExpression, "Array length must be greater than 0");
             return typevisit_t::Failure;
         }
-        length = lengthVal.value_as<std::size_t>();
+        length = lengthVal;
     } else if (outerVarType != nullptr && outerVarType->isArray()) {
         length = static_cast<const Array*>(outerVarType)->length;
     }

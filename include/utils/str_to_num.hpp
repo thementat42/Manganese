@@ -5,8 +5,9 @@
 #include <core.hpp>
 #include <cstdint>
 #include <frontend/ast/ast_base.hpp>
-#include <mnstl/i128.hxx>
 #include <mnstl/ext_num_config.hxx>
+#include <mnstl/i128.hxx>
+
 
 namespace Manganese::utils {
 
@@ -47,9 +48,140 @@ struct string_conversion_result_t {
 }
 
 template <mnstl::FloatingPoint T>
-[[nodiscard]] string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b) noexcept;
+[[nodiscard]] string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b) noexcept {
+    string_conversion_result_t<T> result;
+    if (ptr >= end) [[unlikely]] {
+        result.exists = false;
+        return result;
+    }
+
+    if (b != Base::Decimal) [[unlikely]] {
+        result.exists = false;
+        return result;
+    }
+
+    T integer_part = 0;
+    bool hasDigits = false;
+    while (ptr != end && isdigit(*ptr)) {
+        hasDigits = true;
+        const int d = _chtoi(*ptr);
+        if (!BETWEEN(d, 0, 9)) {
+            result.exists = false;
+            return result;
+        }
+        integer_part = integer_part * 10 + static_cast<T>(d);
+        ++ptr;
+    }
+
+    T fraction_part = 0;
+    T fractionDiv = 1;
+    if (ptr != end && *ptr == '.') {
+        ++ptr;
+        while (ptr != end && isdigit(*ptr)) {
+            hasDigits = true;
+            const int d = _chtoi(*ptr);
+            if (!BETWEEN(d, 0, 9)) {
+                result.exists = false;
+                return result;
+            }
+            fraction_part = fraction_part * 10 + static_cast<T>(d);
+            fractionDiv *= 10;
+            ++ptr;
+        }
+    }
+    if (!hasDigits) [[unlikely]] {
+        result.exists = false;
+        return result;
+    }
+
+    T value = integer_part + fraction_part / fractionDiv;
+    if (ptr != end && (*ptr == 'e' || *ptr == 'E')) {
+        ++ptr;
+        bool expNegative = false;
+        if (ptr != end && (*ptr == '+' || *ptr == '-')) {
+            expNegative = (*ptr == '-');
+            ++ptr;
+        }
+
+        if (ptr == end || !isdigit(*ptr)) {
+            result.exists = false;
+            return result;
+        }
+
+        int exponent = 0;
+        while (ptr != end && isdigit(*ptr)) {
+            exponent = exponent * 10 + (*ptr - '0');
+            ++ptr;
+        }
+
+        if (expNegative) { exponent = -exponent; }
+        if (exponent > std::numeric_limits<T>::max_exponent10) {
+            result.overflowed = true;
+            result.exists = true;
+            result.value = std::numeric_limits<T>::infinity();
+            return result;
+        }
+        if (exponent < std::numeric_limits<T>::min_exponent10) {
+            result.overflowed = true;
+            result.exists = true;
+            result.value = 0;
+            return result;
+        }
+        value *= static_cast<T>(pow10(exponent));
+    }
+
+    result.exists = true;
+    result.value = value;
+    result.overflowed
+        = value > std::numeric_limits<T>::max() || value < std::numeric_limits<T>::lowest() || !std::isfinite(value);
+
+    return result;
+}
+
 template <mnstl::Integral T>
-[[nodiscard]] string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b) noexcept;
+string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b) noexcept {
+    string_conversion_result_t<T> result;
+    using U = mnstl::mnstl_make_unsigned_t<T>;
+
+    if (ptr >= end) [[unlikely]] {
+        result.exists = false;
+        return result;
+    }
+    const int radix = static_cast<int>(b);
+
+    U value = 0;
+    const U max_before_mul = static_cast<U>(std::numeric_limits<U>::max() / static_cast<unsigned>(radix));
+
+    for (; ptr != end; ++ptr) {
+        const int d = _chtoi(*ptr);
+        if (d < 0 || d >= radix) {
+            result.exists = false;
+            return result;
+        }
+        if (value > max_before_mul) { result.overflowed = true; }
+
+        value *= static_cast<U>(radix);
+
+        if (value > std::numeric_limits<U>::max() - static_cast<U>(d)) { result.overflowed = true; }
+        value += static_cast<U>(d);
+    }
+
+    if constexpr (std::is_signed_v<T>) {
+        // Since input strings are always positive, we only check against positive max limits
+        if (value <= static_cast<U>(std::numeric_limits<T>::max())) {
+            result.value = static_cast<T>(value);
+            result.exists = true;
+        } else {
+            result.exists = true;
+            result.overflowed = true;
+        }
+    } else {
+        result.value = static_cast<T>(value);
+        result.exists = true;
+    }
+    return result;
+}
+
 
 template <class Target, class Source>
 string_conversion_result_t<Target> wrap_result(const string_conversion_result_t<Source>& result) noexcept {
@@ -136,12 +268,12 @@ inline string_conversion_result_t<T> stringToNumber(std::string_view str, bool i
     if (isFloat) {
         if (t == float32) { return wrap_result<T>(_stox<mnstl::float32_t>(parsing_start, parsing_end, base)); }
         if (t == float64) { return wrap_result<T>(_stox<mnstl::float64_t>(parsing_start, parsing_end, base)); }
-        if (t == not_primitive) {
-            auto result32 = _stox<mnstl::float32_t>(parsing_start, parsing_end, base);
-            if (!result32.overflowed) { return wrap_result<T>(result32); }
-            // if float32 fails do float64
-            return wrap_result<T>(_stox<mnstl::float64_t>(parsing_start, parsing_end, base));
-        }
+
+        auto result32 = _stox<mnstl::float32_t>(parsing_start, parsing_end, base);
+        if (!result32.overflowed) { return wrap_result<T>(result32); }
+        // if float32 fails do float64
+        return wrap_result<T>(_stox<mnstl::float64_t>(parsing_start, parsing_end, base));
+
     } else if (t == int8) {
         return wrap_result<T>(_stox<std::int8_t>(parsing_start, parsing_end, base));
     } else if (t == int16) {
