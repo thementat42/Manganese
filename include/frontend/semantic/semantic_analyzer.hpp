@@ -15,12 +15,14 @@
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
 #include <mnstl/tiny_stack.hxx>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
+
 
 namespace Manganese::semantic {
 
@@ -101,7 +103,8 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     };
 
    public:
-    SemanticAnalyzer(std::vector<parser::ParsedFile>& files, const utils::TargetInfo& target, mnstl::chunk_allocator& arena) :
+    SemanticAnalyzer(std::vector<parser::ParsedFile>& files, const utils::TargetInfo& target,
+                     mnstl::chunk_allocator& arena) :
         symbolTable(arena), typeContext(arena, target), parsedFiles(files), genericsStack() {}
 
     Result analyze();
@@ -131,6 +134,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression);
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
+    std::optional<std::uint64_t> computeExplicitArrayLength(const ast::Expression* lengthExpression);
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
