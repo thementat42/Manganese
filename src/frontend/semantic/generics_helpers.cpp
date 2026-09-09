@@ -4,7 +4,6 @@
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/generics_helpers.hpp>
 #include <frontend/semantic/type_context.hpp>
-
 #include <string>
 #include <utility>
 #include <utils/result.hpp>
@@ -154,7 +153,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_ta
 }
 
 const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
-                                                           const TypeList& typeArgs) {
+                                                                   const TypeList& typeArgs) {
     const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
     if (cachedResult == nullptr || cachedResult->state != ResolutionStatus::Success) {
@@ -190,7 +189,7 @@ const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(const ast::Ag
 }
 
 const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
-                                                          const TypeList& typeArgs) {
+                                                                  const TypeList& typeArgs) {
     const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
     const InstantiationResult* cachedResult = instantiationCache.find(key);
     if (cachedResult == nullptr || cachedResult->state != ResolutionStatus::Success) {
@@ -246,24 +245,28 @@ const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type) 
             const auto* arrayType = static_cast<const ast::ArrayType*>(type);
             const SemanticType* elementType = resolveGenericType(arrayType->elementType);
             if (elementType->isPoison()) { return typeContext.getPoison(); }
-            if (!arrayType->lengthExpression->canFold()) {
-                logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
-                return typeContext.getPoison();
+            if (arrayType->lengthExpression != nullptr) {
+                if (visit(arrayType->lengthExpression) == Result::Failure) { return typeContext.getPoison(); }
+                std::optional<std::uint64_t> lengthValue;
+
+                if (!arrayType->lengthExpression->canFold()) {
+                    logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
+                    return typeContext.getPoison();
+                }
+                if (!arrayType->lengthExpression->semanticType->isInteger()) {
+                    logError(arrayType->lengthExpression, "Array type length must be an integer, not '{}'",
+                             arrayType->lengthExpression->semanticType->toString());
+                    return typeContext.getPoison();
+                }
+                lengthValue = computeExplicitArrayLength(arrayType->lengthExpression);
+                if (!lengthValue.has_value()) {
+                    logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
+                    return typeContext.getPoison();
+                }
+                return typeContext.getArray(elementType, *lengthValue);
             }
-            if (!length.is_number()) {
-                logError(arrayType->lengthExpression, "Array length must be an integer value");
-                return typeContext.getPoison();
-            }
-            const auto lengthValue = length.number_unchecked();
-            if (lengthValue.is_error()) {
-                logError(arrayType->lengthExpression, "{}", lengthValue.error_unchecked());
-                return typeContext.getPoison();
-            }
-            if (!lengthValue.is_integer()) {
-                logError(arrayType->lengthExpression, "Array length must be an integer value");
-                return typeContext.getPoison();
-            }
-            return typeContext.getArray(elementType, length.number_unchecked().value_as<std::size_t>());
+            // TODO
+            return typeContext.getPoison();
         }
         case FunctionType: {
             const auto* functionType = static_cast<const ast::FunctionType*>(type);
