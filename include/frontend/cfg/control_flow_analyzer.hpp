@@ -57,13 +57,13 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 
     using _flow_base_t::visit;
 
-#define STMT(name) stmtvisit_t visit(const ast::name*) override;
+#define STMT(name) stmtvisit_t visit(const ast::name*) noexcept override;
 
 // Expressions and types don't contribute to control flow so they can just immediately return
 #define EXPR(name) \
-    exprvisit_t visit(const ast::name*) override {}
+    constexpr exprvisit_t visit(const ast::name*) noexcept override {}
 #define TYPE(name) \
-    typevisit_t visit(const ast::name*) override {}
+    constexpr typevisit_t visit(const ast::name*) noexcept override {}
 
 #include <frontend/ast/ast.def>
 
