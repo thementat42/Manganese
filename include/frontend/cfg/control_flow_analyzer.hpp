@@ -7,6 +7,7 @@
 #include <frontend/ast/visitor_base.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic.hpp>
+#include <io/logging.hpp>
 #include <mnstl/chunk_allocator.hxx>
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
@@ -24,16 +25,37 @@ using _flow_base_t = ast::Visitor<void, FlowStatus, void, false>;
 
 class ControlFlowAnalyzer final : public _flow_base_t {
    private:
+    std::vector<parser::ParsedFile>& files;
     semantic::SemanticAnalyzer semanticAnalyzer;
+
+    struct {
+        bool hasError : 1 = false;
+        bool hasWarning : 1 = false;
+    } flags;
 
    public:
     ControlFlowAnalyzer(std::vector<parser::ParsedFile>& parsedFiles, const utils::TargetInfo& targetInfo,
                         mnstl::chunk_allocator& allocator) :
-        semanticAnalyzer(parsedFiles, targetInfo, allocator) {}
+        files(parsedFiles), semanticAnalyzer(parsedFiles, targetInfo, allocator) {}
     Result analyze();
+
+   private:
+    template <class... Args>
+    void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
+        logging::logError(node->line, node->column, message, std::forward<Args>(args)...);
+        flags.hasError = true;
+    }
+
+    template <class... Args>
+    void logWarning(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
+        logging::logWarning(node->line, node->column, message, std::forward<Args>(args)...);
+        flags.hasWarning = true;
+    }
 
    protected:
     // overrides for visitor functions
+
+    using _flow_base_t::visit;
 
 #define STMT(name) stmtvisit_t visit(const ast::name*) override;
 
