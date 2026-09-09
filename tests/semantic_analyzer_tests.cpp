@@ -22,9 +22,10 @@ utils::TargetInfo target = utils::TargetInfo{.pointerSize = sizeof(void*), .poin
 // Helper: Parses and runs full semantic analysis on source code
 bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena);
-    parser::ParsedFile parsedFile = parser.parse();
+    std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
+    auto& parsedFile = parsedFiles[0];
 
-    semantic::SemanticAnalyzer analyzer(parsedFile, target, arena);
+    semantic::SemanticAnalyzer analyzer(parsedFiles, target, arena);
     const Result result = analyzer.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -627,9 +628,10 @@ bool testAnalyzeFromFile() {
 
     mnstl::chunk_allocator file_allocator{};
     parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
-    parser::ParsedFile parsedFile = parser.parse();
+    std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
+    auto& parsedFile = parsedFiles[0];
 
-    semantic::SemanticAnalyzer analyzer(parsedFile, target, file_allocator);
+    semantic::SemanticAnalyzer analyzer(parsedFiles, target, file_allocator);
 
     std::ofstream logFile(logFileName, std::ios::app);
     const Result result = analyzer.analyze();
@@ -761,7 +763,7 @@ bool miscTests() {
     )";
     return analyzeSource(code, false, __func__);
 }
-}
+}  // namespace
 }  // namespace analyzer_tests
 
 void runSemanticAnalyzerTests(TestRunner& runner) {

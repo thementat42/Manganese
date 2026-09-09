@@ -8,11 +8,18 @@
 namespace Manganese::semantic {
 
 Result SemanticAnalyzer::analyze() {
-    // Don't want errors cascading because of conflicting redeclarations
-    if (buildScopeTree() == Result::Failure) { return Result::Failure; }
+    for (parser::ParsedFile& file : parsedFiles) {
+        // Don't want errors cascading because of conflicting redeclarations
+        if (buildScopeTree(file) == Result::Failure) { return Result::Failure; }
+    }
     symbolTable.switchToCheckingMode();
-    if (collectGlobals() == Result::Failure) { return Result::Failure; }
-    return checkStatements();
+    for (parser::ParsedFile& file : parsedFiles) {
+        if (collectGlobals(file) == Result::Failure) { return Result::Failure; }
+    }
+    for (parser::ParsedFile& file : parsedFiles) {
+        if (checkStatements(file) == Result::Failure) { return Result::Failure; }
+    }
+    return Result::Success;
 }
 
 const Symbol* SemanticAnalyzer::resolveTypeSymbol(const ast::Type* typeNode) {

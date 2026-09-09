@@ -9,9 +9,9 @@
 
 namespace Manganese::semantic {
 
-Result SemanticAnalyzer::collectGlobals() {
+Result SemanticAnalyzer::collectGlobals(parser::ParsedFile& file) {
     Result result = Result::Success;
-    for (ast::Statement* statement : parsedFile.program) {
+    for (ast::Statement* statement : file.program) {
         if (_collectGlobalsInStatement(statement, ast::StatementKind::AggregateDeclarationStatement)
             == Result::Failure) {
             result = Result::Failure;
@@ -19,7 +19,7 @@ Result SemanticAnalyzer::collectGlobals() {
     }
 
     // Do this on a separate pass in case a function uses an aggregate in its signature
-    for (ast::Statement* statement : parsedFile.program) {
+    for (ast::Statement* statement : file.program) {
         if (_collectGlobalsInStatement(statement, ast::StatementKind::FunctionDeclarationStatement)
             == Result::Failure) {
             result = Result::Failure;
@@ -155,9 +155,9 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
     return funcResult;
 }
 
-Result SemanticAnalyzer::checkStatements() {  // semantic analysis pass (this can also check the generic specializations)
+Result SemanticAnalyzer::checkStatements(parser::ParsedFile& file) {  // semantic analysis pass (this can also check the generic specializations)
     Result programIsSemanticallyValid = Result::Success;
-    for (ast::Statement* stmt : parsedFile.program) {
+    for (ast::Statement* stmt : file.program) {
         if (this->visit(stmt) == Result::Failure) { programIsSemanticallyValid = Result::Failure; }
     }
     return programIsSemanticallyValid;

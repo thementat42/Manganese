@@ -11,10 +11,10 @@ namespace Manganese::semantic {
 // Note: all types are nullptr for the moment since this is just meant to collect names
 // Types are set later on
 
-Result SemanticAnalyzer::buildScopeTree() {
+Result SemanticAnalyzer::buildScopeTree(parser::ParsedFile& file) {
     // first pass -- collect all user-defined types
     Result result = Result::Success;
-    for (ast::Statement* stmt : parsedFile.program) {
+    for (ast::Statement* stmt : file.program) {
         if (_buildStatementScope(stmt) == Result::Failure) { result = Result::Failure; }
     }
     return result;

@@ -65,7 +65,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
    private:
     SymbolTable symbolTable;
     TypeContext typeContext;
-    parser::ParsedFile& parsedFile;
+    std::vector<parser::ParsedFile>& parsedFiles;
     mnstl::tiny_stack<TypeList> genericsStack;
     InstantiationCache instantiationCache;
     std::unordered_map<std::string_view, std::size_t> activeGenericParams;
@@ -101,24 +101,24 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     };
 
    public:
-    SemanticAnalyzer(parser::ParsedFile& file, const utils::TargetInfo& target, mnstl::chunk_allocator& arena) :
-        symbolTable(arena), typeContext(arena, target), parsedFile(file), genericsStack() {}
+    SemanticAnalyzer(std::vector<parser::ParsedFile>& files, const utils::TargetInfo& target, mnstl::chunk_allocator& arena) :
+        symbolTable(arena), typeContext(arena, target), parsedFiles(files), genericsStack() {}
 
     Result analyze();
 
     ~SemanticAnalyzer() override = default;
 
    private:
-    Result buildScopeTree();
+    Result buildScopeTree(parser::ParsedFile& file);
 
     Result _buildStatementScope(ast::Statement* stmt);
     Result _buildBodyScope(const ast::Block& block);
     Result _buildNamespaceScope(ast::NamespaceStatement* node);
-    Result collectGlobals();
+    Result collectGlobals(parser::ParsedFile& file);
     Result _collectGlobalsInStatement(ast::Statement* statement, ast::StatementKind targetKind);
     Result collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate);
     Result collectGlobalFunction(ast::FunctionDeclarationStatement* function);
-    Result checkStatements();
+    Result checkStatements(parser::ParsedFile& file);
 
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
