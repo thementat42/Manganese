@@ -296,7 +296,7 @@ std::string MemberAccessExpression::toString(std::size_t indent) const {
     return std::format("{}.{}", object->toString(indent), property);
 }
 
-std::string NumberLiteralExpression::toString(std::size_t /*indent*/) const { return value.to_string(true); }
+std::string NumberLiteralExpression::toString(std::size_t /*indent*/) const { return value; }
 
 std::string PostfixExpression::toString(std::size_t indent) const {
     return std::format(WRAP("{}{}"), left->toString(indent), lexer::tokenTypeToString(op));

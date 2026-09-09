@@ -3,12 +3,12 @@
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/logging.hpp>
-
 #include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <utils/result.hpp>
+
 
 namespace Manganese::lexer {
 
@@ -44,7 +44,12 @@ constexpr bool isValidCodePoint(char32_t codepoint) noexcept {
 
 // Hex helpers
 
-constexpr int hexDigitToInt(char c) noexcept { return mnstl::detail::_chtoi(c); }
+constexpr int hexDigitToInt(char c) noexcept {
+    if (BETWEEN(c, '0', '9')) { return c - '0'; }
+    if (BETWEEN(c, 'a', 'f')) { return c - 'a' + 10; }
+    if (BETWEEN(c, 'A', 'F')) { return c - 'A' + 10; }
+    return -1;
+}
 
 std::optional<char32_t> parseHexCodePoint(std::string_view digits, std::size_t line, std::size_t col) {
     if (digits.empty()) {
