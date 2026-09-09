@@ -10,12 +10,12 @@
 #include <io/logging.hpp>
 #include <io/reader.hpp>
 #include <memory>
-
 #include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <utils/result.hpp>
+#include <utils/str_to_num.hpp>
 
 namespace Manganese::lexer {
 
@@ -24,15 +24,8 @@ enum class Mode : std::uint8_t {
     File = 'f'  // Filename passed in
 };
 
-enum class Base : std::uint8_t {
-    Binary = 2,
-    Octal = 8,
-    Decimal = 10,
-    Hexadecimal = 16
-};
-
 struct NumberPrefixResult {
-    Base base;
+    utils::Base base;
     bool (*isValidBaseChar)(char);
     std::string prefix;
 };
