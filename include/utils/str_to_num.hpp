@@ -135,6 +135,7 @@ inline string_conversion_result_t<T> stringToNumber(std::string_view str, bool i
 
     if (isFloat) {
         if (t == float32) { return wrap_result<T>(_stox<mnstl::float32_t>(parsing_start, parsing_end, base)); }
+        if (t == float64) { return wrap_result<T>(_stox<mnstl::float64_t>(parsing_start, parsing_end, base)); }
         if (t == not_primitive) {
             auto result32 = _stox<mnstl::float32_t>(parsing_start, parsing_end, base);
             if (!result32.overflowed) { return wrap_result<T>(result32); }

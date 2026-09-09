@@ -129,21 +129,21 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
     for (ast::EnumValue& variant : statement->values) {
         if (variant.value != nullptr) {
             if (visit(variant.value) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-            auto explicitVal = variant.value->fold(typeContext.getTargetInfo());
-            if (!explicitVal.has_value()) {
+            if (!variant.value->canFold()) {
                 logging::logError(variant.line, variant.column,
                                   "Variant {} (in enum {}) must have a compile-time value", variant.name,
                                   statement->name);
                 symbol->status = ResolutionStatus::Failure;
                 result = stmtvisit_t::Failure;
             }
-            if (!explicitVal.is_number() || !explicitVal.number_unchecked().is_integer()) {
+            if (!variant.value->semanticType->isInteger()) {
                 logging::logError(variant.line, variant.column, "Variant {} (in enum {}) must have an integer value",
                                   variant.name, statement->name);
                 symbol->status = ResolutionStatus::Failure;
                 result = stmtvisit_t::Failure;
             }
-            currentVariantValue = explicitVal.number_unchecked().value_as<std::int64_t>();
+            // TODO
+            currentVariantValue = static_cast<std::int64_t>(*computeExplicitArrayLength(variant.value));
         }
 
         variants.emplace_back(variant.name, currentVariantValue);
