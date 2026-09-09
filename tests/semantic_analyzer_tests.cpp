@@ -624,7 +624,7 @@ bool testScopedType() {
 // Other
 
 bool testAnalyzeFromFile() {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/analyzer_tests.mn";
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/semantic_analyzer_tests.mn";
 
     mnstl::chunk_allocator file_allocator{};
     parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
