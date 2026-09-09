@@ -3,13 +3,11 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "frontend/ast/ast_expressions.hpp"
-
 
 /**
  * Ambiguous cases:
@@ -243,8 +241,9 @@ ast::Expression* Parser::parsePrimaryExpression() {
         case TokenType::True: return makeNode<ast::BoolLiteralExpression>(startToken, true);
         case TokenType::False: return makeNode<ast::BoolLiteralExpression>(startToken, false);
         case TokenType::FloatLiteral:
+            return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme(), true);
         case TokenType::IntegerLiteral:
-            return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme());
+            return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme(), false);
         default:
             ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
                                + lexer ::tokenTypeToString(startToken.getType()));

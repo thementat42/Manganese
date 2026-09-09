@@ -155,9 +155,10 @@ struct MemberAccessExpression final : public Expression {
 
 struct NumberLiteralExpression final : public Expression {
     const std::string value;
+    const bool isFloat;
 
-    explicit NumberLiteralExpression(std::string&& _value) noexcept :
-        Expression(ExpressionKind::NumberLiteralExpression), value(std::move(_value)) {}
+    explicit NumberLiteralExpression(std::string&& _value, bool _isFloat) noexcept :
+        Expression(ExpressionKind::NumberLiteralExpression), value(std::move(_value)), isFloat(_isFloat) {}
 
     MN_AST_STANDARD_INTERFACE;
 
