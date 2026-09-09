@@ -6,7 +6,7 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 
-#include <mnstl/number.hxx>
+
 #include <string>
 #include <utility>
 #include <utils/target_info.hpp>
@@ -154,10 +154,10 @@ struct MemberAccessExpression final : public Expression {
 };
 
 struct NumberLiteralExpression final : public Expression {
-    const mnstl::number_t value;
+    const std::string value;
 
-    explicit NumberLiteralExpression(mnstl::number_t _value) noexcept :
-        Expression(ExpressionKind::NumberLiteralExpression), value(_value) {}
+    explicit NumberLiteralExpression(std::string&& _value) noexcept :
+        Expression(ExpressionKind::NumberLiteralExpression), value(std::move(_value)) {}
 
     MN_AST_STANDARD_INTERFACE;
 

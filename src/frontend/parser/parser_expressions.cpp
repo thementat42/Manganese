@@ -3,10 +3,13 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <mnstl/number.hxx>
+
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "frontend/ast/ast_expressions.hpp"
+
 
 /**
  * Ambiguous cases:
@@ -239,26 +242,9 @@ ast::Expression* Parser::parsePrimaryExpression() {
         case TokenType::Identifier: return makeNode<ast::IdentifierExpression>(startToken, std::move(lexeme));
         case TokenType::True: return makeNode<ast::BoolLiteralExpression>(startToken, true);
         case TokenType::False: return makeNode<ast::BoolLiteralExpression>(startToken, false);
-        case TokenType::FloatLiteral: {
-            const mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, true);
-            if (!value.exists) {
-                logError(startToken, "Invalid float literal '{}'", lexeme);
-                return makeNode<ast::NumberLiteralExpression>(startToken, 0.0);
-            }
-            if (value.overflowed) { logError(startToken, "Float literal {} cannot fit in its assigned type", lexeme); }
-            return makeNode<ast::NumberLiteralExpression>(startToken, value.value);
-        }
-        case TokenType::IntegerLiteral: {
-            const mnstl::string_conversion_result_t<mnstl::number_t> value = mnstl::str_to_num(lexeme, false);
-            if (!value.exists) {
-                logError(startToken, "Invalid integer literal '{}'", lexeme);
-                return makeNode<ast::NumberLiteralExpression>(startToken, 0);
-            }
-            if (value.overflowed) {
-                logError(startToken, "Integer literal {} cannot fit in its assigned type", lexeme);
-            }
-            return makeNode<ast::NumberLiteralExpression>(startToken, value.value);
-        }
+        case TokenType::FloatLiteral:
+        case TokenType::IntegerLiteral:
+            return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme());
         default:
             ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
                                + lexer ::tokenTypeToString(startToken.getType()));

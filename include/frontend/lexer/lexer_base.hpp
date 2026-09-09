@@ -10,7 +10,7 @@
 #include <io/logging.hpp>
 #include <io/reader.hpp>
 #include <memory>
-#include <mnstl/number.hxx>
+
 #include <optional>
 #include <string>
 #include <string_view>

@@ -2,7 +2,7 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <mnstl/number.hxx>
+
 #include <string>
 #include <utility>
 #include <utils/type_names.hpp>

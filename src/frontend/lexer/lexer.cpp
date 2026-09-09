@@ -7,7 +7,7 @@
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>
 #include <memory>
-#include <mnstl/number.hxx>
+
 #include <optional>
 #include <string>
 #include <utility>

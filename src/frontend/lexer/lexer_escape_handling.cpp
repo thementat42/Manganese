@@ -3,7 +3,7 @@
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/logging.hpp>
-#include <mnstl/number.hxx>
+
 #include <optional>
 #include <string>
 #include <string_view>

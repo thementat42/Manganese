@@ -7,7 +7,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <mnstl/number.hxx>
+
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -44,27 +44,6 @@ void dumpSemanticType(std::ostream& os, Indent ind, const semantic::SemanticType
         os << "not yet deduced";
     }
     os << "\n";
-}
-
-std::string_view getNumberTypeName(const mnstl::number_t& value) {
-    using enum mnstl::number_t::held_type;
-    switch (value.underlying_type()) {
-        case i8: return int8_str;
-        case i16: return int16_str;
-        case i32: return int32_str;
-        case i64: return int64_str;
-        case i128: return int128_str;
-        case u8: return uint8_str;
-        case u16: return uint16_str;
-        case u32: return uint32_str;
-        case u64: return uint64_str;
-        case u128: return uint128_str;
-        case f32: return float32_str;
-        case f64: return float64_str;
-        case err: return "error";
-        case none: ASSERT_UNREACHABLE("Number did not hold a value");
-    }
-    ASSERT_UNREACHABLE("Number did not hold a valid type");
 }
 
 inline std::size_t utf8Length(std::string_view str) noexcept {
@@ -503,7 +482,6 @@ void NumberLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "NumberLiteralExpression", *this);
     os << ind.next() << "value: " << toString() << "\n";
-    os << ind.next() << "Inferred literal type: " << getNumberTypeName(value) << "\n";
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
