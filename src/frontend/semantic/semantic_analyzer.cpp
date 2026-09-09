@@ -8,18 +8,29 @@
 namespace Manganese::semantic {
 
 Result SemanticAnalyzer::analyze() {
+    Result scopeTreeResult = Result::Failure;
+    Result globalCollectionResult = Result::Failure;
+    Result semanticAnalysisResult = Result::Failure;
+
     for (parser::ParsedFile& file : parsedFiles) {
         // Don't want errors cascading because of conflicting redeclarations
-        if (buildScopeTree(file) == Result::Failure) { return Result::Failure; }
+        if (buildScopeTree(file) == Result::Failure) { scopeTreeResult = Result::Failure; }
     }
+
+    if (scopeTreeResult == Result::Failure) { return scopeTreeResult; }
+
     symbolTable.switchToCheckingMode();
     for (parser::ParsedFile& file : parsedFiles) {
-        if (collectGlobals(file) == Result::Failure) { return Result::Failure; }
+        if (collectGlobals(file) == Result::Failure) { globalCollectionResult = Result::Failure; }
     }
+
+    if (globalCollectionResult == Result::Failure) { return globalCollectionResult; }
+
+
     for (parser::ParsedFile& file : parsedFiles) {
-        if (checkStatements(file) == Result::Failure) { return Result::Failure; }
+        if (checkStatements(file) == Result::Failure) { semanticAnalysisResult = Result::Failure; }
     }
-    return Result::Success;
+    return semanticAnalysisResult;
 }
 
 const Symbol* SemanticAnalyzer::resolveTypeSymbol(const ast::Type* typeNode) {
