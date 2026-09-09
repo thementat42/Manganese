@@ -4,7 +4,7 @@
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <mnstl/fold_result.hxx>
+
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -122,9 +122,7 @@ struct Expression : public ASTNode {
     const ExpressionKind kind;
     const semantic::SemanticType* semanticType = nullptr;
 
-    virtual mnstl::fold_result_t fold(const utils::TargetInfo& /*unused*/) const NOEXCEPT_IF_RELEASE {
-        return mnstl::fold_result_t{};
-    }
+    virtual bool canFold() const noexcept { return false; }
     constexpr bool isPoisoned() const noexcept { return kind == ExpressionKind::PoisonedExpression; };
 
    protected:

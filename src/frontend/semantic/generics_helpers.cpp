@@ -4,7 +4,7 @@
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/generics_helpers.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <mnstl/fold_result.hxx>
+
 #include <string>
 #include <utility>
 #include <utils/result.hpp>
@@ -246,8 +246,7 @@ const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type) 
             const auto* arrayType = static_cast<const ast::ArrayType*>(type);
             const SemanticType* elementType = resolveGenericType(arrayType->elementType);
             if (elementType->isPoison()) { return typeContext.getPoison(); }
-            const mnstl::fold_result_t length = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
-            if (!length.has_value()) {
+            if (!arrayType->lengthExpression->canFold()) {
                 logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
                 return typeContext.getPoison();
             }

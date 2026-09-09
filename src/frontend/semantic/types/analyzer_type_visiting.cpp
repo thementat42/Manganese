@@ -4,7 +4,7 @@
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <mnstl/fold_result.hxx>
+
 #include <mnstl/number.hxx>
 #include <string_view>
 #include <utility>
@@ -52,8 +52,7 @@ auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
     std::optional<std::size_t> length = std::nullopt;
     if (arrayType->lengthExpression != nullptr) {
         if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
-        const mnstl::fold_result_t fold = arrayType->lengthExpression->fold(typeContext.getTargetInfo());
-        if (!fold.is_number() || !fold.number_unchecked().is_integer()) {
+        if (!arrayType->lengthExpression->canFold()) {
             logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
             return typevisit_t::Failure;
         }
