@@ -174,7 +174,7 @@ Result Lexer::tokenizeNumber() {
                 continue;
             }
 
-            if (base != mnstl::Base::Decimal) {
+            if (base != Base::Decimal) {
                 logError("Invalid number literal : floating point values are only allowed for decimal literals");
                 advance();
                 result = Result::Failure;
@@ -199,7 +199,7 @@ Result Lexer::tokenizeNumber() {
         }
         numberLiteral += consumeChar();
     }
-    if (base == mnstl::Base::Decimal && to_lowercase(peekChar()) == 'e') {
+    if (base == Base::Decimal && to_lowercase(peekChar()) == 'e') {
         if (processScientificNotation(numberLiteral) == Result::Failure) { result = Result::Failure; }
 
         isFloat = true;
@@ -536,7 +536,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
     const char currentChar = peekChar();
     if (currentChar != '0') {
         // Decimal number
-        return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
+        return NumberPrefixResult{.base = Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
     }
     // Could be a base indicator (0x, 0b, 0o) -- check next char
     switch (peekChar(1)) {
@@ -544,21 +544,21 @@ NumberPrefixResult Lexer::processNumberPrefix() {
         case 'X':
             // Hexadecimal number
             advance(2);
-            return NumberPrefixResult{.base = mnstl::Base::Hexadecimal, .isValidBaseChar = is_xdigit, .prefix = "0x"};
+            return NumberPrefixResult{.base = Base::Hexadecimal, .isValidBaseChar = is_xdigit, .prefix = "0x"};
         case 'b':
         case 'B':
             // Binary number
             advance(2);
-            return NumberPrefixResult{.base = mnstl::Base::Binary, .isValidBaseChar = is_bdigit, .prefix = "0b"};
+            return NumberPrefixResult{.base = Base::Binary, .isValidBaseChar = is_bdigit, .prefix = "0b"};
         case 'o':
         case 'O':
             // Octal number
             advance(2);
-            return NumberPrefixResult{.base = mnstl::Base::Octal, .isValidBaseChar = is_odigit, .prefix = "0o"};
+            return NumberPrefixResult{.base = Base::Octal, .isValidBaseChar = is_odigit, .prefix = "0o"};
         case 'd':
         case 'D':
             advance(2);
-            return NumberPrefixResult{.base = mnstl::Base::Octal, .isValidBaseChar = is_digit, .prefix = "0d"};
+            return NumberPrefixResult{.base = Base::Octal, .isValidBaseChar = is_digit, .prefix = "0d"};
 
             // explicit decimal prefix (optional)
         default:
@@ -567,7 +567,7 @@ NumberPrefixResult Lexer::processNumberPrefix() {
                 logWarning("Leading zeros in numeric literals are treated as decimal numbers."
                            "Use a 0o prefix for octal numbers.");
             }
-            return NumberPrefixResult{.base = mnstl::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
+            return NumberPrefixResult{.base = Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
     }
 }
 

@@ -24,8 +24,15 @@ enum class Mode : std::uint8_t {
     File = 'f'  // Filename passed in
 };
 
+enum class Base : std::uint8_t {
+    Binary = 2,
+    Octal = 8,
+    Decimal = 10,
+    Hexadecimal = 16
+};
+
 struct NumberPrefixResult {
-    mnstl::Base base;
+    Base base;
     bool (*isValidBaseChar)(char);
     std::string prefix;
 };
