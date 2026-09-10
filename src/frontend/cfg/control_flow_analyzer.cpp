@@ -31,16 +31,38 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ExpressionStatement* /*unused*/
 
 FlowStatus ControlFlowAnalyzer::visit([[maybe_unused]] const ast::ForLoopStatement* statement) noexcept {
     // TODO
-    return FlowStatus::Returns;
+    return FlowStatus::FallsThrough;
 }
 
-FlowStatus ControlFlowAnalyzer::visit([[maybe_unused]] const ast::FunctionDeclarationStatement* statement) noexcept {
-    return FlowStatus::Returns;
+FlowStatus ControlFlowAnalyzer::visit(const ast::FunctionDeclarationStatement* statement) noexcept {
+    FlowStatus bodyStatus = visit(statement->body);
+    if (!statement->returnType->semanticType->isVoid() && bodyStatus == FlowStatus::FallsThrough) {
+        logError(statement, "non-void function '{}' does not return a value on all control paths", statement->name);
+    }
+    return FlowStatus::FallsThrough;  // A function declaration itself doesn't affect control flow
 }
 
-FlowStatus ControlFlowAnalyzer::visit([[maybe_unused]] const ast::IfStatement* statement) noexcept {
-    // TODO
-    return FlowStatus::Returns;
+FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcept {
+    FlowStatus ifBodyStatus = visit(statement->body);
+    bool allBranchesTerminate = (ifBodyStatus != FlowStatus::FallsThrough);
+    FlowStatus result = ifBodyStatus;
+
+    for (const auto& elif : statement->elifs) {
+        FlowStatus elifStatus = visit(elif.body);
+        if (elifStatus == FlowStatus::FallsThrough || (allBranchesTerminate && elifStatus != result)) {
+            allBranchesTerminate = false;
+        }
+    }
+
+    if (!statement->elseBody.empty()) {
+        allBranchesTerminate = false;
+    } else {
+        FlowStatus elseStatus = visit(statement->elseBody);
+        if ((elseStatus == FlowStatus::FallsThrough) || (allBranchesTerminate && elseStatus != result)) {
+            allBranchesTerminate = false;
+        }
+    }
+    return allBranchesTerminate ? result : FlowStatus::FallsThrough;
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::ImportStatement* /*unused*/) noexcept {
@@ -61,9 +83,19 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::NestedBlockStatement* statement
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::ReturnStatement* /*unused*/) noexcept { return FlowStatus::Returns; }
 
-FlowStatus ControlFlowAnalyzer::visit([[maybe_unused]] const ast::SwitchStatement* statement) noexcept {
-    // TODO
-    return FlowStatus::Returns;
+FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noexcept {
+    bool allCasesTerminate = true;
+    if (statement->defaultBody.empty()) {
+        allCasesTerminate = false;
+    } else {
+        FlowStatus defaultStatus = visit(statement->defaultBody);
+        if (defaultStatus == FlowStatus::FallsThrough) { allCasesTerminate = false; }
+    }
+    for (const auto& caseClause : statement->cases) {
+        FlowStatus caseStatus = visit(caseClause.body);
+        if (caseStatus == FlowStatus::FallsThrough) { allCasesTerminate = false; }
+    }
+    return allCasesTerminate ? FlowStatus::Returns : FlowStatus::FallsThrough;
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::VariableDeclarationStatement* /*unused*/) noexcept {
