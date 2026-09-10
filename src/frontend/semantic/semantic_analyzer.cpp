@@ -164,7 +164,8 @@ std::optional<std::uint64_t> SemanticAnalyzer::computeExplicitArrayLength(const 
         }
         case ast::ExpressionKind::NumberLiteralExpression: {
             const auto* num = static_cast<const ast::NumberLiteralExpression*>(lengthExpression);
-            const utils::string_conversion_result_t result = utils::stringToNumber<std::uint64_t>(num->value, num->isFloat);
+            const utils::string_conversion_result_t result
+                = utils::stringToNumber<std::uint64_t>(num->value, num->isFloat);
             if (!result.exists) {
                 logError(lengthExpression, "Invalid number literal '{}'", num->value);
                 break;

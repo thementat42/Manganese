@@ -8,7 +8,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateType* type) -> typevisit_t {

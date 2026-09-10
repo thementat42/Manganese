@@ -225,7 +225,6 @@ struct TypeCastExpression final : public Expression {
     TypeCastExpression(Expression* _originalValue, Type* _targetType) noexcept :
         Expression(ExpressionKind::TypeCastExpression), originalValue(_originalValue), targetType(_targetType) {}
     bool canFold() const noexcept override { return originalValue->canFold(); }
-    
 
     MN_AST_STANDARD_INTERFACE;
 };

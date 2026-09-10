@@ -2,7 +2,6 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-
 #include <string>
 #include <utility>
 #include <utils/type_names.hpp>

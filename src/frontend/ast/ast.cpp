@@ -4,7 +4,6 @@
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/type_context.hpp>
-
 #include <string_view>
 #include <utils/target_info.hpp>
 #include <utils/type_names.hpp>

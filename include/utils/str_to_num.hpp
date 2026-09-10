@@ -8,7 +8,6 @@
 #include <mnstl/ext_num_config.hxx>
 #include <mnstl/i128.hxx>
 
-
 namespace Manganese::utils {
 
 enum class Base : std::uint8_t {
@@ -181,7 +180,6 @@ string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b) no
     }
     return result;
 }
-
 
 template <class Target, class Source>
 string_conversion_result_t<Target> wrap_result(const string_conversion_result_t<Source>& result) noexcept {
