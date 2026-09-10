@@ -126,4 +126,8 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block) {
     return blockStatus;
 }
 
+FlowStatus ControlFlowAnalyzer::visit(const ast::PoisonedStatement* /*unused*/) noexcept {
+    return FlowStatus::FallsThrough;
+}
+
 }  // namespace Manganese::cfg
