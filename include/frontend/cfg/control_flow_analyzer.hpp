@@ -26,7 +26,6 @@ using _flow_base_t = ast::Visitor<void, FlowStatus, void, false>;
 class ControlFlowAnalyzer final : public _flow_base_t {
    private:
     std::vector<parser::ParsedFile>& files;
-    semantic::SemanticAnalyzer semanticAnalyzer;
 
     struct {
         bool hasError : 1 = false;
@@ -34,10 +33,13 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     } flags;
 
    public:
-    ControlFlowAnalyzer(std::vector<parser::ParsedFile>& parsedFiles, const utils::TargetInfo& targetInfo,
-                        mnstl::chunk_allocator& allocator) :
-        files(parsedFiles), semanticAnalyzer(parsedFiles, targetInfo, allocator) {}
-    Result analyze();
+    ControlFlowAnalyzer(std::vector<parser::ParsedFile>& parsedFiles) : files(parsedFiles) {}
+    Result analyze() {
+        for (const auto& file : files) {
+            for (const ast::Statement* statement : file.program) { visit(statement); }
+        }
+        return flags.hasError ? Result::Failure : Result::Success;
+    }
 
    private:
     template <class... Args>
@@ -72,7 +74,6 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 #undef TYPE
 
     FlowStatus visit(const ast::Block&);
-    
 };
 
 }  // namespace Manganese::cfg
