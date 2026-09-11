@@ -6,6 +6,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <utility>
+#include <utils/expression_folding.hpp>
 #include <utils/result.hpp>
 #include <vector>
 
@@ -258,7 +259,11 @@ const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type) 
                              arrayType->lengthExpression->semanticType->toString());
                     return typeContext.getPoison();
                 }
-                lengthValue = computeExplicitArrayLength(arrayType->lengthExpression);
+                lengthValue = utils::computeExpression<std::uint64_t>(
+                    arrayType->lengthExpression, typeContext.getTargetInfo(),
+                    [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
+                        this->logError(expr, fmt, std::forward<Args>(args)...);
+                    });
                 if (!lengthValue.has_value()) {
                     logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
                     return typeContext.getPoison();

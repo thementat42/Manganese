@@ -6,6 +6,7 @@
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
 #include <utility>
+#include <utils/expression_folding.hpp>
 #include <utils/result.hpp>
 #include <vector>
 
@@ -143,7 +144,18 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
                 result = stmtvisit_t::Failure;
             }
             // TODO
-            currentVariantValue = static_cast<std::int64_t>(*computeExplicitArrayLength(variant.value));
+            auto tmp = utils::computeExpression<std::int64_t>(
+                variant.value, typeContext.getTargetInfo(),
+                                    [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
+                        this->logError(expr, fmt, std::forward<Args>(args)...);
+                    });
+            if (!tmp.has_value()) {
+                logError(variant.value, "Invalid value '{}' for variant '{}' in enum '{}'", variant.value->toString(),
+                         variant.name, statement->name);
+
+            } else {
+                currentVariantValue = *tmp;
+            }
         }
 
         variants.emplace_back(variant.name, currentVariantValue);

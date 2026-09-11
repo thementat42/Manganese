@@ -6,6 +6,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <string_view>
 #include <utility>
+#include <utils/expression_folding.hpp>
 #include <vector>
 
 namespace Manganese::semantic {
@@ -54,12 +55,17 @@ auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
             logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
             return typevisit_t::Failure;
         }
-        const auto lengthVal = computeExplicitArrayLength(arrayType->lengthExpression);
+        const auto lengthVal = utils::computeExpression<std::uint64_t>(
+            arrayType->lengthExpression, typeContext.getTargetInfo(),
+            [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
+                this->logError(expr, fmt, std::forward<Args>(args)...);
+            });
+
         if (!lengthVal.has_value()) {
             logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
             return typevisit_t::Failure;
         }
-        if (*lengthVal <= 0) {
+        if (*lengthVal == 0) {
             logError(arrayType->lengthExpression, "Array length must be greater than 0");
             return typevisit_t::Failure;
         }
@@ -73,7 +79,7 @@ auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
 }
 
 auto SemanticAnalyzer::visit(ast::FunctionType* type) -> typevisit_t {
-    const ast::FunctionType* functionType = static_cast<const ast::FunctionType*>(type);
+    const auto* functionType = static_cast<const ast::FunctionType*>(type);
     std::vector<Parameter> resolvedParameterTypes;
     for (const ast::FunctionParameterType& parameterType : functionType->parameterTypes) {
         DISCARD(visit(parameterType.type));

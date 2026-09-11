@@ -133,7 +133,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression);
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
-    std::optional<std::uint64_t> computeExplicitArrayLength(const ast::Expression* lengthExpression);
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
