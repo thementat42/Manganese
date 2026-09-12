@@ -67,19 +67,21 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                     break;
                 }
                 return static_cast<bool>(result.value != 0);
+            } else {
+                using num_t_helper
+                    = std::conditional_t<(sizeof(T) > sizeof(std::int64_t)), mnstl::int128_t, std::int64_t>;
+                using num_t = std::conditional_t<std::is_signed_v<T>, num_t_helper, mnstl::mnstl_make_unsigned_t<T>>;
+                const utils::string_conversion_result_t result = utils::stringToNumber<num_t>(num->value, num->isFloat);
+                if (!result.exists) {
+                    logger(expression, "Invalid number literal '{}'", num->value);
+                    break;
+                }
+                if (result.overflowed) {
+                    logger(expression, "Number literal '{}' cannot fit in its assigned type", num->value);
+                    break;
+                }
+                return static_cast<T>(result.value);
             }
-            using num_t_helper = std::conditional_t<(sizeof(T) > sizeof(std::int64_t)), mnstl::int128_t, std::int64_t>;
-            using num_t = std::conditional_t<std::is_signed_v<T>, num_t_helper, mnstl::mnstl_make_unsigned_t<T>>;
-            const utils::string_conversion_result_t result = utils::stringToNumber<num_t>(num->value, num->isFloat);
-            if (!result.exists) {
-                logger(expression, "Invalid number literal '{}'", num->value);
-                break;
-            }
-            if (result.overflowed) {
-                logger(expression, "Number literal '{}' cannot fit in its assigned type", num->value);
-                break;
-            }
-            return static_cast<T>(result.value);
         }
         case ast::ExpressionKind::PostfixExpression: {
             const auto* postfixExpression = static_cast<const ast::PostfixExpression*>(expression);
@@ -89,7 +91,10 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 case UnaryPlus: return static_cast<T>(+*operandValue);
                 case UnaryMinus: return static_cast<T>(-*operandValue);
                 case Not: return static_cast<T>(!static_cast<bool>(*operandValue));
-                case BitNot: return static_cast<T>(~*operandValue);
+                case BitNot: {
+                    /* cast to int here since ~bool doesn't work (T can be bool)*/
+                    return static_cast<T>(~static_cast<int>(*operandValue));
+                }
                 case Inc:
                 case AddressOf:
                 case Dereference:
