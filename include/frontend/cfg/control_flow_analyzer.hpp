@@ -36,7 +36,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     const std::vector<parser::ParsedFile>& files;
     const utils::TargetInfo& targetInfo;
     const semantic::SymbolTable& symbolTable;  // need to look up symbols for definite assignment
-    std::unordered_map<const semantic::Symbol*, AssignmentState> assignmentStates;
+    std::vector<AssignmentState> symbolAssignmentStates;  // indexed into by Symbol::ID
 
     struct {
         bool hasError : 1 = false;
@@ -46,7 +46,9 @@ class ControlFlowAnalyzer final : public _flow_base_t {
    public:
     ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo,
                         const semantic::SymbolTable& _symbolTable) :
-        files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable) {}
+        files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable) {
+        symbolAssignmentStates.resize(symbolTable.getSize(), AssignmentState::Uninitialized);
+    }
     Result analyze() {
         for (const auto& file : files) {
             for (const ast::Statement* statement : file.program) { visit(statement); }

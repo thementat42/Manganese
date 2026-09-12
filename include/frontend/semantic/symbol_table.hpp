@@ -44,6 +44,7 @@ struct Symbol {
     ast::Visibility visibility = ast::Visibility::Private;
     bool isMutable;
     ResolutionStatus status = ResolutionStatus::NotStarted;
+    std::size_t ID = static_cast<size_t>(-1);  // placeholder, set by declare()
 };
 
 struct Scope {
@@ -81,6 +82,7 @@ class SymbolTable {
         bool _isFirstPass : 1 = true;  // Toggles table from allocation mode to tree-tracking mode
         bool _isInsideGenericInstantiation : 1 = true;
     } _flags;
+    std::size_t currentSymbolID = 0;
 
     inline bool noScopeAvailable() const noexcept { return _currentScope == nullptr; }
 
@@ -114,6 +116,7 @@ class SymbolTable {
     Scope* getCurrentScope() noexcept { return _currentScope; }
     const Scope* getCurrentScope() const noexcept { return _currentScope; }
     void setCurrentScope(Scope* scope) noexcept { _currentScope = scope; }
+    std::size_t getSize() const noexcept { return currentSymbolID; }
 
     Result declare(std::string_view name, Symbol&& symbol) {
         if (noScopeAvailable()) [[unlikely]] {
@@ -121,6 +124,7 @@ class SymbolTable {
             return Result::Failure;
         }
         symbol.hostScope = _currentScope;
+        symbol.ID = currentSymbolID++;
         return _currentScope->insert(name, symbol);
     }
 
