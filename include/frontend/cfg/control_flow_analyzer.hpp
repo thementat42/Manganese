@@ -11,6 +11,7 @@
 #include <mnstl/chunk_allocator.hxx>
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
+#include <vector>
 
 namespace Manganese::cfg {
 
@@ -26,8 +27,8 @@ using _flow_base_t = ast::Visitor<void, FlowStatus, void, false>;
 
 class ControlFlowAnalyzer final : public _flow_base_t {
    private:
-    std::vector<parser::ParsedFile>& files;
-    utils::TargetInfo& targetInfo;
+    const std::vector<parser::ParsedFile>& files;
+    const utils::TargetInfo& targetInfo;
 
     struct {
         bool hasError : 1 = false;
@@ -35,7 +36,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     } flags;
 
    public:
-    ControlFlowAnalyzer(std::vector<parser::ParsedFile>& parsedFiles, utils::TargetInfo& _targetInfo) : files(parsedFiles), targetInfo(_targetInfo) {}
+    ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo) : files(_files), targetInfo(_targetInfo) {}
     Result analyze() {
         for (const auto& file : files) {
             for (const ast::Statement* statement : file.program) { visit(statement); }
