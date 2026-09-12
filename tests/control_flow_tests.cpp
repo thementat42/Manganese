@@ -1,6 +1,7 @@
 #include <core.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
+#include <frontend/cfg/control_flow_analyzer.hpp>
 #include <fstream>
 #include <iostream>
 #include <mnstl/chunk_allocator.hxx>
@@ -16,14 +17,17 @@ namespace {
 
 constexpr const char* logFileName = "logs/control_flow_tests.log";
 mnstl::chunk_allocator arena;
-utils::TargetInfo target = utils::TargetInfo::fromHostTriple();
+utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
 bool analyzeControlFlow(const std::string& source, bool expectSuccess, std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
-    semantic::SemanticAnalyzer analyzer(parsedFiles, target, arena);
-    const Result result = analyzer.analyze();
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena);
+    DISCARD(semanticAnalyzer.analyze());
+
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo);
+   Result result = cfa.analyze(); 
 
     std::ofstream logFile(logFileName, std::ios::app);
     if (logFile) {
