@@ -143,7 +143,6 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
                 symbol->status = ResolutionStatus::Failure;
                 result = stmtvisit_t::Failure;
             }
-            // TODO
             auto tmp = utils::computeExpression<std::int64_t>(
                 variant.value, typeContext.getTargetInfo(),
                                     [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {

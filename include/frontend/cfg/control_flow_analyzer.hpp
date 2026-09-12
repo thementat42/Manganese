@@ -18,7 +18,8 @@ enum class FlowStatus : std::int8_t {
     FallsThrough = -1,
     Returns = 1,
     Breaks = 2,
-    ContinuesLoop = 3
+    ContinuesLoop = 3,
+    InfiniteLoop = 4
 };
 
 using _flow_base_t = ast::Visitor<void, FlowStatus, void, false>;
@@ -26,6 +27,7 @@ using _flow_base_t = ast::Visitor<void, FlowStatus, void, false>;
 class ControlFlowAnalyzer final : public _flow_base_t {
    private:
     std::vector<parser::ParsedFile>& files;
+    utils::TargetInfo& targetInfo;
 
     struct {
         bool hasError : 1 = false;
@@ -33,7 +35,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     } flags;
 
    public:
-    ControlFlowAnalyzer(std::vector<parser::ParsedFile>& parsedFiles) : files(parsedFiles) {}
+    ControlFlowAnalyzer(std::vector<parser::ParsedFile>& parsedFiles, utils::TargetInfo& _targetInfo) : files(parsedFiles), targetInfo(_targetInfo) {}
     Result analyze() {
         for (const auto& file : files) {
             for (const ast::Statement* statement : file.program) { visit(statement); }

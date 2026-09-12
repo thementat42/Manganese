@@ -1,5 +1,7 @@
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/cfg/control_flow_analyzer.hpp>
+#include <utils/expression_folding.hpp>
 
 namespace Manganese::cfg {
 
@@ -29,8 +31,29 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ExpressionStatement* /*unused*/
     return FlowStatus::FallsThrough;
 }
 
-FlowStatus ControlFlowAnalyzer::visit([[maybe_unused]] const ast::ForLoopStatement* statement) noexcept {
-    // TODO
+FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) noexcept {
+    if (statement->stopCondition == nullptr) {
+        // no stop condition, whether or not the loop exits depends on whether the body breaks/returns
+        FlowStatus bodyStatus = visit(statement->body);
+        if (bodyStatus == FlowStatus::Returns) { return FlowStatus::Returns; }
+        if (bodyStatus == FlowStatus::Breaks) { return FlowStatus::Breaks; }
+        return FlowStatus::InfiniteLoop;
+    }
+    auto conditionValue = utils::computeExpression<bool>(
+        statement->stopCondition, targetInfo,
+        [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
+            this->logError(expr, fmt, std::forward<Args>(args)...);
+        });
+    if (conditionValue.has_value()) {
+        // never executes
+        if (!*conditionValue) { return FlowStatus::FallsThrough; }
+        FlowStatus bodyStatus = visit(statement->body);
+
+        if (bodyStatus == FlowStatus::Returns) { return FlowStatus::Returns; }
+        if (bodyStatus == FlowStatus::Breaks) { return FlowStatus::Breaks; }
+        return FlowStatus::InfiniteLoop;
+    }
+    // Couldn't fold value, assume it termintes
     return FlowStatus::FallsThrough;
 }
 
@@ -102,9 +125,25 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::VariableDeclarationStatement* /
     return FlowStatus::FallsThrough;
 }
 
-FlowStatus ControlFlowAnalyzer::visit([[maybe_unused]] const ast::WhileLoopStatement* statement) noexcept {
-    // TODO
-    return FlowStatus::Returns;
+FlowStatus ControlFlowAnalyzer::visit(const ast::WhileLoopStatement* statement) noexcept {
+    // Try to detect infinite loops
+    auto conditionValue = utils::computeExpression<bool>(
+        statement->condition, targetInfo,
+        [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
+            this->logError(expr, fmt, std::forward<Args>(args)...);
+        });
+    if (conditionValue.has_value()) {
+        if (!*conditionValue) {
+            // while (false) so the body never executes
+            return FlowStatus::FallsThrough;
+        }
+        // while (true) so infinite loop
+        FlowStatus bodyStatus = visit(statement->body);
+        if (bodyStatus == FlowStatus::Returns) { return FlowStatus::Returns; }
+        return FlowStatus::InfiniteLoop;
+    }
+    // Condition could not be folded (runtime value), so we assume it terminates
+    return FlowStatus::FallsThrough;
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block) {
