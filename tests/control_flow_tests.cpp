@@ -1,7 +1,8 @@
 #include <core.hpp>
+#include <filesystem>
+#include <frontend/cfg/control_flow_analyzer.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
-#include <frontend/cfg/control_flow_analyzer.hpp>
 #include <fstream>
 #include <iostream>
 #include <mnstl/chunk_allocator.hxx>
@@ -27,7 +28,7 @@ bool analyzeControlFlow(const std::string& source, bool expectSuccess, std::stri
     DISCARD(semanticAnalyzer.analyze());
 
     cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo);
-   Result result = cfa.analyze(); 
+    Result result = cfa.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
     if (logFile) {
@@ -93,6 +94,22 @@ bool testPartialReturnBranching() {
     return analyzeControlFlow(invalid, false, __func__);
 }
 
+bool testControlFlowFromFile() {
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/control_flow_tests.mn";
+    mnstl::chunk_allocator file_allocator{};
+
+    parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
+    std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
+
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, file_allocator);
+    (void)semanticAnalyzer.analyze();
+
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo);
+    Result result = cfa.analyze();
+
+    return result == Result::Success;
+}
+
 }  // namespace
 }  // namespace control_flow_tests
 
@@ -101,10 +118,11 @@ void runControlFlowAnalyzerTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
 
-    runner.runTest("Unreachable Code Analysis", control_flow_tests::testUnreachableCode);
-    runner.runTest("Missing Return Paths Analysis", control_flow_tests::testMissingReturnPaths);
-    runner.runTest("Valid Branching Returns Analysis", control_flow_tests::testValidBranchingReturns);
-    runner.runTest("Empty Return in Non-Void Function Analysis", control_flow_tests::testPartialReturnBranching);
+    runner.runTest("Unreachable Code Control Flow Analysis", control_flow_tests::testUnreachableCode);
+    runner.runTest("Missing Return Paths Control Flow Analysis", control_flow_tests::testMissingReturnPaths);
+    runner.runTest("Valid Branching Returns Control Flow Analysis", control_flow_tests::testValidBranchingReturns);
+    runner.runTest("Partial Return Branching Control Flow Analysis", control_flow_tests::testPartialReturnBranching);
+    runner.runTest("File Control Flow Analysis", control_flow_tests::testControlFlowFromFile);
 }
 
 }  // namespace Manganese::tests
