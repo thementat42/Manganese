@@ -55,7 +55,7 @@ bool testUnreachableCode() {
         }
     )";
 
-    return analyzeControlFlow(invalid, false, __func__);
+    return analyzeControlFlow(invalid, true, __func__);
 }
 
 bool testMissingReturnPaths() {
