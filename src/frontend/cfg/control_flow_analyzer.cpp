@@ -77,7 +77,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcep
         }
     }
 
-    if (!statement->elseBody.empty()) {
+    if (statement->elseBody.empty()) {
         allBranchesTerminate = false;
     } else {
         FlowStatus elseStatus = visit(statement->elseBody);
