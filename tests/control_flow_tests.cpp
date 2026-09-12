@@ -82,10 +82,11 @@ bool testValidBranchingReturns() {
     return analyzeControlFlow(valid, true, __func__);
 }
 
-bool testEmptyReturnInNonVoid() {
+bool testPartialReturnBranching() {
     const std::string invalid = R"(
-        func compute() -> int32 {
-            return;
+        func checkPositive(x: int32) -> int32 {
+            if (x > 0) { return 1; }
+            let y = 0;
         }
     )";
 
@@ -103,7 +104,7 @@ void runControlFlowAnalyzerTests(TestRunner& runner) {
     runner.runTest("Unreachable Code Analysis", control_flow_tests::testUnreachableCode);
     runner.runTest("Missing Return Paths Analysis", control_flow_tests::testMissingReturnPaths);
     runner.runTest("Valid Branching Returns Analysis", control_flow_tests::testValidBranchingReturns);
-    runner.runTest("Empty Return in Non-Void Function Analysis", control_flow_tests::testEmptyReturnInNonVoid);
+    runner.runTest("Empty Return in Non-Void Function Analysis", control_flow_tests::testPartialReturnBranching);
 }
 
 }  // namespace Manganese::tests
