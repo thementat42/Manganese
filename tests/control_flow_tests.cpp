@@ -27,7 +27,7 @@ bool analyzeControlFlow(const std::string& source, bool expectSuccess, std::stri
     semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena);
     DISCARD(semanticAnalyzer.analyze());
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo);
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable());
     Result result = cfa.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -104,7 +104,7 @@ bool testControlFlowFromFile() {
     semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, file_allocator);
     (void)semanticAnalyzer.analyze();
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo);
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable());
     Result result = cfa.analyze();
 
     return result == Result::Success;

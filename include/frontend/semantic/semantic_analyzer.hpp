@@ -15,7 +15,6 @@
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
 #include <mnstl/tiny_stack.hxx>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -107,6 +106,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         symbolTable(arena), typeContext(arena, target), parsedFiles(files), genericsStack() {}
 
     Result analyze();
+    const SymbolTable& getSymbolTable() const noexcept {return symbolTable;}
 
     ~SemanticAnalyzer() override = default;
 

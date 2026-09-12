@@ -23,12 +23,20 @@ enum class FlowStatus : std::int8_t {
     InfiniteLoop = 4
 };
 
+enum class AssignmentState : std::int8_t {
+    Uninitialized = -1,
+    MaybeInitialized = 0,
+    Initialized = 1
+};
+
 using _flow_base_t = ast::Visitor<void, FlowStatus, void, false>;
 
 class ControlFlowAnalyzer final : public _flow_base_t {
    private:
     const std::vector<parser::ParsedFile>& files;
     const utils::TargetInfo& targetInfo;
+    const semantic::SymbolTable& symbolTable;  // need to look up symbols for definite assignment
+    std::unordered_map<const semantic::Symbol*, AssignmentState> assignmentStates;
 
     struct {
         bool hasError : 1 = false;
@@ -36,7 +44,9 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     } flags;
 
    public:
-    ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo) : files(_files), targetInfo(_targetInfo) {}
+    ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo,
+                        const semantic::SymbolTable& _symbolTable) :
+        files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable) {}
     Result analyze() {
         for (const auto& file : files) {
             for (const ast::Statement* statement : file.program) { visit(statement); }
