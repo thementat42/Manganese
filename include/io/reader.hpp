@@ -18,9 +18,6 @@ class Reader {
     Reader(const Reader&) = delete;
     Reader& operator=(const Reader&) = delete;
 
-    Reader(Reader&&) noexcept = delete;
-    Reader& operator=(Reader&&) noexcept = delete;
-
     virtual char peekChar(std::size_t offset = 0) noexcept = 0;
     [[nodiscard]] virtual char consumeChar() noexcept = 0;
     virtual void setPosition(std::size_t newPosition) noexcept = 0;

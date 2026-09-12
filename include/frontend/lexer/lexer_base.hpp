@@ -58,8 +58,6 @@ class Lexer {
     // Avoid file ownership issues
     Lexer(const Lexer&) = delete;
     Lexer(Lexer&&) = delete;
-    Lexer& operator=(const Lexer&) = delete;
-    Lexer& operator=(Lexer&&) = delete;
 
     Token& peekToken();
     Token consumeToken();
