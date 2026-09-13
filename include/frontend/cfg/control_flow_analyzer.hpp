@@ -77,7 +77,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 #define STMT(name) stmtvisit_t visit(const ast::name*) noexcept override;
 
 #define EXPR(name) exprvisit_t visit(const ast::name*) noexcept override;
-    // Expressions and types don't contribute to control flow or assignment so they can just be no-ops
+    // Types don't contribute to control flow or assignment so they can just be no-ops
 #define TYPE(name) \
     constexpr typevisit_t visit(const ast::name*) noexcept override {}
 
