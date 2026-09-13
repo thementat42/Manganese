@@ -1,6 +1,7 @@
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/cfg/control_flow_analyzer.hpp>
+#include <frontend/semantic/symbol_table.hpp>
 #include <utils/expression_folding.hpp>
 
 namespace Manganese::cfg {
@@ -121,7 +122,13 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noe
     return allCasesTerminate ? FlowStatus::Returns : FlowStatus::FallsThrough;
 }
 
-FlowStatus ControlFlowAnalyzer::visit(const ast::VariableDeclarationStatement* /*unused*/) noexcept {
+FlowStatus ControlFlowAnalyzer::visit(const ast::VariableDeclarationStatement* statement) noexcept {
+    const semantic::Symbol* symbol = symbolTable.lookup(statement->name);
+    if (statement->value != nullptr) {
+        symbolAssignmentStates[symbol->ID] = AssignmentState::Initialized;
+    } else {
+        symbolAssignmentStates[symbol->ID] = AssignmentState::Uninitialized;
+    }
     return FlowStatus::FallsThrough;
 }
 
