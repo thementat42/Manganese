@@ -53,7 +53,7 @@ auto SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) 
         }
 
         const SemanticType* expectedFieldType = aggregateType->getFieldType(fieldInit.name);
-        if (expectedFieldType->isPoison()) {
+        if (expectedFieldType == nullptr || expectedFieldType->isPoison()) {
             logError(expression, "Aggregate '{}' has no field named '{}'", aggregateType->toString(), fieldInit.name);
             result = exprvisit_t::Failure;
             continue;
