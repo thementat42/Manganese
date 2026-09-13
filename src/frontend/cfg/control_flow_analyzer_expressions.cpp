@@ -17,7 +17,7 @@ void ControlFlowAnalyzer::visit(const ast::AssignmentExpression* expression) noe
 
     const semantic::Symbol* symbol
         = symbolTable.lookup(static_cast<const ast::IdentifierExpression*>(expression->assignee)->name);
-    symbolAssignmentStates[symbol->ID] = AssignmentState::Initialized;
+    if (symbol != nullptr) { symbolAssignmentStates[symbol->ID] = AssignmentState::Initialized; }
 }
 
 void ControlFlowAnalyzer::visit([[maybe_unused]] const ast::BinaryExpression* expression) noexcept {}
