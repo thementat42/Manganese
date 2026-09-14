@@ -110,6 +110,58 @@ bool testControlFlowFromFile() {
     return result == Result::Success;
 }
 
+bool testUninitializedRead() {
+    const std::string invalid = R"(
+        func foo() -> int32 {
+            let x: int32;
+            return x;
+        }
+    )";
+    return analyzeControlFlow(invalid, false, __func__);
+}
+
+bool testConditionalInitializationFailure() {
+    const std::string invalid = R"(
+        func foo(cond: bool) -> int32 {
+            let x: int32;
+            if (cond) {
+                x = 10;
+            }
+            return x; // Fails: x is MaybeInitialized
+        }
+    )";
+    return analyzeControlFlow(invalid, false, __func__);
+}
+
+bool testConditionalInitializationSuccess() {
+    const std::string valid = R"(
+        func foo(cond: bool) -> int32 {
+            let x: int32;
+            if (cond) {
+                x = 10;
+            } else {
+                x = 20;
+            }
+            return x; // Succeeds: x is fully Initialized on all paths
+        }
+    )";
+    return analyzeControlFlow(valid, true, __func__);
+}
+
+bool testLoopAssignmentSafety() {
+    const std::string invalid = R"(
+        func foo(n: int32) -> int32 {
+            let x: int32;
+            while (n > 0) {
+                x = 5;
+                n = n - 1;
+            }
+            return x; // Fails: runtime loop might execute 0 times
+        }
+    )";
+    return analyzeControlFlow(invalid, false, __func__);
+}
+
 }  // namespace
 }  // namespace control_flow_tests
 
@@ -123,6 +175,11 @@ void runControlFlowAnalyzerTests(TestRunner& runner) {
     runner.runTest("Valid Branching Returns Control Flow Analysis", control_flow_tests::testValidBranchingReturns);
     runner.runTest("Partial Return Branching Control Flow Analysis", control_flow_tests::testPartialReturnBranching);
     runner.runTest("File Control Flow Analysis", control_flow_tests::testControlFlowFromFile);
+
+    runner.runTest("Uninitialized Variable Read", control_flow_tests::testUninitializedRead);
+    runner.runTest("Conditional Initialization Failure", control_flow_tests::testConditionalInitializationFailure);
+    runner.runTest("Conditional Initialization Success", control_flow_tests::testConditionalInitializationSuccess);
+    runner.runTest("Runtime Loop Assignment Safety", control_flow_tests::testLoopAssignmentSafety);
 }
 
 }  // namespace Manganese::tests
