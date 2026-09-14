@@ -6,28 +6,6 @@
 
 namespace Manganese::cfg {
 
-namespace {
-/**
- * Given two assignment states in two branches, computes what the resulting assignment state should be
- */
-constexpr AssignmentState _mergeStatesHelper(AssignmentState a, AssignmentState b) noexcept {
-    // If we have the same state for a symbol along two branches, just merge them
-    if (a == b) { return a; }
-    // some kind of disagreement. the possibilities here are:
-    // initialized & uninitialized
-    // initialized & maybe initialized
-    // maybe initialized & uninitialized
-    // (or vice versa)
-    // In all cases the result is that the value is maybe initialized
-    return AssignmentState::MaybeInitialized;
-}
-
-void mergeStates(std::vector<AssignmentState>& a, const std::vector<AssignmentState>& b) noexcept {
-    for (std::size_t i = 0; i < a.size(); ++i) { a[i] = _mergeStatesHelper(a[i], b[i]); }
-}
-
-}  // namespace
-
 FlowStatus ControlFlowAnalyzer::visit(const ast::AggregateDeclarationStatement* /*unused*/) noexcept {
     return FlowStatus::FallsThrough;
 }
@@ -166,7 +144,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ReturnStatement* /*unused*/) no
 FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noexcept {
     visit(statement->target);
     auto preSwitchStates = symbolAssignmentStates;
-    std::vector<AssignmentState> mergedStates;
+    states_t mergedStates;
 
     const bool hasDefault = statement->defaultBody.empty();
     bool allCasesTerminate = hasDefault;
@@ -198,8 +176,8 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noe
 FlowStatus ControlFlowAnalyzer::visit(const ast::VariableDeclarationStatement* statement) noexcept {
     const semantic::Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol != nullptr) {
-        symbolAssignmentStates[symbol->ID]
-            = statement->value == nullptr ? AssignmentState::Uninitialized : AssignmentState::Initialized;
+        setAssignmentState(*symbol,
+                           statement->value == nullptr ? AssignmentState::Uninitialized : AssignmentState::Initialized);
     }
     return FlowStatus::FallsThrough;
 }

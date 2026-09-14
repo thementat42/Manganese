@@ -32,7 +32,7 @@ void ControlFlowAnalyzer::visit(const ast::AssignmentExpression* expression) noe
         // the variable gets marked as initialized even if the value isn't initialized.
         // because the recursive visit() call to the value will catch the use of an uninitialized value, the visitor as
         // a whole will still eventually error out, so we don't need to bubble up errors
-        symbolAssignmentStates[assigneeSymbol->ID] = AssignmentState::Initialized;
+        setAssignmentState(*assigneeSymbol, AssignmentState::Initialized);
     }
 }
 
@@ -59,8 +59,7 @@ void ControlFlowAnalyzer::visit(const ast::IdentifierExpression* expression) noe
     if (symbol == nullptr) { return; }  // this was a semantic error
     using enum semantic::SymbolKind;
 
-    if (symbol->kind == Variable && symbolAssignmentStates[symbol->ID] != AssignmentState::Initialized) {
-        const auto state = symbolAssignmentStates[symbol->ID];
+    if (const auto state = getAssignmentState(*symbol); symbol->kind == Variable) {
         if (state == AssignmentState::Uninitialized) {
             logError(expression, "Identifier '{}' does not have a value", expression->name);
         } else if (state == AssignmentState::MaybeInitialized) {
