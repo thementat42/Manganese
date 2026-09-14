@@ -142,7 +142,7 @@ bool testConditionalInitializationSuccess() {
             } else {
                 x = 20;
             }
-            return x; // Succeeds: x is fully Initialized on all paths
+            return x; # Succeeds: x is fully Initialized on all paths
         }
     )";
     return analyzeControlFlow(valid, true, __func__);
@@ -156,7 +156,7 @@ bool testLoopAssignmentSafety() {
                 x = 5;
                 n = n - 1;
             }
-            return x; // Fails: runtime loop might execute 0 times
+            return x; # Fails: runtime loop might execute 0 times
         }
     )";
     return analyzeControlFlow(invalid, false, __func__);
