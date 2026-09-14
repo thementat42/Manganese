@@ -18,19 +18,18 @@
 namespace Manganese::semantic {
 
 enum class SymbolKind : std::uint8_t {
-    Variable,
-    Constant,
-    Function,
-    Parameter,
-    ConstantParameter,
     Aggregate,
+    Constant,
+    ConstantParameter,
     Enum,
-    Module,
-    Import,
-    TypeAlias,
+    Function,
     GenericType,
+    Import,
+    Module,
     Namespace,
-    Invalid
+    Parameter,
+    TypeAlias,
+    Variable
 };
 
 struct Scope;
