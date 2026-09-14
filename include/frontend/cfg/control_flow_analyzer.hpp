@@ -57,6 +57,13 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     }
 
    private:
+    AssignmentState getAssignmentState(const semantic::Symbol& symbol) const noexcept {
+        return symbolAssignmentStates[symbol.ID];
+    }
+    void setAssignmentState(const semantic::Symbol& symbol, AssignmentState newState) noexcept {
+        symbolAssignmentStates[symbol.ID] = newState;
+    }
+
     template <class... Args>
     void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logError(node->line, node->column, message, std::forward<Args>(args)...);
