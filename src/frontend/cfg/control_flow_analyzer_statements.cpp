@@ -125,11 +125,8 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noe
 FlowStatus ControlFlowAnalyzer::visit(const ast::VariableDeclarationStatement* statement) noexcept {
     const semantic::Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol != nullptr) {
-        if (statement->value != nullptr) {
-            symbolAssignmentStates[symbol->ID] = AssignmentState::Initialized;
-        } else {
-            symbolAssignmentStates[symbol->ID] = AssignmentState::Uninitialized;
-        }
+        symbolAssignmentStates[symbol->ID]
+            = statement->value == nullptr ? AssignmentState::Uninitialized : AssignmentState::Initialized;
     }
     return FlowStatus::FallsThrough;
 }
