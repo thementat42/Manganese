@@ -36,7 +36,11 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     const std::vector<parser::ParsedFile>& files;
     const utils::TargetInfo& targetInfo;
     const semantic::SymbolTable& symbolTable;  // need to look up symbols for definite assignment
-    std::vector<AssignmentState> symbolAssignmentStates;  // indexed into by Symbol::ID
+
+    struct states_t {
+        std::vector<std::uint64_t> isUnInitialized;
+        std::vector<std::uint64_t> isMaybeInitialized;
+    } symbolAssignmentStates;
 
     struct {
         bool hasError : 1 = false;
@@ -47,7 +51,9 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo,
                         const semantic::SymbolTable& _symbolTable) :
         files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable) {
-        symbolAssignmentStates.resize(symbolTable.getSize(), AssignmentState::Uninitialized);
+        const std::size_t numWords = (symbolTable.getSize() + 63) / 64;
+        symbolAssignmentStates.isUnInitialized.resize(numWords, 0);
+        symbolAssignmentStates.isMaybeInitialized.resize(numWords, 0);
     }
     Result analyze() {
         for (const auto& file : files) {
@@ -57,12 +63,10 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     }
 
    private:
-    AssignmentState getAssignmentState(const semantic::Symbol& symbol) const noexcept {
-        return symbolAssignmentStates[symbol.ID];
-    }
-    void setAssignmentState(const semantic::Symbol& symbol, AssignmentState newState) noexcept {
-        symbolAssignmentStates[symbol.ID] = newState;
-    }
+    static void mergeStates(states_t& dest, const states_t& src);
+    AssignmentState getAssignmentState(const semantic::Symbol& symbol) const noexcept;
+
+    void setAssignmentState(const semantic::Symbol& symbol, AssignmentState newState) noexcept;
 
     template <class... Args>
     void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
