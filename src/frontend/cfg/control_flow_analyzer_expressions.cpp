@@ -2,8 +2,6 @@
 #include <frontend/cfg/control_flow_analyzer.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 
-#include "frontend/semantic/type_context.hpp"
-
 namespace Manganese::cfg {
 
 void ControlFlowAnalyzer::visit(const ast::AggregateInstantiationExpression* expression) noexcept {
@@ -62,7 +60,12 @@ void ControlFlowAnalyzer::visit(const ast::IdentifierExpression* expression) noe
     using enum semantic::SymbolKind;
 
     if (symbol->kind == Variable && symbolAssignmentStates[symbol->ID] != AssignmentState::Initialized) {
-        logError(expression, "Identifier '{}' does not have a value", expression->name);
+        const auto state = symbolAssignmentStates[symbol->ID];
+        if (state == AssignmentState::Uninitialized) {
+            logError(expression, "Identifier '{}' does not have a value", expression->name);
+        } else if (state == AssignmentState::MaybeInitialized) {
+            logError(expression, "Identifier '{}' may not have a value on all control paths", expression->name);
+        }
     }
 }
 
