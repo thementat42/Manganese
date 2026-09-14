@@ -123,7 +123,7 @@ bool testUninitializedRead() {
 bool testConditionalInitializationFailure() {
     const std::string invalid = R"(
         func foo(cond: bool) -> int32 {
-            let x: int32;
+            let mut x: int32;
             if (cond) {
                 x = 10;
             }
@@ -136,7 +136,7 @@ bool testConditionalInitializationFailure() {
 bool testConditionalInitializationSuccess() {
     const std::string valid = R"(
         func foo(cond: bool) -> int32 {
-            let x: int32;
+            let mut x: int32;
             if (cond) {
                 x = 10;
             } else {
@@ -151,7 +151,7 @@ bool testConditionalInitializationSuccess() {
 bool testLoopAssignmentSafety() {
     const std::string invalid = R"(
         func foo(n: int32) -> int32 {
-            let x: int32;
+            let mut x: int32;
             while (n > 0) {
                 x = 5;
                 n = n - 1;
