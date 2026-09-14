@@ -35,7 +35,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
    private:
     const std::vector<parser::ParsedFile>& files;
     const utils::TargetInfo& targetInfo;
-    const semantic::SymbolTable& symbolTable;  // need to look up symbols for definite assignment
+    semantic::SymbolTable& symbolTable;  // need to look up symbols for definite assignment
 
     struct states_t {
         std::vector<std::uint64_t> isUnInitialized;
@@ -49,18 +49,13 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 
    public:
     ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo,
-                        const semantic::SymbolTable& _symbolTable) :
+                        semantic::SymbolTable& _symbolTable) :
         files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable) {
         const std::size_t numWords = (symbolTable.getSize() + 63) / 64;
-        symbolAssignmentStates.isUnInitialized.resize(numWords, 0);
+        symbolAssignmentStates.isUnInitialized.resize(numWords, static_cast<std::size_t>(-1));
         symbolAssignmentStates.isMaybeInitialized.resize(numWords, 0);
     }
-    Result analyze() {
-        for (const auto& file : files) {
-            for (const ast::Statement* statement : file.program) { visit(statement); }
-        }
-        return flags.hasError ? Result::Failure : Result::Success;
-    }
+    Result analyze();
 
    private:
     static void mergeStates(states_t& dest, const states_t& src);
@@ -98,7 +93,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 #undef EXPR
 #undef TYPE
 
-    FlowStatus visit(const ast::Block&);
+    FlowStatus visit(const ast::Block&, bool enterNewScope = true);
 };
 
 }  // namespace Manganese::cfg

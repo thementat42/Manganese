@@ -106,7 +106,8 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         symbolTable(arena), typeContext(arena, target), parsedFiles(files), genericsStack() {}
 
     Result analyze();
-    const SymbolTable& getSymbolTable() const noexcept {return symbolTable;}
+    SymbolTable& getSymbolTable() noexcept { return symbolTable; }
+    const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
 
     ~SemanticAnalyzer() override = default;
 

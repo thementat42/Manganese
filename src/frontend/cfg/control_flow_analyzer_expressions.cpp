@@ -25,6 +25,7 @@ void ControlFlowAnalyzer::visit(const ast::AssignmentExpression* expression) noe
     // e.g. assigning an element of an array
     if (expression->assignee->kind != ast::ExpressionKind::IdentifierExpression) { return; }
 
+    std::cout << "EEE!\n";
     const semantic::Symbol* assigneeSymbol
         = symbolTable.lookup(static_cast<const ast::IdentifierExpression*>(expression->assignee)->name);
 
@@ -55,6 +56,7 @@ void ControlFlowAnalyzer::visit(const ast::GenericInstantiationExpression* expre
 }
 
 void ControlFlowAnalyzer::visit(const ast::IdentifierExpression* expression) noexcept {
+    std::cout << "EEE!\n";
     const semantic::Symbol* symbol = symbolTable.lookup(expression->name);
     if (symbol == nullptr) { return; }  // this was a semantic error
     using enum semantic::SymbolKind;

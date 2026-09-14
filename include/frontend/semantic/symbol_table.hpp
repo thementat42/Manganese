@@ -91,10 +91,7 @@ class SymbolTable {
 
     ~SymbolTable() noexcept = default;
 
-    // Call before beginning pass 2
-    void switchToCheckingMode() noexcept {
-        _flags._isFirstPass = false;
-
+    void resetToRoot() noexcept {
         auto resetIndices = [](auto& self, Scope* scope) -> void {
             scope->currentChildIndex = 0;
             for (Scope* child : scope->children) { self(self, child); }
@@ -102,6 +99,12 @@ class SymbolTable {
 
         resetIndices(resetIndices, _root);
         _currentScope = _root;
+    }
+
+    // Call before beginning pass 2
+    void switchToCheckingMode() noexcept {
+        _flags._isFirstPass = false;
+        resetToRoot();
     }
 
     void enterGenericCheckingMode() noexcept { _flags._isInsideGenericInstantiation = true; }

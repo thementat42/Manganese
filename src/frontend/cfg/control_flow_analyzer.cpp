@@ -2,6 +2,14 @@
 
 namespace Manganese::cfg {
 
+Result ControlFlowAnalyzer::analyze() {
+    symbolTable.resetToRoot();
+    for (const auto& file : files) {
+        for (const ast::Statement* statement : file.program) { visit(statement); }
+    }
+    return flags.hasError ? Result::Failure : Result::Success;
+}
+
 AssignmentState ControlFlowAnalyzer::getAssignmentState(const semantic::Symbol& symbol) const noexcept {
     const std::size_t wordIdx = symbol.ID / 64;
     const std::size_t bitIdx = symbol.ID % 64;

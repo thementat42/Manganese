@@ -102,7 +102,7 @@ bool testControlFlowFromFile() {
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
     semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, file_allocator);
-    (void)semanticAnalyzer.analyze();
+    DISCARD(semanticAnalyzer.analyze());
 
     cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable());
     Result result = cfa.analyze();
@@ -113,7 +113,7 @@ bool testControlFlowFromFile() {
 bool testUninitializedRead() {
     const std::string invalid = R"(
         func foo() -> int32 {
-            let x: int32;
+            let mut x: int32;
             return x;
         }
     )";
@@ -127,7 +127,7 @@ bool testConditionalInitializationFailure() {
             if (cond) {
                 x = 10;
             }
-            return x; // Fails: x is MaybeInitialized
+            return x; # Fails: x is MaybeInitialized
         }
     )";
     return analyzeControlFlow(invalid, false, __func__);
@@ -150,7 +150,7 @@ bool testConditionalInitializationSuccess() {
 
 bool testLoopAssignmentSafety() {
     const std::string invalid = R"(
-        func foo(n: int32) -> int32 {
+        func foo(n: mut int32) -> int32 {
             let mut x: int32;
             while (n > 0) {
                 x = 5;
