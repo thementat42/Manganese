@@ -28,7 +28,8 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::EnumDeclarationStatement* /*unu
     return FlowStatus::FallsThrough;
 }
 
-FlowStatus ControlFlowAnalyzer::visit(const ast::ExpressionStatement* /*unused*/) noexcept {
+FlowStatus ControlFlowAnalyzer::visit(const ast::ExpressionStatement* statement) noexcept {
+    visit(statement->expression);
     return FlowStatus::FallsThrough;
 }
 
@@ -97,7 +98,8 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ModuleDeclarationStatement* /*u
     return FlowStatus::FallsThrough;
 }
 
-FlowStatus ControlFlowAnalyzer::visit(const ast::NamespaceStatement* /*unused*/) noexcept {
+FlowStatus ControlFlowAnalyzer::visit(const ast::NamespaceStatement* statement) noexcept {
+    visit(statement->block);
     return FlowStatus::FallsThrough;
 }
 
@@ -148,6 +150,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::WhileLoopStatement* statement) 
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block) {
+    symbolTable.enterScope();
     FlowStatus blockStatus = FlowStatus::FallsThrough;
     bool isUnreachable = false;
     for (const ast::Statement* stmt : block) {
@@ -163,6 +166,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block) {
             isUnreachable = blockStatus != FlowStatus::FallsThrough;
         }
     }
+    symbolTable.exitScope();
     return blockStatus;
 }
 
