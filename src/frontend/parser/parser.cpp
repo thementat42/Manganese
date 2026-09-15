@@ -12,7 +12,7 @@
 namespace Manganese::parser {
 
 Parser::Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
-    lexer(std::make_unique<lexer::Lexer>(source, mode)), arena(allocatorReference), flags() {}
+    lexer(source, mode), arena(allocatorReference), flags() {}
 
 ParsedFile Parser::parse() {
     ast::ModuleDeclarationStatement* fileModule = nullptr;
@@ -44,8 +44,8 @@ ParsedFile Parser::parse() {
         previousToken.reset();
     }
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
-    if (lexer->hasError()) { flags.hasError = true; }
-    if (lexer->hasWarning()) { flags.hasWarning = true; }
+    if (lexer.hasError()) { flags.hasError = true; }
+    if (lexer.hasWarning()) { flags.hasWarning = true; }
     return ParsedFile{.fileModule = fileModule, .imports = std::move(imports), .program = std::move(program)};
 }
 

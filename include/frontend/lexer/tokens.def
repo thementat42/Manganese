@@ -5,9 +5,6 @@ TOKEN(CharLiteral, "char literal")
 TOKEN(IntegerLiteral, "integer literal")
 TOKEN(FloatLiteral, "float literal")
 
-TOKEN(Keyword, "keyword")
-TOKEN(Operator, "operator")
-
 // Brackets
 TOKEN(LeftParen, "(")
 TOKEN(RightParen, ")")

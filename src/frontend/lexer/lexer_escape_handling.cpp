@@ -9,7 +9,6 @@
 #include <utility>
 #include <utils/result.hpp>
 
-
 namespace Manganese::lexer {
 
 constexpr inline std::uint32_t UTF8_1B_MAX = 0x7F;

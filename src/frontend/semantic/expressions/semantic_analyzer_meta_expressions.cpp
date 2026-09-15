@@ -5,7 +5,6 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
-
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>

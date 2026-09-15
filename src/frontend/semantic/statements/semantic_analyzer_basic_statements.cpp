@@ -29,7 +29,9 @@ auto SemanticAnalyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t
 
 auto SemanticAnalyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
 
-auto SemanticAnalyzer::visit(ast::ModuleDeclarationStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
+auto SemanticAnalyzer::visit(ast::ModuleDeclarationStatement* /*unused*/) -> stmtvisit_t {
+    return stmtvisit_t::Success;
+}
 auto SemanticAnalyzer::visit(ast::ImportStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 auto SemanticAnalyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {

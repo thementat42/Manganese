@@ -8,7 +8,6 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser/operators.hpp>
 #include <io/logging.hpp>
-#include <memory>
 #include <mnstl/chunk_allocator.hxx>
 #include <optional>
 #include <span>
@@ -29,7 +28,7 @@ struct ParsedFile {
 
 class Parser {
    private:
-    std::unique_ptr<lexer::Lexer> lexer;
+    lexer::Lexer lexer;
     constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
     std::optional<Token> previousToken;
     mnstl::chunk_allocator& arena;
@@ -165,12 +164,12 @@ class Parser {
 
     bool isUnaryContext() const noexcept;
 
-    [[nodiscard]] inline Token& peekToken() const { return lexer->peekToken(); }
-    [[nodiscard]] inline TokenType peekTokenType() { return lexer->peekToken().getType(); }
+    [[nodiscard]] inline Token& peekToken() { return lexer.peekToken(); }
+    [[nodiscard]] inline TokenType peekTokenType() { return lexer.peekToken().getType(); }
 
     [[nodiscard]] inline Token consumeToken() {
         previousToken = peekToken();
-        return lexer->consumeToken();
+        return lexer.consumeToken();
     }
 
     Token expectToken(TokenType expectedType);

@@ -138,28 +138,28 @@ endfunction()
 function(enable_release_flags target)
     if(MSVC)
         target_compile_options(${target} PRIVATE
-            /O2 /Ob2 /Ot /Qspectre
+            /O3 /Qspectre
         )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(${target} PRIVATE
-            -O2 -finline-functions -funroll-loops -fomit-frame-pointer
+            -O3 -finline-functions -funroll-loops -fomit-frame-pointer
             -fstack-protector-strong -march=native -g0 -fno-rtti
         )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         target_compile_options(${target} PRIVATE
-            -O2 -finline-functions -funroll-loops -fomit-frame-pointer
+            -O3 -finline-functions -funroll-loops -fomit-frame-pointer
             -fstack-protector-strong -march=native -g0 -fno-rtti
         )
     else()
             message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. Using generic debug flags.")
             target_compile_options(${target} PRIVATE
-            -O2 -DNDEBUG
+            -O3 -DNDEBUG
         )
     endif()
 
     if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")  # -flto seems to break on windows
-    target_compile_options(${target} PRIVATE -flto)
-    target_link_options(${target} PRIVATE -flto)
+        target_compile_options(${target} PRIVATE -flto)
+        target_link_options(${target} PRIVATE -flto)
     endif()
 endfunction()
 

@@ -77,8 +77,7 @@ int main(int argc, char const* argv[]) {
     }
     if (controlflow) {
         std::cout << ansi::PINK << "Control Flow Analysis Tests\n" << ansi::RESET;
-        // TODO: Add once control flow analysis has progress
-        std::cout << "To be implemented.\n";
+        Manganese::tests::runControlFlowAnalyzerTests(runner);
         std::cout << "\n----------\n";
     }
     if (codegen) {

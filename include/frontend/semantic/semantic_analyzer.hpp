@@ -15,14 +15,12 @@
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
 #include <mnstl/tiny_stack.hxx>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
-
 
 namespace Manganese::semantic {
 
@@ -108,6 +106,8 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         symbolTable(arena), typeContext(arena, target), parsedFiles(files), genericsStack() {}
 
     Result analyze();
+    SymbolTable& getSymbolTable() noexcept { return symbolTable; }
+    const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
 
     ~SemanticAnalyzer() override = default;
 
@@ -134,7 +134,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression);
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
-    std::optional<std::uint64_t> computeExplicitArrayLength(const ast::Expression* lengthExpression);
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
@@ -142,7 +141,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 
     template <class... Args>
-    static void logWarning(ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
+    static void logWarning(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logWarning(node->line, node->column, message, std::forward<Args>(args)...);
     }
 
