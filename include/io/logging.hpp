@@ -42,7 +42,7 @@ enum class LogLevel : std::uint8_t {
 
 inline void writeToStderr(std::string_view prefixColor, std::string_view label, std::string_view message,
                           std::size_t line, std::size_t col) {
-    std::string out = std::format("{}{}{} (line {}, column {})\n", prefixColor, label, message, line, col);
+    std::string out = std::format("{}{}{} {} (line {}, column {})\n", prefixColor, label, message, ansi::RESET, line, col);
 
     // Using .write() bypasses operator<<
     std::cerr.write(out.data(), static_cast<std::streamsize>(out.size()));
