@@ -144,7 +144,10 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::NestedBlockStatement* statement
     return visit(statement->block);
 }
 
-FlowStatus ControlFlowAnalyzer::visit(const ast::ReturnStatement* /*unused*/) noexcept { return FlowStatus::Returns; }
+FlowStatus ControlFlowAnalyzer::visit(const ast::ReturnStatement* statement) noexcept {
+    visit(statement->value);
+    return FlowStatus::Returns;
+}
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noexcept {
     visit(statement->target);
@@ -221,7 +224,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::WhileLoopStatement* statement) 
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block, bool shouldEnterScope) {
-    if (shouldEnterScope) {symbolTable.enterScope();}
+    if (shouldEnterScope) { symbolTable.enterScope(); }
     FlowStatus blockStatus = FlowStatus::FallsThrough;
     bool isUnreachable = false;
     for (const ast::Statement* stmt : block) {
