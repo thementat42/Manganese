@@ -19,6 +19,7 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
         }
         case ast::ExpressionKind::BinaryExpression: {
             const auto* binaryExpression = static_cast<const ast::BinaryExpression*>(expression);
+            using bitwise_t = std::conditional_t<std::is_same_v<T, bool>, int, T>;
             auto leftValue = computeExpression<T>(binaryExpression->left, targetInfo, logger);
             auto rightValue = computeExpression<T>(binaryExpression->right, targetInfo, logger);
             if (!leftValue.has_value() || !rightValue.has_value()) { break; }
@@ -37,11 +38,11 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 case NotEqual: return static_cast<T>(*leftValue != *rightValue);
                 case And: return static_cast<T>(static_cast<bool>(*leftValue) && static_cast<bool>(*rightValue));
                 case Or: return static_cast<T>(static_cast<bool>(*leftValue) || static_cast<bool>(*rightValue));
-                case BitAnd: return static_cast<T>(*leftValue & *rightValue);
-                case BitOr: return static_cast<T>(*leftValue | *rightValue);
-                case BitXor: return static_cast<T>(*leftValue ^ *rightValue);
-                case BitLShift: return static_cast<T>(*leftValue << *rightValue);
-                case BitRShift: return static_cast<T>(*leftValue >> *rightValue);
+                case BitAnd: return static_cast<T>(static_cast<bitwise_t>(*leftValue) & static_cast<bitwise_t>(*rightValue));
+                case BitOr: return static_cast<T>(static_cast<bitwise_t>(*leftValue) | static_cast<bitwise_t>(*rightValue));
+                case BitXor: return static_cast<T>(static_cast<bitwise_t>(*leftValue) ^ static_cast<bitwise_t>(*rightValue));
+                case BitLShift: return static_cast<T>(static_cast<bitwise_t>(*leftValue) << static_cast<bitwise_t>(*rightValue));
+                case BitRShift: return static_cast<T>(static_cast<bitwise_t>(*leftValue) >> static_cast<bitwise_t>(*rightValue));
                 case MemberAccess:
                 case ScopeResolution:
                 case Assignment: return std::nullopt;  // can't fold these
