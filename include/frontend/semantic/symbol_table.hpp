@@ -79,7 +79,7 @@ class SymbolTable {
     Scope* _currentScope;
     struct {
         bool _isFirstPass : 1 = true;  // Toggles table from allocation mode to tree-tracking mode
-        bool _isInsideGenericInstantiation : 1 = true;
+        bool _isInsideGenericInstantiation : 1 = false;
     } _flags;
     std::size_t currentSymbolID = 0;
 
