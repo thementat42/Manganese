@@ -23,12 +23,6 @@ enum class FlowStatus : std::int8_t {
     InfiniteLoop = 4
 };
 
-enum class AssignmentState : std::int8_t {
-    Uninitialized = -1,
-    MaybeInitialized = 0,
-    Initialized = 1
-};
-
 using _flow_base_t = ast::Visitor<void, FlowStatus, void, false>;
 
 class ControlFlowAnalyzer final : public _flow_base_t {
@@ -36,11 +30,6 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     const std::vector<parser::ParsedFile>& files;
     const utils::TargetInfo& targetInfo;
     semantic::SymbolTable& symbolTable;  // need to look up symbols for definite assignment
-
-    struct states_t {
-        std::vector<std::uint64_t> isUnInitialized;
-        std::vector<std::uint64_t> isMaybeInitialized;
-    } symbolAssignmentStates;
 
     struct {
         bool hasError : 1 = false;
@@ -51,17 +40,10 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo,
                         semantic::SymbolTable& _symbolTable) :
         files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable) {
-        const std::size_t numWords = (symbolTable.getSize() + 63) / 64;
-        symbolAssignmentStates.isUnInitialized.resize(numWords, static_cast<std::size_t>(-1));
-        symbolAssignmentStates.isMaybeInitialized.resize(numWords, 0);
     }
     Result analyze();
 
    private:
-    static void mergeStates(states_t& dest, const states_t& src);
-    AssignmentState getAssignmentState(const semantic::Symbol& symbol) const noexcept;
-
-    void setAssignmentState(const semantic::Symbol& symbol, AssignmentState newState) noexcept;
 
     template <class... Args>
     void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
@@ -82,7 +64,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 
 #define STMT(name) stmtvisit_t visit(const ast::name*) noexcept override;
 
-#define EXPR(name) exprvisit_t visit(const ast::name*) noexcept override;
+#define EXPR(name) exprvisit_t visit(const ast::name*) noexcept override {}
     // Types don't contribute to control flow or assignment so they can just be no-ops
 #define TYPE(name) \
     constexpr typevisit_t visit(const ast::name*) noexcept override {}
@@ -93,7 +75,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 #undef EXPR
 #undef TYPE
 
-    FlowStatus visit(const ast::Block&, bool enterNewScope = true);
+    FlowStatus visit(const ast::Block&);
 };
 
 }  // namespace Manganese::cfg
