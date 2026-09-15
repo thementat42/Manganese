@@ -27,12 +27,11 @@ auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
     const ContextGuard guard{context.forLoopDepth,
                              static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1)};
-    bool blockNeedsToEnterScope = true;
+    bool blockNeedsToEnterScope = statement->initializationStep == nullptr;
 
     if (statement->initializationStep != nullptr) {
         // We want the variable to be declared inside the scope of the for loop
         // since we enter a scope here, we need to the body visitor know it's already in the appropriate scope
-        blockNeedsToEnterScope = false;
         symbolTable.enterScope();
         if (visit(statement->initializationStep) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
