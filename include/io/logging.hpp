@@ -40,41 +40,53 @@ enum class LogLevel : std::uint8_t {
     Critical
 };
 
+inline void writeToStderr(std::string_view prefixColor, std::string_view label, std::string_view message,
+                          std::size_t line, std::size_t col) {
+    std::string out = std::format("{}{}{} (line {}, column {})\n", prefixColor, label, message, line, col);
+
+    // Using .write() bypasses operator<<
+    std::cerr.write(out.data(), static_cast<std::streamsize>(out.size()));
+}
+
 template <class... Args>
 void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
 #if MN_DEBUG
     std::string message = std::format(fmt, std::forward<Args>(args)...);
+    std::string out;
     switch (level) {
-        case LogLevel::Info: std::cerr << ansi::BLUE << "[Internal Info] " << message << ansi::RESET << "\n"; break;
+        case LogLevel::Info: out = std::format("{}[Internal Info] {}{}\n", ansi::BLUE, message, ansi::RESET); break;
         case LogLevel::Warning:
-            std::cerr << ansi::YELLOW << "[Internal Warning] " << message << ansi::RESET << "\n";
+            out = std::format("{}[Internal Warning] {}{}\n", ansi::YELLOW, message, ansi::RESET);
             break;
-        case LogLevel::Error: std::cerr << ansi::RED << "[Internal Error] " << message << ansi::RESET << "\n"; break;
+        case LogLevel::Error: out = std::format("{}[Internal Error] {}{}\n", ansi::RED, message, ansi::RESET); break;
         case LogLevel::Critical:
-            std::cerr << ansi::RED << "[Internal Critical Error] " << message << ansi::RESET << "\n";
-            std::cerr << "Critical error encountered";
+            out = std::format("{}[Internal Critical Error] {}{}\n", ansi::RED, message, ansi::RESET);
+            std::cout.write(out.data(), static_cast<std::streamsize>(out.size()));
+            std::cout.write("Critical error encountered\n", 27);
             throw std::runtime_error("Critical error");
     }
-#else  // ^^ MN_DEBUG vv !MN_DEBUG
+    std::cout.write(out.data(), static_cast<std::streamsize>(out.size()));
+#else
     DISCARD(level);
     DISCARD(fmt);
     ((void)(args), ...);
-    return;  // No internal logging in non-debug builds
-#endif  // MN_DEBUG
+#endif
 }
 
 template <class... Args>
 void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) {
     std::string message = std::format(fmt, std::forward<Args>(args)...);
+
     switch (level) {
-        case LogLevel::Info: return;  // No user info
-        case LogLevel::Warning: std::cerr << ansi::YELLOW << "Warning: " << message << ansi::RESET; break;
-        case LogLevel::Error: std::cerr << ansi::RED << "Error: " << message << ansi::RESET; break;
+        case LogLevel::Info: return;
+        case LogLevel::Warning: writeToStderr(ansi::YELLOW, "Warning: ", message, line, col); break;
+        case LogLevel::Error: writeToStderr(ansi::RED, "Error: ", message, line, col); break;
         case LogLevel::Critical:
-            std::cerr << ansi::CRITICAL << "Critical error: " << message << " Compilation aborted." << ansi::RESET;
+            std::string critMessage
+                = std::format("{}Critical error: {} Compilation aborted.{}", ansi::CRITICAL, message, ansi::RESET);
+            writeToStderr("", "", critMessage, line, col);
             break;
     }
-    std::cerr << " (line " << line << ", column " << col << ")\n";
 }
 
 template <class... Args>
