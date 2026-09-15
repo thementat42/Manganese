@@ -18,8 +18,20 @@ auto ControlFlowAnalyzer::visit(const ast::ArrayLiteralExpression* expression) n
 }
 
 auto ControlFlowAnalyzer::visit(const ast::AssignmentExpression* expression) noexcept -> exprvisit_t {
-    visit(expression->assignee);
     visit(expression->value);
+
+    // e.g. assigning an element of an array
+    if (expression->assignee->kind != ast::ExpressionKind::IdentifierExpression) { return; }
+
+    const semantic::Symbol* assigneeSymbol
+        = symbolTable.lookup(static_cast<const ast::IdentifierExpression*>(expression->assignee)->name);
+
+    if (assigneeSymbol != nullptr) {
+        // the variable gets marked as initialized even if the value isn't initialized.
+        // because the recursive visit() call to the value will catch the use of an uninitialized value, the visitor as
+        // a whole will still eventually error out, so we don't need to bubble up errors
+        setAssignmentState(*assigneeSymbol, AssignmentState::Initialized);
+    }
 }
 
 auto ControlFlowAnalyzer::visit(const ast::BinaryExpression* expression) noexcept -> exprvisit_t {
@@ -40,7 +52,19 @@ auto ControlFlowAnalyzer::visit(const ast::GenericInstantiationExpression* expre
     visit(expression->identifier);
 }
 
-auto ControlFlowAnalyzer::visit(const ast::IdentifierExpression* /*unused*/) noexcept -> exprvisit_t {}
+auto ControlFlowAnalyzer::visit(const ast::IdentifierExpression* expression) noexcept -> exprvisit_t {
+    const semantic::Symbol* symbol = symbolTable.lookup(expression->name);
+    if (symbol == nullptr) { return; }  // this was a semantic error
+    using enum semantic::SymbolKind;
+
+    if (const auto state = getAssignmentState(*symbol); symbol->kind == Variable) {
+        if (state == AssignmentState::Uninitialized) {
+            logError(expression, "Identifier '{}' does not have a value", expression->name);
+        } else if (state == AssignmentState::MaybeInitialized) {
+            logError(expression, "Identifier '{}' may not have a value on all control paths", expression->name);
+        }
+    }
+}
 
 auto ControlFlowAnalyzer::visit(const ast::IndexExpression* expression) noexcept -> exprvisit_t {
     visit(expression->variable);
