@@ -27,7 +27,7 @@ auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
     const ContextGuard guard{context.forLoopDepth,
                              static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1)};
-    bool blockNeedsToEnterScope = statement->initializationStep == nullptr;
+    const bool blockNeedsToEnterScope = statement->initializationStep == nullptr;
 
     if (statement->initializationStep != nullptr) {
         // We want the variable to be declared inside the scope of the for loop
