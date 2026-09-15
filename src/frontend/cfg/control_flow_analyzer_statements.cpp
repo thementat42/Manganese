@@ -179,7 +179,6 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noe
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::VariableDeclarationStatement* statement) noexcept {
-    std::cout << "EEE!\n";
     const semantic::Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol != nullptr) {
         setAssignmentState(*symbol,
