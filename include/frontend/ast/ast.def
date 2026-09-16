@@ -41,6 +41,7 @@ EXPR(ScopeResolutionExpression)
 EXPR(SizeofExpression)
 EXPR(StringLiteralExpression)
 EXPR(TypeCastExpression)
+EXPR(UninitializedExpression)
 
 // Types
 

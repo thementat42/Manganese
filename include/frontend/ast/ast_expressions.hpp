@@ -229,6 +229,12 @@ struct TypeCastExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE;
 };
 
+struct UninitializedExpression final : public Expression {
+    UninitializedExpression() noexcept : Expression(ExpressionKind::UninitializedExpression) {}
+
+    MN_AST_STANDARD_INTERFACE;
+};
+
 struct PoisonedExpression final : public Expression {
     PoisonedExpression() noexcept : Expression(ExpressionKind::PoisonedExpression) {}
 
