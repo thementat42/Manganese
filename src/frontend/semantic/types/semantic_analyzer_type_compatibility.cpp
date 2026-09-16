@@ -71,7 +71,8 @@ Result SemanticAnalyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) c
 }
 
 const SemanticType* SemanticAnalyzer::promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const {
-    if (lhs->isPoison() || rhs->isPoison()) { return typeContext.getPoison(); }
+    if (!lhs->isNumeric() || !rhs->isNumeric()) { return typeContext.getPoison(); }
+
     // direct match, don't need to promote
     if (lhs == rhs) { return lhs; }
 
@@ -121,7 +122,8 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
         return {.result = Compatible_t::Error, .message = "Could not deduce types"};
     }
     if (from->isUninitialized() || to->isUninitialized()) {
-        return {.result = Compatible_t::Error, .message = "Cannot use keyword 'uninitialized' as part of an expression"};
+        return {.result = Compatible_t::Error,
+                .message = "Cannot use keyword 'uninitialized' as part of an expression"};
     }
 
     // Duplicated types point to the same underlying value so we can just do a fast pointer comparison
@@ -242,7 +244,9 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
         case SemanticTypeKind::Void:
             return {.result = Compatible_t::Error, .message = "Cannot use 'void' expression in this context"};
         case SemanticTypeKind::Poison: return {.result = Compatible_t::Error, .message = "Could not deduce types"};
-        case SemanticTypeKind::Uninitialized: return {.result = Compatible_t::Error, .message = "Cannot use keyword 'uninitialized' as part of an expression"};
+        case SemanticTypeKind::Uninitialized:
+            return {.result = Compatible_t::Error,
+                    .message = "Cannot use keyword 'uninitialized' as part of an expression"};
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
 }
