@@ -44,5 +44,5 @@ uint16
 uint32
 uint64
 uint8
-uninit
+uninitialized
 while
