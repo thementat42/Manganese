@@ -51,7 +51,7 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
                         const char* testName) {
     std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
-        std::cerr << "ERROR: Could not open log file for writing.\n";
+        std::cout << "ERROR: Could not open log file for writing.\n";
     } else {
         logFile << "Test: " << testName << '\n';
     }
@@ -66,7 +66,7 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
 
     const auto& block = parsedFile.program;
     if (block.size() != N) {
-        std::cerr << "ERROR: Expected " << N << " statements, got " << block.size() << " in test: " << testName << '\n';
+        std::cout << "ERROR: Expected " << N << " statements, got " << block.size() << " in test: " << testName << '\n';
         return false;
     }
 
@@ -74,9 +74,9 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
     for (std::size_t i = 0; i < N; ++i) {
         const std::string actual = block[i]->toString(0);
         if (actual != expected[i]) {
-            std::cerr << "ERROR: Statement " << (i + 1) << " does not match expected in test: " << testName << '\n';
-            std::cerr << "Expected: " << "\n" << expected[i] << '\n';
-            std::cerr << "Actual:   " << "\n" << actual << '\n';
+            std::cout << "ERROR: Statement " << (i + 1) << " does not match expected in test: " << testName << '\n';
+            std::cout << "Expected: " << "\n" << expected[i] << '\n';
+            std::cout << "Actual:   " << "\n" << actual << '\n';
             success = false;
         }
     }
@@ -87,7 +87,7 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
 bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& expected, const std::string& testName) {
     std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
-        std::cerr << "ERROR: Could not open log file for writing.\n";
+        std::cout << "ERROR: Could not open log file for writing.\n";
     } else {
         logFile << "Test: " << testName << '\n';
     }
@@ -101,15 +101,15 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
 
     const auto& block = parsedFile.program;
     if (block.size() != 1) {
-        std::cerr << "ERROR: Expected 1 statement, got " << block.size() << " in test: " << testName << '\n';
+        std::cout << "ERROR: Expected 1 statement, got " << block.size() << " in test: " << testName << '\n';
         return false;
     }
 
     const std::string actual = block[0]->toString(0);
     if (actual != expected) {
-        std::cerr << "ERROR: Statement does not match expected in test: " << testName << '\n';
-        std::cerr << "Expected: " << "\n" << expected << '\n';
-        std::cerr << "Actual:   " << "\n" << actual << '\n';
+        std::cout << "ERROR: Statement does not match expected in test: " << testName << '\n';
+        std::cout << "Expected: " << "\n" << expected << '\n';
+        std::cout << "Actual:   " << "\n" << actual << '\n';
         return false;
     }
 
@@ -553,13 +553,13 @@ bool testImportsAndAliases() {
 
     // Verify module header metadata
     if (parsedFile.fileModule == nullptr || parsedFile.fileModule->name != "dataprocessing") {
-        std::cerr << "ERROR: Module declaration not parsed correctly in testImportsAndAliases\n";
+        std::cout << "ERROR: Module declaration not parsed correctly in testImportsAndAliases\n";
         return false;
     }
 
     // Verify import metadata count
     if (parsedFile.imports.size() != 3) {
-        std::cerr << "ERROR: Expected 3 imports, got " << parsedFile.imports.size() << " in testImportsAndAliases\n";
+        std::cout << "ERROR: Expected 3 imports, got " << parsedFile.imports.size() << " in testImportsAndAliases\n";
         return false;
     }
 

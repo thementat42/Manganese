@@ -30,7 +30,7 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
 
     std::ofstream logFile(logFileName, std::ios::app);
     if (!logFile) {
-        std::cerr << "ERROR: Could not open log file for writing.\n";
+        std::cout << "ERROR: Could not open log file for writing.\n";
     } else {
         logFile << "Test: " << testName << "\n";
         logFile << "Expected Result: Semantically " << (expectSuccess ? "Valid" : "Invalid") << "\n";
@@ -637,7 +637,7 @@ bool testAnalyzeFromFile() {
     const Result result = analyzer.analyze();
 
     if (!logFile) {
-        std::cerr << "ERROR: Could not open log file for writing.\n";
+        std::cout << "ERROR: Could not open log file for writing.\n";
     } else {
         logFile << "Test: Analysis from file\n";
         logFile << "Expected Result: Semantically Valid\n";
