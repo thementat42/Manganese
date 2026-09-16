@@ -151,6 +151,7 @@ expression =
     | array_literal_expression
     | aggregate_literal_expression
     | aggregate_instantiation_expression
+    | uninitialized_expression
     | "(" expression ")"
 
 
@@ -200,6 +201,8 @@ aggregate_instantiation_expression =
     "{"
         (identifier "=" expression ("," identifier "=" expression)*)?
     "}"
+
+uninitialized_expression = "uninitialized"
 
 #~ Statements
 
