@@ -110,7 +110,7 @@ std::string Pointer::toString() const {
 
 std::string Poison::toString() const { return "<error_type>"; }
 
-std::string Uninitialized::toString() const { return "uninitialized"; }
+std::string Uninitialized::toString() const { return "keyword 'uninitialized'"; }
 
 std::string Void::toString() const { return "void"; }
 
