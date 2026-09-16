@@ -331,6 +331,8 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
     std::string name = expectToken(TokenType::Identifier,
                                    std::format("Expected variable name after '{}'", isMutable ? "let mut" : "let"))
                            .getLexeme();
+
+    // Type declaration
     if (peekTokenType() == TokenType::Colon) {
         DISCARD(consumeToken());  // Consume the colon
         if (peekTokenType() == TokenType::Public) {
@@ -343,13 +345,11 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
         }
         explicitType = parseType(Precedence::Default);
     }
-    if (peekTokenType() != TokenType::Semicolon) {
-        expectToken(TokenType::Assignment, "Expected '=' or ';' after variable name");
+
+    // Initializer
+    if (peekTokenType() == TokenType::Assignment) {
+        DISCARD(consumeToken());  // consume '='
         value = parseExpression(Precedence::Default);
-    } else if (explicitType == nullptr) {
-        // If no value is provided, we need to have a type
-        expectToken(TokenType::Colon, "Expected ':' to specify type for variable without initial value");
-        explicitType = parseType(Precedence::Default);
     }
 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
