@@ -143,6 +143,7 @@ consteval void initializeLookups(LookupTable& table) noexcept {
     registerNudHandler_binary(table, LeftParen, &Parser::parseParenthesizedExpression);
     registerNudHandler_binary(table, StrLiteral, &Parser::parsePrimaryExpression);
     registerNudHandler_binary(table, True, &Parser::parsePrimaryExpression);
+    registerNudHandler_binary(table, Uninitialized, &Parser::parsePrimaryExpression);
 
     //~ Prefix Operators
     registerNudHandler_prefix(table, AddressOf, &Parser::parsePrefixExpression);
