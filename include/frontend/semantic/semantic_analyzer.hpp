@@ -129,6 +129,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
     Result analyzePointerArithmetic(ast::BinaryExpression* expr) const;
     Result checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element);
+    Result checkVariableInitializer(ast::VariableDeclarationStatement* statement, const SemanticType*& variableType);
 
     const SemanticType* resolveGenericType(const ast::Type* type);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);

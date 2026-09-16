@@ -244,6 +244,7 @@ ast::Expression* Parser::parsePrimaryExpression() {
             return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme(), true);
         case TokenType::IntegerLiteral:
             return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme(), false);
+        case TokenType::Uninitialized: return makeNode<ast::UninitializedExpression>(startToken);
         default:
             ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
                                + lexer ::tokenTypeToString(startToken.getType()));

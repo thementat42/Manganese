@@ -162,6 +162,16 @@ bool testLoopAssignmentSafety() {
     return analyzeControlFlow(invalid, false, __func__);
 }
 
+bool testExplicitUninitializedKeyword() {
+    const std::string valid = R"(
+        func foo() -> int32 {
+            let mut x: int32 = uninitialized;
+            return x;  # should be fine (but UB)
+        }
+    )";
+    return analyzeControlFlow(valid, true, __func__);
+}
+
 }  // namespace
 }  // namespace control_flow_tests
 
@@ -180,6 +190,7 @@ void runControlFlowAnalyzerTests(TestRunner& runner) {
     runner.runTest("Conditional Initialization Failure", control_flow_tests::testConditionalInitializationFailure);
     runner.runTest("Conditional Initialization Success", control_flow_tests::testConditionalInitializationSuccess);
     runner.runTest("Runtime Loop Assignment Safety", control_flow_tests::testLoopAssignmentSafety);
+    runner.runTest("Explicit uninitialized keyword", control_flow_tests::testExplicitUninitializedKeyword);
 }
 
 }  // namespace Manganese::tests

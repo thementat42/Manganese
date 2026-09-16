@@ -27,6 +27,7 @@ TOKEN(_keywordStart, "<keyword-start>")  // meta for keyword info (nothing lexes
 KEYWORD(Let, "let")
 KEYWORD(Mut, "mut")
 KEYWORD(Ptr, "ptr")
+KEYWORD(Uninitialized, "uninitialized")
 
 KEYWORD(Private, "private")
 KEYWORD(Public, "public")

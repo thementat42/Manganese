@@ -98,6 +98,8 @@ auto ControlFlowAnalyzer::visit(const ast::TypeCastExpression* expression) noexc
     visit(expression->originalValue);
 }
 
+auto ControlFlowAnalyzer::visit(const ast::UninitializedExpression* /*unused*/) noexcept -> exprvisit_t {}
+
 auto ControlFlowAnalyzer::visit(const ast::PoisonedExpression* /*unused*/) noexcept -> exprvisit_t {}
 
 }  // namespace Manganese::cfg

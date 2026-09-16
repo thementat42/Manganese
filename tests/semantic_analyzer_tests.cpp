@@ -746,6 +746,41 @@ bool testVariadicAndDefaults() {
     return analyzeSource(code, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
+bool testUninitializedSemanticRules() {
+    // mutable variable with an explicit type
+    const std::string valid = R"(
+        func main() {
+            let mut x: int32 = uninitialized;
+            x = 10;
+        }
+    )";
+
+    //  immutable variable cannot use uninitialized
+    const std::string invalidImmutable = R"(
+        func main() {
+            let x: int32 = uninitialized;
+        }
+    )";
+
+    // cannot use uninitialized without an explicit type annotation
+    const std::string invalidNoType = R"(
+        func main() {
+            let mut x = uninitialized;
+        }
+    )";
+
+    // cannot use uninitialized in an expression
+    const std::string invalidUninitializedExpression = R"(
+        func main() {
+            let mut x = uninitialized + 3 * 4;
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidImmutable, false, __func__)
+        && analyzeSource(invalidNoType, false, __func__)
+        && analyzeSource(invalidUninitializedExpression, false, __func__);
+}
+
 bool miscTests() {
     const std::string code = R"(
         func foo[T](x: T) -> T {
@@ -810,6 +845,7 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     // Other
     runner.runTest("Analysis from file", analyzer_tests::testAnalyzeFromFile);
     runner.runTest("Dereference & Immutability analysis", analyzer_tests::testPointerDereferenceAndMutability);
+    runner.runTest("Uninitialized Semantic Rules", analyzer_tests::testUninitializedSemanticRules);
     runner.runTest("Misc analyzer tests", analyzer_tests::miscTests);
 }
 

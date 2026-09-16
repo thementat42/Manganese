@@ -683,6 +683,13 @@ bool testPathologicalExpressionRecovery2() {
     return file.program.size() == 3;
 }
 
+bool testUninitializedKeywordParsing() {
+    const std::string expression = "let mut x: int32 = uninitialized;\n";
+    const std::string expected = "(let mut x: private int32 = (uninitialized));";
+
+    return validateStatement(getParserResults(expression), expected, "Explicit Uninitialized Keyword Parsing");
+}
+
 bool miscTests() {
     const std::string expression = "int x = aggregate{1, \"asdf\", 3.1f32};";
     parser::ParsedFile x = getParserResults(expression);
@@ -722,6 +729,7 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Cascading Syntax Failures", parser_tests::testCascadingSyntaxFailures);
     runner.runTest("Pathological Expression Recovery", parser_tests::testPathologicalExpressionRecovery);
     runner.runTest("Pathological Error Recovery", parser_tests::testPathologicalExpressionRecovery2);
+    runner.runTest("Uninitialized Keyword Parsing", parser_tests::testUninitializedKeywordParsing);
     runner.runTest("Miscellaneous Tests", parser_tests::miscTests);
 }
 }  // namespace Manganese::tests

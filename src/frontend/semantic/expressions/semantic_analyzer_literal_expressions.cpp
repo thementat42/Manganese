@@ -164,6 +164,11 @@ auto SemanticAnalyzer::visit(ast::StringLiteralExpression* expression) -> exprvi
     return exprvisit_t::Success;
 }
 
+auto SemanticAnalyzer::visit(ast::UninitializedExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getUninitalized();
+    return exprvisit_t::Success;
+}
+
 auto SemanticAnalyzer::visit(ast::PoisonedExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     return exprvisit_t::Failure;

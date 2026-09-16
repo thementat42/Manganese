@@ -10,6 +10,8 @@
 #include <utils/result.hpp>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
@@ -145,9 +147,9 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
             }
             auto tmp = utils::computeExpression<std::int64_t>(
                 variant.value, typeContext.getTargetInfo(),
-                                    [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
-                        this->logError(expr, fmt, std::forward<Args>(args)...);
-                    });
+                [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
+                    this->logError(expr, fmt, std::forward<Args>(args)...);
+                });
             if (!tmp.has_value()) {
                 logError(variant.value, "Invalid value '{}' for variant '{}' in enum '{}'", variant.value->toString(),
                          variant.name, statement->name);
@@ -252,35 +254,19 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
         }
     }
 
-    if (statement->value != nullptr) {
-        context.currentVariableDeclarationType = variableType;
-        if (visit(statement->value) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
-        const SemanticType* initializerType = statement->value->semanticType;
-
-        if (initializerType->isPoison()) {
-            logError(statement->value, "Could not determine type of initializer '{}' for variable '{}'",
-                     statement->value->toString(), statement->name);
-            return stmtvisit_t::Failure;
-        }
-        if (initializerType->isVoid()) {
-            logError(statement->value, "Cannot initialize variable '{}' with a void expression", statement->name);
-            return stmtvisit_t::Failure;
-        }
-
-        if (variableType == nullptr) {
-            variableType = initializerType;
-        } else {
-            // If the declared type used `[]`, unify/fill its length using the initializer's dimensions
-            variableType = unifyArrayInference(variableType, initializerType);
-            if (variableType == nullptr) {
-                logError(statement, "Initializer type '{}' is incompatible with declared type",
-                         initializerType->toString());
-                return stmtvisit_t::Failure;
-            }
-        }
-    } else if (!statement->isMutable) {
-        logError(statement, "Immutable variable '{}' must have an initializer", statement->name);
+    if (variableType == nullptr && statement->value == nullptr) {
+        logError(statement, "Variable '{}' must have a type annotation or an initializer", statement->name);
         return stmtvisit_t::Failure;
+    }
+
+    if (statement->value != nullptr) {
+        Result initializerResult = checkVariableInitializer(statement, variableType);
+        if (initializerResult == Result::Failure) { return stmtvisit_t::Failure; }
+    } else {
+        if (!statement->isMutable) {
+            logError(statement, "Immutable variable '{}' must have an initializer", statement->name);
+            return stmtvisit_t::Failure;
+        }
     }
 
     if (variableType == nullptr
@@ -300,6 +286,50 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
     if (declarationResult == Result::Failure) {
         logError(statement, "Redeclaration error: variable '{}' is already declared in this scope", statement->name);
         return stmtvisit_t::Failure;
+    }
+
+    return stmtvisit_t::Success;
+}
+
+Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatement* statement,
+                                                  const SemanticType*& variableType) {
+    if (statement->value->kind == ast::ExpressionKind::UninitializedExpression) {
+        if (variableType == nullptr) {
+            logError(statement,
+                     "Cannot use keyword 'uninitalized' for variable '{}' without an explicit type annotation",
+                     statement->name);
+            return stmtvisit_t::Failure;
+        }
+        if (!statement->isMutable) {
+            logError(statement, "Immutable variable '{}' cannot be initialized with keyword 'uninitalized'",
+                     statement->name);
+            return stmtvisit_t::Failure;
+        }
+        // uninit is fine, we know the type
+        return stmtvisit_t::Success;
+    }
+
+    context.currentVariableDeclarationType = variableType;
+    if (visit(statement->value) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
+    const SemanticType* initializerType = statement->value->semanticType;
+    if (initializerType->isPoison()) {
+        logError(statement->value, "Could not determine type of initializer '{}' for variable '{}'",
+                 statement->value->toString(), statement->name);
+        return stmtvisit_t::Failure;
+    }
+    if (initializerType->isVoid()) {
+        logError(statement->value, "Cannot initialize variable '{}' with a void expression", statement->name);
+        return stmtvisit_t::Failure;
+    }
+    if (variableType == nullptr) {
+        variableType = initializerType;
+    } else {
+        variableType = unifyArrayInference(variableType, initializerType);
+        if (variableType == nullptr) {
+            logError(statement, "Initializer type '{}' is incompatible with declared type",
+                     initializerType->toString());
+            return stmtvisit_t::Failure;
+        }
     }
 
     return stmtvisit_t::Success;

@@ -320,6 +320,10 @@ std::string TypeCastExpression::toString(std::size_t indent) const {
     return std::format(WRAP("{} as {}"), originalValue->toString(indent), targetType->toString(indent));
 }
 
+std::string UninitializedExpression::toString(std::size_t /*indent*/) const {
+    return std::format(WRAP("uninitialized"));
+}
+
 // Types
 
 std::string AggregateType::toString(std::size_t indent) const {

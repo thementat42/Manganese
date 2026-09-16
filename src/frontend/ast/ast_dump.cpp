@@ -546,6 +546,12 @@ void TypeCastExpression::dump(std::ostream& os, std::size_t indent) const {
     os << ind << "}\n";
 }
 
+void UninitializedExpression::dump(std::ostream& os, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "Uninit", *this);
+    os << ind << "}\n";
+}
+
 // Types
 
 void AggregateType::dump(std::ostream& os, std::size_t indent) const {

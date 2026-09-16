@@ -1,3 +1,5 @@
+#include "frontend/semantic/type_context.hpp"
+
 #include <algorithm>
 #include <core.hpp>
 #include <cstddef>
@@ -40,7 +42,7 @@ PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type) {
         case string: return {.category = Cat::String, .bitWidth = 0};
         default: break;
     }
-    return {Cat::Int, 0};
+    return {.category = Cat::Int, .bitWidth = 0};
 }
 
 std::string SemanticType::toStringWithTypeArguments(const TypeList& typeArguments) const {
@@ -107,6 +109,8 @@ std::string Pointer::toString() const {
 }
 
 std::string Poison::toString() const { return "<error_type>"; }
+
+std::string Uninitialized::toString() const { return "keyword 'uninitialized'"; }
 
 std::string Void::toString() const { return "void"; }
 
@@ -191,6 +195,10 @@ std::size_t Poison::size(const utils::TargetInfo& /*target*/) const noexcept { r
 
 std::size_t Poison::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
 
+std::size_t Uninitialized::size(const utils::TargetInfo& /*target*/) const noexcept { return 0; }
+
+std::size_t Uninitialized::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
+
 std::size_t Void::size(const utils::TargetInfo& /*target*/) const noexcept { return 0; }
 
 std::size_t Void::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
@@ -257,15 +265,14 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(pointer->baseType));
             return hash_combine(hash, std::hash<bool>{}(pointer->isMutable));
         }
-        case SemanticTypeKind::Poison: {
+        case SemanticTypeKind::Poison:
+        case SemanticTypeKind::Uninitialized:
+        case SemanticTypeKind::Void: {
             return hash;
         }
         case SemanticTypeKind::Primitive:
             // Since each primitive value is unique we can just hash the enum type
             return hash_combine(hash, std::hash<prim_int_t>{}(static_cast<prim_int_t>(t->primitiveType)));
-        case SemanticTypeKind::Void: {
-            return hash;
-        }  // no extra logic neexex
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup hash");
 }
@@ -309,7 +316,8 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             const auto* right = static_cast<const GenericInstantiation*>(rhs);
             return (left->baseType == right->baseType) && (left->typeArguments == right->typeArguments);
         }
-        case SemanticTypeKind::Poison: return true;
+        case SemanticTypeKind::Uninitialized:
+        case SemanticTypeKind::Poison:
         case SemanticTypeKind::Void: return true;
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
@@ -385,6 +393,7 @@ const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType primitive) cons
     return &_primitives[static_cast<unsigned>(primitive)];
 }
 
+const SemanticType* TypeContext::getUninitalized() const noexcept { return &_uninitializedInstance; }
 const SemanticType* TypeContext::getVoid() const noexcept { return &_voidInstance; }
 
 const SemanticType* TypeContext::getUSizeType() const noexcept {
