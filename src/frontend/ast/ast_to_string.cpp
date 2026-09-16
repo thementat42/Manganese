@@ -321,7 +321,7 @@ std::string TypeCastExpression::toString(std::size_t indent) const {
 }
 
 std::string UninitializedExpression::toString(std::size_t /*indent*/) const {
-    return std::format(WRAP("uninit"));
+    return std::format(WRAP("uninitalized"));
 }
 
 // Types
