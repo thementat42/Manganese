@@ -19,7 +19,7 @@ static bool strneq(const char* a, const char* b, std::size_t max_count) {
 
 int main(int argc, char const* argv[]) {
     if (argc == 1) {
-        std::cerr << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--all]\n",
+        std::cout << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--all]\n",
                                  argv[0]);
         return 1;
     }
@@ -53,7 +53,7 @@ int main(int argc, char const* argv[]) {
             codegen = true;
             break;
         } else {
-            std::cerr << std::format("Skipping unknown argument: {}\n", argv[i]);
+            std::cout << std::format("Skipping unknown argument: {}\n", argv[i]);
         }
     }
     std::filesystem::create_directories("logs");

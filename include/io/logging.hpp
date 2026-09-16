@@ -45,7 +45,7 @@ inline void writeToStderr(std::string_view prefixColor, std::string_view label, 
     std::string out = std::format("{}{}{} {} (line {}, column {})\n", prefixColor, label, message, ansi::RESET, line, col);
 
     // Using .write() bypasses operator<<
-    std::cerr.write(out.data(), static_cast<std::streamsize>(out.size()));
+    std::cout.write(out.data(), static_cast<std::streamsize>(out.size()));
 }
 
 template <class... Args>
