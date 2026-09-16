@@ -32,6 +32,7 @@ enum class SemanticTypeKind : std::uint8_t {
     Pointer,
     Poison,
     Primitive,
+    Uninitialized,
     Void,
 };
 
@@ -65,6 +66,7 @@ struct SemanticType {
     constexpr bool isPointer() const noexcept { return kind == SemanticTypeKind::Pointer; }
     constexpr bool isPoison() const noexcept { return kind == SemanticTypeKind::Poison; }
     constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
+    constexpr bool isUninitialized() const noexcept { return kind == SemanticTypeKind::Uninitialized; }
     constexpr bool isVoid() const noexcept { return kind == SemanticTypeKind::Void; }
 
     constexpr bool isBoolean() const noexcept { return isPrimitive() && primitiveType == ast::PrimitiveType::boolean; }
@@ -268,6 +270,18 @@ struct PrimitiveInfo {
 
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type);
 
+/**
+* Note: this is the "type" of the 'uninitialized' keyword, not of an uninitialized variable
+*/
+struct Uninitialized final : public SemanticType {
+    Uninitialized() noexcept : SemanticType(SemanticTypeKind::Uninitialized) {}
+    ~Uninitialized() override = default;
+
+    std::string toString() const override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
+};
+
 struct Void final : public SemanticType {
     Void() noexcept : SemanticType(SemanticTypeKind::Void) {};
     ~Void() override = default;
@@ -305,6 +319,7 @@ class TypeContext {
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
     std::array<SemanticType, NUM_PRIMITIVES> _primitives;
     Void _voidInstance;
+    Uninitialized _uninitializedInstance;
     Poison _poisonInstance;
 
     template <std::size_t... Is>
@@ -346,6 +361,7 @@ class TypeContext {
 
     const SemanticType* getPrimitive(ast::PrimitiveType primitive) const noexcept;
 
+    const SemanticType* getUninitalized() const noexcept;
     const SemanticType* getVoid() const noexcept;
 
     const SemanticType* getUSizeType() const noexcept;
