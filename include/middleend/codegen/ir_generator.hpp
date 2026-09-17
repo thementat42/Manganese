@@ -18,18 +18,18 @@ using _irgen_base_t = ast::Visitor<llvm::Value*, void, llvm::Type*, false>;
 
 class IRGenerator final : public _irgen_base_t {
    private:
-    llvm::LLVMContext& context;
+    std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
-    llvm::IRBuilder<> builder;
-    mnstl::tiny_stack<std::unordered_map<std::string_view, llvm::Value*>> scopes;
+    std::unique_ptr<llvm::IRBuilder<>> builder;
+    std::unordered_map<std::string, llvm::Value*> namedValues;
     std::vector<parser::ParsedFile>& files;
 
    public:
-    IRGenerator(llvm::LLVMContext& llvmContext, std::string_view moduleName,
+    IRGenerator(std::string_view moduleName,
                 std::vector<parser::ParsedFile>& parsedFiles) :
-        context(llvmContext),
-        module(std::make_unique<llvm::Module>(moduleName, context)),
-        builder(context),
+        context(std::make_unique<llvm::LLVMContext>()),
+        module(std::make_unique<llvm::Module>(moduleName, *context)),
+        builder(std::make_unique<llvm::IRBuilder<>>(*context)),
         files(parsedFiles) {}
 
     std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
