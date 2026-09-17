@@ -3,14 +3,14 @@
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
-#include <memory>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
 #include <frontend/ast.hpp>
+#include <frontend/parser.hpp>
+#include <memory>
 #include <mnstl/tiny_stack.hxx>
 #include <string_view>
-
 
 namespace Manganese::codegen {
 
@@ -22,18 +22,23 @@ class IRGenerator final : public _irgen_base_t {
     std::unique_ptr<llvm::Module> module;
     llvm::IRBuilder<> builder;
     mnstl::tiny_stack<std::unordered_map<std::string_view, llvm::Value*>> scopes;
-    
-    public:
-     IRGenerator(llvm::LLVMContext& llvmContext, std::string_view moduleName) :
-         context(llvmContext), module(std::make_unique<llvm::Module>(moduleName, context)), builder(context) {}
+    std::vector<parser::ParsedFile>& files;
 
-     std::unique_ptr<llvm::Module> takeModule() noexcept {return std::move(module);}
+   public:
+    IRGenerator(llvm::LLVMContext& llvmContext, std::string_view moduleName,
+                std::vector<parser::ParsedFile>& parsedFiles) :
+        context(llvmContext),
+        module(std::make_unique<llvm::Module>(moduleName, context)),
+        builder(context),
+        files(parsedFiles) {}
+
+    std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
 
    protected:
     // overrides for visitor functions
     using _irgen_base_t::visit;
 
-    #define STMT(name) stmtvisit_t visit(const ast::name*) override;
+#define STMT(name) stmtvisit_t visit(const ast::name*) override;
 #define EXPR(name) exprvisit_t visit(const ast::name*) override;
 #define TYPE(name) typevisit_t visit(const ast::name*) override;
 #include <frontend/ast/ast.def>
