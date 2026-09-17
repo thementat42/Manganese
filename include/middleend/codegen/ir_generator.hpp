@@ -34,6 +34,12 @@ class IRGenerator final : public _irgen_base_t {
 
     std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
 
+    void generate() noexcept {
+        for (const parser::ParsedFile& file : files) {
+            for (const ast::Statement* statement : file.program) { visit(statement); }
+        }
+    }
+
    protected:
     // overrides for visitor functions
     using _irgen_base_t::visit;
