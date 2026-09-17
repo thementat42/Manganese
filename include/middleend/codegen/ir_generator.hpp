@@ -3,6 +3,7 @@
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
+#include <memory>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
@@ -18,13 +19,15 @@ using _irgen_base_t = ast::Visitor<llvm::Value*, void, llvm::Type*, false>;
 class IRGenerator final : public _irgen_base_t {
    private:
     llvm::LLVMContext& context;
-    llvm::Module module;
+    std::unique_ptr<llvm::Module> module;
     llvm::IRBuilder<> builder;
     mnstl::tiny_stack<std::unordered_map<std::string_view, llvm::Value*>> scopes;
     
     public:
-    IRGenerator(llvm::LLVMContext& llvmContext, std::string_view moduleName) :
-        context(llvmContext), module(moduleName, context), builder(context) {}
+     IRGenerator(llvm::LLVMContext& llvmContext, std::string_view moduleName) :
+         context(llvmContext), module(std::make_unique<llvm::Module>(moduleName, context)), builder(context) {}
+
+     std::unique_ptr<llvm::Module> takeModule() noexcept {return std::move(module);}
 
    protected:
     // overrides for visitor functions
