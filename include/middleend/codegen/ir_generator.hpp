@@ -45,8 +45,8 @@ class IRGenerator final : public _irgen_base_t {
     using _irgen_base_t::visit;
 
 #define STMT(name) stmtvisit_t visit(const ast::name*) override;
-#define EXPR(name) exprvisit_t visit(const ast::name*) override;
-#define TYPE(name) typevisit_t visit(const ast::name*) override;
+#define EXPR(name) [[nodiscard]] exprvisit_t visit(const ast::name*) override;
+#define TYPE(name) [[nodiscard]] typevisit_t visit(const ast::name*) override;
 #include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR
