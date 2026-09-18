@@ -1,9 +1,14 @@
+#include <llvm/ADT/APFloat.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
+#include <core.hpp>
 #include <frontend/ast.hpp>
+#include <frontend/semantic.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
 namespace Manganese::codegen {
@@ -35,7 +40,7 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::BoolLiteralExpression* expression) -> exprvisit_t {
-    return nullptr;
+    return llvm::ConstantInt::getBool(*context, expression->value);
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::CharLiteralExpression* expression) -> exprvisit_t {
@@ -63,7 +68,7 @@ namespace Manganese::codegen {
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::NumberLiteralExpression* expression) -> exprvisit_t {
+auto IRGenerator::visit([[maybe_unused]] const ast::NumberLiteralExpression* expression) -> exprvisit_t {
     return nullptr;
 }
 
