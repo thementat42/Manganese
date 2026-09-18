@@ -7,6 +7,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
+#include <array>
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
@@ -30,8 +31,22 @@ namespace Manganese::codegen {
     return llvm::ConstantInt::get(sizeType, expression->semanticType->alignment(targetInfo));
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::ArrayLiteralExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::ArrayLiteralExpression* expression) -> exprvisit_t {
+    llvm::Type* elementType = visit(expression->semanticType);
+    const std::size_t length = expression->elements.size();
+    llvm::ArrayType* arrayType = llvm::ArrayType::get(elementType, length);
+    llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "arr_literal");
+    for (std::size_t i = 0; i < length; ++i) {
+        llvm::Value* elementValue = visit(expression->elements[i]);
+        // GEP gets a pointer offset, not a direct array element
+        // so we want to get a pointer to the first element of the array, stay there, and then go forward to the ith
+        // element
+        // effectively &array[0][i]
+        std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
+        llvm::Value* elemPtr = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_element");
+        builder->CreateStore(elementValue, elemPtr);
+    }
+    return arrayAlloca;
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::AssignmentExpression* expression) -> exprvisit_t {
@@ -127,7 +142,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::StringLiteralExpression* expression) -> exprvisit_t {
     llvm::StringRef strRef(expression->value.data(), expression->value.size());
-    return builder->CreateGlobalString(strRef, ".str");
+    return builder->CreateGlobalString(strRef, "str_literal");
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::TypeCastExpression* expression) -> exprvisit_t {
