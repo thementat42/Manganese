@@ -68,8 +68,39 @@ namespace Manganese::codegen {
     return nullptr;
 }
 
-auto IRGenerator::visit([[maybe_unused]] const ast::NumberLiteralExpression* expression) -> exprvisit_t {
-    return nullptr;
+auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprvisit_t {
+    std::string_view lexeme = expression->value;
+    if (expression->isFloat) {
+        if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
+            lexeme.remove_suffix(3);
+            return llvm::ConstantFP::get(llvm::Type::getFloatTy(*context), lexeme);
+        }
+        if (lexeme.ends_with("f64") || lexeme.ends_with("F64")) { lexeme.remove_suffix(3); }
+        return llvm::ConstantFP::get(llvm::Type::getDoubleTy(*context), lexeme);
+    }
+
+    std::uint8_t radix = 10;
+
+    // Figure out the radix and the type of the integer literal based on prefixes and suffixes for LLVM
+    // Note: LLVM doesn't have a concept of signed vs unsigned integers, just sequences of N bits
+    // instead other places need to tell it how to handle those bits
+    // (e.g. 'udiv' vs 'idiv' for unsigned vs signed division)
+
+    if (lexeme.starts_with("0x") || lexeme.starts_with("0X")) {
+        radix = 16;
+        lexeme.remove_prefix(2);
+    } else if (lexeme.starts_with("0D") || lexeme.starts_with("0D")) {
+        radix = 10;
+        lexeme.remove_prefix(2);
+    } else if (lexeme.starts_with("0o") || lexeme.starts_with("0O")) {
+        radix = 8;
+        lexeme.remove_prefix(2);
+    } else if (lexeme.starts_with("0b") || lexeme.starts_with("0B")) {
+        radix = 2;
+        lexeme.remove_prefix(2);
+    }
+
+    return llvm::ConstantInt::get(getLLVMIntegerType(expression, lexeme), lexeme, radix);
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::PostfixExpression* expression) -> exprvisit_t {

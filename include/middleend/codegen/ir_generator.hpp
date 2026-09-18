@@ -1,3 +1,4 @@
+#include "utils/target_info.hpp"
 #ifndef MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP
 #define MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP 1
 
@@ -11,6 +12,7 @@
 #include <memory>
 #include <mnstl/tiny_stack.hxx>
 #include <string_view>
+#include <utils/target_info.hpp>
 
 namespace Manganese::codegen {
 
@@ -23,14 +25,15 @@ class IRGenerator final : public _irgen_base_t {
     std::unique_ptr<llvm::IRBuilder<>> builder;
     std::unordered_map<std::string, llvm::Value*> namedValues;
     std::vector<parser::ParsedFile>& files;
+    utils::TargetInfo targetInfo;
 
    public:
-    IRGenerator(std::string_view moduleName,
-                std::vector<parser::ParsedFile>& parsedFiles) :
+    IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles, utils::TargetInfo info) :
         context(std::make_unique<llvm::LLVMContext>()),
         module(std::make_unique<llvm::Module>(moduleName, *context)),
         builder(std::make_unique<llvm::IRBuilder<>>(*context)),
-        files(parsedFiles) {}
+        files(parsedFiles),
+        targetInfo(info) {}
 
     std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
 
@@ -39,6 +42,9 @@ class IRGenerator final : public _irgen_base_t {
             for (const ast::Statement* statement : file.program) { visit(statement); }
         }
     }
+
+    [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
+                                                        std::string_view lexeme) const;
 
    protected:
     // overrides for visitor functions
