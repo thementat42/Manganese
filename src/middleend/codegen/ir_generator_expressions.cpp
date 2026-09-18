@@ -23,8 +23,10 @@ namespace Manganese::codegen {
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::AlignofExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::AlignofExpression* expression) -> exprvisit_t {
+    // Note: no codegen for the nested expression occurs
+    llvm::IntegerType* sizeType = module->getDataLayout().getIntPtrType(*context);
+    return llvm::ConstantInt::get(sizeType, expression->semanticType->alignment(targetInfo));
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::ArrayLiteralExpression* expression) -> exprvisit_t {
@@ -116,8 +118,10 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::SizeofExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::SizeofExpression* expression) -> exprvisit_t {
+    // Note: no codegen for the nested expression occurs
+    llvm::IntegerType* sizeType = module->getDataLayout().getIntPtrType(*context);
+    return llvm::ConstantInt::get(sizeType, expression->semanticType->size(targetInfo));
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::StringLiteralExpression* expression) -> exprvisit_t {
