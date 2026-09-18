@@ -1,4 +1,5 @@
 #include <llvm/ADT/APFloat.h>
+#include <llvm/ADT/StringRef.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
@@ -125,7 +126,8 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::StringLiteralExpression* expression) -> exprvisit_t {
-    return nullptr;
+    llvm::StringRef strRef(expression->value.data(), expression->value.size());
+    return builder->CreateGlobalString(strRef, ".str");
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::TypeCastExpression* expression) -> exprvisit_t {
