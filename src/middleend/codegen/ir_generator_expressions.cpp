@@ -45,8 +45,8 @@ namespace Manganese::codegen {
     return llvm::ConstantInt::getBool(*context, expression->value);
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::CharLiteralExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::CharLiteralExpression* expression) -> exprvisit_t {
+    return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), static_cast<std::uint64_t>(expression->value));
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::FunctionCallExpression* expression) -> exprvisit_t {
