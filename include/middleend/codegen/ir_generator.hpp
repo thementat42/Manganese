@@ -57,6 +57,7 @@ class IRGenerator final : public _irgen_base_t {
 #undef STMT
 #undef EXPR
 #undef TYPE
+    [[nodiscard]] typevisit_t visit(const semantic::SemanticType*);
 };
 
 }  // namespace Manganese::codegen
