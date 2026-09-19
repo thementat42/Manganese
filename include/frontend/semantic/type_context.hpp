@@ -312,7 +312,7 @@ inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
 
 class TypeContext {
    private:
-    mnstl::chunk_allocator& _allocator;
+    mnstl::chunk_allocator& _arena;
     utils::TargetInfo _targetInfo;
     constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::boolean) + 1;
 
@@ -329,8 +329,8 @@ class TypeContext {
     }
 
    public:
-    explicit TypeContext(mnstl::chunk_allocator& allocator, utils::TargetInfo target) noexcept :
-        _allocator(allocator),
+    explicit TypeContext(mnstl::chunk_allocator& arena, utils::TargetInfo target) noexcept :
+        _arena(arena),
         _targetInfo(target),
         _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
 
