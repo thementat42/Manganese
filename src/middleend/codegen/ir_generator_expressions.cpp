@@ -71,17 +71,53 @@ namespace Manganese::codegen {
     rhs = convertNumberToType(rhs, rhsType, commonType);
 
     using enum lexer::TokenType;
-    const bool doFloatOperation = lhsType->isFloat() || rhsType->isFloat();
+    const bool doFloatOperation = commonType->isFloat();
 
     switch (expression->op) {
-                case Mod:
+        case Plus:
+            return doFloatOperation ? builder->CreateFAdd(lhs, rhs, "fadd_tmp")
+                                    : builder->CreateAdd(lhs, rhs, "iadd_tmp");
+
+        case Minus:
+            return doFloatOperation ? builder->CreateFSub(lhs, rhs, "fsub_tmp")
+                                    : builder->CreateSub(lhs, rhs, "isub_tmp");
+
+        case Mul:
+            return doFloatOperation ? builder->CreateFMul(lhs, rhs, "fmul_tmp")
+                                    : builder->CreateMul(lhs, rhs, "imul_tmp");
+
+        case Div: return builder->CreateFDiv(lhs, rhs, "truediv_tmp");
+
+        case FloorDiv: {
+            bool hasFloatOperand = lhsType->isFloat() || rhsType->isFloat();
+            if (!hasFloatOperand) {
+                return commonType->isSignedInteger() ? builder->CreateSDiv(lhs, rhs, "sfloordiv_tmp")
+                                                     : builder->CreateUDiv(lhs, rhs, "ufloordiv_tmp");
+            }
+            // temporarily do the division in floating-point then truncate to an int
+            llvm::Value* floatDivisionResult = builder->CreateFDiv(lhs, rhs, "floordiv_mixed_int_float_tmp_val");
+            typevisit_t floatType = visit(commonType);
+            llvm::Function* floorIntrinsic = llvm::Intrinsic::getDeclarationIfExists(
+                builder->GetInsertBlock()->getModule(), llvm::Intrinsic::floor, {floatType});
+            if (floorIntrinsic == nullptr) { ASSERT_UNREACHABLE("Could not find LLVM float intrinsic function"); }
+            llvm::Value* floored = builder->CreateCall(floorIntrinsic, {floatDivisionResult}, "fdiv_val");
+            llvm::Type* llvmTargetIntType = visit(commonType);
+
+            return commonType->isSignedInteger() ? builder->CreateFPToSI(floored, llvmTargetIntType, "fdiv_fptosi_tmp")
+                                                 : builder->CreateFPToUI(floored, llvmTargetIntType, "fdiv_fptoui_tmp");
+        }
+        case Mod: {
+            if (doFloatOperation) { return builder->CreateFRem(lhs, rhs, "fmod_tmp"); }
+            return commonType->isSignedInteger() ? builder->CreateSRem(lhs, rhs, "smod_tmp")
+                                                 : builder->CreateURem(lhs, rhs, "umod_tmp");
+        }
         case GreaterThan:
         case GreaterThanOrEqual:
         case LessThan:
         case LessThanOrEqual:
         case Equal:
         case NotEqual: {
-            if (commonType->isFloat()) {
+            if (doFloatOperation) {
                 const llvm::CmpInst::Predicate predicate = getFloatPredicate(expression->op);
                 return builder->CreateFCmp(predicate, lhs, rhs, "fcmp_tmp");
             }
@@ -91,11 +127,16 @@ namespace Manganese::codegen {
         }
         case And:
         case Or:
-        case BitAnd:
-        case BitOr:
-        case BitXor:
-        case BitLShift:
-        case BitRShift:
+        case BitAnd: return builder->CreateAnd(lhs, rhs, "bitand");
+
+        case BitOr: return builder->CreateOr(lhs, rhs, "bitand");
+        case BitXor: return builder->CreateXor(lhs, rhs, "bitxor");
+        case BitLShift: return builder->CreateShl(lhs, rhs, "bitshl");
+        case BitRShift: {
+            // signed types need sign extension and unsigned types need 0 extension
+            return commonType->isSignedInteger() ? builder->CreateAShr(lhs, rhs, "arithmetic_shr_tmp")
+                                                 : builder->CreateLShr(lhs, rhs, "logical_shr_tmp");
+        }
         case MemberAccess:
         case ScopeResolution:
         default: break;
