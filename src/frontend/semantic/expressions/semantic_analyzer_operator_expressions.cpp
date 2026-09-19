@@ -96,6 +96,27 @@ auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
             expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::string);
             return exprvisit_t::Success;
         }
+
+        if (op == lexer::TokenType::FloorDiv && lhsType->isNumeric() && rhsType->isNumeric()) {
+            const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
+
+            if (commonType->isFloat()) {
+                auto info = getPrimitiveInfo(commonType->primitiveType);
+                auto targetPrimitive = (info.bitWidth == 32) ? ast::PrimitiveType::int32 : ast::PrimitiveType::int64;
+
+                expression->semanticType = typeContext.getPrimitive(targetPrimitive);
+            } else {
+                expression->semanticType = commonType;
+            }
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::int64);
+            return exprvisit_t::Success;
+        }
+
+        if (op == lexer::TokenType::Div && lhsType->isNumeric() && rhsType->isNumeric()) {
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::float64);
+            return exprvisit_t::Success;
+        }
+
         const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
         if (commonType->isPoison()) {
             logError(expression, "Invalid operands for arithmetic operator '{}': {} and {}",
