@@ -472,7 +472,7 @@ void MemberAccessExpression::dump(std::ostream& os, std::size_t indent) const {
     dumpHeader(os, ind, "MemberAccessExpression", *this);
     os << ind.next() << "object: \n";
     object->dump(os, ind.next(2));
-    os << ind.next() << "property: " << property << "\n";
+    os << ind.next() << "field: " << field << "\n";
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }

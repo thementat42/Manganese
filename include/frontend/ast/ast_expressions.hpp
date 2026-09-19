@@ -145,10 +145,11 @@ struct IndexExpression final : public Expression {
 
 struct MemberAccessExpression final : public Expression {
     Expression* object;
-    const std::string property;
+    const std::string field;
+    std::size_t fieldIndex = static_cast<std::size_t>(-1);
 
-    MemberAccessExpression(Expression* _object, std::string&& _property) noexcept :
-        Expression(ExpressionKind::MemberAccessExpression), object(_object), property(std::move(_property)) {}
+    MemberAccessExpression(Expression* _object, std::string&& _field) noexcept :
+        Expression(ExpressionKind::MemberAccessExpression), object(_object), field(std::move(_field)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

@@ -293,7 +293,7 @@ std::string IndexExpression::toString(std::size_t indent) const {
 }
 
 std::string MemberAccessExpression::toString(std::size_t indent) const {
-    return std::format("{}.{}", object->toString(indent), property);
+    return std::format("{}.{}", object->toString(indent), field);
 }
 
 std::string NumberLiteralExpression::toString(std::size_t /*indent*/) const { return value; }

@@ -241,14 +241,16 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
 
     const auto* aggregateType = static_cast<const Aggregate*>(objectType);
 
-    for (const AggregateField& field : aggregateType->fields) {
-        if (field.name == expression->property) {
+    for (std::size_t i = 0; i < aggregateType->fields.size(); ++i) {
+        const AggregateField& field = aggregateType->fields[i];
+        if (field.name == expression->field) {
             expression->semanticType = field.type;
+            expression->fieldIndex = i;
             return exprvisit_t::Success;
         }
     }
     logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(),
-             expression->property);
+             expression->field);
 
     return exprvisit_t::Failure;
 }
