@@ -126,7 +126,9 @@ namespace Manganese::codegen {
             return builder->CreateICmp(predicate, lhs, rhs, "icmp_tmp");
         }
         case And:
+        // TODO
         case Or:
+            // TODO
         case BitAnd: return builder->CreateAnd(lhs, rhs, "bitand");
 
         case BitOr: return builder->CreateOr(lhs, rhs, "bitand");
@@ -144,11 +146,12 @@ namespace Manganese::codegen {
     ASSERT_UNREACHABLE(std::format("Invalid binary operator {} in codegen", lexer::tokenTypeToString(expression->op)));
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::BoolLiteralExpression* expression) -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit(const ast::BoolLiteralExpression* expression) -> exprvisit_t {
     return llvm::ConstantInt::getBool(*context, expression->value);
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::CharLiteralExpression* expression) -> exprvisit_t {
+    // LLVM expects a uint64 as the value for an integer even if it's a smaller type
     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), static_cast<std::uint64_t>(expression->value));
 }
 
@@ -161,8 +164,10 @@ namespace Manganese::codegen {
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::IdentifierExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
+    llvm::Value* value = namedValues[expression->name];
+    llvm::Type* llvmType = visit(expression->semanticType);
+    return builder->CreateLoad(llvmType, value, std::format("load_val_of_{}", expression->name));
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::IndexExpression* expression) -> exprvisit_t {
@@ -208,11 +213,81 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     return llvm::ConstantInt::get(getLLVMIntegerType(expression, lexeme), lexeme, radix);
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::PostfixExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::PostfixExpression* expression) -> exprvisit_t {
+    using enum lexer::TokenType;
+    llvm::Value* ptrToValue = getLValue(expression->left);
+    const semantic::SemanticType* valueType = expression->left->semanticType;
+    llvm::Type* valueTypeLLVM = visit(valueType);
+
+    llvm::Value* originalValue = builder->CreateLoad(valueTypeLLVM, ptrToValue, "postfix_incdec_load");
+
+    llvm::Value* updatedValue = nullptr;
+    llvm::Value* one
+        = valueType->isInteger() ? llvm::ConstantInt::get(valueTypeLLVM, 1) : llvm::ConstantFP::get(valueTypeLLVM, 1.0);
+
+    if (expression->op == Inc) {
+        updatedValue = valueType->isInteger() ? builder->CreateAdd(originalValue, one, "postfix_inc_iadd")
+                                              : builder->CreateFAdd(originalValue, one, "postfix_inc_fadd");
+    } else if (expression->op == Dec) {
+        updatedValue = valueType->isInteger() ? builder->CreateSub(originalValue, one, "postfix_dec_isub")
+                                              : builder->CreateFSub(originalValue, one, "postfix_dec_fsub");
+    } else {
+        ASSERT_UNREACHABLE(std::format("Unknown postfix operator '{}'", lexer::tokenTypeToString(expression->op)));
+    }
+    builder->CreateStore(updatedValue, ptrToValue);
+    // postfix does the operation but returns the original value
+    return originalValue;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::PrefixExpression* expression) -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit(const ast::PrefixExpression* expression) -> exprvisit_t {
+    using enum lexer::TokenType;
+
+    lexer::TokenType op = expression->op;
+    const semantic::SemanticType* valueType = expression->right->semanticType;
+    llvm::Type* valueTypeLLVM = visit(valueType);
+
+    if (op == UnaryPlus) { return visit(expression->right); /*+x is the same as x*/ }
+    if (op == UnaryMinus) {
+        llvm::Value* value = visit(expression->right);
+
+        return valueType->isFloat() ? builder->CreateFNeg(value, "fneg") : builder->CreateNeg(value, "ineg");
+    }
+    if (op == Not) {
+        llvm::Value* value = visit(expression->right);
+
+        // expression's semantic type is bool
+        value = convertNumberToType(value, valueType, expression->semanticType);
+        return builder->CreateNot(value);
+    }
+    if (op == BitNot) {
+        llvm::Value* value = visit(expression->right);
+        return builder->CreateNot(value, "bitnot_tmp");
+    }
+    if (op == AddressOf) { return getLValue(expression->right); }
+    if (op == Dereference) {
+        llvm::Value* value = visit(expression->right);
+        return builder->CreateLoad(valueTypeLLVM, value, "deref_load");
+    }
+
+    if (op == Inc || op == Dec) {
+        llvm::Value* ptrToValue = getLValue(expression->right);
+        llvm::Value* originalValue = builder->CreateLoad(valueTypeLLVM, ptrToValue, "postfix_incdec_load");
+
+        llvm::Value* updatedValue = nullptr;
+        llvm::Value* one = valueType->isInteger() ? llvm::ConstantInt::get(valueTypeLLVM, 1)
+                                                  : llvm::ConstantFP::get(valueTypeLLVM, 1.0);
+
+        if (expression->op == Inc) {
+            updatedValue = valueType->isInteger() ? builder->CreateAdd(originalValue, one, "prefix_inc_iadd")
+                                                  : builder->CreateFAdd(originalValue, one, "prefix_inc_fadd");
+        } else if (expression->op == Dec) {
+            updatedValue = valueType->isInteger() ? builder->CreateSub(originalValue, one, "prefix_dec_isub")
+                                                  : builder->CreateFSub(originalValue, one, "prefix_dec_fsub");
+        }
+        builder->CreateStore(updatedValue, ptrToValue);
+        // prefix does the operation and returns that value
+        return updatedValue;
+    }
     return nullptr;
 }
 
