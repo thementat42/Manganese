@@ -3,6 +3,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
+#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
@@ -44,6 +45,8 @@ auto IRGenerator::visit([[maybe_unused]] const ast::VariableDeclarationStatement
 
 auto IRGenerator::visit([[maybe_unused]] const ast::WhileLoopStatement* statement) -> stmtvisit_t {}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::PoisonedStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::PoisonedStatement* /*unused*/) -> stmtvisit_t {
+    ASSERT_UNREACHABLE("Poisoned statement was not flagged as semantically invalid during semantic analysis");
+}
 
 }  // namespace Manganese::codegen
