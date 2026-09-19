@@ -3,15 +3,20 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
 #include <array>
 #include <core.hpp>
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <middleend/codegen/ir_generator.hpp>
+
+#include "frontend/lexer/token.hpp"
+#include "frontend/semantic/type_context.hpp"
 
 namespace Manganese::codegen {
 
@@ -35,7 +40,7 @@ namespace Manganese::codegen {
     llvm::Type* elementType = visit(expression->semanticType);
     const std::size_t length = expression->elements.size();
     llvm::ArrayType* arrayType = llvm::ArrayType::get(elementType, length);
-    llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "arr_literal");
+    llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "array_literal");
     for (std::size_t i = 0; i < length; ++i) {
         llvm::Value* elementValue = visit(expression->elements[i]);
         // GEP gets a pointer offset, not a direct array element
@@ -43,7 +48,7 @@ namespace Manganese::codegen {
         // element
         // effectively &array[0][i]
         std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
-        llvm::Value* elemPtr = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_element");
+        llvm::Value* elemPtr = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
         builder->CreateStore(elementValue, elemPtr);
     }
     return arrayAlloca;
@@ -53,8 +58,49 @@ namespace Manganese::codegen {
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::BinaryExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::BinaryExpression* expression) -> exprvisit_t {
+    const semantic::SemanticType* lhsType = expression->left->semanticType;
+    const semantic::SemanticType* rhsType = expression->right->semanticType;
+
+    const semantic::SemanticType* commonType = expression->semanticType;
+
+    exprvisit_t lhs = visit(expression->left);
+    exprvisit_t rhs = visit(expression->right);
+
+    lhs = convertNumberToType(lhs, lhsType, commonType);
+    rhs = convertNumberToType(rhs, rhsType, commonType);
+
+    using enum lexer::TokenType;
+    const bool doFloatOperation = lhsType->isFloat() || rhsType->isFloat();
+
+    switch (expression->op) {
+                case Mod:
+        case GreaterThan:
+        case GreaterThanOrEqual:
+        case LessThan:
+        case LessThanOrEqual:
+        case Equal:
+        case NotEqual: {
+            if (commonType->isFloat()) {
+                const llvm::CmpInst::Predicate predicate = getFloatPredicate(expression->op);
+                return builder->CreateFCmp(predicate, lhs, rhs, "fcmp_tmp");
+            }
+            const bool isSigned = commonType->isSignedInteger();
+            const llvm::CmpInst::Predicate predicate = getIntPredicate(expression->op, isSigned);
+            return builder->CreateICmp(predicate, lhs, rhs, "icmp_tmp");
+        }
+        case And:
+        case Or:
+        case BitAnd:
+        case BitOr:
+        case BitXor:
+        case BitLShift:
+        case BitRShift:
+        case MemberAccess:
+        case ScopeResolution:
+        default: break;
+    }
+    ASSERT_UNREACHABLE(std::format("Invalid binary operator {} in codegen", lexer::tokenTypeToString(expression->op)));
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::BoolLiteralExpression* expression) -> exprvisit_t {

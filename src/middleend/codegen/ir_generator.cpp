@@ -1,14 +1,18 @@
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/InstrTypes.h>
 
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
+#include <frontend/semantic/type_context.hpp>
 #include <middleend/codegen/ir_generator.hpp>
+
+#include "frontend/lexer/token.hpp"
 
 namespace Manganese::codegen {
 
 [[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
-                                                        std::string_view lexeme) const {
+                                                                 std::string_view lexeme) const {
     if (lexeme.ends_with("i8") || lexeme.ends_with("u8") || lexeme.ends_with("I8") || lexeme.ends_with("U8")) {
         lexeme.remove_suffix(2);
         return llvm::Type::getInt8Ty(*context);
@@ -48,4 +52,64 @@ namespace Manganese::codegen {
                                    ast::primitiveTypeToString(p)));
 }
 
-} // namespace Manganese::codegen
+[[nodiscard]] llvm::Value* IRGenerator::convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
+                                                            const semantic::SemanticType* toType) {
+    if (fromType == toType) { return val; }
+    llvm::Type* toTypeLLVM = visit(toType);
+    auto fromWidth = semantic::getPrimitiveInfo(fromType->primitiveType).bitWidth;
+    auto toWidth = semantic::getPrimitiveInfo(toType->primitiveType).bitWidth;
+
+    if (fromType->isInteger()) {
+        if (toType->isFloat()) {
+            // int to float
+            return (fromType->isSignedInteger()) ? builder->CreateSIToFP(val, toTypeLLVM)
+                                                 : builder->CreateUIToFP(val, toTypeLLVM);
+        }
+
+        // int to int
+
+        // widening so extend (0 extend for unsigned, sign extend for signed)
+        if (fromWidth < toWidth) {
+            return fromType->isSignedInteger() ? builder->CreateSExt(val, toTypeLLVM)
+                                               : builder->CreateZExt(val, toTypeLLVM);
+        }
+
+        // narrowing so truncate
+        return builder->CreateTrunc(val, toTypeLLVM);
+    }
+    // float conversion
+    if (toType->isInteger()) {
+        // float to int
+        return toType->isSignedInteger() ? builder->CreateFPToSI(val, toTypeLLVM)
+                                         : builder->CreateFPToUI(val, toTypeLLVM);
+    }
+    // float to float
+    return fromWidth > toWidth ? builder->CreateFPTrunc(val, toTypeLLVM) : builder->CreateFPExt(val, toTypeLLVM);
+}
+
+llvm::CmpInst::Predicate IRGenerator::getFloatPredicate(lexer::TokenType op) {
+    using enum lexer::TokenType;
+    using enum llvm::CmpInst::Predicate;
+    if (op == GreaterThan) { return FCMP_UGT; }
+    if (op == GreaterThanOrEqual) { return FCMP_UGE; }
+    if (op == LessThan) { return FCMP_ULT; }
+    if (op == LessThanOrEqual) { return FCMP_ULE; }
+    if (op == Equal) { return FCMP_UEQ; }
+    if (op == NotEqual) { return FCMP_UNE; }
+    ASSERT_UNREACHABLE(std::format("Unknown binary comparison operator '{}' in IRGenerator::getFloatPredicate",
+                                   lexer::tokenTypeToString(op)));
+}
+llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool isSigned) {
+    using enum lexer::TokenType;
+    using enum llvm::CmpInst::Predicate;
+    if (op == GreaterThan) { return isSigned ? ICMP_SGT : ICMP_UGT; }
+    if (op == GreaterThanOrEqual) { return isSigned ? ICMP_SGE : ICMP_UGE; }
+    if (op == LessThan) { return isSigned ? ICMP_SLT : ICMP_ULT; }
+    if (op == LessThanOrEqual) { return isSigned ? ICMP_SLE : ICMP_ULE; }
+    if (op == Equal) { return ICMP_EQ; }
+    if (op == NotEqual) { return ICMP_NE; }
+    ASSERT_UNREACHABLE(std::format("Unknown binary comparison operator '{}' in IRGenerator::getIntPredicate",
+                                   lexer::tokenTypeToString(op)));
+}
+
+}  // namespace Manganese::codegen

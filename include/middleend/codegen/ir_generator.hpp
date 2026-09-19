@@ -1,3 +1,4 @@
+#include "frontend/lexer/token.hpp"
 #include "utils/target_info.hpp"
 #ifndef MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP
 #define MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP 1
@@ -43,9 +44,6 @@ class IRGenerator final : public _irgen_base_t {
         }
     }
 
-    [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
-                                                        std::string_view lexeme) const;
-
    protected:
     // overrides for visitor functions
     using _irgen_base_t::visit;
@@ -58,6 +56,13 @@ class IRGenerator final : public _irgen_base_t {
 #undef EXPR
 #undef TYPE
     [[nodiscard]] typevisit_t visit(const semantic::SemanticType*);
+
+    [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
+                                                        std::string_view lexeme) const;
+    [[nodiscard]] llvm::Value* convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
+                                                   const semantic::SemanticType* toType);
+    static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op) NOEXCEPT_IF_RELEASE;
+    static llvm::CmpInst::Predicate getIntPredicate(lexer::TokenType op, bool isSigned) NOEXCEPT_IF_RELEASE;
 };
 
 }  // namespace Manganese::codegen
