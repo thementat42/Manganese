@@ -11,6 +11,14 @@
 
 namespace Manganese::ast {
 
+struct Declaration : public Statement {
+    std::string name;
+    std::string mangledName;
+
+    Declaration(StatementKind kind, std::string&& _name) noexcept : Statement(kind), name(std::move(_name)) {}
+    virtual ~Declaration() = default;
+};
+
 struct AggregateField {
     std::string name;
     Type* type;
@@ -18,19 +26,19 @@ struct AggregateField {
     bool isMutable;
 };
 
-struct AggregateDeclarationStatement final : public Statement {
-    std::string name;
+struct AggregateDeclarationStatement final : public Declaration {
     std::vector<std::string> genericTypes;
     std::vector<AggregateField> fields;
     Visibility visibility = Visibility::Private;
 
     AggregateDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
                                   std::vector<AggregateField>&& _fields) noexcept :
-        Statement(StatementKind::AggregateDeclarationStatement),
-        name(std::move(_name)),
+        Declaration(StatementKind::AggregateDeclarationStatement, std::move(_name)),
         genericTypes(std::move(_genericTypes)),
         fields(std::move(_fields)) {}
     MN_AST_STANDARD_INTERFACE;
+
+    bool isDeclaration() const noexcept override { return true; }
 };
 
 struct AliasStatement final : public Statement {
@@ -67,19 +75,18 @@ struct EnumValue {
     std::size_t line, column;
 };
 
-struct EnumDeclarationStatement final : public Statement {
-    std::string name;
+struct EnumDeclarationStatement final : public Declaration {
     Type* baseType;
     std::vector<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
     EnumDeclarationStatement(std::string&& _name, Type* _baseType, std::vector<EnumValue>&& _values) noexcept :
-        Statement(StatementKind::EnumDeclarationStatement),
-        name(std::move(_name)),
+        Declaration(StatementKind::EnumDeclarationStatement, std::move(_name)),
         baseType(_baseType),
         values(std::move(_values)) {}
 
     MN_AST_STANDARD_INTERFACE;
+    bool isDeclaration() const noexcept override { return true; }
 };
 
 /**
@@ -120,8 +127,7 @@ struct FunctionParameter {
     bool isVariadic;
 };
 
-struct FunctionDeclarationStatement final : public Statement {
-    std::string name;
+struct FunctionDeclarationStatement final : public Declaration {
     std::vector<std::string> genericTypes;
     std::vector<FunctionParameter> parameters;
     Type* returnType;
@@ -131,14 +137,14 @@ struct FunctionDeclarationStatement final : public Statement {
     FunctionDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
                                  std::vector<FunctionParameter>&& _parameters, Type* _returnType,
                                  Block&& _body) noexcept :
-        Statement(StatementKind::FunctionDeclarationStatement),
-        name(std::move(_name)),
+        Declaration(StatementKind::FunctionDeclarationStatement, std::move(_name)),
         genericTypes(std::move(_genericTypes)),
         parameters(std::move(_parameters)),
         returnType(_returnType),
         body(std::move(_body)) {}
 
     MN_AST_STANDARD_INTERFACE;
+    bool isDeclaration() const noexcept override { return true; }
 };
 
 struct ElifClause {
@@ -227,23 +233,22 @@ struct SwitchStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE;
 };
 
-struct VariableDeclarationStatement final : public Statement {
+struct VariableDeclarationStatement final : public Declaration {
     Visibility visibility;
     bool isMutable;
-    std::string name;
     Expression* value;
     Type* type;
 
     VariableDeclarationStatement(bool _isMutable, std::string&& _name, Visibility _visibility, Expression* _value,
                                  Type* _type) noexcept :
-        Statement(StatementKind::VariableDeclarationStatement),
+        Declaration(StatementKind::VariableDeclarationStatement, std::move(_name)),
         visibility(_visibility),
         isMutable(_isMutable),
-        name(std::move(_name)),
         value(_value),
         type(_type) {}
 
     MN_AST_STANDARD_INTERFACE;
+    bool isDeclaration() const noexcept override { return true; }
 };
 
 struct WhileLoopStatement final : public Statement {

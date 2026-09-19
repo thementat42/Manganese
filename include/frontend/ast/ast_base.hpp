@@ -112,6 +112,7 @@ struct Statement : public ASTNode {
     const StatementKind kind;
 
     constexpr bool isPoisoned() const noexcept { return kind == StatementKind::PoisonedStatement; };
+    virtual bool isDeclaration() const noexcept { return false; }
 
    protected:
     explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}

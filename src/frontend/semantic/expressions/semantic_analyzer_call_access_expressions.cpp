@@ -249,8 +249,7 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
             return exprvisit_t::Success;
         }
     }
-    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(),
-             expression->field);
+    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(), expression->field);
 
     return exprvisit_t::Failure;
 }
@@ -304,6 +303,9 @@ auto SemanticAnalyzer::visit(ast::ScopeResolutionExpression* expression) -> expr
     }
     expression->semanticType = memberSymbol->type;
     context.nestedScopeResolutionCurrentSymbol = memberSymbol;
+    if (auto* stmt = static_cast<ast::Statement*>(memberSymbol->node); stmt->isDeclaration()) {
+        expression->mangledName = static_cast<const ast::Declaration*>(stmt)->mangledName;
+    }
     return exprvisit_t::Success;
 }
 

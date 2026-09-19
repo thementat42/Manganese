@@ -193,6 +193,7 @@ struct PrefixExpression final : public Expression {
 struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
     Expression* element;
+    std::string mangledName;
 
     ScopeResolutionExpression(Expression* _scope, Expression* _element) noexcept :
         Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope), element(_element) {}
