@@ -3,7 +3,7 @@
 #include <mnstl/i128.hxx>
 #include <utils/str_to_num.hpp>
 
-#include "mnstl/ext_num_config.hxx"
+#include <mnstl/ext_num_config.hxx>
 
 namespace Manganese::utils {
 

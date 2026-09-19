@@ -15,9 +15,6 @@
 #include <frontend/semantic.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
-#include "frontend/lexer/token.hpp"
-#include "frontend/semantic/type_context.hpp"
-
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::AggregateInstantiationExpression* expression)

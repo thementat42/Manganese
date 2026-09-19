@@ -9,8 +9,6 @@
 #include <utils/result.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
-
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {

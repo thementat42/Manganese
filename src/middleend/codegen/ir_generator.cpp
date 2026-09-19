@@ -8,11 +8,6 @@
 #include <frontend/semantic/type_context.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/ast/ast_expressions.hpp"
-#include "frontend/ast/ast_statements.hpp"
-#include "frontend/lexer/token.hpp"
-
 namespace Manganese::codegen {
 
 [[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
