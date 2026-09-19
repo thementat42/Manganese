@@ -271,8 +271,8 @@ struct PrimitiveInfo {
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type);
 
 /**
-* Note: this is the "type" of the 'uninitialized' keyword, not of an uninitialized variable
-*/
+ * Note: this is the "type" of the 'uninitialized' keyword, not of an uninitialized variable
+ */
 struct Uninitialized final : public SemanticType {
     Uninitialized() noexcept : SemanticType(SemanticTypeKind::Uninitialized) {}
     ~Uninitialized() override = default;
@@ -330,9 +330,7 @@ class TypeContext {
 
    public:
     explicit TypeContext(mnstl::chunk_allocator& arena, utils::TargetInfo target) noexcept :
-        _arena(arena),
-        _targetInfo(target),
-        _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
+        _arena(arena), _targetInfo(target), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
 
     ~TypeContext() = default;
 

@@ -8,7 +8,6 @@
 #include <frontend/semantic.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
-
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::SemanticType* type) -> typevisit_t {
