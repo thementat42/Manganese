@@ -1,5 +1,3 @@
-#include "frontend/lexer/token.hpp"
-#include "utils/target_info.hpp"
 #ifndef MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP
 #define MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP 1
 
@@ -9,6 +7,7 @@
 #include <llvm/IR/Value.h>
 
 #include <frontend/ast.hpp>
+#include <frontend/lexer/token.hpp>
 #include <frontend/parser.hpp>
 #include <memory>
 #include <mnstl/tiny_stack.hxx>
@@ -48,6 +47,11 @@ class IRGenerator final : public _irgen_base_t {
     // overrides for visitor functions
     using _irgen_base_t::visit;
 
+    [[nodiscard]] exprvisit_t visit(const ast::Expression* expr) { return _irgen_base_t::visit(expr); }
+    stmtvisit_t visit(const ast::Statement* stmt) { _irgen_base_t::visit(stmt); }
+    typevisit_t visit(const ast::Type* type) { return _irgen_base_t::visit(type); }
+    [[nodiscard]] typevisit_t visit(const semantic::SemanticType*);
+
 #define STMT(name) stmtvisit_t visit(const ast::name*) override;
 #define EXPR(name) [[nodiscard]] exprvisit_t visit(const ast::name*) override;
 #define TYPE(name) [[nodiscard]] typevisit_t visit(const ast::name*) override;
@@ -55,7 +59,6 @@ class IRGenerator final : public _irgen_base_t {
 #undef STMT
 #undef EXPR
 #undef TYPE
-    [[nodiscard]] typevisit_t visit(const semantic::SemanticType*);
 
     [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
                                                         std::string_view lexeme) const;
@@ -63,6 +66,7 @@ class IRGenerator final : public _irgen_base_t {
                                                    const semantic::SemanticType* toType);
     static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op) NOEXCEPT_IF_RELEASE;
     static llvm::CmpInst::Predicate getIntPredicate(lexer::TokenType op, bool isSigned) NOEXCEPT_IF_RELEASE;
+    [[nodiscard]] exprvisit_t getLValue(const ast::Expression* expr);
 };
 
 }  // namespace Manganese::codegen
