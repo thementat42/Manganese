@@ -2,11 +2,15 @@
 #include <llvm/IR/InstrTypes.h>
 
 #include <core.hpp>
+#include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
+#include "frontend/ast/ast_base.hpp"
+#include "frontend/ast/ast_expressions.hpp"
+#include "frontend/ast/ast_statements.hpp"
 #include "frontend/lexer/token.hpp"
 
 namespace Manganese::codegen {
@@ -110,6 +114,54 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
     if (op == NotEqual) { return ICMP_NE; }
     ASSERT_UNREACHABLE(std::format("Unknown binary comparison operator '{}' in IRGenerator::getIntPredicate",
                                    lexer::tokenTypeToString(op)));
+}
+
+[[nodiscard]] auto IRGenerator::getLValue(const ast::Expression* expr) -> exprvisit_t {
+    if (expr->kind == ast::ExpressionKind::IdentifierExpression) {
+        const auto* identifierExpression = static_cast<const ast::IdentifierExpression*>(expr);
+        llvm::Value* ptr = namedValues[identifierExpression->name];
+        if (ptr == nullptr) {
+            ASSERT_UNREACHABLE(std::format("Variable '{}' was not flagged as undeclared during semantic analysis",
+                                           identifierExpression->name));
+        }
+        return ptr;
+    }
+    if (expr->kind == ast::ExpressionKind::PrefixExpression) {
+        const auto* prefixExpression = static_cast<const ast::PrefixExpression*>(expr);
+        if (prefixExpression->op == lexer::TokenType::Dereference) { return visit(prefixExpression->right); }
+    }
+
+    if (expr->kind == ast::ExpressionKind::IndexExpression) {
+        const auto* indexExpression = static_cast<const ast::IndexExpression*>(expr);
+        llvm::Value* arrayPtr = getLValue(indexExpression->variable);  // Get pointer to the array
+        llvm::Value* indexVal = visit(indexExpression->index);  // Index is an rvalue calculation
+
+        // like array literals, we first need a pointer to the start of the array then an offset from that pointer
+        llvm::Type* arrayLlvmTy = visit(indexExpression->variable->semanticType);
+        return builder->CreateInBoundsGEP(arrayLlvmTy, arrayPtr, {builder->getInt32(0), indexVal}, "array_element_ptr");
+    }
+
+    if (expr->kind == ast::ExpressionKind::MemberAccessExpression) {
+        const auto* accessExpression = static_cast<const ast::MemberAccessExpression*>(expr);
+        llvm::Value* base = getLValue(accessExpression->object);
+        llvm::Type* aggregateLLVMType = visit(accessExpression->object->semanticType);
+        auto fieldIndex = static_cast<unsigned int>(accessExpression->fieldIndex);
+        return builder->CreateStructGEP(aggregateLLVMType, base, fieldIndex, "field_ptr");
+    }
+    if (expr->kind == ast::ExpressionKind::ScopeResolutionExpression) {
+        const auto* scopeExpression = static_cast<const ast::ScopeResolutionExpression*>(expr);
+        llvm::Value* ptr = namedValues[scopeExpression->mangledName];
+        if (ptr == nullptr) {
+            ptr = builder->GetInsertBlock()->getModule()->getNamedGlobal(scopeExpression->mangledName);
+        }
+        if (ptr == nullptr) {
+            ASSERT_UNREACHABLE(
+                std::format("Could not find LLVM value for mangled name '{}'", scopeExpression->mangledName));
+        }
+        return ptr;
+    }
+
+    ASSERT_UNREACHABLE(std::format("Unknown lvalue expression '{}' in IRGenerator::getLValue", expr->toString()));
 }
 
 }  // namespace Manganese::codegen
