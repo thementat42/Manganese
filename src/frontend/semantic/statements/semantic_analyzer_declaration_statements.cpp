@@ -17,7 +17,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
     // We don't know the generic types at declaration so we can't check them
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
-    
+
     const Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
@@ -71,8 +71,7 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     statement->mangledName = getMangledName(statement->name);
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(
-            std::format("Alias symbol '{}' was not registered during type collection", statement->name));
+        ASSERT_UNREACHABLE(std::format("Alias symbol '{}' was not registered during type collection", statement->name));
     }
     // Already resolved
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
@@ -177,7 +176,6 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     statement->mangledName = getMangledName(statement->name);
 
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
-
 
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr || symbol->type == nullptr) {

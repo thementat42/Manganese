@@ -26,9 +26,7 @@ namespace Manganese::codegen {
             // TODO
             return nullptr;
         }
-        case Primitive: {
-            return getPrimitiveType(type->primitiveType);
-        }
+        case Primitive: return getPrimitiveType(type->primitiveType);
     };
     ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");
 }

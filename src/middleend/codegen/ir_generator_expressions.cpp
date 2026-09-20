@@ -45,7 +45,8 @@ namespace Manganese::codegen {
         // element
         // effectively &array[0][i]
         std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
-        llvm::Value* elementPointer = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
+        llvm::Value* elementPointer
+            = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
         builder->CreateStore(elementValue, elementPointer);
     }
     return arrayAlloca;
@@ -184,7 +185,6 @@ namespace Manganese::codegen {
     llvm::Value* elementPointer = getLValue(expression);
     llvm::Type* elementLLVMType = visit(expression->semanticType);
     return builder->CreateLoad(elementLLVMType, elementPointer, "load_index_expr_val");
-
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::MemberAccessExpression* expression) -> exprvisit_t {
@@ -306,8 +306,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit(const ast::ScopeResolutionExpression* expression)
-    -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit(const ast::ScopeResolutionExpression* expression) -> exprvisit_t {
     llvm::Value* scopeElementPointer = getLValue(expression);
     llvm::Type* scopeElementLLVMType = visit(expression->semanticType);
     return builder->CreateLoad(scopeElementLLVMType, scopeElementPointer, "load_scope_res_val");

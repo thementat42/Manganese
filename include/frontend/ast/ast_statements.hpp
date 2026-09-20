@@ -46,7 +46,7 @@ struct AliasStatement final : public Declaration {
     Visibility visibility = Visibility::Private;
 
     AliasStatement(Type* _baseType, std::string&& _alias) noexcept :
-        Declaration(StatementKind::AliasStatement, std::move(_alias)), baseType(_baseType){}
+        Declaration(StatementKind::AliasStatement, std::move(_alias)), baseType(_baseType) {}
 
     MN_AST_STANDARD_INTERFACE;
     bool isDeclaration() const noexcept override { return true; }
