@@ -52,14 +52,6 @@ class IRGenerator final : public _irgen_base_t {
     stmtvisit_t visit(const ast::Statement* stmt) { _irgen_base_t::visit(stmt); }
     typevisit_t visit(const ast::Type* type) { return _irgen_base_t::visit(type); }
     [[nodiscard]] typevisit_t visit(const semantic::SemanticType*);
-    [[nodiscard]] typevisit_t visit(const semantic ::Aggregate*);
-    [[nodiscard]] typevisit_t visit(const semantic ::Array*);
-    [[nodiscard]] typevisit_t visit(const semantic ::Enum*);
-    [[nodiscard]] typevisit_t visit(const semantic ::Function*);
-    [[nodiscard]] typevisit_t visit(const semantic ::Pointer*);
-    [[nodiscard]] typevisit_t visit(const semantic ::Poison*);
-    [[nodiscard]] typevisit_t visit(const semantic ::Uninitialized*);
-    [[nodiscard]] typevisit_t visit(const semantic ::Void*);
 
 #define STMT(name)     stmtvisit_t visit(const ast::name*) override;
 #define EXPR(name)     [[nodiscard]] exprvisit_t visit(const ast::name*) override;
@@ -71,8 +63,18 @@ class IRGenerator final : public _irgen_base_t {
 #undef TYPE
 #undef SEMANTIC
 
-    [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
-                                                        std::string_view lexeme) const;
+    [[nodiscard]] typevisit_t visit(const semantic::Aggregate*);
+    [[nodiscard]] typevisit_t visit(const semantic::Array*);
+    [[nodiscard]] typevisit_t visit(const semantic::Enum*);
+    [[nodiscard]] typevisit_t visit(const semantic::Function*);
+    [[nodiscard]] typevisit_t visit(const semantic::Pointer*);
+    [[nodiscard]] typevisit_t visit(const semantic::Poison*);
+    [[nodiscard]] typevisit_t visit(const semantic::Uninitialized*);
+    [[nodiscard]] typevisit_t visit(const semantic::Void*);
+    [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
+
+        [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
+                                                            std::string_view lexeme) const;
     [[nodiscard]] llvm::Value* convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
                                                    const semantic::SemanticType* toType);
     static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op) NOEXCEPT_IF_RELEASE;

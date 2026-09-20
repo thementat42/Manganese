@@ -8,6 +8,9 @@
 #include <frontend/semantic.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
+#include "frontend/ast/ast_base.hpp"
+
+
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::SemanticType* type) -> typevisit_t {
@@ -26,8 +29,7 @@ namespace Manganese::codegen {
             return nullptr;
         }
         case Primitive: {
-            // TODO
-            return decltype(nullptr){};
+            return getPrimitiveType(type->primitiveType);
         }
     };
     ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");
@@ -54,6 +56,42 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Void* type) -> typevisit_t { return nullptr; }
+
+[[nodiscard]] auto IRGenerator::getPrimitiveType(ast::PrimitiveType type) -> typevisit_t {
+    // Note: LLVM doesn't have a signed/unsigned distinction so signed and unsigned ints of the same bit width
+    // map to the same LLVM type
+    using enum ast::PrimitiveType;
+    switch (type) {
+        case ast::PrimitiveType::int8:
+        case ast::PrimitiveType::uint8:
+            return builder->getInt8Ty();
+        case ast::PrimitiveType::int16:
+        case ast::PrimitiveType::uint16:
+            return builder->getInt16Ty();
+        case ast::PrimitiveType::int32:
+        case ast::PrimitiveType::uint32:
+        case ast::PrimitiveType::character:  // char32 is a 32-bit int
+            return builder->getInt32Ty();
+        case ast::PrimitiveType::int64:
+        case ast::PrimitiveType::uint64:
+            return builder->getInt64Ty();
+        case ast::PrimitiveType::int128:
+        case ast::PrimitiveType::uint128:
+            return builder->getInt128Ty();
+        case ast::PrimitiveType::float32:
+            return builder->getFloatTy();
+        case ast::PrimitiveType::float64:
+            return builder->getDoubleTy();
+        case ast::PrimitiveType::boolean:
+            // LLVM doesn't have a separate boolean type, just a "1-bit integer"
+            return builder->getInt1Ty();
+        case ast::PrimitiveType::string:
+            // TODO
+        case ast::PrimitiveType::not_primitive:
+            ASSERT_UNREACHABLE("IRGenerator::getPrimitiveType called on non-primitive semantic type");
+    }
+    ASSERT_UNREACHABLE("Unknown primitive type in IRGenerator::getPrimitiveType");
+}
 
 // Visitors for AST types (just call the semantic type visitors)
 
