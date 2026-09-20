@@ -68,13 +68,13 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visit(const semantic::Enum*);
     [[nodiscard]] typevisit_t visit(const semantic::Function*);
     [[nodiscard]] typevisit_t visit(const semantic::Pointer*);
-    [[nodiscard]] typevisit_t visit(const semantic::Poison*);
+    [[nodiscard]] static typevisit_t visit(const semantic::Poison*) NOEXCEPT_IF_RELEASE;
     [[nodiscard]] typevisit_t visit(const semantic::Uninitialized*);
     [[nodiscard]] typevisit_t visit(const semantic::Void*);
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
 
-        [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
-                                                            std::string_view lexeme) const;
+    [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
+                                                        std::string_view lexeme) const;
     [[nodiscard]] llvm::Value* convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
                                                    const semantic::SemanticType* toType);
     static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op) NOEXCEPT_IF_RELEASE;

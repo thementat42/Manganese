@@ -10,7 +10,6 @@
 
 #include "frontend/ast/ast_base.hpp"
 
-
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::SemanticType* type) -> typevisit_t {
@@ -49,13 +48,15 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Pointer* type) -> typevisit_t { return nullptr; }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Poison* type) -> typevisit_t { return nullptr; }
+[[nodiscard]] auto IRGenerator::visit(const semantic::Poison* /*unused*/) -> typevisit_t {
+    ASSERT_UNREACHABLE("Poison semantic type was not flagged as semantically invalid");
+ }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Uninitialized* type) -> typevisit_t {
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Void* type) -> typevisit_t { return nullptr; }
+[[nodiscard]] auto IRGenerator::visit(const semantic::Void* /*unused*/) -> typevisit_t { return builder->getVoidTy(); }
 
 [[nodiscard]] auto IRGenerator::getPrimitiveType(ast::PrimitiveType type) -> typevisit_t {
     // Note: LLVM doesn't have a signed/unsigned distinction so signed and unsigned ints of the same bit width
@@ -63,25 +64,19 @@ namespace Manganese::codegen {
     using enum ast::PrimitiveType;
     switch (type) {
         case ast::PrimitiveType::int8:
-        case ast::PrimitiveType::uint8:
-            return builder->getInt8Ty();
+        case ast::PrimitiveType::uint8: return builder->getInt8Ty();
         case ast::PrimitiveType::int16:
-        case ast::PrimitiveType::uint16:
-            return builder->getInt16Ty();
+        case ast::PrimitiveType::uint16: return builder->getInt16Ty();
         case ast::PrimitiveType::int32:
         case ast::PrimitiveType::uint32:
         case ast::PrimitiveType::character:  // char32 is a 32-bit int
             return builder->getInt32Ty();
         case ast::PrimitiveType::int64:
-        case ast::PrimitiveType::uint64:
-            return builder->getInt64Ty();
+        case ast::PrimitiveType::uint64: return builder->getInt64Ty();
         case ast::PrimitiveType::int128:
-        case ast::PrimitiveType::uint128:
-            return builder->getInt128Ty();
-        case ast::PrimitiveType::float32:
-            return builder->getFloatTy();
-        case ast::PrimitiveType::float64:
-            return builder->getDoubleTy();
+        case ast::PrimitiveType::uint128: return builder->getInt128Ty();
+        case ast::PrimitiveType::float32: return builder->getFloatTy();
+        case ast::PrimitiveType::float64: return builder->getDoubleTy();
         case ast::PrimitiveType::boolean:
             // LLVM doesn't have a separate boolean type, just a "1-bit integer"
             return builder->getInt1Ty();
