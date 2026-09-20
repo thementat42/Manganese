@@ -13,10 +13,11 @@
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
+    statement->mangledName = getMangledName(statement->name);
     // We don't know the generic types at declaration so we can't check them
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
-
+    
     const Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
@@ -67,10 +68,11 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
 }
 
 auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
-    Symbol* symbol = symbolTable.lookup(statement->alias);
+    statement->mangledName = getMangledName(statement->name);
+    Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
         ASSERT_UNREACHABLE(
-            std::format("Alias symbol '{}' was not registered during type collection", statement->alias));
+            std::format("Alias symbol '{}' was not registered during type collection", statement->name));
     }
     // Already resolved
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
@@ -78,7 +80,7 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
 
     // Cycle Detection
     if (symbol->status == ResolutionStatus::InProgress) {
-        logError(statement, "Cyclic type alias detected in the definition of alias '{}'", statement->alias);
+        logError(statement, "Cyclic type alias detected in the definition of alias '{}'", statement->name);
         symbol->status = ResolutionStatus::Failure;
         return stmtvisit_t::Failure;
     }
@@ -95,6 +97,7 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
 
 auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     stmtvisit_t result = stmtvisit_t::Success;
+    statement->mangledName = getMangledName(statement->name);
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
         ASSERT_UNREACHABLE(std::format("Enum {} was not registered during type initalization", statement->name));
@@ -171,8 +174,10 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
                  statement->name);
         return stmtvisit_t::Failure;
     }
+    statement->mangledName = getMangledName(statement->name);
 
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
+
 
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr || symbol->type == nullptr) {
@@ -242,6 +247,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
 
 auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     const SemanticType* variableType = nullptr;
+    statement->mangledName = getMangledName(statement->name);
 
     if (statement->type != nullptr) {
         if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
