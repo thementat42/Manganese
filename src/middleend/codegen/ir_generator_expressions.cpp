@@ -319,7 +319,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     return llvm::ConstantInt::get(sizeType, expression->semanticType->size(targetInfo));
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::StringLiteralExpression* expression) -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit(const ast::StringLiteralExpression* expression) -> exprvisit_t {
     llvm::StringRef strRef(expression->value.data(), expression->value.size());
     return builder->CreateGlobalString(strRef, "str_literal");
 }
@@ -328,12 +328,13 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::UninitializedExpression* expression) -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit(const ast::UninitializedExpression* /*unused*/) -> exprvisit_t {
+    // uninitialized (the keyword) doesn't have any runtime value, so no value needs to be generated
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::PoisonedExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::PoisonedExpression* /*unused*/) -> exprvisit_t {
+    ASSERT_UNREACHABLE("Poisoned expression was not flagged as semantically invalid during semantic analysis");
 }
 
 }  // namespace Manganese::codegen
