@@ -33,6 +33,7 @@ namespace ast {
 struct Expression;
 struct Statement;
 struct Type;
+struct Declaration;
 
 enum class StatementKind : std::uint8_t {
 #define STMT(name) name,

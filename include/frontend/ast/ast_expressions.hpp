@@ -126,6 +126,7 @@ struct GenericInstantiationExpression final : public Expression {
 
 struct IdentifierExpression final : public Expression {
     const std::string name;
+    const Declaration* resolvedDeclaration = nullptr;
 
     explicit IdentifierExpression(std::string&& _name) noexcept :
         Expression(ExpressionKind::IdentifierExpression), name(std::move(_name)) {}

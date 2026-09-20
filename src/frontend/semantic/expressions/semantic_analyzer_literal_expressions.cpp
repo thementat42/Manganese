@@ -117,6 +117,7 @@ auto SemanticAnalyzer::visit(ast::IdentifierExpression* expression) -> exprvisit
         return exprvisit_t::Failure;
     }
     expression->semanticType = symbol->type;
+    expression->resolvedDeclaration = static_cast<const ast::Declaration*>(symbol->node);
     return exprvisit_t::Success;
 }
 
