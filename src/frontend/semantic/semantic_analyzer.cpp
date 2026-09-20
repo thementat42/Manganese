@@ -2,7 +2,6 @@
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <optional>
 #include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
 #include <utils/target_info.hpp>
@@ -26,6 +25,17 @@ Result SemanticAnalyzer::analyze() {
     if (runPass([this](auto& f) { return checkStatements(f); }) == Result::Failure) { return Result::Failure; }
 
     return Result::Success;
+}
+
+std::string SemanticAnalyzer::getMangledName(std::string_view baseName) const {
+    if (context.namespaceStack.empty()) { return std::string(baseName); }
+    std::string result;
+    for (const auto& name : context.namespaceStack) {
+        result += name;
+        result += "$";
+    }
+    result += baseName;
+    return result;
 }
 
 const Symbol* SemanticAnalyzer::resolveTypeSymbol(const ast::Type* typeNode) {

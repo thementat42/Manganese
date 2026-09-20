@@ -40,7 +40,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_t
     activeGenericParams = std::move(oldParams);
 
     if (success) {
-        instantiationCache.markAsSuccess(key, nullptr);
+        instantiationCache.markAsSuccess(key, nullptr, getMangledName(stmt->mangledName));
     } else {
         instantiationCache.markAsFailure(key);
     }
@@ -145,7 +145,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_ta
     activeGenericParams = std::move(oldParams);
 
     if (success) {
-        instantiationCache.markAsSuccess(key, resolvedReturnType);
+        instantiationCache.markAsSuccess(key, resolvedReturnType, getMangledName(stmt->mangledName));
     } else {
         instantiationCache.markAsFailure(key);
     }
@@ -180,13 +180,7 @@ const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(const ast::Ag
 
     activeGenericParams = std::move(oldParams);
 
-    std::string instantiatedName = decl->name + "$";
-    for (std::size_t i = 0; i < typeArgs.size(); ++i) {
-        if (i > 0) { instantiatedName += "$"; }
-        instantiatedName += typeArgs[i]->toString();
-    }
-
-    return typeContext.getNamedAggregate(std::string(instantiatedName), std::move(instantiatedFields));
+    return typeContext.getNamedAggregate(std::string(cachedResult->mangledName), std::move(instantiatedFields));
 }
 
 const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,

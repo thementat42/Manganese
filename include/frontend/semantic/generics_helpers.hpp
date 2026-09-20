@@ -25,7 +25,8 @@ struct InstantiationKey {
 
 struct InstantiationResult {
     ResolutionStatus state = ResolutionStatus::InProgress;
-    const SemanticType* returnType = nullptr;
+    const SemanticType* returnType = nullptr;  // for functions
+    std::string mangledName;
 };
 
 }  // namespace Manganese::semantic
@@ -59,11 +60,11 @@ class InstantiationCache {
     }
 
     void markAsInProgress(const InstantiationKey& key) { _map.insert_or_assign(key, InstantiationResult{}); }
-    void markAsSuccess(const InstantiationKey& key, const SemanticType* returnType) {
-        _map.insert_or_assign(key, InstantiationResult{.state = ResolutionStatus::Success, .returnType = returnType});
+    void markAsSuccess(const InstantiationKey& key, const SemanticType* returnType, std::string&& mangledName) {
+        _map.insert_or_assign(key, InstantiationResult{.state = ResolutionStatus::Success, .returnType = returnType, .mangledName = std::move(mangledName)});
     }
     void markAsFailure(const InstantiationKey& key) {
-        _map.insert_or_assign(key, InstantiationResult{.state = ResolutionStatus::Failure, .returnType = nullptr});
+        _map.insert_or_assign(key, InstantiationResult{.state = ResolutionStatus::Failure, .returnType = nullptr, .mangledName = ""});
     }
 
     bool contains(const InstantiationKey& key) const { return _map.contains(key); }

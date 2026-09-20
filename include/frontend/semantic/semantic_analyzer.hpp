@@ -71,6 +71,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     std::unordered_map<std::string_view, std::size_t> activeGenericParams;
 
     struct {
+        std::vector<std::string_view> namespaceStack;
         const SemanticType* currentFunctionReturnType = nullptr;
         const SemanticType* currentVariableDeclarationType = nullptr;
         const Symbol* nestedScopeResolutionCurrentSymbol = nullptr;
@@ -135,6 +136,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression);
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
+    std::string getMangledName(std::string_view baseName) const;
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {

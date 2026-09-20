@@ -35,12 +35,14 @@ auto SemanticAnalyzer::visit(ast::ModuleDeclarationStatement* /*unused*/) -> stm
 auto SemanticAnalyzer::visit(ast::ImportStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 auto SemanticAnalyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {
+    context.namespaceStack.push_back(statement->name);
     symbolTable.enterNamespace(statement->name, statement);
     stmtvisit_t result = stmtvisit_t::Success;
     for (ast::Statement* stmt : statement->block) {
         if (visit(stmt) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
     symbolTable.exitNamespace();
+    context.namespaceStack.pop_back();
     return result;
 }
 
