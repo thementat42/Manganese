@@ -162,7 +162,20 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
-    llvm::Value* value = namedValues[expression->name];
+    llvm::Value* value = nullptr;
+    if ((expression->resolvedDeclaration != nullptr) && !expression->resolvedDeclaration->mangledName.empty()) {
+        value = namedValues[expression->resolvedDeclaration->mangledName];
+        if (value == nullptr) {
+            value
+                = builder->GetInsertBlock()->getModule()->getNamedGlobal(expression->resolvedDeclaration->mangledName);
+        }
+    }
+
+    if (value == nullptr) { value = namedValues[expression->name]; }
+    if (value == nullptr) {
+        ASSERT_UNREACHABLE(
+            std::format("Variable '{}' was not flagged as undeclared during semantic analysis", expression->name));
+    }
     llvm::Type* llvmType = visit(expression->semanticType);
     return builder->CreateLoad(llvmType, value, std::format("load_val_of_{}", expression->name));
 }
