@@ -1,3 +1,4 @@
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -7,8 +8,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <middleend/codegen/ir_generator.hpp>
-
-#include "frontend/ast/ast_base.hpp"
 
 namespace Manganese::codegen {
 
@@ -38,23 +37,26 @@ namespace Manganese::codegen {
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Array* type) -> typevisit_t { return nullptr; }
+[[nodiscard]] auto IRGenerator::visit(const semantic::Array* type) -> typevisit_t {
+    llvm::Type* elementLLVMType = visit(type->elementType);
+    return llvm::ArrayType::get(elementLLVMType, *type->length);
+}
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Enum* type) -> typevisit_t { return nullptr; }
+[[nodiscard]] auto IRGenerator::visit(const semantic::Enum* type) -> typevisit_t { return visit(type->underlyingType); }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Function* type) -> typevisit_t {
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Pointer* type) -> typevisit_t { return nullptr; }
+[[nodiscard]] auto IRGenerator::visit(const semantic::Pointer* /*unused*/) -> typevisit_t {
+    return builder->getPtrTy();
+}
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Poison* /*unused*/) -> typevisit_t {
     ASSERT_UNREACHABLE("Poison semantic type was not flagged as semantically invalid");
- }
-
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Uninitialized* type) -> typevisit_t {
-    return nullptr;
 }
+
+[[nodiscard]] auto IRGenerator::visit(const semantic::Uninitialized* /*unused*/) -> typevisit_t { return nullptr; }
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Void* /*unused*/) -> typevisit_t { return builder->getVoidTy(); }
 
