@@ -2,6 +2,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 
 #include <core.hpp>
@@ -31,8 +32,11 @@ namespace Manganese::codegen {
     ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Aggregate* type) -> typevisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const semantic::Aggregate* type) -> typevisit_t {
+    std::vector<llvm::Type*> elementTypes;
+    elementTypes.reserve(type->fields.size());
+    for (const semantic::AggregateField& field : type->fields) { elementTypes.push_back(visit(field.type)); }
+    return llvm::StructType::get(*context, elementTypes);
 }
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Array* type) -> typevisit_t {
@@ -42,8 +46,12 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Enum* type) -> typevisit_t { return visit(type->underlyingType); }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Function* type) -> typevisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const semantic::Function* type) -> typevisit_t {
+    llvm::Type* returnTypeLLVM = visit(type->returnType);
+    std::vector<llvm::Type*> parameterLLVMTypes;
+    parameterLLVMTypes.reserve(type->parameterTypes.size());
+    for (const auto& parameter : type->parameterTypes) { parameterLLVMTypes.push_back(visit(parameter.type)); }
+    return llvm::FunctionType::get(returnTypeLLVM, parameterLLVMTypes, /*isVarArg=*/false);
 }
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Pointer* /*unused*/) -> typevisit_t {
