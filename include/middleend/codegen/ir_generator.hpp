@@ -9,6 +9,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/parser.hpp>
+#include <frontend/semantic/type_context.hpp>
 #include <memory>
 #include <mnstl/tiny_stack.hxx>
 #include <string_view>
@@ -51,14 +52,24 @@ class IRGenerator final : public _irgen_base_t {
     stmtvisit_t visit(const ast::Statement* stmt) { _irgen_base_t::visit(stmt); }
     typevisit_t visit(const ast::Type* type) { return _irgen_base_t::visit(type); }
     [[nodiscard]] typevisit_t visit(const semantic::SemanticType*);
+    [[nodiscard]] typevisit_t visit(const semantic ::Aggregate*);
+    [[nodiscard]] typevisit_t visit(const semantic ::Array*);
+    [[nodiscard]] typevisit_t visit(const semantic ::Enum*);
+    [[nodiscard]] typevisit_t visit(const semantic ::Function*);
+    [[nodiscard]] typevisit_t visit(const semantic ::Pointer*);
+    [[nodiscard]] typevisit_t visit(const semantic ::Poison*);
+    [[nodiscard]] typevisit_t visit(const semantic ::Uninitialized*);
+    [[nodiscard]] typevisit_t visit(const semantic ::Void*);
 
-#define STMT(name) stmtvisit_t visit(const ast::name*) override;
-#define EXPR(name) [[nodiscard]] exprvisit_t visit(const ast::name*) override;
-#define TYPE(name) [[nodiscard]] typevisit_t visit(const ast::name*) override;
+#define STMT(name)     stmtvisit_t visit(const ast::name*) override;
+#define EXPR(name)     [[nodiscard]] exprvisit_t visit(const ast::name*) override;
+#define TYPE(name)     [[nodiscard]] typevisit_t visit(const ast::name*) override;
+#define SEMANTIC(name) [[nodiscard]] typevisit_t visit(const semantic::name*);
 #include <frontend/ast/ast.def>
 #undef STMT
 #undef EXPR
 #undef TYPE
+#undef SEMANTIC
 
     [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
                                                         std::string_view lexeme) const;

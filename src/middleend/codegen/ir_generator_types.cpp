@@ -10,9 +10,50 @@
 
 namespace Manganese::codegen {
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::SemanticType* type) -> typevisit_t {
+[[nodiscard]] auto IRGenerator::visit(const semantic::SemanticType* type) -> typevisit_t {
+    using enum semantic::SemanticTypeKind;
+    switch (type->kind) {
+        case Aggregate: return visit(static_cast<const semantic::Aggregate*>(type));
+        case Array: return visit(static_cast<const semantic::Array*>(type));
+        case Enum: return visit(static_cast<const semantic::Enum*>(type));
+        case Function: return visit(static_cast<const semantic::Function*>(type));
+        case Pointer: return visit(static_cast<const semantic::Pointer*>(type));
+        case Poison: return visit(static_cast<const semantic::Poison*>(type));
+        case Uninitialized: return visit(static_cast<const semantic::Uninitialized*>(type));
+        case Void: return visit(static_cast<const semantic::Void*>(type));
+        case Generic: {
+            // TODO
+            return nullptr;
+        }
+        case Primitive: {
+            // TODO
+            return decltype(nullptr){};
+        }
+    };
+    ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");
+}
+
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Aggregate* type) -> typevisit_t {
     return nullptr;
 }
+
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Array* type) -> typevisit_t { return nullptr; }
+
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Enum* type) -> typevisit_t { return nullptr; }
+
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Function* type) -> typevisit_t {
+    return nullptr;
+}
+
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Pointer* type) -> typevisit_t { return nullptr; }
+
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Poison* type) -> typevisit_t { return nullptr; }
+
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Uninitialized* type) -> typevisit_t {
+    return nullptr;
+}
+
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const semantic::Void* type) -> typevisit_t { return nullptr; }
 
 // Visitors for AST types (just call the semantic type visitors)
 
