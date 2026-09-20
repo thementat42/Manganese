@@ -17,7 +17,7 @@ auto IRGenerator::visit([[maybe_unused]] const ast::BreakStatement* statement) -
 
 auto IRGenerator::visit([[maybe_unused]] const ast::ContinueStatement* statement) -> stmtvisit_t {}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::EmptyStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::EmptyStatement* /*unused*/) -> stmtvisit_t { /*doesn't need to do anything*/ }
 
 auto IRGenerator::visit([[maybe_unused]] const ast::EnumDeclarationStatement* statement) -> stmtvisit_t {}
 
