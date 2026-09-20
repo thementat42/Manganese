@@ -41,13 +41,12 @@ struct AggregateDeclarationStatement final : public Declaration {
     bool isDeclaration() const noexcept override { return true; }
 };
 
-struct AliasStatement final : public Statement {
+struct AliasStatement final : public Declaration {
     Type* baseType;  // The type being aliased (x in alias x as foo)
-    std::string alias;  // The name of the alias (foo in alias x as foo)
     Visibility visibility = Visibility::Private;
 
     AliasStatement(Type* _baseType, std::string&& _alias) noexcept :
-        Statement(StatementKind::AliasStatement), baseType(_baseType), alias(std::move(_alias)) {}
+        Declaration(StatementKind::AliasStatement, std::move(_alias)), baseType(_baseType){}
 
     MN_AST_STANDARD_INTERFACE
 };
