@@ -61,6 +61,7 @@ void AggregateDeclarationStatement::dump(std::ostream& os, std::size_t indent) c
     const Indent ind{indent};
     dumpHeader(os, ind, "AggregateDeclarationStatement", *this);
     os << ind.next() << "name: " << name << "\n";
+    os << ind.next() << "mangled name: " << mangledName << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
     os << ind.next() << "fields: [\n";
 
@@ -79,7 +80,8 @@ void AggregateDeclarationStatement::dump(std::ostream& os, std::size_t indent) c
 void AliasStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AliasStatement", *this);
-    os << ind.next() << "alias: " << alias << "\n";
+    os << ind.next() << "alias: " << name << "\n";
+    os << ind.next() << "mangled name: " << mangledName << "\n";
     os << ind.next() << "base type: ";
     baseType->dump(os, ind.next(2));
     os << ind << "}\n";
@@ -106,6 +108,7 @@ void EnumDeclarationStatement::dump(std::ostream& os, std::size_t indent) const 
     dumpHeader(os, ind, "EnumDeclarationStatement", *this);
 
     os << ind.next() << "name: " << name << "\n";
+    os << ind.next() << "mangled name: " << mangledName << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
     os << ind.next() << "values: [\n";
 
@@ -152,6 +155,7 @@ void FunctionDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
     const Indent ind{indent};
     dumpHeader(os, ind, "FunctionDeclarationStatement", *this);
     os << ind.next() << "name: " << name << "\n";
+    os << ind.next() << "mangled name: " << mangledName << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
 
     os << ind.next() << "generic types: [";
@@ -291,6 +295,7 @@ void VariableDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
     const Indent ind{indent};
     dumpHeader(os, ind, "VariableDeclarationStatement", *this);
     os << ind.next() << "name: " << name << "\n";
+    os << ind.next() << "mangled name: " << mangledName << "\n";
     os << ind.next() << "isMutable: " << (isMutable ? "true" : "false") << "\n";
     os << ind.next() << "visibility: " << (visibility == Visibility::Public ? "Public" : "Private") << "\n";
 

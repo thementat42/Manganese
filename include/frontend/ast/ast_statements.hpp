@@ -48,7 +48,8 @@ struct AliasStatement final : public Declaration {
     AliasStatement(Type* _baseType, std::string&& _alias) noexcept :
         Declaration(StatementKind::AliasStatement, std::move(_alias)), baseType(_baseType){}
 
-    MN_AST_STANDARD_INTERFACE
+    MN_AST_STANDARD_INTERFACE;
+    bool isDeclaration() const noexcept override { return true; }
 };
 
 struct BreakStatement final : public Statement {
