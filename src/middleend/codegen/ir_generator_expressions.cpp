@@ -45,8 +45,8 @@ namespace Manganese::codegen {
         // element
         // effectively &array[0][i]
         std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
-        llvm::Value* elemPtr = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
-        builder->CreateStore(elementValue, elemPtr);
+        llvm::Value* elementPointer = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
+        builder->CreateStore(elementValue, elementPointer);
     }
     return arrayAlloca;
 }
@@ -180,12 +180,17 @@ namespace Manganese::codegen {
     return builder->CreateLoad(llvmType, value, std::format("load_val_of_{}", expression->name));
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::IndexExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::IndexExpression* expression) -> exprvisit_t {
+    llvm::Value* elementPointer = getLValue(expression);
+    llvm::Type* elementLLVMType = visit(expression->semanticType);
+    return builder->CreateLoad(elementLLVMType, elementPointer, "load_index_expr_val");
+
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::MemberAccessExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::MemberAccessExpression* expression) -> exprvisit_t {
+    llvm::Value* fieldPointer = getLValue(expression);
+    llvm::Type* fieldLLVMType = visit(expression->semanticType);
+    return builder->CreateLoad(fieldLLVMType, fieldPointer, "load_member_access_expr");
 }
 
 auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprvisit_t {
@@ -301,9 +306,11 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     return nullptr;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::ScopeResolutionExpression* expression)
+[[nodiscard]] auto IRGenerator::visit(const ast::ScopeResolutionExpression* expression)
     -> exprvisit_t {
-    return nullptr;
+    llvm::Value* scopeElementPointer = getLValue(expression);
+    llvm::Type* scopeElementLLVMType = visit(expression->semanticType);
+    return builder->CreateLoad(scopeElementLLVMType, scopeElementPointer, "load_scope_res_val");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::SizeofExpression* expression) -> exprvisit_t {
