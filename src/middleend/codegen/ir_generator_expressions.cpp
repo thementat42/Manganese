@@ -153,8 +153,29 @@ namespace Manganese::codegen {
     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), static_cast<std::uint64_t>(expression->value));
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::FunctionCallExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::FunctionCallExpression* expression) -> exprvisit_t {
+    std::vector<llvm::Value*> argumentValues;
+    argumentValues.reserve(expression->arguments.size());
+    for (const ast::Expression* argument : expression->arguments) { argumentValues.push_back(visit(argument)); }
+
+    llvm::Value* calleeValue = nullptr;
+    if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
+        const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
+        if (idExpr->resolvedDeclaration != nullptr && !idExpr->resolvedDeclaration->mangledName.empty()) {
+            calleeValue = builder->GetInsertBlock()->getModule()->getFunction(idExpr->resolvedDeclaration->mangledName);
+        }
+        if (calleeValue == nullptr) { calleeValue = builder->GetInsertBlock()->getModule()->getFunction(idExpr->name); }
+    } else if (expression->callee->kind == ast::ExpressionKind::ScopeResolutionExpression) {
+        const auto* scopeExpr = static_cast<const ast::ScopeResolutionExpression*>(expression->callee);
+        calleeValue = builder->GetInsertBlock()->getModule()->getFunction(scopeExpr->mangledName);
+    } else {
+        // function pointer, array index, etc.
+
+        calleeValue = visit(expression->callee);
+    }
+
+    auto* functionType = llvm::cast<llvm::FunctionType>(visit(expression->callee->semanticType));
+    return builder->CreateCall(functionType, calleeValue, argumentValues, "call_tmp");
 }
 
 [[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::GenericInstantiationExpression* expression)
