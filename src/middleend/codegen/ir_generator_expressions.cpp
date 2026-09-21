@@ -344,8 +344,32 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     return builder->CreateGlobalString(strRef, "str_literal");
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::TypeCastExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::TypeCastExpression* expression) -> exprvisit_t {
+    llvm::Value* originalValue = visit(expression->originalValue);
+
+    const semantic::SemanticType* fromType = expression->originalValue->semanticType;
+    const semantic::SemanticType* toType = expression->targetType->semanticType;
+
+    // same type, don't need to actually do a cast
+    if (fromType == toType) { return originalValue; }
+    llvm::Type* sourceTypeLLVM = visit(fromType);
+    llvm::Type* destTypeLLVM = visit(toType);
+
+    if (sourceTypeLLVM->isIntOrIntVectorTy() && destTypeLLVM->isIntOrIntVectorTy()) {
+        return builder->CreateIntCast(originalValue, destTypeLLVM, /*isSigned=*/fromType->isSignedInteger(),
+                                      "int_to_int_cast");
+    }
+    if (sourceTypeLLVM->isFPOrFPVectorTy() && destTypeLLVM->isFPOrFPVectorTy()) {
+        return builder->CreateFPCast(originalValue, destTypeLLVM, "fp_cast");
+    }
+    if (sourceTypeLLVM->isIntOrIntVectorTy() && destTypeLLVM->isFPOrFPVectorTy()) {
+        return fromType->isSignedInteger() ? builder->CreateSIToFP(originalValue, destTypeLLVM, "si_to_fp_cast") : builder->CreateUIToFP(originalValue, destTypeLLVM, "ui_to_fp_cast");
+    }
+    if (sourceTypeLLVM->isFPOrFPVectorTy() && destTypeLLVM->isIntOrIntVectorTy()) {
+        return toType->isSignedInteger() ? builder->CreateFPToSI(originalValue, destTypeLLVM, "fp_to_si_cast") : builder->CreateFPToUI(originalValue, destTypeLLVM, "fp_to_ui_cast");
+    }
+
+    ASSERT_UNREACHABLE(std::format("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString()));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::UninitializedExpression* /*unused*/) -> exprvisit_t {
