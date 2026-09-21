@@ -33,9 +33,9 @@ auto IRGenerator::visit([[maybe_unused]] const ast::ImportStatement* statement) 
 
 auto IRGenerator::visit([[maybe_unused]] const ast::ModuleDeclarationStatement* statement) -> stmtvisit_t {}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::NamespaceStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::NamespaceStatement* statement) -> stmtvisit_t { visit(statement->block); }
 
-auto IRGenerator::visit([[maybe_unused]] const ast::NestedBlockStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::NestedBlockStatement* statement) -> stmtvisit_t { visit(statement->block); }
 
 auto IRGenerator::visit([[maybe_unused]] const ast::ReturnStatement* statement) -> stmtvisit_t {}
 
@@ -47,6 +47,10 @@ auto IRGenerator::visit([[maybe_unused]] const ast::WhileLoopStatement* statemen
 
 auto IRGenerator::visit(const ast::PoisonedStatement* /*unused*/) -> stmtvisit_t {
     ASSERT_UNREACHABLE("Poisoned statement was not flagged as semantically invalid during semantic analysis");
+}
+
+auto IRGenerator::visit(const ast::Block& block) -> stmtvisit_t {
+    for (const ast::Statement* statement : block) { visit(statement); }
 }
 
 }  // namespace Manganese::codegen
