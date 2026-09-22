@@ -67,8 +67,12 @@ namespace Manganese::codegen {
     return arrayAlloca;
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::AssignmentExpression* expression) -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::AssignmentExpression* expression) -> exprvisit_t {
+    llvm::Value* assigneePointer = getLValue(expression->assignee);
+    llvm::Value* newValue = visit(expression->value);
+    builder->CreateStore(newValue, assigneePointer);
+    // assignment evaluates to the value itself
+    return newValue;
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::BinaryExpression* expression) -> exprvisit_t {
