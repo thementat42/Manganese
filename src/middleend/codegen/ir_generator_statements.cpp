@@ -27,7 +27,9 @@ auto IRGenerator::visit(const ast::EmptyStatement* /*unused*/) -> stmtvisit_t { 
 
 auto IRGenerator::visit([[maybe_unused]] const ast::EnumDeclarationStatement* statement) -> stmtvisit_t {}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::ExpressionStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::ExpressionStatement* statement) -> stmtvisit_t {
+    DISCARD(visit(statement->expression));
+}
 
 auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
