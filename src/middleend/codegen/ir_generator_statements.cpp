@@ -29,7 +29,43 @@ auto IRGenerator::visit([[maybe_unused]] const ast::EnumDeclarationStatement* st
 
 auto IRGenerator::visit([[maybe_unused]] const ast::ExpressionStatement* statement) -> stmtvisit_t {}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::ForLoopStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
+
+    if (statement->initializationStep != nullptr) { visit(statement->initializationStep); }
+    llvm::BasicBlock* conditionBlock = llvm::BasicBlock::Create(*context, "for_condition", function);
+    llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(*context, "for_body", function);
+    llvm::BasicBlock* postBlock = llvm::BasicBlock::Create(*context, "for_post", function);
+    llvm::BasicBlock* exitBlock = llvm::BasicBlock::Create(*context, "for_exit", function);
+
+    // jump to condition to check
+    builder->CreateBr(conditionBlock);
+
+    builder->SetInsertPoint(conditionBlock);
+    if (statement->stopCondition != nullptr) {
+        llvm::Value* condVal = visit(statement->stopCondition);
+        builder->CreateCondBr(condVal, bodyBlock, exitBlock);
+    } else {
+        // Infinite loop if no condition is provided
+        builder->CreateBr(bodyBlock);
+    }
+
+    // a for loop jumps to the post step on a continue
+    loopStack.push({.continueBlock = postBlock, .exitBlock = exitBlock});
+
+    // emit the body
+    builder->SetInsertPoint(bodyBlock);
+    visit(statement->body);
+    if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(postBlock); }
+
+    loopStack.pop();
+
+    // run the post block then jump back to the condition
+    builder->SetInsertPoint(postBlock);
+    if (statement->postExpression != nullptr) { DISCARD(visit(statement->postExpression)); }
+    builder->CreateBr(conditionBlock);
+    builder->SetInsertPoint(exitBlock);
+}
 
 auto IRGenerator::visit([[maybe_unused]] const ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {}
 
@@ -50,7 +86,7 @@ auto IRGenerator::visit([[maybe_unused]] const ast::IfStatement* statement) -> s
             = llvm::BasicBlock::Create(*context, std::format("elif_condition_{}", i), function);
         llvm::BasicBlock* elifBodyBlock
             = llvm::BasicBlock::Create(*context, std::format("elif_condition_{}_true", i), function);
-        elifBlocks.push_back({elifConditionBlock, elifBodyBlock});
+        elifBlocks.emplace_back(elifConditionBlock, elifBodyBlock);
     }
 
     llvm::BasicBlock* elseBlock
@@ -113,7 +149,51 @@ auto IRGenerator::visit([[maybe_unused]] const ast::SwitchStatement* statement) 
 
 auto IRGenerator::visit([[maybe_unused]] const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::WhileLoopStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::WhileLoopStatement* statement) -> stmtvisit_t {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
+
+    llvm::BasicBlock* conditionBlock = llvm::BasicBlock::Create(*context, "while_loop_cond", function);
+    llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(*context, "while_loop_body", function);
+    llvm::BasicBlock* exitBlock = llvm::BasicBlock::Create(*context, "while_loop_exit", function);
+
+    if (statement->isDoWhile) {
+        // for a do/while loop, check the condition after the body
+        builder->SetInsertPoint(conditionBlock);
+        llvm::Value* condVal = visit(statement->condition);
+        builder->CreateCondBr(condVal, bodyBlock, exitBlock);
+    }
+
+    if (statement->isDoWhile) {
+        // do body first
+        builder->CreateBr(bodyBlock);
+        builder->SetInsertPoint(bodyBlock);
+        visit(statement->body);
+        loopStack.push({.continueBlock = conditionBlock, .exitBlock = exitBlock});
+
+        // after we run the body, we check the condition
+        builder->SetInsertPoint(conditionBlock);
+        llvm::Value* condVal = visit(statement->condition);
+        builder->CreateCondBr(condVal, bodyBlock, exitBlock);
+        loopStack.pop();
+    } else {
+        // regular while loop, check the condition first
+        builder->CreateBr(conditionBlock);
+
+        // check condition
+        builder->SetInsertPoint(conditionBlock);
+        llvm::Value* condVal = visit(statement->condition);
+        builder->CreateCondBr(condVal, bodyBlock, exitBlock);
+
+        loopStack.push({.continueBlock = conditionBlock, .exitBlock = exitBlock});
+
+        builder->SetInsertPoint(bodyBlock);
+        visit(statement->body);
+        if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(conditionBlock); }
+
+        loopStack.pop();
+    }
+    builder->SetInsertPoint(exitBlock);
+}
 
 auto IRGenerator::visit(const ast::PoisonedStatement* /*unused*/) -> stmtvisit_t {
     ASSERT_UNREACHABLE("Poisoned statement was not flagged as semantically invalid during semantic analysis");
