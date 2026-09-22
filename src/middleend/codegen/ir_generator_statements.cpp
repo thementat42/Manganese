@@ -9,6 +9,7 @@
 #include <frontend/ast.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
+#include "frontend/ast/ast_base.hpp"
 #include "frontend/ast/ast_statements.hpp"
 
 namespace Manganese::codegen {
@@ -220,7 +221,17 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
     builder->SetInsertPoint(mergeBlock);
 }
 
-auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
+    llvm::Type* variableTypeLLVM = visit(statement->semanticType);
+    llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statement->name);
+    
+    if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {
+        llvm::Value* initializerValue = visit(statement->value);
+        builder->CreateStore(initializerValue, alloca);
+    }
+    namedValues[std::string(statement->name)] = alloca;
+
+}
 
 auto IRGenerator::visit(const ast::WhileLoopStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();

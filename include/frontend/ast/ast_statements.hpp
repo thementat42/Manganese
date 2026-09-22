@@ -238,6 +238,7 @@ struct VariableDeclarationStatement final : public Declaration {
     bool isMutable;
     Expression* value;
     Type* type;
+    const semantic::SemanticType* semanticType;
 
     VariableDeclarationStatement(bool _isMutable, std::string&& _name, Visibility _visibility, Expression* _value,
                                  Type* _type) noexcept :

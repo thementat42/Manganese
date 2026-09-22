@@ -313,6 +313,8 @@ void VariableDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
         os << ind.next(2) << "auto\n";
     }
 
+    if (type->semanticType != nullptr) { os << ind.next() << "semantic type: \n" << type->semanticType->toString(); }
+
     os << ind << "}\n";
 }
 void WhileLoopStatement::dump(std::ostream& os, std::size_t indent) const {

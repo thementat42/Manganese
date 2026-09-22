@@ -196,6 +196,9 @@ std::string VariableDeclarationStatement::toString(std::size_t indent) const {
     std::string typeName;
     if (type != nullptr) {
         typeName = type->toString();
+    } else if (semanticType != nullptr) {
+        typeName = semanticType->toString();
+
     } else if ((value != nullptr) && (value->semanticType != nullptr)) {
         typeName = value->semanticType->toString();
     } else {
