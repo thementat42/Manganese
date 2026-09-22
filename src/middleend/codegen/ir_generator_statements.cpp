@@ -9,6 +9,8 @@
 #include <frontend/ast.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
+#include "frontend/ast/ast_statements.hpp"
+
 namespace Manganese::codegen {
 
 auto IRGenerator::visit([[maybe_unused]] const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {}
@@ -25,7 +27,12 @@ auto IRGenerator::visit(const ast::ContinueStatement* /*unused*/) -> stmtvisit_t
 
 auto IRGenerator::visit(const ast::EmptyStatement* /*unused*/) -> stmtvisit_t { /*doesn't need to do anything*/ }
 
-auto IRGenerator::visit([[maybe_unused]] const ast::EnumDeclarationStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::EnumDeclarationStatement* /*unused*/) -> stmtvisit_t {
+    /*
+don't need to do anything
+enum values are compile-time constants and emitted in scope resolution handling
+*/
+}
 
 auto IRGenerator::visit(const ast::ExpressionStatement* statement) -> stmtvisit_t {
     DISCARD(visit(statement->expression));
@@ -146,11 +153,74 @@ auto IRGenerator::visit(const ast::NamespaceStatement* statement) -> stmtvisit_t
 
 auto IRGenerator::visit(const ast::NestedBlockStatement* statement) -> stmtvisit_t { visit(statement->block); }
 
-auto IRGenerator::visit([[maybe_unused]] const ast::ReturnStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
+    if (statement->value == nullptr) {
+        builder->CreateRetVoid();
+    } else {
+        llvm::Value* returnValue = visit(statement->value);
+        builder->CreateRet(returnValue);
+    }
+}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::SwitchStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
 
-auto IRGenerator::visit([[maybe_unused]] const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {}
+    llvm::Value* condVal = visit(statement->target);
+
+    // All cases eventually join to this block
+    llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(*context, "switch_end", function);
+
+    // create the default block if there's a default body otherwise just the merge block
+    llvm::BasicBlock* defaultBlock
+        = statement->defaultBody.empty() ? mergeBlock : llvm::BasicBlock::Create(*context, "switch_default", function);
+
+    // 4. Pre-create basic blocks for each case
+    struct CaseInfo {
+        llvm::BasicBlock* block;
+        const ast::CaseClause* astCase;
+    };
+
+    std::vector<CaseInfo> caseInfos;
+    caseInfos.reserve(statement->cases.size());
+
+    for (size_t i = 0; i < statement->cases.size(); ++i) {
+        llvm::BasicBlock* caseBlk = llvm::BasicBlock::Create(*context, std::format("switch_case_{}", i), function);
+        caseInfos.push_back({.block = caseBlk, .astCase = &statement->cases[i]});
+    }
+
+    // LLVM has a built-in switch which usually becomes a jump table
+    llvm::SwitchInst* switchInstance
+        = builder->CreateSwitch(condVal, defaultBlock, static_cast<unsigned>(statement->cases.size()));
+
+    // Populate each case value and emit its body
+    for (size_t i = 0; i < statement->cases.size(); ++i) {
+        auto [caseBlock, astCase] = caseInfos[i];
+
+        // A single case can often match multiple values (e.g., `case 1, 2, 3:`)
+        for (const auto* valExpr : astCase->values) {
+            auto* constVal = llvm::cast<llvm::ConstantInt>(visit(valExpr));
+            switchInstance->addCase(constVal, caseBlock);
+        }
+
+        // Emit case body
+        builder->SetInsertPoint(caseBlock);
+        visit(astCase->body);
+
+        // If the body doesn't end with a terminator (like a return or break), branch to merge
+        if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
+    }
+
+    // Emit default body if there is one
+    if (!statement->defaultBody.empty()) {
+        builder->SetInsertPoint(defaultBlock);
+        visit(statement->defaultBody);
+        if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
+    }
+
+    builder->SetInsertPoint(mergeBlock);
+}
+
+auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {}
 
 auto IRGenerator::visit(const ast::WhileLoopStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
