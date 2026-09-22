@@ -88,8 +88,13 @@ namespace Manganese::codegen {
         case ast::PrimitiveType::boolean:
             // LLVM doesn't have a separate boolean type, just a "1-bit integer"
             return builder->getInt1Ty();
-        case ast::PrimitiveType::string:
-            // TODO
+        case ast::PrimitiveType::string: {
+            llvm::Type* charPointerType = llvm::PointerType::get(*context, 0);
+            llvm::Type* lengthType = builder->getInt64Ty();
+            // strings are a pointer + a length so return an anonymous struct
+            // needs to be handled by language runtime
+            return llvm::StructType::get(*context, {charPointerType, lengthType});
+        }
         case ast::PrimitiveType::not_primitive:
             ASSERT_UNREACHABLE("IRGenerator::getPrimitiveType called on non-primitive semantic type");
     }
