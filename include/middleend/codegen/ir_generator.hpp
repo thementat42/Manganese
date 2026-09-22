@@ -1,3 +1,4 @@
+#include <llvm/IR/BasicBlock.h>
 #ifndef MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP
 #define MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP 1
 
@@ -19,6 +20,11 @@ namespace Manganese::codegen {
 
 using _irgen_base_t = ast::Visitor<llvm::Value*, void, llvm::Type*, false>;
 
+struct LoopTarget {
+    llvm::BasicBlock* continueBlock;  // where a 'continue' statement jumps to
+    llvm::BasicBlock* exitBlock;  // where a 'break' statement jumps to
+};
+
 class IRGenerator final : public _irgen_base_t {
    private:
     std::unique_ptr<llvm::LLVMContext> context;
@@ -27,6 +33,7 @@ class IRGenerator final : public _irgen_base_t {
     std::unordered_map<std::string, llvm::Value*> namedValues;
     std::vector<parser::ParsedFile>& files;
     utils::TargetInfo targetInfo;
+    mnstl::tiny_stack<LoopTarget> loopStack;
 
    public:
     IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles, utils::TargetInfo info) :

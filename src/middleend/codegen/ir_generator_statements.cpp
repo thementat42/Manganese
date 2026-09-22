@@ -13,11 +13,15 @@ namespace Manganese::codegen {
 
 auto IRGenerator::visit([[maybe_unused]] const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::AliasStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::AliasStatement* /*unused*/) -> stmtvisit_t { /*type aliases are purely semantic*/ }
 
-auto IRGenerator::visit([[maybe_unused]] const ast::BreakStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::BreakStatement* /*unused*/) -> stmtvisit_t {
+    builder->CreateBr(loopStack.top().exitBlock);
+}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::ContinueStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::ContinueStatement* /*unused*/) -> stmtvisit_t {
+    builder->CreateBr(loopStack.top().continueBlock);
+}
 
 auto IRGenerator::visit(const ast::EmptyStatement* /*unused*/) -> stmtvisit_t { /*doesn't need to do anything*/ }
 
