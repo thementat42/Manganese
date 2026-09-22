@@ -178,6 +178,11 @@ struct Enum final : public SemanticType {
         return std::ranges::find(variants, variantName, &Variant::name) != variants.end();
     }
 
+    std::optional<std::int64_t> getVariantValue(std::string_view variantName) const {
+        auto it = std::ranges::find(variants, variantName, &Variant::name);
+        return it == variants.end() ? std::nullopt : it->value;
+    }
+
     ~Enum() override = default;
 
     std::string toString() const override;
