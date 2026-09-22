@@ -244,6 +244,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
 }
 
 auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
+    statement->semanticType = typeContext.getPoison();
     const SemanticType* variableType = nullptr;
     statement->mangledName = getMangledName(statement->name);
 
@@ -289,6 +290,8 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
         logError(statement, "Redeclaration error: variable '{}' is already declared in this scope", statement->name);
         return stmtvisit_t::Failure;
     }
+
+    statement->semanticType = variableType;
 
     return stmtvisit_t::Success;
 }
