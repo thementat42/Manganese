@@ -29,8 +29,7 @@ namespace Manganese::codegen {
     return builder->CreateLoad(aggregateType, alloca, "aggregate_load");
 }
 
-[[nodiscard]] auto IRGenerator::visit(const ast::AggregateLiteralExpression* expression)
-    -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit(const ast::AggregateLiteralExpression* expression) -> exprvisit_t {
     auto* aggregateType = llvm::cast<llvm::StructType>(visit(expression->semanticType));
     llvm::Value* alloca = builder->CreateAlloca(aggregateType, nullptr, "anonymous_aggregate_instantiation");
 
@@ -347,6 +346,17 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::ScopeResolutionExpression* expression) -> exprvisit_t {
+    if (expression->semanticType->isEnum()) {
+        const auto* enumType = static_cast<const semantic::Enum*>(expression->semanticType);
+        const auto* identifierExpression = static_cast<const ast::IdentifierExpression*>(expression->element);
+        auto val = enumType->getVariantValue(identifierExpression->name);
+        if (!val) {
+            ASSERT_UNREACHABLE(std::format("Enum variant '{}' did not have a value set", identifierExpression->name));
+        }
+        auto* llvmIntType = llvm::cast<llvm::IntegerType>(visit(enumType->underlyingType));
+        return llvm::ConstantInt::get(llvmIntType, static_cast<std::uint64_t>(*val),
+                                      /*isSigned=*/enumType->underlyingType->isSignedInteger());
+    }
     llvm::Value* scopeElementPointer = getLValue(expression);
     llvm::Type* scopeElementLLVMType = visit(expression->semanticType);
     return builder->CreateLoad(scopeElementLLVMType, scopeElementPointer, "load_scope_res_val");
