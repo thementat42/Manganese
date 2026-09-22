@@ -69,7 +69,7 @@ auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
 
 auto IRGenerator::visit([[maybe_unused]] const ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {}
 
-auto IRGenerator::visit([[maybe_unused]] const ast::IfStatement* statement) -> stmtvisit_t {
+auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
 
     // set up blocks for each place to jump to
@@ -135,9 +135,10 @@ auto IRGenerator::visit([[maybe_unused]] const ast::IfStatement* statement) -> s
     builder->SetInsertPoint(mergeBlock);
 }
 
-auto IRGenerator::visit([[maybe_unused]] const ast::ImportStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::ImportStatement* /*unused*/) -> stmtvisit_t { /*doesn't mean anything in IR*/ }
 
-auto IRGenerator::visit([[maybe_unused]] const ast::ModuleDeclarationStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::ModuleDeclarationStatement* /*unused*/)
+    -> stmtvisit_t { /*doesn't mean anything in IR*/ }
 
 auto IRGenerator::visit(const ast::NamespaceStatement* statement) -> stmtvisit_t { visit(statement->block); }
 
