@@ -17,14 +17,29 @@
 
 namespace Manganese::codegen {
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::AggregateInstantiationExpression* expression)
-    -> exprvisit_t {
-    return nullptr;
+[[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
+    auto* aggregateType = llvm::cast<llvm::StructType>(visit(expression->semanticType));
+    llvm::Value* alloca = builder->CreateAlloca(aggregateType, nullptr, "aggregate_instantiation");
+
+    for (unsigned i = 0; i < expression->fields.size(); ++i) {
+        llvm::Value* fieldValue = visit(expression->fields[i].value);
+        llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
+        builder->CreateStore(fieldValue, fieldPointer);
+    }
+    return builder->CreateLoad(aggregateType, alloca, "aggregate_load");
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::AggregateLiteralExpression* expression)
+[[nodiscard]] auto IRGenerator::visit(const ast::AggregateLiteralExpression* expression)
     -> exprvisit_t {
-    return nullptr;
+    auto* aggregateType = llvm::cast<llvm::StructType>(visit(expression->semanticType));
+    llvm::Value* alloca = builder->CreateAlloca(aggregateType, nullptr, "anonymous_aggregate_instantiation");
+
+    for (unsigned i = 0; i < expression->elements.size(); ++i) {
+        llvm::Value* fieldValue = visit(expression->elements[i]);
+        llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
+        builder->CreateStore(fieldValue, fieldPointer);
+    }
+    return builder->CreateLoad(aggregateType, alloca, "anonymous_aggregate_load");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AlignofExpression* expression) -> exprvisit_t {
@@ -363,13 +378,16 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
         return builder->CreateFPCast(originalValue, destTypeLLVM, "fp_cast");
     }
     if (sourceTypeLLVM->isIntOrIntVectorTy() && destTypeLLVM->isFPOrFPVectorTy()) {
-        return fromType->isSignedInteger() ? builder->CreateSIToFP(originalValue, destTypeLLVM, "si_to_fp_cast") : builder->CreateUIToFP(originalValue, destTypeLLVM, "ui_to_fp_cast");
+        return fromType->isSignedInteger() ? builder->CreateSIToFP(originalValue, destTypeLLVM, "si_to_fp_cast")
+                                           : builder->CreateUIToFP(originalValue, destTypeLLVM, "ui_to_fp_cast");
     }
     if (sourceTypeLLVM->isFPOrFPVectorTy() && destTypeLLVM->isIntOrIntVectorTy()) {
-        return toType->isSignedInteger() ? builder->CreateFPToSI(originalValue, destTypeLLVM, "fp_to_si_cast") : builder->CreateFPToUI(originalValue, destTypeLLVM, "fp_to_ui_cast");
+        return toType->isSignedInteger() ? builder->CreateFPToSI(originalValue, destTypeLLVM, "fp_to_si_cast")
+                                         : builder->CreateFPToUI(originalValue, destTypeLLVM, "fp_to_ui_cast");
     }
 
-    ASSERT_UNREACHABLE(std::format("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString()));
+    ASSERT_UNREACHABLE(
+        std::format("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString()));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::UninitializedExpression* /*unused*/) -> exprvisit_t {
