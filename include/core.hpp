@@ -87,6 +87,10 @@
 
 #define BETWEEN(c, low, high) (((low) <= (c)) && ((c) <= (high)))
 
+#ifndef MN_STRINGIFY
+#define MN_STRINGIFY(x) #x
+#endif  // MN_STRINGIFY
+
 #if MN_DEBUG
 #define ASSERT_UNREACHABLE(message) panic((message), __FILE__, __LINE__, __func__)
 #else
