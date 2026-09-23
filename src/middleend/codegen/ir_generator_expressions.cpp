@@ -16,7 +16,6 @@
 #include <middleend/codegen/ir_generator.hpp>
 #include <runtime/string.hpp>
 
-
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
@@ -142,6 +141,32 @@ namespace Manganese::codegen {
         case LessThanOrEqual:
         case Equal:
         case NotEqual: {
+            if (expression->left->semanticType->isString()) {
+                auto* stringType = visit(expression->left->semanticType);
+
+                // Call runtime string comparison: int mn_strcmp(RuntimeString, RuntimeString)
+                llvm::FunctionCallee strcmpFn = module->getOrInsertFunction(MN_STRINGIFY(mn_strcmp),
+                                                                            builder->getInt32Ty(),  // returns i32
+                                                                            stringType, stringType);
+
+                llvm::Value* cmpResult = builder->CreateCall(strcmpFn, {lhs, rhs}, "strcmp_tmp");
+                llvm::Value* zero = builder->getInt32(0);
+
+                // Map the operation to the appropriate comparison against 0
+                llvm::CmpInst::Predicate pred;
+                switch (expression->op) {
+                    case Equal: pred = llvm::CmpInst::ICMP_EQ; break;
+                    case NotEqual: pred = llvm::CmpInst::ICMP_NE; break;
+                    case LessThan: pred = llvm::CmpInst::ICMP_SLT; break;
+                    case LessThanOrEqual: pred = llvm::CmpInst::ICMP_SLE; break;
+                    case GreaterThan: pred = llvm::CmpInst::ICMP_SGT; break;
+                    case GreaterThanOrEqual: pred = llvm::CmpInst::ICMP_SGE; break;
+                    default: ASSERT_UNREACHABLE("Invalid string comparison operator");
+                }
+
+                return builder->CreateICmp(pred, cmpResult, zero, "str_cmp_bool");
+            }
+            // regular number comparison
             if (doFloatOperation) {
                 const llvm::CmpInst::Predicate predicate = getFloatPredicate(expression->op);
                 return builder->CreateFCmp(predicate, lhs, rhs, "fcmp_tmp");
@@ -150,6 +175,7 @@ namespace Manganese::codegen {
             const llvm::CmpInst::Predicate predicate = getIntPredicate(expression->op, isSigned);
             return builder->CreateICmp(predicate, lhs, rhs, "icmp_tmp");
         }
+
         case And:
         // TODO
         case Or:
