@@ -176,10 +176,50 @@ namespace Manganese::codegen {
             return builder->CreateICmp(predicate, lhs, rhs, "icmp_tmp");
         }
 
+        // to implement short-circuiting for && and || we need phi nodes
         case And:
-        // TODO
-        case Or:
-            // TODO
+        case Or: {
+            const auto op = expression->op;
+            llvm::Function* function = builder->GetInsertBlock()->getParent();
+            llvm::Value* lhsValue = visit(expression->left);
+            llvm::BasicBlock* lhsBlock = builder->GetInsertBlock();
+
+            llvm::BasicBlock* rhsBlock = llvm::BasicBlock::Create(*context, op == And ? "and_rhs" : "or_rhs", function);
+            llvm::BasicBlock* mergeBlock
+                = llvm::BasicBlock::Create(*context, op == And ? "and_end" : "or_end", function);
+
+            // branching on the LHS value
+            if (expression->op == And) {
+                // for && if it's true we need to evaluate the rhs
+                // but if it's false we can skip the rhs
+                builder->CreateCondBr(/*Cond=*/lhsValue, /*True=*/rhsBlock, /*False=*/mergeBlock);
+            } else {
+                // for || if it's false we need to evaluate the rhs
+                //  but if it's true we can skip the rhs
+                builder->CreateCondBr(/*Cond=*/lhsValue, /*True=*/mergeBlock, /*False=*/rhsBlock);
+            }
+
+            // have a separate block for evaluating the rhs (so we can skip it)
+            builder->SetInsertPoint(rhsBlock);
+            llvm::Value* rhsValue = visit(expression->right);
+            llvm::BasicBlock* rhsBlockEnd = builder->GetInsertBlock();
+            builder->CreateBr(mergeBlock);  // after evaluating RHS we can go to the merge
+
+            // Merge via the PHI node
+            builder->SetInsertPoint(mergeBlock);
+
+            llvm::PHINode* phiNode
+                = builder->CreatePHI(builder->getInt1Ty(), /*NumReservedValues=*/2, op == And ? "and_phi" : "or_phi");
+
+            // the PHI node has two incoming values:
+            // for &&: if we come from the lhs, the lhs was false (short circuiting)
+            // for || if we come from the lhs, the lhs was true (short circuiting)
+            // for both, if we come from the rhs we just use that value
+            phiNode->addIncoming(builder->getInt1(op != And), lhsBlock);
+            phiNode->addIncoming(rhsValue, rhsBlockEnd);
+            return phiNode;
+        }
+
         case BitAnd: return builder->CreateAnd(lhs, rhs, "bitand");
 
         case BitOr: return builder->CreateOr(lhs, rhs, "bitand");
@@ -223,7 +263,6 @@ namespace Manganese::codegen {
         calleeValue = builder->GetInsertBlock()->getModule()->getFunction(scopeExpr->mangledName);
     } else {
         // function pointer, array index, etc.
-
         calleeValue = visit(expression->callee);
     }
 
