@@ -1,7 +1,7 @@
-#include <llvm/IR/BasicBlock.h>
 #ifndef MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP
 #define MANGANESE_INCLUDE_MIDDLEEND_CODEGEN_IR_GENERATOR_HPP 1
 
+#include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -10,6 +10,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/parser.hpp>
+#include <frontend/semantic.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <memory>
 #include <mnstl/tiny_stack.hxx>
@@ -34,14 +35,17 @@ class IRGenerator final : public _irgen_base_t {
     std::vector<parser::ParsedFile>& files;
     utils::TargetInfo targetInfo;
     mnstl::tiny_stack<LoopTarget> loopStack;
+    const semantic::SemanticAnalyzer& analyzer;
 
    public:
-    IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles, utils::TargetInfo info) :
+    IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles,
+                const semantic::SemanticAnalyzer& analyzerReference, utils::TargetInfo info) :
         context(std::make_unique<llvm::LLVMContext>()),
         module(std::make_unique<llvm::Module>(moduleName, *context)),
         builder(std::make_unique<llvm::IRBuilder<>>(*context)),
         files(parsedFiles),
-        targetInfo(info) {}
+        targetInfo(info),
+        analyzer(analyzerReference) {}
 
     std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
 
