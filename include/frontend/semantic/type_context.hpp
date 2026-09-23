@@ -79,6 +79,10 @@ struct SemanticType {
         using enum ast::PrimitiveType;
         return isPrimitive() && mnstl::enum_matches(primitiveType, int8, int16, int32, int64, int128);
     }
+    constexpr bool isString() const noexcept {
+        using enum ast::PrimitiveType;
+        return isPrimitive() && mnstl::enum_matches(primitiveType, string);
+    }
     constexpr bool isInteger() const noexcept { return isSignedInteger() || isUnsignedInteger(); }
     constexpr bool isFloat() const noexcept {
         using enum ast::PrimitiveType;

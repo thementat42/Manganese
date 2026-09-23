@@ -14,6 +14,8 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <middleend/codegen/ir_generator.hpp>
+#include <runtime/string.hpp>
+
 
 namespace Manganese::codegen {
 
@@ -90,9 +92,16 @@ namespace Manganese::codegen {
     const bool doFloatOperation = commonType->isFloat();
 
     switch (expression->op) {
-        case Plus:
+        case Plus: {
+            if (expression->semanticType->isString()) {
+                auto* stringType = visit(expression->semanticType);
+                llvm::FunctionCallee concatenationFunction
+                    = module->getOrInsertFunction(MN_STRINGIFY(mn_strcat), stringType, stringType, stringType);
+                return builder->CreateCall(concatenationFunction, {lhs, rhs}, "string_concat_tmp");
+            }
             return doFloatOperation ? builder->CreateFAdd(lhs, rhs, "fadd_tmp")
                                     : builder->CreateAdd(lhs, rhs, "iadd_tmp");
+        }
 
         case Minus:
             return doFloatOperation ? builder->CreateFSub(lhs, rhs, "fsub_tmp")
@@ -370,7 +379,15 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 
 [[nodiscard]] auto IRGenerator::visit(const ast::StringLiteralExpression* expression) -> exprvisit_t {
     llvm::StringRef strRef(expression->value.data(), expression->value.size());
-    return builder->CreateGlobalString(strRef, "str_literal");
+    llvm::Constant* globalString = builder->CreateGlobalString(strRef, "str_literal");
+
+    auto* stringType = llvm::cast<llvm::StructType>(visit(expression->semanticType));
+    llvm::Constant* zero = builder->getInt32(0);
+    std::vector<llvm::Constant*> indices = {zero, zero};
+    llvm::Constant* dataPtr
+        = llvm::ConstantExpr::getInBoundsGetElementPtr(globalString->getType(), globalString, indices);
+    llvm::Constant* length = builder->getInt64(expression->value.size());
+    return llvm::ConstantStruct::get(stringType, {dataPtr, length});
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::TypeCastExpression* expression) -> exprvisit_t {
