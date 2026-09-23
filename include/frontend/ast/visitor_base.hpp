@@ -43,7 +43,7 @@ class Visitor {
 #include <frontend/ast/ast.def>
         }
 
-        ASSERT_UNREACHABLE(std::format("No visit() overload for statement kind {}", static_cast<int>(stmt->kind)));
+        ASSERT_UNREACHABLE_FMT("No visit() overload for statement kind {}", static_cast<int>(stmt->kind));
 #undef STMT
 #undef EXPR
 #undef TYPE
@@ -59,7 +59,7 @@ class Visitor {
 #include <frontend/ast/ast.def>
         }
 
-        ASSERT_UNREACHABLE(std::format("No visit() overload for expression kind {}", static_cast<int>(expr->kind)));
+        ASSERT_UNREACHABLE_FMT("No visit() overload for expression kind {}", static_cast<int>(expr->kind));
 #undef STMT
 #undef EXPR
 #undef TYPE
@@ -76,7 +76,7 @@ class Visitor {
 #include <frontend/ast/ast.def>
         }
 
-        ASSERT_UNREACHABLE(std ::format("No visit() overload for type kind {}", static_cast<int>(type->kind)));
+        ASSERT_UNREACHABLE_FMT("No visit() overload for type kind {}", static_cast<int>(type->kind));
 
 #undef STMT
 #undef EXPR

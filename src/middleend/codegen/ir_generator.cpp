@@ -47,8 +47,8 @@ namespace Manganese::codegen {
         case uint128: return llvm::Type::getInt128Ty(*context);
         default: break;
     }
-    ASSERT_UNREACHABLE(std::format("Invalid integer primitive type '{}' in IRGenerator::visit(NumberLiteralExpression)",
-                                   ast::primitiveTypeToString(p)));
+    ASSERT_UNREACHABLE_FMT("Invalid integer primitive type '{}' in IRGenerator::visit(NumberLiteralExpression)",
+                           ast::primitiveTypeToString(p));
 }
 
 [[nodiscard]] llvm::Value* IRGenerator::convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
@@ -95,8 +95,8 @@ llvm::CmpInst::Predicate IRGenerator::getFloatPredicate(lexer::TokenType op) {
     if (op == LessThanOrEqual) { return FCMP_ULE; }
     if (op == Equal) { return FCMP_UEQ; }
     if (op == NotEqual) { return FCMP_UNE; }
-    ASSERT_UNREACHABLE(std::format("Unknown binary comparison operator '{}' in IRGenerator::getFloatPredicate",
-                                   lexer::tokenTypeToString(op)));
+    ASSERT_UNREACHABLE_FMT("Unknown binary comparison operator '{}' in IRGenerator::getFloatPredicate",
+                           lexer::tokenTypeToString(op));
 }
 llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool isSigned) {
     using enum lexer::TokenType;
@@ -107,8 +107,8 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
     if (op == LessThanOrEqual) { return isSigned ? ICMP_SLE : ICMP_ULE; }
     if (op == Equal) { return ICMP_EQ; }
     if (op == NotEqual) { return ICMP_NE; }
-    ASSERT_UNREACHABLE(std::format("Unknown binary comparison operator '{}' in IRGenerator::getIntPredicate",
-                                   lexer::tokenTypeToString(op)));
+    ASSERT_UNREACHABLE_FMT("Unknown binary comparison operator '{}' in IRGenerator::getIntPredicate",
+                           lexer::tokenTypeToString(op));
 }
 
 [[nodiscard]] auto IRGenerator::getLValue(const ast::Expression* expr) -> exprvisit_t {
@@ -116,8 +116,8 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
         const auto* identifierExpression = static_cast<const ast::IdentifierExpression*>(expr);
         llvm::Value* ptr = namedValues[identifierExpression->name];
         if (ptr == nullptr) {
-            ASSERT_UNREACHABLE(std::format("Variable '{}' was not flagged as undeclared during semantic analysis",
-                                           identifierExpression->name));
+            ASSERT_UNREACHABLE_FMT("Variable '{}' was not flagged as undeclared during semantic analysis",
+                                   identifierExpression->name);
         }
         return ptr;
     }
@@ -150,13 +150,12 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
             ptr = builder->GetInsertBlock()->getModule()->getNamedGlobal(scopeExpression->mangledName);
         }
         if (ptr == nullptr) {
-            ASSERT_UNREACHABLE(
-                std::format("Could not find LLVM value for mangled name '{}'", scopeExpression->mangledName));
+            ASSERT_UNREACHABLE_FMT("Could not find LLVM value for mangled name '{}'", scopeExpression->mangledName);
         }
         return ptr;
     }
 
-    ASSERT_UNREACHABLE(std::format("Unknown lvalue expression '{}' in IRGenerator::getLValue", expr->toString()));
+    ASSERT_UNREACHABLE_FMT("Unknown lvalue expression '{}' in IRGenerator::getLValue", expr->toString());
 }
 
 }  // namespace Manganese::codegen

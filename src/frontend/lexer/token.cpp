@@ -3,7 +3,6 @@
 #include <frontend/lexer/token.hpp>
 #include <io/logging.hpp>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 namespace Manganese::lexer {
@@ -25,8 +24,7 @@ std::string tokenTypeToString(TokenType type) {
 #undef KEYWORD
 #undef OPERATOR
     }
-    ASSERT_UNREACHABLE("No string representation for TokenType: "
-                       + std ::to_string(static_cast<std ::underlying_type<TokenType>::type>(type)));
+    ASSERT_UNREACHABLE_FMT("No string representation for TokenType: {}", static_cast<int>(type));
 }
 
 TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
@@ -35,7 +33,7 @@ TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
         case TokenType::Minus: return TokenType::UnaryMinus;
         case TokenType::BitAnd: return TokenType::AddressOf;
         case TokenType::Mul: return TokenType::Dereference;
-        default: ASSERT_UNREACHABLE("No unary counterpart for token type: " + tokenTypeToString(_type));
+        default: ASSERT_UNREACHABLE_FMT("No unary counterpart for token type: {}", tokenTypeToString(_type));
     }
 }
 

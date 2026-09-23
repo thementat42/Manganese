@@ -234,7 +234,7 @@ namespace Manganese::codegen {
         case ScopeResolution:
         default: break;
     }
-    ASSERT_UNREACHABLE(std::format("Invalid binary operator {} in codegen", lexer::tokenTypeToString(expression->op)));
+    ASSERT_UNREACHABLE_FMT("Invalid binary operator {} in codegen", lexer::tokenTypeToString(expression->op));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::BoolLiteralExpression* expression) -> exprvisit_t {
@@ -287,8 +287,8 @@ namespace Manganese::codegen {
 
     if (value == nullptr) { value = namedValues[expression->name]; }
     if (value == nullptr) {
-        ASSERT_UNREACHABLE(
-            std::format("Variable '{}' was not flagged as undeclared during semantic analysis", expression->name));
+        ASSERT_UNREACHABLE_FMT("Variable '{}' was not flagged as undeclared during semantic analysis",
+                               expression->name);
     }
     llvm::Type* llvmType = visit(expression->semanticType);
     return builder->CreateLoad(llvmType, value, std::format("load_val_of_{}", expression->name));
@@ -360,7 +360,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
         updatedValue = valueType->isInteger() ? builder->CreateSub(originalValue, one, "postfix_dec_isub")
                                               : builder->CreateFSub(originalValue, one, "postfix_dec_fsub");
     } else {
-        ASSERT_UNREACHABLE(std::format("Unknown postfix operator '{}'", lexer::tokenTypeToString(expression->op)));
+        ASSERT_UNREACHABLE_FMT("Unknown postfix operator '{}'", lexer::tokenTypeToString(expression->op));
     }
     builder->CreateStore(updatedValue, ptrToValue);
     // postfix does the operation but returns the original value
@@ -424,9 +424,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
         const auto* enumType = static_cast<const semantic::Enum*>(expression->semanticType);
         const auto* identifierExpression = static_cast<const ast::IdentifierExpression*>(expression->element);
         auto val = enumType->getVariantValue(identifierExpression->name);
-        if (!val) {
-            ASSERT_UNREACHABLE(std::format("Enum variant '{}' did not have a value set", identifierExpression->name));
-        }
+        if (!val) { ASSERT_UNREACHABLE_FMT("Enum variant '{}' did not have a value set", identifierExpression->name); }
         auto* llvmIntType = llvm::cast<llvm::IntegerType>(visit(enumType->underlyingType));
         return llvm::ConstantInt::get(llvmIntType, static_cast<std::uint64_t>(*val),
                                       /*isSigned=*/enumType->underlyingType->isSignedInteger());
@@ -482,8 +480,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
                                          : builder->CreateFPToUI(originalValue, destTypeLLVM, "fp_to_ui_cast");
     }
 
-    ASSERT_UNREACHABLE(
-        std::format("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString()));
+    ASSERT_UNREACHABLE_FMT("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString());
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::UninitializedExpression* /*unused*/) -> exprvisit_t {

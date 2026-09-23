@@ -20,7 +20,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
 
     const Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
+        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not logged in the symbol table", statement->name);
     }
 
     const auto* aggregateType = static_cast<const Aggregate*>(symbol->type);
@@ -71,7 +71,7 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     statement->mangledName = getMangledName(statement->name);
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(std::format("Alias symbol '{}' was not registered during type collection", statement->name));
+        ASSERT_UNREACHABLE_FMT("Alias symbol '{}' was not registered during type collection", statement->name);
     }
     // Already resolved
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
@@ -99,7 +99,7 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
     statement->mangledName = getMangledName(statement->name);
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(std::format("Enum {} was not registered during type initalization", statement->name));
+        ASSERT_UNREACHABLE_FMT("Enum {} was not registered during type initalization", statement->name);
     }
 
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }

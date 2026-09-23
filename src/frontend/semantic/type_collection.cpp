@@ -57,7 +57,7 @@ Result SemanticAnalyzer::collectGlobalAggregate(ast::AggregateDeclarationStateme
     // Skip uninstantiated generics
     Symbol* symbol = symbolTable.lookup(aggregate->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not recorded during type collection", aggregate->name));
+        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not recorded during type collection", aggregate->name);
     }
 
     // Skip if already processed
@@ -98,7 +98,7 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
     Symbol* symbol = symbolTable.lookup(function->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(std::format("Function '{}' was not recorded during type collection", function->name));
+        ASSERT_UNREACHABLE_FMT("Function '{}' was not recorded during type collection", function->name);
     }
 
     if (!function->genericTypes.empty()) {

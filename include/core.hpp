@@ -93,8 +93,10 @@
 
 #if MN_DEBUG
 #define ASSERT_UNREACHABLE(message) panic((message), __FILE__, __LINE__, __func__)
+#define ASSERT_UNREACHABLE_FMT(message, ...) ASSERT_UNREACHABLE(std::format(message __VA_OPT__(,) __VA_ARGS__))
 #else
 #define ASSERT_UNREACHABLE(message) manganese_unreachable()
+#define ASSERT_UNREACHABLE_FMT(message, ...) manganese_unreachable()
 #endif  // MN_DEBUG
 
 #endif  // MANGANESE_INCLUDE_CORE_HPP

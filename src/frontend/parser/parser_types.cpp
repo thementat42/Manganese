@@ -145,7 +145,7 @@ ast::Type* Parser::parseIdentifierType() {
     } else if (lexeme == bool_str) {
         prim_t = boolean;
     } else {
-        ASSERT_UNREACHABLE("Unknown primitive type " + lexeme);
+        ASSERT_UNREACHABLE_FMT("Unknown primitive type '{}'", lexeme);
     }
     return makeNode<ast::IdentifierType>(startToken, startToken.getLexeme(), prim_t);
 }
