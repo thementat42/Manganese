@@ -22,7 +22,13 @@
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
 
-namespace Manganese::semantic {
+namespace Manganese {
+
+namespace codegen {
+class IRGenerator;
+}
+
+namespace semantic {
 
 class SemanticAnalyzer;
 
@@ -63,6 +69,7 @@ using _analyzer_base_t = ast::Visitor<Result, Result, Result, true>;
 
 class SemanticAnalyzer final : public _analyzer_base_t {
    private:
+    friend class codegen::IRGenerator;
     SymbolTable symbolTable;
     TypeContext typeContext;
     std::vector<parser::ParsedFile>& parsedFiles;
@@ -229,7 +236,7 @@ constexpr bool isLvalue(const ast::Expression* expr) noexcept {
     return mnstl::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression,
                                ScopeResolutionExpression);
 }
-
-}  // namespace Manganese::semantic
+}  // namespace semantic
+}  // namespace Manganese
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_ANALYZER_HPP
