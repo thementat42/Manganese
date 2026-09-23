@@ -264,7 +264,7 @@ const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type) 
                 }
                 return typeContext.getArray(elementType, *lengthValue);
             }
-            // TODO
+            logError(type, "Could not deduce array length.");
             return typeContext.getPoison();
         }
         case FunctionType: {
