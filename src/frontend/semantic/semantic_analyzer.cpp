@@ -62,7 +62,7 @@ const Symbol* SemanticAnalyzer::resolveTypeSymbol(const ast::Type* typeNode) {
     return nullptr;
 }
 
-const Symbol* SemanticAnalyzer::resolveScopeSymbol(const ast::Expression* expr) {
+const Symbol* SemanticAnalyzer::resolveScopeSymbol(const ast::Expression* expr) const {
     if (expr->kind == ast::ExpressionKind::IdentifierExpression) {
         const auto* id = static_cast<const ast::IdentifierExpression*>(expr);
         return symbolTable.lookup(id->name);
@@ -82,7 +82,7 @@ const Symbol* SemanticAnalyzer::resolveScopeSymbol(const ast::Expression* expr) 
     return nullptr;
 }
 
-bool SemanticAnalyzer::isMutableExpression(const ast::Expression* expr) {
+bool SemanticAnalyzer::isMutableExpression(const ast::Expression* expr) const {
     using enum ast::ExpressionKind;
     switch (expr->kind) {
         case IdentifierExpression: {

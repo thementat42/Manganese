@@ -139,9 +139,11 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element);
     Result checkVariableInitializer(ast::VariableDeclarationStatement* statement, const SemanticType*& variableType);
 
+    bool isMutableExpression(const ast::Expression* expr) const;
+
     const SemanticType* resolveGenericType(const ast::Type* type);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
-    const Symbol* resolveScopeSymbol(const ast::Expression* expression);
+    const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
     std::string getMangledName(std::string_view baseName) const;
 
@@ -193,6 +195,12 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
                                                      const TypeList& typeArgs);
 
+    [[nodiscard]] const InstantiationResult* getInstantiationResult(const ast::ASTNode* declNode,
+                                                                    const TypeList& typeArgs) const {
+        const InstantiationKey key{.declNode = declNode, .typeArgs = typeArgs};
+        return instantiationCache.find(key);
+    }
+
     static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
         using enum ast::ExpressionKind;
         switch (expr->kind) {
@@ -203,8 +211,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
             default: return expr;
         }
     }
-
-    bool isMutableExpression(const ast::Expression* expr);
 };
 
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
