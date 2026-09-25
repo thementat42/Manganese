@@ -117,6 +117,7 @@ struct FunctionCallExpression final : public Expression {
 struct GenericInstantiationExpression final : public Expression {
     Expression* identifier;
     std::vector<Type*> types;
+    std::vector<const semantic::SemanticType*> semanticTypes;
 
     GenericInstantiationExpression(Expression* _identifier, std::vector<Type*>&& _types) noexcept :
         Expression(ExpressionKind::GenericInstantiationExpression), identifier(_identifier), types(std::move(_types)) {}

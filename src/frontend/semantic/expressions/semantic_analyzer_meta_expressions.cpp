@@ -38,6 +38,8 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
         resolvedTypeArguments.push_back(resolved);
     }
 
+    expression->semanticTypes = resolvedTypeArguments;  // copy
+
     const Symbol* symbol = resolveScopeSymbol(expression->identifier);
     if (symbol == nullptr || symbol->node == nullptr) {
         logError(expression->identifier, "Use of undeclared symbol '{}'", expression->identifier->toString());
