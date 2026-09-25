@@ -16,6 +16,9 @@
 #include <middleend/codegen/ir_generator.hpp>
 #include <runtime/string.hpp>
 
+#include "frontend/semantic/symbol_table.hpp"
+#include "frontend/semantic/type_context.hpp"
+
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
@@ -270,9 +273,16 @@ namespace Manganese::codegen {
     return builder->CreateCall(functionType, calleeValue, argumentValues, "call_tmp");
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::GenericInstantiationExpression* expression)
+[[nodiscard]] auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression)
     -> exprvisit_t {
-    return nullptr;
+    const semantic::Symbol* symbol = analyzer.resolveScopeSymbol(expression->identifier);
+
+    const auto* instantiationResult = analyzer.getInstantiationResult(symbol->node, expression->semanticTypes);
+    if (instantiationResult != nullptr && instantiationResult->state == semantic::ResolutionStatus::Success) {
+        return namedValues[instantiationResult->mangledName];
+    }
+    ASSERT_UNREACHABLE_FMT("Instantiation {} was not declared as invalid during semantic analysis",
+                           expression->toString());
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
