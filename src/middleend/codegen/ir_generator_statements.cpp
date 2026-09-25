@@ -9,9 +9,6 @@
 #include <frontend/ast.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/ast/ast_statements.hpp"
-
 namespace Manganese::codegen {
 
 auto IRGenerator::visit([[maybe_unused]] const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {}
@@ -30,9 +27,9 @@ auto IRGenerator::visit(const ast::EmptyStatement* /*unused*/) -> stmtvisit_t { 
 
 auto IRGenerator::visit(const ast::EnumDeclarationStatement* /*unused*/) -> stmtvisit_t {
     /*
-don't need to do anything
-enum values are compile-time constants and emitted in scope resolution handling
-*/
+        don't need to do anything
+        enum values are compile-time constants and emitted in scope resolution handling
+    */
 }
 
 auto IRGenerator::visit(const ast::ExpressionStatement* statement) -> stmtvisit_t {
