@@ -245,7 +245,7 @@ ast::Expression* Parser::parsePrimaryExpression() {
         case TokenType::Uninitialized: return makeNode<ast::UninitializedExpression>(startToken);
         default:
             ASSERT_UNREACHABLE_FMT("Invalid Token Type in parsePrimaryExpression: {}",
-                               lexer ::tokenTypeToString(startToken.getType()));
+                                   lexer ::tokenTypeToString(startToken.getType()));
     }
 }
 

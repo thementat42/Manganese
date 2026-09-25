@@ -53,7 +53,7 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 default: break;
             }
             ASSERT_UNREACHABLE_FMT("Unknown binary operator '{}' in computeExpression",
-                                           lexer::tokenTypeToString(binaryExpression->op));
+                                   lexer::tokenTypeToString(binaryExpression->op));
         }
         case ast::ExpressionKind::BoolLiteralExpression: {
             const auto* boolLiteralExpression = static_cast<const ast::BoolLiteralExpression*>(expression);
@@ -109,7 +109,7 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 default:;
             }
             ASSERT_UNREACHABLE_FMT("Unknown postfix operator '{}' in computeExpression",
-                                           lexer::tokenTypeToString(postfixExpression->op));
+                                   lexer::tokenTypeToString(postfixExpression->op));
         }
         case ast::ExpressionKind::PrefixExpression: {
             // can only increment/decrement lvalues which aren't foldable

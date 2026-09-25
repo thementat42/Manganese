@@ -175,7 +175,7 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
     llvm::BasicBlock* defaultBlock
         = statement->defaultBody.empty() ? mergeBlock : llvm::BasicBlock::Create(*context, "switch_default", function);
 
-    // 4. Pre-create basic blocks for each case
+    // Pre-create basic blocks for each case
     struct CaseInfo {
         llvm::BasicBlock* block;
         const ast::CaseClause* astCase;
@@ -224,13 +224,12 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
 auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     llvm::Type* variableTypeLLVM = visit(statement->semanticType);
     llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statement->name);
-    
+
     if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {
         llvm::Value* initializerValue = visit(statement->value);
         builder->CreateStore(initializerValue, alloca);
     }
     namedValues[std::string(statement->name)] = alloca;
-
 }
 
 auto IRGenerator::visit(const ast::WhileLoopStatement* statement) -> stmtvisit_t {

@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 
-
 #ifndef MN_STRCMP_LESS
 #define MN_STRCMP_LESS (-1)
 #endif
