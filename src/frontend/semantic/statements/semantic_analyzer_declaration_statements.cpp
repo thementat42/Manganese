@@ -64,6 +64,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
 
     aggregateType->fields = std::move(fieldTypes);
     aggregateType->status = ResolutionStatus::Success;
+    statement->semanticType = aggregateType;
     return stmtvisit_t::Success;
 }
 
@@ -91,6 +92,7 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     }
     symbol->type = statement->baseType->semanticType;
     symbol->status = ResolutionStatus::Success;
+    statement->semanticType = statement->baseType->semanticType;
     return stmtvisit_t::Success;
 }
 
@@ -163,6 +165,7 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
         currentVariantValue++;
     }
     enumType->variants = std::move(variants);
+    statement->semanticType = enumType;
     return result;
 }
 
@@ -190,7 +193,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     symbol->status = ResolutionStatus::InProgress;
 
     const ContextGuard contextGuard{context.inFunction, true};
-    const Function* functionType = static_cast<const Function*>(symbol->type);
+    const auto* functionType = static_cast<const Function*>(symbol->type);
 
     stmtvisit_t signatureResult = stmtvisit_t::Success;
 
@@ -239,6 +242,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
 
     const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);
     symbol->status = isSuccess ? ResolutionStatus::Success : ResolutionStatus::Failure;
+    statement->semanticType = functionType;
 
     return isSuccess ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }

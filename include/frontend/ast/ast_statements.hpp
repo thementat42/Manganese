@@ -14,6 +14,7 @@ namespace Manganese::ast {
 struct Declaration : public Statement {
     std::string name;
     std::string mangledName;
+    const semantic::SemanticType* semanticType = nullptr;
 
     Declaration(StatementKind kind, std::string&& _name) noexcept : Statement(kind), name(std::move(_name)) {}
     virtual ~Declaration() = default;
@@ -238,7 +239,6 @@ struct VariableDeclarationStatement final : public Declaration {
     bool isMutable;
     Expression* value;
     Type* type;
-    const semantic::SemanticType* semanticType;
 
     VariableDeclarationStatement(bool _isMutable, std::string&& _name, Visibility _visibility, Expression* _value,
                                  Type* _type) noexcept :
