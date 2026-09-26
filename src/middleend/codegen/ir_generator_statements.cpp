@@ -1,4 +1,5 @@
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/LLVMContext.h>
@@ -11,7 +12,7 @@
 
 namespace Manganese::codegen {
 
-auto IRGenerator::visit([[maybe_unused]] const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {}
+
 
 auto IRGenerator::visit(const ast::AliasStatement* /*unused*/) -> stmtvisit_t { /*type aliases are purely semantic*/ }
 
@@ -154,10 +155,18 @@ auto IRGenerator::visit(const ast::NestedBlockStatement* statement) -> stmtvisit
 auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
     if (statement->value == nullptr) {
         builder->CreateRetVoid();
-    } else {
-        llvm::Value* returnValue = visit(statement->value);
-        builder->CreateRet(returnValue);
+        return;
     }
+    llvm::Function* currentFunction = builder->GetInsertBlock()->getParent();
+    llvm::Type* expectedReturnType = currentFunction->getReturnType();
+
+    llvm::Value* returnValue = visit(statement->value);
+
+    if (expectedReturnType->isStructTy() && returnValue->getType()->isPointerTy()) {
+        returnValue = builder->CreateLoad(expectedReturnType, returnValue, "return");
+    }
+
+    builder->CreateRet(returnValue);
 }
 
 auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
