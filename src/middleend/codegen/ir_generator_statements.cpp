@@ -12,7 +12,16 @@
 
 namespace Manganese::codegen {
 
+auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
+    if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
+    auto* llvmType = llvm::StructType::create(*context, statement->name);
+    savedTypes[statement->semanticType] = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
 
+    std::vector<llvm::Type*> memberTypes;
+    memberTypes.reserve(statement->fields.size());
+    for (const auto& field : statement->fields) { memberTypes.push_back(visit(field.type)); }
+    llvmType->setBody(memberTypes);
+}
 
 auto IRGenerator::visit(const ast::AliasStatement* /*unused*/) -> stmtvisit_t { /*type aliases are purely semantic*/ }
 

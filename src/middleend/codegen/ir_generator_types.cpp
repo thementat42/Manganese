@@ -33,10 +33,20 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Aggregate* type) -> typevisit_t {
+    if (auto it = savedTypes.find(type); it != savedTypes.end()) { return it->second; }
     std::vector<llvm::Type*> elementTypes;
     elementTypes.reserve(type->fields.size());
     for (const semantic::AggregateField& field : type->fields) { elementTypes.push_back(visit(field.type)); }
-    return llvm::StructType::get(*context, elementTypes);
+
+    auto* structType = type->name.empty() ? llvm::StructType::get(*context, elementTypes)
+                                          : llvm::StructType::create(*context, type->name);
+
+    if (!type->name.empty()) {
+        structType->setBody(elementTypes);
+        savedTypes[type] = structType;
+    }
+
+    return structType;
 }
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Array* type) -> typevisit_t {

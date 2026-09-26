@@ -32,6 +32,7 @@ class IRGenerator final : public _irgen_base_t {
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
     std::unordered_map<std::string, llvm::Value*> namedValues;
+    std::unordered_map<const semantic::SemanticType*, llvm::StructType*> savedTypes;
     std::vector<parser::ParsedFile>& files;
     utils::TargetInfo targetInfo;
     mnstl::tiny_stack<LoopTarget> loopStack;
