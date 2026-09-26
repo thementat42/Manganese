@@ -16,9 +16,6 @@
 #include <middleend/codegen/ir_generator.hpp>
 #include <runtime/string.hpp>
 
-#include "frontend/semantic/symbol_table.hpp"
-#include "frontend/semantic/type_context.hpp"
-
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
@@ -30,7 +27,8 @@ namespace Manganese::codegen {
         llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
         builder->CreateStore(fieldValue, fieldPointer);
     }
-    return builder->CreateLoad(aggregateType, alloca, "aggregate_load");
+    return alloca;
+    // return builder->CreateLoad(aggregateType, alloca, "aggregate_load");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateLiteralExpression* expression) -> exprvisit_t {
@@ -42,7 +40,8 @@ namespace Manganese::codegen {
         llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
         builder->CreateStore(fieldValue, fieldPointer);
     }
-    return builder->CreateLoad(aggregateType, alloca, "anonymous_aggregate_load");
+    return alloca;
+    // return builder->CreateLoad(aggregateType, alloca, "anonymous_aggregate_load");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AlignofExpression* expression) -> exprvisit_t {
@@ -73,6 +72,19 @@ namespace Manganese::codegen {
 [[nodiscard]] auto IRGenerator::visit(const ast::AssignmentExpression* expression) -> exprvisit_t {
     llvm::Value* assigneePointer = getLValue(expression->assignee);
     llvm::Value* newValue = visit(expression->value);
+
+    const semantic::SemanticType* type = expression->semanticType;
+
+    if ((type->isAggregate() || type->isArray()) && newValue->getType()->isPointerTy()) {
+        DISCARD(visit(type));
+        std::size_t sizeInBytes = type->size(targetInfo);
+        std::size_t alignment = type->alignment(targetInfo);
+        
+        builder->CreateMemCpy(assigneePointer, llvm::MaybeAlign(alignment), 
+                              newValue, llvm::MaybeAlign(alignment), sizeInBytes);
+        return newValue;
+    }
+
     builder->CreateStore(newValue, assigneePointer);
     // assignment evaluates to the value itself
     return newValue;
@@ -250,9 +262,21 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::FunctionCallExpression* expression) -> exprvisit_t {
+    auto* functionType = llvm::cast<llvm::FunctionType>(visit(expression->callee->semanticType));
+
     std::vector<llvm::Value*> argumentValues;
     argumentValues.reserve(expression->arguments.size());
-    for (const ast::Expression* argument : expression->arguments) { argumentValues.push_back(visit(argument)); }
+
+    for (unsigned int i = 0; i < expression->arguments.size(); ++i) {
+        const ast::Expression* argument = expression->arguments[i];
+        llvm::Value* argumentValue = visit(argument);
+
+        llvm::Type* expectedParameterType = functionType->getParamType(i);
+        if (expectedParameterType->isStructTy() && argumentValue->getType()->isPointerTy()) {
+            argumentValue = builder->CreateLoad(expectedParameterType, argumentValue, "argument_load_tmp");
+        }
+        argumentValues.push_back(argumentValue);
+    }
 
     llvm::Value* calleeValue = nullptr;
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
@@ -269,20 +293,24 @@ namespace Manganese::codegen {
         calleeValue = visit(expression->callee);
     }
 
-    auto* functionType = llvm::cast<llvm::FunctionType>(visit(expression->callee->semanticType));
     return builder->CreateCall(functionType, calleeValue, argumentValues, "call_tmp");
 }
 
-[[nodiscard]] auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression)
-    -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -> exprvisit_t {
     const semantic::Symbol* symbol = analyzer.resolveScopeSymbol(expression->identifier);
 
     const auto* instantiationResult = analyzer.getInstantiationResult(symbol->node, expression->semanticTypes);
-    if (instantiationResult != nullptr && instantiationResult->state == semantic::ResolutionStatus::Success) {
-        return namedValues[instantiationResult->mangledName];
+
+    if (instantiationResult == nullptr || instantiationResult->state != semantic::ResolutionStatus::Success) {
+        ASSERT_UNREACHABLE_FMT("Instantiation {} was not declared as invalid during semantic analysis",
+                               expression->toString());
     }
-    ASSERT_UNREACHABLE_FMT("Instantiation {} was not declared as invalid during semantic analysis",
-                           expression->toString());
+    llvm::Function* llvmFunc = module->getFunction(std::string(instantiationResult->mangledName));
+    if (llvmFunc != nullptr) {
+        // already did codegen for this, don't need to re-generate the function
+        return llvmFunc;
+    }
+    return namedValues[instantiationResult->mangledName];
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
