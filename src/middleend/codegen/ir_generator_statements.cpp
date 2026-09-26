@@ -15,7 +15,8 @@ namespace Manganese::codegen {
 auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
     if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
     auto* llvmType = llvm::StructType::create(*context, statement->name);
-    savedTypes[statement->semanticType] = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
+    savedTypes[statement->semanticType]
+        = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
 
     std::vector<llvm::Type*> memberTypes;
     memberTypes.reserve(statement->fields.size());
@@ -84,7 +85,30 @@ auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
     builder->SetInsertPoint(exitBlock);
 }
 
-auto IRGenerator::visit([[maybe_unused]] const ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {}
+auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
+    if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
+
+    auto* functionType = llvm::cast<llvm::FunctionType>(visit(statement->semanticType));
+
+    auto* llvmFunction
+        = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, statement->mangledName, module.get());
+
+    llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(*context, "entry", llvmFunction);
+    builder->SetInsertPoint(entryBlock);
+
+    llvm::Argument* currentLLVMArgument = llvmFunction->arg_begin();
+    for (std::size_t i = 0; i < statement->parameters.size(); ++i, ++currentLLVMArgument) {
+        const auto& param = statement->parameters[i];
+        currentLLVMArgument->setName(param.name);
+
+        llvm::AllocaInst* alloca = builder->CreateAlloca(currentLLVMArgument->getType(), nullptr, param.name + "_addr");
+        builder->CreateStore(currentLLVMArgument, alloca);
+
+        namedValues[param.name] = alloca;
+    }
+    
+    visit(statement->body);
+}
 
 auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
