@@ -20,7 +20,7 @@
 MN_BEGIN_C_LINKAGE
 struct RuntimeString {
     const char* data;
-    size_t size;
+    size_t length;
 };
 
 MN_RUNTIME_API_FUNCTION RuntimeString mn_strcat(RuntimeString, RuntimeString);
