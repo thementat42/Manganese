@@ -23,8 +23,8 @@ struct RuntimeString {
     size_t size;
 };
 
-RuntimeString mn_strcat(RuntimeString, RuntimeString);
-int32_t mn_strcmp(RuntimeString, RuntimeString);
+MN_RUNTIME_API_FUNCTION RuntimeString mn_strcat(RuntimeString, RuntimeString);
+MN_RUNTIME_API_FUNCTION int32_t mn_strcmp(RuntimeString, RuntimeString);
 MN_END_C_LINKAGE
 
 #endif  // MANGANESE_INCLUDE_RUNTIME_STRING_HPP
