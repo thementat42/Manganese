@@ -70,7 +70,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
             Scope* previousScope = symbolTable.getCurrentScope();
             if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
-            visitRes = visit(functionDeclaration, generic_tag);
+            visitRes = visit(generic_tag, functionDeclaration);
 
             if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
         }
@@ -110,7 +110,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
         Scope* previousScope = symbolTable.getCurrentScope();
         if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
-        const stmtvisit_t visitRes = visit(aggregateDecl, generic_tag);
+        const stmtvisit_t visitRes = visit(generic_tag, aggregateDecl);
 
         if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
 

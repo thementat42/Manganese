@@ -12,7 +12,7 @@
 
 namespace Manganese::semantic {
 
-auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(generic_tag_t /*unused*/, ast::AggregateDeclarationStatement* stmt) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
     if (const auto* cached = instantiationCache.find(key)) {
@@ -48,7 +48,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_t
     return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(generic_tag_t /*unused*/, ast::FunctionDeclarationStatement* stmt) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
     if (const auto* cached = instantiationCache.find(key)) {
@@ -315,7 +315,7 @@ const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type) 
                 Scope* previousScope = symbolTable.getCurrentScope();
                 if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
-                auto visitResult = visit(aggregate, generic_tag);
+                auto visitResult = visit(generic_tag, aggregate);
 
                 if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
 
