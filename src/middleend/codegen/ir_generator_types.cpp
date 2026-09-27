@@ -24,8 +24,7 @@ namespace Manganese::codegen {
         case Uninitialized: return visit(static_cast<const semantic::Uninitialized*>(type));
         case Void: return visit(static_cast<const semantic::Void*>(type));
         case Generic: {
-            // TODO
-            return nullptr;
+            ASSERT_UNREACHABLE("Encountered unresolved generic semantic type during IR generation");
         }
         case Primitive: return getPrimitiveType(type->primitiveType);
     };

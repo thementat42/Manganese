@@ -16,6 +16,10 @@
 #include <middleend/codegen/ir_generator.hpp>
 #include <runtime/string.hpp>
 
+#include "frontend/ast/ast_statements.hpp"
+#include "frontend/semantic/generics_helpers.hpp"
+#include "frontend/semantic/symbol_table.hpp"
+
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
@@ -79,9 +83,9 @@ namespace Manganese::codegen {
         DISCARD(visit(type));
         std::size_t sizeInBytes = type->size(targetInfo);
         std::size_t alignment = type->alignment(targetInfo);
-        
-        builder->CreateMemCpy(assigneePointer, llvm::MaybeAlign(alignment), 
-                              newValue, llvm::MaybeAlign(alignment), sizeInBytes);
+
+        builder->CreateMemCpy(assigneePointer, llvm::MaybeAlign(alignment), newValue, llvm::MaybeAlign(alignment),
+                              sizeInBytes);
         return newValue;
     }
 
@@ -305,12 +309,24 @@ namespace Manganese::codegen {
         ASSERT_UNREACHABLE_FMT("Instantiation {} was not declared as invalid during semantic analysis",
                                expression->toString());
     }
-    llvm::Function* llvmFunc = module->getFunction(std::string(instantiationResult->mangledName));
-    if (llvmFunc != nullptr) {
-        // already did codegen for this, don't need to re-generate the function
-        return llvmFunc;
+
+    if (symbol->kind == semantic::SymbolKind::Function) {
+        // if this specialization already exists just return that
+        llvm::Function* llvmFunc = module->getFunction(std::string(instantiationResult->mangledName));
+        if (llvmFunc != nullptr) { return llvmFunc; }
+        const auto* functionDecl = static_cast<const ast::FunctionDeclarationStatement*>(symbol->node);
+
+        visit(semantic::generic_tag, functionDecl, instantiationResult->mangledName);
+
+        return module->getFunction(std::string(instantiationResult->mangledName));
     }
-    return namedValues[instantiationResult->mangledName];
+
+    if (symbol->kind == semantic::SymbolKind::Aggregate) {
+        DISCARD(visit(expression->semanticType));
+        return nullptr;
+    }
+    ASSERT_UNREACHABLE_FMT("Instantiation {} was not declared as invalid during semantic analysis",
+                           expression->toString());
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
