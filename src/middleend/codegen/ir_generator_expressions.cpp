@@ -296,11 +296,24 @@ namespace Manganese::codegen {
     return builder->CreateCall(functionType, calleeValue, argumentValues, "call_tmp");
 }
 
-[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::GenericInstantiationExpression* expression) -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::GenericInstantiationExpression* expression)
+    -> exprvisit_t {
     return nullptr;
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
+    if (expression->semanticType != nullptr && expression->semanticType->isFunction()) {
+        llvm::Function* function = nullptr;
+        if (expression->resolvedDeclaration != nullptr && !expression->resolvedDeclaration->mangledName.empty()) {
+            function = module->getFunction(expression->resolvedDeclaration->mangledName);
+        }
+        if (function == nullptr) { function = module->getFunction(expression->name); }
+        if (function == nullptr) {
+            ASSERT_UNREACHABLE_FMT("Function '{}' could not be found in the LLVM module", expression->name);
+        }
+        return function;
+    }
+
     llvm::Value* value = nullptr;
     if ((expression->resolvedDeclaration != nullptr) && !expression->resolvedDeclaration->mangledName.empty()) {
         value = namedValues[expression->resolvedDeclaration->mangledName];
@@ -322,9 +335,7 @@ namespace Manganese::codegen {
 [[nodiscard]] auto IRGenerator::visit(const ast::IndexExpression* expression) -> exprvisit_t {
     llvm::Value* elementPointer = getLValue(expression);
     llvm::Type* elementLLVMType = visitTypeAsValue(expression->semanticType);
-    if (expression->semanticType->isFunction()) {
-        elementLLVMType = llvm::PointerType::get(*context, 0);
-    }
+    if (expression->semanticType->isFunction()) { elementLLVMType = llvm::PointerType::get(*context, 0); }
     return builder->CreateLoad(elementLLVMType, elementPointer, "load_index_expr_val");
 }
 
