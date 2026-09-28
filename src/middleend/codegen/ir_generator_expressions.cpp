@@ -16,10 +16,6 @@
 #include <middleend/codegen/ir_generator.hpp>
 #include <runtime/string.hpp>
 
-#include "frontend/ast/ast_statements.hpp"
-#include "frontend/semantic/generics_helpers.hpp"
-#include "frontend/semantic/symbol_table.hpp"
-
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
@@ -300,33 +296,8 @@ namespace Manganese::codegen {
     return builder->CreateCall(functionType, calleeValue, argumentValues, "call_tmp");
 }
 
-[[nodiscard]] auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -> exprvisit_t {
-    const semantic::Symbol* symbol = analyzer.resolveScopeSymbol(expression->identifier);
-
-    const auto* instantiationResult = analyzer.getInstantiationResult(symbol->node, expression->semanticTypes);
-
-    if (instantiationResult == nullptr || instantiationResult->state != semantic::ResolutionStatus::Success) {
-        ASSERT_UNREACHABLE_FMT("Instantiation {} was not declared as invalid during semantic analysis",
-                               expression->toString());
-    }
-
-    if (symbol->kind == semantic::SymbolKind::Function) {
-        // if this specialization already exists just return that
-        llvm::Function* llvmFunc = module->getFunction(std::string(instantiationResult->mangledName));
-        if (llvmFunc != nullptr) { return llvmFunc; }
-        const auto* functionDecl = static_cast<const ast::FunctionDeclarationStatement*>(symbol->node);
-
-        visit(semantic::generic_tag, functionDecl, instantiationResult->mangledName);
-
-        return module->getFunction(std::string(instantiationResult->mangledName));
-    }
-
-    if (symbol->kind == semantic::SymbolKind::Aggregate) {
-        DISCARD(visit(expression->semanticType));
-        return nullptr;
-    }
-    ASSERT_UNREACHABLE_FMT("Instantiation {} was not declared as invalid during semantic analysis",
-                           expression->toString());
+[[nodiscard]] auto IRGenerator::visit([[maybe_unused]] const ast::GenericInstantiationExpression* expression) -> exprvisit_t {
+    return nullptr;
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
@@ -351,6 +322,9 @@ namespace Manganese::codegen {
 [[nodiscard]] auto IRGenerator::visit(const ast::IndexExpression* expression) -> exprvisit_t {
     llvm::Value* elementPointer = getLValue(expression);
     llvm::Type* elementLLVMType = visit(expression->semanticType);
+    if (expression->semanticType->isFunction()) {
+        elementLLVMType = llvm::PointerType::get(*context, 0);
+    }
     return builder->CreateLoad(elementLLVMType, elementPointer, "load_index_expr_val");
 }
 

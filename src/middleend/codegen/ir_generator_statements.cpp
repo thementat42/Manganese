@@ -113,32 +113,6 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     visit(statement->body);
 }
 
-auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionDeclarationStatement* statement,
-                        std::string_view mangledName) -> stmtvisit_t {
-    // the semantic analyzer already instantiated a concrete type here
-    auto* functionType = llvm::cast<llvm::FunctionType>(visit(statement->semanticType));
-
-    auto* llvmFunction
-        = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, mangledName, module.get());
-
-    llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(*context, "entry", llvmFunction);
-    builder->SetInsertPoint(entryBlock);
-
-    auto* argumentInterator = llvmFunction->arg_begin();
-    for (std::size_t i = 0; i < statement->parameters.size(); ++i, ++argumentInterator) {
-        const auto& param = statement->parameters[i];
-        llvm::Argument* currentLLVMArgument = &*argumentInterator;
-        currentLLVMArgument->setName(param.name);
-
-        llvm::AllocaInst* alloca = builder->CreateAlloca(currentLLVMArgument->getType(), nullptr, param.name + "_addr");
-        builder->CreateStore(currentLLVMArgument, alloca);
-
-        namedValues[param.name] = alloca;
-    }
-
-    visit(statement->body);
-}
-
 auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
 
