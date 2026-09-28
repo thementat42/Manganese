@@ -9,9 +9,6 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <middleend/codegen/ir_generator.hpp>
-#include <string_view>
-
-#include "frontend/semantic/generics_helpers.hpp"
 
 namespace Manganese::codegen {
 
@@ -23,7 +20,7 @@ auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> 
 
     std::vector<llvm::Type*> memberTypes;
     memberTypes.reserve(statement->fields.size());
-    for (const auto& field : statement->fields) { memberTypes.push_back(visit(field.type)); }
+    for (const auto& field : statement->fields) { memberTypes.push_back(visitTypeAsValue(field.type->semanticType)); }
     llvmType->setBody(memberTypes);
 }
 
@@ -264,7 +261,7 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
 }
 
 auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
-    llvm::Type* variableTypeLLVM = visit(statement->semanticType);
+    llvm::Type* variableTypeLLVM = visitTypeAsValue(statement->semanticType);
     llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statement->name);
 
     if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {

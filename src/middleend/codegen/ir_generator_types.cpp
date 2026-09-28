@@ -31,6 +31,14 @@ namespace Manganese::codegen {
     ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");
 }
 
+[[nodiscard]] auto IRGenerator::visitTypeAsValue(const semantic::SemanticType* type) -> typevisit_t {
+    if (type->isFunction()) {
+        // functions aren't first-class values so we need to store a function pointer
+        return llvm::PointerType::get(*context, 0);
+    }
+    return visit(type);
+}
+
 [[nodiscard]] auto IRGenerator::visit(const semantic::Aggregate* type) -> typevisit_t {
     if (auto it = savedTypes.find(type); it != savedTypes.end()) { return it->second; }
     std::vector<llvm::Type*> elementTypes;

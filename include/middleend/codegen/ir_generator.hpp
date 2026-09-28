@@ -78,6 +78,8 @@ class IRGenerator final : public _irgen_base_t {
     stmtvisit_t visit(semantic::generic_tag_t, const ast::FunctionDeclarationStatement*, std::string_view mangledName,
                       const semantic::InstantiationKey& key);
 
+    [[nodiscard]] typevisit_t visitTypeAsValue(const semantic::SemanticType* type);
+
     stmtvisit_t visit(const ast::Block& block);
     [[nodiscard]] typevisit_t visit(const semantic::Aggregate*);
     [[nodiscard]] typevisit_t visit(const semantic::Array*);

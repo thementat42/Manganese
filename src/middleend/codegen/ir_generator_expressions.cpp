@@ -51,7 +51,7 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::ArrayLiteralExpression* expression) -> exprvisit_t {
-    llvm::Type* elementType = visit(expression->semanticType);
+    llvm::Type* elementType = visitTypeAsValue(expression->semanticType);
     const std::size_t length = expression->elements.size();
     llvm::ArrayType* arrayType = llvm::ArrayType::get(elementType, length);
     llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "array_literal");
@@ -315,13 +315,13 @@ namespace Manganese::codegen {
         ASSERT_UNREACHABLE_FMT("Variable '{}' was not flagged as undeclared during semantic analysis",
                                expression->name);
     }
-    llvm::Type* llvmType = visit(expression->semanticType);
+    llvm::Type* llvmType = visitTypeAsValue(expression->semanticType);
     return builder->CreateLoad(llvmType, value, std::format("load_val_of_{}", expression->name));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IndexExpression* expression) -> exprvisit_t {
     llvm::Value* elementPointer = getLValue(expression);
-    llvm::Type* elementLLVMType = visit(expression->semanticType);
+    llvm::Type* elementLLVMType = visitTypeAsValue(expression->semanticType);
     if (expression->semanticType->isFunction()) {
         elementLLVMType = llvm::PointerType::get(*context, 0);
     }
@@ -330,7 +330,7 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::MemberAccessExpression* expression) -> exprvisit_t {
     llvm::Value* fieldPointer = getLValue(expression);
-    llvm::Type* fieldLLVMType = visit(expression->semanticType);
+    llvm::Type* fieldLLVMType = visitTypeAsValue(expression->semanticType);
     return builder->CreateLoad(fieldLLVMType, fieldPointer, "load_member_access_expr");
 }
 
@@ -458,7 +458,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
                                       /*isSigned=*/enumType->underlyingType->isSignedInteger());
     }
     llvm::Value* scopeElementPointer = getLValue(expression);
-    llvm::Type* scopeElementLLVMType = visit(expression->semanticType);
+    llvm::Type* scopeElementLLVMType = visitTypeAsValue(expression->semanticType);
     return builder->CreateLoad(scopeElementLLVMType, scopeElementPointer, "load_scope_res_val");
 }
 

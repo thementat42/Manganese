@@ -144,8 +144,8 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
         llvm::Value* indexVal = visit(indexExpression->index);  // Index is an rvalue calculation
 
         // like array literals, we first need a pointer to the start of the array then an offset from that pointer
-        llvm::Type* arrayLlvmTy = visit(indexExpression->variable->semanticType);
-        return builder->CreateInBoundsGEP(arrayLlvmTy, arrayPtr, {builder->getInt32(0), indexVal}, "array_element_ptr");
+        llvm::Type* arrayLlvmType = visitTypeAsValue(indexExpression->variable->semanticType);
+        return builder->CreateInBoundsGEP(arrayLlvmType, arrayPtr, {builder->getInt32(0), indexVal}, "array_element_ptr");
     }
 
     if (expr->kind == ast::ExpressionKind::MemberAccessExpression) {
