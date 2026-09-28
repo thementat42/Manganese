@@ -14,8 +14,10 @@
 #include <frontend/semantic/type_context.hpp>
 #include <memory>
 #include <mnstl/tiny_stack.hxx>
+#include <ostream>
 #include <string_view>
 #include <utils/target_info.hpp>
+
 
 namespace Manganese::codegen {
 
@@ -36,11 +38,11 @@ class IRGenerator final : public _irgen_base_t {
     std::vector<parser::ParsedFile>& files;
     utils::TargetInfo targetInfo;
     mnstl::tiny_stack<LoopTarget> loopStack;
-    const semantic::SemanticAnalyzer& analyzer;
+    semantic::SemanticAnalyzer& analyzer;
 
    public:
     IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles,
-                const semantic::SemanticAnalyzer& analyzerReference, utils::TargetInfo info) :
+                semantic::SemanticAnalyzer& analyzerReference, utils::TargetInfo info) :
         context(std::make_unique<llvm::LLVMContext>()),
         module(std::make_unique<llvm::Module>(moduleName, *context)),
         builder(std::make_unique<llvm::IRBuilder<>>(*context)),
@@ -49,12 +51,10 @@ class IRGenerator final : public _irgen_base_t {
         analyzer(analyzerReference) {}
 
     std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
+    llvm::Module* getModule() const noexcept { return module.get(); }
 
-    void generate() noexcept {
-        for (const parser::ParsedFile& file : files) {
-            for (const ast::Statement* statement : file.program) { visit(statement); }
-        }
-    }
+    void generate() noexcept;
+    void dump(std::ostream&) const;
 
    protected:
     // overrides for visitor functions
@@ -75,7 +75,8 @@ class IRGenerator final : public _irgen_base_t {
 #undef TYPE
 #undef SEMANTIC
 
-    stmtvisit_t visit(semantic::generic_tag_t, const ast::FunctionDeclarationStatement*, std::string_view mangledName);
+    stmtvisit_t visit(semantic::generic_tag_t, const ast::FunctionDeclarationStatement*, std::string_view mangledName,
+                      const semantic::InstantiationKey& key);
 
     stmtvisit_t visit(const ast::Block& block);
     [[nodiscard]] typevisit_t visit(const semantic::Aggregate*);

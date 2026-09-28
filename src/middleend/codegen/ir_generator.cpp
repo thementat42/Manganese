@@ -1,5 +1,6 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/InstrTypes.h>
+#include <llvm/Support/raw_os_ostream.h>
 
 #include <core.hpp>
 #include <format>
@@ -9,6 +10,17 @@
 #include <middleend/codegen/ir_generator.hpp>
 
 namespace Manganese::codegen {
+
+void IRGenerator::generate() noexcept {
+    for (const parser::ParsedFile& file : files) {
+        for (const ast::Statement* statement : file.program) { visit(statement); }
+    }
+}
+
+void IRGenerator::dump(std::ostream& os) const {
+    llvm::raw_os_ostream ros{os};
+    module->print(ros, nullptr);
+}
 
 [[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
                                                                  std::string_view lexeme) const {

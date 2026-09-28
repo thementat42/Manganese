@@ -10,9 +10,11 @@
 #include <string>
 #include <utils/target_info.hpp>
 
+#include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
+
 #include "testrunner.hpp"
 #include "tests.hpp"
-
 
 namespace Manganese::tests {
 
@@ -22,38 +24,85 @@ constexpr const char* logFileName = "logs/codegen_tests.log";
 mnstl::chunk_allocator arena;
 utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
-bool generateCode(const std::string& source, bool expectSuccess, std::string_view testName) {
+bool validateIRContains(const std::string& source, const std::vector<std::string>& expectedSubstrings, std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
     semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena);
-    if (semanticAnalyzer.analyze() != Result::Success) { return !expectSuccess; }
+    if (semanticAnalyzer.analyze() != Result::Success) { return false; }
 
     cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable());
-    if (cfa.analyze() != Result::Success) { return !expectSuccess; }
+    if (cfa.analyze() != Result::Success) { return false; }
 
-    bool irGenSucceeded = true;
+    std::string irOutput;
+    bool generationPassed = true;
+
     try {
         codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, targetInfo);
         irGenerator.generate();
-    } catch (...) { irGenSucceeded = false; }
+
+        if (auto* module = irGenerator.getModule()) {
+            std::string tempStr;
+            llvm::raw_string_ostream rso(tempStr);
+            module->print(rso, nullptr);
+            rso.flush();
+            irOutput = tempStr;
+        } else {
+            generationPassed = false;
+        }
+    } catch (const std::exception& e) {
+        generationPassed = false;
+        irOutput = std::string("Exception: ") + e.what();
+    } catch (...) {
+        generationPassed = false;
+        irOutput = "Unknown exception during IR generation.";
+    }
+
+    if (!generationPassed) {
+        std::ofstream logFile(logFileName, std::ios::app);
+        if (logFile) {
+            logFile << "Test: " << testName << " failed during generation or module retrieval.\n";
+            logFile << "---------------------\n";
+        }
+        std::cout << "Test: " << testName << " failed during generation or module retrieval.\n";
+        return false;
+    }
+
+    bool allFound = true;
+    std::vector<std::string> missingPatterns;
+    for (const auto& pattern : expectedSubstrings) {
+        if (irOutput.find(pattern) == std::string::npos) {
+            allFound = false;
+            missingPatterns.push_back(pattern);
+        }
+    }
 
     std::ofstream logFile(logFileName, std::ios::app);
     if (logFile) {
         logFile << "Test: " << testName << "\n";
-        logFile << "Expected Result: " << (expectSuccess ? "Success" : "Failure") << "\n";
-        logFile << "Actual Result: " << (irGenSucceeded && expectSuccess ? "Success" : "Failure") << '\n';
-        logFile << "---------------------\n";
+        logFile << "Result: " << (allFound ? "Passed" : "Failed (Missing pattern)") << "\n";
+        if (!allFound) {
+            for (const auto& pattern : missingPatterns) {
+                logFile << "Missing Substring: \"" << pattern << "\"\n";
+            }
+        }
+        logFile << "Generated IR\n" << irOutput << "\n---------------------\n";
         logFile.close();
     }
 
-    return expectSuccess ? irGenSucceeded : !irGenSucceeded;
+    if (!allFound) {
+        std::cout << "Test: " << testName << " -> Failed (Missing patterns)\n";
+        for (const auto& pattern : missingPatterns) {
+            std::cout << "  -> Missing Substring: \"" << pattern << "\"\n";
+        }
+    }
+
+    return allFound;
 }
 
 }  // namespace
 
 namespace codegen_tests {
-
 namespace {
 
 bool testBasicFunctionEmission() {
@@ -62,7 +111,7 @@ bool testBasicFunctionEmission() {
             return a + b;
         }
     )";
-    return generateCode(source, true, __func__);
+    return validateIRContains(source, {"define", "add"}, __func__);
 }
 
 bool testVariableAllocationAndAssignment() {
@@ -73,7 +122,7 @@ bool testVariableAllocationAndAssignment() {
             return x;
         }
     )";
-    return generateCode(source, true, __func__);
+    return validateIRContains(source, {"compute", "alloca"}, __func__);
 }
 
 bool testControlFlowLoweringIfElse() {
@@ -86,7 +135,7 @@ bool testControlFlowLoweringIfElse() {
             }
         }
     )";
-    return generateCode(source, true, __func__);
+    return validateIRContains(source, {"max", "br"}, __func__);
 }
 
 bool testWhileLoopLowering() {
@@ -101,7 +150,7 @@ bool testWhileLoopLowering() {
             return sum;
         }
     )";
-    return generateCode(source, true, __func__);
+    return validateIRContains(source, {"countdown", "br"}, __func__);
 }
 
 bool testAggregateLayoutEmission() {
@@ -115,7 +164,7 @@ bool testAggregateLayoutEmission() {
             return p;
         }
     )";
-    return generateCode(source, true, __func__);
+    return validateIRContains(source, {"origin", "Point"}, __func__);
 }
 
 bool testPointerDereferenceCodegen() {
@@ -124,27 +173,88 @@ bool testPointerDereferenceCodegen() {
             *ptrVal = *ptrVal + 1;
         }
     )";
-    return generateCode(source, true, __func__);
+    return validateIRContains(source, {"increment", "load", "store"}, __func__);
 }
 
-// bool testCodegenFromFile() {
-//     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/codegen_tests.mn";
-//     mnstl::chunk_allocator file_allocator{};
 
-//     parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
-//     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
+bool testBooleanLogic() {
+    const std::string source = R"(
+        func check(a: bool, b: bool) -> bool {
+            return (a && b) || !a;
+        }
+    )";
+    return validateIRContains(source, {"check", "and", "or"}, __func__);
+}
 
-//     semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, file_allocator);
-//     if (semanticAnalyzer.analyze() != Result::Success) { return false; }
+bool testBinaryOperatorPrecedence() {
+    const std::string source = R"(
+        func evaluate() -> int32 {
+            let x = 3;
+            let y = 4;
+            return 2 + x * 4 - 8 / y;
+        }
+    )";
+    return validateIRContains(source, {"evaluate", "mul", "add", "sub", "fdiv"}, __func__);
+}
 
-//     cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable());
-//     if (cfa.analyze() != Result::Success) { return false; }
+bool testNestedFunctionCalls() {
+    const std::string source = R"(
+        func square(x: int32) -> int32 {
+            return x * x;
+        }
+        func computeNested(a: int32, b: int32) -> int32 {
+            return square(square(a) + square(b));
+        }
+    )";
+    return validateIRContains(source, {"computeNested", "square", "call"}, __func__);
+}
 
-//     try {
-//         codegen::IRGenerator irGenerator("FileModule", parsedFiles, semanticAnalyzer, targetInfo);
-//         irGenerator.generate();
-//         return true;
-//     } catch (...) { return false; }
+bool testArrayIndexBasedAccess() {
+    const std::string source = R"(
+        func getElement() -> int32 {
+            let arr: int32[3] = [10, 20, 30];
+            return arr[1];
+        }
+    )";
+    return validateIRContains(source, {"getElement", "getelementptr"}, __func__);
+}
+
+// bool testGenericsCodegen() {
+//     const std::string source = R"(
+//         func identity[T](x: T) -> T {
+//             return x;
+//         }
+//         func run() -> int32 {
+//             return identity@[int32](42);
+//         }
+//     )";
+//     return validateIRContains(source, {"run", "identity"}, __func__);
+// }
+
+bool testArrayOfFunctionsIndexedAndCalled() {
+    const std::string source = R"(
+        func f1(a: int32, b: int32) -> int32 { return a + b; }
+        func f2(a: int32, b: int32) -> int32 { return a - b; }
+        
+        func dispatch(y: int32) -> int32 {
+            let funcs = [f1, f2];
+            return funcs[y](10, 5);
+        }
+    )";
+    return validateIRContains(source, {"dispatch", "call"}, __func__);
+}
+
+// bool testArrayOfInstantiatedGenericFunctions() {
+//     const std::string source = R"(
+//         func foo[T](a: int32, b: int32) -> int32 { return a + b; }
+//         func blah[T](a: int32, b: int32) -> int32 { return a * b; }
+
+//         func testGenericArray(y: int32) -> int32 {
+//             let x = [foo@[int32], blah@[int32]];
+//             return x[y](1, 2);
+//         }
+//     )";
+//     return validateIRContains(source, {"testGenericArray", "call"}, __func__);
 // }
 
 }  // namespace
@@ -160,7 +270,14 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("While Loop Lowering", codegen_tests::testWhileLoopLowering);
     runner.runTest("Aggregate Layout Emission", codegen_tests::testAggregateLayoutEmission);
     runner.runTest("Pointer Dereference Codegen", codegen_tests::testPointerDereferenceCodegen);
-    // runner.runTest("File Code Generation", codegen_tests::testCodegenFromFile);
+
+    runner.runTest("Boolean Logic Codegen", codegen_tests::testBooleanLogic);
+    runner.runTest("Binary Operator Precedence", codegen_tests::testBinaryOperatorPrecedence);
+    runner.runTest("Nested Function Calls", codegen_tests::testNestedFunctionCalls);
+    runner.runTest("Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
+    // runner.runTest("Generics Codegen", codegen_tests::testGenericsCodegen);
+    runner.runTest("Array of Functions Indexed and Called", codegen_tests::testArrayOfFunctionsIndexedAndCalled);
+    // runner.runTest("Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
 }
 
 }  // namespace Manganese::tests
