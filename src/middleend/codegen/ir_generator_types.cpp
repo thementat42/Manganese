@@ -32,6 +32,11 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visitTypeAsValue(const semantic::SemanticType* type) -> typevisit_t {
+    if (type->isArray()) {
+        const auto* arrayType = static_cast<const semantic::Array*>(type);
+        llvm::Type* elementValType = visitTypeAsValue(arrayType->elementType);
+        return llvm::ArrayType::get(elementValType, *arrayType->length);
+    }
     if (type->isFunction()) {
         // functions aren't first-class values so we need to store a function pointer
         return llvm::PointerType::get(*context, 0);
