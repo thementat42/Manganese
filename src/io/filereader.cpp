@@ -6,7 +6,6 @@
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 namespace Manganese::io {
@@ -16,19 +15,16 @@ FileReader::FileReader(const std::string& filename, std::size_t bufferCapacity) 
     _filePtr = std::fopen(filename.c_str(), "r");
     if (_filePtr == nullptr) {
         logging::logCritical(0, 0, "Could not open file {}", filename);
-        throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
-        return;
     }
     // Disable fread's buffering since FileReader does its own buffering
-    setvbuf(_filePtr, nullptr, _IONBF, 0);
+    std::setvbuf(_filePtr, nullptr, _IONBF, 0);
 
     _buffer = std::make_unique_for_overwrite<char[]>(bufferCapacity + 1);  // +1 for a null terminator
     _bufferSize = std::fread(_buffer.get(), sizeof(char), bufferCapacity, _filePtr);  // initial read
 
     if (_bufferSize == 0) {
-        logging::logError(0, 0, "File {} is empty or could not be read", filename);
-        throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
-        return;
+        std::fclose(_filePtr);
+        logging::logCritical(0, 0, "File {} is empty or could not be read", filename);
     }
     _buffer[_bufferSize] = '\0';
 }
