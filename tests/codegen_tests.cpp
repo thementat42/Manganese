@@ -1,3 +1,6 @@
+#include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
+
 #include <core.hpp>
 #include <filesystem>
 #include <frontend/cfg/control_flow_analyzer.hpp>
@@ -10,9 +13,6 @@
 #include <string>
 #include <utils/target_info.hpp>
 
-#include <llvm/IR/Module.h>
-#include <llvm/Support/raw_ostream.h>
-
 #include "testrunner.hpp"
 #include "tests.hpp"
 
@@ -24,7 +24,8 @@ constexpr const char* logFileName = "logs/codegen_tests.log";
 mnstl::chunk_allocator arena;
 utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
-bool validateIRContains(const std::string& source, const std::vector<std::string>& expectedSubstrings, std::string_view testName) {
+bool validateIRContains(const std::string& source, const std::vector<std::string>& expectedSubstrings,
+                        std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
@@ -82,9 +83,7 @@ bool validateIRContains(const std::string& source, const std::vector<std::string
         logFile << "Test: " << testName << "\n";
         logFile << "Result: " << (allFound ? "Passed" : "Failed (Missing pattern)") << "\n";
         if (!allFound) {
-            for (const auto& pattern : missingPatterns) {
-                logFile << "Missing Substring: \"" << pattern << "\"\n";
-            }
+            for (const auto& pattern : missingPatterns) { logFile << "Missing Substring: \"" << pattern << "\"\n"; }
         }
         logFile << "Generated IR\n" << irOutput << "\n---------------------\n";
         logFile.close();
@@ -92,9 +91,7 @@ bool validateIRContains(const std::string& source, const std::vector<std::string
 
     if (!allFound) {
         std::cout << "Test: " << testName << " -> Failed (Missing patterns)\n";
-        for (const auto& pattern : missingPatterns) {
-            std::cout << "  -> Missing Substring: \"" << pattern << "\"\n";
-        }
+        for (const auto& pattern : missingPatterns) { std::cout << "  -> Missing Substring: \"" << pattern << "\"\n"; }
     }
 
     return allFound;
@@ -175,7 +172,6 @@ bool testPointerDereferenceCodegen() {
     )";
     return validateIRContains(source, {"increment", "load", "store"}, __func__);
 }
-
 
 bool testBooleanLogic() {
     const std::string source = R"(
@@ -277,7 +273,8 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
     // runner.runTest("Generics Codegen", codegen_tests::testGenericsCodegen);
     runner.runTest("Array of Functions Indexed and Called", codegen_tests::testArrayOfFunctionsIndexedAndCalled);
-    // runner.runTest("Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
+    // runner.runTest("Array of Instantiated Generic Functions",
+    // codegen_tests::testArrayOfInstantiatedGenericFunctions);
 }
 
 }  // namespace Manganese::tests

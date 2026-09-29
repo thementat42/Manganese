@@ -116,11 +116,11 @@
 #endif
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-    #define MN_RUNTIME_API_FUNCTION __declspec(dllexport)
+#define MN_RUNTIME_API_FUNCTION __declspec(dllexport)
 #elif defined(__GNUC__) || defined(__clang__)
-    #define MN_RUNTIME_API_FUNCTION __attribute__((visibility("default")))
+#define MN_RUNTIME_API_FUNCTION __attribute__((visibility("default")))
 #else
-    #define MN_RUNTIME_API_FUNCTION
+#define MN_RUNTIME_API_FUNCTION
 #endif
 
 #endif  // MANGANESE_INCLUDE_CORE_HPP

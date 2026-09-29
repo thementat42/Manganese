@@ -18,7 +18,6 @@
 #include <string_view>
 #include <utils/target_info.hpp>
 
-
 namespace Manganese::codegen {
 
 using _irgen_base_t = ast::Visitor<llvm::Value*, void, llvm::Type*, false>;

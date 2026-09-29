@@ -145,7 +145,8 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
 
         // like array literals, we first need a pointer to the start of the array then an offset from that pointer
         llvm::Type* arrayLlvmType = visitTypeAsValue(indexExpression->variable->semanticType);
-        return builder->CreateInBoundsGEP(arrayLlvmType, arrayPtr, {builder->getInt32(0), indexVal}, "array_element_ptr");
+        return builder->CreateInBoundsGEP(arrayLlvmType, arrayPtr, {builder->getInt32(0), indexVal},
+                                          "array_element_ptr");
     }
 
     if (expr->kind == ast::ExpressionKind::MemberAccessExpression) {
