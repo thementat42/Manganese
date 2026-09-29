@@ -4,6 +4,7 @@
 #include <io/logging.hpp>
 #include <string>
 #include <string_view>
+#include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
 
 namespace Manganese::semantic {

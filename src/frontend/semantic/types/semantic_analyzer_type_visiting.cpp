@@ -7,6 +7,7 @@
 #include <string_view>
 #include <utility>
 #include <utils/expression_folding.hpp>
+#include <utils/resolution_status.hpp>
 #include <vector>
 
 namespace Manganese::semantic {

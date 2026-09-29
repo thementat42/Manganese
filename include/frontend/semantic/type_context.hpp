@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <utils/resolution_status.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
 
@@ -34,13 +35,6 @@ enum class SemanticTypeKind : std::uint8_t {
     Primitive,
     Uninitialized,
     Void,
-};
-
-enum class ResolutionStatus : std::int8_t {
-    Failure = -1,
-    InProgress = 0,
-    Success = 1,
-    NotStarted = 2,
 };
 
 struct SemanticType {

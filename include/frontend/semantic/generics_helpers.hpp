@@ -6,6 +6,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <functional>
 #include <unordered_map>
+#include <utils/resolution_status.hpp>
 
 namespace Manganese::semantic {
 struct Scope;

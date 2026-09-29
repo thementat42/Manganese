@@ -12,6 +12,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
 #include <vector>
 
