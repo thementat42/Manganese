@@ -9,8 +9,6 @@
 #include <utils/result.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
-
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
@@ -241,14 +239,15 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
 
     const auto* aggregateType = static_cast<const Aggregate*>(objectType);
 
-    for (const AggregateField& field : aggregateType->fields) {
-        if (field.name == expression->property) {
+    for (std::size_t i = 0; i < aggregateType->fields.size(); ++i) {
+        const AggregateField& field = aggregateType->fields[i];
+        if (field.name == expression->field) {
             expression->semanticType = field.type;
+            expression->fieldIndex = i;
             return exprvisit_t::Success;
         }
     }
-    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(),
-             expression->property);
+    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(), expression->field);
 
     return exprvisit_t::Failure;
 }
@@ -302,6 +301,9 @@ auto SemanticAnalyzer::visit(ast::ScopeResolutionExpression* expression) -> expr
     }
     expression->semanticType = memberSymbol->type;
     context.nestedScopeResolutionCurrentSymbol = memberSymbol;
+    if (auto* stmt = static_cast<ast::Statement*>(memberSymbol->node); stmt->isDeclaration()) {
+        expression->mangledName = static_cast<const ast::Declaration*>(stmt)->mangledName;
+    }
     return exprvisit_t::Success;
 }
 

@@ -7,21 +7,21 @@
 #include <io/logging.hpp>
 #include <utility>
 #include <utils/expression_folding.hpp>
+#include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
 #include <vector>
-
-#include "frontend/ast/ast_statements.hpp"
 
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
+    statement->mangledName = getMangledName(statement->name);
     // We don't know the generic types at declaration so we can't check them
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     const Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(std::format("Aggregate '{}' was not logged in the symbol table", statement->name));
+        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not logged in the symbol table", statement->name);
     }
 
     const auto* aggregateType = static_cast<const Aggregate*>(symbol->type);
@@ -65,14 +65,15 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
 
     aggregateType->fields = std::move(fieldTypes);
     aggregateType->status = ResolutionStatus::Success;
+    statement->semanticType = aggregateType;
     return stmtvisit_t::Success;
 }
 
 auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
-    Symbol* symbol = symbolTable.lookup(statement->alias);
+    statement->mangledName = getMangledName(statement->name);
+    Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(
-            std::format("Alias symbol '{}' was not registered during type collection", statement->alias));
+        ASSERT_UNREACHABLE_FMT("Alias symbol '{}' was not registered during type collection", statement->name);
     }
     // Already resolved
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
@@ -80,7 +81,7 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
 
     // Cycle Detection
     if (symbol->status == ResolutionStatus::InProgress) {
-        logError(statement, "Cyclic type alias detected in the definition of alias '{}'", statement->alias);
+        logError(statement, "Cyclic type alias detected in the definition of alias '{}'", statement->name);
         symbol->status = ResolutionStatus::Failure;
         return stmtvisit_t::Failure;
     }
@@ -92,14 +93,16 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
     }
     symbol->type = statement->baseType->semanticType;
     symbol->status = ResolutionStatus::Success;
+    statement->semanticType = statement->baseType->semanticType;
     return stmtvisit_t::Success;
 }
 
 auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     stmtvisit_t result = stmtvisit_t::Success;
+    statement->mangledName = getMangledName(statement->name);
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE(std::format("Enum {} was not registered during type initalization", statement->name));
+        ASSERT_UNREACHABLE_FMT("Enum {} was not registered during type initalization", statement->name);
     }
 
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
@@ -163,6 +166,7 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
         currentVariantValue++;
     }
     enumType->variants = std::move(variants);
+    statement->semanticType = enumType;
     return result;
 }
 
@@ -173,6 +177,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
                  statement->name);
         return stmtvisit_t::Failure;
     }
+    statement->mangledName = getMangledName(statement->name);
 
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
@@ -189,7 +194,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     symbol->status = ResolutionStatus::InProgress;
 
     const ContextGuard contextGuard{context.inFunction, true};
-    const Function* functionType = static_cast<const Function*>(symbol->type);
+    const auto* functionType = static_cast<const Function*>(symbol->type);
 
     stmtvisit_t signatureResult = stmtvisit_t::Success;
 
@@ -238,12 +243,15 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
 
     const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);
     symbol->status = isSuccess ? ResolutionStatus::Success : ResolutionStatus::Failure;
+    statement->semanticType = functionType;
 
     return isSuccess ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
 auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
+    statement->semanticType = typeContext.getPoison();
     const SemanticType* variableType = nullptr;
+    statement->mangledName = getMangledName(statement->name);
 
     if (statement->type != nullptr) {
         if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
@@ -287,6 +295,8 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
         logError(statement, "Redeclaration error: variable '{}' is already declared in this scope", statement->name);
         return stmtvisit_t::Failure;
     }
+
+    statement->semanticType = variableType;
 
     return stmtvisit_t::Success;
 }

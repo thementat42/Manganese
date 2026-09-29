@@ -164,7 +164,6 @@ ast::Statement* Parser::parseForLoopStatement() {
 }
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
-    // TODO: Handle function attributes
     const Token startToken = consumeToken();
     std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
 

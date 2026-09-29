@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <utils/resolution_status.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
 
@@ -34,13 +35,6 @@ enum class SemanticTypeKind : std::uint8_t {
     Primitive,
     Uninitialized,
     Void,
-};
-
-enum class ResolutionStatus : std::int8_t {
-    Failure = -1,
-    InProgress = 0,
-    Success = 1,
-    NotStarted = 2,
 };
 
 struct SemanticType {
@@ -78,6 +72,10 @@ struct SemanticType {
     constexpr bool isSignedInteger() const noexcept {
         using enum ast::PrimitiveType;
         return isPrimitive() && mnstl::enum_matches(primitiveType, int8, int16, int32, int64, int128);
+    }
+    constexpr bool isString() const noexcept {
+        using enum ast::PrimitiveType;
+        return isPrimitive() && mnstl::enum_matches(primitiveType, string);
     }
     constexpr bool isInteger() const noexcept { return isSignedInteger() || isUnsignedInteger(); }
     constexpr bool isFloat() const noexcept {
@@ -178,6 +176,11 @@ struct Enum final : public SemanticType {
         return std::ranges::find(variants, variantName, &Variant::name) != variants.end();
     }
 
+    std::optional<std::int64_t> getVariantValue(std::string_view variantName) const {
+        auto it = std::ranges::find(variants, variantName, &Variant::name);
+        return it == variants.end() ? std::nullopt : it->value;
+    }
+
     ~Enum() override = default;
 
     std::string toString() const override;
@@ -271,8 +274,8 @@ struct PrimitiveInfo {
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type);
 
 /**
-* Note: this is the "type" of the 'uninitialized' keyword, not of an uninitialized variable
-*/
+ * Note: this is the "type" of the 'uninitialized' keyword, not of an uninitialized variable
+ */
 struct Uninitialized final : public SemanticType {
     Uninitialized() noexcept : SemanticType(SemanticTypeKind::Uninitialized) {}
     ~Uninitialized() override = default;
@@ -312,7 +315,7 @@ inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
 
 class TypeContext {
    private:
-    mnstl::chunk_allocator& _allocator;
+    mnstl::chunk_allocator& _arena;
     utils::TargetInfo _targetInfo;
     constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::boolean) + 1;
 
@@ -329,10 +332,8 @@ class TypeContext {
     }
 
    public:
-    explicit TypeContext(mnstl::chunk_allocator& allocator, utils::TargetInfo target) noexcept :
-        _allocator(allocator),
-        _targetInfo(target),
-        _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
+    explicit TypeContext(mnstl::chunk_allocator& arena, utils::TargetInfo target) noexcept :
+        _arena(arena), _targetInfo(target), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
 
     ~TypeContext() = default;
 

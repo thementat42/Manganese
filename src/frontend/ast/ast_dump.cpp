@@ -79,7 +79,7 @@ void AggregateDeclarationStatement::dump(std::ostream& os, std::size_t indent) c
 void AliasStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AliasStatement", *this);
-    os << ind.next() << "alias: " << alias << "\n";
+    os << ind.next() << "alias: " << name << "\n";
     os << ind.next() << "base type: ";
     baseType->dump(os, ind.next(2));
     os << ind << "}\n";
@@ -302,10 +302,12 @@ void VariableDeclarationStatement::dump(std::ostream& os, std::size_t indent) co
     }
 
     os << ind.next() << "type: \n";
-    if (type != nullptr) {
-        type->dump(os, ind.next(2));
-    } else {
+    if (type == nullptr) {
         os << ind.next(2) << "auto\n";
+    } else if (type->semanticType != nullptr) {
+        os << ind.next() << type->semanticType->toString();
+    } else {
+        type->dump(os, ind.next(2));
     }
 
     os << ind << "}\n";
@@ -472,7 +474,7 @@ void MemberAccessExpression::dump(std::ostream& os, std::size_t indent) const {
     dumpHeader(os, ind, "MemberAccessExpression", *this);
     os << ind.next() << "object: \n";
     object->dump(os, ind.next(2));
-    os << ind.next() << "property: " << property << "\n";
+    os << ind.next() << "property: " << field << "\n";
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }

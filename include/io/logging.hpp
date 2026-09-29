@@ -42,7 +42,8 @@ enum class LogLevel : std::uint8_t {
 
 inline void writeToStderr(std::string_view prefixColor, std::string_view label, std::string_view message,
                           std::size_t line, std::size_t col) {
-    std::string out = std::format("{}{}{} {} (line {}, column {})\n", prefixColor, label, message, ansi::RESET, line, col);
+    std::string out
+        = std::format("{}{}{} {} (line {}, column {})\n", prefixColor, label, message, ansi::RESET, line, col);
 
     // Using .write() bypasses operator<<
     std::cout.write(out.data(), static_cast<std::streamsize>(out.size()));
@@ -61,11 +62,9 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
         case LogLevel::Error: out = std::format("{}[Internal Error] {}{}\n", ansi::RED, message, ansi::RESET); break;
         case LogLevel::Critical:
             out = std::format("{}[Internal Critical Error] {}{}\n", ansi::RED, message, ansi::RESET);
-            std::cout.write(out.data(), static_cast<std::streamsize>(out.size()));
-            std::cout.write("Critical error encountered\n", 27);
-            throw std::runtime_error("Critical error");
     }
     std::cout.write(out.data(), static_cast<std::streamsize>(out.size()));
+    if (level == LogLevel::Critical) { throw std::runtime_error{out}; }
 #else
     DISCARD(level);
     DISCARD(fmt);
@@ -85,6 +84,7 @@ void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<A
             std::string critMessage
                 = std::format("{}Critical error: {} Compilation aborted.{}", ansi::CRITICAL, message, ansi::RESET);
             writeToStderr("", "", critMessage, line, col);
+            throw std::runtime_error{message};
             break;
     }
 }

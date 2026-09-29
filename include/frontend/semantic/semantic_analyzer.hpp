@@ -22,7 +22,13 @@
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
 
-namespace Manganese::semantic {
+namespace Manganese {
+
+namespace codegen {
+class IRGenerator;
+}
+
+namespace semantic {
 
 class SemanticAnalyzer;
 
@@ -63,6 +69,7 @@ using _analyzer_base_t = ast::Visitor<Result, Result, Result, true>;
 
 class SemanticAnalyzer final : public _analyzer_base_t {
    private:
+    friend class codegen::IRGenerator;
     SymbolTable symbolTable;
     TypeContext typeContext;
     std::vector<parser::ParsedFile>& parsedFiles;
@@ -71,6 +78,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     std::unordered_map<std::string_view, std::size_t> activeGenericParams;
 
     struct {
+        std::vector<std::string_view> namespaceStack;
         const SemanticType* currentFunctionReturnType = nullptr;
         const SemanticType* currentVariableDeclarationType = nullptr;
         const Symbol* nestedScopeResolutionCurrentSymbol = nullptr;
@@ -131,10 +139,13 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element);
     Result checkVariableInitializer(ast::VariableDeclarationStatement* statement, const SemanticType*& variableType);
 
+    bool isMutableExpression(const ast::Expression* expr) const;
+
     const SemanticType* resolveGenericType(const ast::Type* type);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
-    const Symbol* resolveScopeSymbol(const ast::Expression* expression);
+    const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
+    std::string getMangledName(std::string_view baseName) const;
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
@@ -177,12 +188,18 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 
     // Overloads to handle generics specializations
-    stmtvisit_t visit(ast::AggregateDeclarationStatement*, generic_tag_t);
-    stmtvisit_t visit(ast::FunctionDeclarationStatement*, generic_tag_t);
+    stmtvisit_t visit(generic_tag_t, ast::AggregateDeclarationStatement*);
+    stmtvisit_t visit(generic_tag_t, ast::FunctionDeclarationStatement*);
     const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
                                                     const TypeList& typeArgs);
     const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
                                                      const TypeList& typeArgs);
+
+    [[nodiscard]] const InstantiationResult* getInstantiationResult(const ast::ASTNode* declNode,
+                                                                    const TypeList& typeArgs) const {
+        const InstantiationKey key{.declNode = declNode, .typeArgs = typeArgs};
+        return instantiationCache.find(key);
+    }
 
     static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
         using enum ast::ExpressionKind;
@@ -194,8 +211,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
             default: return expr;
         }
     }
-
-    bool isMutableExpression(const ast::Expression* expr);
 };
 
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
@@ -227,7 +242,7 @@ constexpr bool isLvalue(const ast::Expression* expr) noexcept {
     return mnstl::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression,
                                ScopeResolutionExpression);
 }
-
-}  // namespace Manganese::semantic
+}  // namespace semantic
+}  // namespace Manganese
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_ANALYZER_HPP

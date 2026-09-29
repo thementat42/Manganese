@@ -38,6 +38,8 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
         resolvedTypeArguments.push_back(resolved);
     }
 
+    expression->semanticTypes = resolvedTypeArguments;  // copy
+
     const Symbol* symbol = resolveScopeSymbol(expression->identifier);
     if (symbol == nullptr || symbol->node == nullptr) {
         logError(expression->identifier, "Use of undeclared symbol '{}'", expression->identifier->toString());
@@ -68,7 +70,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
             Scope* previousScope = symbolTable.getCurrentScope();
             if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
-            visitRes = visit(functionDeclaration, generic_tag);
+            visitRes = visit(generic_tag, functionDeclaration);
 
             if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
         }
@@ -108,7 +110,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
         Scope* previousScope = symbolTable.getCurrentScope();
         if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
-        const stmtvisit_t visitRes = visit(aggregateDecl, generic_tag);
+        const stmtvisit_t visitRes = visit(generic_tag, aggregateDecl);
 
         if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
 

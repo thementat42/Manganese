@@ -33,6 +33,7 @@ namespace ast {
 struct Expression;
 struct Statement;
 struct Type;
+struct Declaration;
 
 enum class StatementKind : std::uint8_t {
 #define STMT(name) name,
@@ -112,6 +113,7 @@ struct Statement : public ASTNode {
     const StatementKind kind;
 
     constexpr bool isPoisoned() const noexcept { return kind == StatementKind::PoisonedStatement; };
+    virtual bool isDeclaration() const noexcept { return false; }
 
    protected:
     explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}

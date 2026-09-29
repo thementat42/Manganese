@@ -328,6 +328,7 @@ auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const Semanti
     if (lhs->isPoison() || rhs->isPoison()) {
         return {.result = Compatible_t::Error, .message = "Unable to deduce types in comparison"};
     }
+    if (lhs->isString() && rhs->isString()) { return {.result = Compatible_t::Valid}; }
 
     if (lhs == rhs) { return {.result = Compatible_t::Valid}; }
 

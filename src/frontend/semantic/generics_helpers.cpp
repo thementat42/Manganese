@@ -7,12 +7,13 @@
 #include <string>
 #include <utility>
 #include <utils/expression_folding.hpp>
+#include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
 #include <vector>
 
 namespace Manganese::semantic {
 
-auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(generic_tag_t /*unused*/, ast::AggregateDeclarationStatement* stmt) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
     if (const auto* cached = instantiationCache.find(key)) {
@@ -40,7 +41,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_t
     activeGenericParams = std::move(oldParams);
 
     if (success) {
-        instantiationCache.markAsSuccess(key, nullptr);
+        instantiationCache.markAsSuccess(key, nullptr, getMangledName(stmt->mangledName));
     } else {
         instantiationCache.markAsFailure(key);
     }
@@ -48,7 +49,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* stmt, generic_t
     return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
 
-auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_tag_t /*unused*/) -> stmtvisit_t {
+auto SemanticAnalyzer::visit(generic_tag_t /*unused*/, ast::FunctionDeclarationStatement* stmt) -> stmtvisit_t {
     const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
 
     if (const auto* cached = instantiationCache.find(key)) {
@@ -145,7 +146,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* stmt, generic_ta
     activeGenericParams = std::move(oldParams);
 
     if (success) {
-        instantiationCache.markAsSuccess(key, resolvedReturnType);
+        instantiationCache.markAsSuccess(key, resolvedReturnType, getMangledName(stmt->mangledName));
     } else {
         instantiationCache.markAsFailure(key);
     }
@@ -180,13 +181,7 @@ const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(const ast::Ag
 
     activeGenericParams = std::move(oldParams);
 
-    std::string instantiatedName = decl->name + "$";
-    for (std::size_t i = 0; i < typeArgs.size(); ++i) {
-        if (i > 0) { instantiatedName += "$"; }
-        instantiatedName += typeArgs[i]->toString();
-    }
-
-    return typeContext.getNamedAggregate(std::string(instantiatedName), std::move(instantiatedFields));
+    return typeContext.getNamedAggregate(std::string(cachedResult->mangledName), std::move(instantiatedFields));
 }
 
 const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
@@ -270,7 +265,7 @@ const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type) 
                 }
                 return typeContext.getArray(elementType, *lengthValue);
             }
-            // TODO
+            logError(type, "Could not deduce array length.");
             return typeContext.getPoison();
         }
         case FunctionType: {
@@ -321,7 +316,7 @@ const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type) 
                 Scope* previousScope = symbolTable.getCurrentScope();
                 if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
-                auto visitResult = visit(aggregate, generic_tag);
+                auto visitResult = visit(generic_tag, aggregate);
 
                 if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
 

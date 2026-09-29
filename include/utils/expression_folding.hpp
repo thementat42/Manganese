@@ -1,9 +1,8 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <mnstl/ext_num_config.hxx>
 #include <mnstl/i128.hxx>
 #include <utils/str_to_num.hpp>
-
-#include "mnstl/ext_num_config.hxx"
 
 namespace Manganese::utils {
 
@@ -38,18 +37,23 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 case NotEqual: return static_cast<T>(*leftValue != *rightValue);
                 case And: return static_cast<T>(static_cast<bool>(*leftValue) && static_cast<bool>(*rightValue));
                 case Or: return static_cast<T>(static_cast<bool>(*leftValue) || static_cast<bool>(*rightValue));
-                case BitAnd: return static_cast<T>(static_cast<bitwise_t>(*leftValue) & static_cast<bitwise_t>(*rightValue));
-                case BitOr: return static_cast<T>(static_cast<bitwise_t>(*leftValue) | static_cast<bitwise_t>(*rightValue));
-                case BitXor: return static_cast<T>(static_cast<bitwise_t>(*leftValue) ^ static_cast<bitwise_t>(*rightValue));
-                case BitLShift: return static_cast<T>(static_cast<bitwise_t>(*leftValue) << static_cast<bitwise_t>(*rightValue));
-                case BitRShift: return static_cast<T>(static_cast<bitwise_t>(*leftValue) >> static_cast<bitwise_t>(*rightValue));
+                case BitAnd:
+                    return static_cast<T>(static_cast<bitwise_t>(*leftValue) & static_cast<bitwise_t>(*rightValue));
+                case BitOr:
+                    return static_cast<T>(static_cast<bitwise_t>(*leftValue) | static_cast<bitwise_t>(*rightValue));
+                case BitXor:
+                    return static_cast<T>(static_cast<bitwise_t>(*leftValue) ^ static_cast<bitwise_t>(*rightValue));
+                case BitLShift:
+                    return static_cast<T>(static_cast<bitwise_t>(*leftValue) << static_cast<bitwise_t>(*rightValue));
+                case BitRShift:
+                    return static_cast<T>(static_cast<bitwise_t>(*leftValue) >> static_cast<bitwise_t>(*rightValue));
                 case MemberAccess:
                 case ScopeResolution:
                 case Assignment: return std::nullopt;  // can't fold these
                 default: break;
             }
-            ASSERT_UNREACHABLE(std::format("Unknown binary operator '{}' in computeExpression",
-                                           lexer::tokenTypeToString(binaryExpression->op)));
+            ASSERT_UNREACHABLE_FMT("Unknown binary operator '{}' in computeExpression",
+                                   lexer::tokenTypeToString(binaryExpression->op));
         }
         case ast::ExpressionKind::BoolLiteralExpression: {
             const auto* boolLiteralExpression = static_cast<const ast::BoolLiteralExpression*>(expression);
@@ -104,8 +108,8 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                     break;
                 default:;
             }
-            ASSERT_UNREACHABLE(std::format("Unknown postfix operator '{}' in computeExpression",
-                                           lexer::tokenTypeToString(postfixExpression->op)));
+            ASSERT_UNREACHABLE_FMT("Unknown postfix operator '{}' in computeExpression",
+                                   lexer::tokenTypeToString(postfixExpression->op));
         }
         case ast::ExpressionKind::PrefixExpression: {
             // can only increment/decrement lvalues which aren't foldable

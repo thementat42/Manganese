@@ -82,8 +82,7 @@ int main(int argc, char const* argv[]) {
     }
     if (codegen) {
         std::cout << ansi::PINK << "Codegen Tests\n" << ansi::RESET;
-        // TODO: Add once codegen has progress
-        std::cout << "To be implemented.\n";
+        Manganese::tests::runCodeGenerationTests(runner);
         std::cout << "\n----------\n";
     }
 

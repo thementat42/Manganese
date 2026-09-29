@@ -6,34 +6,26 @@
 #include <io/filereader.hpp>
 #include <io/logging.hpp>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 namespace Manganese::io {
 
 FileReader::FileReader(const std::string& filename, std::size_t bufferCapacity) :
-    _filePtr(nullptr), _bufferSize(0), _bufferCapacity(bufferCapacity) {
-    _filePtr = std::fopen(filename.c_str(), "r");
-    if (_filePtr == nullptr) {
-        logging::logCritical(0, 0, "Could not open file {}", filename);
-        throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
-        return;
-    }
+    _filePtr(std::fopen(filename.c_str(), "r")), _bufferSize(0), _bufferCapacity(bufferCapacity) {
+    if (_filePtr == nullptr) { logging::logCritical(0, 0, "Could not open file {}", filename); }
     // Disable fread's buffering since FileReader does its own buffering
-    setvbuf(_filePtr, nullptr, _IONBF, 0);
+    std::setvbuf(_filePtr.get(), nullptr, _IONBF, 0);
 
     _buffer = std::make_unique_for_overwrite<char[]>(bufferCapacity + 1);  // +1 for a null terminator
-    _bufferSize = std::fread(_buffer.get(), sizeof(char), bufferCapacity, _filePtr);  // initial read
+    _bufferSize = std::fread(_buffer.get(), sizeof(char), bufferCapacity, _filePtr.get());  // initial read
 
-    if (_bufferSize == 0) {
-        logging::logError(0, 0, "File {} is empty or could not be read", filename);
-        throw std::runtime_error("Critical error encountered.");  // Note: exception here means hard error and exit
-        return;
-    }
+    if (_bufferSize == 0) { logging::logCritical(0, 0, "File {} is empty or could not be read", filename); }
     _buffer[_bufferSize] = '\0';
 }
 
 void FileReader::refillBuffer() {
+    if ((std::feof(_filePtr.get()) != 0) || (std::ferror(_filePtr.get()) != 0)) { return; }
+
     const std::size_t unreadBytes = _bufferSize - _position;
     if (unreadBytes != 0U) {
         // Move any unread data to the beginning of the buffer
@@ -42,7 +34,8 @@ void FileReader::refillBuffer() {
         std::memmove(_buffer.get(), _buffer.get() + _position, unreadBytes);
     }
     const std::size_t remainingCapacity = _bufferCapacity - unreadBytes;
-    const std::size_t bytesRead = std::fread(_buffer.get() + unreadBytes, sizeof(char), remainingCapacity, _filePtr);
+    const std::size_t bytesRead
+        = std::fread(_buffer.get() + unreadBytes, sizeof(char), remainingCapacity, _filePtr.get());
 
     _bufferSize = unreadBytes + bytesRead;
     _position = 0;  // We moved any remaining data to the front, so reset position to 0

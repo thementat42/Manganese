@@ -97,8 +97,8 @@ ast::Statement* Parser::parseVisibilityAffectedStatement() {
         case TokenType::Private: visibility = ast::Visibility::Private; break;
         case TokenType::Public: visibility = ast::Visibility::Public; break;
         default:
-            ASSERT_UNREACHABLE("Unexpected token type in parseVisibilityAffectedStatement: "
-                               + lexer ::tokenTypeToString(peekTokenType()));
+            ASSERT_UNREACHABLE_FMT("Unexpected token type in parseVisibilityAffectedStatement: '{}'",
+                                   lexer ::tokenTypeToString(peekTokenType()));
     }
 
     switch (peekTokenType()) {

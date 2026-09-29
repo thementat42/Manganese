@@ -1,5 +1,3 @@
-#include "frontend/semantic/type_context.hpp"
-
 #include <algorithm>
 #include <core.hpp>
 #include <cstddef>
@@ -326,7 +324,7 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
 const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::optional<std::size_t> length) {
     Array tmp(elementType, length);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Array>(elementType, length);
+    auto* heapAlloc = _arena.emplace<Array>(elementType, length);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -338,7 +336,7 @@ const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::
 const SemanticType* TypeContext::getAnonymousAggregate(TypeList&& fieldTypes) {
     Aggregate tmp(std::move(fieldTypes));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields));
+    auto* heapAlloc = _arena.emplace<Aggregate>(std::move(tmp.fields));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -347,7 +345,7 @@ const SemanticType* TypeContext::getNamedAggregate(std::string&& name, std::vect
     // Named types are nominal: they are unique by their declaration name.
     Aggregate tmp(std::move(fieldTypes), std::move(name));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Aggregate>(std::move(tmp.fields), std::move(tmp.name));
+    auto* heapAlloc = _arena.emplace<Aggregate>(std::move(tmp.fields), std::move(tmp.name));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -355,7 +353,7 @@ const SemanticType* TypeContext::getNamedAggregate(std::string&& name, std::vect
 const SemanticType* TypeContext::getEnum(std::string_view name) {
     Enum tmp(name);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Enum>(name);
+    auto* heapAlloc = _arena.emplace<Enum>(name);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -363,7 +361,7 @@ const SemanticType* TypeContext::getEnum(std::string_view name) {
 const SemanticType* TypeContext::getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType) {
     Function tmp(std::move(parameterTypes), returnType);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Function>(std::move(tmp.parameterTypes), returnType);
+    auto* heapAlloc = _arena.emplace<Function>(std::move(tmp.parameterTypes), returnType);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -371,7 +369,7 @@ const SemanticType* TypeContext::getFunction(std::vector<Parameter>&& parameterT
 const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType, TypeList&& typeArguments) {
     GenericInstantiation tmp(baseType, std::move(typeArguments));
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<GenericInstantiation>(baseType, std::move(tmp.typeArguments));
+    auto* heapAlloc = _arena.emplace<GenericInstantiation>(baseType, std::move(tmp.typeArguments));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
@@ -379,7 +377,7 @@ const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType
 const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool isMutable) {
     Pointer tmp(baseType, isMutable);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _allocator.emplace<Pointer>(baseType, isMutable);
+    auto* heapAlloc = _arena.emplace<Pointer>(baseType, isMutable);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }

@@ -7,8 +7,6 @@
 #include <utility>
 #include <vector>
 
-#include "frontend/ast/ast_expressions.hpp"
-
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`
@@ -98,12 +96,12 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
     while (!done()) {
         if (peekTokenType() == lexer::TokenType::RightBrace) { break; }
         Token token = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation");
-        const std::string propertyName = token.getLexeme();
+        const std::string fieldName = token.getLexeme();
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
         constexpr auto precedence = precedenceAbove(Precedence::Assignment);
         ast::Expression* value = parseExpression(precedence);
 
-        fields.push_back({.name = propertyName, .value = value, .line = token.getLine(), .column = token.getColumn()});
+        fields.push_back({.name = fieldName, .value = value, .line = token.getLine(), .column = token.getColumn()});
 
         if (peekTokenType() != lexer::TokenType::RightBrace) {
             expectToken(lexer::TokenType::Comma, "Expected ',' to separate aggregate fields");
@@ -246,8 +244,8 @@ ast::Expression* Parser::parsePrimaryExpression() {
             return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme(), false);
         case TokenType::Uninitialized: return makeNode<ast::UninitializedExpression>(startToken);
         default:
-            ASSERT_UNREACHABLE("Invalid Token Type in parsePrimaryExpression: "
-                               + lexer ::tokenTypeToString(startToken.getType()));
+            ASSERT_UNREACHABLE_FMT("Invalid Token Type in parsePrimaryExpression: {}",
+                                   lexer ::tokenTypeToString(startToken.getType()));
     }
 }
 

@@ -4,6 +4,7 @@
 #include <io/logging.hpp>
 #include <string>
 #include <string_view>
+#include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
 
 namespace Manganese::semantic {
@@ -49,7 +50,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
         case AliasStatement: {
             auto* aliasStmt = static_cast<ast::AliasStatement*>(stmt);
 
-            const Result result = symbolTable.declare(aliasStmt->alias,
+            const Result result = symbolTable.declare(aliasStmt->name,
                                                       Symbol{
                                                           .type = nullptr,
                                                           .node = aliasStmt,
@@ -57,7 +58,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = aliasStmt->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(aliasStmt->alias, aliasStmt); }
+            if (result == Result::Failure) { _reportRedeclaration(aliasStmt->name, aliasStmt); }
             return result;
         }
         case EnumDeclarationStatement: {

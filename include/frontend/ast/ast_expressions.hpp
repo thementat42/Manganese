@@ -117,6 +117,7 @@ struct FunctionCallExpression final : public Expression {
 struct GenericInstantiationExpression final : public Expression {
     Expression* identifier;
     std::vector<Type*> types;
+    std::vector<const semantic::SemanticType*> semanticTypes;
 
     GenericInstantiationExpression(Expression* _identifier, std::vector<Type*>&& _types) noexcept :
         Expression(ExpressionKind::GenericInstantiationExpression), identifier(_identifier), types(std::move(_types)) {}
@@ -126,6 +127,7 @@ struct GenericInstantiationExpression final : public Expression {
 
 struct IdentifierExpression final : public Expression {
     const std::string name;
+    const Declaration* resolvedDeclaration = nullptr;
 
     explicit IdentifierExpression(std::string&& _name) noexcept :
         Expression(ExpressionKind::IdentifierExpression), name(std::move(_name)) {}
@@ -145,10 +147,11 @@ struct IndexExpression final : public Expression {
 
 struct MemberAccessExpression final : public Expression {
     Expression* object;
-    const std::string property;
+    const std::string field;
+    std::size_t fieldIndex = static_cast<std::size_t>(-1);
 
-    MemberAccessExpression(Expression* _object, std::string&& _property) noexcept :
-        Expression(ExpressionKind::MemberAccessExpression), object(_object), property(std::move(_property)) {}
+    MemberAccessExpression(Expression* _object, std::string&& _field) noexcept :
+        Expression(ExpressionKind::MemberAccessExpression), object(_object), field(std::move(_field)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };
@@ -192,6 +195,7 @@ struct PrefixExpression final : public Expression {
 struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
     Expression* element;
+    std::string mangledName;
 
     ScopeResolutionExpression(Expression* _scope, Expression* _element) noexcept :
         Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope), element(_element) {}

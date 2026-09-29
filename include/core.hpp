@@ -87,10 +87,40 @@
 
 #define BETWEEN(c, low, high) (((low) <= (c)) && ((c) <= (high)))
 
+#ifndef MN_STRINGIFY
+#define MN_STRINGIFY(x) #x
+#endif  // MN_STRINGIFY
+
 #if MN_DEBUG
-#define ASSERT_UNREACHABLE(message) panic((message), __FILE__, __LINE__, __func__)
+#define ASSERT_UNREACHABLE(message)          panic((message), __FILE__, __LINE__, __func__)
+#define ASSERT_UNREACHABLE_FMT(message, ...) ASSERT_UNREACHABLE(std::format(message __VA_OPT__(, ) __VA_ARGS__))
 #else
-#define ASSERT_UNREACHABLE(message) manganese_unreachable()
+#define ASSERT_UNREACHABLE(message)          manganese_unreachable()
+#define ASSERT_UNREACHABLE_FMT(message, ...) manganese_unreachable()
 #endif  // MN_DEBUG
+
+#ifndef MN_BEGIN_C_LINKAGE
+#ifdef __cplusplus
+#define MN_BEGIN_C_LINKAGE extern "C" {
+#else
+#define MN_BEGIN_C_LINKAGE
+#endif
+#endif
+
+#ifndef MN_END_C_LINKAGE
+#ifdef __cplusplus
+#define MN_END_C_LINKAGE }
+#else
+#define MN_END_C_LINKAGE
+#endif
+#endif
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+#define MN_RUNTIME_API_FUNCTION __declspec(dllexport)
+#elif defined(__GNUC__) || defined(__clang__)
+#define MN_RUNTIME_API_FUNCTION __attribute__((visibility("default")))
+#else
+#define MN_RUNTIME_API_FUNCTION
+#endif
 
 #endif  // MANGANESE_INCLUDE_CORE_HPP

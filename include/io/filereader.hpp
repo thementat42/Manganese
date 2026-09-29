@@ -14,8 +14,14 @@ namespace Manganese::io {
  */
 class FileReader : public Reader {
    private:
+    struct FileDeleter {
+        void operator()(std::FILE* fp) const {
+            if (fp != nullptr) { std::fclose(fp); }
+        }
+    };
+
     std::size_t _position = 0, _line = 1, _column = 1;
-    std::FILE* _filePtr;
+    std::unique_ptr<std::FILE, FileDeleter> _filePtr;
     std::size_t _bufferSize;
     std::size_t _bufferCapacity;
     constexpr static inline std::size_t DEFAULT_BUFFER_CAPACITY = 64ULL * 1024;
@@ -26,9 +32,7 @@ class FileReader : public Reader {
    public:
     FileReader() = default;
     explicit FileReader(const std::string& filename, std::size_t bufferCapacity = DEFAULT_BUFFER_CAPACITY);
-    ~FileReader() noexcept override {
-        if (_filePtr != nullptr) { std::fclose(_filePtr); }
-    }
+    ~FileReader() noexcept override = default;
 
     char peekChar(std::size_t offset = 0) noexcept override;
     [[nodiscard]] char consumeChar() noexcept override;
@@ -41,7 +45,7 @@ class FileReader : public Reader {
     [[nodiscard]] std::size_t getColumn() const noexcept override { return _column; }
 
     [[nodiscard]] bool done() const noexcept override {
-        return (_position >= _bufferSize) && (std::feof(_filePtr) != 0);
+        return (_position >= _bufferSize) && (std::feof(_filePtr.get()) != 0);
     }
 };
 }  // namespace Manganese::io

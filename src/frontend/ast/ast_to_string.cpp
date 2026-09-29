@@ -70,7 +70,7 @@ std::string AggregateDeclarationStatement::toString(std::size_t indent) const {
 }
 
 std::string AliasStatement::toString(std::size_t indent) const {
-    return getIndent(indent) + std::format("alias {} = " WRAP("{}") ";", alias, baseType->toString(indent));
+    return getIndent(indent) + std::format("alias {} = " WRAP("{}") ";", name, baseType->toString(indent));
 }
 
 std::string BreakStatement::toString(std::size_t indent) const { return getIndent(indent) + "break;"; }
@@ -194,12 +194,15 @@ std::string SwitchStatement::toString(std::size_t indent) const {
 
 std::string VariableDeclarationStatement::toString(std::size_t indent) const {
     std::string typeName;
-    if (type != nullptr) {
-        typeName = type->toString();
+
+    if (type == nullptr) {
+        typeName = "auto";
+    } else if (type->semanticType != nullptr) {
+        typeName = type->semanticType->toString();
     } else if ((value != nullptr) && (value->semanticType != nullptr)) {
         typeName = value->semanticType->toString();
     } else {
-        typeName = "auto";
+        typeName = type->toString();
     }
     std::string typeStr = std::format("{} {}", visibilityToString(visibility), typeName);
     std::string valueStr = (value == nullptr) ? "" : " = " + value->toString(0);
@@ -293,7 +296,7 @@ std::string IndexExpression::toString(std::size_t indent) const {
 }
 
 std::string MemberAccessExpression::toString(std::size_t indent) const {
-    return std::format("{}.{}", object->toString(indent), property);
+    return std::format("{}.{}", object->toString(indent), field);
 }
 
 std::string NumberLiteralExpression::toString(std::size_t /*indent*/) const { return value; }

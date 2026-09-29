@@ -96,6 +96,27 @@ auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
             expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::string);
             return exprvisit_t::Success;
         }
+
+        if (op == lexer::TokenType::FloorDiv && lhsType->isNumeric() && rhsType->isNumeric()) {
+            const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
+
+            if (commonType->isFloat()) {
+                auto info = getPrimitiveInfo(commonType->primitiveType);
+                auto targetPrimitive = (info.bitWidth == 32) ? ast::PrimitiveType::int32 : ast::PrimitiveType::int64;
+
+                expression->semanticType = typeContext.getPrimitive(targetPrimitive);
+            } else {
+                expression->semanticType = commonType;
+            }
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::int64);
+            return exprvisit_t::Success;
+        }
+
+        if (op == lexer::TokenType::Div && lhsType->isNumeric() && rhsType->isNumeric()) {
+            expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::float64);
+            return exprvisit_t::Success;
+        }
+
         const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
         if (commonType->isPoison()) {
             logError(expression, "Invalid operands for arithmetic operator '{}': {} and {}",
@@ -106,8 +127,7 @@ auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
         expression->semanticType = commonType;
         return result;
     }
-    ASSERT_UNREACHABLE(
-        std::format("Unhandled binary operator {} in visit(BinaryExpression)", lexer::tokenTypeToString(op)));
+    ASSERT_UNREACHABLE_FMT("Unhandled binary operator {} in visit(BinaryExpression)", lexer::tokenTypeToString(op));
 };
 
 auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
@@ -234,8 +254,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
         } break;
 
-        default:
-            ASSERT_UNREACHABLE(std::format("Unknown prefix operator {}", lexer::tokenTypeToString(expression->op)));
+        default: ASSERT_UNREACHABLE_FMT("Unknown prefix operator {}", lexer::tokenTypeToString(expression->op));
     }
     return exprvisit_t::Success;
 }
