@@ -1,13 +1,17 @@
 #ifndef MNSTL_CHUNK_ALLOCATOR
 #define MNSTL_CHUNK_ALLOCATOR 1
 
+#include <algorithm>
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <memory>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
 
 namespace mnstl {
 
@@ -28,9 +32,12 @@ class chunk_allocator {
 
    public:
     chunk_allocator() { add_chunk(); }
+
     ~chunk_allocator() noexcept {
         // Destroy in reverse order
-        for (auto it = _destructors.rbegin(); it != _destructors.rend(); ++it) { it->destructor(it->object); }
+        for (destructor& _destructor : std::views::reverse(_destructors)) {
+            _destructor.destructor(_destructor.object);
+        }
     }
 
     template <class T, class... Args>
@@ -44,6 +51,17 @@ class chunk_allocator {
                 destructor{.destructor = [](void* obj) { static_cast<T*>(obj)->~T(); }, .object = ptr});
         }
         return ptr;
+    }
+
+    void merge_with(chunk_allocator&& other) noexcept {
+        if (this == &other) { return; }
+        _chunks.reserve(_chunks.size() + other._chunks.size());
+        _destructors.reserve(_destructors.size() + other._destructors.size());
+
+        std::ranges::move(other._chunks, std::back_inserter(_chunks));
+        std::ranges::move(other._destructors, std::back_inserter(_destructors));
+        other._chunks.clear();
+        other._destructors.clear();
     }
 
    private:
