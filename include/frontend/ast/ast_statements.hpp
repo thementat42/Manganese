@@ -43,7 +43,7 @@ struct AggregateDeclarationStatement final : public Declaration {
 };
 
 struct AliasStatement final : public Declaration {
-    Type* baseType;  // The type being aliased (x in alias x as foo)
+    Type* baseType;
     Visibility visibility = Visibility::Private;
 
     AliasStatement(Type* _baseType, std::string&& _alias) noexcept :
