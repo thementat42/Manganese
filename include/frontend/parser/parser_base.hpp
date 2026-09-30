@@ -108,7 +108,7 @@ class Parser {
     ast::CaseClause parseCaseClause();
     ast::Block parseDefaultClause();
 
-    std::vector<std::string> parseImportPath();
+    std::vector<std::string> parseModulePath();
     std::optional<std::string> parseImportAlias();
 
     // Type Parsing

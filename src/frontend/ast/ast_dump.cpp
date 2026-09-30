@@ -236,7 +236,12 @@ void ImportStatement::dump(std::ostream& os, std::size_t indent) const {
 void ModuleDeclarationStatement::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ModuleDeclarationStatement", *this);
-    os << ind.next() << "module name: " << name << "\n";
+    os << ind.next() << "path: [";
+    for (std::size_t i = 0; i < path.size(); ++i) {
+        os << path[i];
+        if (i + 1 < path.size()) { os << ", "; }
+    }
+    os << "]\n";
     os << ind << "}\n";
 }
 

@@ -180,10 +180,11 @@ struct ImportStatement final : public Statement {
 };
 
 struct ModuleDeclarationStatement final : public Statement {
-    std::string name;
+        std::vector<std::string> path;
 
-    explicit ModuleDeclarationStatement(std::string&& _name) noexcept :
-        Statement(StatementKind::ModuleDeclarationStatement), name(std::move(_name)) {}
+
+    explicit ModuleDeclarationStatement(std::vector<std::string>&& _path) noexcept :
+        Statement(StatementKind::ModuleDeclarationStatement), path(std::move(_path)) {}
 
     MN_AST_STANDARD_INTERFACE;
 };

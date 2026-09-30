@@ -229,7 +229,7 @@ ast::Statement* Parser::parseIfStatement() {
 ast::Statement* Parser::parseImportStatement() {
     const Token startToken = consumeToken();
 
-    std::vector<std::string> path = parseImportPath();
+    std::vector<std::string> path = parseModulePath();
     std::optional<std::string> alias = parseImportAlias();
 
     expectToken(TokenType::Semicolon, "Expected a ';' to end an import statement");
@@ -241,20 +241,14 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
     const lexer::Token temp = consumeToken();
     if (flags.hasParsedFileHeader) { logWarning(temp, "Module declarations should go at the top of the file"); }
 
-    std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
-
-    while (peekTokenType() == TokenType::ScopeResolution) {
-        DISCARD(consumeToken());
-        name += "::" + expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme();
-    }
-
+    std::vector<std::string> path = parseModulePath();
     expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
 
     if (flags.hasModuleDeclaration) {
         logError(temp, "This file already has a module declaration. Files can only have one module declaration.");
     }
 
-    return makeNode<ast::ModuleDeclarationStatement>(temp, std::move(name));
+    return makeNode<ast::ModuleDeclarationStatement>(temp, std::move(path));
 }
 
 ast::Statement* Parser::parseNamespace() {
@@ -523,7 +517,7 @@ ast::Block Parser::parseDefaultClause() {
     return defaultBody;
 }
 
-std::vector<std::string> Parser::parseImportPath() {
+std::vector<std::string> Parser::parseModulePath() {
     std::vector<std::string> path;
     path.push_back(expectToken(TokenType::Identifier, "Expected a module name or path").getLexeme());
 

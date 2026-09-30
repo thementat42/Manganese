@@ -166,7 +166,12 @@ std::string NamespaceStatement::toString(std::size_t indent) const {
 }
 
 std::string ModuleDeclarationStatement::toString(std::size_t indent) const {
-    return getIndent(indent) + std::format("module {};", name);
+    std::string pathStr;
+    for (std::size_t i = 0; i < path.size(); ++i) {
+        pathStr += path[i];
+        if (i != path.size() - 1) [[likely]] { pathStr += "::"; }
+    }
+    return getIndent(indent) + std::format("module {};", pathStr);
 }
 
 std::string NestedBlockStatement::toString(std::size_t indent) const {
