@@ -6,6 +6,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <vector>
+#include "frontend/parser/parser_base.hpp"
 
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
@@ -151,11 +152,7 @@ std::string IfStatement::toString(std::size_t indent) const {
 }
 
 std::string ImportStatement::toString(std::size_t indent) const {
-    std::string pathStr;
-    for (std::size_t i = 0; i < path.size(); ++i) {
-        pathStr += path[i];
-        if (i != path.size() - 1) [[likely]] { pathStr += "::"; }
-    }
+    std::string pathStr = parser::flattenPath(path);
     const std::string aliasStr = alias.has_value() ? std::format("as {}", *alias) : "";
 
     return getIndent(indent) + std::format("import {} {};", pathStr, aliasStr);
@@ -166,12 +163,7 @@ std::string NamespaceStatement::toString(std::size_t indent) const {
 }
 
 std::string ModuleDeclarationStatement::toString(std::size_t indent) const {
-    std::string pathStr;
-    for (std::size_t i = 0; i < path.size(); ++i) {
-        pathStr += path[i];
-        if (i != path.size() - 1) [[likely]] { pathStr += "::"; }
-    }
-    return getIndent(indent) + std::format("module {};", pathStr);
+    return getIndent(indent) + std::format("module {};", parser::flattenPath(path));
 }
 
 std::string NestedBlockStatement::toString(std::size_t indent) const {
