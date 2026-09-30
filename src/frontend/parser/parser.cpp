@@ -2,7 +2,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
-#include <memory>
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
 #include <string>

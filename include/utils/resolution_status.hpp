@@ -6,8 +6,8 @@
 namespace Manganese {
 
 /**
-* Used for cycle detection
-*/
+ * Used for cycle detection
+ */
 enum class [[nodiscard]] ResolutionStatus : std::int8_t {
     Failure = -1,
     InProgress = 0,
@@ -15,7 +15,6 @@ enum class [[nodiscard]] ResolutionStatus : std::int8_t {
     NotStarted = 2,
 };
 
-} // namespace Manganese
+}  // namespace Manganese
 
-
-#endif // MANGANESE_INCLUDE_UTILS_RESOLUTION_STATUS_HPP
+#endif  // MANGANESE_INCLUDE_UTILS_RESOLUTION_STATUS_HPP

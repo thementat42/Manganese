@@ -180,8 +180,7 @@ struct ImportStatement final : public Statement {
 };
 
 struct ModuleDeclarationStatement final : public Statement {
-        std::vector<std::string> path;
-
+    std::vector<std::string> path;
 
     explicit ModuleDeclarationStatement(std::vector<std::string>&& _path) noexcept :
         Statement(StatementKind::ModuleDeclarationStatement), path(std::move(_path)) {}

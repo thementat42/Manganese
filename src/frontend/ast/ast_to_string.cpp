@@ -6,6 +6,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <vector>
+
 #include "frontend/parser/parser_base.hpp"
 
 #if MN_DEBUG
