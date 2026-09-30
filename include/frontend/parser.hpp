@@ -4,5 +4,6 @@
 #include <frontend/parser/lookup_table.hpp>
 #include <frontend/parser/operators.hpp>
 #include <frontend/parser/parser_base.hpp>
+#include <frontend/parser/module_handling.hpp>
 
 #endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_HPP
