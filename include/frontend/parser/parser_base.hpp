@@ -20,6 +20,8 @@
 namespace Manganese::parser {
 using lexer::TokenType, lexer::Token;
 
+std::string flattenPath(const std::vector<std::string>& path);
+
 struct ParsedFile {
     ast::ModuleDeclarationStatement* fileModule;
     std::vector<ast::ImportStatement*> imports;
