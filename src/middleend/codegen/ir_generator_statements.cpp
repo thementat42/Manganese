@@ -361,11 +361,11 @@ auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionD
     paramTypes.reserve(funcDecl->parameters.size());
 
     for (const auto& param : funcDecl->parameters) {
-        paramTypes.push_back(visitTypeAsValue(analyzer.resolveGenericType(param.type, genericsStack)));
+        paramTypes.push_back(visitTypeAsValue(analyzer.resolveGenericType(param.type, genericsStack, activeGenericParams)));
     }
 
     llvm::Type* returnType = (funcDecl->returnType != nullptr)
-        ? visitTypeAsValue(analyzer.resolveGenericType(funcDecl->returnType, genericsStack))
+        ? visitTypeAsValue(analyzer.resolveGenericType(funcDecl->returnType, genericsStack, activeGenericParams))
         : llvm::Type::getVoidTy(*context);
 
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, /*isVarArg=*/false);
