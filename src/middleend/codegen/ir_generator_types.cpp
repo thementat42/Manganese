@@ -31,6 +31,20 @@ namespace Manganese::codegen {
     ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");
 }
 
+[[nodiscard]] auto IRGenerator::visitTypeAsValue(const ast::Type* type) -> typevisit_t {
+    if (type->kind != ast::TypeKind::IdentifierType) { return visitTypeAsValue(type->semanticType); }
+    const auto* identifierType = static_cast<const ast::IdentifierType*>(type);
+
+    if (auto it = activeGenericParams.find(identifierType->name); it != activeGenericParams.end()) {
+        std::size_t index = it->second;
+        if (!genericsStack.is_empty() && index < genericsStack.top().size()) {
+            return visitTypeAsValue(genericsStack.top()[index]); 
+        }
+        ASSERT_UNREACHABLE("Unbound generic parameter during in IRGenerator::visitTypeAsValue(ast::Type*)");
+    }
+    return visitTypeAsValue(type->semanticType);
+}
+
 [[nodiscard]] auto IRGenerator::visitTypeAsValue(const semantic::SemanticType* type) -> typevisit_t {
     if (type->isArray()) {
         const auto* arrayType = static_cast<const semantic::Array*>(type);

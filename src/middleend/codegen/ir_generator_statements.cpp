@@ -325,4 +325,66 @@ auto IRGenerator::visit(const ast::Block& block) -> stmtvisit_t {
     for (const ast::Statement* statement : block) { visit(statement); }
 }
 
+auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::AggregateDeclarationStatement* aggDecl,
+                        const std::string& mangledName, semantic::TypeList&& typeArgs) -> stmtvisit_t {
+    auto oldParams = activeGenericParams;
+    genericsStack.push(std::move(typeArgs));
+
+    activeGenericParams.clear();
+    for (std::size_t i = 0; i < aggDecl->genericTypes.size(); ++i) {
+        activeGenericParams[aggDecl->genericTypes[i]] = i;
+    }
+
+    llvm::StructType* llvmStruct = llvm::StructType::create(*context, mangledName);
+
+    std::vector<llvm::Type*> fieldTypes;
+    fieldTypes.reserve(aggDecl->fields.size());
+    for (const auto& field : aggDecl->fields) { fieldTypes.push_back(visitTypeAsValue(field.type->semanticType)); }
+
+    llvmStruct->setBody(fieldTypes, /*isPacked=*/false);
+
+    activeGenericParams = std::move(oldParams);
+    genericsStack.pop();
+}
+
+auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionDeclarationStatement* funcDecl,
+                        const std::string& mangledName, semantic::TypeList&& typeArgs) -> stmtvisit_t {
+    genericsStack.push(std::move(typeArgs));
+
+    auto oldParams = activeGenericParams;
+    activeGenericParams.clear();
+    for (std::size_t i = 0; i < funcDecl->genericTypes.size(); ++i) {
+        activeGenericParams[funcDecl->genericTypes[i]] = i;
+    }
+
+    std::vector<llvm::Type*> paramTypes;
+    paramTypes.reserve(funcDecl->parameters.size());
+
+    for (const auto& param : funcDecl->parameters) { paramTypes.push_back(visit(param.type)); }
+
+    llvm::Type* returnType
+        = (funcDecl->returnType != nullptr) ? visit(funcDecl->returnType) : llvm::Type::getVoidTy(*context);
+
+    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, /*isVarArg=*/false);
+
+    llvm::Function* llvmFunc
+        = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mangledName, module.get());
+    llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(*context, "entry", llvmFunc);
+    builder->SetInsertPoint(entryBlock);
+
+    // Bind function arguments
+    auto* argIt = llvmFunc->arg_begin();
+    for (std::size_t i = 0; i < funcDecl->parameters.size(); ++i, ++argIt) {
+        argIt->setName(funcDecl->parameters[i].name);
+        llvm::AllocaInst* alloca
+            = builder->CreateAlloca(argIt->getType(), nullptr, funcDecl->parameters[i].name + "_addr");
+        builder->CreateStore(&*argIt, alloca);
+        namedValues[std::string(funcDecl->parameters[i].name)] = alloca;
+    }
+
+    visit(funcDecl->body);
+
+    activeGenericParams = std::move(oldParams);
+}
+
 }  // namespace Manganese::codegen

@@ -38,6 +38,8 @@ class IRGenerator final : public _irgen_base_t {
     utils::TargetInfo targetInfo;
     mnstl::tiny_stack<LoopTarget> loopStack;
     semantic::SemanticAnalyzer& analyzer;
+    std::unordered_map<std::string_view, std::size_t> activeGenericParams;
+    mnstl::tiny_stack<semantic::TypeList> genericsStack;
 
    public:
     IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles,
@@ -78,10 +80,11 @@ class IRGenerator final : public _irgen_base_t {
                       const semantic::InstantiationKey& key);
 
     [[nodiscard]] typevisit_t visitTypeAsValue(const semantic::SemanticType* type);
+    [[nodiscard]] typevisit_t visitTypeAsValue(const ast::Type* type);
 
     stmtvisit_t visit(const ast::Block& block);
-    stmtvisit_t visit(semantic::generic_tag_t, const ast::AggregateDeclarationStatement*);
-    stmtvisit_t visit(semantic::generic_tag_t, const ast::FunctionDeclarationStatement*);
+    stmtvisit_t visit(semantic::generic_tag_t, const ast::AggregateDeclarationStatement*, const std::string& mangledName, semantic::TypeList&& typeArgs);
+    stmtvisit_t visit(semantic::generic_tag_t, const ast::FunctionDeclarationStatement*, const std::string& mangledName, semantic::TypeList&& typeArgs);
 
     [[nodiscard]] typevisit_t visit(const semantic::Aggregate*);
     [[nodiscard]] typevisit_t visit(const semantic::Array*);
