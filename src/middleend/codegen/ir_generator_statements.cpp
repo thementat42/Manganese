@@ -360,10 +360,13 @@ auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionD
     std::vector<llvm::Type*> paramTypes;
     paramTypes.reserve(funcDecl->parameters.size());
 
-    for (const auto& param : funcDecl->parameters) { paramTypes.push_back(visit(param.type)); }
+    for (const auto& param : funcDecl->parameters) {
+        paramTypes.push_back(visitTypeAsValue(analyzer.resolveGenericType(param.type, genericsStack)));
+    }
 
-    llvm::Type* returnType
-        = (funcDecl->returnType != nullptr) ? visit(funcDecl->returnType) : llvm::Type::getVoidTy(*context);
+    llvm::Type* returnType = (funcDecl->returnType != nullptr)
+        ? visitTypeAsValue(analyzer.resolveGenericType(funcDecl->returnType, genericsStack))
+        : llvm::Type::getVoidTy(*context);
 
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, /*isVarArg=*/false);
 
@@ -385,6 +388,7 @@ auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionD
     visit(funcDecl->body);
 
     activeGenericParams = std::move(oldParams);
+    genericsStack.pop();
 }
 
 }  // namespace Manganese::codegen

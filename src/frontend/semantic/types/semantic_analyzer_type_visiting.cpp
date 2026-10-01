@@ -103,7 +103,7 @@ auto SemanticAnalyzer::visit(ast::FunctionType* type) -> typevisit_t {
 }
 
 auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t {
-    const SemanticType* resolved = resolveGenericType(type);
+    const SemanticType* resolved = resolveGenericType(type,genericsStack);
     if (resolved == nullptr) { return typevisit_t::Failure; }
     type->semanticType = resolved;
     return typevisit_t::Success;

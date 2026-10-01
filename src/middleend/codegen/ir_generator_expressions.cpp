@@ -322,10 +322,6 @@ namespace Manganese::codegen {
     
     if (symbol->kind == semantic::SymbolKind::Function) {
         auto tmp = expression->semanticTypes;
-        
-            std::cout << "EEE ";
-            for (const auto *i : tmp) { std::cout << i->toString() << ", "; }
-            std::cout << '\n';
         llvm::Function* llvmFunc = module->getFunction(mangledName);
         if (llvmFunc == nullptr) {
             auto* funcDecl = static_cast<ast::FunctionDeclarationStatement*>(symbol->node);

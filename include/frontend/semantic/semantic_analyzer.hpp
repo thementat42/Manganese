@@ -141,7 +141,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
     bool isMutableExpression(const ast::Expression* expr) const;
 
-    const SemanticType* resolveGenericType(const ast::Type* type);
+    const SemanticType* resolveGenericType(const ast::Type* type, mnstl::tiny_stack<TypeList>& types);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
