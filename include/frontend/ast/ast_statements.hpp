@@ -16,7 +16,7 @@ struct Declaration : public Statement {
     std::string mangledName;
     const semantic::SemanticType* semanticType = nullptr;
 
-    Declaration(StatementKind kind, std::string&& _name) noexcept : Statement(kind), name(std::move(_name)) {}
+    Declaration(StatementKind _kind, std::string&& _name) noexcept : Statement(_kind), name(std::move(_name)) {}
     virtual ~Declaration() = default;
 };
 
