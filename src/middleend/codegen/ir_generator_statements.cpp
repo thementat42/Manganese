@@ -325,31 +325,37 @@ auto IRGenerator::visit(const ast::Block& block) -> stmtvisit_t {
     for (const ast::Statement* statement : block) { visit(statement); }
 }
 
-auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::AggregateDeclarationStatement* aggDecl,
+auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::AggregateDeclarationStatement* aggregateDeclaration,
                         const std::string& mangledName, semantic::TypeList&& typeArgs) -> stmtvisit_t {
-    auto oldParams = activeGenericParams;
-    genericsStack.push(std::move(typeArgs));
+    const semantic::StackGuard stackGuard{genericsStack, std::move(typeArgs)};
 
+    auto oldParams = activeGenericParams;
     activeGenericParams.clear();
-    for (std::size_t i = 0; i < aggDecl->genericTypes.size(); ++i) {
-        activeGenericParams[aggDecl->genericTypes[i]] = i;
+    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size(); ++i) {
+        activeGenericParams[aggregateDeclaration->genericTypes[i]] = i;
     }
 
     llvm::StructType* llvmStruct = llvm::StructType::create(*context, mangledName);
 
     std::vector<llvm::Type*> fieldTypes;
-    fieldTypes.reserve(aggDecl->fields.size());
-    for (const auto& field : aggDecl->fields) { fieldTypes.push_back(visitTypeAsValue(field.type->semanticType)); }
+    fieldTypes.reserve(aggregateDeclaration->fields.size());
+    for (const auto& field : aggregateDeclaration->fields) {
+        const semantic::SemanticType* resolvedType
+            = analyzer.resolveGenericType(field.type, genericsStack, activeGenericParams);
+        if (resolvedType->isPoison()) { return; }
+        fieldTypes.push_back(visitTypeAsValue(resolvedType));
+    }
 
     llvmStruct->setBody(fieldTypes, /*isPacked=*/false);
 
     activeGenericParams = std::move(oldParams);
-    genericsStack.pop();
 }
 
 auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionDeclarationStatement* funcDecl,
                         const std::string& mangledName, semantic::TypeList&& typeArgs) -> stmtvisit_t {
-    genericsStack.push(std::move(typeArgs));
+    const llvm::IRBuilder<>::InsertPointGuard insertGuard(*builder);
+
+    const semantic::StackGuard stackGuard{genericsStack, std::move(typeArgs)};
 
     auto oldParams = activeGenericParams;
     activeGenericParams.clear();
@@ -361,7 +367,8 @@ auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionD
     paramTypes.reserve(funcDecl->parameters.size());
 
     for (const auto& param : funcDecl->parameters) {
-        paramTypes.push_back(visitTypeAsValue(analyzer.resolveGenericType(param.type, genericsStack, activeGenericParams)));
+        paramTypes.push_back(
+            visitTypeAsValue(analyzer.resolveGenericType(param.type, genericsStack, activeGenericParams)));
     }
 
     llvm::Type* returnType = (funcDecl->returnType != nullptr)
@@ -388,7 +395,6 @@ auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionD
     visit(funcDecl->body);
 
     activeGenericParams = std::move(oldParams);
-    genericsStack.pop();
 }
 
 }  // namespace Manganese::codegen
