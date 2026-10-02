@@ -23,9 +23,6 @@ namespace Manganese::codegen {
         case Poison: return visit(static_cast<const semantic::Poison*>(type));
         case Uninitialized: return visit(static_cast<const semantic::Uninitialized*>(type));
         case Void: return visit(static_cast<const semantic::Void*>(type));
-        case Generic: {
-            ASSERT_UNREACHABLE("Encountered unresolved generic semantic type during IR generation");
-        }
         case Primitive: return getPrimitiveType(type->primitiveType);
     };
     ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");

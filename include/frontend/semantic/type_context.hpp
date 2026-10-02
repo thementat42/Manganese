@@ -29,7 +29,6 @@ enum class SemanticTypeKind : std::uint8_t {
     Array,
     Enum,
     Function,
-    Generic,
     Pointer,
     Poison,
     Primitive,
@@ -56,7 +55,6 @@ struct SemanticType {
     constexpr bool isArray() const noexcept { return kind == SemanticTypeKind::Array; }
     constexpr bool isEnum() const noexcept { return kind == SemanticTypeKind::Enum; }
     constexpr bool isFunction() const noexcept { return kind == SemanticTypeKind::Function; }
-    constexpr bool isGeneric() const noexcept { return kind == SemanticTypeKind::Generic; }
     constexpr bool isPointer() const noexcept { return kind == SemanticTypeKind::Pointer; }
     constexpr bool isPoison() const noexcept { return kind == SemanticTypeKind::Poison; }
     constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
@@ -158,7 +156,7 @@ struct Array final : public SemanticType {
     std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
 };
 
-struct Variant {
+struct EnumVariant {
     std::string_view name;
     std::optional<std::int64_t> value = std::nullopt;
 };
@@ -166,18 +164,18 @@ struct Variant {
 struct Enum final : public SemanticType {
     const std::string_view name;
     mutable const SemanticType* underlyingType = nullptr;
-    mutable std::vector<Variant> variants;
+    mutable std::vector<EnumVariant> variants;
     mutable ResolutionStatus status = ResolutionStatus::NotStarted;
 
     explicit Enum(std::string_view enumName, const SemanticType* defaultUnderlying = nullptr) noexcept :
         SemanticType(SemanticTypeKind::Enum), name(enumName), underlyingType(defaultUnderlying) {}
 
-    bool hasVariant(std::string_view variantName) const noexcept {
-        return std::ranges::find(variants, variantName, &Variant::name) != variants.end();
+    bool hasEnumVariant(std::string_view variantName) const noexcept {
+        return std::ranges::find(variants, variantName, &EnumVariant::name) != variants.end();
     }
 
     std::optional<std::int64_t> getVariantValue(std::string_view variantName) const {
-        auto it = std::ranges::find(variants, variantName, &Variant::name);
+        auto it = std::ranges::find(variants, variantName, &EnumVariant::name);
         return it == variants.end() ? std::nullopt : it->value;
     }
 
@@ -216,20 +214,6 @@ struct Function final : public SemanticType {
         parameterTypes(std::move(params)) {}
 
     ~Function() override = default;
-
-    std::string toString() const override;
-    std::size_t size(const utils::TargetInfo& target) const noexcept override;
-    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
-};
-
-struct GenericInstantiation final : public SemanticType {
-    const SemanticType* baseType;
-    TypeList typeArguments;
-
-    GenericInstantiation(const SemanticType* base, TypeList&& args) noexcept :
-        SemanticType(SemanticTypeKind::Generic), baseType(base), typeArguments(std::move(args)) {}
-
-    ~GenericInstantiation() override = default;
 
     std::string toString() const override;
     std::size_t size(const utils::TargetInfo& target) const noexcept override;
@@ -353,8 +337,6 @@ class TypeContext {
     const SemanticType* getEnum(std::string_view name);
 
     const SemanticType* getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType);
-
-    const SemanticType* getGenericInstance(const SemanticType* baseType, TypeList&& typeArguments);
 
     const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
 

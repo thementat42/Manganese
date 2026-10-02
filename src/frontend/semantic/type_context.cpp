@@ -100,8 +100,6 @@ std::string Function::toString() const {
     return result;
 }
 
-std::string GenericInstantiation::toString() const { return baseType->toStringWithTypeArguments(typeArguments); }
-
 std::string Pointer::toString() const {
     return std::format("{}ptr {}", (isMutable ? "mut " : ""), baseType->toString());
 }
@@ -175,16 +173,6 @@ std::size_t Function::size(const utils::TargetInfo& target) const noexcept { ret
 
 std::size_t Function::alignment(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment; }
 
-std::size_t GenericInstantiation::size(const utils::TargetInfo& target) const noexcept {
-    if (baseType != nullptr) { return baseType->size(target); }
-    return 0;
-}
-
-std::size_t GenericInstantiation::alignment(const utils::TargetInfo& target) const noexcept {
-    if (baseType != nullptr) { return baseType->alignment(target); }
-    return 1;
-}
-
 std::size_t Pointer::size(const utils::TargetInfo& target) const noexcept { return target.pointerSize; }
 
 std::size_t Pointer::alignment(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment; }
@@ -248,15 +236,6 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             }
             return hash;
         }
-        case SemanticTypeKind::Generic: {
-            const auto* generic = static_cast<const GenericInstantiation*>(t);
-            // Mix the base generic template type (e.g., the List in List@[int])
-            hash = hash_combine(hash, std::hash<const SemanticType*>{}(generic->baseType));
-            for (const SemanticType* arg : generic->typeArguments) {
-                hash = hash_combine(hash, std::hash<const SemanticType*>{}(arg));
-            }
-            return hash;
-        }
         case SemanticTypeKind::Pointer: {
             // like arrays, just hash the fields
             const auto* pointer = static_cast<const Pointer*>(t);
@@ -309,11 +288,6 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             const auto* right = static_cast<const Function*>(rhs);
             return (left->returnType == right->returnType) && (left->parameterTypes == right->parameterTypes);
         }
-        case SemanticTypeKind::Generic: {
-            const auto* left = static_cast<const GenericInstantiation*>(lhs);
-            const auto* right = static_cast<const GenericInstantiation*>(rhs);
-            return (left->baseType == right->baseType) && (left->typeArguments == right->typeArguments);
-        }
         case SemanticTypeKind::Uninitialized:
         case SemanticTypeKind::Poison:
         case SemanticTypeKind::Void: return true;
@@ -362,14 +336,6 @@ const SemanticType* TypeContext::getFunction(std::vector<Parameter>&& parameterT
     Function tmp(std::move(parameterTypes), returnType);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
     auto* heapAlloc = _arena.emplace<Function>(std::move(tmp.parameterTypes), returnType);
-    _cache.insert(heapAlloc);
-    return heapAlloc;
-}
-
-const SemanticType* TypeContext::getGenericInstance(const SemanticType* baseType, TypeList&& typeArguments) {
-    GenericInstantiation tmp(baseType, std::move(typeArguments));
-    if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _arena.emplace<GenericInstantiation>(baseType, std::move(tmp.typeArguments));
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
