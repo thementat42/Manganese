@@ -203,28 +203,6 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
             return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
         }
 
-        case SemanticTypeKind::Generic: {
-            const auto* genericFrom = static_cast<const GenericInstantiation*>(from);
-            const auto* genericTo = static_cast<const GenericInstantiation*>(to);
-
-            if (genericFrom->baseType != genericTo->baseType) { return {.result = Compatible_t::Error}; }
-            if (genericFrom->typeArguments.size() != genericTo->typeArguments.size()) {
-                return {.result = Compatible_t::Error,
-                        .message = conversionError + " (different number of type parameters)."};
-            }
-            for (std::size_t i = 0; i < genericFrom->typeArguments.size(); ++i) {
-                const SemanticType* fromArgument = genericFrom->typeArguments[i];
-                const SemanticType* toArgument = genericTo->typeArguments[i];
-                if (!areTypesCompatible(fromArgument, toArgument)) {
-                    return {.result = Compatible_t::Error,
-                            .message = conversionError
-                                + std::format(" (mismatch in position {}: {} cannot convert to {})", i,
-                                              fromArgument->toString(), toArgument->toString())};
-                }
-            }
-            return {.result = Compatible_t::Valid};
-        };
-
         case SemanticTypeKind::Pointer: {
             const auto* ptrFrom = static_cast<const Pointer*>(from);
             const auto* ptrTo = static_cast<const Pointer*>(to);

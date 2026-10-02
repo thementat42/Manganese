@@ -130,7 +130,7 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
 
     std::int64_t currentVariantValue = 0;
 
-    std::vector<Variant> variants;
+    std::vector<EnumVariant> variants;
 
     for (ast::EnumValue& variant : statement->values) {
         if (variant.value != nullptr) {

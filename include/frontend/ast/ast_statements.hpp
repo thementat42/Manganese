@@ -16,7 +16,7 @@ struct Declaration : public Statement {
     std::string mangledName;
     const semantic::SemanticType* semanticType = nullptr;
 
-    Declaration(StatementKind kind, std::string&& _name) noexcept : Statement(kind), name(std::move(_name)) {}
+    Declaration(StatementKind _kind, std::string&& _name) noexcept : Statement(_kind), name(std::move(_name)) {}
     virtual ~Declaration() = default;
 };
 
@@ -43,7 +43,7 @@ struct AggregateDeclarationStatement final : public Declaration {
 };
 
 struct AliasStatement final : public Declaration {
-    Type* baseType;  // The type being aliased (x in alias x as foo)
+    Type* baseType;
     Visibility visibility = Visibility::Private;
 
     AliasStatement(Type* _baseType, std::string&& _alias) noexcept :

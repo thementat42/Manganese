@@ -141,7 +141,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
     bool isMutableExpression(const ast::Expression* expr) const;
 
-    const SemanticType* resolveGenericType(const ast::Type* type);
+    const SemanticType* resolveGenericType(const ast::Type* type, mnstl::tiny_stack<TypeList>& types, const std::unordered_map<std::string_view, std::size_t>& typeMapping);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
@@ -190,6 +190,10 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     // Overloads to handle generics specializations
     stmtvisit_t visit(generic_tag_t, ast::AggregateDeclarationStatement*);
     stmtvisit_t visit(generic_tag_t, ast::FunctionDeclarationStatement*);
+
+    exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol);
+    exprvisit_t instantiateGenericAggregate(ast::GenericInstantiationExpression* expression, const Symbol* symbol);
+
     const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
                                                     const TypeList& typeArgs);
     const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
