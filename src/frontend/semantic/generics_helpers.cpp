@@ -352,8 +352,8 @@ const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type, 
             // some symbol type (e.g. T)
             if (auto it = typeMapping.find(IdentifierType->name); it != typeMapping.end()) {
                 const std::size_t index = it->second;
-                if (!genericsStack.is_empty() && index < genericsStack.top().size()) {
-                    return genericsStack.top()[index];
+                if (!types.is_empty() && index < types.top().size()) {
+                    return types.top()[index];
                 }
                 logError(type, "Unbound generic parameter '{}'", IdentifierType->name);
                 return typeContext.getPoison();
