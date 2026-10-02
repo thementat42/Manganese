@@ -90,8 +90,8 @@ bool validateIRContains(const std::string& source, const std::vector<std::string
     }
 
     if (!allFound) {
-        std::cout << "Test: " << testName << " -> Failed (Missing patterns)\n";
-        for (const auto& pattern : missingPatterns) { std::cout << "  -> Missing Substring: \"" << pattern << "\"\n"; }
+        std::cout << "Test: " << testName << "Failed. Missing patterns:\n";
+        for (const auto& pattern : missingPatterns) { std::cout << "\tMissing Substring: \"" << pattern << "\"\n"; }
     }
 
     return allFound;
@@ -253,6 +253,45 @@ bool testArrayOfInstantiatedGenericFunctions() {
     return validateIRContains(source, {"testGenericArray", "call"}, __func__);
 }
 
+bool testGenericAggregateInstantiation() {
+    const std::string source = R"(
+        aggregate Wrapper[T] {
+            inner: T;
+        }
+        func makeWrapper() -> int32 {
+            let w = Wrapper@[int32] { inner = 100 };
+            return w.inner;
+        }
+    )";
+    return validateIRContains(source, {"makeWrapper", "Wrapper"}, __func__);
+}
+
+bool testMultiParamGenerics() {
+    const std::string source = R"(
+        func selectFirst[T, U](a: T, b: U) -> T {
+            return a;
+        }
+        func testSelect() -> int32 {
+            return selectFirst@[int32, bool](99, true);
+        }
+    )";
+    return validateIRContains(source, {"selectFirst", "testSelect"}, __func__);
+}
+
+bool testArrayOfGenericAggregates() {
+    const std::string source = R"(
+        aggregate Pair[FirstType, SecondType] {
+            first: FirstType;
+            second: SecondType;
+        }
+        func getBoxVal() -> int32 {
+            let pairs: Pair@[int32, string][] = [Pair@[int32, string]{first = 10, second = "ten"}, Pair@[int32, string]{first = 20, second = "twenty"}];
+            return pairs[0].first;
+        }
+    )";
+    return validateIRContains(source, {"getBoxVal", "Pair"}, __func__);
+}
+
 }  // namespace
 }  // namespace codegen_tests
 
@@ -273,8 +312,11 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
     runner.runTest("Generics Codegen", codegen_tests::testGenericsCodegen);
     runner.runTest("Array of Functions Indexed and Called", codegen_tests::testArrayOfFunctionsIndexedAndCalled);
-    runner.runTest("Array of Instantiated Generic Functions",
-    codegen_tests::testArrayOfInstantiatedGenericFunctions);
+    runner.runTest("Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
+
+    runner.runTest("Generic Aggregate Instantiation", codegen_tests::testGenericAggregateInstantiation);
+    runner.runTest("Multi-Parameter Generic Functions", codegen_tests::testMultiParamGenerics);
+    runner.runTest("Array of Generic Aggregates", codegen_tests::testArrayOfGenericAggregates);
 }
 
 }  // namespace Manganese::tests
