@@ -30,11 +30,13 @@ Result SemanticAnalyzer::analyze() {
 std::string SemanticAnalyzer::getMangledName(std::string_view baseName) const {
     if (context.namespaceStack.empty()) { return std::string(baseName); }
     std::string result;
-    for (const auto& name : context.namespaceStack) {
-        result += name;
-        result += "$";
-    }
-    result += baseName;
+    for (const auto& name : context.namespaceStack) { result += std::format("${}", name); }
+    return result;
+}
+
+std::string SemanticAnalyzer::getMangledName(std::string_view baseName, const TypeList& typeArgs) const {
+    std::string result = getMangledName(baseName);
+    for (const auto& type : typeArgs) { result += std::format("${}", type->toString()); }
     return result;
 }
 

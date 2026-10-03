@@ -41,7 +41,7 @@ auto SemanticAnalyzer::visit(generic_tag_t /*unused*/, ast::AggregateDeclaration
     activeGenericParams = std::move(oldParams);
 
     if (success) {
-        instantiationCache.markAsSuccess(key, nullptr, getMangledName(stmt->mangledName));
+        instantiationCache.markAsSuccess(key, nullptr, getMangledName(stmt->mangledName, genericsStack.top()));
     } else {
         instantiationCache.markAsFailure(key);
     }
@@ -146,7 +146,7 @@ auto SemanticAnalyzer::visit(generic_tag_t /*unused*/, ast::FunctionDeclarationS
     activeGenericParams = std::move(oldParams);
 
     if (success) {
-        instantiationCache.markAsSuccess(key, resolvedReturnType, getMangledName(stmt->mangledName));
+        instantiationCache.markAsSuccess(key, resolvedReturnType, getMangledName(stmt->mangledName, genericsStack.top()));
     } else {
         instantiationCache.markAsFailure(key);
     }
