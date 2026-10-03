@@ -221,6 +221,8 @@ bool testGenericsCodegen() {
             return x;
         }
         func run() -> int32 {
+            identity@[string]("foo");
+            identity@[bool](true);
             return identity@[int32](42);
         }
     )";
