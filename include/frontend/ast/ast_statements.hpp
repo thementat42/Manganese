@@ -37,7 +37,7 @@ struct AggregateDeclarationStatement final : public Declaration {
         Declaration(StatementKind::AggregateDeclarationStatement, std::move(_name)),
         genericTypes(std::move(_genericTypes)),
         fields(std::move(_fields)) {}
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AggregateDeclarationStatement);
 
     bool isDeclaration() const noexcept override { return true; }
 };
@@ -49,25 +49,25 @@ struct AliasStatement final : public Declaration {
     AliasStatement(Type* _baseType, std::string&& _alias) noexcept :
         Declaration(StatementKind::AliasStatement, std::move(_alias)), baseType(_baseType) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AliasStatement);
     bool isDeclaration() const noexcept override { return true; }
 };
 
 struct BreakStatement final : public Statement {
     explicit BreakStatement() noexcept : Statement(StatementKind::BreakStatement) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(BreakStatement);
 };
 
 struct ContinueStatement final : public Statement {
     explicit ContinueStatement() noexcept : Statement(StatementKind::ContinueStatement) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ContinueStatement);
 };
 
 struct EmptyStatement final : public Statement {
     explicit EmptyStatement() noexcept : Statement(StatementKind::EmptyStatement) {}
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(EmptyStatement);
 };
 
 struct EnumValue {
@@ -86,7 +86,7 @@ struct EnumDeclarationStatement final : public Declaration {
         baseType(_baseType),
         values(std::move(_values)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(EnumDeclarationStatement);
     bool isDeclaration() const noexcept override { return true; }
 };
 
@@ -99,7 +99,7 @@ struct ExpressionStatement final : public Statement {
     explicit ExpressionStatement(Expression* _expression) noexcept :
         Statement(StatementKind::ExpressionStatement), expression(_expression) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ExpressionStatement);
 };
 
 struct ForLoopStatement final : public Statement {
@@ -116,7 +116,7 @@ struct ForLoopStatement final : public Statement {
         postExpression(_postExpression),
         body(std::move(_body)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ForLoopStatement);
 };
 
 struct FunctionParameter {
@@ -144,7 +144,7 @@ struct FunctionDeclarationStatement final : public Declaration {
         returnType(_returnType),
         body(std::move(_body)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(FunctionDeclarationStatement);
     bool isDeclaration() const noexcept override { return true; }
 };
 
@@ -166,7 +166,7 @@ struct IfStatement final : public Statement {
         elseBody(std::move(_elseBody)),
         elifs(std::move(_elifs)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(IfStatement);
 };
 
 struct ImportStatement final : public Statement {
@@ -176,7 +176,7 @@ struct ImportStatement final : public Statement {
     ImportStatement(std::vector<std::string>&& _path, std::optional<std::string>&& _alias) noexcept :
         Statement(StatementKind::ImportStatement), path(std::move(_path)), alias(std::move(_alias)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ImportStatement);
 };
 
 struct ModuleDeclarationStatement final : public Statement {
@@ -185,7 +185,7 @@ struct ModuleDeclarationStatement final : public Statement {
     explicit ModuleDeclarationStatement(std::string&& _name) noexcept :
         Statement(StatementKind::ModuleDeclarationStatement), name(std::move(_name)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ModuleDeclarationStatement);
 };
 
 struct NamespaceStatement final : public Statement {
@@ -195,7 +195,7 @@ struct NamespaceStatement final : public Statement {
     NamespaceStatement(std::string&& _name, Block&& _block) noexcept :
         Statement(StatementKind::NamespaceStatement), name(std::move(_name)), block(std::move(_block)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(NamespaceStatement);
 };
 
 struct NestedBlockStatement final : public Statement {
@@ -203,7 +203,7 @@ struct NestedBlockStatement final : public Statement {
 
     NestedBlockStatement(Block&& _block) noexcept :
         Statement(StatementKind::NestedBlockStatement), block(std::move(_block)) {}
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(NestedBlockStatement);
 };
 
 struct ReturnStatement final : public Statement {
@@ -212,7 +212,7 @@ struct ReturnStatement final : public Statement {
     explicit ReturnStatement(Expression* _value = nullptr) noexcept :
         Statement(StatementKind::ReturnStatement), value(_value) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ReturnStatement);
 };
 
 struct CaseClause {
@@ -231,7 +231,7 @@ struct SwitchStatement final : public Statement {
         cases(std::move(_cases)),
         defaultBody(std::move(_defaultBody)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(SwitchStatement);
 };
 
 struct VariableDeclarationStatement final : public Declaration {
@@ -248,7 +248,7 @@ struct VariableDeclarationStatement final : public Declaration {
         value(_value),
         type(_type) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(VariableDeclarationStatement);
     bool isDeclaration() const noexcept override { return true; }
 };
 
@@ -263,13 +263,13 @@ struct WhileLoopStatement final : public Statement {
         condition(_condition),
         isDoWhile(_isDoWhile) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(WhileLoopStatement);
 };
 
 struct PoisonedStatement final : public Statement {
     PoisonedStatement() noexcept : Statement(StatementKind::PoisonedStatement) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PoisonedStatement);
 };
 
 inline EmptyStatement* getEmptyStatement() noexcept {

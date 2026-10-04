@@ -25,7 +25,7 @@ struct AggregateInstantiationExpression final : public Expression {
     AggregateInstantiationExpression(Expression* _base, std::vector<AggregateInstantiationField>&& _fields) noexcept :
         Expression(ExpressionKind::AggregateInstantiationExpression), base(_base), fields(std::move(_fields)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AggregateInstantiationExpression);
 };
 
 struct AggregateLiteralExpression final : public Expression {
@@ -34,7 +34,8 @@ struct AggregateLiteralExpression final : public Expression {
     explicit AggregateLiteralExpression(std::vector<Expression*>&& _elements) noexcept :
         Expression(ExpressionKind::AggregateLiteralExpression), elements(std::move(_elements)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AggregateLiteralExpression);
+    ;
 };
 
 struct AlignofExpression final : public Expression {
@@ -43,7 +44,7 @@ struct AlignofExpression final : public Expression {
     AlignofExpression(Type* t) noexcept : Expression(ExpressionKind::AlignofExpression), type(t) {}
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE
+    MN_AST_STANDARD_INTERFACE(AlignofExpression);
 };
 
 struct ArrayLiteralExpression final : public Expression {
@@ -52,7 +53,7 @@ struct ArrayLiteralExpression final : public Expression {
     explicit ArrayLiteralExpression(std::vector<Expression*>&& _elements) noexcept :
         Expression(ExpressionKind::ArrayLiteralExpression), elements(std::move(_elements)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ArrayLiteralExpression);
 };
 
 struct AssignmentExpression final : public Expression {
@@ -63,7 +64,7 @@ struct AssignmentExpression final : public Expression {
     AssignmentExpression(Expression* _assignee, lexer::TokenType _op, Expression* _value) noexcept :
         Expression(ExpressionKind::AssignmentExpression), assignee(_assignee), value(_value), op(_op) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AssignmentExpression);
 };
 
 struct BinaryExpression final : public Expression {
@@ -75,7 +76,7 @@ struct BinaryExpression final : public Expression {
         Expression(ExpressionKind::BinaryExpression), left(_left), right(_right), op(_op) {}
     bool canFold() const noexcept override { return left->canFold() && right->canFold(); }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(BinaryExpression);
 };
 
 struct BoolLiteralExpression final : public Expression {
@@ -85,7 +86,7 @@ struct BoolLiteralExpression final : public Expression {
         Expression(ExpressionKind::BoolLiteralExpression), value(_value) {}
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(BoolLiteralExpression);
 };
 
 struct CharLiteralExpression final : public Expression {
@@ -98,7 +99,7 @@ struct CharLiteralExpression final : public Expression {
 
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(CharLiteralExpression);
 };
 
 struct FunctionCallExpression final : public Expression {
@@ -108,7 +109,7 @@ struct FunctionCallExpression final : public Expression {
     FunctionCallExpression(Expression* _callee, std::vector<Expression*>&& _arguments) noexcept :
         Expression(ExpressionKind::FunctionCallExpression), callee(_callee), arguments(std::move(_arguments)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(FunctionCallExpression);
 };
 
 /**
@@ -122,7 +123,7 @@ struct GenericInstantiationExpression final : public Expression {
     GenericInstantiationExpression(Expression* _identifier, std::vector<Type*>&& _types) noexcept :
         Expression(ExpressionKind::GenericInstantiationExpression), identifier(_identifier), types(std::move(_types)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(GenericInstantiationExpression);
 };
 
 struct IdentifierExpression final : public Expression {
@@ -132,7 +133,7 @@ struct IdentifierExpression final : public Expression {
     explicit IdentifierExpression(std::string&& _name) noexcept :
         Expression(ExpressionKind::IdentifierExpression), name(std::move(_name)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(IdentifierExpression);
 };
 
 struct IndexExpression final : public Expression {
@@ -142,7 +143,7 @@ struct IndexExpression final : public Expression {
     IndexExpression(Expression* _variable, Expression* _index) noexcept :
         Expression(ExpressionKind::IndexExpression), variable(_variable), index(_index) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(IndexExpression);
 };
 
 struct MemberAccessExpression final : public Expression {
@@ -153,7 +154,7 @@ struct MemberAccessExpression final : public Expression {
     MemberAccessExpression(Expression* _object, std::string&& _field) noexcept :
         Expression(ExpressionKind::MemberAccessExpression), object(_object), field(std::move(_field)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(MemberAccessExpression);
 };
 
 struct NumberLiteralExpression final : public Expression {
@@ -165,7 +166,7 @@ struct NumberLiteralExpression final : public Expression {
 
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(NumberLiteralExpression);
 };
 
 struct PostfixExpression final : public Expression {
@@ -177,7 +178,7 @@ struct PostfixExpression final : public Expression {
 
     bool canFold() const noexcept override { return left->canFold(); }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PostfixExpression);
 };
 
 struct PrefixExpression final : public Expression {
@@ -189,7 +190,7 @@ struct PrefixExpression final : public Expression {
 
     bool canFold() const noexcept override { return right->canFold(); }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PrefixExpression);
 };
 
 struct ScopeResolutionExpression final : public Expression {
@@ -200,7 +201,7 @@ struct ScopeResolutionExpression final : public Expression {
     ScopeResolutionExpression(Expression* _scope, Expression* _element) noexcept :
         Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope), element(_element) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ScopeResolutionExpression);
 };
 
 struct SizeofExpression final : public Expression {
@@ -209,7 +210,7 @@ struct SizeofExpression final : public Expression {
     SizeofExpression(Type* t) noexcept : Expression(ExpressionKind::SizeofExpression), type(t) {}
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE
+    MN_AST_STANDARD_INTERFACE(SizeofExpression)
 };
 
 struct StringLiteralExpression final : public Expression {
@@ -219,7 +220,7 @@ struct StringLiteralExpression final : public Expression {
         Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(StringLiteralExpression);
 };
 
 struct TypeCastExpression final : public Expression {
@@ -230,19 +231,19 @@ struct TypeCastExpression final : public Expression {
         Expression(ExpressionKind::TypeCastExpression), originalValue(_originalValue), targetType(_targetType) {}
     bool canFold() const noexcept override { return originalValue->canFold(); }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(TypeCastExpression);
 };
 
 struct UninitializedExpression final : public Expression {
     UninitializedExpression() noexcept : Expression(ExpressionKind::UninitializedExpression) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(UninitializedExpression);
 };
 
 struct PoisonedExpression final : public Expression {
     PoisonedExpression() noexcept : Expression(ExpressionKind::PoisonedExpression) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PoisonedExpression);
 };
 
 }  // namespace Manganese::ast

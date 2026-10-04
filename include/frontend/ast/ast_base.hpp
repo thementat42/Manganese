@@ -17,8 +17,9 @@
 #define MN_AST_DUMP
 #endif
 
-#define MN_AST_STANDARD_INTERFACE                                \
-    std::string toString(std::size_t indent = 0) const override; \
+#define MN_AST_STANDARD_INTERFACE(ClassName)                          \
+    ClassName* clone(semantic::CloneContext* context) const override; \
+    std::string toString(std::size_t indent = 0) const override;      \
     MN_AST_DUMP
 
 namespace Manganese {
@@ -26,6 +27,7 @@ namespace Manganese {
 namespace semantic {
 
 struct SemanticType;
+struct CloneContext;
 
 }  // namespace semantic
 
@@ -103,6 +105,7 @@ struct ASTNode {
     virtual ~ASTNode() noexcept = default;
 
     virtual std::string toString(std::size_t indent = 0) const = 0;
+    virtual ASTNode* clone(semantic::CloneContext* context) const = 0;
 
 #if MN_DEBUG
     virtual void dump(std::ostream& os, std::size_t indentDepth = 0) const = 0;
@@ -114,6 +117,7 @@ struct Statement : public ASTNode {
 
     constexpr bool isPoisoned() const noexcept { return kind == StatementKind::PoisonedStatement; };
     virtual bool isDeclaration() const noexcept { return false; }
+    Statement* clone(semantic::CloneContext* context) const override = 0;
 
    protected:
     explicit Statement(StatementKind _kind) noexcept : kind(_kind) {}
@@ -125,6 +129,7 @@ struct Expression : public ASTNode {
 
     virtual bool canFold() const noexcept { return false; }
     constexpr bool isPoisoned() const noexcept { return kind == ExpressionKind::PoisonedExpression; };
+    Expression* clone(semantic::CloneContext* context) const override = 0;
 
    protected:
     explicit Expression(ExpressionKind _kind) noexcept : kind(_kind) {}
@@ -134,6 +139,7 @@ struct Type : public ASTNode {
     const TypeKind kind;
     const PrimitiveType primitiveType;
     const semantic::SemanticType* semanticType = nullptr;
+    Type* clone(semantic::CloneContext* context) const override = 0;
 
     constexpr bool isPoisoned() const noexcept { return kind == TypeKind::PoisonedType; };
 

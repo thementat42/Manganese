@@ -13,7 +13,7 @@ struct AggregateType final : public Type {
 
     explicit AggregateType(std::vector<Type*>&& _fieldTypes) noexcept :
         Type(TypeKind::AggregateType), fieldTypes(std::move(_fieldTypes)) {}
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AggregateType);
 };
 
 struct ArrayType final : public Type {
@@ -23,7 +23,7 @@ struct ArrayType final : public Type {
     explicit ArrayType(Type* _elementType, Expression* _lengthExpr = nullptr) noexcept :
         Type(TypeKind::ArrayType), elementType(_elementType), lengthExpression(_lengthExpr) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ArrayType);
 };
 
 struct FunctionParameterType {
@@ -39,7 +39,7 @@ struct FunctionType final : public Type {
     FunctionType(std::vector<FunctionParameterType>&& _parameterTypes, Type* _returnType) noexcept :
         Type(TypeKind::FunctionType), parameterTypes(std::move(_parameterTypes)), returnType(_returnType) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(FunctionType);
 };
 
 /**
@@ -51,7 +51,7 @@ struct GenericInstantiationType final : public Type {
     GenericInstantiationType(Type* _baseType, std::vector<Type*>&& _typeParameters) noexcept :
         Type(TypeKind::GenericInstantiationType), baseType(_baseType), typeParameters(std::move(_typeParameters)) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(GenericInstantiationType);
 };
 
 struct IdentifierType final : public Type {
@@ -59,7 +59,7 @@ struct IdentifierType final : public Type {
 
     explicit IdentifierType(std::string&& _name, PrimitiveType prim = PrimitiveType::not_primitive) noexcept :
         Type(TypeKind::IdentifierType, prim), name(std::move(_name)) {}
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(IdentifierType);
 };
 
 struct PointerType final : public Type {
@@ -69,7 +69,7 @@ struct PointerType final : public Type {
     PointerType(Type* _baseType, bool _isMutable) noexcept :
         Type(TypeKind::PointerType), baseType(_baseType), isMutable(_isMutable) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PointerType);
 };
 
 struct ScopedType final : public Type {
@@ -78,7 +78,7 @@ struct ScopedType final : public Type {
 
     ScopedType(Type* _qualifier, Type* _type) noexcept : Type(TypeKind::ScopedType), scope(_qualifier), type(_type) {}
 
-    MN_AST_STANDARD_INTERFACE
+    MN_AST_STANDARD_INTERFACE(ScopedType)
 };
 
 struct TypeofType final : public Type {
@@ -87,13 +87,13 @@ struct TypeofType final : public Type {
     explicit TypeofType(Expression* expr) noexcept :
         Type(TypeKind::TypeofType, PrimitiveType::not_primitive), expression(expr) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(TypeofType);
 };
 
 struct PoisonedType final : public Type {
     PoisonedType() noexcept : Type(TypeKind::PoisonedType) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PoisonedType);
 };
 
 }  // namespace Manganese::ast
