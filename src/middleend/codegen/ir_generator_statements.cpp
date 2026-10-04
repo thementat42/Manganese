@@ -198,6 +198,7 @@ auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
     if (expectedReturnType->isStructTy() && returnValue->getType()->isPointerTy()) {
         returnValue = builder->CreateLoad(expectedReturnType, returnValue, "return");
     }
+    std::cout << "EEEEEE " << statement->value->semanticType->toString() << "\n";
 
     builder->CreateRet(returnValue);
 }
@@ -325,8 +326,9 @@ auto IRGenerator::visit(const ast::Block& block) -> stmtvisit_t {
     for (const ast::Statement* statement : block) { visit(statement); }
 }
 
-auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::AggregateDeclarationStatement* aggregateDeclaration,
-                        const std::string& mangledName, semantic::TypeList&& typeArgs) -> stmtvisit_t {
+auto IRGenerator::visit(semantic::generic_tag_t /*unused*/,
+                        const ast::AggregateDeclarationStatement* aggregateDeclaration, const std::string& mangledName,
+                        semantic::TypeList&& typeArgs) -> stmtvisit_t {
     const semantic::StackGuard stackGuard{genericsStack, std::move(typeArgs)};
 
     auto oldParams = activeGenericParams;
@@ -340,10 +342,9 @@ auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::Aggregate
     std::vector<llvm::Type*> fieldTypes;
     fieldTypes.reserve(aggregateDeclaration->fields.size());
     for (const auto& field : aggregateDeclaration->fields) {
-        const semantic::SemanticType* resolvedType
-            = analyzer.resolveGenericType(field.type, genericsStack, activeGenericParams);
-        if (resolvedType->isPoison()) { return; }
-        fieldTypes.push_back(visitTypeAsValue(resolvedType));
+        llvm::Type* llvmFieldType = visitTypeAsValue(field.type);
+        if (llvmFieldType == nullptr) { return; }
+        fieldTypes.push_back(llvmFieldType);
     }
 
     llvmStruct->setBody(fieldTypes, /*isPacked=*/false);
@@ -366,14 +367,10 @@ auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionD
     std::vector<llvm::Type*> paramTypes;
     paramTypes.reserve(funcDecl->parameters.size());
 
-    for (const auto& param : funcDecl->parameters) {
-        paramTypes.push_back(
-            visitTypeAsValue(analyzer.resolveGenericType(param.type, genericsStack, activeGenericParams)));
-    }
+    for (const auto& param : funcDecl->parameters) { paramTypes.push_back(visitTypeAsValue(param.type)); }
 
-    llvm::Type* returnType = (funcDecl->returnType != nullptr)
-        ? visitTypeAsValue(analyzer.resolveGenericType(funcDecl->returnType, genericsStack, activeGenericParams))
-        : llvm::Type::getVoidTy(*context);
+    llvm::Type* returnType
+        = (funcDecl->returnType != nullptr) ? visitTypeAsValue(funcDecl->returnType) : llvm::Type::getVoidTy(*context);
 
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, /*isVarArg=*/false);
 

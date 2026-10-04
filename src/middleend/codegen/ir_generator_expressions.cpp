@@ -159,9 +159,8 @@ namespace Manganese::codegen {
             if (expression->left->semanticType->isString()) {
                 auto* stringType = visit(expression->left->semanticType);
 
-                // Call runtime string comparison: int mn_strcmp(RuntimeString, RuntimeString)
                 llvm::FunctionCallee strcmpFn = module->getOrInsertFunction(MN_STRINGIFY(mn_strcmp),
-                                                                            builder->getInt32Ty(),  // returns i32
+                                                                            builder->getInt32Ty(),
                                                                             stringType, stringType);
 
                 llvm::Value* cmpResult = builder->CreateCall(strcmpFn, {lhs, rhs}, "strcmp_tmp");
