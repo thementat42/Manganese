@@ -3,6 +3,9 @@
 #include <frontend/semantic/type_context.hpp>
 #include <vector>
 
+#include "core.hpp"
+
+
 namespace Manganese::ast {
 
 // Helpers
@@ -126,10 +129,14 @@ IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
                           cloneBlock(elseBody, context));
 }
 
-ImportStatement* ImportStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+ImportStatement* ImportStatement::clone(semantic::CloneContext* /*context*/) const {
+    ASSERT_UNREACHABLE(
+        "Import statements should have been enforced as being at the top of a file, not inside a generic function");
+}
 
-ModuleDeclarationStatement* ModuleDeclarationStatement::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+ModuleDeclarationStatement* ModuleDeclarationStatement::clone(semantic::CloneContext* /*context*/) const {
+        ASSERT_UNREACHABLE(
+        "Module declaration statements should have been enforced as being at the top of a file, not inside a generic function");
 }
 
 NamespaceStatement* NamespaceStatement::clone(semantic::CloneContext* context) const {
@@ -362,7 +369,7 @@ IdentifierType* IdentifierType::clone(semantic::CloneContext* context) const {
         clone->semanticType = semanticType;
     }
     return clone;
- }
+}
 
 PointerType* PointerType::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context, baseType->clone(context), isMutable);
