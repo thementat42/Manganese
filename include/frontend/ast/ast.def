@@ -49,9 +49,9 @@ TYPE(AggregateType)
 TYPE(ArrayType)
 TYPE(FunctionType)
 TYPE(GenericInstantiationType)
+TYPE(IdentifierType)
 TYPE(PointerType)
 TYPE(ScopedType)
-TYPE(IdentifierType)
 TYPE(TypeofType)
 
 // Errors

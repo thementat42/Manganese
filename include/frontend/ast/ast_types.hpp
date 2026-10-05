@@ -48,6 +48,7 @@ struct FunctionType final : public Type {
 struct GenericInstantiationType final : public Type {
     Type* baseType;  // some_function in `some_function@[T,U]`
     std::vector<Type*> typeParameters;  // T and U in `some_function@[T,U]`
+
     GenericInstantiationType(Type* _baseType, std::vector<Type*>&& _typeParameters) noexcept :
         Type(TypeKind::GenericInstantiationType), baseType(_baseType), typeParameters(std::move(_typeParameters)) {}
 
@@ -76,7 +77,7 @@ struct ScopedType final : public Type {
     Type* scope;
     Type* type;
 
-    ScopedType(Type* _qualifier, Type* _type) noexcept : Type(TypeKind::ScopedType), scope(_qualifier), type(_type) {}
+    ScopedType(Type* _scope, Type* _type) noexcept : Type(TypeKind::ScopedType), scope(_scope), type(_type) {}
 
     MN_AST_STANDARD_INTERFACE(ScopedType)
 };
