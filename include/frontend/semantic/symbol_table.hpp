@@ -80,6 +80,7 @@ class SymbolTable {
     Scope* _currentScope;
     struct {
         bool _isFirstPass : 1 = true;  // Toggles table from allocation mode to tree-tracking mode
+        std::uint8_t _genericDepth = 0;
     } _flags;
     std::size_t currentSymbolID = 0;
 
@@ -109,8 +110,10 @@ class SymbolTable {
 
     void enterScope();
     void enterNamespace(std::string_view name, ast::ASTNode* node);
+    void enterGenericCheckingMode() noexcept { ++_flags._genericDepth; }
     void exitScope() NOEXCEPT_IF_RELEASE;
     void FORCE_INLINE exitNamespace() NOEXCEPT_IF_RELEASE { exitScope(); }
+    void exitGenericCheckingMode() noexcept { --_flags._genericDepth; }
 
     Scope* getCurrentScope() noexcept { return _currentScope; }
     const Scope* getCurrentScope() const noexcept { return _currentScope; }

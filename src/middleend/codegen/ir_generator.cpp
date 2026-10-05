@@ -15,8 +15,6 @@ void IRGenerator::generate() noexcept {
     for (const parser::ParsedFile& file : files) {
         for (const ast::Statement* statement : file.program) { visit(statement); }
     }
-
-    for (const ast::Statement* declaration : analyzer.getInstantiatedDeclarations()) { visit(declaration); }
 }
 
 void IRGenerator::dump(std::ostream& os) const {

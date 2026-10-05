@@ -85,7 +85,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
         symbolTable.setCurrentScope(_previousScope);
     }
 
-    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedAggregate->mangledName));
+    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedAggregate->mangledName), clonedAggregate);
     instantiatedDeclarations.push_back(clonedAggregate);
 
     expression->semanticType = concreteType;
@@ -136,7 +136,9 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
         Scope* previousScope = symbolTable.getCurrentScope();
         if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
+        symbolTable.enterGenericCheckingMode();
         visitRes = visit(clonedFunction);
+        symbolTable.exitGenericCheckingMode();
 
         if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
     }
@@ -170,7 +172,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
         symbolTable.setCurrentScope(previousScope);
     }
 
-    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedFunction->mangledName));
+    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedFunction->mangledName), clonedFunction);
     instantiatedDeclarations.push_back(clonedFunction);
 
     expression->semanticType = concreteType;

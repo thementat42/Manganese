@@ -171,19 +171,16 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
 }
 
 auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
-    if (!statement->genericTypes.empty()) { 
-        statement->mangledName = getMangledName(statement->name);
-        return stmtvisit_t::Success; 
-    }
+    if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     if (context.inFunction && !context.isInstantiatingGeneric) {
         logError(statement,
-             "Nested functions are not supported: function '{}' cannot be declared inside another function",
-             statement->name);
+                 "Nested functions are not supported: function '{}' cannot be declared inside another function",
+                 statement->name);
         return stmtvisit_t::Failure;
     }
 
-    statement->mangledName = getMangledName(statement->name);
+    if (!context.isInstantiatingGeneric) { statement->mangledName = getMangledName(statement->name); }
 
     const SemanticType* functionType = nullptr;
     Symbol* symbol = nullptr;
@@ -258,9 +255,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     context.currentFunctionReturnType = previousReturnType;
 
     const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);
-    if (symbol != nullptr) {
-        symbol->status = isSuccess ? ResolutionStatus::Success : ResolutionStatus::Failure;
-    }
+    if (symbol != nullptr) { symbol->status = isSuccess ? ResolutionStatus::Success : ResolutionStatus::Failure; }
     statement->semanticType = fnType;
 
     return isSuccess ? stmtvisit_t::Success : stmtvisit_t::Failure;

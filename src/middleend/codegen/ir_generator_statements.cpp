@@ -198,7 +198,6 @@ auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
     if (expectedReturnType->isStructTy() && returnValue->getType()->isPointerTy()) {
         returnValue = builder->CreateLoad(expectedReturnType, returnValue, "return");
     }
-    std::cout << "EEEEEE " << statement->value->semanticType->toString() << "\n";
 
     builder->CreateRet(returnValue);
 }

@@ -206,7 +206,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
         symbolTable.setCurrentScope(_previousScope);
     }
 
-    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedAggregate->mangledName));
+    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedAggregate->mangledName), clonedAggregate);
     instantiatedDeclarations.push_back(clonedAggregate);
 
     type->semanticType = concreteType;
