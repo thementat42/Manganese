@@ -251,9 +251,11 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
         }
     }
 
+    // we need this for generic instantiations
+    const SemanticType* previousReturnType = context.currentFunctionReturnType;
     context.currentFunctionReturnType = fnType->returnType;
     const stmtvisit_t bodyResult = visit(statement->body, false);
-    context.currentFunctionReturnType = nullptr;
+    context.currentFunctionReturnType = previousReturnType;
 
     const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);
     if (symbol != nullptr) {
