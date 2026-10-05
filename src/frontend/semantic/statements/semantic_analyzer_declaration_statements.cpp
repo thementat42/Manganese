@@ -171,39 +171,51 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
 }
 
 auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
-    // don't allow nested functions but a generic instantiation will still call this
-    // so we need to check that this is actually a nested function declaration, not a temporary reroute
-    if (context.inFunction && ! context.isInstantiatingGeneric) {
+    if (!statement->genericTypes.empty()) { 
+        statement->mangledName = getMangledName(statement->name);
+        return stmtvisit_t::Success; 
+    }
+
+    if (context.inFunction && !context.isInstantiatingGeneric) {
         logError(statement,
-                 "Nested functions are not supported: function '{}' cannot be declared inside another function",
-                 statement->name);
+             "Nested functions are not supported: function '{}' cannot be declared inside another function",
+             statement->name);
         return stmtvisit_t::Failure;
     }
+
     statement->mangledName = getMangledName(statement->name);
 
-    if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
+    const SemanticType* functionType = nullptr;
+    Symbol* symbol = nullptr;
 
-    Symbol* symbol = symbolTable.lookup(statement->name);
-    if (symbol == nullptr || symbol->type == nullptr) {
-        ASSERT_UNREACHABLE(
-            std::format("Function '{}' was not properly registered during symbol collection", statement->name));
+    if (context.isInstantiatingGeneric && !statement->mangledName.empty()) {
+        functionType = getInstantiatedFunctionType(statement);
+        symbol = symbolTable.lookup(statement->mangledName);
+    } else {
+        symbol = symbolTable.lookup(statement->name);
+        if (symbol == nullptr || symbol->type == nullptr) {
+            ASSERT_UNREACHABLE(
+                std::format("Function '{}' was not properly registered during symbol collection", statement->name));
+        }
+        functionType = symbol->type;
     }
 
-    if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
-    if (symbol->status == ResolutionStatus::Failure) { return stmtvisit_t::Failure; }
-    if (symbol->status == ResolutionStatus::InProgress) { return stmtvisit_t::Success; }
-
-    symbol->status = ResolutionStatus::InProgress;
+    if (symbol != nullptr) {
+        if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
+        if (symbol->status == ResolutionStatus::Failure) { return stmtvisit_t::Failure; }
+        if (symbol->status == ResolutionStatus::InProgress) { return stmtvisit_t::Success; }
+        symbol->status = ResolutionStatus::InProgress;
+    }
 
     const ContextGuard contextGuard{context.inFunction, true};
-    const auto* functionType = static_cast<const Function*>(symbol->type);
+    const auto* fnType = static_cast<const Function*>(functionType);
 
     stmtvisit_t signatureResult = stmtvisit_t::Success;
 
     symbolTable.enterScope();
     for (std::size_t i = 0; i < statement->parameters.size(); ++i) {
         const auto& param = statement->parameters[i];
-        const SemanticType* resolvedParamType = functionType->parameterTypes[i].type;
+        const SemanticType* resolvedParamType = fnType->parameterTypes[i].type;
 
         const stmtvisit_t paramDeclaration = symbolTable.declare(
             param.name,
@@ -239,13 +251,15 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
         }
     }
 
-    context.currentFunctionReturnType = functionType->returnType;
+    context.currentFunctionReturnType = fnType->returnType;
     const stmtvisit_t bodyResult = visit(statement->body, false);
     context.currentFunctionReturnType = nullptr;
 
     const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);
-    symbol->status = isSuccess ? ResolutionStatus::Success : ResolutionStatus::Failure;
-    statement->semanticType = functionType;
+    if (symbol != nullptr) {
+        symbol->status = isSuccess ? ResolutionStatus::Success : ResolutionStatus::Failure;
+    }
+    statement->semanticType = fnType;
 
     return isSuccess ? stmtvisit_t::Success : stmtvisit_t::Failure;
 }
