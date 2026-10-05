@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
+#include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <string_view>
@@ -103,9 +104,112 @@ auto SemanticAnalyzer::visit(ast::FunctionType* type) -> typevisit_t {
 }
 
 auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t {
-    const SemanticType* resolved = resolveGenericType(type, genericsStack, activeGenericParams);
-    if (resolved == nullptr) { return typevisit_t::Failure; }
-    type->semanticType = resolved;
+    if (visit(type->baseType) == typevisit_t::Failure) {
+        type->semanticType = typeContext.getPoison();
+        return typevisit_t::Failure;
+    }
+
+    if (type->baseType->kind != ast::TypeKind::IdentifierType) {
+        logError(type->baseType, "Expected a type name as the base of a generic instantiation");
+        type->semanticType = typeContext.getPoison();
+        return typevisit_t::Failure;
+    }
+
+    auto* identifierType = static_cast<ast::IdentifierType*>(type->baseType);
+    std::string_view baseTypeName = identifierType->name;
+
+    Symbol* symbol = symbolTable.lookup(baseTypeName);
+    if (symbol == nullptr || symbol->kind != SymbolKind::Aggregate) {
+        logError(type, "Unknown generic aggregate type '{}'", baseTypeName);
+        type->semanticType = typeContext.getPoison();
+        return typevisit_t::Failure;
+    }
+
+    auto* aggregateDeclaration = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
+
+    TypeList typeArgs;
+    typeArgs.reserve(type->typeParameters.size());
+    for (auto* paramNode : type->typeParameters) {
+        if (visit(paramNode) == typevisit_t::Failure) {
+            type->semanticType = typeContext.getPoison();
+            return typevisit_t::Failure;
+        }
+        typeArgs.push_back(paramNode->semanticType);
+    }
+
+    if (aggregateDeclaration->genericTypes.size() != typeArgs.size()) {
+        logError(type, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
+                 aggregateDeclaration->name, aggregateDeclaration->genericTypes.size(), typeArgs.size());
+        type->semanticType = typeContext.getPoison();
+        return typevisit_t::Failure;
+    }
+
+    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = typeArgs};
+
+    if (const auto* cached = instantiationCache.find(key)) {
+        if (cached->state == ResolutionStatus::Success) {
+            type->semanticType = cached->semanticType;
+            return typevisit_t::Success;
+        }
+        if (cached->state == ResolutionStatus::InProgress) {
+            logError(type, "Recursive generic aggregate instantiation detected for '{}'", aggregateDeclaration->name);
+            type->semanticType = typeContext.getPoison();
+            return typevisit_t::Failure;
+        }
+    }
+
+    instantiationCache.markAsInProgress(key);
+
+    CloneContext cloneContext{.arena = arena, .substitutions = {}, .declarationSubstitutions = {}};
+    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size(); ++i) {
+        cloneContext.substitutions[aggregateDeclaration->genericTypes[i]] = typeArgs[i];
+    }
+
+    auto* clonedAggregate = aggregateDeclaration->clone(&cloneContext);
+    clonedAggregate->mangledName = getMangledName(aggregateDeclaration->name, typeArgs);
+
+    Scope* previousScope = symbolTable.getCurrentScope();
+    if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
+
+    const stmtvisit_t visitRes = visit(clonedAggregate);
+
+    if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
+
+    if (visitRes == stmtvisit_t::Failure) {
+        instantiationCache.markAsFailure(key);
+        logError(type, "Failed to analyze instantiated aggregate '{}'", aggregateDeclaration->name);
+        type->semanticType = typeContext.getPoison();
+        return typevisit_t::Failure;
+    }
+
+    const SemanticType* concreteType = getInstantiatedAggregateType(clonedAggregate);
+    if (concreteType == nullptr || concreteType->isPoison()) {
+        instantiationCache.markAsFailure(key);
+        logError(type, "Failed to materialize instantiated aggregate type for '{}'", aggregateDeclaration->name);
+        type->semanticType = typeContext.getPoison();
+        return typevisit_t::Failure;
+    }
+
+    {
+        Scope* targetScope = (symbol->hostScope != nullptr) ? symbol->hostScope : symbolTable.getCurrentScope();
+        Scope* _previousScope = symbolTable.getCurrentScope();
+        symbolTable.setCurrentScope(targetScope);
+
+        DISCARD(symbolTable.declare(clonedAggregate->mangledName,
+                                    Symbol{.type = concreteType,
+                                           .node = clonedAggregate,
+                                           .kind = SymbolKind::Aggregate,
+                                           .visibility = aggregateDeclaration->visibility,
+                                           .isMutable = false,
+                                           .status = ResolutionStatus::Success}));
+
+        symbolTable.setCurrentScope(_previousScope);
+    }
+
+    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedAggregate->mangledName));
+    instantiatedDeclarations.push_back(clonedAggregate);
+
+    type->semanticType = concreteType;
     return typevisit_t::Success;
 }
 
