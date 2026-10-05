@@ -24,7 +24,7 @@ constexpr const char* logFileName = "logs/codegen_tests.log";
 mnstl::chunk_allocator arena;
 utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
-bool validateIRContains(const std::string& source, const std::vector<std::string>& expectedSubstrings,
+bool validateIRContains(const std::string& source, const std::initializer_list<std::string>& expectedSubstrings,
                         std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
