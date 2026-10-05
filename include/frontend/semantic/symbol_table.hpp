@@ -80,7 +80,6 @@ class SymbolTable {
     Scope* _currentScope;
     struct {
         bool _isFirstPass : 1 = true;  // Toggles table from allocation mode to tree-tracking mode
-        bool _isInsideGenericInstantiation : 1 = false;
     } _flags;
     std::size_t currentSymbolID = 0;
 
@@ -107,9 +106,6 @@ class SymbolTable {
         _flags._isFirstPass = false;
         resetToRoot();
     }
-
-    void enterGenericCheckingMode() noexcept { _flags._isInsideGenericInstantiation = true; }
-    void exitGenericCheckingMode() noexcept { _flags._isInsideGenericInstantiation = false; }
 
     void enterScope();
     void enterNamespace(std::string_view name, ast::ASTNode* node);

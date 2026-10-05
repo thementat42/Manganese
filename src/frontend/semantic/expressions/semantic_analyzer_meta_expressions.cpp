@@ -1,11 +1,9 @@
 #include <core.hpp>
-#include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <utility>
 #include <utils/result.hpp>
 #include <vector>
 
@@ -45,11 +43,12 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
         logError(expression->identifier, "Use of undeclared symbol '{}'", expression->identifier->toString());
         return exprvisit_t::Failure;
     }
-    const StackGuard guard{genericsStack, std::move(resolvedTypeArguments)};
 
-    if (symbol->kind == SymbolKind::Function) { return instantiateGenericFunction(expression, symbol); }
+    if (symbol->kind == SymbolKind::Function) {
+        return instantiateGenericFunction(expression, symbol, resolvedTypeArguments);
+    }
     if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
-        return instantiateGenericAggregate(expression, symbol);
+        return instantiateGenericAggregate(expression, symbol, resolvedTypeArguments);
     }
 
     logError(expression->identifier, "Symbol '{}' is neither a generic function nor a generic aggregate",
@@ -69,92 +68,5 @@ auto SemanticAnalyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
-// Helpers
-
-auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpression* expression,
-                                                   const Symbol* symbol) -> exprvisit_t {
-    auto* aggregateDeclaration = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
-
-    if (aggregateDeclaration->genericTypes.size() != genericsStack.top().size()) {
-        logError(expression, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
-                 aggregateDeclaration->name, aggregateDeclaration->genericTypes.size(), genericsStack.top().size());
-        return exprvisit_t::Failure;
-    }
-
-    // set up params for instantiation
-    auto oldParams = activeGenericParams;
-    activeGenericParams.clear();
-    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size(); ++i) {
-        activeGenericParams[aggregateDeclaration->genericTypes[i]] = i;
-    }
-
-    // Instantiate the generic aggregate definition with host scope restored
-    Scope* previousScope = symbolTable.getCurrentScope();
-    if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
-
-    const stmtvisit_t visitRes = visit(generic_tag, aggregateDeclaration);
-
-    if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
-
-    const SemanticType* concreteType = nullptr;
-    if (visitRes != stmtvisit_t::Failure) {
-        concreteType = getInstantiatedAggregateType(aggregateDeclaration, genericsStack.top());
-    }
-
-    activeGenericParams = std::move(oldParams);
-
-    if (concreteType == nullptr || concreteType->isPoison()) {
-        logError(expression, "Failed to materialize instantiated aggregate type for '{}'", aggregateDeclaration->name);
-        return exprvisit_t::Failure;
-    }
-
-    expression->semanticType = concreteType;
-    expression->identifier->semanticType = concreteType;  // Attach to base for parent visitors
-    return exprvisit_t::Success;
-}
-
-auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol)
-    -> exprvisit_t {
-    auto* functionDeclaration = static_cast<ast::FunctionDeclarationStatement*>(symbol->node);
-    if (functionDeclaration->genericTypes.size() != genericsStack.top().size()) {
-        logError(expression, "Generic function '{}' expects {} type arguments, but {} were provided",
-                 functionDeclaration->name, functionDeclaration->genericTypes.size(), genericsStack.top().size());
-        return exprvisit_t::Failure;
-    }
-
-    // set up params for function instantiation
-    auto oldParams = activeGenericParams;
-    activeGenericParams.clear();
-    for (std::size_t i = 0; i < functionDeclaration->genericTypes.size(); ++i) {
-        activeGenericParams[functionDeclaration->genericTypes[i]] = i;
-    }
-
-    stmtvisit_t visitRes;
-    {
-        // If we don't do this, the analyzer will think that any instantiation of a generic function inside another
-        // function body is a nested function declaration, which is wrong
-        const ContextGuard<bool> instantiationNestingGuard{context.inFunction, false};
-        Scope* previousScope = symbolTable.getCurrentScope();
-        if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
-
-        visitRes = visit(generic_tag, functionDeclaration);
-
-        if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
-    }
-    const SemanticType* concreteType = nullptr;
-    if (visitRes != stmtvisit_t::Failure) {
-        concreteType = getInstantiatedFunctionType(functionDeclaration, genericsStack.top());
-    }
-
-    activeGenericParams = std::move(oldParams);
-
-    if (concreteType == nullptr || concreteType->isPoison()) {
-        logError(expression, "Failed to materialize instantiated function type for '{}'", functionDeclaration->name);
-        return exprvisit_t::Failure;
-    }
-    expression->semanticType = concreteType;
-    expression->identifier->semanticType = concreteType;  // Attach to base for parent visitors
-    return exprvisit_t::Success;
-}
 
 }  // namespace Manganese::semantic

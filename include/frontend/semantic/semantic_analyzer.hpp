@@ -51,18 +51,17 @@ struct [[nodiscard]] ContextGuard {
     ContextGuard& operator=(ContextGuard&&) = delete;
 };
 
-template <class T>
-struct [[nodiscard]] StackGuard {
-    mnstl::tiny_stack<T>& stack;
-    explicit StackGuard(mnstl::tiny_stack<T>& _stack, T&& _new_element) : stack(_stack) {
-        stack.push(std::move(_new_element));
-    }
-    ~StackGuard() noexcept { stack.pop(); }
+enum class Compatible_t : std::int8_t {
+    Error = -1,
+    Warning = 0,
+    Valid = 1
+};
 
-    StackGuard(const StackGuard&) = delete;
-    StackGuard& operator=(const StackGuard&) = delete;
-    StackGuard(StackGuard&&) = delete;
-    StackGuard& operator=(StackGuard&&) = delete;
+struct typeCompatibilityResult {
+    const Compatible_t result;
+    const std::string message{};
+
+    constexpr operator bool() const noexcept { return result != Compatible_t::Error; }
 };
 
 using _analyzer_base_t = ast::Visitor<Result, Result, Result, true>;
@@ -73,9 +72,9 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     SymbolTable symbolTable;
     TypeContext typeContext;
     std::vector<parser::ParsedFile>& parsedFiles;
-    mnstl::tiny_stack<TypeList> genericsStack;
+    ast::Block instantiatedDeclarations;
     InstantiationCache instantiationCache;
-    std::unordered_map<std::string_view, std::size_t> activeGenericParams;
+    mnstl::chunk_allocator& arena;
 
     struct {
         std::vector<std::string_view> namespaceStack;
@@ -89,29 +88,17 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         std::uint8_t whileLoopDepth = 0;
 
         bool inFunction = false;
+        bool isInstantiatingGeneric = false;
         bool inIfCondition : 1 = false;
         bool inForLoopCondition : 1 = false;
         bool inWhileLoopCondition : 1 = false;
 
     } context;
 
-    enum class Compatible_t : std::int8_t {
-        Error = -1,
-        Warning = 0,
-        Valid = 1
-    };
-
-    struct typeCompatibilityResult {
-        const Compatible_t result;
-        const std::string message{};
-
-        constexpr operator bool() const noexcept { return result != Compatible_t::Error; }
-    };
-
    public:
     SemanticAnalyzer(std::vector<parser::ParsedFile>& files, const utils::TargetInfo& target,
-                     mnstl::chunk_allocator& arena) :
-        symbolTable(arena), typeContext(arena, target), parsedFiles(files), genericsStack() {}
+                     mnstl::chunk_allocator& _arena) :
+        symbolTable(_arena), typeContext(_arena, target), parsedFiles(files), arena(_arena) {}
 
     Result analyze();
     SymbolTable& getSymbolTable() noexcept { return symbolTable; }
@@ -141,7 +128,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
     bool isMutableExpression(const ast::Expression* expr) const;
 
-    const SemanticType* resolveGenericType(const ast::Type* type, mnstl::tiny_stack<TypeList>& types, const std::unordered_map<std::string_view, std::size_t>& typeMapping);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
@@ -189,16 +175,14 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 
     // Overloads to handle generics specializations
-    stmtvisit_t visit(generic_tag_t, ast::AggregateDeclarationStatement*);
-    stmtvisit_t visit(generic_tag_t, ast::FunctionDeclarationStatement*);
 
-    exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol);
-    exprvisit_t instantiateGenericAggregate(ast::GenericInstantiationExpression* expression, const Symbol* symbol);
+    exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
+                                           const TypeList& typeArgs);
+    exprvisit_t instantiateGenericAggregate(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
+                                            const TypeList& typeArgs);
 
-    const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
-                                                    const TypeList& typeArgs);
-    const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
-                                                     const TypeList& typeArgs);
+    const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl);
+    const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl);
 
     [[nodiscard]] const InstantiationResult* getInstantiationResult(const ast::ASTNode* declNode,
                                                                     const TypeList& typeArgs) const {

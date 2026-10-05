@@ -171,7 +171,9 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
 }
 
 auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
-    if (context.inFunction) {
+    // don't allow nested functions but a generic instantiation will still call this
+    // so we need to check that this is actually a nested function declaration, not a temporary reroute
+    if (context.inFunction && ! context.isInstantiatingGeneric) {
         logError(statement,
                  "Nested functions are not supported: function '{}' cannot be declared inside another function",
                  statement->name);

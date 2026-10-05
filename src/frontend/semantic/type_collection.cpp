@@ -158,11 +158,12 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
 Result SemanticAnalyzer::checkStatements(
     parser::ParsedFile& file) {  // semantic analysis pass (this can also check the generic specializations)
-    Result programIsSemanticallyValid = Result::Success;
-    for (ast::Statement* stmt : file.program) {
-        if (this->visit(stmt) == Result::Failure) { programIsSemanticallyValid = Result::Failure; }
+    Result result = Result::Success;
+    for (std::size_t i = 0; i < file.program.size(); ++i) {
+        ast::Statement* statement = file.program[i];
+        if (visit(statement) == Result::Failure) { result = Result::Failure; }
     }
-    return programIsSemanticallyValid;
+    return result;
 }
 
 }  // namespace Manganese::semantic

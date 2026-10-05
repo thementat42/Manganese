@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
+#include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/generics_helpers.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <string>
@@ -13,370 +14,202 @@
 
 namespace Manganese::semantic {
 
-auto SemanticAnalyzer::visit(generic_tag_t /*unused*/, ast::AggregateDeclarationStatement* stmt) -> stmtvisit_t {
-    const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
+auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpression* expression,
+                                                   const Symbol* symbol, const TypeList& typeArgs) -> exprvisit_t {
+    auto* aggregateDeclaration = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
+
+    if (aggregateDeclaration->genericTypes.size() != typeArgs.size()) {
+        logError(expression, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
+                 aggregateDeclaration->name, aggregateDeclaration->genericTypes.size(), typeArgs.size());
+        return exprvisit_t::Failure;
+    }
+
+    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = typeArgs};
 
     if (const auto* cached = instantiationCache.find(key)) {
-        if (cached->state == ResolutionStatus::InProgress) {
-            logError(stmt, "Decursive aggregate layout dependency in '{}'", stmt->name);
-            return stmtvisit_t::Failure;
+        if (cached->state == ResolutionStatus::Success) {
+            expression->semanticType = cached->semanticType;
+            expression->identifier->semanticType = cached->semanticType;
+            return exprvisit_t::Success;
         }
-        return cached->state == ResolutionStatus::Success ? stmtvisit_t::Success : stmtvisit_t::Failure;
+        if (cached->state == ResolutionStatus::InProgress) {
+            logError(expression, "Recursive generic aggregate instantiation detected for '{}'",
+                     aggregateDeclaration->name);
+            return exprvisit_t::Failure;
+        }
     }
 
     instantiationCache.markAsInProgress(key);
-    auto oldParams = activeGenericParams;
-    activeGenericParams.clear();
 
-    for (std::size_t i = 0; i < stmt->genericTypes.size(); ++i) { activeGenericParams[stmt->genericTypes[i]] = i; }
-
-    bool success = true;
-    for (const auto& field : stmt->fields) {
-        const SemanticType* fieldType = resolveGenericType(field.type, genericsStack, activeGenericParams);
-        if (fieldType->isPoison()) {
-            success = false;
-            break;
-        }
+    CloneContext cloneContext{.arena = arena, .substitutions = {}, .declarationSubstitutions = {}};
+    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size(); ++i) {
+        cloneContext.substitutions[aggregateDeclaration->genericTypes[i]] = typeArgs[i];
     }
-    activeGenericParams = std::move(oldParams);
 
-    if (success) {
-        instantiationCache.markAsSuccess(key, nullptr, getMangledName(stmt->mangledName, genericsStack.top()));
-    } else {
+    auto* clonedAggregate = aggregateDeclaration->clone(&cloneContext);
+    clonedAggregate->mangledName = getMangledName(aggregateDeclaration->name, typeArgs);
+
+    Scope* previousScope = symbolTable.getCurrentScope();
+    if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
+
+    const stmtvisit_t visitRes = visit(clonedAggregate);
+
+    if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
+
+    if (visitRes == stmtvisit_t::Failure) {
         instantiationCache.markAsFailure(key);
+        logError(expression, "Failed to analyze instantiated aggregate '{}'", aggregateDeclaration->name);
+        return exprvisit_t::Failure;
     }
 
-    return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
+    const SemanticType* concreteType = getInstantiatedAggregateType(clonedAggregate);
+    if (concreteType == nullptr || concreteType->isPoison()) {
+        instantiationCache.markAsFailure(key);
+        logError(expression, "Failed to materialize instantiated aggregate type for '{}'", aggregateDeclaration->name);
+        return exprvisit_t::Failure;
+    }
+
+    {
+        Scope* targetScope = (symbol->hostScope != nullptr) ? symbol->hostScope : symbolTable.getCurrentScope();
+        Scope* _previousScope = symbolTable.getCurrentScope();
+        symbolTable.setCurrentScope(targetScope);
+
+        DISCARD(symbolTable.declare(clonedAggregate->mangledName,
+                                    Symbol{.type = concreteType,
+                                           .node = clonedAggregate,
+                                           .kind = SymbolKind::Aggregate,
+                                           .visibility = aggregateDeclaration->visibility,
+                                           .isMutable = false,
+                                           .status = ResolutionStatus::Success}));
+
+        symbolTable.setCurrentScope(_previousScope);
+    }
+
+    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedAggregate->mangledName));
+    instantiatedDeclarations.push_back(clonedAggregate);
+
+    expression->semanticType = concreteType;
+    expression->identifier->semanticType = concreteType;
+
+    return exprvisit_t::Success;
 }
 
-auto SemanticAnalyzer::visit(generic_tag_t /*unused*/, ast::FunctionDeclarationStatement* stmt) -> stmtvisit_t {
-    const InstantiationKey key{.declNode = stmt, .typeArgs = genericsStack.top()};
+auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
+                                                  const TypeList& typeArgs) -> exprvisit_t {
+    auto* functionDeclaration = static_cast<ast::FunctionDeclarationStatement*>(symbol->node);
+
+    if (functionDeclaration->genericTypes.size() != typeArgs.size()) {
+        logError(expression, "Generic function '{}' expects {} type arguments, but {} were provided",
+                 functionDeclaration->name, functionDeclaration->genericTypes.size(), typeArgs.size());
+        return exprvisit_t::Failure;
+    }
+
+    InstantiationKey key{.declNode = functionDeclaration, .typeArgs = typeArgs};
 
     if (const auto* cached = instantiationCache.find(key)) {
-        if (cached->state == ResolutionStatus::InProgress) {
-            logError(stmt, "Recursive generic function instantiation dependency in '{}'", stmt->name);
-            return stmtvisit_t::Failure;
+        if (cached->state == ResolutionStatus::Success) {
+            expression->semanticType = cached->semanticType;
+            expression->identifier->semanticType = cached->semanticType;
+            return exprvisit_t::Success;
         }
-        return cached->state == ResolutionStatus::Success ? stmtvisit_t::Success : stmtvisit_t::Failure;
+        if (cached->state == ResolutionStatus::InProgress) {
+            logError(expression, "Recursive generic instantiation detected for '{}'", functionDeclaration->name);
+            return exprvisit_t::Failure;
+        }
     }
-
-    if (context.inFunction) {
-        logError(stmt, "Cannot declare nested functions");
-        instantiationCache.markAsFailure(key);
-        return stmtvisit_t::Failure;
-    }
-
-    const ContextGuard<bool> guard{context.inFunction, true};
 
     instantiationCache.markAsInProgress(key);
-    auto oldParams = activeGenericParams;
-    activeGenericParams.clear();
 
-    for (std::size_t i = 0; i < stmt->genericTypes.size(); ++i) { activeGenericParams[stmt->genericTypes[i]] = i; }
-
-    const SemanticType* resolvedReturnType = typeContext.getVoid();
-    if (stmt->returnType != nullptr) {
-        resolvedReturnType = resolveGenericType(stmt->returnType, genericsStack, activeGenericParams);
-        if (resolvedReturnType == nullptr || resolvedReturnType->isPoison()) {
-            activeGenericParams = std::move(oldParams);
-            instantiationCache.markAsFailure(key);
-            return stmtvisit_t::Failure;
-        }
+    CloneContext cloneContext{.arena = arena, .substitutions = {}, .declarationSubstitutions = {}};
+    for (std::size_t i = 0; i < functionDeclaration->genericTypes.size(); ++i) {
+        cloneContext.substitutions[functionDeclaration->genericTypes[i]] = typeArgs[i];
     }
 
-    symbolTable.enterGenericCheckingMode();
-    symbolTable.enterScope();
-    const SemanticType* previousFunctionReturnType = context.currentFunctionReturnType;
-    context.currentFunctionReturnType = resolvedReturnType;
+    auto* clonedFunction = functionDeclaration->clone(&cloneContext);
+    clonedFunction->mangledName = getMangledName(functionDeclaration->name, typeArgs);
 
-    bool success = true;
+    stmtvisit_t visitRes;
+    {
+        const ContextGuard<bool> instantiationGuard{context.isInstantiatingGeneric, true};
+        const ContextGuard<bool> functionNestingGuard{context.inFunction, false};
 
-    for (const auto& param : stmt->parameters) {
-        const SemanticType* paramType = resolveGenericType(param.type, genericsStack, activeGenericParams);
-        if (param.isVariadic) { paramType = typeContext.getArray(paramType, std::nullopt); }
+        Scope* previousScope = symbolTable.getCurrentScope();
+        if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
 
-        if (paramType == nullptr || paramType->isPoison()) {
-            success = false;
-            break;
-        }
+        visitRes = visit(clonedFunction);
 
-        const bool declarationResult
-            = symbolTable.declare(
-                  param.name,
-                  Symbol{.type = paramType,
-                         .node = stmt,
-                         .kind = (param.isMutable ? SymbolKind::Parameter : SymbolKind::ConstantParameter),
-                         .isMutable = param.isMutable,
-                         .status = ResolutionStatus::Success})
-            == Result::Failure;
-
-        if (declarationResult) {
-            logError(stmt, "Redefinition of parameter '{}' in generic function '{}'", param.name, stmt->name);
-            success = false;
-            break;
-        }
-
-        if (param.defaultValue != nullptr) {
-            if (visit(param.defaultValue) == exprvisit_t::Failure) {
-                success = false;
-                break;
-            }
-            const SemanticType* defaultValueType = param.defaultValue->semanticType;
-            if (defaultValueType == nullptr || defaultValueType->isPoison()
-                || !areTypesCompatible(defaultValueType, paramType)) {
-                logError(stmt, "Invalid default value type for parameter '{}'", param.name);
-                success = false;
-                break;
-            }
-        }
+        if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
     }
 
-    if (success) {
-        for (auto* bodyStmt : stmt->body) {
-            if (visit(bodyStmt) == stmtvisit_t::Failure) {
-                success = false;
-                break;
-            }
-        }
-    }
-
-    context.currentFunctionReturnType = previousFunctionReturnType;
-    symbolTable.exitGenericCheckingMode();
-    symbolTable.exitScope();
-    activeGenericParams = std::move(oldParams);
-
-    if (success) {
-        instantiationCache.markAsSuccess(key, resolvedReturnType, getMangledName(stmt->mangledName, genericsStack.top()));
-    } else {
+    if (visitRes == stmtvisit_t::Failure) {
         instantiationCache.markAsFailure(key);
+        logError(expression, "Failed to analyze instantiated function '{}'", functionDeclaration->name);
+        return exprvisit_t::Failure;
     }
 
-    return success ? stmtvisit_t::Success : stmtvisit_t::Failure;
+    const SemanticType* concreteType = getInstantiatedFunctionType(clonedFunction);
+    if (concreteType == nullptr || concreteType->isPoison()) {
+        instantiationCache.markAsFailure(key);
+        logError(expression, "Failed to materialize instantiated function type for '{}'", functionDeclaration->name);
+        return exprvisit_t::Failure;
+    }
+
+    {
+        Scope* targetScope = (symbol->hostScope != nullptr) ? symbol->hostScope : symbolTable.getCurrentScope();
+        Scope* previousScope = symbolTable.getCurrentScope();
+        symbolTable.setCurrentScope(targetScope);
+
+        DISCARD(symbolTable.declare(clonedFunction->mangledName,
+                                    Symbol{.type = concreteType,
+                                           .node = clonedFunction,
+                                           .kind = SymbolKind::Function,
+                                           .visibility = functionDeclaration->visibility,
+                                           .isMutable = false,
+                                           .status = ResolutionStatus::Success}));
+
+        symbolTable.setCurrentScope(previousScope);
+    }
+
+    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedFunction->mangledName));
+    instantiatedDeclarations.push_back(clonedFunction);
+
+    expression->semanticType = concreteType;
+    expression->identifier->semanticType = concreteType;
+    return exprvisit_t::Success;
 }
 
-const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
-                                                                   const TypeList& typeArgs) {
-    const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
-    const InstantiationResult* cachedResult = instantiationCache.find(key);
-    if (cachedResult == nullptr || cachedResult->state != ResolutionStatus::Success) {
-        return typeContext.getPoison();  // Not instantiated or failed
-    }
-
-    // Temporarily bind generic parameters for field type resolution
-    auto oldParams = activeGenericParams;
-    activeGenericParams.clear();
-    for (std::size_t i = 0; i < decl->genericTypes.size(); ++i) { activeGenericParams[decl->genericTypes[i]] = i; }
-
+const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(
+    const ast::AggregateDeclarationStatement* clonedDecl) {
     std::vector<AggregateField> instantiatedFields;
-    instantiatedFields.reserve(decl->fields.size());
+    instantiatedFields.reserve(clonedDecl->fields.size());
 
-    for (const ast::AggregateField& fieldNode : decl->fields) {
-        const SemanticType* fieldType = resolveGenericType(fieldNode.type, genericsStack, activeGenericParams);
-        if (fieldType->isPoison()) {
-            activeGenericParams = std::move(oldParams);
-            return typeContext.getPoison();
-        }
+    for (const ast::AggregateField& fieldNode : clonedDecl->fields) {
+        const SemanticType* fieldType = fieldNode.type->semanticType;
+        if (fieldType == nullptr || fieldType->isPoison()) { return typeContext.getPoison(); }
         instantiatedFields.push_back(AggregateField{.name = fieldNode.name, .type = fieldType});
     }
 
-    activeGenericParams = std::move(oldParams);
-
-    return typeContext.getNamedAggregate(std::string(cachedResult->mangledName), std::move(instantiatedFields));
+    return typeContext.getNamedAggregate(std::string(clonedDecl->mangledName), std::move(instantiatedFields));
 }
 
-const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
-                                                                  const TypeList& typeArgs) {
-    const InstantiationKey key{.declNode = decl, .typeArgs = typeArgs};
-    const InstantiationResult* cachedResult = instantiationCache.find(key);
-    if (cachedResult == nullptr || cachedResult->state != ResolutionStatus::Success) {
-        return typeContext.getPoison();  // Not instantiated or failed
-    }
+const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* clonedDecl) {
+    const SemanticType* resolvedReturnType
+        = (clonedDecl->returnType != nullptr) ? clonedDecl->returnType->semanticType : typeContext.getVoid();
 
-    const SemanticType* resolvedReturnType = cachedResult->returnType;
-
-    // Temporarily bind generic parameters for parameter type resolution
-    auto oldParams = activeGenericParams;
-    activeGenericParams.clear();
-    for (std::size_t i = 0; i < decl->genericTypes.size(); ++i) { activeGenericParams[decl->genericTypes[i]] = i; }
+    if (resolvedReturnType->isPoison()) { return typeContext.getPoison(); }
 
     std::vector<Parameter> instantiatedParams;
-    instantiatedParams.reserve(decl->parameters.size());
+    instantiatedParams.reserve(clonedDecl->parameters.size());
 
-    for (const ast::FunctionParameter& paramNode : decl->parameters) {
-        const SemanticType* paramType = resolveGenericType(paramNode.type, genericsStack, activeGenericParams);
-        if (paramType->isPoison()) {
-            activeGenericParams = std::move(oldParams);
-            return typeContext.getPoison();
-        }
+    for (const ast::FunctionParameter& paramNode : clonedDecl->parameters) {
+        const SemanticType* paramType = paramNode.type->semanticType;
+        if (paramType == nullptr || paramType->isPoison()) { return typeContext.getPoison(); }
+
         instantiatedParams.push_back(
             Parameter{.type = paramType, .isMutable = paramNode.isMutable, .isVariadic = paramNode.isVariadic});
     }
 
-    activeGenericParams = std::move(oldParams);
-
     return typeContext.getFunction(std::move(instantiatedParams), resolvedReturnType);
-}
-
-const SemanticType* SemanticAnalyzer::resolveGenericType(const ast::Type* type, mnstl::tiny_stack<TypeList>& types, const std::unordered_map<std::string_view, std::size_t>& typeMapping) {
-    if (type->primitiveType != ast::PrimitiveType::not_primitive) {
-        return typeContext.getPrimitive(type->primitiveType);
-    }
-    using enum ast::TypeKind;
-
-    switch (type->kind) {
-        case PoisonedType: return typeContext.getPoison();
-        case AggregateType: {
-            const auto* aggregateType = static_cast<const ast::AggregateType*>(type);
-            TypeList fields;
-            fields.reserve(aggregateType->fieldTypes.size());
-
-            for (const ast::Type* field : aggregateType->fieldTypes) {
-                const SemanticType* fieldType = resolveGenericType(field, types, typeMapping);
-                if (fieldType->isPoison()) { return typeContext.getPoison(); }
-                fields.push_back(fieldType);
-            }
-            return typeContext.getAnonymousAggregate(std::move(fields));
-        }
-        case ArrayType: {
-            const auto* arrayType = static_cast<const ast::ArrayType*>(type);
-            const SemanticType* elementType = resolveGenericType(arrayType->elementType, types, typeMapping);
-            if (elementType->isPoison()) { return typeContext.getPoison(); }
-            if (arrayType->lengthExpression != nullptr) {
-                if (visit(arrayType->lengthExpression) == Result::Failure) { return typeContext.getPoison(); }
-                std::optional<std::uint64_t> lengthValue;
-
-                if (!arrayType->lengthExpression->canFold()) {
-                    logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
-                    return typeContext.getPoison();
-                }
-                if (!arrayType->lengthExpression->semanticType->isInteger()) {
-                    logError(arrayType->lengthExpression, "Array type length must be an integer, not '{}'",
-                             arrayType->lengthExpression->semanticType->toString());
-                    return typeContext.getPoison();
-                }
-                lengthValue = utils::computeExpression<std::uint64_t>(
-                    arrayType->lengthExpression, typeContext.getTargetInfo(),
-                    [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
-                        this->logError(expr, fmt, std::forward<Args>(args)...);
-                    });
-                if (!lengthValue.has_value()) {
-                    logError(arrayType->lengthExpression, "Array length must be a compile-time constant");
-                    return typeContext.getPoison();
-                }
-                return typeContext.getArray(elementType, *lengthValue);
-            }
-            logError(type, "Could not deduce array length.");
-            return typeContext.getPoison();
-        }
-        case FunctionType: {
-            const auto* functionType = static_cast<const ast::FunctionType*>(type);
-            std::vector<Parameter> params;
-            params.reserve(functionType->parameterTypes.size());
-
-            for (const auto& param : functionType->parameterTypes) {
-                const SemanticType* paramType = resolveGenericType(param.type, types, typeMapping);
-                if (paramType->isPoison()) { return typeContext.getPoison(); }
-                params.push_back(
-                    Parameter{.type = paramType, .isMutable = param.isMutable, .isVariadic = param.isVariadic});
-            }
-
-            const SemanticType* returnType = resolveGenericType(functionType->returnType, types, typeMapping);
-            if (returnType->isPoison()) { return typeContext.getPoison(); }
-            return typeContext.getFunction(std::move(params), returnType);
-        }
-        case GenericInstantiationType: {
-            const auto* genericType = static_cast<const ast::GenericInstantiationType*>(type);
-            TypeList resolvedTypes;
-            resolvedTypes.reserve(genericType->typeParameters.size());
-
-            for (const ast::Type* param : genericType->typeParameters) {
-                const SemanticType* paramType = resolveGenericType(param, types, typeMapping);
-                if (paramType->isPoison()) { return typeContext.getPoison(); }
-                resolvedTypes.push_back(paramType);
-            }
-
-            const Symbol* symbol = nullptr;
-            if (genericType->baseType->kind == ast::TypeKind::IdentifierType) {
-                const auto* IdentifierType = static_cast<const ast::IdentifierType*>(genericType->baseType);
-                symbol = symbolTable.lookup(IdentifierType->name);
-            } else if (genericType->baseType->kind == ast::TypeKind::ScopedType) {
-                // Properly resolve namespace-qualified base types (e.g., Data::Pair)
-                symbol = resolveTypeSymbol(genericType->baseType);
-            }
-
-            if (symbol == nullptr || symbol->node == nullptr) {
-                logError(type, "Unknown generic base declaration");
-                return typeContext.getPoison();
-            }
-
-            if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::GenericType) {
-                auto* aggregate = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
-                const StackGuard guard{types, std::move(resolvedTypes)};
-
-                Scope* previousScope = symbolTable.getCurrentScope();
-                if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
-
-                auto visitResult = visit(generic_tag, aggregate);
-
-                if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(previousScope); }
-
-                if (visitResult == stmtvisit_t::Failure) { return typeContext.getPoison(); }
-                return getInstantiatedAggregateType(aggregate, types.top());
-            }
-
-            logError(type, "Symbol '{}' is not a generic type", genericType->baseType->toString());
-            return typeContext.getPoison();
-        }
-        case PointerType: {
-            const auto* pointerType = static_cast<const ast::PointerType*>(type);
-            const SemanticType* baseType = resolveGenericType(pointerType->baseType, types, typeMapping);
-            if (baseType->isPoison()) { return typeContext.getPoison(); }
-            return typeContext.getPointer(baseType, pointerType->isMutable);
-        }
-        case ScopedType: {
-            // Qualified non-generic type resolution (e.g., foo::bar::MyStruct)
-            const Symbol* symbol = resolveTypeSymbol(type);
-            if (symbol == nullptr) {
-                logError(type, "Unknown scoped type '{}'", type->toString());
-                return typeContext.getPoison();
-            }
-
-            if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::TypeAlias) { return symbol->type; }
-
-            logError(type, "Symbol '{}' is not a type", type->toString());
-            return typeContext.getPoison();
-        }
-        case IdentifierType: {
-            const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
-
-            // some symbol type (e.g. T)
-            if (auto it = typeMapping.find(IdentifierType->name); it != typeMapping.end()) {
-                const std::size_t index = it->second;
-                if (!types.is_empty() && index < types.top().size()) {
-                    return types.top()[index];
-                }
-                logError(type, "Unbound generic parameter '{}'", IdentifierType->name);
-                return typeContext.getPoison();
-            }
-
-            // Lookup named, non-generic type in symbolt able
-            const Symbol* symbol = symbolTable.lookup(IdentifierType->name);
-            if (symbol == nullptr) {
-                logError(type, "Unknown type name '{}'", IdentifierType->name);
-                return typeContext.getPoison();
-            }
-            if (symbol->kind == SymbolKind::Aggregate || symbol->kind == SymbolKind::TypeAlias) { return symbol->type; }
-
-            logError(type, "Symbol '{}' is not a type", IdentifierType->name);
-            return typeContext.getPoison();
-        }
-        case TypeofType: {
-            auto* nestedExpression = static_cast<const ast::TypeofType*>(type)->expression;
-            if (visit(nestedExpression) == exprvisit_t::Failure) { return typeContext.getPoison(); }
-            return nestedExpression->semanticType;
-        }
-    }
-    ASSERT_UNREACHABLE("Unknown ast::TypeKind in resolveGenericType");
 }
 
 }  // namespace Manganese::semantic
