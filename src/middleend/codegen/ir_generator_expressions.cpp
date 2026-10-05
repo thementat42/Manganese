@@ -295,14 +295,7 @@ namespace Manganese::codegen {
     return builder->CreateCall(functionType, calleeValue, argumentValues, "call_tmp");
 }
 
-[[nodiscard]] auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -> exprvisit_t {
-    std::vector<llvm::Type*> resolvedTypeArguments;
-    resolvedTypeArguments.reserve(expression->semanticTypes.size());
-
-    for (const semantic::SemanticType* type : expression->semanticTypes) {
-        resolvedTypeArguments.push_back(visit(type));
-    }
-
+auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -> exprvisit_t {
     const semantic::Symbol* symbol = analyzer.resolveScopeSymbol(expression->identifier);
     if (symbol == nullptr || symbol->node == nullptr) {
         ASSERT_UNREACHABLE_FMT(
@@ -320,28 +313,22 @@ namespace Manganese::codegen {
     const std::string& mangledName = instantiationResult->mangledName;
     
     if (symbol->kind == semantic::SymbolKind::Function) {
-        auto tmp = expression->semanticTypes;
         llvm::Function* llvmFunc = module->getFunction(mangledName);
         if (llvmFunc == nullptr) {
-            auto* funcDecl = static_cast<ast::FunctionDeclarationStatement*>(symbol->node);
-            visit(semantic::generic_tag, funcDecl, mangledName, std::move(tmp));
-            llvmFunc = module->getFunction(mangledName);
+            ASSERT_UNREACHABLE_FMT("Instantiated function '{}' was not generated in the LLVM module", mangledName);
         }
         return llvmFunc;
     }
+    
     if (symbol->kind == semantic::SymbolKind::Aggregate || symbol->kind == semantic::SymbolKind::GenericType) {
         llvm::StructType* llvmStruct = llvm::StructType::getTypeByName(*context, mangledName);
-
         if (llvmStruct == nullptr) {
-            auto tmp = expression->semanticTypes;
-            auto* aggDecl = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
-            visit(semantic::generic_tag, aggDecl, mangledName, std::move(tmp));
-            llvmStruct = llvm::StructType::getTypeByName(*context, mangledName);
+            ASSERT_UNREACHABLE_FMT("Instantiated aggregate '{}' was not generated in the LLVM module", mangledName);
         }
-
-        return nullptr;
+        return nullptr; // Or whatever representation your expression evaluation expects for type references
     }
-    ASSERT_UNREACHABLE_FMT("Generic instantiation {} was not flagged ase semantically invalid", expression->toString());
+
+    ASSERT_UNREACHABLE_FMT("Generic instantiation {} was not flagged as semantically invalid", expression->toString());
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {

@@ -28,10 +28,6 @@ namespace Manganese::codegen {
     ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");
 }
 
-[[nodiscard]] auto IRGenerator::visitTypeAsValue(const ast::Type* type) -> typevisit_t {
-    return visitTypeAsValue(analyzer.resolveGenericType(type, genericsStack, activeGenericParams));
-}
-
 [[nodiscard]] auto IRGenerator::visitTypeAsValue(const semantic::SemanticType* type) -> typevisit_t {
     if (type->isArray()) {
         const auto* arrayType = static_cast<const semantic::Array*>(type);

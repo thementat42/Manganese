@@ -103,6 +103,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result analyze();
     SymbolTable& getSymbolTable() noexcept { return symbolTable; }
     const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
+    const ast::Block& getInstantiatedDeclarations() const noexcept {return instantiatedDeclarations;}
 
     ~SemanticAnalyzer() override = default;
 
