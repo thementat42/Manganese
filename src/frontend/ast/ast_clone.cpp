@@ -1,6 +1,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/type_context.hpp>
+#include <vector>
 
 namespace Manganese::ast {
 
@@ -10,45 +11,120 @@ namespace {
 
 template <class T, class... Args>
     requires(std::is_convertible_v<T*, ast::ASTNode*> && std::is_constructible_v<T, Args...>)
-T* makeClonedNode(T* t, semantic::CloneContext* context, Args&&... args) {
+T* makeClonedNode(const T* t, semantic::CloneContext* context, Args&&... args) {
     T* const node = context->arena.emplace<T>(std::forward<Args>(args)...);
     node->line = t->line;
     node->column = t->column;
     return node;
 }
 
+ast::Block cloneBlock(const ast::Block& block, semantic::CloneContext* context) {
+    ast::Block result;
+    result.reserve(block.size());
+    for (const auto* statement : block) { result.push_back(statement->clone(context)); }
+    return result;
+}
+
 }  // namespace
 
 // Statements
-AggregateDeclarationStatement* AggregateDeclarationStatement::clone(
-    [[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::CloneContext* context) const {
+    std::vector<AggregateField> fieldClones;
+    fieldClones.reserve(fields.size());
+    for (const auto& field : fields) {
+        fieldClones.push_back({.name = field.name,
+                               .type = field.type->clone(context),
+                               .line = field.line,
+                               .column = field.column,
+                               .isMutable = field.isMutable});
+    }
+    auto* cloned = makeClonedNode(this, context, std::string(name), std::vector<std::string>{}, std::move(fieldClones));
+    cloned->visibility = visibility;
+    cloned->mangledName = mangledName;
+    return cloned;
 }
 
-AliasStatement* AliasStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-BreakStatement* BreakStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-ContinueStatement* ContinueStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-EmptyStatement* EmptyStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-EnumDeclarationStatement* EnumDeclarationStatement::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+AliasStatement* AliasStatement::clone(semantic::CloneContext* context) const {
+    Type* baseClone = baseType->clone(context);
+    auto* clone = makeClonedNode(this, context, baseClone, std::string(name));
+    clone->visibility = visibility;
+    clone->mangledName = mangledName;
+    return clone;
 }
 
-ExpressionStatement* ExpressionStatement::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+BreakStatement* BreakStatement::clone(semantic::CloneContext* context) const { return makeClonedNode(this, context); }
+
+ContinueStatement* ContinueStatement::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context);
 }
 
-ForLoopStatement* ForLoopStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+EmptyStatement* EmptyStatement::clone(semantic::CloneContext* context) const { return makeClonedNode(this, context); }
 
-FunctionDeclarationStatement* FunctionDeclarationStatement::clone(
-    [[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+EnumDeclarationStatement* EnumDeclarationStatement::clone(semantic::CloneContext* context) const {
+    Type* baseTypeClone = baseType->clone(context);
+    std::vector<EnumValue> valueClones;
+    valueClones.reserve(values.size());
+
+    for (const auto& value : values) {
+        valueClones.push_back(
+            {.name = value.name, .value = value.value->clone(context), .line = value.line, .column = value.column});
+    }
+    auto* clone = makeClonedNode(this, context, std::string(name), baseTypeClone, std::move(valueClones));
+    clone->visibility = visibility;
+    clone->mangledName = mangledName;
+    return clone;
 }
 
-IfStatement* IfStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+ExpressionStatement* ExpressionStatement::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, expression->clone(context));
+}
+
+ForLoopStatement* ForLoopStatement::clone(semantic::CloneContext* context) const {
+    Statement* initializationClone = nullptr;
+    Expression* stopClone = nullptr;
+    Expression* postClone = nullptr;
+
+    if (initializationStep != nullptr) { initializationClone = initializationStep->clone(context); }
+    if (stopCondition != nullptr) { stopClone = stopCondition->clone(context); }
+    if (postExpression != nullptr) { postClone = postExpression->clone(context); }
+
+    return makeClonedNode(this, context, initializationClone, stopClone, postClone, cloneBlock(body, context));
+}
+
+FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::CloneContext* context) const {
+    std::vector<FunctionParameter> parameterClones;
+    parameterClones.reserve(parameters.size());
+    for (const auto& param : parameters) {
+        parameterClones.push_back(
+            {.name = param.name,
+             .type = param.type->clone(context),
+             .defaultValue = (param.defaultValue == nullptr) ? nullptr : param.defaultValue->clone(context),
+             .line = param.line,
+             .column = param.column,
+             .isMutable = param.isMutable,
+             .isVariadic = param.isVariadic});
+    }
+    Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
+
+    auto* clone = makeClonedNode(this, context, std::string(name), std::vector<std::string>{},
+                                 std::move(parameterClones), returnTypeClone, cloneBlock(body, context));
+    clone->visibility = visibility;
+    clone->mangledName = mangledName;
+    return clone;
+}
+
+IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
+    Expression* conditionClone = condition->clone(context);
+    std::vector<ElifClause> elifClones;
+    elifClones.reserve(elifs.size());
+
+    for (const auto& elif : elifs) {
+        elifClones.push_back({.condition = elif.condition->clone(context), .body = cloneBlock(elif.body, context)});
+    }
+
+    return makeClonedNode(this, context, conditionClone, cloneBlock(body, context), std::move(elifClones),
+                          cloneBlock(elseBody, context));
+}
 
 ImportStatement* ImportStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
 
@@ -56,129 +132,260 @@ ModuleDeclarationStatement* ModuleDeclarationStatement::clone([[maybe_unused]] s
     return nullptr;
 }
 
-NamespaceStatement* NamespaceStatement::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+NamespaceStatement* NamespaceStatement::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, std::string(name), cloneBlock(block, context));
 }
 
-NestedBlockStatement* NestedBlockStatement::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+NestedBlockStatement* NestedBlockStatement::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, cloneBlock(block, context));
 }
 
-ReturnStatement* ReturnStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-SwitchStatement* SwitchStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-VariableDeclarationStatement* VariableDeclarationStatement::clone(
-    [[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+ReturnStatement* ReturnStatement::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, value == nullptr ? nullptr : value->clone(context));
 }
 
-WhileLoopStatement* WhileLoopStatement::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+SwitchStatement* SwitchStatement::clone(semantic::CloneContext* context) const {
+    Expression* targetClone = target->clone(context);
+    std::vector<CaseClause> caseClones;
+    caseClones.reserve(cases.size());
+
+    for (const auto& caseClause : cases) {
+        std::vector<Expression*> clonedCaseValues;
+        clonedCaseValues.reserve(caseClause.values.size());
+
+        for (const auto* value : caseClause.values) { clonedCaseValues.push_back(value->clone(context)); }
+        caseClones.push_back({.values = std::move(clonedCaseValues), .body = cloneBlock(caseClause.body, context)});
+    }
+
+    return makeClonedNode(this, context, targetClone, std::move(caseClones), cloneBlock(defaultBody, context));
 }
 
-AggregateInstantiationExpression* AggregateInstantiationExpression::clone(
-    [[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+VariableDeclarationStatement* VariableDeclarationStatement::clone(semantic::CloneContext* context) const {
+    Type* typeClone = type == nullptr ? nullptr : type->clone(context);
+    Expression* valueClone = value == nullptr ? nullptr : value->clone(context);
+
+    auto* clone = makeClonedNode(this, context, isMutable, std::string(name), visibility, valueClone, typeClone);
+    clone->mangledName = mangledName;
+    return clone;
 }
 
-AggregateLiteralExpression* AggregateLiteralExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+WhileLoopStatement* WhileLoopStatement::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, cloneBlock(body, context), condition->clone(context), isDoWhile);
 }
 
-AlignofExpression* AlignofExpression::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+// Expressions
 
-ArrayLiteralExpression* ArrayLiteralExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+AggregateInstantiationExpression* AggregateInstantiationExpression::clone(semantic::CloneContext* context) const {
+    Expression* baseClone = base->clone(context);
+
+    std::vector<AggregateInstantiationField> fieldClones;
+    fieldClones.reserve(fields.size());
+
+    for (const auto& field : fields) {
+        fieldClones.push_back(
+            {.name = field.name, .value = field.value->clone(context), .line = field.line, .column = field.column});
+    }
+
+    return makeClonedNode(this, context, baseClone, std::move(fieldClones));
 }
 
-AssignmentExpression* AssignmentExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+AggregateLiteralExpression* AggregateLiteralExpression::clone(semantic::CloneContext* context) const {
+    std::vector<Expression*> elementClones;
+    elementClones.reserve(elements.size());
+
+    for (const auto& element : elements) { elementClones.push_back(element->clone(context)); }
+
+    return makeClonedNode(this, context, std::move(elementClones));
 }
 
-BinaryExpression* BinaryExpression::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-BoolLiteralExpression* BoolLiteralExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+AlignofExpression* AlignofExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, type->clone(context));
 }
 
-CharLiteralExpression* CharLiteralExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+ArrayLiteralExpression* ArrayLiteralExpression::clone(semantic::CloneContext* context) const {
+    std::vector<Expression*> elementClones;
+    elementClones.reserve(elements.size());
+
+    for (const auto& element : elements) { elementClones.push_back(element->clone(context)); }
+
+    return makeClonedNode(this, context, std::move(elementClones));
 }
 
-FunctionCallExpression* FunctionCallExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+AssignmentExpression* AssignmentExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, assignee->clone(context), op, value->clone(context));
 }
 
-GenericInstantiationExpression* GenericInstantiationExpression::clone(
-    [[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+BinaryExpression* BinaryExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, left->clone(context), op, right->clone(context));
 }
 
-IdentifierExpression* IdentifierExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+BoolLiteralExpression* BoolLiteralExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, value);
 }
 
-IndexExpression* IndexExpression::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-MemberAccessExpression* MemberAccessExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+CharLiteralExpression* CharLiteralExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, value);
 }
 
-NumberLiteralExpression* NumberLiteralExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+FunctionCallExpression* FunctionCallExpression::clone(semantic::CloneContext* context) const {
+    Expression* calleeClone = callee->clone(context);
+
+    std::vector<Expression*> argumentClones;
+    argumentClones.reserve(arguments.size());
+
+    for (const auto& argument : arguments) { argumentClones.push_back(argument->clone(context)); }
+
+    return makeClonedNode(this, context, calleeClone, std::move(argumentClones));
 }
 
-PostfixExpression* PostfixExpression::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+GenericInstantiationExpression* GenericInstantiationExpression::clone(semantic::CloneContext* context) const {
+    Expression* identifierClone = identifier->clone(context);
+    std::vector<Type*> typeClones;
+    typeClones.reserve(types.size());
 
-PrefixExpression* PrefixExpression::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+    for (Type* t : types) { typeClones.push_back(t->clone(context)); }
 
-ScopeResolutionExpression* ScopeResolutionExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+    auto* clone = makeClonedNode(this, context, identifierClone, std::move(typeClones));
+
+    return clone;
 }
 
-SizeofExpression* SizeofExpression::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+IdentifierExpression* IdentifierExpression::clone(semantic::CloneContext* context) const {
+    auto* clone = makeClonedNode(this, context, std::string(name));
 
-StringLiteralExpression* StringLiteralExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+    if (resolvedDeclaration != nullptr) {
+        if (auto it = context->declarationSubstitutions.find(resolvedDeclaration);
+            it != context->declarationSubstitutions.end()) {
+            clone->resolvedDeclaration = it->second;
+        } else {
+            clone->resolvedDeclaration = resolvedDeclaration;
+        }
+    }
+    return clone;
 }
 
-TypeCastExpression* TypeCastExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+IndexExpression* IndexExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, variable->clone(context), index->clone(context));
 }
 
-UninitializedExpression* UninitializedExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+MemberAccessExpression* MemberAccessExpression::clone(semantic::CloneContext* context) const {
+    auto* clone = makeClonedNode(this, context, object->clone(context), std::string(field));
+    clone->fieldIndex = fieldIndex;
+    return clone;
+}
+
+NumberLiteralExpression* NumberLiteralExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, std::string(value), isFloat);
+}
+
+PostfixExpression* PostfixExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, left->clone(context), op);
+}
+
+PrefixExpression* PrefixExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, op, right->clone(context));
+}
+
+ScopeResolutionExpression* ScopeResolutionExpression::clone(semantic::CloneContext* context) const {
+    auto* clone = makeClonedNode(this, context, scope->clone(context), element->clone(context));
+    clone->mangledName = mangledName;
+    return clone;
+}
+
+SizeofExpression* SizeofExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, type->clone(context));
+}
+
+StringLiteralExpression* StringLiteralExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, std::string(value));
+}
+
+TypeCastExpression* TypeCastExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, originalValue->clone(context), targetType->clone(context));
+}
+
+UninitializedExpression* UninitializedExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context);
 }
 
 // Types
 
-AggregateType* AggregateType::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+AggregateType* AggregateType::clone(semantic::CloneContext* context) const {
+    std::vector<Type*> fieldTypeClones;
+    fieldTypeClones.reserve(fieldTypes.size());
 
-ArrayType* ArrayType::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+    for (const auto* type : fieldTypes) { fieldTypeClones.push_back(type->clone(context)); }
 
-FunctionType* FunctionType::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
-
-GenericInstantiationType* GenericInstantiationType::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+    return makeClonedNode(this, context, std::move(fieldTypeClones));
 }
 
-PointerType* PointerType::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+ArrayType* ArrayType::clone(semantic::CloneContext* context) const {
+    Expression* lengthExpressionClone = lengthExpression == nullptr ? nullptr : lengthExpression->clone(context);
 
-ScopedType* ScopedType::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+    return makeClonedNode(this, context, elementType->clone(context), lengthExpressionClone);
+}
 
-IdentifierType* IdentifierType::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
+    std::vector<FunctionParameterType> parameterTypeClones;
+    parameterTypeClones.reserve(parameterTypes.size());
 
-TypeofType* TypeofType::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+    for (const auto& param : parameterTypes) {
+        parameterTypeClones.push_back(
+            {.isMutable = param.isMutable, .isVariadic = param.isVariadic, .type = param.type->clone(context)});
+    }
+
+    Type* returnTypeClone = returnType == nullptr ? nullptr : returnType->clone(context);
+
+    return makeClonedNode(this, context, std::move(parameterTypeClones), returnTypeClone);
+}
+
+GenericInstantiationType* GenericInstantiationType::clone(semantic::CloneContext* context) const {
+    Type* baseTypeClone = baseType->clone(context);
+
+    std::vector<Type*> typeParameterClones;
+    typeParameterClones.reserve(typeParameters.size());
+
+    for (const auto* type : typeParameters) { typeParameterClones.push_back(type->clone(context)); }
+
+    return makeClonedNode(this, context, baseTypeClone, std::move(typeParameterClones));
+}
+
+IdentifierType* IdentifierType::clone(semantic::CloneContext* context) const {
+    auto* clone = makeClonedNode(this, context, std::string(name));
+
+    if (auto it = context->substitutions.find(name); it != context->substitutions.end()) {
+        // This is a generic parameter: make its semantic type the substituted one from the instantiation
+        // e.g for foo@[int32], map T in foo[T] to int32
+        clone->semanticType = it->second;
+    } else {
+        // regular identifier (like int32)
+        clone->semanticType = semanticType;
+    }
+    return clone;
+ }
+
+PointerType* PointerType::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, baseType->clone(context), isMutable);
+}
+
+ScopedType* ScopedType::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, scope->clone(context), type->clone(context));
+}
+
+TypeofType* TypeofType::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, expression->clone(context));
+}
 
 // Poison
 
-PoisonedExpression* PoisonedExpression::clone([[maybe_unused]] semantic::CloneContext* context) const {
-    return nullptr;
+PoisonedExpression* PoisonedExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context);
 }
 
-PoisonedStatement* PoisonedStatement::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+PoisonedStatement* PoisonedStatement::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context);
+}
 
-PoisonedType* PoisonedType::clone([[maybe_unused]] semantic::CloneContext* context) const { return nullptr; }
+PoisonedType* PoisonedType::clone(semantic::CloneContext* context) const { return makeClonedNode(this, context); }
 
 }  // namespace Manganese::ast
