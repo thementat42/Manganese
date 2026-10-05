@@ -234,12 +234,15 @@ ast::Statement* Parser::parseImportStatement() {
 
     expectToken(TokenType::Semicolon, "Expected a ';' to end an import statement");
 
+    if (flags.hasParsedFileHeader) { logError(startToken, "Import statements must go at the top of the file"); }
+
+
     return makeNode<ast::ImportStatement>(startToken, std::move(path), std::move(alias));
 }
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
     const lexer::Token temp = consumeToken();
-    if (flags.hasParsedFileHeader) { logWarning(temp, "Module declarations should go at the top of the file"); }
+    if (flags.hasParsedFileHeader || flags.hasImports) { logError(temp, "Module declarations must be the first line of a file"); }
 
     std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
 

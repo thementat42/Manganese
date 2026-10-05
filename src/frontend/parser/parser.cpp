@@ -25,9 +25,10 @@ ParsedFile Parser::parse() {
     }
     while (peekTokenType() == TokenType::Import) {
         imports.push_back(static_cast<ast::ImportStatement*>(parseImportStatement()));
+        flags.hasImports = true;
     }
 
-    flags.hasParsedFileHeader = true;  // Now, setting a module or import name should be a warning
+    flags.hasParsedFileHeader = true;  // Now, setting a module or import name should be an error
 
     while (!done()) {
         ast::Statement* stmt = parseStatement();
