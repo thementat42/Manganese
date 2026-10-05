@@ -5,7 +5,6 @@
 
 #include "core.hpp"
 
-
 namespace Manganese::ast {
 
 // Helpers
@@ -43,7 +42,6 @@ AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::Cl
     }
     auto* cloned = makeClonedNode(this, context, std::string(name), std::vector<std::string>{}, std::move(fieldClones));
     cloned->visibility = visibility;
-    cloned->mangledName = mangledName;
     return cloned;
 }
 
@@ -51,7 +49,6 @@ AliasStatement* AliasStatement::clone(semantic::CloneContext* context) const {
     Type* baseClone = baseType->clone(context);
     auto* clone = makeClonedNode(this, context, baseClone, std::string(name));
     clone->visibility = visibility;
-    clone->mangledName = mangledName;
     return clone;
 }
 
@@ -74,7 +71,6 @@ EnumDeclarationStatement* EnumDeclarationStatement::clone(semantic::CloneContext
     }
     auto* clone = makeClonedNode(this, context, std::string(name), baseTypeClone, std::move(valueClones));
     clone->visibility = visibility;
-    clone->mangledName = mangledName;
     return clone;
 }
 
@@ -112,7 +108,6 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
     auto* clone = makeClonedNode(this, context, std::string(name), std::vector<std::string>{},
                                  std::move(parameterClones), returnTypeClone, cloneBlock(body, context));
     clone->visibility = visibility;
-    clone->mangledName = mangledName;
     return clone;
 }
 
@@ -135,7 +130,7 @@ ImportStatement* ImportStatement::clone(semantic::CloneContext* /*context*/) con
 }
 
 ModuleDeclarationStatement* ModuleDeclarationStatement::clone(semantic::CloneContext* /*context*/) const {
-        ASSERT_UNREACHABLE(
+    ASSERT_UNREACHABLE(
         "Module declaration statements should have been enforced as being at the top of a file, not inside a generic function");
 }
 
@@ -172,7 +167,6 @@ VariableDeclarationStatement* VariableDeclarationStatement::clone(semantic::Clon
     Expression* valueClone = value == nullptr ? nullptr : value->clone(context);
 
     auto* clone = makeClonedNode(this, context, isMutable, std::string(name), visibility, valueClone, typeClone);
-    clone->mangledName = mangledName;
     return clone;
 }
 
@@ -295,7 +289,6 @@ PrefixExpression* PrefixExpression::clone(semantic::CloneContext* context) const
 
 ScopeResolutionExpression* ScopeResolutionExpression::clone(semantic::CloneContext* context) const {
     auto* clone = makeClonedNode(this, context, scope->clone(context), element->clone(context));
-    clone->mangledName = mangledName;
     return clone;
 }
 
