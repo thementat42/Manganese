@@ -11,12 +11,6 @@
 namespace Manganese::semantic {
 struct Scope;
 
-struct generic_tag_t {
-    constexpr explicit generic_tag_t() noexcept = default;
-};
-
-constexpr inline generic_tag_t generic_tag{};
-
 struct InstantiationKey {
     const ast::ASTNode* declNode;
     TypeList typeArgs;
