@@ -242,19 +242,6 @@ bool testArrayOfFunctionsIndexedAndCalled() {
     return validateIRContains(source, {"dispatch", "call"}, __func__);
 }
 
-bool testArrayOfInstantiatedGenericFunctions() {
-    const std::string source = R"(
-        func foo[T](a: int32, b: int32) -> int32 { return a + b; }
-        func blah[T](a: int32, b: int32) -> int32 { return a * b; }
-
-        func testGenericArray(y: int32) -> int32 {
-            let x = [foo@[int32], blah@[int32]];
-            return x[y](1, 2);
-        }
-    )";
-    return validateIRContains(source, {"testGenericArray", "call"}, __func__);
-}
-
 bool testGenericAggregateInstantiation() {
     const std::string source = R"(
         aggregate Wrapper[T] {
@@ -294,6 +281,19 @@ bool testArrayOfGenericAggregates() {
     return validateIRContains(source, {"getBoxVal", "Pair"}, __func__);
 }
 
+bool testArrayOfInstantiatedGenericFunctions() {
+    const std::string source = R"(
+        func foo[T](a: int32, b: int32) -> int32 { return a + b; }
+        func blah[T](a: int32, b: int32) -> int32 { return a * b; }
+
+        func testGenericArray(y: int32) -> int32 {
+            let x = [foo@[int32], blah@[int32]];
+            return x[y](1, 2);
+        }
+    )";
+    return validateIRContains(source, {"testGenericArray", "call"}, __func__);
+}
+
 }  // namespace
 }  // namespace codegen_tests
 
@@ -314,11 +314,13 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
     runner.runTest("Generics Codegen", codegen_tests::testGenericsCodegen);
     runner.runTest("Array of Functions Indexed and Called", codegen_tests::testArrayOfFunctionsIndexedAndCalled);
-    runner.runTest("Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
 
     runner.runTest("Generic Aggregate Instantiation", codegen_tests::testGenericAggregateInstantiation);
     runner.runTest("Multi-Parameter Generic Functions", codegen_tests::testMultiParamGenerics);
     runner.runTest("Array of Generic Aggregates", codegen_tests::testArrayOfGenericAggregates);
+
+    runner.runTest("Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
+
 }
 
 }  // namespace Manganese::tests
