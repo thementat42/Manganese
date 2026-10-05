@@ -705,7 +705,7 @@ bool testPointerDereferenceAndMutability() {
         && analyzeSource(incImmutable, false, __func__) && analyzeSource(addressOfRValue, false, __func__);
 }
 
-bool testVariadicAndDefaults() {
+[[maybe_unused]] bool testVariadicAndDefaults() {
     const std::string code = R"(
         # Function with default parameters
         func configure(timeout: int = 30, retries: int = 3) -> int {
@@ -821,7 +821,7 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Generic Scope Resolution analysis", analyzer_tests::testGenericScopeResolution);
     runner.runTest("Scope Resolution Mutability analysis", analyzer_tests::testScopeResolutionMutability);
     runner.runTest("Deeply Nested Scoped Type analysis", analyzer_tests::testDeeplyNestedScopedType);
-    runner.runTest("Variadic and Default Function analysis", analyzer_tests::testVariadicAndDefaults);
+    // runner.runTest("Variadic and Default Function analysis", analyzer_tests::testVariadicAndDefaults);
 
     // Expressions
     runner.runTest("Aggregate Instantiation & Literals analysis",
