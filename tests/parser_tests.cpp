@@ -265,6 +265,29 @@ bool testBitwiseOperators() {
     return validateStatements(getParserResults(expression), expected, "Bitwise Operators");
 }
 
+bool testTernaryOperator() {
+    const std::string expression = "a ? b : c;\n"
+                                   "x = condition ? trueVal : falseVal;\n"
+                                   "is_valid || force ? allow() : deny();\n"
+                                   "result = a == b ? c + d : e * f;\n"
+                                   "a ? b ? c : d : e;\n"
+                                   "a ? b : c ? d : e;\n"
+                                   "a ? b : c ? d : e ? f : g;\n";
+
+    const std::array<std::string, 7> expected = {
+        "(a ? b : c);",
+        "(x = (condition ? trueVal : falseVal));",
+        "((is_valid || force) ? (allow()) : (deny()));",
+        "(result = ((a == b) ? (c + d) : (e * f)));",
+        "(a ? (b ? c : d) : e);",
+        "(a ? b : (c ? d : e));",
+        "(a ? b : (c ? d : (e ? f : g)));"
+    };
+
+    return validateStatements(getParserResults(expression), expected, "Ternary Operators");
+}
+
+
 bool testAggregateDeclarationAndInstantiation() {
     const std::string expression = "public aggregate Point {\n"
                                    "    x: uint128;\n"
@@ -712,6 +735,7 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Typed Variable Declaration", parser_tests::testTypedVariableDeclaration);
     runner.runTest("Postfix Operators", parser_tests::testPostfixOperators);
     runner.runTest("Bitwise Operators", parser_tests::testBitwiseOperators);
+    runner.runTest("Ternary Operator", parser_tests::testTernaryOperator);
     runner.runTest("Aggregate Declaration and Instantiation", parser_tests::testAggregateDeclarationAndInstantiation);
     runner.runTest("Function Declaration and Call", parser_tests::testFunctionDeclarationAndCall);
     runner.runTest("Loops", parser_tests::testLoops);
