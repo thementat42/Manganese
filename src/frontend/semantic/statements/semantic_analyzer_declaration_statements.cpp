@@ -182,6 +182,16 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
 
     if (!context.isInstantiatingGeneric) { statement->mangledName = getMangledName(statement->name); }
 
+    if (statement->returnType != nullptr && statement->returnType->semanticType == nullptr) {
+        if (visit(statement->returnType) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
+    }
+
+    for (auto& param : statement->parameters) {
+        if (param.type != nullptr && param.type->semanticType == nullptr) {
+            if (visit(param.type) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
+        }
+    }
+
     const SemanticType* functionType = nullptr;
     Symbol* symbol = nullptr;
 
@@ -248,7 +258,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
         }
     }
 
-    // we need this for generic instantiations
+    // we need this for generic instantiations since this can be called while visiting another function
     const SemanticType* previousReturnType = context.currentFunctionReturnType;
     context.currentFunctionReturnType = fnType->returnType;
     const stmtvisit_t bodyResult = visit(statement->body, false);
