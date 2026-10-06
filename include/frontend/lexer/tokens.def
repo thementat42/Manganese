@@ -119,6 +119,7 @@ OPERATOR(NotEqual, "!=")
 OPERATOR(And, "&&")
 OPERATOR(Or, "||")
 OPERATOR(Not, "!")
+OPERATOR(Ternary, "?")
 
 OPERATOR(BitAnd, "&")
 OPERATOR(BitOr, "|")
