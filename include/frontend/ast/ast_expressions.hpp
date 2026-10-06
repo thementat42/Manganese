@@ -223,6 +223,17 @@ struct StringLiteralExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE(StringLiteralExpression);
 };
 
+struct TernaryExpression final : public Expression {
+    Expression* condition;
+    Expression* ifTrue;
+    Expression* ifFalse;
+
+    TernaryExpression(Expression* _condition, Expression* _ifTrue, Expression* _ifFalse) noexcept :
+        Expression(ExpressionKind::TernaryExpression), condition(_condition), ifTrue(_ifTrue), ifFalse(_ifFalse) {}
+
+    MN_AST_STANDARD_INTERFACE(TernaryExpression);
+};
+
 struct TypeCastExpression final : public Expression {
     Expression* originalValue;
     Type* targetType;

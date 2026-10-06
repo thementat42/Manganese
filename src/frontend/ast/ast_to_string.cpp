@@ -319,6 +319,10 @@ std::string SizeofExpression::toString(std::size_t indent) const {
 
 std::string StringLiteralExpression::toString(std::size_t /*indent*/) const { return std::format("\"{}\"", value); }
 
+std::string TernaryExpression::toString(std::size_t /*indent*/) const {
+    return std::format("{} ? {} : {}", condition->toString(), ifTrue->toString(), ifFalse->toString());
+}
+
 std::string TypeCastExpression::toString(std::size_t indent) const {
     return std::format(WRAP("{} as {}"), originalValue->toString(indent), targetType->toString(indent));
 }

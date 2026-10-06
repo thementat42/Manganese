@@ -40,6 +40,7 @@ EXPR(PrefixExpression)
 EXPR(ScopeResolutionExpression)
 EXPR(SizeofExpression)
 EXPR(StringLiteralExpression)
+EXPR(TernaryExpression)
 EXPR(TypeCastExpression)
 EXPR(UninitializedExpression)
 

@@ -537,6 +537,16 @@ void StringLiteralExpression::dump(std::ostream& os, std::size_t indent) const {
     os << ind << "}\n";
 }
 
+void TernaryExpression::dump(std::ostream& os, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "StringLiteralExpression", *this);
+    os << ind.next() << "condition: " << condition->toString() << "\n";
+    os << ind.next() << "if true: " << ifTrue->toString() << "\n";
+    os << ind.next() << "if false: " << ifFalse->toString() << "\n";
+    dumpSemanticType(os, ind.next(), semanticType);
+    os << ind << "}\n";
+}
+
 void TypeCastExpression::dump(std::ostream& os, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "TypeCastExpression", *this);
