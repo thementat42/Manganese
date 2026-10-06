@@ -388,6 +388,10 @@ Result Lexer::tokenizeSymbol() {
             }
             break;
         }
+        case '?': {
+            type = TokenType::Ternary;
+            break;
+        }
         case '~': {
             type = TokenType::BitNot;
             break;
