@@ -74,6 +74,7 @@ class Parser {
     ast::Expression* parsePrimaryExpression();
     ast::Expression* parseScopeResolutionExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseSizeofExpression();
+    ast::Expression* parseTernaryExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseTypeCastExpression(ast::Expression* left, Precedence precedence);
 
     // Statement Parsing

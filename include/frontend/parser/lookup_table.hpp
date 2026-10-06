@@ -133,6 +133,7 @@ consteval void initializeLookups(LookupTable& table) noexcept {
     registerLedHandler_binary(table, Mul, Precedence::Multiplicative, &Parser::parseBinaryExpression);
     registerLedHandler_binary(table, Or, Precedence::LogicalOr, &Parser::parseBinaryExpression);
     registerLedHandler_binary(table, Plus, Precedence::Additive, &Parser::parseBinaryExpression);
+    registerLedHandler_binary(table, Ternary, Precedence::Ternary, &Parser::parseTernaryExpression);
 
     //~ Literals and Symbols
     registerNudHandler_binary(table, CharLiteral, &Parser::parsePrimaryExpression);
