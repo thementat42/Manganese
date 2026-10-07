@@ -1,5 +1,6 @@
 #include <llvm/ADT/APFloat.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
@@ -15,6 +16,8 @@
 #include <frontend/semantic.hpp>
 #include <middleend/codegen/ir_generator.hpp>
 #include <runtime/string.hpp>
+
+#include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese::codegen {
 
@@ -528,6 +531,43 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
         = llvm::ConstantExpr::getInBoundsGetElementPtr(globalString->getType(), globalString, indices);
     llvm::Constant* length = builder->getInt64(expression->value.size());
     return llvm::ConstantStruct::get(stringType, {dataPtr, length});
+}
+
+[[nodiscard]] auto IRGenerator::visit(const ast::TernaryExpression* expression) -> exprvisit_t {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
+
+    llvm::BasicBlock* trueBlock = llvm::BasicBlock::Create(*context, "ternary_true", function);
+    llvm::BasicBlock* falseBlock = llvm::BasicBlock::Create(*context, "ternary_false", function);
+    llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(*context, "ternary_end", function);
+
+    // the two branches are in isolated blocks below; we branch to a specific block based on the condition
+    llvm::Value* conditionValue = visit(expression->condition);
+    builder->CreateCondBr(conditionValue, /*True=*/trueBlock, /*False=*/falseBlock);
+
+    // generate code for each case in its own  block so it can be skipped over as needed
+    // in both cases, after it's been evaluated, want to skip to after the ternary
+    builder->SetInsertPoint(trueBlock);
+    llvm::Value* trueBranchValue = visit(expression->ifTrue);
+    builder->CreateBr(mergeBlock);
+    llvm::BasicBlock* trueEndBlock = builder->GetInsertBlock();
+
+    // ditto for the false block
+    builder->SetInsertPoint(falseBlock);
+    llvm::Value* falseBranchValue = visit(expression->ifFalse);
+    builder->CreateBr(mergeBlock);
+    llvm::BasicBlock* falseEndBlock = builder->GetInsertBlock();
+
+    // both expressions have code generated, now we need a PHI node
+    builder->SetInsertPoint(mergeBlock);
+
+    llvm::Type* ternaryType = trueBranchValue->getType();
+
+    llvm::PHINode* phiNode = builder->CreatePHI(ternaryType, 2, "ternary_phi");
+
+    // we know which block jumped here based on the value that was evaluated
+    phiNode->addIncoming(trueBranchValue, trueEndBlock);
+    phiNode->addIncoming(falseBranchValue, falseEndBlock);
+    return phiNode;
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::TypeCastExpression* expression) -> exprvisit_t {
