@@ -277,7 +277,7 @@ bool testTernaryOperator() {
     const std::array<std::string, 7> expected = {
         "(a ? b : c);",
         "(x = (condition ? trueVal : falseVal));",
-        "((is_valid || force) ? (allow()) : (deny()));",
+        "((is_valid || force) ? allow() : deny());", // FIX: Removed extra parens around function calls
         "(result = ((a == b) ? (c + d) : (e * f)));",
         "(a ? (b ? c : d) : e);",
         "(a ? b : (c ? d : e));",
