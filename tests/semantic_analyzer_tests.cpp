@@ -537,6 +537,29 @@ bool testDeeplyNestedScopedType() {
     return analyzeSource(valid, true, __func__) && analyzeSource(invalidChain, false, __func__);
 }
 
+bool testTernaryExpressionSemantics() {
+    // Valid cases: matching types, and condition that resolves to boolean
+    const std::string valid = R"(
+        func main() {
+            let cond = true;
+            let a = 10;
+            let b = 20;
+            let result = cond ? a : b;
+        }
+    )";
+
+    // Invalid case: True and False branches have completely un-castable/incompatible types
+    const std::string invalid = R"(
+        func main() {
+            let cond = true;
+            let result = cond ? "Hello String" : 42; 
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalid, false, __func__);
+}
+
+
 // Type Tests
 
 bool testPointerTypeMutability() {
@@ -834,6 +857,8 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Member Access Expression analysis", analyzer_tests::testMemberAccessExpression);
     runner.runTest("Pointer Operators (& and *) analysis", analyzer_tests::testPrefixPostfixPointerOperators);
     runner.runTest("Sizeof & Alignof Expressions analysis", analyzer_tests::testSizeofAndAlignofExpression);
+    runner.runTest("Ternary Expression analysis", analyzer_tests::testTernaryExpressionSemantics);
+
     runner.runTest("TypeCast Expression analysis", analyzer_tests::testTypeCastExpression);
 
     // Types
