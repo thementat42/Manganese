@@ -25,27 +25,18 @@ struct InstantiationResult {
     ast::Statement* clonedNode;
 };
 
-}  // namespace Manganese::semantic
-
-namespace std {
-
-template <>
-struct hash<Manganese::semantic::InstantiationKey> {
-    std::size_t operator()(const Manganese::semantic::InstantiationKey& key) const noexcept {
-        std::size_t hash_value = std::hash<const Manganese::ast::ASTNode*>{}(key.declNode);
+struct _insthasher {
+    constexpr std::size_t operator()(const InstantiationKey& key) const noexcept {
+        std::size_t hash_value = std::hash<const ast::ASTNode*>{}(key.declNode);
         for (const auto* type : key.typeArgs) {
-            hash_value = Manganese::semantic::hash_combine(hash_value, std::hash<decltype(type)>{}(type));
+            hash_value = hash_combine(hash_value, std::hash<decltype(type)>{}(type));
         }
         return hash_value;
     }
 };
 
-}  // namespace std
-
-namespace Manganese::semantic {
-
 class InstantiationCache {
-    std::unordered_map<InstantiationKey, InstantiationResult> _map;
+    std::unordered_map<InstantiationKey, InstantiationResult, _insthasher> _map;
 
    public:
     InstantiationCache() noexcept = default;
