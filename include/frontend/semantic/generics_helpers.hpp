@@ -15,7 +15,7 @@ struct InstantiationKey {
     const ast::ASTNode* declNode;
     TypeList typeArgs;
 
-    friend bool operator==(const InstantiationKey&, const InstantiationKey&) noexcept = default;
+    friend constexpr bool operator==(const InstantiationKey&, const InstantiationKey&) noexcept = default;
 };
 
 struct InstantiationResult {
