@@ -12,8 +12,11 @@
 namespace Manganese::parser {
 
 constexpr std::size_t tokenToIndex(lexer::TokenType t) noexcept { return static_cast<std::size_t>(t); }
-consteval Precedence precedenceAbove(Precedence p) noexcept {
+constexpr Precedence precedenceAbove(Precedence p) noexcept {
     return static_cast<Precedence>(static_cast<std::underlying_type_t<Precedence>>(p) + 1);
+}
+constexpr Precedence precedenceBelow(Precedence p) noexcept {
+    return static_cast<Precedence>(static_cast<std::underlying_type_t<Precedence>>(p) - 1);
 }
 
 using statementHandler_t = ast::Statement* (Parser::*)();
@@ -59,6 +62,15 @@ constexpr void registerLedHandler_prefix(LookupTable& table, lexer::TokenType ty
                                          ledHandler_t handler) noexcept {
     auto& entry = table[type];
     entry.expressionOperator = Operator::prefix(precedence);
+    entry.ledHandler = handler;
+}
+
+constexpr void registerLedHandler_rightAssociative(LookupTable& table, lexer::TokenType type, Precedence precedence,
+                                                   ledHandler_t handler) noexcept {
+    auto& entry = table[type];
+
+    entry.expressionOperator.leftBindingPower = precedence;
+    entry.expressionOperator.rightBindingPower = precedenceBelow(precedence);
     entry.ledHandler = handler;
 }
 
@@ -133,7 +145,7 @@ consteval void initializeLookups(LookupTable& table) noexcept {
     registerLedHandler_binary(table, Mul, Precedence::Multiplicative, &Parser::parseBinaryExpression);
     registerLedHandler_binary(table, Or, Precedence::LogicalOr, &Parser::parseBinaryExpression);
     registerLedHandler_binary(table, Plus, Precedence::Additive, &Parser::parseBinaryExpression);
-    registerLedHandler_binary(table, Ternary, Precedence::Ternary, &Parser::parseTernaryExpression);
+    registerLedHandler_rightAssociative(table, Ternary, Precedence::Ternary, &Parser::parseTernaryExpression);
 
     //~ Literals and Symbols
     registerNudHandler_binary(table, CharLiteral, &Parser::parsePrimaryExpression);

@@ -6,8 +6,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "frontend/ast/ast_expressions.hpp"
-#include "frontend/parser/operators.hpp"
 
 /**
  * Ambiguous cases:
@@ -280,15 +278,17 @@ ast::Expression* Parser::parseSizeofExpression() {
     return makeNode<ast::SizeofExpression>(startToken, type);
 }
 
-ast::Expression* Parser::parseTernaryExpression(ast::Expression* left, Precedence /*unused*/) {
+ast::Expression* Parser::parseTernaryExpression(ast::Expression* left, Precedence precedence) {
     const Token startToken = consumeToken();  // skip the '?'
 
     ast::Expression* ifTrue = parseExpression(Precedence::Default);
+    
     expectToken(TokenType::Colon, "Expected ':' in ternary expression");
-    ast::Expression* ifFalse = parseExpression(Precedence::Ternary);
+    ast::Expression* ifFalse = parseExpression(precedence);
 
     return makeNode<ast::TernaryExpression>(startToken, left, ifTrue, ifFalse);
 }
+
 
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {
     const Token startToken = consumeToken();  // Consume the 'as' token
