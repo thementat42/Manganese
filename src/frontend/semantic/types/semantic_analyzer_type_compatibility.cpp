@@ -237,7 +237,7 @@ auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const S
     const PrimitiveInfo src = getPrimitiveInfo(from->primitiveType);
     const PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType);
     const bool is_conditional_context
-        = context.inIfCondition || context.inForLoopCondition || context.inWhileLoopCondition;
+        = context.inIfCondition || context.inForLoopCondition || context.inWhileLoopCondition || context.inTernaryCondition;
 
     if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
 

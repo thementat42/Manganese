@@ -259,6 +259,45 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
+auto SemanticAnalyzer::visit(ast::TernaryExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
+    exprvisit_t result = exprvisit_t::Success;
+    if (visit(expression->condition) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    if (visit(expression->ifTrue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    if (visit(expression->ifFalse) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+
+    context.inTernaryCondition = true;
+    const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
+        expression->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
+    context.inTernaryCondition = false;
+    const typeCompatibilityResult branchTypesAreCompatible
+        = areTypesCompatible(expression->ifTrue->semanticType, expression->ifFalse->semanticType);
+
+    if (!conditionCanBeBool) {
+        logError(expression->condition,
+                 "Condition in ternary expression must be a boolean type or implicitly convertible to it, not {}",
+                 expression->condition->semanticType->toString());
+        result = exprvisit_t::Failure;
+    } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+        logWarning(expression->condition, "{}", conditionCanBeBool.message);
+    }
+
+    if (!branchTypesAreCompatible) {
+        logError(
+            expression->ifFalse,
+            "Both branches in a ternary expression must be convertible to each other (cannot convert between '{}' and '{}')",
+            expression->ifTrue->semanticType->toString(), expression->ifFalse->semanticType->toString());
+        result = exprvisit_t::Failure;
+    } else if (branchTypesAreCompatible.result == Compatible_t::Warning) {
+        logWarning(expression->condition, "{}", branchTypesAreCompatible.message);
+    }
+
+    // TODO: choose the "best fit" of the two types
+    expression->semanticType = expression->ifTrue->semanticType;
+
+    return result;
+}
+
 auto SemanticAnalyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;

@@ -92,6 +92,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         bool inIfCondition : 1 = false;
         bool inForLoopCondition : 1 = false;
         bool inWhileLoopCondition : 1 = false;
+        bool inTernaryCondition : 1 = false;
 
     } context;
 
