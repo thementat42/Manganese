@@ -304,6 +304,11 @@ TypeCastExpression* TypeCastExpression::clone(semantic::CloneContext* context) c
     return makeClonedNode(this, context, originalValue->clone(context), targetType->clone(context));
 }
 
+TernaryExpression* TernaryExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, condition->clone(context), ifTrue->clone(context), ifFalse->clone(context));
+
+}
+
 UninitializedExpression* UninitializedExpression::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context);
 }
