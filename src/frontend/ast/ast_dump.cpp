@@ -230,7 +230,7 @@ void ImportStatement::dump(std::ostream& os, const utils::StringInterner& intern
     }
     os << "]\n";
 
-    os << ind.next() << std::format("alias: {}\n", alias.has_value() ? std::string(interner.get_view(alias.value())) : "none");
+    os << ind.next() << std::format("alias: {}\n", alias.has_value() ? std::string(interner.get_view(*alias)) : "none");
     os << ind << "}\n";
 }
 
