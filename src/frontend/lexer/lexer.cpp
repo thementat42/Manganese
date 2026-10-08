@@ -17,7 +17,8 @@ namespace Manganese::lexer {
 
 //~ Core Lexer Functions
 
-Lexer::Lexer(const std::string& source, Mode mode) : tokenStartLine(1), tokenStartCol(1) {
+Lexer::Lexer(const std::string& source, utils::StringInterner& interner, Mode mode)
+    : tokenStartLine(1), tokenStartCol(1), interner(interner) {
     switch (mode) {
         case Mode::String: reader = std::make_unique<io::StringReader>(source); break;
         case Mode::File: reader = std::make_unique<io::FileReader>(source); break;
@@ -85,7 +86,7 @@ Token& Lexer::peekToken() {
 Token Lexer::consumeToken() {
     if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
     // check if queue is still empty if it is, we are done tokenizing
-    if (tokenStream.empty()) { return Token(TokenType::EndOfFile, "EOF", getLine(), getCol()); }
+    if (tokenStream.empty()) { return {TokenType::EndOfFile, interner.intern(std::string_view("EOF")), getLine(), getCol()}; }
     const Token token = tokenStream.front();
     tokenStream.pop_front();  // get rid of the token
     return token;
@@ -349,7 +350,6 @@ Result Lexer::tokenizeSymbol() {
             }
             break;
         }
-            // Let the parser decide if '&' is a bitwise AND or an address-of operator, default to bitwise AND
         case '|': {
             if (next == '|') {  // logical OR (||)
                 lexeme += next;
@@ -364,17 +364,9 @@ Result Lexer::tokenizeSymbol() {
         }
         case '^': {  // Bitwise XOR
             if (next == '=') {
-                // Bitwise assignment operator (^=)
                 lexeme += '=';
                 type = TokenType::BitXorAssign;
-            }
-            // else if (next == '^') {
-            //     // Exponentiation operator (^^)
-            //     lexeme += '^';
-            //     lexeme += (nextnext == '=') ? "=" : "";  // ^^=, in place exponentiation
-            //     type = (nextnext == '=') ? TokenType::ExpAssign : TokenType::Exp;
-            // }
-            else {
+            } else {
                 type = TokenType::BitXor;
             }
             break;
@@ -407,13 +399,10 @@ Result Lexer::tokenizeSymbol() {
         }
         case '<': {
             if (next == '=') {
-                // Less than or Equal to (<=)
                 lexeme += '=';
                 type = TokenType::LessThanOrEqual;
             } else if (next == current) {
-                // Bitwise left shift (<<)
                 lexeme += next;
-                // In place left shift (<<=)
                 lexeme += (nextnext == '=') ? "=" : "";
                 type = (nextnext == '=') ? TokenType::BitLShiftAssign : TokenType::BitLShift;
             } else {
@@ -423,13 +412,10 @@ Result Lexer::tokenizeSymbol() {
         }
         case '>': {
             if (next == '=') {
-                // Greater than or Equal to (>=)
                 lexeme += '=';
                 type = TokenType::GreaterThanOrEqual;
             } else if (next == current) {
-                // Bitwise right shift (>>)
                 lexeme += next;
-                // In place right shift (>>=)
                 lexeme += (nextnext == '=') ? "=" : "";
                 type = (nextnext == '=') ? TokenType::BitRShiftAssign : TokenType::BitRShift;
             } else {
@@ -514,7 +500,6 @@ Result Lexer::tokenizeSymbol() {
             } else {
                 type = TokenType::Div;
             }
-            // Multiline comments handled in the main loop
             break;
         }
         default:
@@ -531,7 +516,7 @@ Result Lexer::tokenizeSymbol() {
 //~ Helper Functions
 
 void Lexer::emitToken(TokenType type, std::string&& lexeme, bool invalid) {
-    tokenStream.emplace_back(type, std::move(lexeme), tokenStartLine, tokenStartCol, invalid);
+    tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
 }
 
 NumberPrefixResult Lexer::processNumberPrefix() {
@@ -544,28 +529,22 @@ NumberPrefixResult Lexer::processNumberPrefix() {
     switch (peekChar(1)) {
         case 'x':
         case 'X':
-            // Hexadecimal number
             advance(2);
             return NumberPrefixResult{.base = utils::Base::Hexadecimal, .isValidBaseChar = is_xdigit, .prefix = "0x"};
         case 'b':
         case 'B':
-            // Binary number
             advance(2);
             return NumberPrefixResult{.base = utils::Base::Binary, .isValidBaseChar = is_bdigit, .prefix = "0b"};
         case 'o':
         case 'O':
-            // Octal number
             advance(2);
             return NumberPrefixResult{.base = utils::Base::Octal, .isValidBaseChar = is_odigit, .prefix = "0o"};
         case 'd':
         case 'D':
             advance(2);
             return NumberPrefixResult{.base = utils::Base::Octal, .isValidBaseChar = is_digit, .prefix = "0d"};
-
-            // explicit decimal prefix (optional)
         default:
-            // Not a valid base indicator -- just treat it as a decimal number
-            if (is_digit(peekChar(1))) {  // if the literal is 0, that's fine
+            if (is_digit(peekChar(1))) {
                 logWarning("Leading zeros in numeric literals are treated as decimal numbers."
                            "Use a 0o prefix for octal numbers.");
             }
@@ -574,7 +553,6 @@ NumberPrefixResult Lexer::processNumberPrefix() {
 }
 
 Result Lexer::processScientificNotation(std::string& numberLiteral) {
-    // Caller guarantees next character is an 'e'
     numberLiteral += to_lowercase(consumeChar());
     if (peekChar() == '+' || peekChar() == '-') { numberLiteral += consumeChar(); }
 
@@ -589,14 +567,6 @@ Result Lexer::processScientificNotation(std::string& numberLiteral) {
 }
 
 Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
-    /*
-        The valid numeric suffixes are:
-        - i8, i16, i32, i64, i128 (signed integers with the corresponding bit width)
-        - u8, u16, u32, u64, u128 (unsigned integers with the corresponding bit width)
-        - f32, f64 (floating-point numbers with the corresponding bit width)
-        NOTE: These are case-insensitive, so 'I', 'U', and 'F' are also valid.
-        */
-
     const char suffix = to_lowercase(peekChar());
 
     if (suffix != 'i' && suffix != 'u' && suffix != 'f') { return Result::Success; }
@@ -640,74 +610,3 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
 }
 
 }  // namespace Manganese::lexer
-
-/*
-~ Some ambiguous cases to consider  -- cases where a character could map to more than one operator
-~ If any of these occur while inside a string literal or in a char, obviously don't do anything
-* Ambiguous case 1: angle brackets (`<` and `>`)
-`<` and `>` use cases:
-- comparisons (<, >)
-- comparisons with equality (<=, >=)
-- bitwise shifts (<<, >>)
-
-when < or > is seen, check next char:
-if it's an =, push that as one operator
-otherwise, push it as a comparison op
-
-
-* Ambiguous case 2: Logical/bitwise and and or (&&/&, ||/|)
-If the current char is a bitwise operator, look at the next char
-- if it's a the same character, push that as a logical operator
-- if it's an equals sign, push it as a bitwise assignment operator
-- otherwise push it as a regular bitwise operator
-
-* Ambiguous case 3: `+`
-`+` use cases:
-- unary plus
-- addition (or whatever that's overloaded to for the type)
-- increment (++)
-
-- if the next token is a `+`, it's an increment, push that as one operator
-
-* Ambiguous case 4: `-`
-`-` use cases:
-- unary minus
-- subtraction (or whatever that's overloaded to for the type)
-- decrement
-- arrow (->)
-
-- if the next token is a >, it's ->, push that as one operator
-- if the next token is a -, it's a decrement, push that as one operator
-
-When a * is seen, look at the next char. If it's also a *, it's exponentiation, push that as one operator.
-Otherwise, it's multiplication, push that as one operator.
-
-* Ambiguous case 5: `/`
-`/` use cases
-- division operator
-- multiline/block comments
-- floor division operator //
-
-if the current char is an initial /, look at the next char
-- if it's another /, it's the floor division operator -- push it as one thing
-- if it's a *, it's a multiline comment -– keep going until * / is found (no space)
-- otherwise, it's a division operator -- push that
-
-* Ambiguous case 6: `=`
-`=` use cases:
-- assignment
-- equality (or inequality)
-(note, cases like <= and >= are handled in the angle brackets parsing since in both cases, the angle bracket appears
-first so it's the first thing the lexer sees)
-
-look at next char
-- if it's an equals, push that as one comparison operator
-- otherwise, push it as an assignment operator
-
-* Ambiguous case 7: any arithmetic/bitwise operator
-if followed by an equals sign, it's an assignment operator
-
-if current char is an operator (after doing the above checks), look at the next char
-- if it's an equals sign, it's an assignment operator, push that as one operator
-- otherwise, push it as a regular operator
-*/

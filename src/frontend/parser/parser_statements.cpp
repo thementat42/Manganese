@@ -22,10 +22,7 @@ ast::Statement* Parser::parseStatement() {
     }
 
     // Handle bare semicolons
-    if (type == TokenType::Semicolon) {
-        // still want line and column information for these
-        return makeNode<ast::EmptyStatement>(consumeToken());
-    }
+    if (type == TokenType::Semicolon) { return makeNode<ast::EmptyStatement>(consumeToken()); }
 
     const statementHandler_t handler = lookupTable[type].statementHandler;
     if (handler != nullptr) { return (this->*handler)(); }
@@ -40,32 +37,31 @@ ast::Statement* Parser::parseStatement() {
 
 ast::Statement* Parser::parseAggregateDeclarationStatement() {
     const Token startToken = consumeToken();
-    std::string name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
+    const auto name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
 
-    std::vector<std::string> genericTypes = parseGenericsList(name);
+    std::vector<utils::StringID> genericTypes = parseGenericsList(name);
 
     expectToken(TokenType::LeftBrace, "Expected a '{'");
 
     std::vector<ast::AggregateField> fields;
     while (!done() && peekTokenType() != TokenType::RightBrace) {
-        if (auto field = parseAggregateField(name, fields)) { fields.push_back(std::move(*field)); }
+        if (auto field = parseAggregateField(name, fields)) { fields.push_back(*field); }
     }
 
     expectToken(TokenType::RightBrace);
 
-    return makeNode<ast::AggregateDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
-                                                        std::move(fields));
+    return makeNode<ast::AggregateDeclarationStatement>(startToken, name, std::move(genericTypes), std::move(fields));
 }
 
 ast::Statement* Parser::parseAliasStatement() {
     flags.parsingAliasStatement = true;
     const Token startToken = consumeToken();  // consume alias
-    std::string alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
+    const auto alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Assignment, "Expected '=' after an alias name to introduce the aliased type.");
     ast::Type* baseType = parseType(Precedence::Default);
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
     flags.parsingAliasStatement = false;
-    return makeNode<ast::AliasStatement>(startToken, baseType, std::move(alias));
+    return makeNode<ast::AliasStatement>(startToken, baseType, alias);
 }
 
 ast::Statement* Parser::parseBreakStatement() {
@@ -93,7 +89,7 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
 
 ast::Statement* Parser::parseEnumDeclarationStatement() {
     const Token startToken = consumeToken();  // Consume 'enum'
-    std::string name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
+    const auto name = expectToken(TokenType::Identifier, "Expected enum name after 'enum'").getLexeme();
     ast::Type* baseType = nullptr;
 
     if (peekTokenType() == TokenType::Colon) {
@@ -101,7 +97,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
         baseType = parseType(Precedence::Default);
         if (baseType == nullptr) {
             Token& tmp = peekToken();
-            logError(tmp, "Expected valid underlying type after ':' for enum '{}'", name);
+            logError(tmp, "Expected valid underlying type after ':' for enum '{}'", interner.get_view(name));
             baseType = makeNode<ast::PoisonedType>(tmp);
         }
     }
@@ -114,9 +110,9 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
 
         if (auto duplicate = std::ranges::find(values, member.name, &ast::EnumValue::name); duplicate != values.end()) {
             logError(member, "Duplicate member '{}' in enum '{}' (previously declared at line {}, column {})",
-                     member.name, name, duplicate->line, duplicate->column);
+                     interner.get_view(member.name), interner.get_view(name), duplicate->line, duplicate->column);
         } else {
-            values.push_back(std::move(member));
+            values.push_back(member);
         }
 
         if (peekTokenType() != TokenType::RightBrace) {
@@ -126,7 +122,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
 
     expectToken(TokenType::RightBrace, "Expected '}' to close the enum body");
 
-    return makeNode<ast::EnumDeclarationStatement>(startToken, std::move(name), baseType, std::move(values));
+    return makeNode<ast::EnumDeclarationStatement>(startToken, name, baseType, std::move(values));
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
@@ -165,9 +161,9 @@ ast::Statement* Parser::parseForLoopStatement() {
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
     const Token startToken = consumeToken();
-    std::string name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
+    const auto name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
 
-    std::vector<std::string> genericTypes = parseGenericsList(name);
+    std::vector<utils::StringID> genericTypes = parseGenericsList(name);
 
     expectToken(TokenType::LeftParen);
 
@@ -177,7 +173,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
 
     while (!done() && peekTokenType() != TokenType::RightParen) {
         if (auto param = parseFunctionParameter(name, params, hasDefaultParameter, hasVariadicParameter)) {
-            params.push_back(std::move(*param));
+            params.push_back(*param);
         }
 
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
@@ -194,8 +190,8 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         returnType = parseType(Precedence::Default);
     }
 
-    return makeNode<ast::FunctionDeclarationStatement>(startToken, std::move(name), std::move(genericTypes),
-                                                       std::move(params), returnType, parseBlock("function body"));
+    return makeNode<ast::FunctionDeclarationStatement>(startToken, name, std::move(genericTypes), std::move(params),
+                                                       returnType, parseBlock("function body"));
 }
 
 ast::Statement* Parser::parseIfStatement() {
@@ -229,26 +225,30 @@ ast::Statement* Parser::parseIfStatement() {
 ast::Statement* Parser::parseImportStatement() {
     const Token startToken = consumeToken();
 
-    std::vector<std::string> path = parseImportPath();
-    std::optional<std::string> alias = parseImportAlias();
+    std::vector<utils::StringID> path = parseImportPath();
+    utils::OptionalStringID alias = parseImportAlias();
 
     expectToken(TokenType::Semicolon, "Expected a ';' to end an import statement");
 
     if (flags.hasParsedFileHeader) { logError(startToken, "Import statements must go at the top of the file"); }
 
-
-    return makeNode<ast::ImportStatement>(startToken, std::move(path), std::move(alias));
+    return makeNode<ast::ImportStatement>(startToken, std::move(path), alias);
 }
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
     const lexer::Token temp = consumeToken();
-    if (flags.hasParsedFileHeader || flags.hasImports) { logError(temp, "Module declarations must be the first line of a file"); }
+    if (flags.hasParsedFileHeader || flags.hasImports) {
+        logError(temp, "Module declarations must be the first line of a file");
+    }
 
-    std::string name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
+    const auto name = expectToken(TokenType::Identifier, "Expected a module name").getLexeme();
 
+    std::string fullName = std::string(interner.get_view(name));
     while (peekTokenType() == TokenType::ScopeResolution) {
         DISCARD(consumeToken());
-        name += "::" + expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme();
+        fullName += "::"
+            + std::string(interner.get_view(
+                expectToken(TokenType::Identifier, "Expected identifier after '::'").getLexeme()));
     }
 
     expectToken(TokenType::Semicolon, "Expected a ';' after a module declaration");
@@ -257,14 +257,14 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
         logError(temp, "This file already has a module declaration. Files can only have one module declaration.");
     }
 
-    return makeNode<ast::ModuleDeclarationStatement>(temp, std::move(name));
+    return makeNode<ast::ModuleDeclarationStatement>(temp, interner.intern(fullName));
 }
 
 ast::Statement* Parser::parseNamespace() {
     const Token startToken = consumeToken();  // skip 'namespace'
-    std::string name = expectToken(TokenType::Identifier, "Expected a namespace name after 'namespace'").getLexeme();
-    ast::Block body = parseBlock("namespace " + name);
-    return makeNode<ast::NamespaceStatement>(startToken, std::move(name), std::move(body));
+    const auto name = expectToken(TokenType::Identifier, "Expected a namespace name after 'namespace'").getLexeme();
+    ast::Block body = parseBlock("namespace " + std::string(interner.get_view(name)));
+    return makeNode<ast::NamespaceStatement>(startToken, name, std::move(body));
 }
 
 ast::Statement* Parser::parseRedundantSemicolon() {
@@ -275,11 +275,7 @@ ast::Statement* Parser::parseRedundantSemicolon() {
 ast::Statement* Parser::parseReturnStatement() {
     const Token startToken = consumeToken();
     ast::Expression* expression = nullptr;
-    if (peekTokenType() != TokenType::Semicolon) {
-        // If the next token is not a semicolon, parse an expression
-        // If it is, this is a null return statement
-        expression = parseExpression(Precedence::Default);
-    }
+    if (peekTokenType() != TokenType::Semicolon) { expression = parseExpression(Precedence::Default); }
     expectToken(TokenType::Semicolon, "Expected semicolon after return statement");
     return makeNode<ast::ReturnStatement>(startToken, expression);
 }
@@ -330,9 +326,9 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
         DISCARD(consumeToken());  // Consume the 'mut' token
         isMutable = true;
     }
-    std::string name = expectToken(TokenType::Identifier,
-                                   std::format("Expected variable name after '{}'", isMutable ? "let mut" : "let"))
-                           .getLexeme();
+    const auto name = expectToken(TokenType::Identifier,
+                                  std::format("Expected variable name after '{}'", isMutable ? "let mut" : "let"))
+                          .getLexeme();
 
     // Type declaration
     if (peekTokenType() == TokenType::Colon) {
@@ -341,7 +337,6 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
             visibility = ast::Visibility::Public;
             DISCARD(consumeToken());  // Consume the public keyword
         } else if (peekTokenType() == TokenType::Private) [[unlikely]] {
-            // private is the default so it'd mainly be used for emphasis
             visibility = ast::Visibility::Private;
             DISCARD(consumeToken());  // Consume the private keyword
         }
@@ -356,15 +351,14 @@ ast::Statement* Parser::parseVariableDeclarationStatement() {
 
     expectToken(TokenType::Semicolon, "Expected semicolon after variable declaration");
 
-    return makeNode<ast::VariableDeclarationStatement>(startToken, isMutable, std::move(name), visibility, value,
-                                                       explicitType);
+    return makeNode<ast::VariableDeclarationStatement>(startToken, isMutable, name, visibility, value, explicitType);
 }
 
 // Helpers
 
 ast::EnumValue Parser::parseEnumMember() {
     auto valueToken = expectToken(TokenType::Identifier, "Expected enum value name");
-    std::string valueName = valueToken.getLexeme();
+    const auto valueName = valueToken.getLexeme();
     ast::Expression* valueExpression = nullptr;
 
     if (peekTokenType() == TokenType::Assignment) {
@@ -372,33 +366,31 @@ ast::EnumValue Parser::parseEnumMember() {
         valueExpression = parseExpression(Precedence::Default);
     }
 
-    return ast::EnumValue{.name = std::move(valueName),
-                          .value = valueExpression,
-                          .line = valueToken.getLine(),
-                          .column = valueToken.getColumn()};
+    return ast::EnumValue{
+        .name = valueName, .value = valueExpression, .line = valueToken.getLine(), .column = valueToken.getColumn()};
 }
 
-std::vector<std::string> Parser::parseGenericsList(std::string_view contextName) {
+std::vector<utils::StringID> Parser::parseGenericsList(utils::StringID contextName) {
     if (peekTokenType() != TokenType::LeftSquare) { return {}; }
     DISCARD(consumeToken());  // Consume '['
 
-    std::vector<std::string> genericTypes;
-    return parseCommaSeparatedList<std::string>(
+    std::vector<utils::StringID> genericTypes;
+    return parseCommaSeparatedList<utils::StringID>(
         TokenType::RightSquare, "Expected a ',' to separate generic types, or a ']' to close the generic type list",
         [this, &genericTypes, contextName]() { return parseGenericTypeParameter(genericTypes, contextName); });
 }
 
-std::optional<ast::AggregateField> Parser::parseAggregateField(std::string_view aggregateName,
+std::optional<ast::AggregateField> Parser::parseAggregateField(utils::StringID aggregateName,
                                                                std::span<ast::AggregateField> existingFields) {
     if (peekTokenType() != TokenType::Identifier) {
         logError(peekToken(), "Unexpected token '{}' in aggregate declaration. Expected field name.",
-                 peekToken().getLexeme());
+                 interner.get_view(peekToken().getLexeme()));
         DISCARD(consumeToken());  // Skip unexpected token to avoid an infinite loop
         return std::nullopt;
     }
 
     Token fieldToken = consumeToken();
-    std::string fieldName = fieldToken.getLexeme();
+    const auto fieldName = fieldToken.getLexeme();
     expectToken(TokenType::Colon, "Expected a ':' to declare an aggregate field type.");
 
     bool isMutable = false;
@@ -413,42 +405,40 @@ std::optional<ast::AggregateField> Parser::parseAggregateField(std::string_view 
     if (auto duplicate = std::ranges::find(existingFields, fieldName, &ast::AggregateField::name);
         duplicate != existingFields.end()) {
         logError(fieldToken, "Duplicate field '{}' in aggregate '{}' (previously declared at line {}, column {})",
-                 fieldName, aggregateName, duplicate->line, duplicate->column);
+                 interner.get_view(fieldName), interner.get_view(aggregateName), duplicate->line, duplicate->column);
         return std::nullopt;
     }
 
-    return ast::AggregateField{.name = std::move(fieldName),
+    return ast::AggregateField{.name = fieldName,
                                .type = type,
                                .line = fieldToken.getLine(),
                                .column = fieldToken.getColumn(),
                                .isMutable = isMutable};
 }
 
-std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(std::string_view functionName,
+std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::StringID functionName,
                                                                      std::span<ast::FunctionParameter> existingParams,
                                                                      bool& hasDefaultParameter,
                                                                      bool& hasVariadicParameter) {
     Token t = expectToken(TokenType::Identifier, "Expected a variable name");
-    std::string paramName = t.getLexeme();
+    const auto paramName = t.getLexeme();
 
     bool isMutable = false;
     bool isVariadic = false;
     ast::Expression* defaultValue = nullptr;
 
-    // Handle Variadic (...)
     if (peekTokenType() == TokenType::Ellipsis) {
         DISCARD(consumeToken());
         if (hasVariadicParameter) {
-            logError(t, "Only one variadic parameter is allowed in function '{}'", functionName);
+            logError(t, "Only one variadic parameter is allowed in function '{}'", interner.get_view(functionName));
         } else {
             isVariadic = true;
             hasVariadicParameter = true;
         }
     } else if (hasVariadicParameter) {
-        logError(t, "Parameter '{}' cannot follow a variadic parameter", paramName);
+        logError(t, "Parameter '{}' cannot follow a variadic parameter", interner.get_view(paramName));
     }
 
-    // Handle Type Annotations
     expectToken(TokenType::Colon);
     if (peekTokenType() == TokenType::Mut) {
         DISCARD(consumeToken());
@@ -456,26 +446,26 @@ std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(std::string
     }
     ast::Type* paramType = parseType(Precedence::Default);
 
-    // Handle Default Values
     if (peekTokenType() == TokenType::Assignment) {
         DISCARD(consumeToken());
         hasDefaultParameter = true;
         defaultValue = parseExpression(Precedence::Default);
 
-        if (isVariadic) { logError(t, "Variadic parameter '{}' cannot have a default value", paramName); }
+        if (isVariadic) {
+            logError(t, "Variadic parameter '{}' cannot have a default value", interner.get_view(paramName));
+        }
     } else if (hasDefaultParameter) {
-        logError(t, "Non-default parameter '{}' cannot follow a default parameter", paramName);
+        logError(t, "Non-default parameter '{}' cannot follow a default parameter", interner.get_view(paramName));
     }
 
-    // Check Duplicates
     if (auto duplicate = std::ranges::find(existingParams, paramName, &ast::FunctionParameter::name);
         duplicate != existingParams.end()) {
-        logError(t, "Duplicate parameter '{}' in function '{}' (previously declared at line {}, column {})", paramName,
-                 functionName, duplicate->line, duplicate->column);
+        logError(t, "Duplicate parameter '{}' in function '{}' (previously declared at line {}, column {})",
+                 interner.get_view(paramName), interner.get_view(functionName), duplicate->line, duplicate->column);
         return std::nullopt;
     }
 
-    return ast::FunctionParameter{.name = std::move(paramName),
+    return ast::FunctionParameter{.name = paramName,
                                   .type = paramType,
                                   .defaultValue = defaultValue,
                                   .line = t.getLine(),
@@ -515,19 +505,13 @@ ast::Block Parser::parseDefaultClause() {
     ast::Block defaultBody;
     while (peekTokenType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
 
-    // If the body was empty, this means there's a dangling else
-    // We still want this printed out, but the toString method determines the presence of an else block
-    // by checking the the body is empty
-    // in this edge case, there is a body but it's empty, which makes the printing logic think there isn't one
-    // to get around this, add a dummy statement (doesn't print anything) so the empty else block is still
-    // printed
     if (defaultBody.empty()) { defaultBody.push_back(ast::getEmptyStatement()); }
 
     return defaultBody;
 }
 
-std::vector<std::string> Parser::parseImportPath() {
-    std::vector<std::string> path;
+std::vector<utils::StringID> Parser::parseImportPath() {
+    std::vector<utils::StringID> path;
     path.push_back(expectToken(TokenType::Identifier, "Expected a module name or path").getLexeme());
 
     while (peekTokenType() == TokenType::ScopeResolution) {
@@ -538,13 +522,26 @@ std::vector<std::string> Parser::parseImportPath() {
     return path;
 }
 
-std::optional<std::string> Parser::parseImportAlias() {
+utils::OptionalStringID Parser::parseImportAlias() {
     if (peekTokenType() == TokenType::As) {
         DISCARD(consumeToken());  // Consume 'as'
-        return expectToken(TokenType::Identifier, "Expected an identifier as an import alias").getLexeme();
+        return {.id = expectToken(TokenType::Identifier, "Expected an identifier as an import alias").getLexeme()};
     }
 
-    return std::nullopt;
+    return {};
+}
+
+utils::StringID Parser::parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,
+                                                  utils::StringID contextName) {
+    Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
+    const auto genericName = genericToken.getLexeme();
+
+    if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
+        logError(genericToken, "Duplicate generic type '{}' in '{}'", interner.get_view(genericName),
+                 interner.get_view(contextName));
+        return {};
+    }
+    return genericName;
 }
 
 }  // namespace Manganese::parser

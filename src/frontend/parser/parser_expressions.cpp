@@ -3,7 +3,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -48,7 +47,7 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
     if (isUnaryContext()) {
         Token& lookahead = peekToken();
         if (lookahead.hasUnaryCounterpart()) {
-            lookahead.overrideType(lookahead.getUnaryCounterpart(), lookahead.getLexeme());
+            lookahead.overrideType(lookahead.getUnaryCounterpart());
         }
     }
 
@@ -60,14 +59,13 @@ ast::Expression* Parser::parseExpression(Precedence precedence) {
         logError(token, "Expected expression to the left of '{}'", lexer::tokenTypeToString(type));
         return makeNode<ast::PoisonedExpression>(consumeToken());
     }
-    // ast::Expression* left = nudIterator->second(this);
     ast::Expression* left = (this->*nudHandler)();
 
     while (!done()) {
         token = peekToken();
 
         if (isUnaryContext() && token.hasUnaryCounterpart()) {
-            token.overrideType(token.getUnaryCounterpart(), token.getLexeme());
+            token.overrideType(token.getUnaryCounterpart());
             precedence = Precedence::Unary;
         }
         type = token.getType();
@@ -96,7 +94,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
     while (!done()) {
         if (peekTokenType() == lexer::TokenType::RightBrace) { break; }
         Token token = expectToken(lexer::TokenType::Identifier, "Expected field name in aggregate instantiation");
-        const std::string fieldName = token.getLexeme();
+        const auto fieldName = token.getLexeme();
         expectToken(lexer::TokenType::Assignment, "Expected '=' to assign value to aggregate field");
         constexpr auto precedence = precedenceAbove(Precedence::Assignment);
         ast::Expression* value = parseExpression(precedence);
@@ -136,7 +134,6 @@ ast::Expression* Parser::parseAlignofExpression() {
             DISCARD(consumeToken());
         }
 
-        // If we successfully skipped to the closing parenthesis, consume it
         if (peekTokenType() == lexer::TokenType::RightParen) { DISCARD(consumeToken()); }
 
         return makeNode<ast::AlignofExpression>(startToken, makeNode<ast::PoisonedType>(startToken));
@@ -201,7 +198,7 @@ ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Prec
 }
 
 ast::Expression* Parser::parseParenthesizedExpression() {
-    const Token startToken = consumeToken();  // Consume the left parenthesis
+    DISCARD(consumeToken());  // Consume the left parenthesis
     ast::Expression* expr = parseExpression(Precedence::Default);
     expectToken(lexer::TokenType::RightParen, "Expected a right parenthesis to close the expression");
     return expr;
@@ -217,10 +214,8 @@ ast::Expression* Parser::parsePrefixExpression() {
     Token startToken = peekToken();
     TokenType op = startToken.getType();
 
-    // Check if we need to convert to a unary counterpart
     if (startToken.hasUnaryCounterpart() && isUnaryContext()) { op = startToken.getUnaryCounterpart(); }
 
-    // Now advance past the token
     DISCARD(consumeToken());
 
     ast::Expression* right = parseExpression(Precedence::Unary);
@@ -229,19 +224,19 @@ ast::Expression* Parser::parsePrefixExpression() {
 
 ast::Expression* Parser::parsePrimaryExpression() {
     const lexer::Token startToken = consumeToken();
-    std::string lexeme = startToken.getLexeme();
+    const auto lexemeId = startToken.getLexeme();
 
     switch (startToken.getType()) {
         case TokenType::CharLiteral:
-            return makeNode<ast::CharLiteralExpression>(startToken, lexeme[0]);  // Single character
-        case TokenType::StrLiteral: return makeNode<ast::StringLiteralExpression>(startToken, std::move(lexeme));
-        case TokenType::Identifier: return makeNode<ast::IdentifierExpression>(startToken, std::move(lexeme));
+            return makeNode<ast::CharLiteralExpression>(startToken, interner.get_view(lexemeId)[0]);
+        case TokenType::StrLiteral: return makeNode<ast::StringLiteralExpression>(startToken, lexemeId);
+        case TokenType::Identifier: return makeNode<ast::IdentifierExpression>(startToken, lexemeId);
         case TokenType::True: return makeNode<ast::BoolLiteralExpression>(startToken, true);
         case TokenType::False: return makeNode<ast::BoolLiteralExpression>(startToken, false);
         case TokenType::FloatLiteral:
-            return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme(), true);
+            return makeNode<ast::NumberLiteralExpression>(startToken, lexemeId, true);
         case TokenType::IntegerLiteral:
-            return makeNode<ast::NumberLiteralExpression>(startToken, startToken.getLexeme(), false);
+            return makeNode<ast::NumberLiteralExpression>(startToken, lexemeId, false);
         case TokenType::Uninitialized: return makeNode<ast::UninitializedExpression>(startToken);
         default:
             ASSERT_UNREACHABLE_FMT("Invalid Token Type in parsePrimaryExpression: {}",
@@ -269,7 +264,6 @@ ast::Expression* Parser::parseSizeofExpression() {
             DISCARD(consumeToken());
         }
 
-        // If we successfully skipped to the closing parenthesis, consume it
         if (peekTokenType() == lexer::TokenType::RightParen) { DISCARD(consumeToken()); }
 
         return makeNode<ast::SizeofExpression>(startToken, makeNode<ast::PoisonedType>(startToken));
@@ -289,10 +283,10 @@ ast::Expression* Parser::parseTernaryExpression(ast::Expression* left, Precedenc
     return makeNode<ast::TernaryExpression>(startToken, left, ifTrue, ifFalse);
 }
 
-
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {
     const Token startToken = consumeToken();  // Consume the 'as' token
     ast::Type* type = parseType(precedence);
     return makeNode<ast::TypeCastExpression>(startToken, left, type);
 }
+
 }  // namespace Manganese::parser

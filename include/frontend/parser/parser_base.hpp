@@ -46,7 +46,7 @@ class Parser {
 
    public:
     Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference,
-           utils::StringInterner& _interner);
+           utils::StringInterner& internerReference);
 
     ~Parser() noexcept = default;
 
@@ -101,7 +101,7 @@ class Parser {
     ast::Statement* parseWhileLoopStatement();
 
     ast::EnumValue parseEnumMember();
-    std::vector<utils::StringID> parseGenericsList(std::string_view contextName);
+    std::vector<utils::StringID> parseGenericsList(utils::StringID contextName);
     std::optional<ast::AggregateField> parseAggregateField(utils::StringID aggregateName,
                                                            std::span<ast::AggregateField> existingFields);
 
@@ -113,7 +113,7 @@ class Parser {
     ast::Block parseDefaultClause();
 
     std::vector<utils::StringID> parseImportPath();
-    std::optional<utils::StringID> parseImportAlias();
+    utils::OptionalStringID parseImportAlias();
 
     // Type Parsing
 
@@ -130,7 +130,7 @@ class Parser {
 
     ast::Type* parseAggregateTypeField();
     ast::FunctionParameterType parseFunctionTypeParameter(bool& seenVariadic);
-    utils::StringID parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics, std::string_view contextName);
+    utils::StringID parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics, utils::StringID contextName);
 
     // ~ Helpers
     ast::Block parseBlock(std::string_view blockName);

@@ -80,7 +80,7 @@ class Lexer {
     Result tokenizeSymbol();
 
     //~ Helper functions
-    void emitToken(TokenType type, utils::StringID lexeme, bool invalid);
+    void emitToken(TokenType type, std::string&& lexeme, bool invalid);
     NumberPrefixResult processNumberPrefix();
     Result processScientificNotation(std::string& numberLiteral);
     Result processNumberSuffix(std::string& numberLiteral, bool isFloat);

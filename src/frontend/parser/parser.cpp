@@ -2,7 +2,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
-#include <memory>
 #include <mnstl/chunk_allocator.hxx>
 #include <mnstl/enum_matches.hxx>
 #include <string>
@@ -11,8 +10,8 @@
 
 namespace Manganese::parser {
 
-Parser::Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
-    lexer(source, mode), arena(allocatorReference), flags() {}
+Parser::Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference, utils::StringInterner& internerReference) :
+    lexer(source, internerReference, mode), arena(allocatorReference), interner(internerReference), flags() {}
 
 ParsedFile Parser::parse() {
     ast::ModuleDeclarationStatement* fileModule = nullptr;

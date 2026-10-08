@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <optional>
 #include <utility>
 #include <vector>
 #include <utils/string_interner.hpp>
@@ -171,9 +170,9 @@ struct IfStatement final : public Statement {
 
 struct ImportStatement final : public Statement {
     std::vector<utils::StringID> path;
-    std::optional<utils::StringID> alias;
+    utils::OptionalStringID alias;
 
-    ImportStatement(std::vector<utils::StringID>&& _path, std::optional<utils::StringID>&& _alias) noexcept :
+    ImportStatement(std::vector<utils::StringID>&& _path, utils::OptionalStringID _alias) noexcept :
         Statement(StatementKind::ImportStatement), path(std::move(_path)), alias(_alias) {}
 
     MN_AST_STANDARD_INTERFACE(ImportStatement);

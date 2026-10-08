@@ -2,7 +2,6 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <string>
 #include <utility>
 #include <utils/type_names.hpp>
 
@@ -110,9 +109,10 @@ ast::Type* Parser::parseIdentifierType() {
     if (!startToken.isPrimitiveType()) {
         return makeNode<ast::IdentifierType>(startToken, expectToken(TokenType::Identifier).getLexeme());
     }
-    // If the token is a primitive type, we can directly create a IdentifierType
+    // If the token is a primitive type, we can directly create an IdentifierType
     DISCARD(consumeToken());
-    const std::string lexeme = startToken.getLexeme();
+    const auto lexemeId = startToken.getLexeme();
+    const std::string_view lexeme = interner.get_view(lexemeId);
     ast::PrimitiveType prim_t = not_primitive;
     if (lexeme == int8_str) {
         prim_t = int8;
@@ -147,11 +147,11 @@ ast::Type* Parser::parseIdentifierType() {
     } else {
         ASSERT_UNREACHABLE_FMT("Unknown primitive type '{}'", lexeme);
     }
-    return makeNode<ast::IdentifierType>(startToken, startToken.getLexeme(), prim_t);
+    return makeNode<ast::IdentifierType>(startToken, lexemeId, prim_t);
 }
 
 ast::Type* Parser::parseParenthesizedType() {
-    const Token startToken = consumeToken();  // Skip the '('
+    DISCARD(consumeToken());  // Skip the '('
     ast::Type* innerType = parseType(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
     return innerType;
@@ -181,7 +181,7 @@ ast::Type* Parser::parseTypeofType() {
         logError(peekToken(), "Expected a valid expression inside 'typeof(...)'.");
         innerExpression = makeNode<ast::PoisonedExpression>(startToken);
     }
-    expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
+    expectToken(TokenType::RightParen, "Expected ')' to close typeof");
     return makeNode<ast::TypeofType>(startToken, innerExpression);
 }
 
@@ -221,14 +221,14 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
     return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
 }
 
-std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics,
-                                              std::string_view contextName) {
+utils::StringID Parser::parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,
+                                                 utils::StringID contextName) {
     Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
-    std::string genericName = genericToken.getLexeme();
+    const auto genericName = genericToken.getLexeme();
 
     if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
-        logError(genericToken, "Duplicate generic type '{}' in '{}'", genericName, contextName);
-        return "";
+        logError(genericToken, "Duplicate generic type '{}' in '{}'", interner.get_view(genericName), interner.get_view(contextName));
+        return {};
     }
     return genericName;
 }
