@@ -6,14 +6,12 @@
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <functional>
 #include <io/logging.hpp>
 #include <mnstl/chunk_allocator.hxx>
-#include <string>
-#include <string_view>
 #include <unordered_map>
 #include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
+#include <utils/string_interner.hpp>
 #include <vector>
 
 namespace Manganese::semantic {
@@ -48,25 +46,23 @@ struct Symbol {
 };
 
 struct Scope {
-    // std::equal_to<> enables heterogenous lookup (e.g. looking up with std::string or const char*)
-    // so explicit conversions are not required
-    std::unordered_map<std::string_view, Symbol, std::hash<std::string_view>, std::equal_to<>> symbols;
+    std::unordered_map<utils::StringID, Symbol> symbols;
     Scope* parent = nullptr;
     std::vector<Scope*> children;
     std::size_t currentChildIndex = 0;
-    std::string_view namespaceName = {};
+    utils::StringID namespaceName = {};
 
-    inline Result insert(std::string_view name, Symbol symbol) {
+    inline Result insert(utils::StringID name, Symbol symbol) {
         const bool emplace_succeeded = symbols.emplace(name, symbol).second;
         return emplace_succeeded ? Result::Success : Result::Failure;
     }
 
-    [[nodiscard]] inline Symbol* lookup(std::string_view name) noexcept {
+    [[nodiscard]] inline Symbol* lookup(utils::StringID name) noexcept {
         auto it = symbols.find(name);
         return it == symbols.end() ? nullptr : &(it->second);
     }
 
-    [[nodiscard]] inline const Symbol* lookup(std::string_view name) const noexcept {
+    [[nodiscard]] inline const Symbol* lookup(utils::StringID name) const noexcept {
         auto it = symbols.find(name);
         return it == symbols.end() ? nullptr : &(it->second);
     }
@@ -109,7 +105,7 @@ class SymbolTable {
     }
 
     void enterScope();
-    void enterNamespace(std::string_view name, ast::ASTNode* node);
+    void enterNamespace(utils::StringID name, ast::ASTNode* node);
     void enterGenericCheckingMode() noexcept { ++_flags._genericDepth; }
     void exitScope() NOEXCEPT_IF_RELEASE;
     void FORCE_INLINE exitNamespace() NOEXCEPT_IF_RELEASE { exitScope(); }
@@ -120,7 +116,7 @@ class SymbolTable {
     void setCurrentScope(Scope* scope) noexcept { _currentScope = scope; }
     std::size_t getSize() const noexcept { return currentSymbolID; }
 
-    Result declare(std::string_view name, Symbol&& symbol) {
+    Result declare(utils::StringID name, Symbol&& symbol) {
         if (noScopeAvailable()) [[unlikely]] {
             logging::logInternal(logging::LogLevel::Error, "No active scope in which to declare a symbol");
             return Result::Failure;
@@ -130,14 +126,14 @@ class SymbolTable {
         return _currentScope->insert(name, symbol);
     }
 
-    Symbol* lookup(std::string_view name) NOEXCEPT_IF_RELEASE;
-    const Symbol* lookup(std::string_view name) const NOEXCEPT_IF_RELEASE;
+    Symbol* lookup(utils::StringID name) NOEXCEPT_IF_RELEASE;
+    const Symbol* lookup(utils::StringID name) const NOEXCEPT_IF_RELEASE;
 
-    static Symbol* scopedLookup(Scope* targetScope, std::string_view member) noexcept {
+    static Symbol* scopedLookup(Scope* targetScope, utils::StringID member) noexcept {
         return targetScope->lookup(member);
     }
 
-    static const Symbol* scopedLookup(const Scope* targetScope, std::string_view member) noexcept {
+    static const Symbol* scopedLookup(const Scope* targetScope, utils::StringID member) noexcept {
         return targetScope->lookup(member);
     }
 };

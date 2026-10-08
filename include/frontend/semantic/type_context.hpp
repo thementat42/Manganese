@@ -9,11 +9,11 @@
 #include <mnstl/enum_matches.hxx>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <utils/resolution_status.hpp>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
 
@@ -91,7 +91,7 @@ struct SemanticType {
 };
 
 struct AggregateField {
-    std::string_view name;  // empty for anonymous aggregates
+    utils::StringID name;  // empty for anonymous aggregates
     const SemanticType* type;
 
     friend bool operator==(const AggregateField&, const AggregateField&) noexcept = default;
@@ -102,30 +102,30 @@ struct AggregateField {
 
 struct Aggregate final : public SemanticType {
     mutable std::vector<AggregateField> fields;
-    std::string name;
+    utils::StringID name;
     mutable ResolutionStatus status;
 
-    Aggregate(std::vector<AggregateField>&& fieldTypes, std::string&& aggregateName = "") noexcept :
+    Aggregate(std::vector<AggregateField>&& fieldTypes, utils::StringID aggregateName = {}) noexcept :
         SemanticType(SemanticTypeKind::Aggregate),
         fields(std::move(fieldTypes)),
-        name(std::move(aggregateName)),
+        name(aggregateName),
         status(ResolutionStatus::NotStarted) {}
 
     // For anonymous aggregates
     Aggregate(TypeList&& rawTypes) noexcept :
         SemanticType(SemanticTypeKind::Aggregate), status(ResolutionStatus::Success) {
         fields.reserve(rawTypes.size());
-        for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
+        for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = {}, .type = t}); }
     }
 
-    const SemanticType* getFieldType(std::string_view fieldName) const noexcept {
+    const SemanticType* getFieldType(utils::StringID fieldName) const noexcept {
         for (const AggregateField& field : fields) {
             if (field.name == fieldName) { return field.type; }
         }
         return nullptr;
     }
 
-    const SemanticType* getFieldType(std::size_t index) const noexcept {
+    const SemanticType* getFieldTypeByIndex(std::size_t index) const noexcept {
         if (index < fields.size()) [[likely]] { return fields[index].type; }
         return nullptr;
     }
@@ -157,24 +157,24 @@ struct Array final : public SemanticType {
 };
 
 struct EnumVariant {
-    std::string_view name;
+    utils::StringID name;
     std::optional<std::int64_t> value = std::nullopt;
 };
 
 struct Enum final : public SemanticType {
-    const std::string_view name;
+    const utils::StringID name;
     mutable const SemanticType* underlyingType = nullptr;
     mutable std::vector<EnumVariant> variants;
     mutable ResolutionStatus status = ResolutionStatus::NotStarted;
 
-    explicit Enum(std::string_view enumName, const SemanticType* defaultUnderlying = nullptr) noexcept :
+    explicit Enum(utils::StringID enumName, const SemanticType* defaultUnderlying = nullptr) noexcept :
         SemanticType(SemanticTypeKind::Enum), name(enumName), underlyingType(defaultUnderlying) {}
 
-    bool hasEnumVariant(std::string_view variantName) const noexcept {
+    bool hasEnumVariant(utils::StringID variantName) const noexcept {
         return std::ranges::find(variants, variantName, &EnumVariant::name) != variants.end();
     }
 
-    std::optional<std::int64_t> getVariantValue(std::string_view variantName) const {
+    std::optional<std::int64_t> getVariantValue(utils::StringID variantName) const {
         auto it = std::ranges::find(variants, variantName, &EnumVariant::name);
         return it == variants.end() ? std::nullopt : it->value;
     }
@@ -332,9 +332,9 @@ class TypeContext {
 
     const SemanticType* getAnonymousAggregate(TypeList&& fieldTypes);
 
-    const SemanticType* getNamedAggregate(std::string&& name, std::vector<AggregateField>&& fieldTypes);
+    const SemanticType* getNamedAggregate(utils::StringID name, std::vector<AggregateField>&& fieldTypes);
 
-    const SemanticType* getEnum(std::string_view name);
+    const SemanticType* getEnum(utils::StringID name);
 
     const SemanticType* getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType);
 

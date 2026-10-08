@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <utility>
 #include <utils/result.hpp>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 
 namespace Manganese {
@@ -77,7 +78,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     mnstl::chunk_allocator& arena;
 
     struct {
-        std::vector<std::string_view> namespaceStack;
+        std::vector<utils::StringID> namespaceStack;
         const SemanticType* currentFunctionReturnType = nullptr;
         const SemanticType* currentVariableDeclarationType = nullptr;
         const Symbol* nestedScopeResolutionCurrentSymbol = nullptr;
@@ -104,7 +105,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result analyze();
     SymbolTable& getSymbolTable() noexcept { return symbolTable; }
     const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
-    const ast::Block& getInstantiatedDeclarations() const noexcept {return instantiatedDeclarations;}
+    const ast::Block& getInstantiatedDeclarations() const noexcept { return instantiatedDeclarations; }
 
     ~SemanticAnalyzer() override = default;
 
@@ -133,8 +134,8 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
-    std::string getMangledName(std::string_view baseName) const;
-    std::string getMangledName(std::string_view baseName, const TypeList& typeArgs) const;
+    utils::StringID getMangledName(utils::StringID baseName) const;
+    utils::StringID getMangledName(utils::StringID baseName, const TypeList& typeArgs) const;
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {

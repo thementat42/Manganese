@@ -7,6 +7,7 @@
 #include <functional>
 #include <unordered_map>
 #include <utils/resolution_status.hpp>
+#include <utils/string_interner.hpp>
 
 namespace Manganese::semantic {
 struct Scope;
@@ -21,7 +22,7 @@ struct InstantiationKey {
 struct InstantiationResult {
     ResolutionStatus state = ResolutionStatus::InProgress;
     const SemanticType* semanticType = nullptr;  // for functions
-    std::string mangledName;
+    utils::StringID mangledName;
     ast::Statement* clonedNode;
 };
 
@@ -47,19 +48,19 @@ class InstantiationCache {
     }
 
     void markAsInProgress(const InstantiationKey& key) { _map.insert_or_assign(key, InstantiationResult{}); }
-    void markAsSuccess(const InstantiationKey& key, const SemanticType* semanticType, std::string&& mangledName,
+    void markAsSuccess(const InstantiationKey& key, const SemanticType* semanticType, utils::StringID mangledName,
                        ast::Statement* clonedNode) {
         _map.insert_or_assign(key,
                               InstantiationResult{.state = ResolutionStatus::Success,
                                                   .semanticType = semanticType,
-                                                  .mangledName = std::move(mangledName),
+                                                  .mangledName = mangledName,
                                                   .clonedNode = clonedNode});
     }
     void markAsFailure(const InstantiationKey& key) {
         _map.insert_or_assign(
             key,
             InstantiationResult{
-                .state = ResolutionStatus::Failure, .semanticType = nullptr, .mangledName = "", .clonedNode = nullptr});
+                .state = ResolutionStatus::Failure, .semanticType = nullptr, .mangledName = {}, .clonedNode = nullptr});
     }
 
     bool contains(const InstantiationKey& key) const { return _map.contains(key); }
