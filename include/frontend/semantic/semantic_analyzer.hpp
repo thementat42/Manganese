@@ -16,8 +16,6 @@
 #include <mnstl/enum_matches.hxx>
 #include <mnstl/tiny_stack.hxx>
 #include <string>
-#include <string_view>
-#include <unordered_map>
 #include <utility>
 #include <utils/result.hpp>
 #include <utils/string_interner.hpp>
@@ -76,6 +74,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     ast::Block instantiatedDeclarations;
     InstantiationCache instantiationCache;
     mnstl::chunk_allocator& arena;
+    utils::StringInterner& interner;
 
     struct {
         std::vector<utils::StringID> namespaceStack;
@@ -99,8 +98,8 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
    public:
     SemanticAnalyzer(std::vector<parser::ParsedFile>& files, const utils::TargetInfo& target,
-                     mnstl::chunk_allocator& _arena) :
-        symbolTable(_arena), typeContext(_arena, target), parsedFiles(files), arena(_arena) {}
+                     mnstl::chunk_allocator& _arena, utils::StringInterner& _interner) :
+        symbolTable(_arena), typeContext(_arena, target), parsedFiles(files), arena(_arena), interner(_interner) {}
 
     Result analyze();
     SymbolTable& getSymbolTable() noexcept { return symbolTable; }
