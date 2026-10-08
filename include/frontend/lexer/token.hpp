@@ -7,7 +7,7 @@
 #include <mnstl/enum_matches.hxx>
 #include <string>
 #include <string_view>
-#include <utility>
+#include <utils/string_interner.hpp>
 
 namespace Manganese::lexer {
 
@@ -27,24 +27,15 @@ std::string tokenTypeToString(TokenType type);
 
 class Token {
    private:
-    std::string _lexeme;
+    utils::StringID _lexeme;
     std::size_t _line, _column;
     TokenType _type;
     bool _isInvalid;
 
    public:
     Token() noexcept = default;
-    Token(TokenType type, std::string&& lexeme, std::size_t line, std::size_t column, bool isInvalid = false) :
-        _line(line), _column(column), _type(type), _isInvalid(isInvalid) {
-        // Special lexeme override cases
-        if (_type == TokenType::Int32) {
-            _lexeme = "int32";
-        } else if (_type == TokenType::Float32) {
-            _lexeme = "float32";
-        } else {
-            _lexeme = std::move(lexeme);
-        }
-    }
+    Token(TokenType type, utils::StringID lexeme, std::size_t line, std::size_t column, bool isInvalid = false) :
+        _lexeme(lexeme), _line(line), _column(column), _type(type), _isInvalid(isInvalid) {}
     ~Token() noexcept = default;
 
     bool isKeyword() const noexcept { return BETWEEN(_type, TokenType::_keywordStart, TokenType::_keywordEnd); }
@@ -52,7 +43,7 @@ class Token {
 
     bool isInvalid() const noexcept { return _isInvalid; }
     TokenType getType() const noexcept { return _type; }
-    std::string getLexeme() const noexcept { return _lexeme; }
+    utils::StringID getLexeme() const noexcept { return _lexeme; }
     std::size_t getLine() const noexcept { return _line; }
     std::size_t getColumn() const noexcept { return _column; }
 

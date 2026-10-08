@@ -16,6 +16,7 @@
 #include <utility>
 #include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
+#include <utils/string_interner.hpp>
 
 namespace Manganese::lexer {
 
@@ -45,6 +46,7 @@ class Lexer {
     std::size_t tokenStartLine, tokenStartCol;  // Keep track of where the token started for error reporting
     constexpr static std::size_t QUEUE_LOOKAHEAD_AMOUNT = 8;  // how many tokens to look ahead
     std::deque<Token> tokenStream;
+    utils::StringInterner& interner;
 
     struct {
         bool hasError : 1 = false;
@@ -52,7 +54,7 @@ class Lexer {
     } flags;
 
    public:
-    explicit Lexer(const std::string& source, Mode mode = Mode::File);
+    explicit Lexer(const std::string& source, utils::StringInterner& _interner, Mode mode = Mode::File);
     ~Lexer() noexcept = default;
 
     // Avoid file ownership issues
@@ -78,7 +80,7 @@ class Lexer {
     Result tokenizeSymbol();
 
     //~ Helper functions
-    void emitToken(TokenType type, std::string&& lexeme, bool invalid);
+    void emitToken(TokenType type, utils::StringID lexeme, bool invalid);
     NumberPrefixResult processNumberPrefix();
     Result processScientificNotation(std::string& numberLiteral);
     Result processNumberSuffix(std::string& numberLiteral, bool isFloat);
