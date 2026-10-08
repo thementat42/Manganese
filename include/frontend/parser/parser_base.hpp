@@ -32,6 +32,7 @@ class Parser {
     constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
     std::optional<Token> previousToken;
     mnstl::chunk_allocator& arena;
+    utils::StringInterner& interner;
 
     // Some flags
     struct {
@@ -44,7 +45,8 @@ class Parser {
     } flags;
 
    public:
-    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference);
+    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference,
+           utils::StringInterner& _interner);
 
     ~Parser() noexcept = default;
 
@@ -99,19 +101,19 @@ class Parser {
     ast::Statement* parseWhileLoopStatement();
 
     ast::EnumValue parseEnumMember();
-    std::vector<std::string> parseGenericsList(std::string_view contextName);
-    std::optional<ast::AggregateField> parseAggregateField(std::string_view aggregateName,
+    std::vector<utils::StringID> parseGenericsList(std::string_view contextName);
+    std::optional<ast::AggregateField> parseAggregateField(utils::StringID aggregateName,
                                                            std::span<ast::AggregateField> existingFields);
 
-    std::optional<ast::FunctionParameter> parseFunctionParameter(std::string_view functionName,
+    std::optional<ast::FunctionParameter> parseFunctionParameter(utils::StringID functionName,
                                                                  std::span<ast::FunctionParameter> existingParams,
                                                                  bool& hasDefaultParameter, bool& hasVariadicParameter);
 
     ast::CaseClause parseCaseClause();
     ast::Block parseDefaultClause();
 
-    std::vector<std::string> parseImportPath();
-    std::optional<std::string> parseImportAlias();
+    std::vector<utils::StringID> parseImportPath();
+    std::optional<utils::StringID> parseImportAlias();
 
     // Type Parsing
 
@@ -128,7 +130,7 @@ class Parser {
 
     ast::Type* parseAggregateTypeField();
     ast::FunctionParameterType parseFunctionTypeParameter(bool& seenVariadic);
-    std::string parseGenericTypeParameter(std::vector<std::string>& existingGenerics, std::string_view contextName);
+    utils::StringID parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics, std::string_view contextName);
 
     // ~ Helpers
     ast::Block parseBlock(std::string_view blockName);
@@ -138,12 +140,7 @@ class Parser {
                                            ParseFunction&& parseFunction) {
         std::vector<T> items;
         while (!done() && peekTokenType() != closeToken) {
-            auto item = parseFunction();
-            if constexpr (std::is_same_v<T, std::string>) {
-                if (!item.empty()) { items.push_back(std::move(item)); }
-            } else {
-                items.push_back(std::move(item));
-            }
+            items.push_back(parseFunction());
             if (peekTokenType() != closeToken) { expectToken(TokenType::Comma, missingCommaMessage); }
         }
         expectToken(closeToken);
