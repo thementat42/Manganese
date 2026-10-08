@@ -16,6 +16,7 @@
 #include <mnstl/tiny_stack.hxx>
 #include <ostream>
 #include <string_view>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 
 namespace Manganese::codegen {
@@ -32,13 +33,13 @@ class IRGenerator final : public _irgen_base_t {
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
-    std::unordered_map<std::string, llvm::Value*> namedValues;
+    std::unordered_map<utils::StringID, llvm::Value*> namedValues;
     std::unordered_map<const semantic::SemanticType*, llvm::StructType*> savedTypes;
     std::vector<parser::ParsedFile>& files;
     utils::TargetInfo targetInfo;
     mnstl::tiny_stack<LoopTarget> loopStack;
     semantic::SemanticAnalyzer& analyzer;
-    std::unordered_map<std::string_view, std::size_t> activeGenericParams;
+    std::unordered_map<utils::StringID, std::size_t> activeGenericParams;
     mnstl::tiny_stack<semantic::TypeList> genericsStack;
 
    public:
@@ -92,7 +93,7 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
 
     [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
-                                                        std::string_view lexeme) const;
+                                                        utils::StringID lexeme) const;
     [[nodiscard]] llvm::Value* convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
                                                    const semantic::SemanticType* toType);
     static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op) NOEXCEPT_IF_RELEASE;

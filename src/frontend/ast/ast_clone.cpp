@@ -2,6 +2,7 @@
 #include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <vector>
+#include <utils/string_interner.hpp>
 
 #include "core.hpp"
 
@@ -40,14 +41,14 @@ AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::Cl
                                .column = field.column,
                                .isMutable = field.isMutable});
     }
-    auto* cloned = makeClonedNode(this, context, std::string(name), std::vector<std::string>{}, std::move(fieldClones));
+    auto* cloned = makeClonedNode(this, context, name, std::vector<utils::StringID>{}, std::move(fieldClones));
     cloned->visibility = visibility;
     return cloned;
 }
 
 AliasStatement* AliasStatement::clone(semantic::CloneContext* context) const {
     Type* baseClone = baseType->clone(context);
-    auto* clone = makeClonedNode(this, context, baseClone, std::string(name));
+    auto* clone = makeClonedNode(this, context, baseClone, name);
     clone->visibility = visibility;
     return clone;
 }
@@ -69,7 +70,7 @@ EnumDeclarationStatement* EnumDeclarationStatement::clone(semantic::CloneContext
         valueClones.push_back(
             {.name = value.name, .value = value.value->clone(context), .line = value.line, .column = value.column});
     }
-    auto* clone = makeClonedNode(this, context, std::string(name), baseTypeClone, std::move(valueClones));
+    auto* clone = makeClonedNode(this, context, name, baseTypeClone, std::move(valueClones));
     clone->visibility = visibility;
     return clone;
 }
@@ -105,7 +106,7 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
     }
     Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
 
-    auto* clone = makeClonedNode(this, context, std::string(name), std::vector<std::string>{},
+    auto* clone = makeClonedNode(this, context, name, std::vector<utils::StringID>{},
                                  std::move(parameterClones), returnTypeClone, cloneBlock(body, context));
     clone->visibility = visibility;
     return clone;
@@ -135,7 +136,7 @@ ModuleDeclarationStatement* ModuleDeclarationStatement::clone(semantic::CloneCon
 }
 
 NamespaceStatement* NamespaceStatement::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, std::string(name), cloneBlock(block, context));
+    return makeClonedNode(this, context, name, cloneBlock(block, context));
 }
 
 NestedBlockStatement* NestedBlockStatement::clone(semantic::CloneContext* context) const {
@@ -166,7 +167,7 @@ VariableDeclarationStatement* VariableDeclarationStatement::clone(semantic::Clon
     Type* typeClone = type == nullptr ? nullptr : type->clone(context);
     Expression* valueClone = value == nullptr ? nullptr : value->clone(context);
 
-    auto* clone = makeClonedNode(this, context, isMutable, std::string(name), visibility, valueClone, typeClone);
+    auto* clone = makeClonedNode(this, context, isMutable, name, visibility, valueClone, typeClone);
     return clone;
 }
 
@@ -252,7 +253,7 @@ GenericInstantiationExpression* GenericInstantiationExpression::clone(semantic::
 }
 
 IdentifierExpression* IdentifierExpression::clone(semantic::CloneContext* context) const {
-    auto* clone = makeClonedNode(this, context, std::string(name));
+    auto* clone = makeClonedNode(this, context, name);
 
     if (resolvedDeclaration != nullptr) {
         if (auto it = context->declarationSubstitutions.find(resolvedDeclaration);
@@ -270,13 +271,13 @@ IndexExpression* IndexExpression::clone(semantic::CloneContext* context) const {
 }
 
 MemberAccessExpression* MemberAccessExpression::clone(semantic::CloneContext* context) const {
-    auto* clone = makeClonedNode(this, context, object->clone(context), std::string(field));
+    auto* clone = makeClonedNode(this, context, object->clone(context), field);
     clone->fieldIndex = fieldIndex;
     return clone;
 }
 
 NumberLiteralExpression* NumberLiteralExpression::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, std::string(value), isFloat);
+    return makeClonedNode(this, context, value, isFloat);
 }
 
 PostfixExpression* PostfixExpression::clone(semantic::CloneContext* context) const {
@@ -297,7 +298,7 @@ SizeofExpression* SizeofExpression::clone(semantic::CloneContext* context) const
 }
 
 StringLiteralExpression* StringLiteralExpression::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, std::string(value));
+    return makeClonedNode(this, context, value);
 }
 
 TypeCastExpression* TypeCastExpression::clone(semantic::CloneContext* context) const {
@@ -306,7 +307,6 @@ TypeCastExpression* TypeCastExpression::clone(semantic::CloneContext* context) c
 
 TernaryExpression* TernaryExpression::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context, condition->clone(context), ifTrue->clone(context), ifFalse->clone(context));
-
 }
 
 UninitializedExpression* UninitializedExpression::clone(semantic::CloneContext* context) const {
@@ -356,7 +356,7 @@ GenericInstantiationType* GenericInstantiationType::clone(semantic::CloneContext
 }
 
 IdentifierType* IdentifierType::clone(semantic::CloneContext* context) const {
-    auto* clone = makeClonedNode(this, context, std::string(name));
+    auto* clone = makeClonedNode(this, context, name);
 
     if (auto it = context->substitutions.find(name); it != context->substitutions.end()) {
         // This is a generic parameter: make its semantic type the substituted one from the instantiation

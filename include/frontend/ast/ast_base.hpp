@@ -13,14 +13,14 @@
 #include <vector>
 
 #if MN_DEBUG
-#define MN_AST_DUMP void dump(std::ostream& os, std::size_t indent = 0) const override;
+#define MN_AST_DUMP void dump(std::ostream& os, const utils::StringInterner&, std::size_t indent = 0) const override;
 #else
 #define MN_AST_DUMP
 #endif
 
 #define MN_AST_STANDARD_INTERFACE(ClassName)                          \
     ClassName* clone(semantic::CloneContext* context) const override; \
-    std::string toString(std::size_t indent = 0) const override;      \
+    std::string toString(const utils::StringInterner&, std::size_t indent = 0) const override;      \
     MN_AST_DUMP
 
 namespace Manganese {
@@ -105,11 +105,11 @@ struct ASTNode {
     ASTNode() noexcept = default;
     virtual ~ASTNode() noexcept = default;
 
-    virtual std::string toString(std::size_t indent = 0) const = 0;
+    virtual std::string toString(const utils::StringInterner&, std::size_t indent = 0) const = 0;
     virtual ASTNode* clone(semantic::CloneContext* context) const = 0;
 
 #if MN_DEBUG
-    virtual void dump(std::ostream& os, std::size_t indentDepth = 0) const = 0;
+    virtual void dump(std::ostream& os, const utils::StringInterner&, std::size_t indentDepth = 0) const = 0;
 #endif  // MN_DEBUG
 };
 
