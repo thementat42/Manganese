@@ -5,6 +5,7 @@
 #include <frontend/lexer/token.hpp>
 #include <string>
 #include <utility>
+#include <utils/string_interner.hpp>
 #include <vector>
 
 namespace Manganese::ast {
@@ -56,10 +57,10 @@ struct GenericInstantiationType final : public Type {
 };
 
 struct IdentifierType final : public Type {
-    std::string name;
+    utils::StringID name;
 
-    explicit IdentifierType(std::string&& _name, PrimitiveType prim = PrimitiveType::not_primitive) noexcept :
-        Type(TypeKind::IdentifierType, prim), name(std::move(_name)) {}
+    explicit IdentifierType(utils::StringID _name, PrimitiveType prim = PrimitiveType::not_primitive) noexcept :
+        Type(TypeKind::IdentifierType, prim), name(_name) {}
     MN_AST_STANDARD_INTERFACE(IdentifierType);
 };
 

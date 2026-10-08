@@ -5,36 +5,36 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <optional>
-#include <string>
 #include <utility>
 #include <vector>
+#include <utils/string_interner.hpp>
 
 namespace Manganese::ast {
 
 struct Declaration : public Statement {
-    std::string name;
-    std::string mangledName;
+    utils::StringID name;
+    utils::StringID mangledName;
     const semantic::SemanticType* semanticType = nullptr;
 
-    Declaration(StatementKind _kind, std::string&& _name) noexcept : Statement(_kind), name(std::move(_name)) {}
+    Declaration(StatementKind _kind, utils::StringID _name) noexcept : Statement(_kind), name(_name) {}
     virtual ~Declaration() = default;
 };
 
 struct AggregateField {
-    std::string name;
+    utils::StringID name;
     Type* type;
     std::size_t line, column;
     bool isMutable;
 };
 
 struct AggregateDeclarationStatement final : public Declaration {
-    std::vector<std::string> genericTypes;
+    std::vector<utils::StringID> genericTypes;
     std::vector<AggregateField> fields;
     Visibility visibility = Visibility::Private;
 
-    AggregateDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
+    AggregateDeclarationStatement(utils::StringID _name, std::vector<utils::StringID>&& _genericTypes,
                                   std::vector<AggregateField>&& _fields) noexcept :
-        Declaration(StatementKind::AggregateDeclarationStatement, std::move(_name)),
+        Declaration(StatementKind::AggregateDeclarationStatement, _name),
         genericTypes(std::move(_genericTypes)),
         fields(std::move(_fields)) {}
     MN_AST_STANDARD_INTERFACE(AggregateDeclarationStatement);
@@ -46,8 +46,8 @@ struct AliasStatement final : public Declaration {
     Type* baseType;
     Visibility visibility = Visibility::Private;
 
-    AliasStatement(Type* _baseType, std::string&& _alias) noexcept :
-        Declaration(StatementKind::AliasStatement, std::move(_alias)), baseType(_baseType) {}
+    AliasStatement(Type* _baseType, utils::StringID _alias) noexcept :
+        Declaration(StatementKind::AliasStatement, _alias), baseType(_baseType) {}
 
     MN_AST_STANDARD_INTERFACE(AliasStatement);
     bool isDeclaration() const noexcept override { return true; }
@@ -71,7 +71,7 @@ struct EmptyStatement final : public Statement {
 };
 
 struct EnumValue {
-    std::string name;
+    utils::StringID name;
     Expression* value;
     std::size_t line, column;
 };
@@ -81,8 +81,8 @@ struct EnumDeclarationStatement final : public Declaration {
     std::vector<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
-    EnumDeclarationStatement(std::string&& _name, Type* _baseType, std::vector<EnumValue>&& _values) noexcept :
-        Declaration(StatementKind::EnumDeclarationStatement, std::move(_name)),
+    EnumDeclarationStatement(utils::StringID _name, Type* _baseType, std::vector<EnumValue>&& _values) noexcept :
+        Declaration(StatementKind::EnumDeclarationStatement, _name),
         baseType(_baseType),
         values(std::move(_values)) {}
 
@@ -120,7 +120,7 @@ struct ForLoopStatement final : public Statement {
 };
 
 struct FunctionParameter {
-    std::string name;
+    utils::StringID name;
     Type* type;
     Expression* defaultValue;
     std::size_t line, column;
@@ -129,16 +129,16 @@ struct FunctionParameter {
 };
 
 struct FunctionDeclarationStatement final : public Declaration {
-    std::vector<std::string> genericTypes;
+    std::vector<utils::StringID> genericTypes;
     std::vector<FunctionParameter> parameters;
     Type* returnType;
     Block body;
     Visibility visibility = Visibility::Private;
 
-    FunctionDeclarationStatement(std::string&& _name, std::vector<std::string>&& _genericTypes,
+    FunctionDeclarationStatement(utils::StringID _name, std::vector<utils::StringID>&& _genericTypes,
                                  std::vector<FunctionParameter>&& _parameters, Type* _returnType,
                                  Block&& _body) noexcept :
-        Declaration(StatementKind::FunctionDeclarationStatement, std::move(_name)),
+        Declaration(StatementKind::FunctionDeclarationStatement, _name),
         genericTypes(std::move(_genericTypes)),
         parameters(std::move(_parameters)),
         returnType(_returnType),
@@ -170,30 +170,30 @@ struct IfStatement final : public Statement {
 };
 
 struct ImportStatement final : public Statement {
-    std::vector<std::string> path;
-    std::optional<std::string> alias;
+    std::vector<utils::StringID> path;
+    std::optional<utils::StringID> alias;
 
-    ImportStatement(std::vector<std::string>&& _path, std::optional<std::string>&& _alias) noexcept :
-        Statement(StatementKind::ImportStatement), path(std::move(_path)), alias(std::move(_alias)) {}
+    ImportStatement(std::vector<utils::StringID>&& _path, std::optional<utils::StringID>&& _alias) noexcept :
+        Statement(StatementKind::ImportStatement), path(std::move(_path)), alias(_alias) {}
 
     MN_AST_STANDARD_INTERFACE(ImportStatement);
 };
 
 struct ModuleDeclarationStatement final : public Statement {
-    std::string name;
+    utils::StringID name;
 
-    explicit ModuleDeclarationStatement(std::string&& _name) noexcept :
-        Statement(StatementKind::ModuleDeclarationStatement), name(std::move(_name)) {}
+    explicit ModuleDeclarationStatement(utils::StringID _name) noexcept :
+        Statement(StatementKind::ModuleDeclarationStatement), name(_name) {}
 
     MN_AST_STANDARD_INTERFACE(ModuleDeclarationStatement);
 };
 
 struct NamespaceStatement final : public Statement {
-    std::string name;
+    utils::StringID name;
     Block block;
 
-    NamespaceStatement(std::string&& _name, Block&& _block) noexcept :
-        Statement(StatementKind::NamespaceStatement), name(std::move(_name)), block(std::move(_block)) {}
+    NamespaceStatement(utils::StringID _name, Block&& _block) noexcept :
+        Statement(StatementKind::NamespaceStatement), name(_name), block(std::move(_block)) {}
 
     MN_AST_STANDARD_INTERFACE(NamespaceStatement);
 };
@@ -240,9 +240,9 @@ struct VariableDeclarationStatement final : public Declaration {
     Expression* value;
     Type* type;
 
-    VariableDeclarationStatement(bool _isMutable, std::string&& _name, Visibility _visibility, Expression* _value,
+    VariableDeclarationStatement(bool _isMutable, utils::StringID _name, Visibility _visibility, Expression* _value,
                                  Type* _type) noexcept :
-        Declaration(StatementKind::VariableDeclarationStatement, std::move(_name)),
+        Declaration(StatementKind::VariableDeclarationStatement, _name),
         visibility(_visibility),
         isMutable(_isMutable),
         value(_value),

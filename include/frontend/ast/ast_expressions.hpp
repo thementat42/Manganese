@@ -5,15 +5,15 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <string>
 #include <utility>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
 
 namespace Manganese::ast {
 
 struct AggregateInstantiationField {
-    std::string name;
+    utils::StringID name;
     Expression* value;
     std::size_t line, column;
 };
@@ -127,11 +127,11 @@ struct GenericInstantiationExpression final : public Expression {
 };
 
 struct IdentifierExpression final : public Expression {
-    const std::string name;
+    const utils::StringID name;
     const Declaration* resolvedDeclaration = nullptr;
 
-    explicit IdentifierExpression(std::string&& _name) noexcept :
-        Expression(ExpressionKind::IdentifierExpression), name(std::move(_name)) {}
+    explicit IdentifierExpression(utils::StringID _name) noexcept :
+        Expression(ExpressionKind::IdentifierExpression), name(_name) {}
 
     MN_AST_STANDARD_INTERFACE(IdentifierExpression);
 };
@@ -148,21 +148,21 @@ struct IndexExpression final : public Expression {
 
 struct MemberAccessExpression final : public Expression {
     Expression* object;
-    const std::string field;
+    const utils::StringID field;
     std::size_t fieldIndex = static_cast<std::size_t>(-1);
 
-    MemberAccessExpression(Expression* _object, std::string&& _field) noexcept :
-        Expression(ExpressionKind::MemberAccessExpression), object(_object), field(std::move(_field)) {}
+    MemberAccessExpression(Expression* _object, utils::StringID _field) noexcept :
+        Expression(ExpressionKind::MemberAccessExpression), object(_object), field(_field) {}
 
     MN_AST_STANDARD_INTERFACE(MemberAccessExpression);
 };
 
 struct NumberLiteralExpression final : public Expression {
-    const std::string value;
+    const utils::StringID value;
     const bool isFloat;
 
-    explicit NumberLiteralExpression(std::string&& _value, bool _isFloat) noexcept :
-        Expression(ExpressionKind::NumberLiteralExpression), value(std::move(_value)), isFloat(_isFloat) {}
+    explicit NumberLiteralExpression(utils::StringID _value, bool _isFloat) noexcept :
+        Expression(ExpressionKind::NumberLiteralExpression), value(_value), isFloat(_isFloat) {}
 
     bool canFold() const noexcept override { return true; }
 
@@ -196,7 +196,7 @@ struct PrefixExpression final : public Expression {
 struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
     Expression* element;
-    std::string mangledName;
+    utils::StringID mangledName;
 
     ScopeResolutionExpression(Expression* _scope, Expression* _element) noexcept :
         Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope), element(_element) {}
@@ -214,10 +214,10 @@ struct SizeofExpression final : public Expression {
 };
 
 struct StringLiteralExpression final : public Expression {
-    const std::string value;
+    const utils::StringID value;
 
-    explicit StringLiteralExpression(std::string&& _value) noexcept :
-        Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
+    explicit StringLiteralExpression(utils::StringID _value) noexcept :
+        Expression(ExpressionKind::StringLiteralExpression), value(_value) {}
     bool canFold() const noexcept override { return true; }
 
     MN_AST_STANDARD_INTERFACE(StringLiteralExpression);

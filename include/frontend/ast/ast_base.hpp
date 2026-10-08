@@ -9,6 +9,7 @@
 #include <string_view>
 #include <utils/target_info.hpp>
 #include <utils/type_names.hpp>
+#include <utils/string_interner.hpp>
 #include <vector>
 
 #if MN_DEBUG
