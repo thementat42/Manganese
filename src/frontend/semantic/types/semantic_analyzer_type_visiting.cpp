@@ -268,7 +268,7 @@ auto SemanticAnalyzer::visit(ast::ScopedType* type) -> typevisit_t {
 
     if (memberSymbol->kind != SymbolKind::Aggregate && memberSymbol->kind != SymbolKind::TypeAlias) {
         logError(type->type, "'{}' in scope '{}' is not a type", memberName,
-                 scopeSymbol->scopeDefined->getQualifiedName());
+                 scopeSymbol->scopeDefined->getQualifiedName(interner));
         return typevisit_t::Failure;
     }
     type->semanticType = memberSymbol->type;

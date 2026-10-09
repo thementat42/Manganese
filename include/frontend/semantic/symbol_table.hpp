@@ -66,7 +66,7 @@ struct Scope {
         auto it = symbols.find(name);
         return it == symbols.end() ? nullptr : &(it->second);
     }
-    std::string getQualifiedName() const;
+    std::string getQualifiedName(const utils::StringInterner&) const;
 };
 
 class SymbolTable {

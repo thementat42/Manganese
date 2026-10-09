@@ -26,7 +26,7 @@ void SymbolTable::enterScope() {
     }
 }
 
-void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
+void SymbolTable::enterNamespace(utils::StringID name, ast::ASTNode* node) {
     if (_flags._isFirstPass) {
         Symbol* namespaceSymbol = _currentScope->lookup(name);
         // Declare the namespace in the current scope if it's not already declared
@@ -69,9 +69,9 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
     }
 }
 
-std::string Scope::getQualifiedName() const {
-    if (parent == nullptr || parent->namespaceName.empty()) { return std::string(namespaceName); }
-    return parent->getQualifiedName() + "::" + std::string(namespaceName);
+std::string Scope::getQualifiedName(const utils::StringInterner& interner) const {
+    if (parent == nullptr || parent->namespaceName == utils::StringID{}) { return std::string(interner.get_view(namespaceName)); }
+    return parent->getQualifiedName(interner) + "::" + std::string(interner.get_view(namespaceName));
 }
 
 void SymbolTable::exitScope() NOEXCEPT_IF_RELEASE {
@@ -82,7 +82,7 @@ void SymbolTable::exitScope() NOEXCEPT_IF_RELEASE {
     _currentScope = _currentScope->parent;
 }
 
-Symbol* SymbolTable::lookup(std::string_view name) NOEXCEPT_IF_RELEASE {
+Symbol* SymbolTable::lookup(utils::StringID name) NOEXCEPT_IF_RELEASE {
     Scope* probe = _currentScope;
     while (probe != nullptr) {
         Symbol* symbol = probe->lookup(name);
@@ -90,11 +90,11 @@ Symbol* SymbolTable::lookup(std::string_view name) NOEXCEPT_IF_RELEASE {
         probe = probe->parent;
     }
 
-    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", name);
+    logging::logInternal(logging::LogLevel::Warning, "Symbol not found in any visible lexical scope.");
     return nullptr;
 }
 
-const Symbol* SymbolTable::lookup(std::string_view name) const NOEXCEPT_IF_RELEASE {
+const Symbol* SymbolTable::lookup(utils::StringID name) const NOEXCEPT_IF_RELEASE {
     const Scope* probe = _currentScope;
     while (probe != nullptr) {
         const Symbol* symbol = probe->lookup(name);
@@ -102,7 +102,7 @@ const Symbol* SymbolTable::lookup(std::string_view name) const NOEXCEPT_IF_RELEA
         probe = probe->parent;
     }
 
-    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", name);
+    logging::logInternal(logging::LogLevel::Warning, "Symbol not found in any visible lexical scope.");
     return nullptr;
 }
 
