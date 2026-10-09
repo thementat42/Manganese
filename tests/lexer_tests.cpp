@@ -17,6 +17,7 @@ using lexer::Token, lexer::TokenType;
 // Helpers
 
 namespace {
+utils::StringInterner interner;
 
 inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true) {
     if (tokens.empty()) {
@@ -35,7 +36,7 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true
 }
 
 std::vector<Token> tokensFromString(const std::string& source) {
-    lexer::Lexer lexer(source, lexer::Mode::String);
+    lexer::Lexer lexer(source, interner, lexer::Mode::String);
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
@@ -50,7 +51,7 @@ std::vector<Token> tokensFromString(const std::string& source) {
 
 std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
     const std::filesystem::path fullPath = std::filesystem::current_path() / filename;
-    lexer::Lexer lexer(fullPath.string(), lexer::Mode::File);
+    lexer::Lexer lexer(fullPath.string(), interner, lexer::Mode::File);
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
@@ -74,14 +75,14 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
                   << tokenTypeToString(token.getType()) << " (lexeme was " << token.getLexeme() << ")" << '\n';
         return false;
     }
-    if (token.getLexeme() != expectedLexeme) {
+    if (interner.get_view(token.getLexeme()) != expectedLexeme) {
         std::cout << "Expected lexeme '" << expectedLexeme << "' but got '" << token.getLexeme() << "'" << '\n';
 
         std::cout << "Expected bytes: ";
         printBytes(expectedLexeme);
 
         std::cout << "Actual bytes:   ";
-        printBytes(token.getLexeme());
+        printBytes(interner.get_view(token.getLexeme()));
         return false;
     }
     if (wantInvalid && !token.isInvalid()) {

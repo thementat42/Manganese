@@ -18,16 +18,17 @@ namespace {
 
 constexpr const char* logFileName = "logs/control_flow_tests.log";
 mnstl::chunk_allocator arena;
+utils::StringInterner interner;
 utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
 bool analyzeControlFlow(const std::string& source, bool expectSuccess, std::string_view testName) {
-    parser::Parser parser(source, lexer::Mode::String, arena);
+    parser::Parser parser(source, lexer::Mode::String, arena, interner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
-    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena);
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena, interner);
     DISCARD(semanticAnalyzer.analyze());
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable());
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), interner);
     Result result = cfa.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -96,15 +97,16 @@ bool testPartialReturnBranching() {
 
 bool testControlFlowFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/control_flow_tests.mn";
-    mnstl::chunk_allocator file_allocator{};
+    mnstl::chunk_allocator fileAllocator{};
+    utils::StringInterner fileInterner;
 
-    parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
+    parser::Parser parser(fullPath.string(), lexer::Mode::File, fileAllocator, fileInterner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
-    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, file_allocator);
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, fileAllocator, fileInterner);
     DISCARD(semanticAnalyzer.analyze());
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable());
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), fileInterner);
     Result result = cfa.analyze();
 
     return result == Result::Success;

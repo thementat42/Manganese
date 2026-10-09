@@ -15,6 +15,7 @@
 
 #include "testrunner.hpp"
 #include "tests.hpp"
+#include "utils/string_interner.hpp"
 
 namespace Manganese::tests {
 
@@ -22,24 +23,25 @@ namespace {
 
 constexpr const char* logFileName = "logs/codegen_tests.log";
 mnstl::chunk_allocator arena;
+utils::StringInterner interner;
 utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
 bool validateIRContains(const std::string& source, const std::initializer_list<std::string>& expectedSubstrings,
                         std::string_view testName) {
-    parser::Parser parser(source, lexer::Mode::String, arena);
+    parser::Parser parser(source, lexer::Mode::String, arena, interner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
-    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena);
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena, interner);
     if (semanticAnalyzer.analyze() != Result::Success) { return false; }
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable());
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), interner);
     if (cfa.analyze() != Result::Success) { return false; }
 
     std::string irOutput;
     bool generationPassed = true;
 
     try {
-        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, targetInfo);
+        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, interner, targetInfo);
         irGenerator.generate();
 
         if (auto* module = irGenerator.getModule()) {

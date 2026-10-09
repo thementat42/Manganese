@@ -17,15 +17,16 @@ namespace Manganese::tests {
 namespace {
 constexpr const char* logFileName = "logs/analyzer_tests.log";
 mnstl::chunk_allocator arena;
+utils::StringInterner interner;
 utils::TargetInfo target = utils::TargetInfo{.pointerSize = sizeof(void*), .pointerAlignment = alignof(void*)};
 
 // Helper: Parses and runs full semantic analysis on source code
 bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {
-    parser::Parser parser(source, lexer::Mode::String, arena);
+    parser::Parser parser(source, lexer::Mode::String, arena, interner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
     auto& parsedFile = parsedFiles[0];
 
-    semantic::SemanticAnalyzer analyzer(parsedFiles, target, arena);
+    semantic::SemanticAnalyzer analyzer(parsedFiles, target, arena, interner);
     const Result result = analyzer.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -41,9 +42,9 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
         // Helper lambda to write statement string rep and dump to log
         auto logStatement = [&logFile](const ast::Statement* stmt) -> void {
             if (!stmt) { return; }
-            logFile << "String representation: " << stmt->toString(0) << '\n';
+            logFile << "String representation: " << stmt->toString(interner, 0) << '\n';
             logFile << "Dumping statement:\n";
-            stmt->dump(logFile);  // Node dump includes semanticType when available
+            stmt->dump(logFile, interner);  // Node dump includes semanticType when available
             logFile << "---------------------\n";
         };
 
@@ -559,7 +560,6 @@ bool testTernaryExpressionSemantics() {
     return analyzeSource(valid, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
-
 // Type Tests
 
 bool testPointerTypeMutability() {
@@ -649,12 +649,14 @@ bool testScopedType() {
 bool testAnalyzeFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/semantic_analyzer_tests.mn";
 
-    mnstl::chunk_allocator file_allocator{};
-    parser::Parser parser(fullPath.string(), lexer::Mode::File, file_allocator);
+    mnstl::chunk_allocator fileAllocator{};
+    utils::StringInterner fileInterner;
+
+    parser::Parser parser(fullPath.string(), lexer::Mode::File, fileAllocator, fileInterner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
     auto& parsedFile = parsedFiles[0];
 
-    semantic::SemanticAnalyzer analyzer(parsedFiles, target, file_allocator);
+    semantic::SemanticAnalyzer analyzer(parsedFiles, target, fileAllocator, fileInterner);
 
     std::ofstream logFile(logFileName, std::ios::app);
     const Result result = analyzer.analyze();
@@ -667,9 +669,9 @@ bool testAnalyzeFromFile() {
         logFile << "Actual Result: Semantically " << (result == Result::Success ? "Valid" : "Invalid") << '\n';
         logFile << "Analyzed File AST:\n";
         for (const auto& stmt : parsedFile.program) {
-            logFile << "String representation: " << stmt->toString(0) << '\n';
+            logFile << "String representation: " << stmt->toString(fileInterner, 0) << '\n';
             logFile << "Dumping statement:\n";
-            stmt->dump(logFile);  // Node dump includes semanticType when available
+            stmt->dump(logFile, fileInterner);  // Node dump includes semanticType when available
             logFile << "---------------------\n";
             logFile.close();
         }

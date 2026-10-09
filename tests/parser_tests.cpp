@@ -9,6 +9,7 @@
 #include <string>
 
 #include "tests.hpp"
+#include "utils/string_interner.hpp"
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
@@ -20,14 +21,15 @@ namespace {
 // Helpers
 constexpr inline const char* logFileName = "logs/parser_tests.log";
 mnstl::chunk_allocator allocator;
+utils::StringInterner interner;
 
 parser::ParsedFile getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
-    parser::Parser parser(source, mode, allocator);
+    parser::Parser parser(source, mode, allocator, interner);
     parser::ParsedFile file = parser.parse();
 
-    if (file.fileModule != nullptr) { std::cout << file.fileModule->toString() << "\n"; }
+    if (file.fileModule != nullptr) { std::cout << file.fileModule->toString(interner) << "\n"; }
     if (!file.imports.empty()) {
-        for (const auto& _import : file.imports) { std::cout << _import->toString() << "\n"; }
+        for (const auto& _import : file.imports) { std::cout << _import->toString(interner) << "\n"; }
     }
 
     return file;
@@ -36,12 +38,12 @@ parser::ParsedFile getParserResults(const std::string& source, lexer::Mode mode 
 void dumpStatement(const ast::Statement* stmt, std::ostream* logFile) {
     if (stmt == nullptr) { return; }
 
-    const std::string stmtStr = stmt->toString(0);
+    const std::string stmtStr = stmt->toString(interner, 0);
     std::cout << stmtStr << '\n';
     if (logFile != nullptr && *logFile) {
         *logFile << "String representation: " << stmtStr << '\n';
         *logFile << "Dumping statement:\n";
-        stmt->dump(*logFile);
+        stmt->dump(*logFile, interner);
         *logFile << "---------------------\n";
     }
 }
@@ -72,7 +74,7 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
 
     bool success = true;
     for (std::size_t i = 0; i < N; ++i) {
-        const std::string actual = block[i]->toString(0);
+        const std::string actual = block[i]->toString(interner, 0);
         if (actual != expected[i]) {
             std::cout << "ERROR: Statement " << (i + 1) << " does not match expected in test: " << testName << '\n';
             std::cout << "Expected: " << "\n" << expected[i] << '\n';
@@ -105,7 +107,7 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
         return false;
     }
 
-    const std::string actual = block[0]->toString(0);
+    const std::string actual = block[0]->toString(interner, 0);
     if (actual != expected) {
         std::cout << "ERROR: Statement does not match expected in test: " << testName << '\n';
         std::cout << "Expected: " << "\n" << expected << '\n';
@@ -575,7 +577,7 @@ bool testImportsAndAliases() {
     const parser::ParsedFile parsedFile = getParserResults(expression);
 
     // Verify module header metadata
-    if (parsedFile.fileModule == nullptr || parsedFile.fileModule->name != "dataprocessing") {
+    if (parsedFile.fileModule == nullptr || interner.get_view(parsedFile.fileModule->name) != "dataprocessing") {
         std::cout << "ERROR: Module declaration not parsed correctly in testImportsAndAliases\n";
         return false;
     }
@@ -591,12 +593,13 @@ bool testImportsAndAliases() {
 
 bool testParseFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
-    mnstl::chunk_allocator file_allocator{};
-    parser::Parser p(fullPath.string(), lexer::Mode::File, file_allocator);
+    mnstl::chunk_allocator fielAllocator{};
+utils::StringInterner fileInterner;
+    parser::Parser p(fullPath.string(), lexer::Mode::File, fielAllocator, fileInterner);
     auto x = p.parse();
-    if (x.fileModule != nullptr) { std::cout << x.fileModule->toString() << "\n"; }
-    for (const auto& _import : x.imports) { std::cout << _import->toString() << "\n"; }
-    for (const auto& element : x.program) { std::cout << element->toString(0) << "\n"; }
+    if (x.fileModule != nullptr) { std::cout << x.fileModule->toString(fileInterner) << "\n"; }
+    for (const auto& _import : x.imports) { std::cout << _import->toString(fileInterner) << "\n"; }
+    for (const auto& element : x.program) { std::cout << element->toString(fileInterner, 0) << "\n"; }
     return true;
 }
 
@@ -716,7 +719,7 @@ bool testUninitializedKeywordParsing() {
 bool miscTests() {
     const std::string expression = "int x = aggregate{1, \"asdf\", 3.1f32};";
     parser::ParsedFile x = getParserResults(expression);
-    std::cout << x.program[0]->toString(0) << "\n";
+    std::cout << x.program[0]->toString(interner, 0) << "\n";
     return true;
 }
 }  // namespace
