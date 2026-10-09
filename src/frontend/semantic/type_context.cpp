@@ -65,7 +65,7 @@ std::string Aggregate::toString() const {
 }
 
 std::string Aggregate::toStringWithTypeArguments(const TypeList& typeArguments) const {
-    const std::string aggregateName = name.empty() ? "aggregate" : name;
+    const std::string aggregateName = name.empty() ? "aggregate" : std::string(name);
     std::string result = aggregateName + "@[";
     for (std::size_t i = 0; i < typeArguments.size(); ++i) {
         result += typeArguments[i]->toString();
@@ -315,11 +315,11 @@ const SemanticType* TypeContext::getAnonymousAggregate(TypeList&& fieldTypes) {
     return heapAlloc;
 }
 
-const SemanticType* TypeContext::getNamedAggregate(std::string&& name, std::vector<AggregateField>&& fieldTypes) {
+const SemanticType* TypeContext::getNamedAggregate(std::string_view name, std::vector<AggregateField>&& fieldTypes) {
     // Named types are nominal: they are unique by their declaration name.
-    Aggregate tmp(std::move(fieldTypes), std::move(name));
+    Aggregate tmp(std::move(fieldTypes), name);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
-    auto* heapAlloc = _arena.emplace<Aggregate>(std::move(tmp.fields), std::move(tmp.name));
+    auto* heapAlloc = _arena.emplace<Aggregate>(std::move(tmp.fields), tmp.name);
     _cache.insert(heapAlloc);
     return heapAlloc;
 }
