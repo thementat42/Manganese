@@ -118,7 +118,7 @@ ast::Type* Parser::parseIdentifierType() {
         prim_t = int8;
     } else if (lexeme == int16_str) {
         prim_t = int16;
-    } else if (lexeme == int32_str) {
+    } else if (lexeme == int32_str || lexeme == int_str) {
         prim_t = int32;
     } else if (lexeme == int64_str) {
         prim_t = int64;
@@ -128,7 +128,7 @@ ast::Type* Parser::parseIdentifierType() {
         prim_t = uint8;
     } else if (lexeme == uint16_str) {
         prim_t = uint16;
-    } else if (lexeme == uint32_str) {
+    } else if (lexeme == uint32_str || lexeme == uint_str) {
         prim_t = uint32;
     } else if (lexeme == uint64_str) {
         prim_t = uint64;
@@ -136,7 +136,7 @@ ast::Type* Parser::parseIdentifierType() {
         prim_t = uint128;
     } else if (lexeme == float32_str) {
         prim_t = float32;
-    } else if (lexeme == float64_str) {
+    } else if (lexeme == float64_str || lexeme == float_str) {
         prim_t = float64;
     } else if (lexeme == string_str) {
         prim_t = string;
