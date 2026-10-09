@@ -531,17 +531,4 @@ utils::OptionalStringID Parser::parseImportAlias() {
     return {};
 }
 
-utils::StringID Parser::parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,
-                                                  utils::StringID contextName) {
-    Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
-    const auto genericName = genericToken.getLexeme();
-
-    if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
-        logError(genericToken, "Duplicate generic type '{}' in '{}'", interner.get_view(genericName),
-                 interner.get_view(contextName));
-        return {};
-    }
-    return genericName;
-}
-
 }  // namespace Manganese::parser
