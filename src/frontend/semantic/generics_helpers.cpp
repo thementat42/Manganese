@@ -20,7 +20,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
 
     if (aggregateDeclaration->genericTypes.size() != typeArgs.size()) {
         logError(expression, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
-                 aggregateDeclaration->name, aggregateDeclaration->genericTypes.size(), typeArgs.size());
+                 interner.get_view(aggregateDeclaration->name), aggregateDeclaration->genericTypes.size(), typeArgs.size());
         return exprvisit_t::Failure;
     }
 
@@ -34,7 +34,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
         }
         if (cached->state == ResolutionStatus::InProgress) {
             logError(expression, "Recursive generic aggregate instantiation detected for '{}'",
-                     aggregateDeclaration->name);
+                     interner.get_view(aggregateDeclaration->name));
             return exprvisit_t::Failure;
         }
     }
@@ -58,14 +58,14 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
 
     if (visitRes == stmtvisit_t::Failure) {
         instantiationCache.markAsFailure(key);
-        logError(expression, "Failed to analyze instantiated aggregate '{}'", aggregateDeclaration->name);
+        logError(expression, "Failed to analyze instantiated aggregate '{}'", interner.get_view(aggregateDeclaration->name));
         return exprvisit_t::Failure;
     }
 
     const SemanticType* concreteType = getInstantiatedAggregateType(clonedAggregate);
     if (concreteType == nullptr || concreteType->isPoison()) {
         instantiationCache.markAsFailure(key);
-        logError(expression, "Failed to materialize instantiated aggregate type for '{}'", aggregateDeclaration->name);
+        logError(expression, "Failed to materialize instantiated aggregate type for '{}'", interner.get_view(aggregateDeclaration->name));
         return exprvisit_t::Failure;
     }
 
@@ -85,7 +85,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
         symbolTable.setCurrentScope(_previousScope);
     }
 
-    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedAggregate->mangledName), clonedAggregate);
+    instantiationCache.markAsSuccess(key, concreteType, clonedAggregate->mangledName, clonedAggregate);
     instantiatedDeclarations.push_back(clonedAggregate);
 
     expression->semanticType = concreteType;
@@ -100,7 +100,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
 
     if (functionDeclaration->genericTypes.size() != typeArgs.size()) {
         logError(expression, "Generic function '{}' expects {} type arguments, but {} were provided",
-                 functionDeclaration->name, functionDeclaration->genericTypes.size(), typeArgs.size());
+                 interner.get_view(functionDeclaration->name), functionDeclaration->genericTypes.size(), typeArgs.size());
         return exprvisit_t::Failure;
     }
 
@@ -113,7 +113,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
             return exprvisit_t::Success;
         }
         if (cached->state == ResolutionStatus::InProgress) {
-            logError(expression, "Recursive generic instantiation detected for '{}'", functionDeclaration->name);
+            logError(expression, "Recursive generic instantiation detected for '{}'", interner.get_view(functionDeclaration->name));
             return exprvisit_t::Failure;
         }
     }
@@ -145,14 +145,14 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
 
     if (visitRes == stmtvisit_t::Failure) {
         instantiationCache.markAsFailure(key);
-        logError(expression, "Failed to analyze instantiated function '{}'", functionDeclaration->name);
+        logError(expression, "Failed to analyze instantiated function '{}'", interner.get_view(functionDeclaration->name));
         return exprvisit_t::Failure;
     }
 
     const SemanticType* concreteType = getInstantiatedFunctionType(clonedFunction);
     if (concreteType == nullptr || concreteType->isPoison()) {
         instantiationCache.markAsFailure(key);
-        logError(expression, "Failed to materialize instantiated function type for '{}'", functionDeclaration->name);
+        logError(expression, "Failed to materialize instantiated function type for '{}'", interner.get_view(functionDeclaration->name));
         return exprvisit_t::Failure;
     }
 
@@ -172,7 +172,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
         symbolTable.setCurrentScope(previousScope);
     }
 
-    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedFunction->mangledName), clonedFunction);
+    instantiationCache.markAsSuccess(key, concreteType, clonedFunction->mangledName, clonedFunction);
     instantiatedDeclarations.push_back(clonedFunction);
 
     expression->semanticType = concreteType;
@@ -191,7 +191,7 @@ const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(
         instantiatedFields.push_back(AggregateField{.name = fieldNode.name, .type = fieldType});
     }
 
-    return typeContext.getNamedAggregate(std::string(clonedDecl->mangledName), std::move(instantiatedFields));
+    return typeContext.getNamedAggregate(clonedDecl->mangledName, std::move(instantiatedFields));
 }
 
 const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* clonedDecl) {
