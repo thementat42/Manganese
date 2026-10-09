@@ -188,10 +188,10 @@ const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(
     for (const ast::AggregateField& fieldNode : clonedDecl->fields) {
         const SemanticType* fieldType = fieldNode.type->semanticType;
         if (fieldType == nullptr || fieldType->isPoison()) { return typeContext.getPoison(); }
-        instantiatedFields.push_back(AggregateField{.name = fieldNode.name, .type = fieldType});
+        instantiatedFields.push_back(AggregateField{.name = interner.get_view(fieldNode.name), .type = fieldType});
     }
 
-    return typeContext.getNamedAggregate(clonedDecl->mangledName, std::move(instantiatedFields));
+    return typeContext.getNamedAggregate(interner.get_view(clonedDecl->mangledName), std::move(instantiatedFields));
 }
 
 const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* clonedDecl) {

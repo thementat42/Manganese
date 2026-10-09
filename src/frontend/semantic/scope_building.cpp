@@ -34,7 +34,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
 
             // Creates an Aggregate shell with name, empty fields ({}), and ResolutionStatus::Unresolved
             const SemanticType* shellType
-                = typeContext.getNamedAggregate(std::string(aggregateStmt->name), /*fields=*/{});
+                = typeContext.getNamedAggregate(interner.get_view(aggregateStmt->name), /*fieldTypes=*/{});
 
             const Result result = symbolTable.declare(aggregateStmt->name,
                                                       Symbol{
@@ -44,7 +44,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = aggregateStmt->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(aggregateStmt->name, aggregateStmt); }
+            if (result == Result::Failure) { _reportRedeclaration(interner.get_view(aggregateStmt->name), aggregateStmt); }
             return result;
         }
         case AliasStatement: {
@@ -58,12 +58,12 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = aliasStmt->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(aliasStmt->name, aliasStmt); }
+            if (result == Result::Failure) { _reportRedeclaration(interner.get_view(aliasStmt->name), aliasStmt); }
             return result;
         }
         case EnumDeclarationStatement: {
             auto* enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
-            const SemanticType* enumType = typeContext.getEnum(enumDecl->name);
+            const SemanticType* enumType = typeContext.getEnum(interner.get_view(enumDecl->name));
             const Result result = symbolTable.declare(enumDecl->name,
                                                       Symbol{
                                                           .type = enumType,
@@ -72,7 +72,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = enumDecl->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(enumDecl->name, enumDecl); }
+            if (result == Result::Failure) { _reportRedeclaration(interner.get_view(enumDecl->name), enumDecl); }
             return result;
         }
         case ForLoopStatement: {
@@ -91,7 +91,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                   .visibility = funcStmt->visibility,
                                                   .isMutable = false,
                                               });
-            if (result == Result::Failure) { _reportRedeclaration(funcStmt->name, funcStmt); }
+            if (result == Result::Failure) { _reportRedeclaration(interner.get_view(funcStmt->name), funcStmt); }
 
             // Process the internal block statements
             const Result bodyResult = _buildBodyScope(funcStmt->body);
