@@ -9,6 +9,7 @@
 #include <string_view>
 #include <vector>
 
+#include "frontend/lexer/token.hpp"
 #include "tests.hpp"
 
 namespace Manganese::tests {
@@ -71,12 +72,13 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
         std::cout << '\n';
     };
     if (token.getType() != expectedType) {
-        std::cout << "Expected token type " << tokenTypeToString(expectedType) << " but got "
-                  << tokenTypeToString(token.getType()) << " (lexeme was " << token.getLexeme() << ")" << '\n';
+        std::cout << std::format("Expected token type {} but got {} (lexeme was {})\n",
+                                 lexer::tokenTypeToString(token.getType()), lexer::tokenTypeToString(token.getType()),
+                                 interner.get_view(token.getLexeme()));
         return false;
     }
     if (interner.get_view(token.getLexeme()) != expectedLexeme) {
-        std::cout << "Expected lexeme '" << expectedLexeme << "' but got '" << token.getLexeme() << "'" << '\n';
+        std::cout << std::format("Expected lexeme '{}' but got '{}'\n", expectedLexeme, interner.get_view(token.getLexeme()));
 
         std::cout << "Expected bytes: ";
         printBytes(expectedLexeme);
@@ -117,7 +119,7 @@ bool testComments() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Int32, "int32") && checkToken(tokens[1], TokenType::Identifier, "x")
+    return checkToken(tokens[0], TokenType::Int32, "int") && checkToken(tokens[1], TokenType::Identifier, "x")
         && checkToken(tokens[2], TokenType::Semicolon, ";");
 }
 
@@ -411,11 +413,11 @@ bool testCompleteProgram() {
     }
     return checkToken(tokens[0], TokenType::Func, "func") && checkToken(tokens[1], TokenType::Identifier, "main")
         && checkToken(tokens[2], TokenType::LeftParen, "(") && checkToken(tokens[3], TokenType::RightParen, ")")
-        && checkToken(tokens[4], TokenType::Arrow, "->") && checkToken(tokens[5], TokenType::Int32, "int32")
-        && checkToken(tokens[6], TokenType::LeftBrace, "{") && checkToken(tokens[7], TokenType::Int32, "int32")
+        && checkToken(tokens[4], TokenType::Arrow, "->") && checkToken(tokens[5], TokenType::Int32, "int")
+        && checkToken(tokens[6], TokenType::LeftBrace, "{") && checkToken(tokens[7], TokenType::Int32, "int")
         && checkToken(tokens[8], TokenType::Identifier, "x") && checkToken(tokens[9], TokenType::Assignment, "=")
         && checkToken(tokens[10], TokenType::IntegerLiteral, "5") && checkToken(tokens[11], TokenType::Semicolon, ";")
-        && checkToken(tokens[12], TokenType::Float32, "float32") && checkToken(tokens[13], TokenType::Identifier, "y")
+        && checkToken(tokens[12], TokenType::Float32, "float") && checkToken(tokens[13], TokenType::Identifier, "y")
         && checkToken(tokens[14], TokenType::Assignment, "=") && checkToken(tokens[15], TokenType::FloatLiteral, "10.5")
         && checkToken(tokens[16], TokenType::Semicolon, ";") && checkToken(tokens[17], TokenType::Identifier, "print")
         && checkToken(tokens[18], TokenType::LeftParen, "(") && checkToken(tokens[19], TokenType::Identifier, "x")
