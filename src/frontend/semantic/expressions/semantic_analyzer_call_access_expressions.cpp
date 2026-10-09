@@ -305,7 +305,7 @@ auto SemanticAnalyzer::visit(ast::ScopeResolutionExpression* expression) -> expr
     expression->semanticType = memberSymbol->type;
     context.nestedScopeResolutionCurrentSymbol = memberSymbol;
     if (auto* stmt = static_cast<ast::Statement*>(memberSymbol->node); stmt->isDeclaration()) {
-        expression->mangledName = static_cast<const ast::Declaration*>(stmt)->mangledName;
+        expression->mangledName = *static_cast<const ast::Declaration*>(stmt)->mangledName;
     }
     return exprvisit_t::Success;
 }

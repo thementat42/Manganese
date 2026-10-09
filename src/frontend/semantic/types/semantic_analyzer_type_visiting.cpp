@@ -45,7 +45,7 @@ auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
 
     const SemanticType* elementType = arrayType->elementType->semanticType;
     if (elementType->isPoison()) {
-        logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString());
+        logError(type, "Cannot form array of invalid type '{}'", arrayType->elementType->toString(interner));
         return typevisit_t::Failure;
     }
     if (elementType->isVoid()) { logError(type, "Cannot form an array of 'void'"); }
@@ -116,11 +116,11 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     }
 
     auto* identifierType = static_cast<ast::IdentifierType*>(type->baseType);
-    std::string_view baseTypeName = identifierType->name;
+    utils::StringID baseTypeNameID = identifierType->name;
 
-    Symbol* symbol = symbolTable.lookup(baseTypeName);
+    Symbol* symbol = symbolTable.lookup(baseTypeNameID);
     if (symbol == nullptr || symbol->kind != SymbolKind::Aggregate) {
-        logError(type, "Unknown generic aggregate type '{}'", baseTypeName);
+        logError(type, "Unknown generic aggregate type '{}'", interner.get_view(baseTypeNameID));
         type->semanticType = typeContext.getPoison();
         return typevisit_t::Failure;
     }
@@ -139,7 +139,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
 
     if (aggregateDeclaration->genericTypes.size() != typeArgs.size()) {
         logError(type, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
-                 aggregateDeclaration->name, aggregateDeclaration->genericTypes.size(), typeArgs.size());
+                 interner.get_view(aggregateDeclaration->name), aggregateDeclaration->genericTypes.size(), typeArgs.size());
         type->semanticType = typeContext.getPoison();
         return typevisit_t::Failure;
     }
@@ -152,7 +152,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
             return typevisit_t::Success;
         }
         if (cached->state == ResolutionStatus::InProgress) {
-            logError(type, "Recursive generic aggregate instantiation detected for '{}'", aggregateDeclaration->name);
+            logError(type, "Recursive generic aggregate instantiation detected for '{}'", interner.get_view(aggregateDeclaration->name));
             type->semanticType = typeContext.getPoison();
             return typevisit_t::Failure;
         }
@@ -166,7 +166,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     }
 
     auto* clonedAggregate = aggregateDeclaration->clone(&cloneContext);
-    clonedAggregate->mangledName = getMangledName(aggregateDeclaration->name, typeArgs);
+    clonedAggregate->mangledName = utils::OptionalStringID{.id = getMangledName(aggregateDeclaration->name, typeArgs)};
 
     Scope* previousScope = symbolTable.getCurrentScope();
     if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
@@ -177,7 +177,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
 
     if (visitRes == stmtvisit_t::Failure) {
         instantiationCache.markAsFailure(key);
-        logError(type, "Failed to analyze instantiated aggregate '{}'", aggregateDeclaration->name);
+        logError(type, "Failed to analyze instantiated aggregate '{}'", interner.get_view(aggregateDeclaration->name));
         type->semanticType = typeContext.getPoison();
         return typevisit_t::Failure;
     }
@@ -185,7 +185,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     const SemanticType* concreteType = getInstantiatedAggregateType(clonedAggregate);
     if (concreteType == nullptr || concreteType->isPoison()) {
         instantiationCache.markAsFailure(key);
-        logError(type, "Failed to materialize instantiated aggregate type for '{}'", aggregateDeclaration->name);
+        logError(type, "Failed to materialize instantiated aggregate type for '{}'", interner.get_view(aggregateDeclaration->name));
         type->semanticType = typeContext.getPoison();
         return typevisit_t::Failure;
     }
@@ -195,7 +195,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
         Scope* _previousScope = symbolTable.getCurrentScope();
         symbolTable.setCurrentScope(targetScope);
 
-        DISCARD(symbolTable.declare(clonedAggregate->mangledName,
+        DISCARD(symbolTable.declare(*clonedAggregate->mangledName,
                                     Symbol{.type = concreteType,
                                            .node = clonedAggregate,
                                            .kind = SymbolKind::Aggregate,
@@ -206,7 +206,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
         symbolTable.setCurrentScope(_previousScope);
     }
 
-    instantiationCache.markAsSuccess(key, concreteType, std::string(clonedAggregate->mangledName), clonedAggregate);
+    instantiationCache.markAsSuccess(key, concreteType, *clonedAggregate->mangledName, clonedAggregate);
     instantiatedDeclarations.push_back(clonedAggregate);
 
     type->semanticType = concreteType;
@@ -218,7 +218,7 @@ auto SemanticAnalyzer::visit(ast::PointerType* type) -> typevisit_t {
     DISCARD(visit(pointerType->baseType));
     const SemanticType* baseType = pointerType->baseType->semanticType;
     if (baseType->isPoison()) {
-        logError(type, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString());
+        logError(type, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString(interner));
         return typevisit_t::Failure;
     }
     if (baseType->isVoid()) {
@@ -246,16 +246,17 @@ auto SemanticAnalyzer::visit(ast::ScopedType* type) -> typevisit_t {
         return typevisit_t::Failure;
     }
     if (scopeSymbol->scopeDefined == nullptr) {
-        logError(type, "'{}' is not a namespace or module", type->scope->toString());
+        logError(type, "'{}' is not a namespace or module", type->scope->toString(interner));
         return typevisit_t::Failure;
     }
     if (type->type->kind != ast::TypeKind::IdentifierType) {
         logError(type->type, "Expected an identifier in a scope resolution expression");
         return typevisit_t::Failure;
     }
-    const std::string_view memberName = static_cast<ast::IdentifierType*>(type->type)->name;
+    const utils::StringID memberNameID = static_cast<ast::IdentifierType*>(type->type)->name;
+    const std::string_view memberName = interner.get_view(memberNameID);
 
-    const Symbol* memberSymbol = decltype(symbolTable)::scopedLookup(scopeSymbol->scopeDefined, memberName);
+    const Symbol* memberSymbol = decltype(symbolTable)::scopedLookup(scopeSymbol->scopeDefined, memberNameID);
     if (memberSymbol == nullptr) {
         logError(type->type, "No member named '{}' in scope", memberName);
         return typevisit_t::Failure;
@@ -283,7 +284,7 @@ auto SemanticAnalyzer::visit(ast::IdentifierType* type) -> typevisit_t {
     }
     const Symbol* symbol = symbolTable.lookup(IdentifierType->name);
     if (symbol == nullptr) {
-        logError(type, "Unknown type '{}'", IdentifierType->name);
+        logError(type, "Unknown type '{}'", interner.get_view(IdentifierType->name));
         return typevisit_t::Failure;
     }
     if (symbol->kind == SymbolKind::TypeAlias && symbol->status != ResolutionStatus::Success) {
@@ -291,7 +292,7 @@ auto SemanticAnalyzer::visit(ast::IdentifierType* type) -> typevisit_t {
         if (visit(aliasStatement) == typevisit_t::Failure) { return typevisit_t::Failure; }
     }
     if (symbol->type == nullptr) {
-        logError(type, "'{}' is not a valid type", IdentifierType->name);
+        logError(type, "'{}' is not a valid type", interner.get_view(IdentifierType->name));
         return typevisit_t::Failure;
     }
     type->semanticType = symbol->type;

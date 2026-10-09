@@ -53,12 +53,12 @@ Result SemanticAnalyzer::analyzePointerArithmetic(ast::BinaryExpression* expr) c
         const auto* rhsBase = static_cast<const Pointer*>(rhsType)->baseType;
 
         if (lhsBase->isPoison()) {
-            logError(expr, "Could not deduce type of pointer '{}'", expr->left->toString());
+            logError(expr, "Could not deduce type of pointer '{}'", expr->left->toString(interner));
             return Result::Failure;
         }
 
         if (rhsBase->isPoison()) {
-            logError(expr, "Could not deduce type of pointer '{}'", expr->right->toString());
+            logError(expr, "Could not deduce type of pointer '{}'", expr->right->toString(interner));
             return Result::Failure;
         }
 
@@ -369,7 +369,7 @@ Result SemanticAnalyzer::checkArrayElementCompatibility(const SemanticType* targ
     if (!compat) {
         logError(element,
                  "Array element '{}' (position {} in literal) of type '{}' is not compatible with expected type '{}'",
-                 element->toString(), i + 1, element->semanticType->toString(), targetType->toString());
+                 element->toString(interner), i + 1, element->semanticType->toString(), targetType->toString());
         return exprvisit_t::Failure;
     }
     if (compat.result == Compatible_t::Warning) { logWarning(element, "{}", compat.message); }
