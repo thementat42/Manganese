@@ -149,7 +149,7 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
                 result = stmtvisit_t::Failure;
             }
             auto tmp = utils::computeExpression<std::int64_t>(
-                variant.value, typeContext.getTargetInfo(),
+                variant.value, typeContext.getTargetInfo(),interner,
                 [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
                     this->logError(expr, fmt, std::forward<Args>(args)...);
                 });

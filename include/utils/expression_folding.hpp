@@ -1,15 +1,20 @@
+#ifndef MANGANESE_INCLUDE_UTILS_EXPRESSION_FOLDING
+#define MANGANESE_INCLUDE_UTILS_EXPRESSION_FOLDING 1
+
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <mnstl/ext_num_config.hxx>
 #include <mnstl/i128.hxx>
 #include <utils/str_to_num.hpp>
+#include <utils/string_interner.hpp>
+
 
 namespace Manganese::utils {
 
 template <class T, class ErrorLogger>
     requires(std::is_arithmetic_v<T> || mnstl::Numeric<T>)
 std::optional<T> computeExpression(const ast::Expression* expression, const utils::TargetInfo& targetInfo,
-                                   ErrorLogger&& logger) noexcept {
+                                   utils::StringInterner& interner, ErrorLogger&& logger) noexcept {
     using enum lexer::TokenType;
     switch (expression->kind) {
         case ast::ExpressionKind::AlignofExpression: {
@@ -19,8 +24,8 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
         case ast::ExpressionKind::BinaryExpression: {
             const auto* binaryExpression = static_cast<const ast::BinaryExpression*>(expression);
             using bitwise_t = std::conditional_t<std::is_same_v<T, bool>, int, T>;
-            auto leftValue = computeExpression<T>(binaryExpression->left, targetInfo, logger);
-            auto rightValue = computeExpression<T>(binaryExpression->right, targetInfo, logger);
+            auto leftValue = computeExpression<T>(binaryExpression->left, targetInfo, interner, logger);
+            auto rightValue = computeExpression<T>(binaryExpression->right, targetInfo, interner, logger);
             if (!leftValue.has_value() || !rightValue.has_value()) { break; }
             switch (binaryExpression->op) {
                 case Plus: return *leftValue + *rightValue;
@@ -65,10 +70,11 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
         }
         case ast::ExpressionKind::NumberLiteralExpression: {
             const auto* num = static_cast<const ast::NumberLiteralExpression*>(expression);
+            std::string_view valueView = interner.get_view(num->value);
             if constexpr (std::is_same_v<T, bool>) {
-                const auto result = utils::stringToNumber<std::int64_t>(num->value, num->isFloat);
+                const auto result = utils::stringToNumber<std::int64_t>(valueView, num->isFloat);
                 if (!result.exists || result.overflowed) {
-                    logger(expression, "Invalid boolean numeric literal '{}'", num->value);
+                    logger(expression, "Invalid boolean numeric literal '{}'", valueView);
                     break;
                 }
                 return static_cast<bool>(result.value != 0);
@@ -76,13 +82,13 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 using num_t_helper
                     = std::conditional_t<(sizeof(T) > sizeof(std::int64_t)), mnstl::int128_t, std::int64_t>;
                 using num_t = std::conditional_t<std::is_signed_v<T>, num_t_helper, mnstl::mnstl_make_unsigned_t<T>>;
-                const utils::string_conversion_result_t result = utils::stringToNumber<num_t>(num->value, num->isFloat);
+                const utils::string_conversion_result_t result = utils::stringToNumber<num_t>(valueView, num->isFloat);
                 if (!result.exists) {
-                    logger(expression, "Invalid number literal '{}'", num->value);
+                    logger(expression, "Invalid number literal '{}'", valueView);
                     break;
                 }
                 if (result.overflowed) {
-                    logger(expression, "Number literal '{}' cannot fit in its assigned type", num->value);
+                    logger(expression, "Number literal '{}' cannot fit in its assigned type", valueView);
                     break;
                 }
                 return static_cast<T>(result.value);
@@ -90,7 +96,7 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
         }
         case ast::ExpressionKind::PostfixExpression: {
             const auto* postfixExpression = static_cast<const ast::PostfixExpression*>(expression);
-            auto operandValue = computeExpression<T>(postfixExpression->left, targetInfo, logger);
+            auto operandValue = computeExpression<T>(postfixExpression->left, targetInfo, interner, logger);
             if (!operandValue.has_value()) { break; }
             switch (postfixExpression->op) {
                 case UnaryPlus: return static_cast<T>(+*operandValue);
@@ -121,7 +127,7 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
         }
         case ast::ExpressionKind::TypeCastExpression: {
             const auto* typeCastExpression = static_cast<const ast::TypeCastExpression*>(expression);
-            return computeExpression<T>(typeCastExpression->originalValue, targetInfo, logger);
+            return computeExpression<T>(typeCastExpression->originalValue, targetInfo, interner, logger);
         }
         default: break;
     }
@@ -129,3 +135,5 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
 }
 
 }  // namespace Manganese::utils
+
+#endif  // MANGANESE_INCLUDE_UTILS_EXPRESSION_FOLDING

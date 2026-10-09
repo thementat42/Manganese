@@ -58,7 +58,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) no
     }
 
     auto conditionValue = utils::computeExpression<bool>(
-        statement->stopCondition, targetInfo,
+        statement->stopCondition, targetInfo, interner,
         [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
             this->logError(expr, fmt, std::forward<Args>(args)...);
         });
@@ -195,7 +195,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::WhileLoopStatement* statement) 
     visit(statement->condition);
     // Try to detect infinite loops
     auto conditionValue = utils::computeExpression<bool>(
-        statement->condition, targetInfo,
+        statement->condition, targetInfo,interner,
         [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
             this->logError(expr, fmt, std::forward<Args>(args)...);
         });

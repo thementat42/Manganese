@@ -58,7 +58,7 @@ auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
             return typevisit_t::Failure;
         }
         const auto lengthVal = utils::computeExpression<std::uint64_t>(
-            arrayType->lengthExpression, typeContext.getTargetInfo(),
+            arrayType->lengthExpression, typeContext.getTargetInfo(),interner,
             [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
                 this->logError(expr, fmt, std::forward<Args>(args)...);
             });
