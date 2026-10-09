@@ -39,18 +39,19 @@ class IRGenerator final : public _irgen_base_t {
     utils::TargetInfo targetInfo;
     mnstl::tiny_stack<LoopTarget> loopStack;
     semantic::SemanticAnalyzer& analyzer;
-    std::unordered_map<utils::StringID, std::size_t> activeGenericParams;
-    mnstl::tiny_stack<semantic::TypeList> genericsStack;
+    utils::StringInterner& interner;
 
    public:
     IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles,
-                semantic::SemanticAnalyzer& analyzerReference, utils::TargetInfo info) :
+                semantic::SemanticAnalyzer& analyzerReference, utils::StringInterner& internerReference,
+                utils::TargetInfo info) :
         context(std::make_unique<llvm::LLVMContext>()),
         module(std::make_unique<llvm::Module>(moduleName, *context)),
         builder(std::make_unique<llvm::IRBuilder<>>(*context)),
         files(parsedFiles),
         targetInfo(info),
-        analyzer(analyzerReference) {}
+        analyzer(analyzerReference),
+        interner(internerReference) {}
 
     std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
     llvm::Module* getModule() const noexcept { return module.get(); }
@@ -92,8 +93,7 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visit(const semantic::Void*);
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
 
-    [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
-                                                        utils::StringID lexeme) const;
+    [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const;
     [[nodiscard]] llvm::Value* convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
                                                    const semantic::SemanticType* toType);
     static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op) NOEXCEPT_IF_RELEASE;

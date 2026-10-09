@@ -48,7 +48,7 @@ namespace Manganese::codegen {
     for (const semantic::AggregateField& field : type->fields) { elementTypes.push_back(visit(field.type)); }
 
     auto* structType = type->name.empty() ? llvm::StructType::get(*context, elementTypes)
-                                          : llvm::StructType::create(*context, type->name);
+                                          : llvm::StructType::create(*context, std::string(type->name));
 
     if (!type->name.empty()) {
         structType->setBody(elementTypes);

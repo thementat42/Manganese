@@ -22,26 +22,22 @@ void IRGenerator::dump(std::ostream& os) const {
     module->print(ros, nullptr);
 }
 
-[[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression,
-                                                                 std::string_view lexeme) const {
+[[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const {
+    std::string_view lexeme = interner.get_view(expression->value);
+    
     if (lexeme.ends_with("i8") || lexeme.ends_with("u8") || lexeme.ends_with("I8") || lexeme.ends_with("U8")) {
-        lexeme.remove_suffix(2);
         return llvm::Type::getInt8Ty(*context);
     }
     if (lexeme.ends_with("i16") || lexeme.ends_with("u16") || lexeme.ends_with("I16") || lexeme.ends_with("U16")) {
-        lexeme.remove_suffix(3);
         return llvm::Type::getInt16Ty(*context);
     }
     if (lexeme.ends_with("i32") || lexeme.ends_with("u32") || lexeme.ends_with("I32") || lexeme.ends_with("U32")) {
-        lexeme.remove_suffix(3);
         return llvm::Type::getInt32Ty(*context);
     }
     if (lexeme.ends_with("i64") || lexeme.ends_with("u64") || lexeme.ends_with("I64") || lexeme.ends_with("U64")) {
-        lexeme.remove_suffix(3);
         return llvm::Type::getInt64Ty(*context);
     }
     if (lexeme.ends_with("i128") || lexeme.ends_with("u128") || lexeme.ends_with("I128") || lexeme.ends_with("U128")) {
-        lexeme.remove_suffix(4);
         return llvm::Type::getInt128Ty(*context);
     }
     using enum ast::PrimitiveType;
@@ -129,7 +125,7 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
         llvm::Value* ptr = namedValues[identifierExpression->name];
         if (ptr == nullptr) {
             ASSERT_UNREACHABLE_FMT("Variable '{}' was not flagged as undeclared during semantic analysis",
-                                   identifierExpression->name);
+                                   interner.get_view(identifierExpression->name));
         }
         return ptr;
     }
@@ -160,15 +156,16 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
         const auto* scopeExpression = static_cast<const ast::ScopeResolutionExpression*>(expr);
         llvm::Value* ptr = namedValues[scopeExpression->mangledName];
         if (ptr == nullptr) {
-            ptr = builder->GetInsertBlock()->getModule()->getNamedGlobal(scopeExpression->mangledName);
+            ptr = builder->GetInsertBlock()->getModule()->getNamedGlobal(interner.get_view(scopeExpression->mangledName));
         }
         if (ptr == nullptr) {
-            ASSERT_UNREACHABLE_FMT("Could not find LLVM value for mangled name '{}'", scopeExpression->mangledName);
+            ASSERT_UNREACHABLE_FMT("Could not find LLVM value for mangled name '{}'",
+                                   interner.get_view(scopeExpression->mangledName));
         }
         return ptr;
     }
 
-    ASSERT_UNREACHABLE_FMT("Unknown lvalue expression '{}' in IRGenerator::getLValue", expr->toString());
+    ASSERT_UNREACHABLE_FMT("Unknown lvalue expression '{}' in IRGenerator::getLValue", expr->toString(interner));
 }
 
 }  // namespace Manganese::codegen

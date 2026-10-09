@@ -17,8 +17,6 @@
 #include <middleend/codegen/ir_generator.hpp>
 #include <runtime/string.hpp>
 
-#include "frontend/ast/ast_expressions.hpp"
-
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
@@ -31,7 +29,6 @@ namespace Manganese::codegen {
         builder->CreateStore(fieldValue, fieldPointer);
     }
     return alloca;
-    // return builder->CreateLoad(aggregateType, alloca, "aggregate_load");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateLiteralExpression* expression) -> exprvisit_t {
@@ -44,7 +41,6 @@ namespace Manganese::codegen {
         builder->CreateStore(fieldValue, fieldPointer);
     }
     return alloca;
-    // return builder->CreateLoad(aggregateType, alloca, "anonymous_aggregate_load");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AlignofExpression* expression) -> exprvisit_t {
@@ -60,10 +56,6 @@ namespace Manganese::codegen {
     llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "array_literal");
     for (std::size_t i = 0; i < length; ++i) {
         llvm::Value* elementValue = visit(expression->elements[i]);
-        // GEP gets a pointer offset, not a direct array element
-        // so we want to get a pointer to the first element of the array, stay there, and then go forward to the ith
-        // element
-        // effectively &array[0][i]
         std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
         llvm::Value* elementPointer
             = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
@@ -89,7 +81,6 @@ namespace Manganese::codegen {
     }
 
     builder->CreateStore(newValue, assigneePointer);
-    // assignment evaluates to the value itself
     return newValue;
 }
 
@@ -136,7 +127,6 @@ namespace Manganese::codegen {
                 return commonType->isSignedInteger() ? builder->CreateSDiv(lhs, rhs, "sfloordiv_tmp")
                                                      : builder->CreateUDiv(lhs, rhs, "ufloordiv_tmp");
             }
-            // temporarily do the division in floating-point then truncate to an int
             llvm::Value* floatDivisionResult = builder->CreateFDiv(lhs, rhs, "floordiv_mixed_int_float_tmp_val");
             typevisit_t floatType = visit(commonType);
             llvm::Function* floorIntrinsic = llvm::Intrinsic::getDeclarationIfExists(
@@ -168,7 +158,6 @@ namespace Manganese::codegen {
                 llvm::Value* cmpResult = builder->CreateCall(strcmpFn, {lhs, rhs}, "strcmp_tmp");
                 llvm::Value* zero = builder->getInt32(0);
 
-                // Map the operation to the appropriate comparison against 0
                 llvm::CmpInst::Predicate pred;
                 switch (expression->op) {
                     case Equal: pred = llvm::CmpInst::ICMP_EQ; break;
@@ -182,7 +171,6 @@ namespace Manganese::codegen {
 
                 return builder->CreateICmp(pred, cmpResult, zero, "str_cmp_bool");
             }
-            // regular number comparison
             if (doFloatOperation) {
                 const llvm::CmpInst::Predicate predicate = getFloatPredicate(expression->op);
                 return builder->CreateFCmp(predicate, lhs, rhs, "fcmp_tmp");
@@ -192,7 +180,6 @@ namespace Manganese::codegen {
             return builder->CreateICmp(predicate, lhs, rhs, "icmp_tmp");
         }
 
-        // to implement short-circuiting for && and || we need phi nodes
         case And:
         case Or: {
             const auto op = expression->op;
@@ -204,45 +191,32 @@ namespace Manganese::codegen {
             llvm::BasicBlock* mergeBlock
                 = llvm::BasicBlock::Create(*context, op == And ? "and_end" : "or_end", function);
 
-            // branching on the LHS value
             if (expression->op == And) {
-                // for && if it's true we need to evaluate the rhs
-                // but if it's false we can skip the rhs
                 builder->CreateCondBr(/*Cond=*/lhsValue, /*True=*/rhsBlock, /*False=*/mergeBlock);
             } else {
-                // for || if it's false we need to evaluate the rhs
-                //  but if it's true we can skip the rhs
                 builder->CreateCondBr(/*Cond=*/lhsValue, /*True=*/mergeBlock, /*False=*/rhsBlock);
             }
 
-            // have a separate block for evaluating the rhs (so we can skip it)
             builder->SetInsertPoint(rhsBlock);
             llvm::Value* rhsValue = visit(expression->right);
             llvm::BasicBlock* rhsBlockEnd = builder->GetInsertBlock();
-            builder->CreateBr(mergeBlock);  // after evaluating RHS we can go to the merge
+            builder->CreateBr(mergeBlock);
 
-            // Merge via the PHI node
             builder->SetInsertPoint(mergeBlock);
 
             llvm::PHINode* phiNode
                 = builder->CreatePHI(builder->getInt1Ty(), /*NumReservedValues=*/2, op == And ? "and_phi" : "or_phi");
 
-            // the PHI node has two incoming values:
-            // for &&: if we come from the lhs, the lhs was false (short circuiting)
-            // for || if we come from the lhs, the lhs was true (short circuiting)
-            // for both, if we come from the rhs we just use that value
             phiNode->addIncoming(builder->getInt1(op != And), lhsBlock);
             phiNode->addIncoming(rhsValue, rhsBlockEnd);
             return phiNode;
         }
 
         case BitAnd: return builder->CreateAnd(lhs, rhs, "bitand");
-
         case BitOr: return builder->CreateOr(lhs, rhs, "bitand");
         case BitXor: return builder->CreateXor(lhs, rhs, "bitxor");
         case BitLShift: return builder->CreateShl(lhs, rhs, "bitshl");
         case BitRShift: {
-            // signed types need sign extension and unsigned types need 0 extension
             return commonType->isSignedInteger() ? builder->CreateAShr(lhs, rhs, "arithmetic_shr_tmp")
                                                  : builder->CreateLShr(lhs, rhs, "logical_shr_tmp");
         }
@@ -258,7 +232,6 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::CharLiteralExpression* expression) -> exprvisit_t {
-    // LLVM expects a uint64 as the value for an integer even if it's a smaller type
     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), static_cast<std::uint64_t>(expression->value));
 }
 
@@ -282,15 +255,14 @@ namespace Manganese::codegen {
     llvm::Value* calleeValue = nullptr;
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
         const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
-        if (idExpr->resolvedDeclaration != nullptr && !idExpr->resolvedDeclaration->mangledName.empty()) {
-            calleeValue = builder->GetInsertBlock()->getModule()->getFunction(idExpr->resolvedDeclaration->mangledName);
+        if (idExpr->resolvedDeclaration != nullptr && idExpr->resolvedDeclaration->mangledName.has_value()) {
+            calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(*idExpr->resolvedDeclaration->mangledName));
         }
-        if (calleeValue == nullptr) { calleeValue = builder->GetInsertBlock()->getModule()->getFunction(idExpr->name); }
+        if (calleeValue == nullptr) { calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(idExpr->name)); }
     } else if (expression->callee->kind == ast::ExpressionKind::ScopeResolutionExpression) {
         const auto* scopeExpr = static_cast<const ast::ScopeResolutionExpression*>(expression->callee);
-        calleeValue = builder->GetInsertBlock()->getModule()->getFunction(scopeExpr->mangledName);
+        calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(scopeExpr->mangledName));
     } else {
-        // function pointer, array index, etc.
         calleeValue = visit(expression->callee);
     }
 
@@ -302,17 +274,17 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
     if (symbol == nullptr || symbol->node == nullptr) {
         ASSERT_UNREACHABLE_FMT(
             "Use of undeclared symbol '{}' in generic instantiation was not flagged as semantically invalid",
-            expression->identifier->toString());
+            expression->identifier->toString(interner));
     }
 
     semantic::InstantiationKey key{.declNode = symbol->node, .typeArgs = expression->semanticTypes};
 
     const auto* instantiationResult = analyzer.instantiationCache.find(key);
     if (instantiationResult == nullptr || instantiationResult->state != ResolutionStatus::Success) {
-        ASSERT_UNREACHABLE_FMT("Generic instantiation not successfully resolved", expression->toString());
+        ASSERT_UNREACHABLE_FMT("Generic instantiation not successfully resolved", expression->toString(interner));
     }
 
-    const std::string& mangledName = instantiationResult->mangledName;
+    const std::string_view mangledName = interner.get_view(instantiationResult->mangledName);
 
     if (symbol->kind == semantic::SymbolKind::Function) {
         llvm::Function* llvmFunc = module->getFunction(mangledName);
@@ -339,38 +311,37 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
         return nullptr;
     }
 
-    ASSERT_UNREACHABLE_FMT("Generic instantiation {} was not flagged as semantically invalid", expression->toString());
+    ASSERT_UNREACHABLE_FMT("Generic instantiation {} was not flagged as semantically invalid", expression->toString(interner));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
     if (expression->semanticType != nullptr && expression->semanticType->isFunction()) {
         llvm::Function* function = nullptr;
-        if (expression->resolvedDeclaration != nullptr && !expression->resolvedDeclaration->mangledName.empty()) {
-            function = module->getFunction(expression->resolvedDeclaration->mangledName);
+        if (expression->resolvedDeclaration != nullptr && expression->resolvedDeclaration->mangledName.has_value()) {
+            function = module->getFunction(interner.get_view(*expression->resolvedDeclaration->mangledName));
         }
-        if (function == nullptr) { function = module->getFunction(expression->name); }
+        if (function == nullptr) { function = module->getFunction(interner.get_view(expression->name)); }
         if (function == nullptr) {
-            ASSERT_UNREACHABLE_FMT("Function '{}' could not be found in the LLVM module", expression->name);
+            ASSERT_UNREACHABLE_FMT("Function '{}' could not be found in the LLVM module", interner.get_view(expression->name));
         }
         return function;
     }
 
     llvm::Value* value = nullptr;
-    if ((expression->resolvedDeclaration != nullptr) && !expression->resolvedDeclaration->mangledName.empty()) {
-        value = namedValues[expression->resolvedDeclaration->mangledName];
+    if ((expression->resolvedDeclaration != nullptr) && expression->resolvedDeclaration->mangledName.has_value()) {
+        value = namedValues[*expression->resolvedDeclaration->mangledName];
         if (value == nullptr) {
-            value
-                = builder->GetInsertBlock()->getModule()->getNamedGlobal(expression->resolvedDeclaration->mangledName);
+            value = builder->GetInsertBlock()->getModule()->getNamedGlobal(interner.get_view(*expression->resolvedDeclaration->mangledName));
         }
     }
 
     if (value == nullptr) { value = namedValues[expression->name]; }
     if (value == nullptr) {
         ASSERT_UNREACHABLE_FMT("Variable '{}' was not flagged as undeclared during semantic analysis",
-                               expression->name);
+                               interner.get_view(expression->name));
     }
     llvm::Type* llvmType = visitTypeAsValue(expression->semanticType);
-    return builder->CreateLoad(llvmType, value, std::format("load_val_of_{}", expression->name));
+    return builder->CreateLoad(llvmType, value, std::format("load_val_of_{}", interner.get_view(expression->name)));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IndexExpression* expression) -> exprvisit_t {
@@ -387,38 +358,39 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
 }
 
 auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprvisit_t {
-    std::string_view lexeme = expression->value;
+    std::string_view lexeme = interner.get_view(expression->value);
     if (expression->isFloat) {
         if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
-            lexeme.remove_suffix(3);
-            return llvm::ConstantFP::get(llvm::Type::getFloatTy(*context), lexeme);
+            std::string mutableLexeme(lexeme);
+            mutableLexeme.erase(mutableLexeme.size() - 3);
+            return llvm::ConstantFP::get(llvm::Type::getFloatTy(*context), mutableLexeme);
         }
-        if (lexeme.ends_with("f64") || lexeme.ends_with("F64")) { lexeme.remove_suffix(3); }
+        if (lexeme.ends_with("f64") || lexeme.ends_with("F64")) {
+            std::string mutableLexeme(lexeme);
+            mutableLexeme.erase(mutableLexeme.size() - 3);
+            return llvm::ConstantFP::get(llvm::Type::getDoubleTy(*context), mutableLexeme);
+        }
         return llvm::ConstantFP::get(llvm::Type::getDoubleTy(*context), lexeme);
     }
 
     std::uint8_t radix = 10;
+    std::string mutableLexeme(lexeme);
 
-    // Figure out the radix and the type of the integer literal based on prefixes and suffixes for LLVM
-    // Note: LLVM doesn't have a concept of signed vs unsigned integers, just sequences of N bits
-    // instead other places need to tell it how to handle those bits
-    // (e.g. 'udiv' vs 'idiv' for unsigned vs signed division)
-
-    if (lexeme.starts_with("0x") || lexeme.starts_with("0X")) {
+    if (mutableLexeme.starts_with("0x") || mutableLexeme.starts_with("0X")) {
         radix = 16;
-        lexeme.remove_prefix(2);
-    } else if (lexeme.starts_with("0D") || lexeme.starts_with("0D")) {
+        mutableLexeme.erase(0, 2);
+    } else if (mutableLexeme.starts_with("0d") || mutableLexeme.starts_with("0D")) {
         radix = 10;
-        lexeme.remove_prefix(2);
-    } else if (lexeme.starts_with("0o") || lexeme.starts_with("0O")) {
+        mutableLexeme.erase(0, 2);
+    } else if (mutableLexeme.starts_with("0o") || mutableLexeme.starts_with("0O")) {
         radix = 8;
-        lexeme.remove_prefix(2);
-    } else if (lexeme.starts_with("0b") || lexeme.starts_with("0B")) {
+        mutableLexeme.erase(0, 2);
+    } else if (mutableLexeme.starts_with("0b") || mutableLexeme.starts_with("0B")) {
         radix = 2;
-        lexeme.remove_prefix(2);
+        mutableLexeme.erase(0, 2);
     }
 
-    return llvm::ConstantInt::get(getLLVMIntegerType(expression, lexeme), lexeme, radix);
+    return llvm::ConstantInt::get(getLLVMIntegerType(expression), mutableLexeme, radix);
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::PostfixExpression* expression) -> exprvisit_t {
@@ -443,7 +415,6 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
         ASSERT_UNREACHABLE_FMT("Unknown postfix operator '{}'", lexer::tokenTypeToString(expression->op));
     }
     builder->CreateStore(updatedValue, ptrToValue);
-    // postfix does the operation but returns the original value
     return originalValue;
 }
 
@@ -454,16 +425,13 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     const semantic::SemanticType* valueType = expression->right->semanticType;
     llvm::Type* valueTypeLLVM = visit(valueType);
 
-    if (op == UnaryPlus) { return visit(expression->right); /*+x is the same as x*/ }
+    if (op == UnaryPlus) { return visit(expression->right); }
     if (op == UnaryMinus) {
         llvm::Value* value = visit(expression->right);
-
         return valueType->isFloat() ? builder->CreateFNeg(value, "fneg") : builder->CreateNeg(value, "ineg");
     }
     if (op == Not) {
         llvm::Value* value = visit(expression->right);
-
-        // expression's semantic type is bool
         value = convertNumberToType(value, valueType, expression->semanticType);
         return builder->CreateNot(value);
     }
@@ -493,7 +461,6 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
                                                   : builder->CreateFSub(originalValue, one, "prefix_dec_fsub");
         }
         builder->CreateStore(updatedValue, ptrToValue);
-        // prefix does the operation and returns that value
         return updatedValue;
     }
     return nullptr;
@@ -503,8 +470,8 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     if (expression->semanticType->isEnum()) {
         const auto* enumType = static_cast<const semantic::Enum*>(expression->semanticType);
         const auto* identifierExpression = static_cast<const ast::IdentifierExpression*>(expression->element);
-        auto val = enumType->getVariantValue(identifierExpression->name);
-        if (!val) { ASSERT_UNREACHABLE_FMT("Enum variant '{}' did not have a value set", identifierExpression->name); }
+        auto val = enumType->getVariantValue(interner.get_view(identifierExpression->name));
+        if (!val) { ASSERT_UNREACHABLE_FMT("Enum variant '{}' did not have a value set", interner.get_view(identifierExpression->name)); }
         auto* llvmIntType = llvm::cast<llvm::IntegerType>(visit(enumType->underlyingType));
         return llvm::ConstantInt::get(llvmIntType, static_cast<std::uint64_t>(*val),
                                       /*isSigned=*/enumType->underlyingType->isSignedInteger());
@@ -515,13 +482,13 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::SizeofExpression* expression) -> exprvisit_t {
-    // Note: no codegen for the nested expression occurs
     llvm::IntegerType* sizeType = module->getDataLayout().getIntPtrType(*context);
     return llvm::ConstantInt::get(sizeType, expression->semanticType->size(targetInfo));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::StringLiteralExpression* expression) -> exprvisit_t {
-    llvm::StringRef strRef(expression->value.data(), expression->value.size());
+    std::string_view strView = interner.get_view(expression->value);
+    llvm::StringRef strRef(strView.data(), strView.size());
     llvm::Constant* globalString = builder->CreateGlobalString(strRef, "str_literal");
 
     auto* stringType = llvm::cast<llvm::StructType>(visit(expression->semanticType));
@@ -529,7 +496,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     std::vector<llvm::Constant*> indices = {zero, zero};
     llvm::Constant* dataPtr
         = llvm::ConstantExpr::getInBoundsGetElementPtr(globalString->getType(), globalString, indices);
-    llvm::Constant* length = builder->getInt64(expression->value.size());
+    llvm::Constant* length = builder->getInt64(strView.size());
     return llvm::ConstantStruct::get(stringType, {dataPtr, length});
 }
 
@@ -540,31 +507,24 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     llvm::BasicBlock* falseBlock = llvm::BasicBlock::Create(*context, "ternary_false", function);
     llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(*context, "ternary_end", function);
 
-    // the two branches are in isolated blocks below; we branch to a specific block based on the condition
     llvm::Value* conditionValue = visit(expression->condition);
     builder->CreateCondBr(conditionValue, /*True=*/trueBlock, /*False=*/falseBlock);
 
-    // generate code for each case in its own  block so it can be skipped over as needed
-    // in both cases, after it's been evaluated, want to skip to after the ternary
     builder->SetInsertPoint(trueBlock);
     llvm::Value* trueBranchValue = visit(expression->ifTrue);
     builder->CreateBr(mergeBlock);
     llvm::BasicBlock* trueEndBlock = builder->GetInsertBlock();
 
-    // ditto for the false block
     builder->SetInsertPoint(falseBlock);
     llvm::Value* falseBranchValue = visit(expression->ifFalse);
     builder->CreateBr(mergeBlock);
     llvm::BasicBlock* falseEndBlock = builder->GetInsertBlock();
 
-    // both expressions have code generated, now we need a PHI node
     builder->SetInsertPoint(mergeBlock);
 
     llvm::Type* ternaryType = trueBranchValue->getType();
-
     llvm::PHINode* phiNode = builder->CreatePHI(ternaryType, 2, "ternary_phi");
 
-    // we know which block jumped here based on the value that was evaluated
     phiNode->addIncoming(trueBranchValue, trueEndBlock);
     phiNode->addIncoming(falseBranchValue, falseEndBlock);
     return phiNode;
@@ -576,7 +536,6 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     const semantic::SemanticType* fromType = expression->originalValue->semanticType;
     const semantic::SemanticType* toType = expression->targetType->semanticType;
 
-    // same type, don't need to actually do a cast
     if (fromType == toType) { return originalValue; }
     llvm::Type* sourceTypeLLVM = visit(fromType);
     llvm::Type* destTypeLLVM = visit(toType);
@@ -601,7 +560,6 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::UninitializedExpression* /*unused*/) -> exprvisit_t {
-    // uninitialized (the keyword) doesn't have any runtime value, so no value needs to be generated
     return nullptr;
 }
 

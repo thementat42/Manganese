@@ -14,7 +14,7 @@ namespace Manganese::codegen {
 
 auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
     if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
-    auto* llvmType = llvm::StructType::create(*context, statement->name);
+    auto* llvmType = llvm::StructType::create(*context, interner.get_view(statement->name));
     savedTypes[statement->semanticType]
         = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
 
@@ -90,8 +90,9 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
 
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(statement->semanticType));
 
+    std::string_view mangledNameView = statement->mangledName.has_value() ? interner.get_view(*statement->mangledName) : interner.get_view(statement->name);
     auto* llvmFunction
-        = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, statement->mangledName, module.get());
+        = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, mangledNameView, module.get());
 
     llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(*context, "entry", llvmFunction);
     builder->SetInsertPoint(entryBlock);
@@ -99,9 +100,10 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     llvm::Argument* currentLLVMArgument = llvmFunction->arg_begin();
     for (std::size_t i = 0; i < statement->parameters.size(); ++i, ++currentLLVMArgument) {
         const auto& param = statement->parameters[i];
-        currentLLVMArgument->setName(param.name);
+        std::string_view paramName = interner.get_view(param.name);
+        currentLLVMArgument->setName(paramName);
 
-        llvm::AllocaInst* alloca = builder->CreateAlloca(currentLLVMArgument->getType(), nullptr, param.name + "_addr");
+        llvm::AllocaInst* alloca = builder->CreateAlloca(currentLLVMArgument->getType(), nullptr, std::string(paramName) + "_addr");
         builder->CreateStore(currentLLVMArgument, alloca);
 
         namedValues[param.name] = alloca;
@@ -262,13 +264,14 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
 
 auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     llvm::Type* variableTypeLLVM = visitTypeAsValue(statement->semanticType);
-    llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statement->name);
+    std::string_view statementName = interner.get_view(statement->name);
+    llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statementName);
 
     if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {
         llvm::Value* initializerValue = visit(statement->value);
         builder->CreateStore(initializerValue, alloca);
     }
-    namedValues[std::string(statement->name)] = alloca;
+    namedValues[statement->name] = alloca;
 }
 
 auto IRGenerator::visit(const ast::WhileLoopStatement* statement) -> stmtvisit_t {
