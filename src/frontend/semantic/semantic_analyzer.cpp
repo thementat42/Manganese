@@ -27,17 +27,21 @@ Result SemanticAnalyzer::analyze() {
     return Result::Success;
 }
 
-std::string SemanticAnalyzer::getMangledName(std::string_view baseName) const {
-    if (context.namespaceStack.empty()) { return std::string(baseName); }
+utils::StringID SemanticAnalyzer::getMangledName(utils::StringID baseNameID) const {
+    std::string_view baseName = interner.get_view(baseNameID);
+    if (context.namespaceStack.empty()) { return baseNameID; }
     std::string result;
     for (const auto& name : context.namespaceStack) { result += std::format("${}", name); }
-    return result;
+    result += baseName;
+    return interner.intern(result);
 }
 
-std::string SemanticAnalyzer::getMangledName(std::string_view baseName, const TypeList& typeArgs) const {
-    std::string result = getMangledName(baseName);
+utils::StringID SemanticAnalyzer::getMangledName(utils::StringID baseNameID, const TypeList& typeArgs) const {
+    std::string result;
+    for (const auto& name : context.namespaceStack) { result += std::format("${}", name); }
+    result += interner.get_view(baseNameID);
     for (const auto& type : typeArgs) { result += std::format("${}", type->toString()); }
-    return result;
+    return interner.intern(result);
 }
 
 const Symbol* SemanticAnalyzer::resolveTypeSymbol(const ast::Type* typeNode) {
