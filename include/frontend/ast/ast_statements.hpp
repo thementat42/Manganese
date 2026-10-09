@@ -12,7 +12,7 @@ namespace Manganese::ast {
 
 struct Declaration : public Statement {
     utils::StringID name;
-    utils::StringID mangledName;
+    utils::OptionalStringID mangledName;
     const semantic::SemanticType* semanticType = nullptr;
 
     Declaration(StatementKind _kind, utils::StringID _name) noexcept : Statement(_kind), name(_name) {}

@@ -44,7 +44,7 @@ auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
 
         if (statement->stopCondition->semanticType->isPoison()) {
             logError(statement->stopCondition, "Could not deduce type of for loop stop condition {}",
-                     statement->stopCondition->toString());
+                     statement->stopCondition->toString(interner));
             result = stmtvisit_t::Failure;
         } else {
             const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
@@ -78,7 +78,7 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     context.inIfCondition = false;
 
     if (statement->condition->semanticType->isPoison()) {
-        logError(statement, "Could not deduce type of condition {}", statement->condition->toString());
+        logError(statement, "Could not deduce type of condition {}", statement->condition->toString(interner));
         result = stmtvisit_t::Failure;
     } else {
         const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
@@ -100,7 +100,7 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         DISCARD(visit(elif.condition));
 
         if (elif.condition->semanticType->isPoison()) {
-            logError(statement, "Could not deduce type of condition {}", elif.condition->toString());
+            logError(statement, "Could not deduce type of condition {}", elif.condition->toString(interner));
             result = stmtvisit_t::Failure;
         } else {
             const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
@@ -178,7 +178,7 @@ auto SemanticAnalyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t 
     context.inWhileLoopCondition = false;
 
     if (statement->condition->semanticType->isPoison()) {
-        logError(statement, "Could not deduce type of expression {}", statement->condition->toString());
+        logError(statement, "Could not deduce type of expression {}", statement->condition->toString(interner));
         return stmtvisit_t::Failure;
     }
     const typeCompatibilityResult conditionCanBeBool

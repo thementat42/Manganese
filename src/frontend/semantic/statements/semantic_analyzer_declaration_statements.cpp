@@ -14,20 +14,20 @@
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
-    statement->mangledName = getMangledName(statement->name);
+    statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)};
     // We don't know the generic types at declaration so we can't check them
     // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     const Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not logged in the symbol table", statement->name);
+        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not logged in the symbol table", interner.get_view(statement->name));
     }
 
     const auto* aggregateType = static_cast<const Aggregate*>(symbol->type);
 
     if (aggregateType->status == ResolutionStatus::InProgress) {
-        logError(statement, "Aggregate '{}' eventually contains itself through a dependency chain", statement->name);
+        logError(statement, "Aggregate '{}' eventually contains itself through a dependency chain", interner.get_view(statement->name));
         return stmtvisit_t::Failure;
     }
 
@@ -42,14 +42,14 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
         DISCARD(visit(field.type));
         const SemanticType* resolvedFieldType = field.type->semanticType;
         if (resolvedFieldType->isPoison()) {
-            logging::logError(field.line, field.column, "Unknown type for field '{}' in aggregate '{}'", field.name,
-                              statement->name);
+            logging::logError(field.line, field.column, "Unknown type for field '{}' in aggregate '{}'", interner.get_view(field.name),
+                              interner.get_view(statement->name));
             return stmtvisit_t::Failure;
         }
 
         if (resolvedFieldType->isAggregate()) {
             const auto* nestedAggregateType = static_cast<const Aggregate*>(resolvedFieldType);
-            const Symbol* nestedSymbol = symbolTable.lookup(nestedAggregateType->name);
+            const Symbol* nestedSymbol = symbolTable.lookup(interner.intern(nestedAggregateType->name));
             if (nestedSymbol != nullptr && nestedSymbol->node != nullptr) {
                 // Cast to non-const ast::Statement* so visit() can accept it
                 auto* nestedStmt = static_cast<ast::Statement*>(nestedSymbol->node);
@@ -60,7 +60,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
                 }
             }
         }
-        fieldTypes.push_back(AggregateField{.name = field.name, .type = resolvedFieldType});
+        fieldTypes.push_back(AggregateField{.name = interner.get_view(field.name), .type = resolvedFieldType});
     }
 
     aggregateType->fields = std::move(fieldTypes);
@@ -70,10 +70,10 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
 }
 
 auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
-    statement->mangledName = getMangledName(statement->name);
+    statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)};
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Alias symbol '{}' was not registered during type collection", statement->name);
+        ASSERT_UNREACHABLE_FMT("Alias symbol '{}' was not registered during type collection", interner.get_view(statement->name));
     }
     // Already resolved
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
@@ -81,7 +81,7 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
 
     // Cycle Detection
     if (symbol->status == ResolutionStatus::InProgress) {
-        logError(statement, "Cyclic type alias detected in the definition of alias '{}'", statement->name);
+        logError(statement, "Cyclic type alias detected in the definition of alias '{}'", interner.get_view(statement->name));
         symbol->status = ResolutionStatus::Failure;
         return stmtvisit_t::Failure;
     }
@@ -99,10 +99,10 @@ auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
 
 auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvisit_t {
     stmtvisit_t result = stmtvisit_t::Success;
-    statement->mangledName = getMangledName(statement->name);
+    statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)};
     Symbol* symbol = symbolTable.lookup(statement->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Enum {} was not registered during type initalization", statement->name);
+        ASSERT_UNREACHABLE_FMT("Enum {} was not registered during type initalization", interner.get_view(statement->name));
     }
 
     if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
@@ -117,14 +117,14 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
             symbol->status = ResolutionStatus::Failure;
             result = stmtvisit_t::Failure;
         } else if (!statement->baseType->semanticType->isInteger()) {
-            logError(statement->baseType, "Base type of enum '{}' must be an integer type, not '{}'", statement->name,
+            logError(statement->baseType, "Base type of enum '{}' must be an integer type, not '{}'", interner.get_view(statement->name),
                      statement->baseType->semanticType->toString());
             result = stmtvisit_t::Failure;
         } else {
             underlyingType = statement->baseType->semanticType;
         }
     }
-    const Enum* enumType = static_cast<const Enum*>(typeContext.getEnum(statement->name));
+    const Enum* enumType = static_cast<const Enum*>(typeContext.getEnum(interner.get_view(statement->name)));
     enumType->underlyingType = underlyingType;
     symbol->type = enumType;
 
@@ -137,14 +137,14 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
             if (visit(variant.value) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
             if (!variant.value->canFold()) {
                 logging::logError(variant.line, variant.column,
-                                  "Variant {} (in enum {}) must have a compile-time value", variant.name,
-                                  statement->name);
+                                  "Variant {} (in enum {}) must have a compile-time value", interner.get_view(variant.name),
+                                  interner.get_view(statement->name));
                 symbol->status = ResolutionStatus::Failure;
                 result = stmtvisit_t::Failure;
             }
             if (!variant.value->semanticType->isInteger()) {
                 logging::logError(variant.line, variant.column, "Variant {} (in enum {}) must have an integer value",
-                                  variant.name, statement->name);
+                                  interner.get_view(variant.name), interner.get_view(statement->name));
                 symbol->status = ResolutionStatus::Failure;
                 result = stmtvisit_t::Failure;
             }
@@ -154,15 +154,15 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
                     this->logError(expr, fmt, std::forward<Args>(args)...);
                 });
             if (!tmp.has_value()) {
-                logError(variant.value, "Invalid value '{}' for variant '{}' in enum '{}'", variant.value->toString(),
-                         variant.name, statement->name);
+                logError(variant.value, "Invalid value '{}' for variant '{}' in enum '{}'", variant.value->toString(interner),
+                         interner.get_view(variant.name), interner.get_view(statement->name));
 
             } else {
                 currentVariantValue = *tmp;
             }
         }
 
-        variants.emplace_back(variant.name, currentVariantValue);
+        variants.emplace_back(interner.get_view(variant.name), currentVariantValue);
         currentVariantValue++;
     }
     enumType->variants = std::move(variants);
@@ -176,11 +176,11 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     if (context.inFunction && !context.isInstantiatingGeneric) {
         logError(statement,
                  "Nested functions are not supported: function '{}' cannot be declared inside another function",
-                 statement->name);
+                 interner.get_view(statement->name));
         return stmtvisit_t::Failure;
     }
 
-    if (!context.isInstantiatingGeneric) { statement->mangledName = getMangledName(statement->name); }
+    if (!context.isInstantiatingGeneric) { statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)}; }
 
     if (statement->returnType != nullptr && statement->returnType->semanticType == nullptr) {
         if (visit(statement->returnType) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
@@ -195,14 +195,14 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     const SemanticType* functionType = nullptr;
     Symbol* symbol = nullptr;
 
-    if (context.isInstantiatingGeneric && !statement->mangledName.empty()) {
+    if (context.isInstantiatingGeneric && statement->mangledName.has_value()) {
         functionType = getInstantiatedFunctionType(statement);
-        symbol = symbolTable.lookup(statement->mangledName);
+        symbol = symbolTable.lookup(*statement->mangledName);
     } else {
         symbol = symbolTable.lookup(statement->name);
         if (symbol == nullptr || symbol->type == nullptr) {
             ASSERT_UNREACHABLE(
-                std::format("Function '{}' was not properly registered during symbol collection", statement->name));
+                std::format("Function '{}' was not properly registered during symbol collection", interner.get_view(statement->name)));
         }
         functionType = symbol->type;
     }
@@ -232,8 +232,8 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
                    .isMutable = param.isMutable});
 
         if (paramDeclaration == stmtvisit_t::Failure) [[unlikely]] {
-            logError(statement, "Failed to declare parameter '{}' in scope for function '{}'", param.name,
-                     statement->name);
+            logError(statement, "Failed to declare parameter '{}' in scope for function '{}'", interner.get_view(param.name),
+                     interner.get_view(statement->name));
             signatureResult = stmtvisit_t::Failure;
         }
 
@@ -246,13 +246,13 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
             const SemanticType* defaultValueType = param.defaultValue->semanticType;
             if (defaultValueType == nullptr || defaultValueType->isPoison()) {
                 logError(statement, "Unable to determine type of default value for parameter '{}' in function '{}'",
-                         param.name, statement->name);
+                         interner.get_view(param.name), interner.get_view(statement->name));
                 signatureResult = stmtvisit_t::Failure;
             } else if (!areTypesCompatible(defaultValueType, resolvedParamType)) {
                 logError(statement,
                          "Default value for parameter '{}' in function '{}' has type '{}', "
                          "but '{}' was expected",
-                         param.name, statement->name, defaultValueType->toString(), resolvedParamType->toString());
+                         interner.get_view(param.name), interner.get_view(statement->name), defaultValueType->toString(), resolvedParamType->toString());
                 signatureResult = stmtvisit_t::Failure;
             }
         }
@@ -274,19 +274,19 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
 auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     statement->semanticType = typeContext.getPoison();
     const SemanticType* variableType = nullptr;
-    statement->mangledName = getMangledName(statement->name);
+    statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)};
 
     if (statement->type != nullptr) {
         if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
         variableType = statement->type->semanticType;
         if (variableType == typeContext.getVoid()) {
-            logError(statement, "Variable '{}' cannot be declared with type void", statement->name);
+            logError(statement, "Variable '{}' cannot be declared with type void", interner.get_view(statement->name));
             return stmtvisit_t::Failure;
         }
     }
 
     if (variableType == nullptr && statement->value == nullptr) {
-        logError(statement, "Variable '{}' must have a type annotation or an initializer", statement->name);
+        logError(statement, "Variable '{}' must have a type annotation or an initializer", interner.get_view(statement->name));
         return stmtvisit_t::Failure;
     }
 
@@ -295,7 +295,7 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
         if (initializerResult == Result::Failure) { return stmtvisit_t::Failure; }
     } else {
         if (!statement->isMutable) {
-            logError(statement, "Immutable variable '{}' must have an initializer", statement->name);
+            logError(statement, "Immutable variable '{}' must have an initializer", interner.get_view(statement->name));
             return stmtvisit_t::Failure;
         }
     }
@@ -315,7 +315,7 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
                                      .status = ResolutionStatus::Success});
 
     if (declarationResult == Result::Failure) {
-        logError(statement, "Redeclaration error: variable '{}' is already declared in this scope", statement->name);
+        logError(statement, "Redeclaration error: variable '{}' is already declared in this scope", interner.get_view(statement->name));
         return stmtvisit_t::Failure;
     }
 
@@ -330,12 +330,12 @@ Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatem
         if (variableType == nullptr) {
             logError(statement,
                      "Cannot use keyword 'uninitalized' for variable '{}' without an explicit type annotation",
-                     statement->name);
+                     interner.get_view(statement->name));
             return stmtvisit_t::Failure;
         }
         if (!statement->isMutable) {
             logError(statement, "Immutable variable '{}' cannot be initialized with keyword 'uninitalized'",
-                     statement->name);
+                     interner.get_view(statement->name));
             return stmtvisit_t::Failure;
         }
         // uninit is fine, we know the type
@@ -347,11 +347,11 @@ Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatem
     const SemanticType* initializerType = statement->value->semanticType;
     if (initializerType->isPoison()) {
         logError(statement->value, "Could not determine type of initializer '{}' for variable '{}'",
-                 statement->value->toString(), statement->name);
+                 statement->value->toString(interner), interner.get_view(statement->name));
         return stmtvisit_t::Failure;
     }
     if (initializerType->isVoid()) {
-        logError(statement->value, "Cannot initialize variable '{}' with a void expression", statement->name);
+        logError(statement->value, "Cannot initialize variable '{}' with a void expression", interner.get_view(statement->name));
         return stmtvisit_t::Failure;
     }
     if (variableType == nullptr) {
