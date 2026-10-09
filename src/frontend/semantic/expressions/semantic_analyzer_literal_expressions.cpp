@@ -109,11 +109,11 @@ auto SemanticAnalyzer::visit(ast::IdentifierExpression* expression) -> exprvisit
     expression->semanticType = typeContext.getPoison();
     const Symbol* symbol = symbolTable.lookup(expression->name);
     if (symbol == nullptr) {
-        logError(expression, "Identifier '{}' was not found in the current scope", expression->name);
+        logError(expression, "Identifier '{}' was not found in the current scope", interner.get_view(expression->name));
         return exprvisit_t::Failure;
     }
     if (symbol->type->isPoison()) [[unlikely]] {
-        logError(expression, "Identifier '{}' used before its type could be determined", expression->name);
+        logError(expression, "Identifier '{}' used before its type could be determined", interner.get_view(expression->name));
         return exprvisit_t::Failure;
     }
     expression->semanticType = symbol->type;
@@ -123,7 +123,7 @@ auto SemanticAnalyzer::visit(ast::IdentifierExpression* expression) -> exprvisit
 
 auto SemanticAnalyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
-    const std::string_view lexeme = expression->value;
+    const std::string_view lexeme = interner.get_view(expression->value);
     using enum ast::PrimitiveType;
     ast::PrimitiveType deducedPrimitiveType;
 

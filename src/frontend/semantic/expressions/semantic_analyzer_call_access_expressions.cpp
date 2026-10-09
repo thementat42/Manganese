@@ -44,22 +44,24 @@ auto SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) 
             continue;
         }
 
-        if (!initializedFields.insert(fieldInit.name).second) {
-            logError(expression, "Duplicate initialization of field '{}'", fieldInit.name);
+        std::string_view fieldName = interner.get_view(fieldInit.name);
+
+        if (!initializedFields.insert(fieldName).second) {
+            logError(expression, "Duplicate initialization of field '{}'", fieldName);
             result = exprvisit_t::Failure;
             continue;
         }
 
-        const SemanticType* expectedFieldType = aggregateType->getFieldType(fieldInit.name);
+        const SemanticType* expectedFieldType = aggregateType->getFieldType(fieldName);
         if (expectedFieldType == nullptr || expectedFieldType->isPoison()) {
-            logError(expression, "Aggregate '{}' has no field named '{}'", aggregateType->toString(), fieldInit.name);
+            logError(expression, "Aggregate '{}' has no field named '{}'", aggregateType->toString(), fieldName);
             result = exprvisit_t::Failure;
             continue;
         }
 
         const SemanticType* actualFieldType = fieldInit.value->semanticType;
         if (!areTypesCompatible(expectedFieldType, actualFieldType)) {
-            logError(fieldInit.value, "Type mismatch for field '{}': expected '{}', got '{}'", fieldInit.name,
+            logError(fieldInit.value, "Type mismatch for field '{}': expected '{}', got '{}'", fieldName,
                      expectedFieldType->toString(), actualFieldType->toString());
             result = exprvisit_t::Failure;
         }
@@ -195,11 +197,11 @@ auto SemanticAnalyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     if (visit(expression->index) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
     if (expression->variable->semanticType->isPoison()) {
-        logError(expression->variable, "Could not deduce type of expression {}", expression->variable->toString());
+        logError(expression->variable, "Could not deduce type of expression {}", expression->variable->toString(interner));
         return exprvisit_t::Failure;
     }
     if (expression->index->semanticType->isPoison()) {
-        logError(expression->index, "Could not deduce type of expression {}", expression->index->toString());
+        logError(expression->index, "Could not deduce type of expression {}", expression->index->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -224,10 +226,10 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
     DISCARD(visit(expression->object));
     const SemanticType* objectType = expression->object->semanticType;
     if (objectType->isPoison()) {
-        logError(expression->object, "Could not deduce type of expression {}", expression->object->toString());
+        logError(expression->object, "Could not deduce type of expression {}", expression->object->toString(interner));
         return exprvisit_t::Failure;
     }
-    // accessing a mamber from a pointer to an aggregate is also done using x.y so auto-dereference if that's the case
+    // accessing a member from a pointer to an aggregate is also done using x.y so auto-dereference if that's the case
     if (objectType->isPointer()) { objectType = static_cast<const Pointer*>(objectType)->baseType; }
 
     if (!objectType->isAggregate()) {
@@ -241,13 +243,13 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
 
     for (std::size_t i = 0; i < aggregateType->fields.size(); ++i) {
         const AggregateField& field = aggregateType->fields[i];
-        if (field.name == expression->field) {
+        if (field.name == interner.get_view(expression->field)) {
             expression->semanticType = field.type;
             expression->fieldIndex = i;
             return exprvisit_t::Success;
         }
     }
-    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(), expression->field);
+    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(), interner.get_view(expression->field));
 
     return exprvisit_t::Failure;
 }
@@ -274,7 +276,8 @@ auto SemanticAnalyzer::visit(ast::ScopeResolutionExpression* expression) -> expr
         logError(expression->element, "Expected an identifier in a scope resolution expression");
         return exprvisit_t::Failure;
     }
-    const std::string_view memberName = static_cast<ast::IdentifierExpression*>(expression->element)->name;
+    const utils::StringID memberNameID = static_cast<ast::IdentifierExpression*>(expression->element)->name;
+    const std::string_view memberName = interner.get_view(memberNameID);
 
     if (scopeSymbol->type != nullptr && scopeSymbol->type->isEnum()) {
         const auto* enumType = static_cast<const Enum*>(scopeSymbol->type);
@@ -290,11 +293,11 @@ auto SemanticAnalyzer::visit(ast::ScopeResolutionExpression* expression) -> expr
     }
 
     if (scopeSymbol->scopeDefined == nullptr) {
-        logError(expression, "'{}' is not a namespace, module or enum", scopeSymbol->node->toString());
+        logError(expression, "'{}' is not a namespace, module or enum", scopeSymbol->node->toString(interner));
         return exprvisit_t::Failure;
     }
 
-    const Symbol* memberSymbol = decltype(symbolTable)::scopedLookup(scopeSymbol->scopeDefined, memberName);
+    const Symbol* memberSymbol = decltype(symbolTable)::scopedLookup(scopeSymbol->scopeDefined, memberNameID);
     if (memberSymbol == nullptr) {
         logError(expression->element, "No member named '{}' in scope", memberName);
         return exprvisit_t::Failure;

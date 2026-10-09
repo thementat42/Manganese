@@ -20,7 +20,7 @@ auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit
     }
 
     if (!isLvalue(expression->assignee)) {
-        logError(expression->assignee, "Cannot assign a value to expression '{}'", expression->assignee->toString());
+        logError(expression->assignee, "Cannot assign a value to expression '{}'", expression->assignee->toString(interner));
         result = exprvisit_t::Failure;
     }
 
@@ -35,7 +35,7 @@ auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit
     }
     if (!isMutableExpression(expression->assignee)) {
         logError(expression->assignee, "Cannot assign a value to immutable value '{}'",
-                 expression->assignee->toString());
+                 expression->assignee->toString(interner));
         result = exprvisit_t::Failure;
     }
 
@@ -50,11 +50,11 @@ auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     if (visit(expression->left) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->right) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (expression->left->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->left->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->left->toString(interner));
         return exprvisit_t::Failure;
     }
     if (expression->right->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->right->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->right->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -136,7 +136,7 @@ auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t 
     if (result == exprvisit_t::Failure) { return result; }
     // the only postfix operators are ++ and -- so the expression must be an integer
     if (expression->left->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -144,7 +144,7 @@ auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t 
 
     if (!isLvalue(operand)) {
         logError(operand, "Cannot apply operator {} to an rvalue '{}'", lexer::tokenTypeToString(expression->op),
-                 operand->toString());
+                 operand->toString(interner));
         result = exprvisit_t::Failure;
     }
     if (!operand->semanticType->isInteger() && !operand->semanticType->isPointer()) {
@@ -154,7 +154,7 @@ auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t 
     }
     if (!isMutableExpression(operand)) {
         logError(operand, "Cannot apply operator {} to an immutable value '{}'",
-                 lexer::tokenTypeToString(expression->op), operand->toString());
+                 lexer::tokenTypeToString(expression->op), operand->toString(interner));
         result = exprvisit_t::Failure;
     }
 
@@ -167,7 +167,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     if (expression->right->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -180,7 +180,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             expression->semanticType = rhsType;
             if (!isLvalue(expression->right)) {
                 logError(expression->right, "Cannot apply operator {} to an rvalue '{}'",
-                         lexer::tokenTypeToString(expression->op), expression->right->toString());
+                         lexer::tokenTypeToString(expression->op), expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
             if (!rhsType->isInteger() && !rhsType->isPointer()) {
@@ -190,7 +190,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             }
             if (!isMutableExpression(expression->right)) {
                 logError(expression->right, "Cannot apply operator {} to an immutable value '{}'",
-                         lexer::tokenTypeToString(expression->op), expression->right->toString());
+                         lexer::tokenTypeToString(expression->op), expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
         } break;
@@ -226,7 +226,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             bool isMut = false;
             expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMut);
             if (!isLvalue(expression->right)) {
-                logError(expression->right, "Cannot take the address of r-value '{}'", expression->right->toString());
+                logError(expression->right, "Cannot take the address of r-value '{}'", expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
             isMut = isMutableExpression(expression->right);
@@ -305,7 +305,7 @@ auto SemanticAnalyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t
                              static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
     if (visit(expression->originalValue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (expression->originalValue->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString(interner));
         return exprvisit_t::Failure;
     }
     if (visit(expression->targetType) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
