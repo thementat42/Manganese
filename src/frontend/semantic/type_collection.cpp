@@ -58,7 +58,7 @@ Result SemanticAnalyzer::collectGlobalAggregate(ast::AggregateDeclarationStateme
     // Skip uninstantiated generics
     Symbol* symbol = symbolTable.lookup(aggregate->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not recorded during type collection", aggregate->name);
+        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not recorded during type collection", interner.get_view(aggregate->name));
     }
 
     // Skip if already processed
@@ -77,17 +77,17 @@ Result SemanticAnalyzer::collectGlobalAggregate(ast::AggregateDeclarationStateme
     for (const auto& field : aggregate->fields) {
         const typevisit_t fieldResult = visit(field.type);
         if (fieldResult == typevisit_t::Failure) {
-            logError(aggregate, "Unknown type '{}' for field '{}' in aggregate '{}'", field.type->toString(),
-                     field.name, aggregate->name);
+            logError(aggregate, "Unknown type '{}' for field '{}' in aggregate '{}'", field.type->toString(interner),
+                     interner.get_view(field.name), interner.get_view(aggregate->name));
             result = Result::Failure;
         }
 
         const SemanticType* fieldType
             = (fieldResult == typevisit_t::Failure ? typeContext.getPoison() : field.type->semanticType);
-        fields.push_back(AggregateField{.name = field.name, .type = fieldType});
+        fields.push_back(AggregateField{.name = interner.get_view(field.name), .type = fieldType});
     }
 
-    symbol->type = typeContext.getNamedAggregate(std::string(aggregate->name), std::move(fields));
+    symbol->type = typeContext.getNamedAggregate(interner.get_view(aggregate->name), std::move(fields));
     symbol->status = ResolutionStatus::NotStarted;
 
     return result;
@@ -99,7 +99,7 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
     Symbol* symbol = symbolTable.lookup(function->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Function '{}' was not recorded during type collection", function->name);
+        ASSERT_UNREACHABLE_FMT("Function '{}' was not recorded during type collection", interner.get_view(function->name));
     }
 
     if (!function->genericTypes.empty()) {
@@ -109,7 +109,7 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
     // Detect direct signature cycles (e.g. infinite parameter expansion)
     if (symbol->status == ResolutionStatus::InProgress) {
-        logError(function, "Cyclic dependency detected in signature of function '{}'", function->name);
+        logError(function, "Cyclic dependency detected in signature of function '{}'", interner.get_view(function->name));
         symbol->status = ResolutionStatus::Failure;
         return Result::Failure;
     }
@@ -124,7 +124,7 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
         const typevisit_t paramResult = visit(param.type);
         if (paramResult == typevisit_t::Failure) {
             logError(function, "Unknown parameter type '{}' for parameter '{}' in function '{}'",
-                     param.type->toString(), param.name, function->name);
+                     param.type->toString(interner), interner.get_view(param.name), interner.get_view(function->name));
             funcResult = Result::Failure;
         }
 
@@ -141,8 +141,8 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
     if (function->returnType != nullptr) {
         const typevisit_t returnResult = visit(function->returnType);
         if (returnResult == typevisit_t::Failure) {
-            logError(function, "Unknown return type '{}' in function '{}'", function->returnType->toString(),
-                     function->name);
+            logError(function, "Unknown return type '{}' in function '{}'", function->returnType->toString(interner),
+                     interner.get_view(function->name));
             funcResult = Result::Failure;
             resolvedReturnType = typeContext.getPoison();
         } else {
