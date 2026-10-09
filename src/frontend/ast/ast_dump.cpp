@@ -29,7 +29,8 @@ inline void dumpHeader(std::ostream& os, Indent indent, std::string_view classNa
     os << indent << std::format("{} [{}:{}]", className, node.line, node.column) << " {\n";
 }
 
-inline void dumpBlock(std::ostream& os, std::string_view label, const utils::StringInterner& interner, Indent indent, const ast::Block& block) {
+inline void dumpBlock(std::ostream& os, std::string_view label, const utils::StringInterner& interner, Indent indent,
+                      const ast::Block& block) {
     os << indent << label << ": [\n";
     for (const ast::Statement* stmt : block) { stmt->dump(os, interner, indent.next()); }
     os << indent << "]\n";
@@ -57,7 +58,8 @@ inline std::size_t utf8Length(std::string_view str) noexcept {
 
 // Statements
 
-void AggregateDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+void AggregateDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner,
+                                         std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AggregateDeclarationStatement", *this);
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
@@ -90,12 +92,12 @@ void BreakStatement::dump(std::ostream& os, const utils::StringInterner& /*unuse
     dumpHeader(os, ind, "BreakStatement", *this);
 }
 
-void ContinueStatement::dump(std::ostream& os, const utils::StringInterner&  /*unused*/, std::size_t indent) const {
+void ContinueStatement::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ContinueStatement", *this);
 }
 
-void EmptyStatement::dump(std::ostream& os, const utils::StringInterner&  /*unused*/, std::size_t indent) const {
+void EmptyStatement::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "EmptyStatement", *this);
     os << " }";  // header includes an opening curly brace
@@ -107,13 +109,14 @@ void EnumDeclarationStatement::dump(std::ostream& os, const utils::StringInterne
 
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
+    os << ind.next() << "base type: " << (baseType != nullptr ? baseType->toString(interner) : "not set") << "\n";
     os << ind.next() << "values: [\n";
 
     for (const EnumValue& val : values) {
         os << ind.next(2) << "{\n";
         os << ind.next(3) << "name: " << interner.get_view(val.name) << "\n";
         os << ind.next(3) << "value: \n";
-        val.value->dump(os, interner, ind.next(4));
+        if (val.value != nullptr) { val.value->dump(os, interner, ind.next(4)); }
         os << ind.next(2) << "}\n";
     }
 
@@ -149,7 +152,8 @@ void ForLoopStatement::dump(std::ostream& os, const utils::StringInterner& inter
     os << ind << "}\n";
 }
 
-void FunctionDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+void FunctionDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner,
+                                        std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "FunctionDeclarationStatement", *this);
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
@@ -234,7 +238,8 @@ void ImportStatement::dump(std::ostream& os, const utils::StringInterner& intern
     os << ind << "}\n";
 }
 
-void ModuleDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+void ModuleDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner,
+                                      std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ModuleDeclarationStatement", *this);
     os << ind.next() << "module name: " << interner.get_view(name) << "\n";
@@ -290,7 +295,8 @@ void SwitchStatement::dump(std::ostream& os, const utils::StringInterner& intern
     os << ind << "}\n";
 }
 
-void VariableDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+void VariableDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner,
+                                        std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "VariableDeclarationStatement", *this);
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
@@ -328,7 +334,8 @@ void WhileLoopStatement::dump(std::ostream& os, const utils::StringInterner& int
 
 // Expressions
 
-void AggregateInstantiationExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+void AggregateInstantiationExpression::dump(std::ostream& os, const utils::StringInterner& interner,
+                                            std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AggregateInstantiationExpression", *this);
     os << ind.next() << "base:\n";
@@ -347,7 +354,8 @@ void AggregateInstantiationExpression::dump(std::ostream& os, const utils::Strin
     os << ind << "}\n";
 }
 
-void AggregateLiteralExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+void AggregateLiteralExpression::dump(std::ostream& os, const utils::StringInterner& interner,
+                                      std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AggregateLiteralExpression", *this);
     os << ind.next() << "Elements {\n";
@@ -405,7 +413,7 @@ void BinaryExpression::dump(std::ostream& os, const utils::StringInterner& inter
     os << ind << "}\n";
 }
 
-void BoolLiteralExpression::dump(std::ostream& os, const utils::StringInterner&  interner, std::size_t indent) const {
+void BoolLiteralExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "BoolLiteralExpression", *this);
     os << ind.next() << "value: " << toString(interner);
@@ -414,7 +422,7 @@ void BoolLiteralExpression::dump(std::ostream& os, const utils::StringInterner& 
     os << ind << "}\n";
 }
 
-void CharLiteralExpression::dump(std::ostream& os, const utils::StringInterner&  /*unused*/, std::size_t indent) const {
+void CharLiteralExpression::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "CharLiteralExpression", *this);
     os << ind.next() << "value: '" << lexer::codepointToUTF8(value) << "'\n";
@@ -441,16 +449,17 @@ void FunctionCallExpression::dump(std::ostream& os, const utils::StringInterner&
     os << ind << "}\n";
 }
 
-void GenericInstantiationExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+void GenericInstantiationExpression::dump(std::ostream& os, const utils::StringInterner& interner,
+                                          std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "GenericInstantiationExpression", *this);
     os << ind.next() << "identifier: \n";
     identifier->dump(os, interner, ind.next(2));
     os << ind.next() << "generic types: [\n";
 
-    for (const Type* type : types) { 
+    for (const Type* type : types) {
         os << ind.next(2);
-        type->dump(os, interner, ind.next(3)); 
+        type->dump(os, interner, ind.next(3));
     }
 
     os << ind.next() << "]\n";
@@ -487,7 +496,7 @@ void MemberAccessExpression::dump(std::ostream& os, const utils::StringInterner&
     os << ind << "}\n";
 }
 
-void NumberLiteralExpression::dump(std::ostream& os, const utils::StringInterner&  interner, std::size_t indent) const {
+void NumberLiteralExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "NumberLiteralExpression", *this);
     os << ind.next() << "value: " << toString(interner) << "\n";
@@ -515,7 +524,8 @@ void PrefixExpression::dump(std::ostream& os, const utils::StringInterner& inter
     os << ind << "}\n";
 }
 
-void ScopeResolutionExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+void ScopeResolutionExpression::dump(std::ostream& os, const utils::StringInterner& interner,
+                                     std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ScopeResolutionExpression", *this);
     os << ind.next() << "scope: \n";
@@ -569,7 +579,8 @@ void TypeCastExpression::dump(std::ostream& os, const utils::StringInterner& int
     os << ind << "}\n";
 }
 
-void UninitializedExpression::dump(std::ostream& os, const utils::StringInterner&  /*unused*/, std::size_t indent) const {
+void UninitializedExpression::dump(std::ostream& os, const utils::StringInterner& /*unused*/,
+                                   std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "Uninit", *this);
     os << ind << "}\n";
@@ -684,17 +695,17 @@ void TypeofType::dump(std::ostream& os, const utils::StringInterner& interner, s
 
 // Errors
 
-void PoisonedStatement::dump(std::ostream& os, const utils::StringInterner&  /*unused*/, std::size_t indent) const {
+void PoisonedStatement::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "PoisonedStatement", *this);
     os << ind << "}\n";
 }
-void PoisonedExpression::dump(std::ostream& os, const utils::StringInterner&  /*unused*/, std::size_t indent) const {
+void PoisonedExpression::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "PoisonedExpression", *this);
     os << ind << "}\n";
 }
-void PoisonedType::dump(std::ostream& os, const utils::StringInterner&  /*unused*/, std::size_t indent) const {
+void PoisonedType::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "PoisonedType", *this);
     os << ind << "}\n";

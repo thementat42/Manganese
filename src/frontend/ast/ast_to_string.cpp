@@ -92,9 +92,9 @@ std::string EmptyStatement::toString(const utils::StringInterner& /*unused*/, st
 }
 
 std::string EnumDeclarationStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string baseTypeStr = (baseType != nullptr) ? std::format(": {}", baseType->toString(interner, indent)) : "";
     std::string result = getIndent(indent)
-        + std::format("{} enum {}: {}", visibilityToString(visibility), interner.get_view(name),
-                      baseType->toString(interner, indent));
+        + std::format("{} enum {}{}", visibilityToString(visibility), interner.get_view(name), baseTypeStr);
     result += " {\n";
     for (std::size_t i = 0; i < values.size(); ++i) {
         const EnumValue& value = values[i];
@@ -343,8 +343,8 @@ std::string SizeofExpression::toString(const utils::StringInterner& interner, st
     return std::format(WRAP("sizeof({})"), type->toString(interner, indent));
 }
 
-std::string StringLiteralExpression::toString(const utils::StringInterner& /*unused*/, std::size_t /*indent*/) const {
-    return std::format("\"{}\"", value);
+std::string StringLiteralExpression::toString(const utils::StringInterner& interner, std::size_t /*indent*/) const {
+    return std::format("\"{}\"", interner.get_view(value));
 }
 
 std::string TernaryExpression::toString(const utils::StringInterner& interner, std::size_t /*indent*/) const {
