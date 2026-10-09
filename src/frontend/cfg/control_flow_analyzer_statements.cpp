@@ -229,7 +229,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block, bool shouldEnterS
     FlowStatus blockStatus = FlowStatus::FallsThrough;
     bool isUnreachable = false;
     for (const ast::Statement* stmt : block) {
-        if (isUnreachable) { logWarning(stmt, "Statement '{}' is unreachable", stmt->toString()); }
+        if (isUnreachable) { logWarning(stmt, "Statement '{}' is unreachable", stmt->toString(interner)); }
         // if we visit the statement first, we'd get false positives (e.g. a return statement in a function would always
         // be marked as unreachable)
         FlowStatus stmtStatus = visit(stmt);

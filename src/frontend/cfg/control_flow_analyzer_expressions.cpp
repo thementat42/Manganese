@@ -60,9 +60,9 @@ auto ControlFlowAnalyzer::visit(const ast::IdentifierExpression* expression) noe
 
     if (const auto state = getAssignmentState(*symbol); symbol->kind == Variable) {
         if (state == AssignmentState::Uninitialized) {
-            logError(expression, "Identifier '{}' does not have a value", expression->name);
+            logError(expression, "Identifier '{}' does not have a value", interner.get_view(expression->name));
         } else if (state == AssignmentState::MaybeInitialized) {
-            logError(expression, "Identifier '{}' may not have a value on all control paths", expression->name);
+            logError(expression, "Identifier '{}' may not have a value on all control paths", interner.get_view(expression->name));
         }
     }
 }

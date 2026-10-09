@@ -1,4 +1,5 @@
 
+#include "utils/string_interner.hpp"
 #ifndef MANGANESE_INCLUDE_FRONTEND_CFG_CONTROL_FLOW_ANALYZER_HPP
 #define MANGANESE_INCLUDE_FRONTEND_CFG_CONTROL_FLOW_ANALYZER_HPP 1
 
@@ -36,6 +37,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     const std::vector<parser::ParsedFile>& files;
     const utils::TargetInfo& targetInfo;
     semantic::SymbolTable& symbolTable;  // need to look up symbols for definite assignment
+    utils::StringInterner& interner;
 
     struct states_t {
         std::vector<std::uint64_t> isUnInitialized;
@@ -49,8 +51,8 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 
    public:
     ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo,
-                        semantic::SymbolTable& _symbolTable) :
-        files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable) {
+                        semantic::SymbolTable& _symbolTable, utils::StringInterner& _interner) :
+        files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable), interner(_interner) {
         const std::size_t numWords = (symbolTable.getSize() + 63) / 64;
         symbolAssignmentStates.isUnInitialized.resize(numWords, static_cast<std::size_t>(-1));
         symbolAssignmentStates.isMaybeInitialized.resize(numWords, 0);
