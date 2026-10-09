@@ -47,7 +47,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
     }
 
     auto* clonedAggregate = aggregateDeclaration->clone(&cloneContext);
-    clonedAggregate->mangledName = getMangledName(aggregateDeclaration->name, typeArgs);
+    clonedAggregate->mangledName = utils::OptionalStringID{.id = getMangledName(aggregateDeclaration->name, typeArgs)};
 
     Scope* previousScope = symbolTable.getCurrentScope();
     if (symbol->hostScope != nullptr) { symbolTable.setCurrentScope(symbol->hostScope); }
@@ -74,7 +74,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
         Scope* _previousScope = symbolTable.getCurrentScope();
         symbolTable.setCurrentScope(targetScope);
 
-        DISCARD(symbolTable.declare(clonedAggregate->mangledName,
+        DISCARD(symbolTable.declare(*clonedAggregate->mangledName,
                                     Symbol{.type = concreteType,
                                            .node = clonedAggregate,
                                            .kind = SymbolKind::Aggregate,
@@ -85,7 +85,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
         symbolTable.setCurrentScope(_previousScope);
     }
 
-    instantiationCache.markAsSuccess(key, concreteType, clonedAggregate->mangledName, clonedAggregate);
+    instantiationCache.markAsSuccess(key, concreteType, *clonedAggregate->mangledName, clonedAggregate);
     instantiatedDeclarations.push_back(clonedAggregate);
 
     expression->semanticType = concreteType;
@@ -126,7 +126,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
     }
 
     auto* clonedFunction = functionDeclaration->clone(&cloneContext);
-    clonedFunction->mangledName = getMangledName(functionDeclaration->name, typeArgs);
+    clonedFunction->mangledName = utils::OptionalStringID{.id = getMangledName(functionDeclaration->name, typeArgs)};
 
     stmtvisit_t visitRes;
     {
@@ -161,7 +161,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
         Scope* previousScope = symbolTable.getCurrentScope();
         symbolTable.setCurrentScope(targetScope);
 
-        DISCARD(symbolTable.declare(clonedFunction->mangledName,
+        DISCARD(symbolTable.declare(*clonedFunction->mangledName,
                                     Symbol{.type = concreteType,
                                            .node = clonedFunction,
                                            .kind = SymbolKind::Function,
@@ -172,7 +172,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
         symbolTable.setCurrentScope(previousScope);
     }
 
-    instantiationCache.markAsSuccess(key, concreteType, clonedFunction->mangledName, clonedFunction);
+    instantiationCache.markAsSuccess(key, concreteType, *clonedFunction->mangledName, clonedFunction);
     instantiatedDeclarations.push_back(clonedFunction);
 
     expression->semanticType = concreteType;
@@ -191,7 +191,8 @@ const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(
         instantiatedFields.push_back(AggregateField{.name = interner.get_view(fieldNode.name), .type = fieldType});
     }
 
-    return typeContext.getNamedAggregate(interner.get_view(clonedDecl->mangledName), std::move(instantiatedFields));
+    std::string_view mangledNameView = clonedDecl->mangledName.has_value() ? interner.get_view(*clonedDecl->mangledName) : std::string_view{};
+    return typeContext.getNamedAggregate(mangledNameView, std::move(instantiatedFields));
 }
 
 const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* clonedDecl) {
