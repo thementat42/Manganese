@@ -24,7 +24,7 @@ auto SemanticAnalyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t 
 auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     TypeList resolvedTypeArguments;
-    resolvedTypeArguments.reserve(expression->types.size());
+    resolvedTypeArguments.reserve(expression->types.size);
 
     for (ast::Type* type : expression->types) {
         if (visit(type) == typevisit_t::Failure) { return exprvisit_t::Failure; }
@@ -36,7 +36,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
         resolvedTypeArguments.push_back(resolved);
     }
 
-    expression->semanticTypes = resolvedTypeArguments;  // copy
+    expression->semanticTypes = arena.emplace_range(resolvedTypeArguments);
 
     const Symbol* symbol = resolveScopeSymbol(expression->identifier);
     if (symbol == nullptr || symbol->node == nullptr) {

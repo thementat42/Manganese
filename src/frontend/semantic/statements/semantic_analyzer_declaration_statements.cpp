@@ -36,7 +36,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
     aggregateType->status = ResolutionStatus::InProgress;
 
     std::vector<AggregateField> fieldTypes;
-    fieldTypes.reserve(statement->fields.size());
+    fieldTypes.reserve(statement->fields.size);
 
     for (const ast::AggregateField& field : statement->fields) {
         DISCARD(visit(field.type));
@@ -220,7 +220,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     stmtvisit_t signatureResult = stmtvisit_t::Success;
 
     symbolTable.enterScope();
-    for (std::size_t i = 0; i < statement->parameters.size(); ++i) {
+    for (std::size_t i = 0; i < statement->parameters.size; ++i) {
         const auto& param = statement->parameters[i];
         const SemanticType* resolvedParamType = fnType->parameterTypes[i].type;
 

@@ -18,9 +18,9 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
                                                    const Symbol* symbol, const TypeList& typeArgs) -> exprvisit_t {
     auto* aggregateDeclaration = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
 
-    if (aggregateDeclaration->genericTypes.size() != typeArgs.size()) {
+    if (aggregateDeclaration->genericTypes.size != typeArgs.size()) {
         logError(expression, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
-                 interner.get_view(aggregateDeclaration->name), aggregateDeclaration->genericTypes.size(), typeArgs.size());
+                 interner.get_view(aggregateDeclaration->name), aggregateDeclaration->genericTypes.size, typeArgs.size());
         return exprvisit_t::Failure;
     }
 
@@ -42,7 +42,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
     instantiationCache.markAsInProgress(key);
 
     CloneContext cloneContext{.arena = arena, .substitutions = {}, .declarationSubstitutions = {}};
-    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size(); ++i) {
+    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size; ++i) {
         cloneContext.substitutions[aggregateDeclaration->genericTypes[i]] = typeArgs[i];
     }
 
@@ -98,9 +98,9 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
                                                   const TypeList& typeArgs) -> exprvisit_t {
     auto* functionDeclaration = static_cast<ast::FunctionDeclarationStatement*>(symbol->node);
 
-    if (functionDeclaration->genericTypes.size() != typeArgs.size()) {
+    if (functionDeclaration->genericTypes.size != typeArgs.size()) {
         logError(expression, "Generic function '{}' expects {} type arguments, but {} were provided",
-                 interner.get_view(functionDeclaration->name), functionDeclaration->genericTypes.size(), typeArgs.size());
+                 interner.get_view(functionDeclaration->name), functionDeclaration->genericTypes.size, typeArgs.size());
         return exprvisit_t::Failure;
     }
 
@@ -121,7 +121,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
     instantiationCache.markAsInProgress(key);
 
     CloneContext cloneContext{.arena = arena, .substitutions = {}, .declarationSubstitutions = {}};
-    for (std::size_t i = 0; i < functionDeclaration->genericTypes.size(); ++i) {
+    for (std::size_t i = 0; i < functionDeclaration->genericTypes.size; ++i) {
         cloneContext.substitutions[functionDeclaration->genericTypes[i]] = typeArgs[i];
     }
 
@@ -183,7 +183,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
 const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(
     const ast::AggregateDeclarationStatement* clonedDecl) {
     std::vector<AggregateField> instantiatedFields;
-    instantiatedFields.reserve(clonedDecl->fields.size());
+    instantiatedFields.reserve(clonedDecl->fields.size);
 
     for (const ast::AggregateField& fieldNode : clonedDecl->fields) {
         const SemanticType* fieldType = fieldNode.type->semanticType;
@@ -202,7 +202,7 @@ const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::Fun
     if (resolvedReturnType->isPoison()) { return typeContext.getPoison(); }
 
     std::vector<Parameter> instantiatedParams;
-    instantiatedParams.reserve(clonedDecl->parameters.size());
+    instantiatedParams.reserve(clonedDecl->parameters.size);
 
     for (const ast::FunctionParameter& paramNode : clonedDecl->parameters) {
         const SemanticType* paramType = paramNode.type->semanticType;

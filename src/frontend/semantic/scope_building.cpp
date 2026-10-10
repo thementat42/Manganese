@@ -104,7 +104,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
             for (const ast::ElifClause& elif : ifStmt->elifs) {
                 if (_buildBodyScope(elif.body) == Result::Failure) { result = Result::Failure; }
             }
-            if (!ifStmt->elseBody.empty() && _buildBodyScope(ifStmt->elseBody) == Result::Failure) {
+            if (ifStmt->elseBody.has_value() && _buildBodyScope(*ifStmt->elseBody) == Result::Failure) {
                 result = Result::Failure;
             }
 
@@ -124,7 +124,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
             for (const ast::CaseClause& clause : switchStmt->cases) {
                 if (_buildBodyScope(clause.body) == Result::Failure) { result = Result::Failure; }
             }
-            if (!switchStmt->defaultBody.empty() && _buildBodyScope(switchStmt->defaultBody) == Result::Failure) {
+            if (switchStmt->defaultBody.has_value() && _buildBodyScope(*switchStmt->defaultBody) == Result::Failure) {
                 result = Result::Failure;
             }
             return result;

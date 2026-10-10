@@ -28,7 +28,7 @@ auto SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) 
 
     const auto* aggregateType = static_cast<const Aggregate*>(baseType);
     std::unordered_set<std::string_view> initializedFields;
-    initializedFields.reserve(expression->fields.size());
+    initializedFields.reserve(expression->fields.size);
 
     exprvisit_t result = exprvisit_t::Success;
     for (auto& fieldInit : expression->fields) {
@@ -130,7 +130,7 @@ auto SemanticAnalyzer::visit(ast::FunctionCallExpression* expression) -> exprvis
         }
 
         bool hasDefault = false;
-        if ((baseDeclaration != nullptr) && i < baseDeclaration->parameters.size()) {
+        if ((baseDeclaration != nullptr) && i < baseDeclaration->parameters.size) {
             hasDefault = (baseDeclaration->parameters[i].defaultValue != nullptr);
         }
 
@@ -141,7 +141,7 @@ auto SemanticAnalyzer::visit(ast::FunctionCallExpression* expression) -> exprvis
     // on any practical system, the compiler would run out of memory long before hitting that value
     const std::size_t maxPossibleArgs
         = hasVariadic ? static_cast<std::size_t>(-1) : functionType->parameterTypes.size();
-    const std::size_t providedArgs = expression->arguments.size();
+    const std::size_t providedArgs = expression->arguments.size;
 
     if (!BETWEEN(providedArgs, minRequiredArgs, maxPossibleArgs)) {
         logError(expression, "Function expected between {} and {} arguments, but got {}", minRequiredArgs,

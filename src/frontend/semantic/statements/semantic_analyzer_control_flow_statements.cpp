@@ -119,9 +119,9 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         if (visit(elif.body) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
 
-    if (statement->elseBody.size() != 0) {
+    if (statement->elseBody.has_value()) {
         // there is an else body
-        if (visit(statement->elseBody) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        if (visit(*statement->elseBody) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
     return result;
 }
@@ -161,7 +161,7 @@ auto SemanticAnalyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
         }
         if (visit(caseClause.body) == Result::Failure) { result = stmtvisit_t::Failure; }
     }
-    if (!statement->defaultBody.empty() && visit(statement->defaultBody) == Result::Failure) {
+    if (statement->defaultBody.has_value() && visit(*statement->defaultBody) == Result::Failure) {
         result = stmtvisit_t::Failure;
     }
     return result;

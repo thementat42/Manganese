@@ -71,7 +71,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     SymbolTable symbolTable;
     TypeContext typeContext;
     std::vector<parser::ParsedFile>& parsedFiles;
-    ast::Block instantiatedDeclarations;
+    std::vector<ast::Statement*> instantiatedDeclarations;
     InstantiationCache instantiationCache;
     mnstl::chunk_allocator& arena;
     utils::StringInterner& interner;
@@ -104,7 +104,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result analyze();
     SymbolTable& getSymbolTable() noexcept { return symbolTable; }
     const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
-    const ast::Block& getInstantiatedDeclarations() const noexcept { return instantiatedDeclarations; }
+    const std::vector<ast::Statement*>& getInstantiatedDeclarations() const noexcept { return instantiatedDeclarations; }
 
     ~SemanticAnalyzer() override = default;
 

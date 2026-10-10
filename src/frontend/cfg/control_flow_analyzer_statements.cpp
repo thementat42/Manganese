@@ -112,13 +112,13 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcep
         mergeStates(mergedStates, symbolAssignmentStates);
     }
 
-    if (statement->elseBody.empty()) {
+    if (!statement->elseBody.has_value()) {
         allBranchesTerminate = false;
         mergeStates(mergedStates, preBranchStates);
 
     } else {
         symbolAssignmentStates = preBranchStates;
-        FlowStatus elseStatus = visit(statement->elseBody);
+        FlowStatus elseStatus = visit(*statement->elseBody);
         if ((elseStatus == FlowStatus::FallsThrough) || (allBranchesTerminate && elseStatus != result)) {
             allBranchesTerminate = false;
         }
@@ -155,11 +155,11 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noe
     auto preSwitchStates = symbolAssignmentStates;
     states_t mergedStates;
 
-    const bool hasDefault = statement->defaultBody.empty();
+    const bool hasDefault = !statement->defaultBody.has_value();
     bool allCasesTerminate = hasDefault;
 
     if (hasDefault) {
-        FlowStatus defaultStatus = visit(statement->defaultBody);
+        FlowStatus defaultStatus = visit(*statement->defaultBody);
         mergedStates = symbolAssignmentStates;
         if (defaultStatus == FlowStatus::FallsThrough) { allCasesTerminate = false; }
     } else {

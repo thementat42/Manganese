@@ -16,7 +16,7 @@ namespace Manganese::semantic {
 auto SemanticAnalyzer::visit(ast::AggregateType* type) -> typevisit_t {
     const auto* aggregateType = static_cast<const ast::AggregateType*>(type);
     TypeList resolvedFields;
-    resolvedFields.reserve(aggregateType->fieldTypes.size());
+    resolvedFields.reserve(aggregateType->fieldTypes.size);
 
     for (ast::Type* fieldType : aggregateType->fieldTypes) {
         DISCARD(visit(fieldType));
@@ -128,7 +128,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     auto* aggregateDeclaration = static_cast<ast::AggregateDeclarationStatement*>(symbol->node);
 
     TypeList typeArgs;
-    typeArgs.reserve(type->typeParameters.size());
+    typeArgs.reserve(type->typeParameters.size);
     for (auto* paramNode : type->typeParameters) {
         if (visit(paramNode) == typevisit_t::Failure) {
             type->semanticType = typeContext.getPoison();
@@ -137,9 +137,9 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
         typeArgs.push_back(paramNode->semanticType);
     }
 
-    if (aggregateDeclaration->genericTypes.size() != typeArgs.size()) {
+    if (aggregateDeclaration->genericTypes.size != typeArgs.size()) {
         logError(type, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
-                 interner.get_view(aggregateDeclaration->name), aggregateDeclaration->genericTypes.size(), typeArgs.size());
+                 interner.get_view(aggregateDeclaration->name), aggregateDeclaration->genericTypes.size, typeArgs.size());
         type->semanticType = typeContext.getPoison();
         return typevisit_t::Failure;
     }
@@ -161,7 +161,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     instantiationCache.markAsInProgress(key);
 
     CloneContext cloneContext{.arena = arena, .substitutions = {}, .declarationSubstitutions = {}};
-    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size(); ++i) {
+    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size; ++i) {
         cloneContext.substitutions[aggregateDeclaration->genericTypes[i]] = typeArgs[i];
     }
 

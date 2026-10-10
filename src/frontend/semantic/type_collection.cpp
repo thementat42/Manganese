@@ -72,7 +72,7 @@ Result SemanticAnalyzer::collectGlobalAggregate(ast::AggregateDeclarationStateme
 
     Result result = Result::Success;
     std::vector<AggregateField> fields;
-    fields.reserve(aggregate->fields.size());
+    fields.reserve(aggregate->fields.size);
 
     for (const auto& field : aggregate->fields) {
         const typevisit_t fieldResult = visit(field.type);
@@ -117,7 +117,7 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
     symbol->status = ResolutionStatus::InProgress;
 
     std::vector<Parameter> paramTypes;
-    paramTypes.reserve(function->parameters.size());
+    paramTypes.reserve(function->parameters.size);
     Result funcResult = Result::Success;
 
     for (const auto& param : function->parameters) {
@@ -159,7 +159,7 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 Result SemanticAnalyzer::checkStatements(
     parser::ParsedFile& file) {  // semantic analysis pass (this can also check the generic specializations)
     Result result = Result::Success;
-    for (std::size_t i = 0; i < file.program.size(); ++i) {
+    for (std::size_t i = 0; i < file.program.size; ++i) {
         ast::Statement* statement = file.program[i];
         if (visit(statement) == Result::Failure) { result = Result::Failure; }
     }
