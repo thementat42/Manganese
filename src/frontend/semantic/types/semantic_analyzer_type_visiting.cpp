@@ -138,7 +138,8 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
 
     if (aggregateDeclaration->genericTypes.size != typeArgs.size()) {
         logError(type, "Generic aggregate '{}' expects {} type arguments, but {} were provided",
-                 interner.get_view(aggregateDeclaration->name), aggregateDeclaration->genericTypes.size, typeArgs.size());
+                 interner.get_view(aggregateDeclaration->name), aggregateDeclaration->genericTypes.size,
+                 typeArgs.size());
         type->semanticType = typeContext.getPoison();
         return typevisit_t::Failure;
     }
@@ -151,7 +152,8 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
             return typevisit_t::Success;
         }
         if (cached->state == ResolutionStatus::InProgress) {
-            logError(type, "Recursive generic aggregate instantiation detected for '{}'", interner.get_view(aggregateDeclaration->name));
+            logError(type, "Recursive generic aggregate instantiation detected for '{}'",
+                     interner.get_view(aggregateDeclaration->name));
             type->semanticType = typeContext.getPoison();
             return typevisit_t::Failure;
         }
@@ -184,7 +186,8 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     const SemanticType* concreteType = getInstantiatedAggregateType(clonedAggregate);
     if (concreteType == nullptr || concreteType->isPoison()) {
         instantiationCache.markAsFailure(key);
-        logError(type, "Failed to materialize instantiated aggregate type for '{}'", interner.get_view(aggregateDeclaration->name));
+        logError(type, "Failed to materialize instantiated aggregate type for '{}'",
+                 interner.get_view(aggregateDeclaration->name));
         type->semanticType = typeContext.getPoison();
         return typevisit_t::Failure;
     }
@@ -274,6 +277,8 @@ auto SemanticAnalyzer::visit(ast::ScopedType* type) -> typevisit_t {
 }
 
 auto SemanticAnalyzer::visit(ast::IdentifierType* type) -> typevisit_t {
+    if (type->semanticType != nullptr) { return typevisit_t::Success; }
+
     const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
     if (IdentifierType->primitiveType != ast::PrimitiveType::not_primitive) {
         type->semanticType = typeContext.getPrimitive(IdentifierType->primitiveType);
