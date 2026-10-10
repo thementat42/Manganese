@@ -22,7 +22,7 @@ using lexer::TokenType, lexer::Token;
 
 struct ParsedFile {
     ast::ModuleDeclarationStatement* fileModule;
-    std::vector<ast::ImportStatement*> imports;
+    mnstl::Slice<ast::ImportStatement*> imports;
     ast::Block program;
 };
 
