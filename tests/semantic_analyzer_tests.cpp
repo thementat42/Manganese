@@ -15,7 +15,7 @@
 namespace Manganese::tests {
 
 namespace {
-constexpr const char* logFileName = "logs/analyzer_tests.log";
+constexpr const char* logFileName = "logs/semantic_analyzer_tests.log";
 mnstl::chunk_allocator arena;
 utils::StringInterner interner;
 utils::TargetInfo target = utils::TargetInfo{.pointerSize = sizeof(void*), .pointerAlignment = alignof(void*)};
