@@ -7,10 +7,10 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <mnstl/slice.hxx>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 #include <utils/type_names.hpp>
-#include <utils/string_interner.hpp>
-#include <vector>
 
 #if MN_DEBUG
 #define MN_AST_DUMP void dump(std::ostream& os, const utils::StringInterner&, std::size_t indent = 0) const override;
@@ -18,9 +18,9 @@
 #define MN_AST_DUMP
 #endif
 
-#define MN_AST_STANDARD_INTERFACE(ClassName)                          \
-    ClassName* clone(semantic::CloneContext* context) const override; \
-    std::string toString(const utils::StringInterner&, std::size_t indent = 0) const override;      \
+#define MN_AST_STANDARD_INTERFACE(ClassName)                                                   \
+    ClassName* clone(semantic::CloneContext* context) const override;                          \
+    std::string toString(const utils::StringInterner&, std::size_t indent = 0) const override; \
     MN_AST_DUMP
 
 namespace Manganese {
@@ -68,7 +68,7 @@ enum class TypeKind : std::uint8_t {
 #undef TYPE
 };
 
-using Block = std::vector<Statement*>;
+using Block = mnstl::Slice<Statement*>;
 
 enum class PrimitiveType : std::uint8_t {
     int8,

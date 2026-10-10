@@ -4,9 +4,9 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <utility>
-#include <vector>
+#include <mnstl/slice.hxx>
 #include <utils/string_interner.hpp>
+
 
 namespace Manganese::ast {
 
@@ -27,15 +27,15 @@ struct AggregateField {
 };
 
 struct AggregateDeclarationStatement final : public Declaration {
-    std::vector<utils::StringID> genericTypes;
-    std::vector<AggregateField> fields;
+    mnstl::Slice<utils::StringID> genericTypes;
+    mnstl::Slice<AggregateField> fields;
     Visibility visibility = Visibility::Private;
 
-    AggregateDeclarationStatement(utils::StringID _name, std::vector<utils::StringID>&& _genericTypes,
-                                  std::vector<AggregateField>&& _fields) noexcept :
+    AggregateDeclarationStatement(utils::StringID _name, mnstl::Slice<utils::StringID> _genericTypes,
+                                  mnstl::Slice<AggregateField> _fields) noexcept :
         Declaration(StatementKind::AggregateDeclarationStatement, _name),
-        genericTypes(std::move(_genericTypes)),
-        fields(std::move(_fields)) {}
+        genericTypes(_genericTypes),
+        fields(_fields) {}
     MN_AST_STANDARD_INTERFACE(AggregateDeclarationStatement);
 
     bool isDeclaration() const noexcept override { return true; }
@@ -77,13 +77,11 @@ struct EnumValue {
 
 struct EnumDeclarationStatement final : public Declaration {
     Type* baseType;
-    std::vector<EnumValue> values;
+    mnstl::Slice<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
-    EnumDeclarationStatement(utils::StringID _name, Type* _baseType, std::vector<EnumValue>&& _values) noexcept :
-        Declaration(StatementKind::EnumDeclarationStatement, _name),
-        baseType(_baseType),
-        values(std::move(_values)) {}
+    EnumDeclarationStatement(utils::StringID _name, Type* _baseType, mnstl::Slice<EnumValue> _values) noexcept :
+        Declaration(StatementKind::EnumDeclarationStatement, _name), baseType(_baseType), values(_values) {}
 
     MN_AST_STANDARD_INTERFACE(EnumDeclarationStatement);
     bool isDeclaration() const noexcept override { return true; }
@@ -108,12 +106,12 @@ struct ForLoopStatement final : public Statement {
     Block body;
 
     ForLoopStatement(Statement* _initializationStep, Expression* _stopCondition, Expression* _postExpression,
-                     Block&& _body) noexcept :
+                     Block _body) noexcept :
         Statement(StatementKind::ForLoopStatement),
         initializationStep(_initializationStep),
         stopCondition(_stopCondition),
         postExpression(_postExpression),
-        body(std::move(_body)) {}
+        body(_body) {}
 
     MN_AST_STANDARD_INTERFACE(ForLoopStatement);
 };
@@ -128,20 +126,19 @@ struct FunctionParameter {
 };
 
 struct FunctionDeclarationStatement final : public Declaration {
-    std::vector<utils::StringID> genericTypes;
-    std::vector<FunctionParameter> parameters;
+    mnstl::Slice<utils::StringID> genericTypes;
+    mnstl::Slice<FunctionParameter> parameters;
     Type* returnType;
     Block body;
     Visibility visibility = Visibility::Private;
 
-    FunctionDeclarationStatement(utils::StringID _name, std::vector<utils::StringID>&& _genericTypes,
-                                 std::vector<FunctionParameter>&& _parameters, Type* _returnType,
-                                 Block&& _body) noexcept :
+    FunctionDeclarationStatement(utils::StringID _name, mnstl::Slice<utils::StringID> _genericTypes,
+                                 mnstl::Slice<FunctionParameter> _parameters, Type* _returnType, Block _body) noexcept :
         Declaration(StatementKind::FunctionDeclarationStatement, _name),
-        genericTypes(std::move(_genericTypes)),
-        parameters(std::move(_parameters)),
+        genericTypes(_genericTypes),
+        parameters(_parameters),
         returnType(_returnType),
-        body(std::move(_body)) {}
+        body(_body) {}
 
     MN_AST_STANDARD_INTERFACE(FunctionDeclarationStatement);
     bool isDeclaration() const noexcept override { return true; }
@@ -155,25 +152,20 @@ struct ElifClause {
 struct IfStatement final : public Statement {
     Expression* condition;
     Block body, elseBody;  // elseBody might be empty
-    std::vector<ElifClause> elifs;
+    mnstl::Slice<ElifClause> elifs;
 
-    IfStatement(Expression* _condition, Block&& _body, std::vector<ElifClause>&& _elifs,
-                Block&& _elseBody = {}) noexcept :
-        Statement(StatementKind::IfStatement),
-        condition(_condition),
-        body(std::move(_body)),
-        elseBody(std::move(_elseBody)),
-        elifs(std::move(_elifs)) {}
+    IfStatement(Expression* _condition, Block _body, mnstl::Slice<ElifClause> _elifs, Block _elseBody = {}) noexcept :
+        Statement(StatementKind::IfStatement), condition(_condition), body(_body), elseBody(_elseBody), elifs(_elifs) {}
 
     MN_AST_STANDARD_INTERFACE(IfStatement);
 };
 
 struct ImportStatement final : public Statement {
-    std::vector<utils::StringID> path;
+    mnstl::Slice<utils::StringID> path;
     utils::OptionalStringID alias;
 
-    ImportStatement(std::vector<utils::StringID>&& _path, utils::OptionalStringID _alias) noexcept :
-        Statement(StatementKind::ImportStatement), path(std::move(_path)), alias(_alias) {}
+    ImportStatement(mnstl::Slice<utils::StringID> _path, utils::OptionalStringID _alias) noexcept :
+        Statement(StatementKind::ImportStatement), path(_path), alias(_alias) {}
 
     MN_AST_STANDARD_INTERFACE(ImportStatement);
 };
@@ -191,8 +183,8 @@ struct NamespaceStatement final : public Statement {
     utils::StringID name;
     Block block;
 
-    NamespaceStatement(utils::StringID _name, Block&& _block) noexcept :
-        Statement(StatementKind::NamespaceStatement), name(_name), block(std::move(_block)) {}
+    NamespaceStatement(utils::StringID _name, Block _block) noexcept :
+        Statement(StatementKind::NamespaceStatement), name(_name), block(_block) {}
 
     MN_AST_STANDARD_INTERFACE(NamespaceStatement);
 };
@@ -200,8 +192,7 @@ struct NamespaceStatement final : public Statement {
 struct NestedBlockStatement final : public Statement {
     Block block;
 
-    NestedBlockStatement(Block&& _block) noexcept :
-        Statement(StatementKind::NestedBlockStatement), block(std::move(_block)) {}
+    NestedBlockStatement(Block _block) noexcept : Statement(StatementKind::NestedBlockStatement), block(_block) {}
     MN_AST_STANDARD_INTERFACE(NestedBlockStatement);
 };
 
@@ -215,20 +206,17 @@ struct ReturnStatement final : public Statement {
 };
 
 struct CaseClause {
-    std::vector<Expression*> values;
+    mnstl::Slice<Expression*> values;
     Block body;
 };
 
 struct SwitchStatement final : public Statement {
     Expression* target;
-    std::vector<CaseClause> cases;
+    mnstl::Slice<CaseClause> cases;
     Block defaultBody;
 
-    SwitchStatement(Expression* _target, std::vector<CaseClause>&& _cases, Block&& _defaultBody = {}) noexcept :
-        Statement(StatementKind::SwitchStatement),
-        target(_target),
-        cases(std::move(_cases)),
-        defaultBody(std::move(_defaultBody)) {}
+    SwitchStatement(Expression* _target, mnstl::Slice<CaseClause> _cases, Block _defaultBody = {}) noexcept :
+        Statement(StatementKind::SwitchStatement), target(_target), cases(_cases), defaultBody(_defaultBody) {}
 
     MN_AST_STANDARD_INTERFACE(SwitchStatement);
 };
@@ -256,11 +244,8 @@ struct WhileLoopStatement final : public Statement {
     Expression* condition;
     bool isDoWhile;
 
-    WhileLoopStatement(Block&& _body, Expression* _condition, bool _isDoWhile = false) noexcept :
-        Statement(StatementKind::WhileLoopStatement),
-        body(std::move(_body)),
-        condition(_condition),
-        isDoWhile(_isDoWhile) {}
+    WhileLoopStatement(Block _body, Expression* _condition, bool _isDoWhile = false) noexcept :
+        Statement(StatementKind::WhileLoopStatement), body(_body), condition(_condition), isDoWhile(_isDoWhile) {}
 
     MN_AST_STANDARD_INTERFACE(WhileLoopStatement);
 };
