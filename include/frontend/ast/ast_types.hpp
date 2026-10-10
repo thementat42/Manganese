@@ -12,7 +12,7 @@ struct AggregateType final : public Type {
     mnstl::Slice<Type*> fieldTypes;
 
     explicit AggregateType(mnstl::Slice<Type*>&& _fieldTypes) noexcept :
-        Type(TypeKind::AggregateType), fieldTypes(std::move(_fieldTypes)) {}
+        Type(TypeKind::AggregateType), fieldTypes(_fieldTypes) {}
     MN_AST_STANDARD_INTERFACE(AggregateType);
 };
 
@@ -50,7 +50,7 @@ struct GenericInstantiationType final : public Type {
     mnstl::Slice<Type*> typeParameters;  // T and U in `some_function@[T,U]`
 
     GenericInstantiationType(Type* _baseType, mnstl::Slice<Type*>&& _typeParameters) noexcept :
-        Type(TypeKind::GenericInstantiationType), baseType(_baseType), typeParameters(std::move(_typeParameters)) {}
+        Type(TypeKind::GenericInstantiationType), baseType(_baseType), typeParameters(_typeParameters) {}
 
     MN_AST_STANDARD_INTERFACE(GenericInstantiationType);
 };
@@ -86,7 +86,7 @@ struct TypeofType final : public Type {
     Expression* expression;
 
     explicit TypeofType(Expression* expr) noexcept :
-        Type(TypeKind::TypeofType, PrimitiveType::not_primitive), expression(expr) {}
+        Type(TypeKind::TypeofType), expression(expr) {}
 
     MN_AST_STANDARD_INTERFACE(TypeofType);
 };
