@@ -5,7 +5,7 @@
 #include <frontend/lexer/token.hpp>
 #include <string>
 #include <utility>
-#include <utils/slice.hpp>
+#include <mnstl/slice.hxx>
 #include <utils/string_interner.hpp>
 #include <vector>
 
