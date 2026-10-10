@@ -8,7 +8,6 @@
 #include <optional>
 #include <span>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace Manganese::parser {
@@ -50,7 +49,8 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
 
     expectToken(TokenType::RightBrace);
 
-    return makeNode<ast::AggregateDeclarationStatement>(startToken, name, std::move(genericTypes), std::move(fields));
+    return makeNode<ast::AggregateDeclarationStatement>(startToken, name, arena.emplace_range(genericTypes),
+                                                        arena.emplace_range(fields));
 }
 
 ast::Statement* Parser::parseAliasStatement() {
@@ -83,8 +83,9 @@ ast::Statement* Parser::parseDoWhileLoopStatement() {
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end a while condition");
-    expectToken(TokenType::Semicolon, "Expected a ';' after a while clause");
-    return makeNode<ast::WhileLoopStatement>(startToken, std::move(body), condition, /*isDoWhile=*/true);
+    expectToken(TokenType::Semicolon, "Expected a ';' after a do/while clause");
+
+    return makeNode<ast::WhileLoopStatement>(startToken, body, condition, /*isDoWhile=*/true);
 }
 
 ast::Statement* Parser::parseEnumDeclarationStatement() {
@@ -122,7 +123,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
 
     expectToken(TokenType::RightBrace, "Expected '}' to close the enum body");
 
-    return makeNode<ast::EnumDeclarationStatement>(startToken, name, baseType, std::move(values));
+    return makeNode<ast::EnumDeclarationStatement>(startToken, name, baseType, arena.emplace_range(values));
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
@@ -156,7 +157,7 @@ ast::Statement* Parser::parseForLoopStatement() {
 
     ast::Block body = parseBlock("for loop body");
 
-    return makeNode<ast::ForLoopStatement>(startToken, init, condition, post, std::move(body));
+    return makeNode<ast::ForLoopStatement>(startToken, init, condition, post, body);
 }
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
@@ -190,8 +191,9 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         returnType = parseType(Precedence::Default);
     }
 
-    return makeNode<ast::FunctionDeclarationStatement>(startToken, name, std::move(genericTypes), std::move(params),
-                                                       returnType, parseBlock("function body"));
+    return makeNode<ast::FunctionDeclarationStatement>(startToken, name, arena.emplace_range(genericTypes),
+                                                       arena.emplace_range(params), returnType,
+                                                       parseBlock("function body"));
 }
 
 ast::Statement* Parser::parseIfStatement() {
@@ -213,13 +215,14 @@ ast::Statement* Parser::parseIfStatement() {
 
         elifs.emplace_back(elifCondition, parseBlock("elif body"));
     }
-    ast::Block elseBody;
+    std::optional<ast::Block> elseBody;
     if (peekTokenType() == TokenType::Else) {
         DISCARD(consumeToken());
         elseBody = parseBlock("else body");
-        if (elseBody.empty()) { elseBody.push_back(ast::getEmptyStatement()); }
+        if (elseBody->empty()) { elseBody = std::nullopt; }
     }
-    return makeNode<ast::IfStatement>(startToken, condition, std::move(body), std::move(elifs), std::move(elseBody));
+    return makeNode<ast::IfStatement>(startToken, condition, arena.emplace_range(body), arena.emplace_range(elifs),
+                                      elseBody);
 }
 
 ast::Statement* Parser::parseImportStatement() {
@@ -232,7 +235,7 @@ ast::Statement* Parser::parseImportStatement() {
 
     if (flags.hasParsedFileHeader) { logError(startToken, "Import statements must go at the top of the file"); }
 
-    return makeNode<ast::ImportStatement>(startToken, std::move(path), alias);
+    return makeNode<ast::ImportStatement>(startToken, arena.emplace_range(path), alias);
 }
 
 ast::Statement* Parser::parseModuleDeclarationStatement() {
@@ -264,7 +267,7 @@ ast::Statement* Parser::parseNamespace() {
     const Token startToken = consumeToken();  // skip 'namespace'
     const auto name = expectToken(TokenType::Identifier, "Expected a namespace name after 'namespace'").getLexeme();
     ast::Block body = parseBlock("namespace " + std::string(interner.get_view(name)));
-    return makeNode<ast::NamespaceStatement>(startToken, name, std::move(body));
+    return makeNode<ast::NamespaceStatement>(startToken, name, body);
 }
 
 ast::Statement* Parser::parseRedundantSemicolon() {
@@ -292,18 +295,15 @@ ast::Statement* Parser::parseSwitchStatement() {
     std::vector<ast::CaseClause> cases;
     while (peekTokenType() == TokenType::Case) { cases.push_back(parseCaseClause()); }
 
-    ast::Block defaultBody;
-    bool hasDefault = false;
-    if (peekTokenType() == TokenType::Default) {
-        hasDefault = true;
-        defaultBody = parseDefaultClause();
-    }
+    std::optional<ast::Block> defaultBody = parseDefaultClause();
 
-    if (cases.empty() && !hasDefault) { logWarning(startToken, "Switch statement has no cases or default body"); }
+    if (cases.empty() && !defaultBody.has_value()) {
+        logWarning(startToken, "Switch statement has no cases or default body");
+    }
 
     expectToken(TokenType::RightBrace, "Expected '}' to end the switch body");
 
-    return makeNode<ast::SwitchStatement>(startToken, variable, std::move(cases), std::move(defaultBody));
+    return makeNode<ast::SwitchStatement>(startToken, variable, arena.emplace_range(cases), defaultBody);
 }
 
 ast::Statement* Parser::parseWhileLoopStatement() {
@@ -489,25 +489,25 @@ ast::CaseClause Parser::parseCaseClause() {
 
     expectToken(TokenType::Colon, std::format("Expected ':' after case value{}", (caseValues.size() > 1 ? "s" : "")));
 
-    ast::Block caseBody;
+    std::vector<ast::Statement*> caseBody;
     while (peekTokenType() != TokenType::Case && peekTokenType() != TokenType::Default
            && peekTokenType() != TokenType::RightBrace) {
         caseBody.push_back(parseStatement());
     }
 
-    return ast::CaseClause{.values = std::move(caseValues), .body = std::move(caseBody)};
+    return ast::CaseClause{.values = arena.emplace_range(caseValues), .body = arena.emplace_range(caseBody)};
 }
 
-ast::Block Parser::parseDefaultClause() {
+std::optional<ast::Block> Parser::parseDefaultClause() {
     DISCARD(consumeToken());  // consume 'default'
     expectToken(TokenType::Colon, "Expected ':' after default case");
 
-    ast::Block defaultBody;
+    std::vector<ast::Statement*> defaultBody;
     while (peekTokenType() != TokenType::RightBrace) { defaultBody.push_back(parseStatement()); }
 
-    if (defaultBody.empty()) { defaultBody.push_back(ast::getEmptyStatement()); }
+    if (defaultBody.empty()) { return std::nullopt; }
 
-    return defaultBody;
+    return arena.emplace_range(defaultBody);
 }
 
 std::vector<utils::StringID> Parser::parseImportPath() {

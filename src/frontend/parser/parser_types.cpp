@@ -2,7 +2,6 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <utility>
 #include <utils/type_names.hpp>
 
 namespace Manganese::parser {
@@ -51,7 +50,7 @@ ast::Type* Parser::parseAggregateType() {
         "Expected ',' to separate fields in aggregate type declaration or '}' to end the declaration",
         [this]() { return parseAggregateTypeField(); });
 
-    return makeNode<ast::AggregateType>(startToken, std::move(fieldTypes));
+    return makeNode<ast::AggregateType>(startToken, arena.emplace_range(fieldTypes));
 }
 
 ast::Type* Parser::parseArrayType(ast::Type* left, Precedence /*unused*/) {
@@ -91,7 +90,7 @@ ast::Type* Parser::parseFunctionType() {
         returnType = parseType(Precedence::Default);
     }
 
-    return makeNode<ast::FunctionType>(startToken, std::move(parameterTypes), returnType);
+    return makeNode<ast::FunctionType>(startToken, arena.emplace_range(parameterTypes), returnType);
 }
 
 ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence /*unused*/) {
@@ -100,7 +99,7 @@ ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence /*u
     auto typeParameters
         = parseCommaSeparatedList<ast::Type*>(TokenType::RightSquare, "Expected ',' to separate generic types",
                                               [this]() { return parseType(precedenceAbove(Precedence::Assignment)); });
-    return makeNode<ast::GenericInstantiationType>(startToken, left, std::move(typeParameters));
+    return makeNode<ast::GenericInstantiationType>(startToken, left, arena.emplace_range(typeParameters));
 }
 
 ast::Type* Parser::parseIdentifierType() {

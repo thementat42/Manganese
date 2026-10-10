@@ -3,7 +3,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <utility>
+#include <mnstl/chunk_allocator.hxx>
 #include <vector>
 
 /**
@@ -46,9 +46,7 @@ namespace Manganese::parser {
 ast::Expression* Parser::parseExpression(Precedence precedence) {
     if (isUnaryContext()) {
         Token& lookahead = peekToken();
-        if (lookahead.hasUnaryCounterpart()) {
-            lookahead.overrideType(lookahead.getUnaryCounterpart());
-        }
+        if (lookahead.hasUnaryCounterpart()) { lookahead.overrideType(lookahead.getUnaryCounterpart()); }
     }
 
     Token token = peekToken();
@@ -106,7 +104,7 @@ ast::Expression* Parser::parseAggregateInstantiationExpression(ast::Expression* 
         }
     }
     expectToken(lexer::TokenType::RightBrace, "Expected '}' to end aggregate instantiation");
-    return makeNode<ast::AggregateInstantiationExpression>(startToken, left, std::move(fields));
+    return makeNode<ast::AggregateInstantiationExpression>(startToken, left, arena.emplace_range(fields));
 }
 
 ast::Expression* Parser::parseAggregateLiteralExpression() {
@@ -117,7 +115,7 @@ ast::Expression* Parser::parseAggregateLiteralExpression() {
     auto expressions = parseCommaSeparatedList<ast::Expression*>(
         TokenType::RightBrace, "Expected a ',' to separate aggregate literal fields, or a '}' to close the declaration",
         [this]() { return parseExpression(Precedence::Default); });
-    return makeNode<ast::AggregateLiteralExpression>(startToken, std::move(expressions));
+    return makeNode<ast::AggregateLiteralExpression>(startToken, arena.emplace_range(expressions));
 }
 
 ast::Expression* Parser::parseAlignofExpression() {
@@ -147,7 +145,7 @@ ast::Expression* Parser::parseArrayInstantiationExpression() {
     auto elements
         = parseCommaSeparatedList<ast::Expression*>(TokenType::RightSquare, "Expected ',' between array elements",
                                                     [this]() { return parseExpression(Precedence::Default); });
-    return makeNode<ast::ArrayLiteralExpression>(startToken, std::move(elements));
+    return makeNode<ast::ArrayLiteralExpression>(startToken, arena.emplace_range(elements));
 }
 
 ast::Expression* Parser::parseAssignmentExpression(ast::Expression* left, Precedence precedence) {
@@ -171,7 +169,7 @@ ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Prec
     auto arguments
         = parseCommaSeparatedList<ast::Expression*>(TokenType::RightParen, "Expected ',' between function arguments",
                                                     [this]() { return parseExpression(Precedence::Assignment); });
-    return makeNode<ast::FunctionCallExpression>(startToken, left, std::move(arguments));
+    return makeNode<ast::FunctionCallExpression>(startToken, left, arena.emplace_range(arguments));
 }
 
 ast::Expression* Parser::parseGenericInstantiationExpression(ast::Expression* left, Precedence /*unused*/) {
@@ -180,7 +178,7 @@ ast::Expression* Parser::parseGenericInstantiationExpression(ast::Expression* le
     auto typeParameters
         = parseCommaSeparatedList<ast::Type*>(lexer::TokenType::RightSquare, "Expected ',' to separate generic types",
                                               [this]() { return parseType(Precedence::Default); });
-    return makeNode<ast::GenericInstantiationExpression>(startToken, left, std::move(typeParameters));
+    return makeNode<ast::GenericInstantiationExpression>(startToken, left, arena.emplace_range(typeParameters));
 }
 
 ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Precedence /*unused*/) {
@@ -233,10 +231,8 @@ ast::Expression* Parser::parsePrimaryExpression() {
         case TokenType::Identifier: return makeNode<ast::IdentifierExpression>(startToken, lexemeId);
         case TokenType::True: return makeNode<ast::BoolLiteralExpression>(startToken, true);
         case TokenType::False: return makeNode<ast::BoolLiteralExpression>(startToken, false);
-        case TokenType::FloatLiteral:
-            return makeNode<ast::NumberLiteralExpression>(startToken, lexemeId, true);
-        case TokenType::IntegerLiteral:
-            return makeNode<ast::NumberLiteralExpression>(startToken, lexemeId, false);
+        case TokenType::FloatLiteral: return makeNode<ast::NumberLiteralExpression>(startToken, lexemeId, true);
+        case TokenType::IntegerLiteral: return makeNode<ast::NumberLiteralExpression>(startToken, lexemeId, false);
         case TokenType::Uninitialized: return makeNode<ast::UninitializedExpression>(startToken);
         default:
             ASSERT_UNREACHABLE_FMT("Invalid Token Type in parsePrimaryExpression: {}",
@@ -276,7 +272,7 @@ ast::Expression* Parser::parseTernaryExpression(ast::Expression* left, Precedenc
     const Token startToken = consumeToken();  // skip the '?'
 
     ast::Expression* ifTrue = parseExpression(Precedence::Default);
-    
+
     expectToken(TokenType::Colon, "Expected ':' in ternary expression");
     ast::Expression* ifFalse = parseExpression(precedence);
 
