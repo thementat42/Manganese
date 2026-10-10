@@ -5,11 +5,23 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 namespace mnstl {
+
+template <class T>
+class Slice {
+    const T* data = nullptr;
+    std::size_t size = 0;
+
+    [[nodiscard]] const T* begin() const noexcept { return data; }
+    [[nodiscard]] const T* end() const noexcept { return data + size; }
+    [[nodiscard]] const T& operator[](std::size_t index) const noexcept { return data[index]; }
+    [[nodiscard]] bool empty() const noexcept { return size == 0; }
+};
 
 class chunk_allocator {
    private:
@@ -30,7 +42,7 @@ class chunk_allocator {
     chunk_allocator() { add_chunk(); }
     ~chunk_allocator() noexcept {
         // Destroy in reverse order
-        for (auto it = _destructors.rbegin(); it != _destructors.rend(); ++it) { it->destructor(it->object); }
+        for (auto& _destructor : std::views::reverse(_destructors)) { _destructor.destructor(_destructor.object); }
     }
 
     template <class T, class... Args>
@@ -44,6 +56,17 @@ class chunk_allocator {
                 destructor{.destructor = [](void* obj) { static_cast<T*>(obj)->~T(); }, .object = ptr});
         }
         return ptr;
+    }
+
+    template <std::ranges::range Range>
+    auto emplace_range(const Range& range) {
+        using value_type = std::remove_cvref_t<decltype(*range.begin())>;
+        std::size_t count = std::ranges::distance(range);
+        if (count == 0) { return Slice<value_type>{.data = nullptr, .size = 0}; }
+        auto* dest = static_cast<value_type*>(allocate(sizeof(value_type) * count, alignof(value_type)));
+
+        std::uninitialized_copy(range.begin(), range.end(), dest);
+        return Slice<value_type>{.data = dest, .size = count};
     }
 
    private:
