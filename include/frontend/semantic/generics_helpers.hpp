@@ -5,18 +5,27 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <functional>
+#include <mnstl/slice.hxx>
 #include <unordered_map>
 #include <utils/resolution_status.hpp>
 #include <utils/string_interner.hpp>
+
 
 namespace Manganese::semantic {
 struct Scope;
 
 struct InstantiationKey {
     const ast::ASTNode* declNode;
-    TypeList typeArgs;
+    mnstl::Slice<const semantic::SemanticType*> typeArgs;
 
-    friend constexpr bool operator==(const InstantiationKey&, const InstantiationKey&) noexcept = default;
+    friend constexpr bool operator==(const InstantiationKey& a, const InstantiationKey& b) noexcept {
+        if (a.declNode != b.declNode) { return false; }
+        if (a.typeArgs.size != b.typeArgs.size) { return false; }
+        for (std::size_t i = 0; i < a.typeArgs.size; ++i) {
+            if (a.typeArgs[i] != b.typeArgs[i]) { return false; }
+        }
+        return true;
+    }
 };
 
 struct InstantiationResult {

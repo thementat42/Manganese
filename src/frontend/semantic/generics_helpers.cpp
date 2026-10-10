@@ -24,7 +24,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
         return exprvisit_t::Failure;
     }
 
-    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = typeArgs};
+    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
 
     if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::Success) {
@@ -104,7 +104,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
         return exprvisit_t::Failure;
     }
 
-    InstantiationKey key{.declNode = functionDeclaration, .typeArgs = typeArgs};
+    InstantiationKey key{.declNode = functionDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
 
     if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::Success) {
