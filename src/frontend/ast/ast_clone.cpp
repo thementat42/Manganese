@@ -3,6 +3,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <vector>
 #include <utils/string_interner.hpp>
+#include <optional>
 
 #include "core.hpp"
 
@@ -21,11 +22,14 @@ T* makeClonedNode(const T* t, semantic::CloneContext* context, Args&&... args) {
     return node;
 }
 
+// Type alias for temporary statement collection during cloning
+using StatementVector = std::vector<ast::Statement*>;
+
 ast::Block cloneBlock(const ast::Block& block, semantic::CloneContext* context) {
-    ast::Block result;
-    result.reserve(block.size());
+    StatementVector result;
+    result.reserve(block.size);
     for (const auto* statement : block) { result.push_back(statement->clone(context)); }
-    return result;
+    return context->arena.emplace_range(result);
 }
 
 }  // namespace
@@ -33,7 +37,7 @@ ast::Block cloneBlock(const ast::Block& block, semantic::CloneContext* context) 
 // Statements
 AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::CloneContext* context) const {
     std::vector<AggregateField> fieldClones;
-    fieldClones.reserve(fields.size());
+    fieldClones.reserve(fields.size);
     for (const auto& field : fields) {
         fieldClones.push_back({.name = field.name,
                                .type = field.type->clone(context),
@@ -41,7 +45,7 @@ AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::Cl
                                .column = field.column,
                                .isMutable = field.isMutable});
     }
-    auto* cloned = makeClonedNode(this, context, name, std::vector<utils::StringID>{}, std::move(fieldClones));
+    auto* cloned = makeClonedNode(this, context, name, mnstl::Slice<utils::StringID>{}, context->arena.emplace_range(fieldClones));
     cloned->visibility = visibility;
     return cloned;
 }
@@ -64,13 +68,13 @@ EmptyStatement* EmptyStatement::clone(semantic::CloneContext* context) const { r
 EnumDeclarationStatement* EnumDeclarationStatement::clone(semantic::CloneContext* context) const {
     Type* baseTypeClone = baseType->clone(context);
     std::vector<EnumValue> valueClones;
-    valueClones.reserve(values.size());
+    valueClones.reserve(values.size);
 
     for (const auto& value : values) {
         valueClones.push_back(
             {.name = value.name, .value = value.value->clone(context), .line = value.line, .column = value.column});
     }
-    auto* clone = makeClonedNode(this, context, name, baseTypeClone, std::move(valueClones));
+    auto* clone = makeClonedNode(this, context, name, baseTypeClone, context->arena.emplace_range(valueClones));
     clone->visibility = visibility;
     return clone;
 }
@@ -93,7 +97,7 @@ ForLoopStatement* ForLoopStatement::clone(semantic::CloneContext* context) const
 
 FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::CloneContext* context) const {
     std::vector<FunctionParameter> parameterClones;
-    parameterClones.reserve(parameters.size());
+    parameterClones.reserve(parameters.size);
     for (const auto& param : parameters) {
         parameterClones.push_back(
             {.name = param.name,
@@ -106,8 +110,8 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
     }
     Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
 
-    auto* clone = makeClonedNode(this, context, name, std::vector<utils::StringID>{},
-                                 std::move(parameterClones), returnTypeClone, cloneBlock(body, context));
+    auto* clone = makeClonedNode(this, context, name, mnstl::Slice<utils::StringID>{},
+                                 context->arena.emplace_range(parameterClones), returnTypeClone, cloneBlock(body, context));
     clone->visibility = visibility;
     return clone;
 }
@@ -115,14 +119,19 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
 IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
     Expression* conditionClone = condition->clone(context);
     std::vector<ElifClause> elifClones;
-    elifClones.reserve(elifs.size());
+    elifClones.reserve(elifs.size);
 
     for (const auto& elif : elifs) {
         elifClones.push_back({.condition = elif.condition->clone(context), .body = cloneBlock(elif.body, context)});
     }
 
-    return makeClonedNode(this, context, conditionClone, cloneBlock(body, context), std::move(elifClones),
-                          cloneBlock(elseBody, context));
+    std::optional<ast::Block> elseBodyClone = std::nullopt;
+    if (elseBody.has_value()) {
+        elseBodyClone = cloneBlock(*elseBody, context);
+    }
+
+    return makeClonedNode(this, context, conditionClone, cloneBlock(body, context), context->arena.emplace_range(elifClones),
+                          elseBodyClone);
 }
 
 ImportStatement* ImportStatement::clone(semantic::CloneContext* /*context*/) const {
@@ -150,17 +159,22 @@ ReturnStatement* ReturnStatement::clone(semantic::CloneContext* context) const {
 SwitchStatement* SwitchStatement::clone(semantic::CloneContext* context) const {
     Expression* targetClone = target->clone(context);
     std::vector<CaseClause> caseClones;
-    caseClones.reserve(cases.size());
+    caseClones.reserve(cases.size);
 
     for (const auto& caseClause : cases) {
         std::vector<Expression*> clonedCaseValues;
-        clonedCaseValues.reserve(caseClause.values.size());
+        clonedCaseValues.reserve(caseClause.values.size);
 
         for (const auto* value : caseClause.values) { clonedCaseValues.push_back(value->clone(context)); }
-        caseClones.push_back({.values = std::move(clonedCaseValues), .body = cloneBlock(caseClause.body, context)});
+        caseClones.push_back({.values = context->arena.emplace_range(clonedCaseValues), .body = cloneBlock(caseClause.body, context)});
     }
 
-    return makeClonedNode(this, context, targetClone, std::move(caseClones), cloneBlock(defaultBody, context));
+    std::optional<ast::Block> defaultBodyClone = std::nullopt;
+    if (defaultBody.has_value()) {
+        defaultBodyClone = cloneBlock(*defaultBody, context);
+    }
+
+    return makeClonedNode(this, context, targetClone, context->arena.emplace_range(caseClones), defaultBodyClone);
 }
 
 VariableDeclarationStatement* VariableDeclarationStatement::clone(semantic::CloneContext* context) const {
@@ -181,23 +195,23 @@ AggregateInstantiationExpression* AggregateInstantiationExpression::clone(semant
     Expression* baseClone = base->clone(context);
 
     std::vector<AggregateInstantiationField> fieldClones;
-    fieldClones.reserve(fields.size());
+    fieldClones.reserve(fields.size);
 
     for (const auto& field : fields) {
         fieldClones.push_back(
             {.name = field.name, .value = field.value->clone(context), .line = field.line, .column = field.column});
     }
 
-    return makeClonedNode(this, context, baseClone, std::move(fieldClones));
+    return makeClonedNode(this, context, baseClone, context->arena.emplace_range(fieldClones));
 }
 
 AggregateLiteralExpression* AggregateLiteralExpression::clone(semantic::CloneContext* context) const {
     std::vector<Expression*> elementClones;
-    elementClones.reserve(elements.size());
+    elementClones.reserve(elements.size);
 
     for (const auto& element : elements) { elementClones.push_back(element->clone(context)); }
 
-    return makeClonedNode(this, context, std::move(elementClones));
+    return makeClonedNode(this, context, context->arena.emplace_range(elementClones));
 }
 
 AlignofExpression* AlignofExpression::clone(semantic::CloneContext* context) const {
@@ -206,11 +220,11 @@ AlignofExpression* AlignofExpression::clone(semantic::CloneContext* context) con
 
 ArrayLiteralExpression* ArrayLiteralExpression::clone(semantic::CloneContext* context) const {
     std::vector<Expression*> elementClones;
-    elementClones.reserve(elements.size());
+    elementClones.reserve(elements.size);
 
     for (const auto& element : elements) { elementClones.push_back(element->clone(context)); }
 
-    return makeClonedNode(this, context, std::move(elementClones));
+    return makeClonedNode(this, context, context->arena.emplace_range(elementClones));
 }
 
 AssignmentExpression* AssignmentExpression::clone(semantic::CloneContext* context) const {
@@ -233,21 +247,21 @@ FunctionCallExpression* FunctionCallExpression::clone(semantic::CloneContext* co
     Expression* calleeClone = callee->clone(context);
 
     std::vector<Expression*> argumentClones;
-    argumentClones.reserve(arguments.size());
+    argumentClones.reserve(arguments.size);
 
     for (const auto& argument : arguments) { argumentClones.push_back(argument->clone(context)); }
 
-    return makeClonedNode(this, context, calleeClone, std::move(argumentClones));
+    return makeClonedNode(this, context, calleeClone, context->arena.emplace_range(argumentClones));
 }
 
 GenericInstantiationExpression* GenericInstantiationExpression::clone(semantic::CloneContext* context) const {
     Expression* identifierClone = identifier->clone(context);
     std::vector<Type*> typeClones;
-    typeClones.reserve(types.size());
+    typeClones.reserve(types.size);
 
     for (Type* t : types) { typeClones.push_back(t->clone(context)); }
 
-    auto* clone = makeClonedNode(this, context, identifierClone, std::move(typeClones));
+    auto* clone = makeClonedNode(this, context, identifierClone, context->arena.emplace_range(typeClones));
 
     return clone;
 }
@@ -317,11 +331,11 @@ UninitializedExpression* UninitializedExpression::clone(semantic::CloneContext* 
 
 AggregateType* AggregateType::clone(semantic::CloneContext* context) const {
     std::vector<Type*> fieldTypeClones;
-    fieldTypeClones.reserve(fieldTypes.size());
+    fieldTypeClones.reserve(fieldTypes.size);
 
     for (const auto* type : fieldTypes) { fieldTypeClones.push_back(type->clone(context)); }
 
-    return makeClonedNode(this, context, std::move(fieldTypeClones));
+    return makeClonedNode(this, context, context->arena.emplace_range(fieldTypeClones));
 }
 
 ArrayType* ArrayType::clone(semantic::CloneContext* context) const {
@@ -332,7 +346,7 @@ ArrayType* ArrayType::clone(semantic::CloneContext* context) const {
 
 FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
     std::vector<FunctionParameterType> parameterTypeClones;
-    parameterTypeClones.reserve(parameterTypes.size());
+    parameterTypeClones.reserve(parameterTypes.size);
 
     for (const auto& param : parameterTypes) {
         parameterTypeClones.push_back(
@@ -341,18 +355,18 @@ FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
 
     Type* returnTypeClone = returnType == nullptr ? nullptr : returnType->clone(context);
 
-    return makeClonedNode(this, context, std::move(parameterTypeClones), returnTypeClone);
+    return makeClonedNode(this, context, context->arena.emplace_range(parameterTypeClones), returnTypeClone);
 }
 
 GenericInstantiationType* GenericInstantiationType::clone(semantic::CloneContext* context) const {
     Type* baseTypeClone = baseType->clone(context);
 
     std::vector<Type*> typeParameterClones;
-    typeParameterClones.reserve(typeParameters.size());
+    typeParameterClones.reserve(typeParameters.size);
 
     for (const auto* type : typeParameters) { typeParameterClones.push_back(type->clone(context)); }
 
-    return makeClonedNode(this, context, baseTypeClone, std::move(typeParameterClones));
+    return makeClonedNode(this, context, baseTypeClone, context->arena.emplace_range(typeParameterClones));
 }
 
 IdentifierType* IdentifierType::clone(semantic::CloneContext* context) const {
