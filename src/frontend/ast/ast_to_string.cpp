@@ -30,28 +30,28 @@ std::string blockToString(const Block& block, const utils::StringInterner& inter
 
 template <class T>
     requires(std::derived_from<T, ASTNode>)
-std::string commaSeparatedList(const std::vector<T*>& values, const utils::StringInterner& interner,
+std::string commaSeparatedList(const mnstl::Slice<T*>& values, const utils::StringInterner& interner,
                                std::size_t indent = 0) {
     std::string result;
-    for (std::size_t i = 0; i < values.size(); ++i) {
+    for (std::size_t i = 0; i < values.size; ++i) {
         result += values[i]->toString(interner, indent);
-        if (i != values.size() - 1) [[likely]] { result += ", "; }
+        if (i != values.size - 1) [[likely]] { result += ", "; }
     }
     return result;
 }
 
 template <class T>
     requires(std::same_as<T, utils::StringID>)
-std::string commaSeparatedList(const std::vector<T>& values, const utils::StringInterner& interner) {
+std::string commaSeparatedList(const mnstl::Slice<T>& values, const utils::StringInterner& interner) {
     std::string result;
-    for (std::size_t i = 0; i < values.size(); ++i) {
+    for (std::size_t i = 0; i < values.size; ++i) {
         result += interner.get_view(values[i]);
-        if (i != values.size() - 1) [[likely]] { result += ", "; }
+        if (i != values.size - 1) [[likely]] { result += ", "; }
     }
     return result;
 }
 
-std::string genericsToString(const std::vector<Type*>& params, const utils::StringInterner& interner,
+std::string genericsToString(const mnstl::Slice<Type*>& params, const utils::StringInterner& interner,
                              std::size_t indent = 0) {
     if (params.empty()) { return ""; }
     return std::format("@[{}]", commaSeparatedList(params, interner, indent));
@@ -96,11 +96,11 @@ std::string EnumDeclarationStatement::toString(const utils::StringInterner& inte
     std::string result = getIndent(indent)
         + std::format("{} enum {}{}", visibilityToString(visibility), interner.get_view(name), baseTypeStr);
     result += " {\n";
-    for (std::size_t i = 0; i < values.size(); ++i) {
+    for (std::size_t i = 0; i < values.size; ++i) {
         const EnumValue& value = values[i];
         result += getIndent(indent + 1) + std::string(interner.get_view(value.name));
         if (value.value != nullptr) { result += std::format(" = {}", value.value->toString(interner, indent + 1)); }
-        if (i != values.size() - 1) { result += ","; }
+        if (i != values.size - 1) { result += ","; }
         result += '\n';
     }
     result += getIndent(indent) + "}";
@@ -136,7 +136,7 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
     if (!genericTypes.empty()) { result += std::format("[{}]", commaSeparatedList(genericTypes, interner)); }
 
     result += '(';
-    for (std::size_t i = 0; i < parameters.size(); ++i) {
+    for (std::size_t i = 0; i < parameters.size; ++i) {
         const FunctionParameter& param = parameters[i];
         result += interner.get_view(param.name);
         if (param.isVariadic) { result += "..."; }
@@ -146,7 +146,7 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
             result += std::format(" = {}", param.defaultValue->toString(interner, 0));
         }
 
-        if (i < parameters.size() - 1) { result += ", "; }
+        if (i < parameters.size - 1) { result += ", "; }
     }
     result += ')';
     if (returnType != nullptr) { result += std::format(" -> {}", returnType->toString(interner, indent)); }
@@ -162,15 +162,15 @@ std::string IfStatement::toString(const utils::StringInterner& interner, std::si
         result += std::format(" elif ({}) ", elif.condition->toString(interner, indent))
             + blockToString(elif.body, interner, indent);
     }
-    if (!elseBody.empty()) { result += " else " + blockToString(elseBody, interner, indent); }
+    if (elseBody.has_value()) { result += " else " + blockToString(*elseBody, interner, indent); }
     return result;
 }
 
 std::string ImportStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string pathStr;
-    for (std::size_t i = 0; i < path.size(); ++i) {
+    for (std::size_t i = 0; i < path.size; ++i) {
         pathStr += interner.get_view(path[i]);
-        if (i != path.size() - 1) [[likely]] { pathStr += "::"; }
+        if (i != path.size - 1) [[likely]] { pathStr += "::"; }
     }
     const std::string aliasStr = alias.has_value() ? std::format("as {}", interner.get_view(*alias)) : "";
 
@@ -201,9 +201,9 @@ std::string SwitchStatement::toString(const utils::StringInterner& interner, std
         result += getIndent(indent + 1) + std::format("case {}:\n", commaSeparatedList(_case.values, interner));
         for (const Statement* stmt : _case.body) { result += stmt->toString(interner, indent + 2) + "\n"; }
     }
-    if (!defaultBody.empty()) {
+    if (defaultBody.has_value()) {
         result += getIndent(indent + 1) + "default:\n";
-        for (const Statement* stmt : defaultBody) { result += stmt->toString(interner, indent + 2) + "\n"; }
+        for (const Statement* stmt : *defaultBody) { result += stmt->toString(interner, indent + 2) + "\n"; }
     }
     result += getIndent(indent) + "}";
     return result;
@@ -247,10 +247,10 @@ std::string WhileLoopStatement::toString(const utils::StringInterner& interner, 
 std::string AggregateInstantiationExpression::toString(const utils::StringInterner& interner,
                                                        std::size_t indent) const {
     std::string result = base->toString(interner, indent) + " {";
-    for (std::size_t i = 0; i < fields.size(); ++i) {
+    for (std::size_t i = 0; i < fields.size; ++i) {
         const AggregateInstantiationField& field = fields[i];
         result += std::format("{} = {}", interner.get_view(field.name), field.value->toString(interner, indent));
-        if (i != fields.size() - 1) { result += ", "; }
+        if (i != fields.size - 1) { result += ", "; }
     }
     result += "}";
     return result;
@@ -258,9 +258,9 @@ std::string AggregateInstantiationExpression::toString(const utils::StringIntern
 
 std::string AggregateLiteralExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string result = "{";
-    for (std::size_t i = 0; i < elements.size(); ++i) {
+    for (std::size_t i = 0; i < elements.size; ++i) {
         result += elements[i]->toString(interner, indent);
-        if (i < elements.size() - 1) [[likely]] { result += ", "; }
+        if (i < elements.size - 1) [[likely]] { result += ", "; }
     }
     result += "}";
     return result;
@@ -272,9 +272,9 @@ std::string AlignofExpression::toString(const utils::StringInterner& interner, s
 
 std::string ArrayLiteralExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string result = "[";
-    for (std::size_t i = 0; i < elements.size(); ++i) {
+    for (std::size_t i = 0; i < elements.size; ++i) {
         result += elements[i]->toString(interner, indent);
-        if (i < elements.size() - 1) [[likely]] { result += ", "; }
+        if (i < elements.size - 1) [[likely]] { result += ", "; }
     }
     result += "]";
     return result;
@@ -299,9 +299,9 @@ std::string CharLiteralExpression::toString(const utils::StringInterner& /*unuse
 
 std::string FunctionCallExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string result = callee->toString(interner, indent) + "(";
-    for (std::size_t i = 0; i < arguments.size(); ++i) {
+    for (std::size_t i = 0; i < arguments.size; ++i) {
         result += arguments[i]->toString(interner, indent);
-        if (i < arguments.size() - 1) [[likely]] { result += ", "; }
+        if (i < arguments.size - 1) [[likely]] { result += ", "; }
     }
     result += ")";
     return result;
@@ -365,9 +365,9 @@ std::string UninitializedExpression::toString(const utils::StringInterner& /*unu
 
 std::string AggregateType::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string result = "aggregate {";
-    for (std::size_t i = 0; i < fieldTypes.size(); ++i) {
+    for (std::size_t i = 0; i < fieldTypes.size; ++i) {
         result += fieldTypes[i]->toString(interner, indent);
-        if (i < fieldTypes.size() - 1) [[likely]] { result += ", "; }
+        if (i < fieldTypes.size - 1) [[likely]] { result += ", "; }
     }
     result += "}";
     return result;
@@ -386,10 +386,10 @@ std::string ArrayType::toString(const utils::StringInterner& interner, std::size
 
 std::string FunctionType::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string result = "func(";
-    for (std::size_t i = 0; i < parameterTypes.size(); ++i) {
+    for (std::size_t i = 0; i < parameterTypes.size; ++i) {
         const FunctionParameterType& param = parameterTypes[i];
         result += std::format("{}{}", (param.isMutable ? "mut " : ""), param.type->toString(interner, indent));
-        if (i != parameterTypes.size() - 1) { result += ", "; }
+        if (i != parameterTypes.size - 1) { result += ", "; }
     }
     result += ")";
     if (returnType != nullptr) { result += std::format(" -> {}", returnType->toString(interner, indent)); }
