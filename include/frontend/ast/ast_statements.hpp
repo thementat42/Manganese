@@ -5,6 +5,7 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <mnstl/slice.hxx>
+#include <optional>
 #include <utils/string_interner.hpp>
 
 
@@ -151,10 +152,11 @@ struct ElifClause {
 
 struct IfStatement final : public Statement {
     Expression* condition;
-    Block body, elseBody;  // elseBody might be empty
+    Block body;
+    std::optional<Block> elseBody;  // elseBody might be empty
     mnstl::Slice<ElifClause> elifs;
 
-    IfStatement(Expression* _condition, Block _body, mnstl::Slice<ElifClause> _elifs, Block _elseBody = {}) noexcept :
+    IfStatement(Expression* _condition, Block _body, mnstl::Slice<ElifClause> _elifs, std::optional<Block> _elseBody = {}) noexcept :
         Statement(StatementKind::IfStatement), condition(_condition), body(_body), elseBody(_elseBody), elifs(_elifs) {}
 
     MN_AST_STANDARD_INTERFACE(IfStatement);
@@ -213,9 +215,9 @@ struct CaseClause {
 struct SwitchStatement final : public Statement {
     Expression* target;
     mnstl::Slice<CaseClause> cases;
-    Block defaultBody;
+    std::optional<Block> defaultBody;
 
-    SwitchStatement(Expression* _target, mnstl::Slice<CaseClause> _cases, Block _defaultBody = {}) noexcept :
+    SwitchStatement(Expression* _target, mnstl::Slice<CaseClause> _cases, std::optional<Block> _defaultBody = {}) noexcept :
         Statement(StatementKind::SwitchStatement), target(_target), cases(_cases), defaultBody(_defaultBody) {}
 
     MN_AST_STANDARD_INTERFACE(SwitchStatement);

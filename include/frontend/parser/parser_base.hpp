@@ -110,7 +110,7 @@ class Parser {
                                                                  bool& hasDefaultParameter, bool& hasVariadicParameter);
 
     ast::CaseClause parseCaseClause();
-    ast::Block parseDefaultClause();
+    std::optional<ast::Block> parseDefaultClause();
 
     std::vector<utils::StringID> parseImportPath();
     utils::OptionalStringID parseImportAlias();
