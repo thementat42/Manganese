@@ -51,7 +51,7 @@ class chunk_allocator {
     template <std::ranges::range Range>
     auto emplace_range(const Range& range) {
         using value_type = std::remove_cvref_t<decltype(*range.begin())>;
-        std::size_t count = std::ranges::distance(range);
+        auto count = static_cast<std::size_t>(std::ranges::distance(range));
         if (count == 0) { return Slice<value_type>{.data = nullptr, .size = 0}; }
         auto* dest = static_cast<value_type*>(allocate(sizeof(value_type) * count, alignof(value_type)));
 
