@@ -20,20 +20,12 @@ class chunk_allocator {
         std::unique_ptr<std::byte[]> data;
         std::size_t used, capacity;
     };
-    struct destructor {
-        void (*destructor)(void*);
-        void* object;
-    };
 
     std::vector<chunk> _chunks;
-    std::vector<destructor> _destructors;
 
    public:
     chunk_allocator() { add_chunk(); }
-    ~chunk_allocator() noexcept {
-        // Destroy in reverse order
-        for (auto& _destructor : std::views::reverse(_destructors)) { _destructor.destructor(_destructor.object); }
-    }
+    ~chunk_allocator() noexcept = default;
 
     template <class T, class... Args>
         requires(std::is_constructible_v<T, Args...>)
@@ -41,14 +33,10 @@ class chunk_allocator {
         void* mem = allocate(sizeof(T), alignof(T));
         T* ptr = new (mem) T(std::forward<Args>(args)...);
 
-        if constexpr (!std::is_trivially_destructible_v<T>) {
-            _destructors.push_back(
-                destructor{.destructor = [](void* obj) { static_cast<T*>(obj)->~T(); }, .object = ptr});
-        }
         return ptr;
     }
 
-    template <std::ranges::range Range>
+    template <std::ranges::sized_range Range>
     auto emplace_range(const Range& range) {
         using value_type = std::remove_cvref_t<decltype(*range.begin())>;
         auto count = static_cast<std::size_t>(std::ranges::distance(range));
