@@ -160,8 +160,8 @@ void FunctionDeclarationStatement::dump(std::ostream& os, const utils::StringInt
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
 
     os << ind.next() << "generic types: [";
-    for (std::size_t i = 0; i < genericTypes.size(); ++i) {
-        os << interner.get_view(genericTypes[i]) << (i + 1 < genericTypes.size() ? ", " : "");
+    for (std::size_t i = 0; i < genericTypes.size; ++i) {
+        os << interner.get_view(genericTypes[i]) << (i + 1 < genericTypes.size ? ", " : "");
     }
     os << "]\n";
 
@@ -218,7 +218,7 @@ void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, 
         os << ind.next() << "]\n";
     }
 
-    if (!elseBody.empty()) { dumpBlock(os, "else body", interner, ind.next(), elseBody); }
+    if (elseBody.has_value()) { dumpBlock(os, "else body", interner, ind.next(), *elseBody); }
 
     os << ind << "}\n";
 }
@@ -228,9 +228,9 @@ void ImportStatement::dump(std::ostream& os, const utils::StringInterner& intern
     dumpHeader(os, ind, "ImportStatement", *this);
 
     os << ind.next() << "path: [";
-    for (std::size_t i = 0; i < path.size(); ++i) {
+    for (std::size_t i = 0; i < path.size; ++i) {
         os << interner.get_view(path[i]);
-        if (i + 1 < path.size()) { os << ", "; }
+        if (i + 1 < path.size) { os << ", "; }
     }
     os << "]\n";
 
@@ -290,7 +290,7 @@ void SwitchStatement::dump(std::ostream& os, const utils::StringInterner& intern
         os << ind.next(2) << "}\n";
     }
 
-    if (!defaultBody.empty()) { dumpBlock(os, "default body", interner, ind.next(), defaultBody); }
+    if (defaultBody.has_value()) { dumpBlock(os, "default body", interner, ind.next(), *defaultBody); }
 
     os << ind << "}\n";
 }
