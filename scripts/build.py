@@ -19,8 +19,6 @@ Options:
     -h, --help                                             Print this help message and exit
     -j, --jobs                                             Number of parallel build jobs.
     -l, --linker LINKER                                    Specify a linker to use (e.g. gcc, ld, etc.) instead of the default for the system
-    -m, --memory-tracking                                  Track the total amount of heap-allocated memory the program uses (ignores deallocations)
-    -mc, --memory-tracking-continuous                      Continuously track the amount of heap-allocated memory (accounts for deallocations, accuracy may vary with different compilers)
     --no-move                                              Leave the executable in the build directory after building (by default it will be moved to the root directory)
     -r, --run                                              Run the executable immediately after building.
     -t, --tests                                            Build the test suite instead of the main compiler.
@@ -168,20 +166,6 @@ arg_parser.add_argument(
 )
 
 arg_parser.add_argument(
-    "-m",
-    "--memory-tracking",
-    action="store_true",
-    help="Track the total amount of heap-allocated memory the program uses (only available in debug mode)",
-)
-
-arg_parser.add_argument(
-    "-mc",
-    "--memory-tracking-continuous",
-    action="store_true",
-    help="Enable detailed continuous memory tracking with allocation/deallocation logging to file (requires -m/--memory-tracking) (accuracy may vary depending on the compiler)",
-)
-
-arg_parser.add_argument(
     "--no-move",
     action="store_true",
     help="Leave the executable in the build directory after building",
@@ -242,23 +226,6 @@ if args.exec_with and not args.run:
         "were passed to the script but the run flag (-r) was not specified",
     )
 
-if args.memory_tracking:
-    if not args.debug:
-        print("Warning: --memory-tracking only has an effect in debug mode")
-    else:
-        print("Tracking cumulative memory usage")
-
-if args.memory_tracking_continuous:
-    if not args.memory_tracking:
-        print(
-            "Warning: --memory-tracking-continuous has no effect if --memory-tracking is off"
-        )
-    else:
-        print("Tracking estimated continuous memory usage")
-    print(
-        "Warning: --memory-tracking-continuous may not be completely accurate and can vary depending on the compiler "
-    )
-
 if args.tests and not args.debug:
     print(
         "Warning: --tests will compile in debug mode",
@@ -282,8 +249,6 @@ cmake_args = [
     "..",
     f"-DBUILD_TESTS={'ON' if args.tests else 'OFF'}",
     f"-DCMAKE_BUILD_TYPE={('Debug' if args.debug or args.tests else 'Release')}",
-    f"-DMEMORY_TRACKING={'ON' if args.memory_tracking else 'OFF'}",
-    f"-DCONTINUOUS_MEMORY_TRACKING={'ON' if args.memory_tracking_continuous else 'OFF'}",
     f"-DCMAKE_EXPORT_COMPILE_COMMANDS={'ON' if args.compile_commands else 'OFF'}",
     f"-DDISABLE_ANSI_COLOURS={'ON' if args.disable_ansi else 'OFF'}",
 ]

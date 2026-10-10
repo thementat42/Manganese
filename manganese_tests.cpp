@@ -8,7 +8,6 @@
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>
 #include <iostream>
-#include <utils/memory_tracking.hpp>
 
 #include "tests/testrunner.hpp"
 #include "tests/tests.hpp"
@@ -86,7 +85,6 @@ int main(int argc, char const* argv[]) {
         std::cout << "\n----------\n";
     }
 
-    logTotalAllocatedMemory();  // Only does something if memory tracking is enabled
     runner.printSummary();
     auto end = std::chrono::high_resolution_clock::now();
 

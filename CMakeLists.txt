@@ -19,28 +19,7 @@ endif()
 
 # Build options
 option(BUILD_TESTS "Build the test suite" OFF)
-option(MEMORY_TRACKING "Enable memory allocation tracking" OFF)
-option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory tracking" OFF)
 option(DISABLE_ANSI_COLOURS "Disable ANSI terminal colours" OFF)
-
-# Memory tracking configuration
-
-if(MEMORY_TRACKING)
-    add_compile_definitions(MEMORY_TRACKING=1)
-    message(STATUS "Memory tracking is enabled. This will track total memory allocations but may not be 100% accurate, and will vary by compiler")
-else()
-    add_compile_definitions(MEMORY_TRACKING=0)
-endif()
-
-if(CONTINUOUS_MEMORY_TRACKING)
-    if(NOT MEMORY_TRACKING)
-        message(WARNING "CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled. Continuous memory tracking will have no effect unless MEMORY_TRACKING is also enabled.")
-    endif()
-    message(STATUS "CONTINUOUS_MEMORY_TRACKING may not be 100% accurate and can vary between compilers and platforms.")
-    add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=1)
-else()
-    add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=0)
-endif()
 
 # LLVM Configuration
 
