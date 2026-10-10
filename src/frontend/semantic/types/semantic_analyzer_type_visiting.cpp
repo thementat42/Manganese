@@ -58,7 +58,7 @@ auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
             return typevisit_t::Failure;
         }
         const auto lengthVal = utils::computeExpression<std::uint64_t>(
-            arrayType->lengthExpression, typeContext.getTargetInfo(),interner,
+            arrayType->lengthExpression, typeContext.getTargetInfo(), interner,
             [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
                 this->logError(expr, fmt, std::forward<Args>(args)...);
             });
@@ -94,7 +94,6 @@ auto SemanticAnalyzer::visit(ast::FunctionType* type) -> typevisit_t {
     }
     const SemanticType* returnType = typeContext.getVoid();
     if (functionType->returnType != nullptr) {
-        // function is not returning void
         DISCARD(visit(functionType->returnType));
         returnType = functionType->returnType->semanticType;
         if (returnType->isPoison()) { return typevisit_t::Failure; }
@@ -144,7 +143,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
         return typevisit_t::Failure;
     }
 
-    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = typeArgs};
+    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
 
     if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::Success) {
@@ -233,10 +232,8 @@ auto SemanticAnalyzer::visit(ast::ScopedType* type) -> typevisit_t {
     const Symbol* scopeSymbol = nullptr;
 
     if (type->scope->kind == ast::TypeKind::IdentifierType) {
-        // regular identifier (e.g. Foo::Bar)
         scopeSymbol = symbolTable.lookup(static_cast<ast::IdentifierType*>(type->scope)->name);
     } else if (type->scope->kind == ast::TypeKind::ScopedType) {
-        // chained resolution (e.g. Foo::Bar::Baz): recursively resolve it
         if (visit(type->scope) == typevisit_t::Failure) { return typevisit_t::Failure; }
         scopeSymbol = context.nestedScopeResolutionCurrentSymbol;
     }
