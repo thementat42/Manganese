@@ -370,7 +370,7 @@ GenericInstantiationType* GenericInstantiationType::clone(semantic::CloneContext
 }
 
 IdentifierType* IdentifierType::clone(semantic::CloneContext* context) const {
-    auto* clone = makeClonedNode(this, context, name);
+    auto* clone = makeClonedNode(this, context, name, primitiveType);
 
     if (auto it = context->substitutions.find(name); it != context->substitutions.end()) {
         // This is a generic parameter: make its semantic type the substituted one from the instantiation
