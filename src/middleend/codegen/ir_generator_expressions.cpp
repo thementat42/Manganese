@@ -23,7 +23,7 @@ namespace Manganese::codegen {
     auto* aggregateType = llvm::cast<llvm::StructType>(visit(expression->semanticType));
     llvm::Value* alloca = builder->CreateAlloca(aggregateType, nullptr, "aggregate_instantiation");
 
-    for (unsigned i = 0; i < expression->fields.size(); ++i) {
+    for (unsigned i = 0; i < expression->fields.size; ++i) {
         llvm::Value* fieldValue = visit(expression->fields[i].value);
         llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
         builder->CreateStore(fieldValue, fieldPointer);
@@ -35,7 +35,7 @@ namespace Manganese::codegen {
     auto* aggregateType = llvm::cast<llvm::StructType>(visit(expression->semanticType));
     llvm::Value* alloca = builder->CreateAlloca(aggregateType, nullptr, "anonymous_aggregate_instantiation");
 
-    for (unsigned i = 0; i < expression->elements.size(); ++i) {
+    for (unsigned i = 0; i < expression->elements.size; ++i) {
         llvm::Value* fieldValue = visit(expression->elements[i]);
         llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
         builder->CreateStore(fieldValue, fieldPointer);
@@ -51,7 +51,7 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::ArrayLiteralExpression* expression) -> exprvisit_t {
     llvm::Type* elementType = visitTypeAsValue(expression->semanticType);
-    const std::size_t length = expression->elements.size();
+    const std::size_t length = expression->elements.size;
     llvm::ArrayType* arrayType = llvm::ArrayType::get(elementType, length);
     llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "array_literal");
     for (std::size_t i = 0; i < length; ++i) {
@@ -239,9 +239,9 @@ namespace Manganese::codegen {
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(expression->callee->semanticType));
 
     std::vector<llvm::Value*> argumentValues;
-    argumentValues.reserve(expression->arguments.size());
+    argumentValues.reserve(expression->arguments.size);
 
-    for (unsigned int i = 0; i < expression->arguments.size(); ++i) {
+    for (unsigned int i = 0; i < expression->arguments.size; ++i) {
         const ast::Expression* argument = expression->arguments[i];
         llvm::Value* argumentValue = visit(argument);
 

@@ -19,7 +19,7 @@ auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> 
         = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
 
     std::vector<llvm::Type*> memberTypes;
-    memberTypes.reserve(statement->fields.size());
+    memberTypes.reserve(statement->fields.size);
     for (const auto& field : statement->fields) { memberTypes.push_back(visitTypeAsValue(field.type->semanticType)); }
     llvmType->setBody(memberTypes);
 }
@@ -90,7 +90,8 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
 
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(statement->semanticType));
 
-    std::string_view mangledNameView = statement->mangledName.has_value() ? interner.get_view(*statement->mangledName) : interner.get_view(statement->name);
+    std::string_view mangledNameView = statement->mangledName.has_value() ? interner.get_view(*statement->mangledName)
+                                                                          : interner.get_view(statement->name);
     auto* llvmFunction
         = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, mangledNameView, module.get());
 
@@ -98,12 +99,13 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     builder->SetInsertPoint(entryBlock);
 
     llvm::Argument* currentLLVMArgument = llvmFunction->arg_begin();
-    for (std::size_t i = 0; i < statement->parameters.size(); ++i, ++currentLLVMArgument) {
+    for (std::size_t i = 0; i < statement->parameters.size; ++i, ++currentLLVMArgument) {
         const auto& param = statement->parameters[i];
         std::string_view paramName = interner.get_view(param.name);
         currentLLVMArgument->setName(paramName);
 
-        llvm::AllocaInst* alloca = builder->CreateAlloca(currentLLVMArgument->getType(), nullptr, std::string(paramName) + "_addr");
+        llvm::AllocaInst* alloca
+            = builder->CreateAlloca(currentLLVMArgument->getType(), nullptr, std::string(paramName) + "_addr");
         builder->CreateStore(currentLLVMArgument, alloca);
 
         namedValues[param.name] = alloca;
@@ -122,9 +124,9 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(*context, "if_true", function);
 
     std::vector<std::pair<llvm::BasicBlock*, llvm::BasicBlock*>> elifBlocks;
-    elifBlocks.reserve(statement->elifs.size());
+    elifBlocks.reserve(statement->elifs.size);
 
-    for (std::size_t i = 0; i < statement->elifs.size(); ++i) {
+    for (std::size_t i = 0; i < statement->elifs.size; ++i) {
         llvm::BasicBlock* elifConditionBlock
             = llvm::BasicBlock::Create(*context, std::format("elif_condition_{}", i), function);
         llvm::BasicBlock* elifBodyBlock
@@ -133,7 +135,7 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     }
 
     llvm::BasicBlock* elseBlock
-        = statement->elseBody.empty() ? nullptr : llvm::BasicBlock::Create(*context, "else_body", function);
+        = statement->elseBody.has_value() ? llvm::BasicBlock::Create(*context, "else_body", function) : nullptr;
 
     // Determine where the primary 'if' false branch should jump
     // If there are elifs, jump to the first one, otherwise we can just go straight to else
@@ -150,7 +152,7 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
     // emit each elif branch
 
-    for (size_t i = 0; i < statement->elifs.size(); ++i) {
+    for (size_t i = 0; i < statement->elifs.size; ++i) {
         auto [condBlk, bodyBlk] = elifBlocks[i];
 
         // If this elif fails, jump to the next elif, the else block, or the merge block
@@ -170,7 +172,7 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
     if (elseBlock != nullptr) {
         builder->SetInsertPoint(elseBlock);
-        visit(statement->elseBody);
+        visit(*statement->elseBody);
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
@@ -213,8 +215,9 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
     llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(*context, "switch_end", function);
 
     // create the default block if there's a default body otherwise just the merge block
-    llvm::BasicBlock* defaultBlock
-        = statement->defaultBody.empty() ? mergeBlock : llvm::BasicBlock::Create(*context, "switch_default", function);
+    llvm::BasicBlock* defaultBlock = statement->defaultBody.has_value()
+        ? llvm::BasicBlock::Create(*context, "switch_default", function)
+        : mergeBlock;
 
     // Pre-create basic blocks for each case
     struct CaseInfo {
@@ -223,19 +226,19 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
     };
 
     std::vector<CaseInfo> caseInfos;
-    caseInfos.reserve(statement->cases.size());
+    caseInfos.reserve(statement->cases.size);
 
-    for (size_t i = 0; i < statement->cases.size(); ++i) {
+    for (size_t i = 0; i < statement->cases.size; ++i) {
         llvm::BasicBlock* caseBlk = llvm::BasicBlock::Create(*context, std::format("switch_case_{}", i), function);
         caseInfos.push_back({.block = caseBlk, .astCase = &statement->cases[i]});
     }
 
     // LLVM has a built-in switch which usually becomes a jump table
     llvm::SwitchInst* switchInstance
-        = builder->CreateSwitch(condVal, defaultBlock, static_cast<unsigned>(statement->cases.size()));
+        = builder->CreateSwitch(condVal, defaultBlock, static_cast<unsigned>(statement->cases.size));
 
     // Populate each case value and emit its body
-    for (size_t i = 0; i < statement->cases.size(); ++i) {
+    for (size_t i = 0; i < statement->cases.size; ++i) {
         auto [caseBlock, astCase] = caseInfos[i];
 
         // A single case can often match multiple values (e.g., `case 1, 2, 3:`)
@@ -253,9 +256,9 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
     }
 
     // Emit default body if there is one
-    if (!statement->defaultBody.empty()) {
+    if (statement->defaultBody.has_value()) {
         builder->SetInsertPoint(defaultBlock);
-        visit(statement->defaultBody);
+        visit(*statement->defaultBody);
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
