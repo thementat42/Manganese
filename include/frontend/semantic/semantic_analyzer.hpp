@@ -186,12 +186,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl);
     const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl);
 
-    [[nodiscard]] const InstantiationResult* getInstantiationResult(const ast::ASTNode* declNode,
-                                                                    const TypeList& typeArgs) const {
-        const InstantiationKey key{.declNode = declNode, .typeArgs = typeArgs};
-        return instantiationCache.find(key);
-    }
-
     static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
         using enum ast::ExpressionKind;
         switch (expr->kind) {
