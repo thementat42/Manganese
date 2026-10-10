@@ -307,6 +307,29 @@ bool testArrayOfInstantiatedGenericFunctions() {
     return validateIRContains(source, {"testGenericArray", "call"}, __func__);
 }
 
+bool testCodegenFromFile() {
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/codegen_tests.mn";
+    mnstl::chunk_allocator fileAllocator{};
+    utils::StringInterner fileInterner;
+
+    parser::Parser parser(fullPath.string(), lexer::Mode::File, fileAllocator, fileInterner);
+    std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
+
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, fileAllocator, fileInterner);
+    if (semanticAnalyzer.analyze() != Result::Success) { return false; }
+
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), fileInterner);
+    if (cfa.analyze() != Result::Success) { return false; }
+
+    try {
+        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, fileInterner, targetInfo);
+        irGenerator.generate();
+        return irGenerator.getModule() != nullptr;
+    } catch (...) {
+        return false;
+    }
+}
+
 }  // namespace
 }  // namespace codegen_tests
 
@@ -334,6 +357,7 @@ void runCodeGenerationTests(TestRunner& runner) {
 
     runner.runTest("Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
     runner.runTest("Ternary Expression Codegen", codegen_tests::testTernaryExpressionCodeGen);
+    runner.runTest("Code Generation From File", codegen_tests::testCodegenFromFile);
 
 }
 
