@@ -7,11 +7,14 @@ namespace mnstl {
 
 template <class T>
 struct Slice {
-    const T* data = nullptr;
+    T* data = nullptr;
     std::size_t size = 0;
 
+    [[nodiscard]] T* begin() noexcept { return data; }
     [[nodiscard]] const T* begin() const noexcept { return data; }
+    [[nodiscard]] T* end() noexcept { return data + size; }
     [[nodiscard]] const T* end() const noexcept { return data + size; }
+    [[nodiscard]] T& operator[](std::size_t index) noexcept { return data[index]; }
     [[nodiscard]] const T& operator[](std::size_t index) const noexcept { return data[index]; }
     [[nodiscard]] bool empty() const noexcept { return size == 0; }
 };
