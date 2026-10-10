@@ -67,8 +67,8 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
     if (logFile) { logFile.close(); }
 
     const auto& block = parsedFile.program;
-    if (block.size() != N) {
-        std::cout << "ERROR: Expected " << N << " statements, got " << block.size() << " in test: " << testName << '\n';
+    if (block.size != N) {
+        std::cout << std::format("ERROR: Expected {} statements, got {} in test : {}\n", N , block.size, testName);
         return false;
     }
 
@@ -102,8 +102,8 @@ bool validateStatement(const parser::ParsedFile& parsedFile, const std::string& 
     if (logFile) { logFile.close(); }
 
     const auto& block = parsedFile.program;
-    if (block.size() != 1) {
-        std::cout << "ERROR: Expected 1 statement, got " << block.size() << " in test: " << testName << '\n';
+    if (block.size != 1) {
+        std::cout << std::format("ERROR: Expected 1 statement, got {} in test : {}\n", block.size, testName);
         return false;
     }
 
@@ -583,8 +583,8 @@ bool testImportsAndAliases() {
     }
 
     // Verify import metadata count
-    if (parsedFile.imports.size() != 3) {
-        std::cout << "ERROR: Expected 3 imports, got " << parsedFile.imports.size() << " in testImportsAndAliases\n";
+    if (parsedFile.imports.size != 3) {
+        std::cout << std::format("ERROR: Expected 3 imports, got {} in testImportsAndAliases\n", parsedFile.imports.size);
         return false;
     }
 
@@ -691,14 +691,14 @@ bool testPathologicalExpressionRecovery() {
                                    "let z: ptr * int32 = foo@[, ](,,);\n";
 
     const parser::ParsedFile file = getParserResults(expression);
-    return file.program.size() == 3;
+    return file.program.size == 3;
 }
 
 bool testCascadingSyntaxFailures() {
     const std::string expression = "if () { print(,,); } else { let a = *; }";
 
     const parser::ParsedFile file = getParserResults(expression);
-    return file.program.size() == 1;
+    return file.program.size == 1;
 }
 bool testPathologicalExpressionRecovery2() {
     const std::string expression = "let x = *** + / 5;\n"
@@ -706,7 +706,7 @@ bool testPathologicalExpressionRecovery2() {
                                    "let z = a + (b * );\n";
 
     const parser::ParsedFile file = getParserResults(expression);
-    return file.program.size() == 3;
+    return file.program.size == 3;
 }
 
 bool testUninitializedKeywordParsing() {
