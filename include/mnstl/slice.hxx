@@ -6,7 +6,7 @@
 namespace mnstl {
 
 template <class T>
-class Slice {
+struct Slice {
     const T* data = nullptr;
     std::size_t size = 0;
 
