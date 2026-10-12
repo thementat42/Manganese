@@ -44,7 +44,9 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = aggregateStmt->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(interner.get_view(aggregateStmt->name), aggregateStmt); }
+            if (result == Result::Failure) {
+                _reportRedeclaration(interner.get_view(aggregateStmt->name), aggregateStmt);
+            }
             return result;
         }
         case AliasStatement: {
@@ -81,7 +83,6 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
         }
         case FunctionDeclarationStatement: {
             auto* funcStmt = static_cast<ast::FunctionDeclarationStatement*>(stmt);
-
             // Register the function itself in the current scope
             auto result = symbolTable.declare(funcStmt->name,
                                               Symbol{
@@ -92,6 +93,8 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                   .isMutable = false,
                                               });
             if (result == Result::Failure) { _reportRedeclaration(interner.get_view(funcStmt->name), funcStmt); }
+
+            if (!funcStmt->genericTypes.empty()) { return result; }
 
             // Process the internal block statements
             const Result bodyResult = _buildBodyScope(funcStmt->body);
