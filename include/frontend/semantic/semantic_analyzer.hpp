@@ -99,7 +99,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
    public:
     SemanticAnalyzer(std::vector<parser::ParsedFile>& files, const utils::TargetInfo& target,
                      mnstl::chunk_allocator& _arena, utils::StringInterner& _interner) :
-        symbolTable(_arena), typeContext(_arena, target), parsedFiles(files), arena(_arena), interner(_interner) {}
+        symbolTable(_arena, _interner), typeContext(_arena, target), parsedFiles(files), arena(_arena), interner(_interner) {}
 
     Result analyze();
     SymbolTable& getSymbolTable() noexcept { return symbolTable; }

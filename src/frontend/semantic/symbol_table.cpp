@@ -90,7 +90,7 @@ Symbol* SymbolTable::lookup(utils::StringID name) NOEXCEPT_IF_RELEASE {
         probe = probe->parent;
     }
 
-    logging::logInternal(logging::LogLevel::Warning, "Symbol not found in any visible lexical scope.");
+    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' found in any visible lexical scope.", _interner.get_view(name));
     return nullptr;
 }
 
@@ -102,7 +102,7 @@ const Symbol* SymbolTable::lookup(utils::StringID name) const NOEXCEPT_IF_RELEAS
         probe = probe->parent;
     }
 
-    logging::logInternal(logging::LogLevel::Warning, "Symbol not found in any visible lexical scope.");
+    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' found in any visible lexical scope.", _interner.get_view(name));
     return nullptr;
 }
 

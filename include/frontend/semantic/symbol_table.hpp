@@ -72,6 +72,7 @@ struct Scope {
 class SymbolTable {
    private:
     mnstl::chunk_allocator& _arena;
+    utils::StringInterner& _interner;
     Scope* _root;
     Scope* _currentScope;
     struct {
@@ -83,8 +84,8 @@ class SymbolTable {
     inline bool noScopeAvailable() const noexcept { return _currentScope == nullptr; }
 
    public:
-    SymbolTable(mnstl::chunk_allocator& arena) noexcept :
-        _arena(arena), _root(_arena.emplace<Scope>()), _currentScope(_root) {}
+    SymbolTable(mnstl::chunk_allocator& arena, utils::StringInterner& interner) noexcept :
+        _arena(arena), _interner(interner), _root(_arena.emplace<Scope>()), _currentScope(_root) {}
 
     ~SymbolTable() noexcept = default;
 
