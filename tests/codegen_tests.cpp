@@ -289,10 +289,9 @@ bool testTernaryExpressionCodeGen() {
             return cond ? first : second;
         }
     )";
-    
+
     return validateIRContains(source, {"selectValue", "br i1", "phi"}, __func__);
 }
-
 
 bool testArrayOfInstantiatedGenericFunctions() {
     const std::string source = R"(
@@ -324,10 +323,23 @@ bool testCodegenFromFile() {
     try {
         codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, fileInterner, targetInfo);
         irGenerator.generate();
+        std::ofstream logFile(logFileName, std::ios::app);
+        if (logFile) {
+            std::string irOutput;
+
+            if (auto* module = irGenerator.getModule()) {
+                std::string tempStr;
+                llvm::raw_string_ostream rso(tempStr);
+                module->print(rso, nullptr);
+                rso.flush();
+                irOutput = tempStr;
+            }
+            logFile << "Test: " << __func__ << "\n";
+            logFile << "Generated IR\n" << irOutput << "\n---------------------\n";
+            logFile.close();
+        }
         return irGenerator.getModule() != nullptr;
-    } catch (...) {
-        return false;
-    }
+    } catch (...) { return false; }
 }
 
 }  // namespace
@@ -358,7 +370,6 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
     runner.runTest("Ternary Expression Codegen", codegen_tests::testTernaryExpressionCodeGen);
     runner.runTest("Code Generation From File", codegen_tests::testCodegenFromFile);
-
 }
 
 }  // namespace Manganese::tests
