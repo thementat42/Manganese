@@ -26,6 +26,8 @@ void SymbolTable::enterScope() {
     }
 }
 
+void SymbolTable::enterScope(Scope* scope) { setCurrentScope(scope); }
+
 void SymbolTable::enterNamespace(utils::StringID name, ast::ASTNode* node) {
     if (_flags._isFirstPass) {
         Symbol* namespaceSymbol = _currentScope->lookup(name);
@@ -70,7 +72,9 @@ void SymbolTable::enterNamespace(utils::StringID name, ast::ASTNode* node) {
 }
 
 std::string Scope::getQualifiedName(const utils::StringInterner& interner) const {
-    if (parent == nullptr || parent->namespaceName == utils::StringID{}) { return std::string(interner.get_view(namespaceName)); }
+    if (parent == nullptr || parent->namespaceName == utils::StringID{}) {
+        return std::string(interner.get_view(namespaceName));
+    }
     return parent->getQualifiedName(interner) + "::" + std::string(interner.get_view(namespaceName));
 }
 
@@ -90,7 +94,8 @@ Symbol* SymbolTable::lookup(utils::StringID name) NOEXCEPT_IF_RELEASE {
         probe = probe->parent;
     }
 
-    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", _interner.get_view(name));
+    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.",
+                         _interner.get_view(name));
     return nullptr;
 }
 
@@ -102,7 +107,8 @@ const Symbol* SymbolTable::lookup(utils::StringID name) const NOEXCEPT_IF_RELEAS
         probe = probe->parent;
     }
 
-    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", _interner.get_view(name));
+    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.",
+                         _interner.get_view(name));
     return nullptr;
 }
 
