@@ -79,7 +79,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
         }
         case ForLoopStatement: {
             auto* forLoopStmt = static_cast<ast::ForLoopStatement*>(stmt);
-            return _buildBodyScope(forLoopStmt->body);
+            return _buildBodyScope(forLoopStmt->body, &forLoopStmt->associatedScope);
         }
         case FunctionDeclarationStatement: {
             auto* funcStmt = static_cast<ast::FunctionDeclarationStatement*>(stmt);
@@ -97,17 +97,17 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
             if (!funcStmt->genericTypes.empty()) { return result; }
 
             // Process the internal block statements
-            const Result bodyResult = _buildBodyScope(funcStmt->body);
+            const Result bodyResult = _buildBodyScope(funcStmt->body, &funcStmt->associatedScope);
             return (result == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
         }
         case IfStatement: {
             auto* ifStmt = static_cast<ast::IfStatement*>(stmt);
             Result result = Result::Success;
-            if (_buildBodyScope(ifStmt->body) == Result::Failure) { result = Result::Failure; }
-            for (const ast::ElifClause& elif : ifStmt->elifs) {
-                if (_buildBodyScope(elif.body) == Result::Failure) { result = Result::Failure; }
+            if (_buildBodyScope(ifStmt->body, &ifStmt->associatedScope) == Result::Failure) { result = Result::Failure; }
+            for (ast::ElifClause& elif : ifStmt->elifs) {
+                if (_buildBodyScope(elif.body, &elif.associatedScope) == Result::Failure) { result = Result::Failure; }
             }
-            if (ifStmt->elseBody.has_value() && _buildBodyScope(*ifStmt->elseBody) == Result::Failure) {
+            if (ifStmt->elseBody.has_value() && _buildBodyScope(*ifStmt->elseBody, &ifStmt->elseAssociatedScope) == Result::Failure) {
                 result = Result::Failure;
             }
 
@@ -119,29 +119,33 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
         }
         case NestedBlockStatement: {
             auto* block = static_cast<ast::NestedBlockStatement*>(stmt);
-            return _buildBodyScope(block->block);
+            return _buildBodyScope(block->block, &block->associatedScope);
         }
         case SwitchStatement: {
             auto* switchStmt = static_cast<ast::SwitchStatement*>(stmt);
             Result result = Result::Success;
-            for (const ast::CaseClause& clause : switchStmt->cases) {
-                if (_buildBodyScope(clause.body) == Result::Failure) { result = Result::Failure; }
+            for (ast::CaseClause& clause : switchStmt->cases) {
+                if (_buildBodyScope(clause.body, &clause.associatedScope) == Result::Failure) {
+                    result = Result::Failure;
+                }
             }
-            if (switchStmt->defaultBody.has_value() && _buildBodyScope(*switchStmt->defaultBody) == Result::Failure) {
+            if (switchStmt->defaultBody.has_value()
+                && _buildBodyScope(*switchStmt->defaultBody, &switchStmt->defaultAssociatedScope) == Result::Failure) {
                 result = Result::Failure;
             }
             return result;
         }
         case WhileLoopStatement: {
             auto* whileStmt = static_cast<ast::WhileLoopStatement*>(stmt);
-            return _buildBodyScope(whileStmt->body);
+            return _buildBodyScope(whileStmt->body, &whileStmt->associatedScope);
         }
         default: return Result::Success;  // Statements that don't introduce scopes or declare types
     }
 }
 
-Result SemanticAnalyzer::_buildBodyScope(const ast::Block& block) {
+Result SemanticAnalyzer::_buildBodyScope(const ast::Block& block, Scope** outScope) {
     symbolTable.enterScope();
+    if (outScope != nullptr) { *outScope = symbolTable.getCurrentScope(); }
     Result result = Result::Success;
 
     for (ast::Statement* statement : block) {
@@ -154,6 +158,7 @@ Result SemanticAnalyzer::_buildBodyScope(const ast::Block& block) {
 
 Result SemanticAnalyzer::_buildNamespaceScope(ast::NamespaceStatement* node) {
     symbolTable.enterNamespace(node->name, node);
+    node->associatedScope = symbolTable.getCurrentScope();
     Result result = Result::Success;
 
     for (ast::Statement* subStatement : node->block) {
