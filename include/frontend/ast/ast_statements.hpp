@@ -20,7 +20,7 @@ struct Declaration : public Statement {
 };
 
 struct ScopeOwner {
-    const semantic::Scope* associatedScope = nullptr;
+    semantic::Scope* associatedScope = nullptr;
 };
 
 struct AggregateField {
@@ -151,12 +151,14 @@ struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {
 struct ElifClause {
     Expression* condition;
     Block body;
+    semantic::Scope* associatedScope;
 };
 
 struct IfStatement final : public Statement, ScopeOwner {
     Expression* condition;
     Block body;
     std::optional<Block> elseBody;  // elseBody might be empty
+    semantic::Scope* elseAssociatedScope = nullptr;
     mnstl::Slice<ElifClause> elifs;
 
     IfStatement(Expression* _condition, Block _body, mnstl::Slice<ElifClause> _elifs,
@@ -214,12 +216,14 @@ struct ReturnStatement final : public Statement {
 struct CaseClause {
     mnstl::Slice<Expression*> values;
     Block body;
+    semantic::Scope* associatedScope;
 };
 
 struct SwitchStatement final : public Statement, ScopeOwner {
     Expression* target;
     mnstl::Slice<CaseClause> cases;
     std::optional<Block> defaultBody;
+    semantic::Scope* defaultAssociatedScope;
 
     SwitchStatement(Expression* _target, mnstl::Slice<CaseClause> _cases,
                     std::optional<Block> _defaultBody = {}) noexcept :
