@@ -29,6 +29,7 @@ namespace semantic {
 
 struct SemanticType;
 struct CloneContext;
+struct Scope;
 
 }  // namespace semantic
 

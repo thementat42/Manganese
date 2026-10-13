@@ -8,7 +8,6 @@
 #include <optional>
 #include <utils/string_interner.hpp>
 
-
 namespace Manganese::ast {
 
 struct Declaration : public Statement {
@@ -18,6 +17,10 @@ struct Declaration : public Statement {
 
     Declaration(StatementKind _kind, utils::StringID _name) noexcept : Statement(_kind), name(_name) {}
     virtual ~Declaration() = default;
+};
+
+struct ScopeOwner {
+    const semantic::Scope* associatedScope = nullptr;
 };
 
 struct AggregateField {
@@ -100,7 +103,7 @@ struct ExpressionStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE(ExpressionStatement);
 };
 
-struct ForLoopStatement final : public Statement {
+struct ForLoopStatement final : public Statement, ScopeOwner {
     Statement* initializationStep;
     Expression* stopCondition;
     Expression* postExpression;
@@ -126,7 +129,7 @@ struct FunctionParameter {
     bool isVariadic;
 };
 
-struct FunctionDeclarationStatement final : public Declaration {
+struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {
     mnstl::Slice<utils::StringID> genericTypes;
     mnstl::Slice<FunctionParameter> parameters;
     Type* returnType;
@@ -150,13 +153,14 @@ struct ElifClause {
     Block body;
 };
 
-struct IfStatement final : public Statement {
+struct IfStatement final : public Statement, ScopeOwner {
     Expression* condition;
     Block body;
     std::optional<Block> elseBody;  // elseBody might be empty
     mnstl::Slice<ElifClause> elifs;
 
-    IfStatement(Expression* _condition, Block _body, mnstl::Slice<ElifClause> _elifs, std::optional<Block> _elseBody = {}) noexcept :
+    IfStatement(Expression* _condition, Block _body, mnstl::Slice<ElifClause> _elifs,
+                std::optional<Block> _elseBody = {}) noexcept :
         Statement(StatementKind::IfStatement), condition(_condition), body(_body), elseBody(_elseBody), elifs(_elifs) {}
 
     MN_AST_STANDARD_INTERFACE(IfStatement);
@@ -181,7 +185,7 @@ struct ModuleDeclarationStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE(ModuleDeclarationStatement);
 };
 
-struct NamespaceStatement final : public Statement {
+struct NamespaceStatement final : public Statement, ScopeOwner {
     utils::StringID name;
     Block block;
 
@@ -191,7 +195,7 @@ struct NamespaceStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE(NamespaceStatement);
 };
 
-struct NestedBlockStatement final : public Statement {
+struct NestedBlockStatement final : public Statement, ScopeOwner {
     Block block;
 
     NestedBlockStatement(Block _block) noexcept : Statement(StatementKind::NestedBlockStatement), block(_block) {}
@@ -212,12 +216,13 @@ struct CaseClause {
     Block body;
 };
 
-struct SwitchStatement final : public Statement {
+struct SwitchStatement final : public Statement, ScopeOwner {
     Expression* target;
     mnstl::Slice<CaseClause> cases;
     std::optional<Block> defaultBody;
 
-    SwitchStatement(Expression* _target, mnstl::Slice<CaseClause> _cases, std::optional<Block> _defaultBody = {}) noexcept :
+    SwitchStatement(Expression* _target, mnstl::Slice<CaseClause> _cases,
+                    std::optional<Block> _defaultBody = {}) noexcept :
         Statement(StatementKind::SwitchStatement), target(_target), cases(_cases), defaultBody(_defaultBody) {}
 
     MN_AST_STANDARD_INTERFACE(SwitchStatement);
@@ -241,7 +246,7 @@ struct VariableDeclarationStatement final : public Declaration {
     bool isDeclaration() const noexcept override { return true; }
 };
 
-struct WhileLoopStatement final : public Statement {
+struct WhileLoopStatement final : public Statement, ScopeOwner {
     Block body;
     Expression* condition;
     bool isDoWhile;
