@@ -37,8 +37,8 @@ TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
 }
 
 void Token::overrideType(TokenType newType) {
-    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {}",
-                         tokenTypeToString(_type), tokenTypeToString(newType));
+    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {}", tokenTypeToString(_type),
+                         tokenTypeToString(newType));
 
     _type = newType;
 }

@@ -1,5 +1,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/cfg.hpp>
+
 #include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese::cfg {
@@ -62,7 +63,8 @@ auto ControlFlowAnalyzer::visit(const ast::IdentifierExpression* expression) noe
         if (state == AssignmentState::Uninitialized) {
             logError(expression, "Identifier '{}' does not have a value", interner.get_view(expression->name));
         } else if (state == AssignmentState::MaybeInitialized) {
-            logError(expression, "Identifier '{}' may not have a value on all control paths", interner.get_view(expression->name));
+            logError(expression, "Identifier '{}' may not have a value on all control paths",
+                     interner.get_view(expression->name));
         }
     }
 }

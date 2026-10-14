@@ -5,8 +5,8 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <utils/string_interner.hpp>
 #include <mnstl/slice.hxx>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 
 namespace Manganese::ast {
@@ -21,7 +21,7 @@ struct AggregateInstantiationExpression final : public Expression {
     Expression* base;
     mnstl::Slice<AggregateInstantiationField> fields;
 
-    AggregateInstantiationExpression(Expression* _base, mnstl::Slice<AggregateInstantiationField>_fields) noexcept :
+    AggregateInstantiationExpression(Expression* _base, mnstl::Slice<AggregateInstantiationField> _fields) noexcept :
         Expression(ExpressionKind::AggregateInstantiationExpression), base(_base), fields(_fields) {}
 
     MN_AST_STANDARD_INTERFACE(AggregateInstantiationExpression);
@@ -34,7 +34,6 @@ struct AggregateLiteralExpression final : public Expression {
         Expression(ExpressionKind::AggregateLiteralExpression), elements(_elements) {}
 
     MN_AST_STANDARD_INTERFACE(AggregateLiteralExpression);
-    ;
 };
 
 struct AlignofExpression final : public Expression {

@@ -256,9 +256,12 @@ namespace Manganese::codegen {
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
         const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
         if (idExpr->resolvedDeclaration != nullptr && idExpr->resolvedDeclaration->mangledName.has_value()) {
-            calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(*idExpr->resolvedDeclaration->mangledName));
+            calleeValue = builder->GetInsertBlock()->getModule()->getFunction(
+                interner.get_view(*idExpr->resolvedDeclaration->mangledName));
         }
-        if (calleeValue == nullptr) { calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(idExpr->name)); }
+        if (calleeValue == nullptr) {
+            calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(idExpr->name));
+        }
     } else if (expression->callee->kind == ast::ExpressionKind::ScopeResolutionExpression) {
         const auto* scopeExpr = static_cast<const ast::ScopeResolutionExpression*>(expression->callee);
         calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(scopeExpr->mangledName));
@@ -311,7 +314,8 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
         return nullptr;
     }
 
-    ASSERT_UNREACHABLE_FMT("Generic instantiation {} was not flagged as semantically invalid", expression->toString(interner));
+    ASSERT_UNREACHABLE_FMT("Generic instantiation {} was not flagged as semantically invalid",
+                           expression->toString(interner));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierExpression* expression) -> exprvisit_t {
@@ -322,7 +326,8 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
         }
         if (function == nullptr) { function = module->getFunction(interner.get_view(expression->name)); }
         if (function == nullptr) {
-            ASSERT_UNREACHABLE_FMT("Function '{}' could not be found in the LLVM module", interner.get_view(expression->name));
+            ASSERT_UNREACHABLE_FMT("Function '{}' could not be found in the LLVM module",
+                                   interner.get_view(expression->name));
         }
         return function;
     }
@@ -331,7 +336,8 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
     if ((expression->resolvedDeclaration != nullptr) && expression->resolvedDeclaration->mangledName.has_value()) {
         value = namedValues[*expression->resolvedDeclaration->mangledName];
         if (value == nullptr) {
-            value = builder->GetInsertBlock()->getModule()->getNamedGlobal(interner.get_view(*expression->resolvedDeclaration->mangledName));
+            value = builder->GetInsertBlock()->getModule()->getNamedGlobal(
+                interner.get_view(*expression->resolvedDeclaration->mangledName));
         }
     }
 
@@ -471,7 +477,10 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
         const auto* enumType = static_cast<const semantic::Enum*>(expression->semanticType);
         const auto* identifierExpression = static_cast<const ast::IdentifierExpression*>(expression->element);
         auto val = enumType->getVariantValue(interner.get_view(identifierExpression->name));
-        if (!val) { ASSERT_UNREACHABLE_FMT("Enum variant '{}' did not have a value set", interner.get_view(identifierExpression->name)); }
+        if (!val) {
+            ASSERT_UNREACHABLE_FMT("Enum variant '{}' did not have a value set",
+                                   interner.get_view(identifierExpression->name));
+        }
         auto* llvmIntType = llvm::cast<llvm::IntegerType>(visit(enumType->underlyingType));
         return llvm::ConstantInt::get(llvmIntType, static_cast<std::uint64_t>(*val),
                                       /*isSigned=*/enumType->underlyingType->isSignedInteger());
@@ -559,9 +568,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     ASSERT_UNREACHABLE_FMT("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString());
 }
 
-[[nodiscard]] auto IRGenerator::visit(const ast::UninitializedExpression* /*unused*/) -> exprvisit_t {
-    return nullptr;
-}
+[[nodiscard]] auto IRGenerator::visit(const ast::UninitializedExpression* /*unused*/) -> exprvisit_t { return nullptr; }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::PoisonedExpression* /*unused*/) -> exprvisit_t {
     ASSERT_UNREACHABLE("Poisoned expression was not flagged as semantically invalid during semantic analysis");

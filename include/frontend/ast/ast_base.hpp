@@ -12,7 +12,6 @@
 #include <utils/target_info.hpp>
 #include <utils/type_names.hpp>
 
-
 #if MN_DEBUG
 #define MN_AST_DUMP void dump(std::ostream& os, const utils::StringInterner&, std::size_t indent = 0) const override;
 #else

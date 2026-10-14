@@ -112,7 +112,8 @@ auto SemanticAnalyzer::visit(ast::IdentifierExpression* expression) -> exprvisit
         return exprvisit_t::Failure;
     }
     if (symbol->type->isPoison()) [[unlikely]] {
-        logError(expression, "Identifier '{}' used before its type could be determined", interner.get_view(expression->name));
+        logError(expression, "Identifier '{}' used before its type could be determined",
+                 interner.get_view(expression->name));
         return exprvisit_t::Failure;
     }
     expression->semanticType = symbol->type;

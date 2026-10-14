@@ -30,7 +30,8 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
         if (visit(type) == typevisit_t::Failure) { return exprvisit_t::Failure; }
         const SemanticType* resolved = type->semanticType;
         if (resolved->isPoison()) {
-            logError(type, "Failed to resolve generic type argument '{}' in generic expression", type->toString(interner));
+            logError(type, "Failed to resolve generic type argument '{}' in generic expression",
+                     type->toString(interner));
             return exprvisit_t::Failure;
         }
         resolvedTypeArguments.push_back(resolved);

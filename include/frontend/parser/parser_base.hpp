@@ -130,7 +130,8 @@ class Parser {
 
     ast::Type* parseAggregateTypeField();
     ast::FunctionParameterType parseFunctionTypeParameter(bool& seenVariadic);
-    utils::StringID parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics, utils::StringID contextName);
+    utils::StringID parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,
+                                              utils::StringID contextName);
 
     // ~ Helpers
     ast::Block parseBlock(std::string_view blockName);

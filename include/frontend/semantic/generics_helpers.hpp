@@ -10,7 +10,6 @@
 #include <utils/resolution_status.hpp>
 #include <utils/string_interner.hpp>
 
-
 namespace Manganese::semantic {
 struct Scope;
 

@@ -1,9 +1,9 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <vector>
-#include <utils/string_interner.hpp>
 #include <optional>
+#include <utils/string_interner.hpp>
+#include <vector>
 
 #include "core.hpp"
 
@@ -45,7 +45,8 @@ AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::Cl
                                .column = field.column,
                                .isMutable = field.isMutable});
     }
-    auto* cloned = makeClonedNode(this, context, name, mnstl::Slice<utils::StringID>{}, context->arena.emplace_range(fieldClones));
+    auto* cloned = makeClonedNode(this, context, name, mnstl::Slice<utils::StringID>{},
+                                  context->arena.emplace_range(fieldClones));
     cloned->visibility = visibility;
     return cloned;
 }
@@ -110,8 +111,9 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
     }
     Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
 
-    auto* clone = makeClonedNode(this, context, name, mnstl::Slice<utils::StringID>{},
-                                 context->arena.emplace_range(parameterClones), returnTypeClone, cloneBlock(body, context));
+    auto* clone
+        = makeClonedNode(this, context, name, mnstl::Slice<utils::StringID>{},
+                         context->arena.emplace_range(parameterClones), returnTypeClone, cloneBlock(body, context));
     clone->visibility = visibility;
     return clone;
 }
@@ -126,12 +128,10 @@ IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
     }
 
     std::optional<ast::Block> elseBodyClone = std::nullopt;
-    if (elseBody.has_value()) {
-        elseBodyClone = cloneBlock(*elseBody, context);
-    }
+    if (elseBody.has_value()) { elseBodyClone = cloneBlock(*elseBody, context); }
 
-    return makeClonedNode(this, context, conditionClone, cloneBlock(body, context), context->arena.emplace_range(elifClones),
-                          elseBodyClone);
+    return makeClonedNode(this, context, conditionClone, cloneBlock(body, context),
+                          context->arena.emplace_range(elifClones), elseBodyClone);
 }
 
 ImportStatement* ImportStatement::clone(semantic::CloneContext* /*context*/) const {
@@ -166,13 +166,12 @@ SwitchStatement* SwitchStatement::clone(semantic::CloneContext* context) const {
         clonedCaseValues.reserve(caseClause.values.size);
 
         for (const auto* value : caseClause.values) { clonedCaseValues.push_back(value->clone(context)); }
-        caseClones.push_back({.values = context->arena.emplace_range(clonedCaseValues), .body = cloneBlock(caseClause.body, context)});
+        caseClones.push_back(
+            {.values = context->arena.emplace_range(clonedCaseValues), .body = cloneBlock(caseClause.body, context)});
     }
 
     std::optional<ast::Block> defaultBodyClone = std::nullopt;
-    if (defaultBody.has_value()) {
-        defaultBodyClone = cloneBlock(*defaultBody, context);
-    }
+    if (defaultBody.has_value()) { defaultBodyClone = cloneBlock(*defaultBody, context); }
 
     return makeClonedNode(this, context, targetClone, context->arena.emplace_range(caseClones), defaultBodyClone);
 }

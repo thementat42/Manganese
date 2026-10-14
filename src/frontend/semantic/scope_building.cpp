@@ -103,11 +103,14 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
         case IfStatement: {
             auto* ifStmt = static_cast<ast::IfStatement*>(stmt);
             Result result = Result::Success;
-            if (_buildBodyScope(ifStmt->body, &ifStmt->associatedScope) == Result::Failure) { result = Result::Failure; }
+            if (_buildBodyScope(ifStmt->body, &ifStmt->associatedScope) == Result::Failure) {
+                result = Result::Failure;
+            }
             for (ast::ElifClause& elif : ifStmt->elifs) {
                 if (_buildBodyScope(elif.body, &elif.associatedScope) == Result::Failure) { result = Result::Failure; }
             }
-            if (ifStmt->elseBody.has_value() && _buildBodyScope(*ifStmt->elseBody, &ifStmt->elseAssociatedScope) == Result::Failure) {
+            if (ifStmt->elseBody.has_value()
+                && _buildBodyScope(*ifStmt->elseBody, &ifStmt->elseAssociatedScope) == Result::Failure) {
                 result = Result::Failure;
             }
 

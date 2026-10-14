@@ -197,7 +197,8 @@ auto SemanticAnalyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
     if (visit(expression->index) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
     if (expression->variable->semanticType->isPoison()) {
-        logError(expression->variable, "Could not deduce type of expression {}", expression->variable->toString(interner));
+        logError(expression->variable, "Could not deduce type of expression {}",
+                 expression->variable->toString(interner));
         return exprvisit_t::Failure;
     }
     if (expression->index->semanticType->isPoison()) {
@@ -249,7 +250,8 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
             return exprvisit_t::Success;
         }
     }
-    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(), interner.get_view(expression->field));
+    logError(expression, "Aggregate type '{}' has no field named '{}'", aggregateType->toString(),
+             interner.get_view(expression->field));
 
     return exprvisit_t::Failure;
 }

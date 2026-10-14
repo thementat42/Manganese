@@ -17,8 +17,8 @@ namespace Manganese::lexer {
 
 //~ Core Lexer Functions
 
-Lexer::Lexer(const std::string& source, utils::StringInterner& interner, Mode mode)
-    : tokenStartLine(1), tokenStartCol(1), interner(interner) {
+Lexer::Lexer(const std::string& source, utils::StringInterner& interner, Mode mode) :
+    tokenStartLine(1), tokenStartCol(1), interner(interner) {
     switch (mode) {
         case Mode::String: reader = std::make_unique<io::StringReader>(source); break;
         case Mode::File: reader = std::make_unique<io::FileReader>(source); break;
@@ -86,7 +86,9 @@ Token& Lexer::peekToken() {
 Token Lexer::consumeToken() {
     if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
     // check if queue is still empty if it is, we are done tokenizing
-    if (tokenStream.empty()) { return {TokenType::EndOfFile, interner.intern(std::string_view("EOF")), getLine(), getCol()}; }
+    if (tokenStream.empty()) {
+        return {TokenType::EndOfFile, interner.intern(std::string_view("EOF")), getLine(), getCol()};
+    }
     const Token token = tokenStream.front();
     tokenStream.pop_front();  // get rid of the token
     return token;

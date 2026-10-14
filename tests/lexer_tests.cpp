@@ -78,7 +78,8 @@ bool checkToken(const Token& token, TokenType expectedType, const std::string& e
         return false;
     }
     if (interner.get_view(token.getLexeme()) != expectedLexeme) {
-        std::cout << std::format("Expected lexeme '{}' but got '{}'\n", expectedLexeme, interner.get_view(token.getLexeme()));
+        std::cout << std::format("Expected lexeme '{}' but got '{}'\n", expectedLexeme,
+                                 interner.get_view(token.getLexeme()));
 
         std::cout << "Expected bytes: ";
         printBytes(expectedLexeme);

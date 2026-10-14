@@ -24,7 +24,7 @@ void IRGenerator::dump(std::ostream& os) const {
 
 [[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const {
     std::string_view lexeme = interner.get_view(expression->value);
-    
+
     if (lexeme.ends_with("i8") || lexeme.ends_with("u8") || lexeme.ends_with("I8") || lexeme.ends_with("U8")) {
         return llvm::Type::getInt8Ty(*context);
     }
@@ -156,7 +156,8 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
         const auto* scopeExpression = static_cast<const ast::ScopeResolutionExpression*>(expr);
         llvm::Value* ptr = namedValues[scopeExpression->mangledName];
         if (ptr == nullptr) {
-            ptr = builder->GetInsertBlock()->getModule()->getNamedGlobal(interner.get_view(scopeExpression->mangledName));
+            ptr = builder->GetInsertBlock()->getModule()->getNamedGlobal(
+                interner.get_view(scopeExpression->mangledName));
         }
         if (ptr == nullptr) {
             ASSERT_UNREACHABLE_FMT("Could not find LLVM value for mangled name '{}'",

@@ -8,7 +8,6 @@
 #include <utils/str_to_num.hpp>
 #include <utils/string_interner.hpp>
 
-
 namespace Manganese::utils {
 
 template <class T, class ErrorLogger>

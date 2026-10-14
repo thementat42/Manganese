@@ -20,7 +20,8 @@ auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit
     }
 
     if (!isLvalue(expression->assignee)) {
-        logError(expression->assignee, "Cannot assign a value to expression '{}'", expression->assignee->toString(interner));
+        logError(expression->assignee, "Cannot assign a value to expression '{}'",
+                 expression->assignee->toString(interner));
         result = exprvisit_t::Failure;
     }
 
@@ -226,7 +227,8 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             bool isMut = false;
             expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMut);
             if (!isLvalue(expression->right)) {
-                logError(expression->right, "Cannot take the address of r-value '{}'", expression->right->toString(interner));
+                logError(expression->right, "Cannot take the address of r-value '{}'",
+                         expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
             isMut = isMutableExpression(expression->right);

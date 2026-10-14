@@ -68,7 +68,7 @@ bool validateStatements(const parser::ParsedFile& parsedFile, const std::array<s
 
     const auto& block = parsedFile.program;
     if (block.size != N) {
-        std::cout << std::format("ERROR: Expected {} statements, got {} in test : {}\n", N , block.size, testName);
+        std::cout << std::format("ERROR: Expected {} statements, got {} in test : {}\n", N, block.size, testName);
         return false;
     }
 
@@ -276,19 +276,17 @@ bool testTernaryOperator() {
                                    "a ? b : c ? d : e;\n"
                                    "a ? b : c ? d : e ? f : g;\n";
 
-    const std::array<std::string, 7> expected = {
-        "(a ? b : c);",
-        "(x = (condition ? trueVal : falseVal));",
-        "((is_valid || force) ? allow() : deny());", // FIX: Removed extra parens around function calls
-        "(result = ((a == b) ? (c + d) : (e * f)));",
-        "(a ? (b ? c : d) : e);",
-        "(a ? b : (c ? d : e));",
-        "(a ? b : (c ? d : (e ? f : g)));"
-    };
+    const std::array<std::string, 7> expected
+        = {"(a ? b : c);",
+           "(x = (condition ? trueVal : falseVal));",
+           "((is_valid || force) ? allow() : deny());",  // FIX: Removed extra parens around function calls
+           "(result = ((a == b) ? (c + d) : (e * f)));",
+           "(a ? (b ? c : d) : e);",
+           "(a ? b : (c ? d : e));",
+           "(a ? b : (c ? d : (e ? f : g)));"};
 
     return validateStatements(getParserResults(expression), expected, "Ternary Operators");
 }
-
 
 bool testAggregateDeclarationAndInstantiation() {
     const std::string expression = "public aggregate Point {\n"
@@ -584,7 +582,8 @@ bool testImportsAndAliases() {
 
     // Verify import metadata count
     if (parsedFile.imports.size != 3) {
-        std::cout << std::format("ERROR: Expected 3 imports, got {} in testImportsAndAliases\n", parsedFile.imports.size);
+        std::cout << std::format("ERROR: Expected 3 imports, got {} in testImportsAndAliases\n",
+                                 parsedFile.imports.size);
         return false;
     }
 
@@ -594,7 +593,7 @@ bool testImportsAndAliases() {
 bool testParseFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
     mnstl::chunk_allocator fielAllocator{};
-utils::StringInterner fileInterner;
+    utils::StringInterner fileInterner;
     parser::Parser p(fullPath.string(), lexer::Mode::File, fielAllocator, fileInterner);
     auto x = p.parse();
     if (x.fileModule != nullptr) { std::cout << x.fileModule->toString(fileInterner) << "\n"; }

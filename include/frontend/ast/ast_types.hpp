@@ -3,8 +3,8 @@
 
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <utility>
 #include <mnstl/slice.hxx>
+#include <utility>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::ast {
@@ -85,8 +85,7 @@ struct ScopedType final : public Type {
 struct TypeofType final : public Type {
     Expression* expression;
 
-    explicit TypeofType(Expression* expr) noexcept :
-        Type(TypeKind::TypeofType), expression(expr) {}
+    explicit TypeofType(Expression* expr) noexcept : Type(TypeKind::TypeofType), expression(expr) {}
 
     MN_AST_STANDARD_INTERFACE(TypeofType);
 };

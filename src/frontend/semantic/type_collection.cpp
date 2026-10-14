@@ -58,7 +58,8 @@ Result SemanticAnalyzer::collectGlobalAggregate(ast::AggregateDeclarationStateme
     // Skip uninstantiated generics
     Symbol* symbol = symbolTable.lookup(aggregate->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not recorded during type collection", interner.get_view(aggregate->name));
+        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not recorded during type collection",
+                               interner.get_view(aggregate->name));
     }
 
     // Skip if already processed
@@ -99,7 +100,8 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
     Symbol* symbol = symbolTable.lookup(function->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Function '{}' was not recorded during type collection", interner.get_view(function->name));
+        ASSERT_UNREACHABLE_FMT("Function '{}' was not recorded during type collection",
+                               interner.get_view(function->name));
     }
 
     if (!function->genericTypes.empty()) {
@@ -109,7 +111,8 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
     // Detect direct signature cycles (e.g. infinite parameter expansion)
     if (symbol->status == ResolutionStatus::InProgress) {
-        logError(function, "Cyclic dependency detected in signature of function '{}'", interner.get_view(function->name));
+        logError(function, "Cyclic dependency detected in signature of function '{}'",
+                 interner.get_view(function->name));
         symbol->status = ResolutionStatus::Failure;
         return Result::Failure;
     }

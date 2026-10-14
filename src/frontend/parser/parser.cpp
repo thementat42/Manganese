@@ -46,7 +46,8 @@ ParsedFile Parser::parse() {
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
     if (lexer.hasError()) { flags.hasError = true; }
     if (lexer.hasWarning()) { flags.hasWarning = true; }
-    return ParsedFile{.fileModule = fileModule, .imports = arena.emplace_range(imports), .program = arena.emplace_range(program)};
+    return ParsedFile{
+        .fileModule = fileModule, .imports = arena.emplace_range(imports), .program = arena.emplace_range(program)};
 }
 
 // Helper functions
