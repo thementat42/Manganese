@@ -221,6 +221,8 @@ bool testGenericsCodegen() {
             return x;
         }
         func run() -> int32 {
+            identity@[string]("foo");
+            identity@[bool](true);
             return identity@[int32](42);
         }
     )";
@@ -284,8 +286,8 @@ bool testArrayOfGenericAggregates() {
             first: FirstType;
             second: SecondType;
         }
-        func getBoxVal() -> int32 {
-            let pairs: Pair@[int32, string][] = [Pair@[int32, string]{first = 10, second = "ten"}, Pair@[int32, string]{first = 20, second = "twenty"}];
+        func getBoxVal() -> float64 {
+            let pairs: Pair@[float64, string][] = [Pair@[float64, string]{first = 10.5, second = "ten and a half"}, Pair@[float64, string]{first = 20.5, second = "twenty and a half"}];
             return pairs[0].first;
         }
     )";

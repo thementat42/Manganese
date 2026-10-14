@@ -2,7 +2,6 @@ aggregate
 alias
 alignof
 as
-blueprint
 bool
 break
 case

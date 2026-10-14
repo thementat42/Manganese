@@ -146,6 +146,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
     const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
     std::string getMangledName(std::string_view baseName) const;
+    std::string getMangledName(std::string_view baseName, const TypeList& typeArgs) const;
 
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
