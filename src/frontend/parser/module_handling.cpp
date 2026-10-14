@@ -23,7 +23,7 @@ void topologicalSort(const std::string& moduleName, SortContext& context) {
 
     if (state == ResolutionStatus::InProgress) {
         std::string loopString;
-        auto cycleStart = std::find(context.resolutionStack.begin(), context.resolutionStack.end(), moduleName);
+        auto cycleStart = std::ranges::find(context.resolutionStack, moduleName);
 
         for (auto it = cycleStart; it != context.resolutionStack.end(); ++it) {
             loopString += std::format("'{}' imports ", *it);
@@ -44,8 +44,8 @@ void topologicalSort(const std::string& moduleName, SortContext& context) {
         for (const auto& dependency : it->second.dependencies) { topologicalSort(dependency, context); }
 
         // this is hit once all a module's dependencies have been analyzed, or a module has no dependencies
-        // the semantic analyzer will now have all the symbols from any and all imported modules so it's safe to analyze
-        // this one
+        // the semantic analyzer will now have all the symbols from any and all imported modules so it's safe to
+        // analyze this one
         state = ResolutionStatus::Success;
         context.orderedModules.push_back(context.modules.at(moduleName));
         context.resolutionStack.pop_back();
