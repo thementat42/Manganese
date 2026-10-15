@@ -36,7 +36,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ExpressionStatement* statement)
 FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) noexcept {
     const bool shouldEnterScope = statement->initializationStep == nullptr;
     if (statement->initializationStep != nullptr) {
-        symbolTable.enterScope();
+        symbolTable.enterScope(statement->associatedScope);
         visit(statement->initializationStep);
     }
     if (statement->postExpression != nullptr) { visit(statement->postExpression); }
@@ -46,7 +46,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) no
     auto preLoopStates = symbolAssignmentStates;
 
     if (statement->stopCondition == nullptr) {
-        FlowStatus bodyStatus = visit(statement->body, shouldEnterScope);
+        FlowStatus bodyStatus = visit(statement->body, shouldEnterScope, statement->associatedScope);
 
         // symbol assignment states updated by loop body visitor
 
@@ -67,7 +67,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) no
         // never executes
         if (!*conditionValue) { return FlowStatus::FallsThrough; }
 
-        FlowStatus bodyStatus = visit(statement->body, shouldEnterScope);
+        FlowStatus bodyStatus = visit(statement->body, shouldEnterScope, statement->associatedScope);
         mergeStates(symbolAssignmentStates, preLoopStates);
 
         if (bodyStatus == FlowStatus::Returns) { return FlowStatus::Returns; }
@@ -76,7 +76,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) no
     }
 
     // Couldn't fold value, runtime loop
-    visit(statement->body, shouldEnterScope);
+    visit(statement->body, shouldEnterScope, statement->associatedScope);
 
     mergeStates(symbolAssignmentStates, preLoopStates);
 
@@ -84,7 +84,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) no
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::FunctionDeclarationStatement* statement) noexcept {
-    FlowStatus bodyStatus = visit(statement->body);
+    FlowStatus bodyStatus = visit(statement->body, true, statement->associatedScope);
     if ((statement->returnType != nullptr) && statement->returnType->semanticType != nullptr
         && !statement->returnType->semanticType->isVoid() && bodyStatus == FlowStatus::FallsThrough) {
         logError(statement, "non-void function '{}' does not return a value on all control paths", statement->name);
@@ -96,7 +96,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcep
     visit(statement->condition);
     auto preBranchStates = symbolAssignmentStates;
 
-    FlowStatus ifBodyStatus = visit(statement->body);
+    FlowStatus ifBodyStatus = visit(statement->body, true, statement->associatedScope);
     auto ifStates = symbolAssignmentStates;
     bool allBranchesTerminate = (ifBodyStatus != FlowStatus::FallsThrough);
     FlowStatus result = ifBodyStatus;
@@ -105,7 +105,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcep
 
     for (const auto& elif : statement->elifs) {
         symbolAssignmentStates = preBranchStates;
-        FlowStatus elifStatus = visit(elif.body);
+        FlowStatus elifStatus = visit(elif.body, true, elif.associatedScope);
         if (elifStatus == FlowStatus::FallsThrough || (allBranchesTerminate && elifStatus != result)) {
             allBranchesTerminate = false;
         }
@@ -118,7 +118,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcep
 
     } else {
         symbolAssignmentStates = preBranchStates;
-        FlowStatus elseStatus = visit(*statement->elseBody);
+        FlowStatus elseStatus = visit(*statement->elseBody, true, statement->elseAssociatedScope);
         if ((elseStatus == FlowStatus::FallsThrough) || (allBranchesTerminate && elseStatus != result)) {
             allBranchesTerminate = false;
         }
@@ -137,12 +137,12 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ModuleDeclarationStatement* /*u
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::NamespaceStatement* statement) noexcept {
-    visit(statement->block);
+    visit(statement->block, true, statement->associatedScope);
     return FlowStatus::FallsThrough;
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::NestedBlockStatement* statement) noexcept {
-    return visit(statement->block);
+    return visit(statement->block, true, statement->associatedScope);
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::ReturnStatement* statement) noexcept {
@@ -159,7 +159,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noe
     bool allCasesTerminate = hasDefault;
 
     if (hasDefault) {
-        FlowStatus defaultStatus = visit(*statement->defaultBody);
+        FlowStatus defaultStatus = visit(*statement->defaultBody, true, statement->defaultAssociatedScope);
         mergedStates = symbolAssignmentStates;
         if (defaultStatus == FlowStatus::FallsThrough) { allCasesTerminate = false; }
     } else {
@@ -169,7 +169,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noe
     }
     for (const auto& caseClause : statement->cases) {
         symbolAssignmentStates = preSwitchStates;
-        FlowStatus caseStatus = visit(caseClause.body);
+        FlowStatus caseStatus = visit(caseClause.body, true, caseClause.associatedScope);
         mergeStates(mergedStates, symbolAssignmentStates);
 
         if (caseStatus == FlowStatus::FallsThrough) { allCasesTerminate = false; }
@@ -207,7 +207,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::WhileLoopStatement* statement) 
         }
         // while (true) so infinite loop
         auto preLoopStates = symbolAssignmentStates;
-        FlowStatus bodyStatus = visit(statement->body);
+        FlowStatus bodyStatus = visit(statement->body, true, statement->associatedScope);
         mergeStates(symbolAssignmentStates, preLoopStates);
 
         if (bodyStatus == FlowStatus::Returns) { return FlowStatus::Returns; }
@@ -215,7 +215,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::WhileLoopStatement* statement) 
     }
     // Condition could not be folded (runtime value): could run 0 times
     auto preLoopStates = symbolAssignmentStates;
-    FlowStatus bodyStatus = visit(statement->body);
+    FlowStatus bodyStatus = visit(statement->body, true, statement->associatedScope);
     // updated states (e.g. a variable assigned inside the loop)
 
     mergeStates(symbolAssignmentStates, preLoopStates);
@@ -224,8 +224,14 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::WhileLoopStatement* statement) 
     return FlowStatus::FallsThrough;
 }
 
-FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block, bool shouldEnterScope) {
-    if (shouldEnterScope) { symbolTable.enterScope(); }
+FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block, bool shouldEnterScope, semantic::Scope* explicitScope) {
+    if (shouldEnterScope) {
+        if (explicitScope != nullptr) {
+            symbolTable.enterScope(explicitScope);
+        } else {
+            symbolTable.enterScope();
+        }
+    }
     FlowStatus blockStatus = FlowStatus::FallsThrough;
     bool isUnreachable = false;
     for (const ast::Statement* stmt : block) {
