@@ -95,7 +95,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 #undef EXPR
 #undef TYPE
 
-    FlowStatus visit(const ast::Block& block, bool shouldEnterScope = true, semantic::Scope* explicitScope = nullptr);
+    FlowStatus visit(const ast::Block& block, bool shouldEnterScope, semantic::Scope* explicitScope);
 };
 
 }  // namespace Manganese::cfg

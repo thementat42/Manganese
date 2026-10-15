@@ -171,9 +171,15 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         return Result::Failure;
     }
 
-    Result visit(ast::Block& block, bool enterNewScope = true) {
+    Result visit(ast::Block& block, bool enterNewScope, semantic::Scope* explicitScope) {
         Result result = Result::Success;
-        if (enterNewScope) { symbolTable.enterScope(); }
+        if (enterNewScope) {
+            if (explicitScope != nullptr) {
+                symbolTable.enterScope(explicitScope);
+            } else {
+                symbolTable.enterScope();
+            }
+        }
         for (ast::Statement* statement : block) {
             auto stmtResult = visit(statement);
             if (stmtResult == Result::Failure) { result = Result::Failure; }
