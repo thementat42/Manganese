@@ -95,6 +95,11 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     auto* llvmFunction
         = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, mangledNameView, module.get());
 
+    // Save the previous insertion point
+    // Since generic instantiations skip around insertion points, we need to make sure to go back to the
+    // old function's insert point
+    llvm::BasicBlock* oldInsertBlock = builder->GetInsertBlock();
+
     llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(*context, "entry", llvmFunction);
     builder->SetInsertPoint(entryBlock);
 
@@ -112,6 +117,11 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     }
 
     visit(statement->body);
+
+    // Restore the previous insertion point so the caller can continue cleanly
+    if (oldInsertBlock != nullptr) {
+        builder->SetInsertPoint(oldInsertBlock);
+    }
 }
 
 auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
