@@ -30,7 +30,7 @@ inline void dumpHeader(std::ostream& os, Indent indent, std::string_view classNa
 }
 
 inline void dumpBlock(std::ostream& os, std::string_view label, const utils::StringInterner& interner, Indent indent,
-                      const ast::Block& block) {
+                      const ast::Block block) {
     os << indent << label << ": [\n";
     for (const ast::Statement* stmt : block) { stmt->dump(os, interner, indent.next()); }
     os << indent << "]\n";

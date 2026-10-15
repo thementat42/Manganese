@@ -118,7 +118,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result buildScopeTree(parser::ParsedFile& file);
 
     Result _buildStatementScope(ast::Statement* stmt);
-    Result _buildBodyScope(const ast::Block& block, Scope**);
+    Result _buildBodyScope(ast::Block block, Scope**);
     Result _buildNamespaceScope(ast::NamespaceStatement* node);
     Result collectGlobals(parser::ParsedFile& file);
     Result _collectGlobalsInStatement(ast::Statement* statement, ast::StatementKind targetKind);
@@ -171,7 +171,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         return Result::Failure;
     }
 
-    Result visit(ast::Block& block, bool enterNewScope, semantic::Scope* explicitScope) {
+    Result visit(ast::Block block, bool enterNewScope, semantic::Scope* explicitScope) {
         Result result = Result::Success;
         if (enterNewScope) {
             if (explicitScope != nullptr) {

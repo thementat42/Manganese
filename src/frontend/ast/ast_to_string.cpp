@@ -6,7 +6,6 @@
 #include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <utils/string_interner.hpp>
-#include <vector>
 
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
@@ -21,7 +20,7 @@ namespace {
 
 inline std::string getIndent(std::size_t indent) { return std::string(indent * 4, ' '); }
 
-std::string blockToString(const Block& block, const utils::StringInterner& interner, std::size_t indent) {
+std::string blockToString(Block block, const utils::StringInterner& interner, std::size_t indent) {
     std::string result = "{\n";
     for (const Statement* stmt : block) { result += stmt->toString(interner, indent + 1) + "\n"; }
     result += getIndent(indent) + "}";

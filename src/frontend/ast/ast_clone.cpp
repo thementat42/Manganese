@@ -25,7 +25,7 @@ T* makeClonedNode(const T* t, semantic::CloneContext* context, Args&&... args) {
 // Type alias for temporary statement collection during cloning
 using StatementVector = std::vector<ast::Statement*>;
 
-ast::Block cloneBlock(const ast::Block& block, semantic::CloneContext* context) {
+ast::Block cloneBlock(ast::Block block, semantic::CloneContext* context) {
     StatementVector result;
     result.reserve(block.size);
     for (const auto* statement : block) { result.push_back(statement->clone(context)); }

@@ -146,7 +146,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
     }
 }
 
-Result SemanticAnalyzer::_buildBodyScope(const ast::Block& block, Scope** outScope) {
+Result SemanticAnalyzer::_buildBodyScope(ast::Block block, Scope** outScope) {
     symbolTable.enterScope();
     if (outScope != nullptr) { *outScope = symbolTable.getCurrentScope(); }
     Result result = Result::Success;

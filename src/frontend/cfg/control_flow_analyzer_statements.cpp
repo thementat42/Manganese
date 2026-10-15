@@ -224,7 +224,7 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::WhileLoopStatement* statement) 
     return FlowStatus::FallsThrough;
 }
 
-FlowStatus ControlFlowAnalyzer::visit(const ast::Block& block, bool shouldEnterScope, semantic::Scope* explicitScope) {
+FlowStatus ControlFlowAnalyzer::visit(ast::Block block, bool shouldEnterScope, semantic::Scope* explicitScope) {
     if (shouldEnterScope) {
         if (explicitScope != nullptr) {
             symbolTable.enterScope(explicitScope);

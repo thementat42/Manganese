@@ -327,7 +327,7 @@ auto IRGenerator::visit(const ast::PoisonedStatement* /*unused*/) -> stmtvisit_t
     ASSERT_UNREACHABLE("Poisoned statement was not flagged as semantically invalid during semantic analysis");
 }
 
-auto IRGenerator::visit(const ast::Block& block) -> stmtvisit_t {
+auto IRGenerator::visit(ast::Block block) -> stmtvisit_t {
     for (const ast::Statement* statement : block) { visit(statement); }
 }
 

@@ -81,7 +81,7 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visitTypeAsValue(const semantic::SemanticType* type);
     [[nodiscard]] typevisit_t visitTypeAsValue(const ast::Type* type);
 
-    stmtvisit_t visit(const ast::Block& block);
+    stmtvisit_t visit(const ast::Block block);
 
     [[nodiscard]] typevisit_t visit(const semantic::Aggregate*);
     [[nodiscard]] typevisit_t visit(const semantic::Array*);
