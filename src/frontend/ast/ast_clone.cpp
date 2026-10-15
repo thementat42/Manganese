@@ -124,7 +124,9 @@ IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
     elifClones.reserve(elifs.size);
 
     for (const auto& elif : elifs) {
-        elifClones.push_back({.condition = elif.condition->clone(context), .body = cloneBlock(elif.body, context), .associatedScope = nullptr});
+        elifClones.push_back({.condition = elif.condition->clone(context),
+                              .body = cloneBlock(elif.body, context),
+                              .associatedScope = nullptr});
     }
 
     std::optional<ast::Block> elseBodyClone = std::nullopt;
@@ -166,8 +168,9 @@ SwitchStatement* SwitchStatement::clone(semantic::CloneContext* context) const {
         clonedCaseValues.reserve(caseClause.values.size);
 
         for (const auto* value : caseClause.values) { clonedCaseValues.push_back(value->clone(context)); }
-        caseClones.push_back(
-            {.values = context->arena.emplace_range(clonedCaseValues), .body = cloneBlock(caseClause.body, context), .associatedScope = nullptr});
+        caseClones.push_back({.values = context->arena.emplace_range(clonedCaseValues),
+                              .body = cloneBlock(caseClause.body, context),
+                              .associatedScope = nullptr});
     }
 
     std::optional<ast::Block> defaultBodyClone = std::nullopt;

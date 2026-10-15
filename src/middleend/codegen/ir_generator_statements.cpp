@@ -119,9 +119,7 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     visit(statement->body);
 
     // Restore the previous insertion point so the caller can continue cleanly
-    if (oldInsertBlock != nullptr) {
-        builder->SetInsertPoint(oldInsertBlock);
-    }
+    if (oldInsertBlock != nullptr) { builder->SetInsertPoint(oldInsertBlock); }
 }
 
 auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {

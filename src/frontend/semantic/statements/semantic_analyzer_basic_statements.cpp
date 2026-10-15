@@ -7,9 +7,7 @@
 
 namespace Manganese::semantic {
 
-auto SemanticAnalyzer::visit(ast::EmptyStatement* /*unused*/) -> stmtvisit_t {
-    return stmtvisit_t::Success;
-}
+auto SemanticAnalyzer::visit(ast::EmptyStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 auto SemanticAnalyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
     if (visit(statement->expression) == exprvisit_t::Failure) {
@@ -35,9 +33,7 @@ auto SemanticAnalyzer::visit(ast::ModuleDeclarationStatement* /*unused*/) -> stm
     return stmtvisit_t::Success;
 }
 
-auto SemanticAnalyzer::visit(ast::ImportStatement* /*unused*/) -> stmtvisit_t {
-    return stmtvisit_t::Success;
-}
+auto SemanticAnalyzer::visit(ast::ImportStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 auto SemanticAnalyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {
     context.namespaceStack.push_back(statement->name);
@@ -80,8 +76,6 @@ auto SemanticAnalyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
 
-auto SemanticAnalyzer::visit(ast::PoisonedStatement* /*unused*/) -> stmtvisit_t {
-    return stmtvisit_t::Failure;
-}
+auto SemanticAnalyzer::visit(ast::PoisonedStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Failure; }
 
 }  // namespace Manganese::semantic

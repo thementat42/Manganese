@@ -61,7 +61,9 @@ auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     if (statement->postExpression != nullptr) {
         if (visit(statement->postExpression) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
-    if (visit(statement->body, blockNeedsToEnterScope, statement->associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    if (visit(statement->body, blockNeedsToEnterScope, statement->associatedScope) == stmtvisit_t::Failure) {
+        result = stmtvisit_t::Failure;
+    }
     return result;
 }
 
@@ -91,7 +93,9 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         }
     }
 
-    if (visit(statement->body, true, statement->associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    if (visit(statement->body, true, statement->associatedScope) == stmtvisit_t::Failure) {
+        result = stmtvisit_t::Failure;
+    }
 
     for (ast::ElifClause& elif : statement->elifs) {
         DISCARD(visit(elif.condition));
@@ -117,7 +121,9 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     }
 
     if (statement->elseBody.has_value()) {
-        if (visit(*statement->elseBody, true, statement->elseAssociatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        if (visit(*statement->elseBody, true, statement->elseAssociatedScope) == stmtvisit_t::Failure) {
+            result = stmtvisit_t::Failure;
+        }
     }
     return result;
 }
@@ -156,10 +162,15 @@ auto SemanticAnalyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
                 }
             }
         }
-        if (visit(caseClause.body, true, first ? statement->associatedScope : caseClause.associatedScope) == Result::Failure) { result = stmtvisit_t::Failure; }
+        if (visit(caseClause.body, true, first ? statement->associatedScope : caseClause.associatedScope)
+            == Result::Failure) {
+            result = stmtvisit_t::Failure;
+        }
         first = false;
     }
-    if (statement->defaultBody.has_value() && visit(*statement->defaultBody, true, first ? statement->associatedScope : statement->defaultAssociatedScope) == stmtvisit_t::Failure) {
+    if (statement->defaultBody.has_value()
+        && visit(*statement->defaultBody, true, first ? statement->associatedScope : statement->defaultAssociatedScope)
+            == stmtvisit_t::Failure) {
         result = stmtvisit_t::Failure;
     }
     return result;
@@ -189,7 +200,9 @@ auto SemanticAnalyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t 
         logWarning(statement, "{}", conditionCanBeBool.message);
     }
 
-    if (visit(statement->body, true, statement->associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    if (visit(statement->body, true, statement->associatedScope) == stmtvisit_t::Failure) {
+        result = stmtvisit_t::Failure;
+    }
 
     return result;
 }
