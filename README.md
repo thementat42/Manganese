@@ -58,7 +58,7 @@ cmake ..
 cmake --build .
 ```
 
-The CMake script has various flags to configure the build process as well.
+The CMake script has various flags to configure the build process as well. See [CMakeLists.txt](CMakeLists.txt) for more
 
 ## Running the test suite
 
