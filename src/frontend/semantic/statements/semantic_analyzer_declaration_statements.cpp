@@ -227,6 +227,7 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     stmtvisit_t signatureResult = stmtvisit_t::Success;
 
     symbolTable.enterScope();
+    statement->associatedScope = symbolTable.getCurrentScope();
     for (std::size_t i = 0; i < statement->parameters.size; ++i) {
         const auto& param = statement->parameters[i];
         const SemanticType* resolvedParamType = fnType->parameterTypes[i].type;
@@ -266,10 +267,9 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
         }
     }
 
-    // we need this for generic instantiations since this can be called while visiting another function
     const SemanticType* previousReturnType = context.currentFunctionReturnType;
     context.currentFunctionReturnType = fnType->returnType;
-    const stmtvisit_t bodyResult = visit(statement->body, false);
+    const stmtvisit_t bodyResult = visit(statement->body, false, statement->associatedScope);
     context.currentFunctionReturnType = previousReturnType;
 
     const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);
@@ -348,7 +348,6 @@ Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatem
                      interner.get_view(statement->name));
             return stmtvisit_t::Failure;
         }
-        // uninit is fine, we know the type
         return stmtvisit_t::Success;
     }
 

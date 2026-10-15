@@ -30,14 +30,12 @@ auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     const bool blockNeedsToEnterScope = statement->initializationStep == nullptr;
 
     if (statement->initializationStep != nullptr) {
-        // We want the variable to be declared inside the scope of the for loop
-        // since we enter a scope here, we need to the body visitor know it's already in the appropriate scope
         symbolTable.enterScope();
+        statement->associatedScope = symbolTable.getCurrentScope();
         if (visit(statement->initializationStep) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
 
     if (statement->stopCondition != nullptr) {
-        // there is a stop condition, check it
         context.inForLoopCondition = true;
         if (visit(statement->stopCondition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
         context.inForLoopCondition = false;
@@ -61,10 +59,9 @@ auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
         }
     }
     if (statement->postExpression != nullptr) {
-        // there is a post expression, check it
         if (visit(statement->postExpression) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
-    if (visit(statement->body, blockNeedsToEnterScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    if (visit(statement->body, blockNeedsToEnterScope, statement->associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     return result;
 }
 
@@ -94,7 +91,7 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         }
     }
 
-    if (visit(statement->body) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    if (visit(statement->body, true, statement->associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
 
     for (ast::ElifClause& elif : statement->elifs) {
         DISCARD(visit(elif.condition));
@@ -116,12 +113,11 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
             }
         }
 
-        if (visit(elif.body) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        if (visit(elif.body, true, elif.associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
 
     if (statement->elseBody.has_value()) {
-        // there is an else body
-        if (visit(*statement->elseBody) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        if (visit(*statement->elseBody, true, statement->elseAssociatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
     return result;
 }
@@ -142,6 +138,7 @@ auto SemanticAnalyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
         return stmtvisit_t::Failure;
     }
     stmtvisit_t result = stmtvisit_t::Success;
+    bool first = true;
     for (ast::CaseClause& caseClause : statement->cases) {
         for (ast::Expression* val : caseClause.values) {
             const bool visitSuccess = visit(val) == exprvisit_t::Success;
@@ -159,9 +156,10 @@ auto SemanticAnalyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
                 }
             }
         }
-        if (visit(caseClause.body) == Result::Failure) { result = stmtvisit_t::Failure; }
+        if (visit(caseClause.body, true, first ? statement->associatedScope : caseClause.associatedScope) == Result::Failure) { result = stmtvisit_t::Failure; }
+        first = false;
     }
-    if (statement->defaultBody.has_value() && visit(*statement->defaultBody) == Result::Failure) {
+    if (statement->defaultBody.has_value() && visit(*statement->defaultBody, true, first ? statement->associatedScope : statement->defaultAssociatedScope) == stmtvisit_t::Failure) {
         result = stmtvisit_t::Failure;
     }
     return result;
@@ -191,7 +189,7 @@ auto SemanticAnalyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t 
         logWarning(statement, "{}", conditionCanBeBool.message);
     }
 
-    if (visit(statement->body) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    if (visit(statement->body, true, statement->associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
 
     return result;
 }
