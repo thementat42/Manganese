@@ -495,7 +495,7 @@ ast::CaseClause Parser::parseCaseClause() {
         caseBody.push_back(parseStatement());
     }
 
-    return ast::CaseClause{.values = arena.emplace_range(caseValues), .body = arena.emplace_range(caseBody)};
+    return ast::CaseClause{.values = arena.emplace_range(caseValues), .body = arena.emplace_range(caseBody), .associatedScope = nullptr};
 }
 
 std::optional<ast::Block> Parser::parseDefaultClause() {
