@@ -13,7 +13,7 @@
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <memory>
-#include <mnstl/tiny_stack.hxx>
+#include <utils/tiny_stack.hpp>
 #include <ostream>
 #include <string_view>
 #include <utils/string_interner.hpp>
@@ -37,7 +37,7 @@ class IRGenerator final : public _irgen_base_t {
     std::unordered_map<const semantic::SemanticType*, llvm::StructType*> savedTypes;
     std::vector<parser::ParsedFile>& files;
     utils::TargetInfo targetInfo;
-    mnstl::tiny_stack<LoopTarget> loopStack;
+    utils::tiny_stack<LoopTarget> loopStack;
     semantic::SemanticAnalyzer& analyzer;
     utils::StringInterner& interner;
 

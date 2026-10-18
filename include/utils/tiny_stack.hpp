@@ -1,12 +1,12 @@
-#ifndef MNSTL_TINY_STACK
-#define MNSTL_TINY_STACK 1
+#ifndef MANGANESE_INCLUDE_UTILS_TINY_STACK_HPP
+#define MANGANESE_INCLUDE_UTILS_TINY_STACK_HPP 1
 
 #include <cassert>
 #include <cstddef>
 #include <utility>
 #include <vector>
 
-namespace mnstl {
+namespace Manganese::utils {
 
 template <class T>
 class tiny_stack {
@@ -24,20 +24,20 @@ class tiny_stack {
     }
 
     [[nodiscard]] T& top() & noexcept {
-        assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
+        assert(!_data.empty() && "Attempted to access element of an empty utils::tiny_stack");
         return _data.back();
     }
     [[nodiscard]] const T& top() const& noexcept {
-        assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
+        assert(!_data.empty() && "Attempted to access element of an empty utils::tiny_stack");
         return _data.back();
     }
 
     [[nodiscard]] T&& top() && noexcept {
-        assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
+        assert(!_data.empty() && "Attempted to access element of an empty utils::tiny_stack");
         return std::move(_data.back());
     }
     [[nodiscard]] const T&& top() const&& noexcept {
-        assert(!_data.empty() && "Attempted to access element of an empty mnstl::tiny_stack");
+        assert(!_data.empty() && "Attempted to access element of an empty utils::tiny_stack");
         return std::move(_data.back());
     }
 
@@ -46,6 +46,6 @@ class tiny_stack {
 
 };  // class tiny_stack
 
-}  // namespace mnstl
+}  // namespace Manganese::utils
 
-#endif  // MNSTL_TINY_STACK
+#endif  // MANGANESE_INCLUDE_UTILS_TINY_STACK_HPP
