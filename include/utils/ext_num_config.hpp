@@ -13,6 +13,10 @@
 #define MN_HAS_STDFLOAT 0
 #endif  // __cplusplus >= 202302L
 
+#ifndef __SIZEOF_INT128__
+#error Manganese requires a compiler with support for __int128
+#endif  //  __SIZEOF_INT128__
+
 namespace Manganese::utils {
 
 using int128_t = __int128;
