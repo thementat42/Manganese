@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <mnstl/slice.hxx>
+#include <utils/slice.hpp>
 #include <optional>
 #include <utils/string_interner.hpp>
 
@@ -31,12 +31,12 @@ struct AggregateField {
 };
 
 struct AggregateDeclarationStatement final : public Declaration {
-    mnstl::Slice<utils::StringID> genericTypes;
-    mnstl::Slice<AggregateField> fields;
+    utils::Slice<utils::StringID> genericTypes;
+    utils::Slice<AggregateField> fields;
     Visibility visibility = Visibility::Private;
 
-    AggregateDeclarationStatement(utils::StringID _name, mnstl::Slice<utils::StringID> _genericTypes,
-                                  mnstl::Slice<AggregateField> _fields) noexcept :
+    AggregateDeclarationStatement(utils::StringID _name, utils::Slice<utils::StringID> _genericTypes,
+                                  utils::Slice<AggregateField> _fields) noexcept :
         Declaration(StatementKind::AggregateDeclarationStatement, _name),
         genericTypes(_genericTypes),
         fields(_fields) {}
@@ -81,10 +81,10 @@ struct EnumValue {
 
 struct EnumDeclarationStatement final : public Declaration {
     Type* baseType;
-    mnstl::Slice<EnumValue> values;
+    utils::Slice<EnumValue> values;
     Visibility visibility = Visibility::Private;
 
-    EnumDeclarationStatement(utils::StringID _name, Type* _baseType, mnstl::Slice<EnumValue> _values) noexcept :
+    EnumDeclarationStatement(utils::StringID _name, Type* _baseType, utils::Slice<EnumValue> _values) noexcept :
         Declaration(StatementKind::EnumDeclarationStatement, _name), baseType(_baseType), values(_values) {}
 
     MN_AST_STANDARD_INTERFACE(EnumDeclarationStatement);
@@ -130,14 +130,14 @@ struct FunctionParameter {
 };
 
 struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {
-    mnstl::Slice<utils::StringID> genericTypes;
-    mnstl::Slice<FunctionParameter> parameters;
+    utils::Slice<utils::StringID> genericTypes;
+    utils::Slice<FunctionParameter> parameters;
     Type* returnType;
     Block body;
     Visibility visibility = Visibility::Private;
 
-    FunctionDeclarationStatement(utils::StringID _name, mnstl::Slice<utils::StringID> _genericTypes,
-                                 mnstl::Slice<FunctionParameter> _parameters, Type* _returnType, Block _body) noexcept :
+    FunctionDeclarationStatement(utils::StringID _name, utils::Slice<utils::StringID> _genericTypes,
+                                 utils::Slice<FunctionParameter> _parameters, Type* _returnType, Block _body) noexcept :
         Declaration(StatementKind::FunctionDeclarationStatement, _name),
         genericTypes(_genericTypes),
         parameters(_parameters),
@@ -159,9 +159,9 @@ struct IfStatement final : public Statement, ScopeOwner {
     Block body;
     std::optional<Block> elseBody;  // elseBody might be empty
     semantic::Scope* elseAssociatedScope = nullptr;
-    mnstl::Slice<ElifClause> elifs;
+    utils::Slice<ElifClause> elifs;
 
-    IfStatement(Expression* _condition, Block _body, mnstl::Slice<ElifClause> _elifs,
+    IfStatement(Expression* _condition, Block _body, utils::Slice<ElifClause> _elifs,
                 std::optional<Block> _elseBody = {}) noexcept :
         Statement(StatementKind::IfStatement), condition(_condition), body(_body), elseBody(_elseBody), elifs(_elifs) {}
 
@@ -169,10 +169,10 @@ struct IfStatement final : public Statement, ScopeOwner {
 };
 
 struct ImportStatement final : public Statement {
-    mnstl::Slice<utils::StringID> path;
+    utils::Slice<utils::StringID> path;
     utils::OptionalStringID alias;
 
-    ImportStatement(mnstl::Slice<utils::StringID> _path, utils::OptionalStringID _alias) noexcept :
+    ImportStatement(utils::Slice<utils::StringID> _path, utils::OptionalStringID _alias) noexcept :
         Statement(StatementKind::ImportStatement), path(_path), alias(_alias) {}
 
     MN_AST_STANDARD_INTERFACE(ImportStatement);
@@ -214,18 +214,18 @@ struct ReturnStatement final : public Statement {
 };
 
 struct CaseClause {
-    mnstl::Slice<Expression*> values;
+    utils::Slice<Expression*> values;
     Block body;
     semantic::Scope* associatedScope;
 };
 
 struct SwitchStatement final : public Statement, ScopeOwner {
     Expression* target;
-    mnstl::Slice<CaseClause> cases;
+    utils::Slice<CaseClause> cases;
     std::optional<Block> defaultBody;
     semantic::Scope* defaultAssociatedScope;
 
-    SwitchStatement(Expression* _target, mnstl::Slice<CaseClause> _cases,
+    SwitchStatement(Expression* _target, utils::Slice<CaseClause> _cases,
                     std::optional<Block> _defaultBody = {}) noexcept :
         Statement(StatementKind::SwitchStatement), target(_target), cases(_cases), defaultBody(_defaultBody) {}
 

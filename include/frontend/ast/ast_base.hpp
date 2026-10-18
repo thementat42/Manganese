@@ -4,7 +4,7 @@
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <mnstl/slice.hxx>
+#include <utils/slice.hpp>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -70,7 +70,7 @@ enum class TypeKind : std::uint8_t {
 #undef TYPE
 };
 
-using Block = mnstl::Slice<Statement*>;
+using Block = utils::Slice<Statement*>;
 
 enum class PrimitiveType : std::uint8_t {
     int8,

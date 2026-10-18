@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <mnstl/slice.hxx>
+#include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 
@@ -19,18 +19,18 @@ struct AggregateInstantiationField {
 
 struct AggregateInstantiationExpression final : public Expression {
     Expression* base;
-    mnstl::Slice<AggregateInstantiationField> fields;
+    utils::Slice<AggregateInstantiationField> fields;
 
-    AggregateInstantiationExpression(Expression* _base, mnstl::Slice<AggregateInstantiationField> _fields) noexcept :
+    AggregateInstantiationExpression(Expression* _base, utils::Slice<AggregateInstantiationField> _fields) noexcept :
         Expression(ExpressionKind::AggregateInstantiationExpression), base(_base), fields(_fields) {}
 
     MN_AST_STANDARD_INTERFACE(AggregateInstantiationExpression);
 };
 
 struct AggregateLiteralExpression final : public Expression {
-    mnstl::Slice<Expression*> elements;
+    utils::Slice<Expression*> elements;
 
-    explicit AggregateLiteralExpression(mnstl::Slice<Expression*>&& _elements) noexcept :
+    explicit AggregateLiteralExpression(utils::Slice<Expression*>&& _elements) noexcept :
         Expression(ExpressionKind::AggregateLiteralExpression), elements(_elements) {}
 
     MN_AST_STANDARD_INTERFACE(AggregateLiteralExpression);
@@ -46,9 +46,9 @@ struct AlignofExpression final : public Expression {
 };
 
 struct ArrayLiteralExpression final : public Expression {
-    mnstl::Slice<Expression*> elements;
+    utils::Slice<Expression*> elements;
 
-    explicit ArrayLiteralExpression(mnstl::Slice<Expression*> _elements) noexcept :
+    explicit ArrayLiteralExpression(utils::Slice<Expression*> _elements) noexcept :
         Expression(ExpressionKind::ArrayLiteralExpression), elements(_elements) {}
 
     MN_AST_STANDARD_INTERFACE(ArrayLiteralExpression);
@@ -102,9 +102,9 @@ struct CharLiteralExpression final : public Expression {
 
 struct FunctionCallExpression final : public Expression {
     Expression* callee;
-    mnstl::Slice<Expression*> arguments;
+    utils::Slice<Expression*> arguments;
 
-    FunctionCallExpression(Expression* _callee, mnstl::Slice<Expression*> _arguments) noexcept :
+    FunctionCallExpression(Expression* _callee, utils::Slice<Expression*> _arguments) noexcept :
         Expression(ExpressionKind::FunctionCallExpression), callee(_callee), arguments(_arguments) {}
 
     MN_AST_STANDARD_INTERFACE(FunctionCallExpression);
@@ -115,10 +115,10 @@ struct FunctionCallExpression final : public Expression {
  */
 struct GenericInstantiationExpression final : public Expression {
     Expression* identifier;
-    mnstl::Slice<Type*> types;
-    mnstl::Slice<const semantic::SemanticType*> semanticTypes;
+    utils::Slice<Type*> types;
+    utils::Slice<const semantic::SemanticType*> semanticTypes;
 
-    GenericInstantiationExpression(Expression* _identifier, mnstl::Slice<Type*> _types) noexcept :
+    GenericInstantiationExpression(Expression* _identifier, utils::Slice<Type*> _types) noexcept :
         Expression(ExpressionKind::GenericInstantiationExpression), identifier(_identifier), types(_types) {}
 
     MN_AST_STANDARD_INTERFACE(GenericInstantiationExpression);

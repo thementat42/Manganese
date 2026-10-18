@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <mnstl/slice.hxx>
+#include <utils/slice.hpp>
 #include <ranges>
 #include <type_traits>
 #include <utility>

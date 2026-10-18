@@ -29,7 +29,7 @@ std::string blockToString(Block block, const utils::StringInterner& interner, st
 
 template <class T>
     requires(std::derived_from<T, ASTNode>)
-std::string commaSeparatedList(const mnstl::Slice<T*>& values, const utils::StringInterner& interner,
+std::string commaSeparatedList(const utils::Slice<T*>& values, const utils::StringInterner& interner,
                                std::size_t indent = 0) {
     std::string result;
     for (std::size_t i = 0; i < values.size; ++i) {
@@ -41,7 +41,7 @@ std::string commaSeparatedList(const mnstl::Slice<T*>& values, const utils::Stri
 
 template <class T>
     requires(std::same_as<T, utils::StringID>)
-std::string commaSeparatedList(const mnstl::Slice<T>& values, const utils::StringInterner& interner) {
+std::string commaSeparatedList(const utils::Slice<T>& values, const utils::StringInterner& interner) {
     std::string result;
     for (std::size_t i = 0; i < values.size; ++i) {
         result += interner.get_view(values[i]);
@@ -50,7 +50,7 @@ std::string commaSeparatedList(const mnstl::Slice<T>& values, const utils::Strin
     return result;
 }
 
-std::string genericsToString(const mnstl::Slice<Type*>& params, const utils::StringInterner& interner,
+std::string genericsToString(const utils::Slice<Type*>& params, const utils::StringInterner& interner,
                              std::size_t indent = 0) {
     if (params.empty()) { return ""; }
     return std::format("@[{}]", commaSeparatedList(params, interner, indent));

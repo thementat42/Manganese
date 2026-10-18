@@ -45,7 +45,7 @@ AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::Cl
                                .column = field.column,
                                .isMutable = field.isMutable});
     }
-    auto* cloned = makeClonedNode(this, context, name, mnstl::Slice<utils::StringID>{},
+    auto* cloned = makeClonedNode(this, context, name, utils::Slice<utils::StringID>{},
                                   context->arena.emplace_range(fieldClones));
     cloned->visibility = visibility;
     return cloned;
@@ -112,7 +112,7 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
     Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
 
     auto* clone
-        = makeClonedNode(this, context, name, mnstl::Slice<utils::StringID>{},
+        = makeClonedNode(this, context, name, utils::Slice<utils::StringID>{},
                          context->arena.emplace_range(parameterClones), returnTypeClone, cloneBlock(body, context));
     clone->visibility = visibility;
     return clone;

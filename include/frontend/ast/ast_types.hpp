@@ -3,15 +3,15 @@
 
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <mnstl/slice.hxx>
+#include <utils/slice.hpp>
 #include <utility>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::ast {
 struct AggregateType final : public Type {
-    mnstl::Slice<Type*> fieldTypes;
+    utils::Slice<Type*> fieldTypes;
 
-    explicit AggregateType(mnstl::Slice<Type*>&& _fieldTypes) noexcept :
+    explicit AggregateType(utils::Slice<Type*>&& _fieldTypes) noexcept :
         Type(TypeKind::AggregateType), fieldTypes(_fieldTypes) {}
     MN_AST_STANDARD_INTERFACE(AggregateType);
 };
@@ -33,10 +33,10 @@ struct FunctionParameterType {
 };
 
 struct FunctionType final : public Type {
-    mnstl::Slice<FunctionParameterType> parameterTypes;
+    utils::Slice<FunctionParameterType> parameterTypes;
     Type* returnType;
 
-    FunctionType(mnstl::Slice<FunctionParameterType>&& _parameterTypes, Type* _returnType) noexcept :
+    FunctionType(utils::Slice<FunctionParameterType>&& _parameterTypes, Type* _returnType) noexcept :
         Type(TypeKind::FunctionType), parameterTypes(std::move(_parameterTypes)), returnType(_returnType) {}
 
     MN_AST_STANDARD_INTERFACE(FunctionType);
@@ -47,9 +47,9 @@ struct FunctionType final : public Type {
  */
 struct GenericInstantiationType final : public Type {
     Type* baseType;  // some_function in `some_function@[T,U]`
-    mnstl::Slice<Type*> typeParameters;  // T and U in `some_function@[T,U]`
+    utils::Slice<Type*> typeParameters;  // T and U in `some_function@[T,U]`
 
-    GenericInstantiationType(Type* _baseType, mnstl::Slice<Type*>&& _typeParameters) noexcept :
+    GenericInstantiationType(Type* _baseType, utils::Slice<Type*>&& _typeParameters) noexcept :
         Type(TypeKind::GenericInstantiationType), baseType(_baseType), typeParameters(_typeParameters) {}
 
     MN_AST_STANDARD_INTERFACE(GenericInstantiationType);

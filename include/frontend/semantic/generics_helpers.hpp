@@ -5,7 +5,7 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <functional>
-#include <mnstl/slice.hxx>
+#include <utils/slice.hpp>
 #include <unordered_map>
 #include <utils/resolution_status.hpp>
 #include <utils/string_interner.hpp>
@@ -15,7 +15,7 @@ struct Scope;
 
 struct InstantiationKey {
     const ast::ASTNode* declNode;
-    mnstl::Slice<const semantic::SemanticType*> typeArgs;
+    utils::Slice<const semantic::SemanticType*> typeArgs;
 
     friend constexpr bool operator==(const InstantiationKey& a, const InstantiationKey& b) noexcept {
         if (a.declNode != b.declNode) { return false; }

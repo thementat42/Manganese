@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-namespace mnstl {
+namespace Manganese::utils {
 
 template <class T>
 struct Slice {
@@ -19,6 +19,6 @@ struct Slice {
     [[nodiscard]] bool empty() const noexcept { return size == 0; }
 };
 
-}  // namespace mnstl
+}  // namespace Manganese::utils
 
 #endif  // MANGANESE_INCLUDE_UTILS_SLICE_HPP
