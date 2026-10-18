@@ -3,7 +3,7 @@
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
 #include <mnstl/chunk_allocator.hxx>
-#include <mnstl/enum_matches.hxx>
+#include <utils/enum_matches.hpp>
 #include <string>
 #include <vector>
 
@@ -56,7 +56,7 @@ bool Parser::isUnaryContext() const noexcept {
     const TokenType lastType = previousToken->getType();
 
     // Statement or expression delimiters
-    if (mnstl::enum_matches(lastType, TokenType::Semicolon, TokenType::LeftParen, TokenType::LeftBrace,
+    if (utils::enum_matches(lastType, TokenType::Semicolon, TokenType::LeftParen, TokenType::LeftBrace,
                             TokenType::LeftSquare, TokenType::Comma, TokenType::Colon, TokenType::Assignment)) {
         return true;
     }
