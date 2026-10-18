@@ -77,9 +77,13 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 }
                 return static_cast<bool>(result.value != 0);
             } else {
-                using num_t_helper
+                using base_int_t
                     = std::conditional_t<(sizeof(T) > sizeof(std::int64_t)), utils::int128_t, std::int64_t>;
-                using num_t = std::conditional_t<std::is_signed_v<T>, num_t_helper, utils::make_unsigned_t<T>>;
+                using base_uint_t
+                    = std::conditional_t<(sizeof(T) > sizeof(std::uint64_t)), utils::uint128_t, std::uint64_t>;
+
+                using num_t = std::conditional_t<T(-1) < T(0), base_int_t, base_uint_t>;
+
                 const utils::string_conversion_result_t result = utils::stringToNumber<num_t>(valueView, num->isFloat);
                 if (!result.exists) {
                     logger(expression, "Invalid number literal '{}'", valueView);

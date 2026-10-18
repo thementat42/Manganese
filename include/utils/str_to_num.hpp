@@ -9,6 +9,36 @@
 
 namespace Manganese::utils {
 
+namespace detail {
+
+template <class T>
+struct make_unsigned {
+    using type = std::make_unsigned_t<T>;
+};
+
+template <class T>
+struct make_unsigned<const T> {
+    using type = make_unsigned<T>::type;
+};
+template <class T>
+struct make_unsigned<volatile T> {
+    using type = make_unsigned<T>::type;
+};
+template <class T>
+struct make_unsigned<const volatile T> {
+    using type = make_unsigned<T>::type;
+};
+
+template <>
+struct make_unsigned<int128_t> {
+    using type = uint128_t;
+};
+template <>
+struct make_unsigned<uint128_t> {
+    using type = uint128_t;
+};
+};  // namespace detail
+
 enum class Base : std::uint8_t {
     Binary = 2,
     Octal = 8,
@@ -139,7 +169,8 @@ template <utils::FloatingPoint T>
 template <utils::Integral T>
 string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b) noexcept {
     string_conversion_result_t<T> result;
-    using U = utils::make_unsigned_t<T>;
+    using U = std::conditional_t<sizeof(T) == 16, utils::uint128_t,
+                                 typename detail::make_unsigned<std::remove_cv_t<T>>::type>;
 
     if (ptr >= end) [[unlikely]] {
         result.exists = false;

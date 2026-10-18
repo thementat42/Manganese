@@ -16,7 +16,7 @@ namespace Manganese::tests {
 
 namespace {
 constexpr const char* logFileName = "logs/semantic_analyzer_tests.log";
-mnstl::chunk_allocator arena;
+utils::chunk_allocator arena;
 utils::StringInterner interner;
 utils::TargetInfo target = utils::TargetInfo{.pointerSize = sizeof(void*), .pointerAlignment = alignof(void*)};
 
@@ -649,7 +649,7 @@ bool testScopedType() {
 bool testAnalyzeFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/semantic_analyzer_tests.mn";
 
-    mnstl::chunk_allocator fileAllocator{};
+    utils::chunk_allocator fileAllocator{};
     utils::StringInterner fileInterner;
 
     parser::Parser parser(fullPath.string(), lexer::Mode::File, fileAllocator, fileInterner);

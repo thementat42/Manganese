@@ -5,7 +5,7 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <string>
 #include <utils/target_info.hpp>
 
@@ -17,7 +17,7 @@ namespace Manganese::tests {
 namespace {
 
 constexpr const char* logFileName = "logs/control_flow_tests.log";
-mnstl::chunk_allocator arena;
+utils::chunk_allocator arena;
 utils::StringInterner interner;
 utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
@@ -97,7 +97,7 @@ bool testPartialReturnBranching() {
 
 bool testControlFlowFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/control_flow_tests.mn";
-    mnstl::chunk_allocator fileAllocator{};
+    utils::chunk_allocator fileAllocator{};
     utils::StringInterner fileInterner;
 
     parser::Parser parser(fullPath.string(), lexer::Mode::File, fileAllocator, fileInterner);

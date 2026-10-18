@@ -5,7 +5,7 @@
 #include <frontend/parser.hpp>
 #include <fstream>
 #include <iostream>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <string>
 
 #include "tests.hpp"
@@ -20,7 +20,7 @@ namespace Manganese::tests {
 namespace {
 // Helpers
 constexpr inline const char* logFileName = "logs/parser_tests.log";
-mnstl::chunk_allocator allocator;
+utils::chunk_allocator allocator;
 utils::StringInterner interner;
 
 parser::ParsedFile getParserResults(const std::string& source, lexer::Mode mode = lexer::Mode::String) {
@@ -592,7 +592,7 @@ bool testImportsAndAliases() {
 
 bool testParseFromFile() {
     const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
-    mnstl::chunk_allocator fielAllocator{};
+    utils::chunk_allocator fielAllocator{};
     utils::StringInterner fileInterner;
     parser::Parser p(fullPath.string(), lexer::Mode::File, fielAllocator, fileInterner);
     auto x = p.parse();

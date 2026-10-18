@@ -71,117 +71,74 @@ concept Integral = SignedIntegral<T> || UnsignedIntegral<T>;
 template <class T>
 concept Numeric = Integral<T> || FloatingPoint<T>;
 
-
-template <class T>
-struct make_unsigned {
-    using type = std::make_unsigned_t<T>;
-};
-
-template <>
-struct make_unsigned<int128_t> {
-    using type = uint128_t;
-};
-template <>
-struct make_unsigned<const int128_t> {
-    using type = const uint128_t;
-};
-template <>
-struct make_unsigned<volatile int128_t> {
-    using type = volatile uint128_t;
-};
-template <>
-struct make_unsigned<const volatile int128_t> {
-    using type = const volatile uint128_t;
-};
-
-template <>
-struct make_unsigned<uint128_t> {
-    using type = uint128_t;
-};
-template <>
-struct make_unsigned<const uint128_t> {
-    using type = const uint128_t;
-};
-template <>
-struct make_unsigned<volatile uint128_t> {
-    using type = volatile uint128_t;
-};
-template <>
-struct make_unsigned<const volatile uint128_t> {
-    using type = const volatile uint128_t;
-};
-
-template <class T>
-using make_unsigned_t = typename make_unsigned<std::remove_reference_t<T>>::type;
-
 }  // namespace Manganese::utils
 
-#if !MN_USE_COMPILER_EXTENDED_TYPES
-namespace std {
-// Native integer + (u)int128
-template <class T>
-    requires(Manganese::utils::Integral<T> && !std::is_same_v<std::remove_cvref_t<T>, Manganese::utils::int128_t>)
-struct common_type<Manganese::utils::int128_t, T> {
-    using type = Manganese::utils::int128_t;
-};
-template <class T>
-    requires(Manganese::utils::Integral<T> && !std::is_same_v<std::remove_cvref_t<T>, Manganese::utils::int128_t>)
-struct common_type<T, Manganese::utils::int128_t> {
-    using type = Manganese::utils::int128_t;
-};
+// #if !MN_USE_COMPILER_EXTENDED_TYPES
+// namespace std {
+// // Native integer + (u)int128
+// template <class T>
+//     requires(Manganese::utils::Integral<T> && !std::is_same_v<std::remove_cvref_t<T>, Manganese::utils::int128_t>)
+// struct common_type<Manganese::utils::int128_t, T> {
+//     using type = Manganese::utils::int128_t;
+// };
+// template <class T>
+//     requires(Manganese::utils::Integral<T> && !std::is_same_v<std::remove_cvref_t<T>, Manganese::utils::int128_t>)
+// struct common_type<T, Manganese::utils::int128_t> {
+//     using type = Manganese::utils::int128_t;
+// };
 
-template <class T>
-    requires(Manganese::utils::Integral<T> && (!std::is_same_v<std::remove_cvref_t<T>, Manganese::utils::uint128_t>))
-struct common_type<Manganese::utils::uint128_t, T> {
-    // If mixed with a signed integer type, promote to signed int128_t to preserve sign correctness.
-    // Otherwise, keep it as an unsigned uint128_t.
-    using type = std::conditional_t<Manganese::utils::SignedIntegral<T>, Manganese::utils::int128_t,
-                                    Manganese::utils::uint128_t>;
-};
+// template <class T>
+//     requires(Manganese::utils::Integral<T> && (!std::is_same_v<std::remove_cvref_t<T>, Manganese::utils::uint128_t>))
+// struct common_type<Manganese::utils::uint128_t, T> {
+//     // If mixed with a signed integer type, promote to signed int128_t to preserve sign correctness.
+//     // Otherwise, keep it as an unsigned uint128_t.
+//     using type = std::conditional_t<Manganese::utils::SignedIntegral<T>, Manganese::utils::int128_t,
+//                                     Manganese::utils::uint128_t>;
+// };
 
-template <class T>
-    requires(Manganese::utils::Integral<T> && (!std::is_same_v<std::remove_cvref_t<T>, Manganese::utils::uint128_t>))
-struct common_type<T, Manganese::utils::uint128_t> {
-    using type = std::conditional_t<Manganese::utils::SignedIntegral<T>, Manganese::utils::int128_t,
-                                    Manganese::utils::uint128_t>;
-};
+// template <class T>
+//     requires(Manganese::utils::Integral<T> && (!std::is_same_v<std::remove_cvref_t<T>, Manganese::utils::uint128_t>))
+// struct common_type<T, Manganese::utils::uint128_t> {
+//     using type = std::conditional_t<Manganese::utils::SignedIntegral<T>, Manganese::utils::int128_t,
+//                                     Manganese::utils::uint128_t>;
+// };
 
-// Native float + (u)int128
-template <class T>
-    requires(Manganese::utils::FloatingPoint<T>)
-struct common_type<T, Manganese::utils::int128_t> {
-    using type = Manganese::utils::float64_t;
-};
-template <class T>
-    requires(Manganese::utils::FloatingPoint<T>)
-struct common_type<Manganese::utils::int128_t, T> {
-    using type = Manganese::utils::float64_t;
-};
+// // Native float + (u)int128
+// template <class T>
+//     requires(Manganese::utils::FloatingPoint<T>)
+// struct common_type<T, Manganese::utils::int128_t> {
+//     using type = Manganese::utils::float64_t;
+// };
+// template <class T>
+//     requires(Manganese::utils::FloatingPoint<T>)
+// struct common_type<Manganese::utils::int128_t, T> {
+//     using type = Manganese::utils::float64_t;
+// };
 
-template <class T>
-    requires(Manganese::utils::FloatingPoint<T>)
-struct common_type<T, Manganese::utils::uint128_t> {
-    using type = Manganese::utils::float64_t;
-};
-template <class T>
-    requires(Manganese::utils::FloatingPoint<T>)
-struct common_type<Manganese::utils::uint128_t, T> {
-    using type = Manganese::utils::float64_t;
-};
+// template <class T>
+//     requires(Manganese::utils::FloatingPoint<T>)
+// struct common_type<T, Manganese::utils::uint128_t> {
+//     using type = Manganese::utils::float64_t;
+// };
+// template <class T>
+//     requires(Manganese::utils::FloatingPoint<T>)
+// struct common_type<Manganese::utils::uint128_t, T> {
+//     using type = Manganese::utils::float64_t;
+// };
 
-template <>
-struct common_type<Manganese::utils::int128_t, Manganese::utils::uint128_t> {
-    using type = Manganese::utils::int128_t;
-};
+// template <>
+// struct common_type<Manganese::utils::int128_t, Manganese::utils::uint128_t> {
+//     using type = Manganese::utils::int128_t;
+// };
 
-template <>
-struct common_type<Manganese::utils::uint128_t, Manganese::utils::int128_t> {
-    using type = Manganese::utils::int128_t;
-};
+// template <>
+// struct common_type<Manganese::utils::uint128_t, Manganese::utils::int128_t> {
+//     using type = Manganese::utils::int128_t;
+// };
 
-// int128 and uint128
+// // int128 and uint128
 
-}  // namespace std
-#endif  // !MN_USE_COMPILER_EXTENDED_TYPES
+// }  // namespace std
+// #endif  // !MN_USE_COMPILER_EXTENDED_TYPES
 
 #endif  // MANGANESE_INCLUDE_UTILS_EXT_NUM_CONFIG
