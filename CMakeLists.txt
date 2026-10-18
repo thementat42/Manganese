@@ -64,7 +64,6 @@ set_target_properties(manganese PROPERTIES
 
 target_compile_definitions(manganese PRIVATE
     MN_DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
-    MN_USE_COMPILER_EXTENDED_TYPES=0
     NO_ANSI_COLOURS=$<BOOL:${DISABLE_ANSI_COLOURS}>
 )
 

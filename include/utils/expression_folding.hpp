@@ -3,7 +3,7 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <utils/i128.hpp>
+#include <utils/ext_num_config.hpp>
 #include <utils/str_to_num.hpp>
 #include <utils/string_interner.hpp>
 
@@ -77,14 +77,7 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 }
                 return static_cast<bool>(result.value != 0);
             } else {
-                using base_int_t
-                    = std::conditional_t<(sizeof(T) > sizeof(std::int64_t)), utils::int128_t, std::int64_t>;
-                using base_uint_t
-                    = std::conditional_t<(sizeof(T) > sizeof(std::uint64_t)), utils::uint128_t, std::uint64_t>;
-
-                using num_t = std::conditional_t<T(-1) < T(0), base_int_t, base_uint_t>;
-
-                const utils::string_conversion_result_t result = utils::stringToNumber<num_t>(valueView, num->isFloat);
+                const utils::string_conversion_result_t result = utils::stringToNumber<T>(valueView, num->isFloat);
                 if (!result.exists) {
                     logger(expression, "Invalid number literal '{}'", valueView);
                     break;

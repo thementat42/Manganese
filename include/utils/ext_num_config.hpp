@@ -11,28 +11,12 @@
 #define MN_HAS_STDFLOAT 1
 #else
 #define MN_HAS_STDFLOAT 0
-#endif
-
-// This should be set by a build system (e.g. CMake)
-#ifndef MN_USE_COMPILER_EXTENDED_TYPES
-#define MN_USE_COMPILER_EXTENDED_TYPES 0
-#endif
+#endif  // __cplusplus >= 202302L
 
 namespace Manganese::utils {
 
-#if MN_USE_COMPILER_EXTENDED_TYPES == 1
-#define MN_NATIVE_I128 1
-// use the compiler's 128-bit integer
 using int128_t = __int128;
 using uint128_t = unsigned __int128;
-#else
-#define MN_NATIVE_I128 0
-// fallback to a (slower) software implementation
-template <bool IsSigned>
-struct _basic_int128;
-using int128_t = _basic_int128<true>;
-using uint128_t = _basic_int128<false>;
-#endif
 
 // C++23 added (optional) support for fixed-width floating point numbers
 // If possible, use those
