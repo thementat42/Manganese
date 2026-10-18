@@ -3,15 +3,14 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <mnstl/ext_num_config.hxx>
-#include <mnstl/i128.hxx>
+#include <utils/i128.hpp>
 #include <utils/str_to_num.hpp>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::utils {
 
 template <class T, class ErrorLogger>
-    requires(std::is_arithmetic_v<T> || mnstl::Numeric<T>)
+    requires(std::is_arithmetic_v<T> || utils::Numeric<T>)
 std::optional<T> computeExpression(const ast::Expression* expression, const utils::TargetInfo& targetInfo,
                                    utils::StringInterner& interner, ErrorLogger&& logger) noexcept {
     using enum lexer::TokenType;
@@ -79,8 +78,8 @@ std::optional<T> computeExpression(const ast::Expression* expression, const util
                 return static_cast<bool>(result.value != 0);
             } else {
                 using num_t_helper
-                    = std::conditional_t<(sizeof(T) > sizeof(std::int64_t)), mnstl::int128_t, std::int64_t>;
-                using num_t = std::conditional_t<std::is_signed_v<T>, num_t_helper, mnstl::mnstl_make_unsigned_t<T>>;
+                    = std::conditional_t<(sizeof(T) > sizeof(std::int64_t)), utils::int128_t, std::int64_t>;
+                using num_t = std::conditional_t<std::is_signed_v<T>, num_t_helper, utils::make_unsigned_t<T>>;
                 const utils::string_conversion_result_t result = utils::stringToNumber<num_t>(valueView, num->isFloat);
                 if (!result.exists) {
                     logger(expression, "Invalid number literal '{}'", valueView);

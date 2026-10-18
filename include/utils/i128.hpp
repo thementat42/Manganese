@@ -1,5 +1,5 @@
-#ifndef MNSTL_EXT_NUMS_I128_HXX
-#define MNSTL_EXT_NUMS_I128_HXX 1
+#ifndef MANGANESE_INCULDE_UTILS_I128_HPP
+#define MANGANESE_INCULDE_UTILS_I128_HPP 1
 
 #include <bit>
 #include <cassert>
@@ -8,31 +8,31 @@
 #include <cstdint>
 #include <format>
 #include <limits>
-#include <mnstl/ext_num_config.hxx>
 #include <ostream>
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <utils/ext_num_config.hpp>
 
 // macros to make definitions of op= (e.g. +=) more concise
-namespace mnstl {
-#if !MNSTL_NATIVE_I128
+namespace Manganese::utils {
+#if !MN_NATIVE_I128
 #define TWO_POW_64 18'446'744'073'709'551'616.0  // for float conversions
 
-#define MNSTL_I128_SELF_IN_PLACE_OP(op, is_noexcept)                                              \
+#define MN_I128_SELF_IN_PLACE_OP(op, is_noexcept)                                              \
     constexpr _basic_int128& operator op## = (const _basic_int128& value) noexcept(is_noexcept) { \
         *this = *this op value;                                                                   \
         return *this;                                                                             \
     }
 
-#define MNSTL_I128_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                      \
+#define MN_I128_PRIMITIVE_IN_PLACE_OP(op, is_noexcept)                      \
     template <Numeric T>                                                       \
     constexpr _basic_int128& operator op## = (T value) noexcept(is_noexcept) { \
         *this = *this op value;                                                \
         return *this;                                                          \
     }
 
-#define MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(op, is_noexcept)                                  \
+#define MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(op, is_noexcept)                                  \
     template <Numeric T, bool B>                                                                \
     constexpr T& operator op## = (T & l, const _basic_int128<B>& value) noexcept(is_noexcept) { \
         l = l op static_cast<T>(value);                                                         \
@@ -160,14 +160,14 @@ struct _basic_int128 {
     constexpr operator int128_t() const noexcept;
     constexpr operator uint128_t() const noexcept;
 
-    MNSTL_I128_SELF_IN_PLACE_OP(+, true)
-    MNSTL_I128_SELF_IN_PLACE_OP(-, true)
-    MNSTL_I128_SELF_IN_PLACE_OP(*, true)
-    MNSTL_I128_SELF_IN_PLACE_OP(/, false)
-    MNSTL_I128_SELF_IN_PLACE_OP(%, false)
-    MNSTL_I128_SELF_IN_PLACE_OP(&, true)
-    MNSTL_I128_SELF_IN_PLACE_OP(|, true)
-    MNSTL_I128_SELF_IN_PLACE_OP(^, true)
+    MN_I128_SELF_IN_PLACE_OP(+, true)
+    MN_I128_SELF_IN_PLACE_OP(-, true)
+    MN_I128_SELF_IN_PLACE_OP(*, true)
+    MN_I128_SELF_IN_PLACE_OP(/, false)
+    MN_I128_SELF_IN_PLACE_OP(%, false)
+    MN_I128_SELF_IN_PLACE_OP(&, true)
+    MN_I128_SELF_IN_PLACE_OP(|, true)
+    MN_I128_SELF_IN_PLACE_OP(^, true)
 
     constexpr _basic_int128& operator<<=(const _basic_int128& r) noexcept {
         if constexpr (IsSigned) {
@@ -187,14 +187,14 @@ struct _basic_int128 {
         return *this;
     }
 
-    MNSTL_I128_PRIMITIVE_IN_PLACE_OP(+, true)
-    MNSTL_I128_PRIMITIVE_IN_PLACE_OP(-, true)
-    MNSTL_I128_PRIMITIVE_IN_PLACE_OP(*, true)
-    MNSTL_I128_PRIMITIVE_IN_PLACE_OP(/, false)
-    MNSTL_I128_PRIMITIVE_IN_PLACE_OP(%, false)
-    MNSTL_I128_PRIMITIVE_IN_PLACE_OP(&, true)
-    MNSTL_I128_PRIMITIVE_IN_PLACE_OP(|, true)
-    MNSTL_I128_PRIMITIVE_IN_PLACE_OP(^, true)
+    MN_I128_PRIMITIVE_IN_PLACE_OP(+, true)
+    MN_I128_PRIMITIVE_IN_PLACE_OP(-, true)
+    MN_I128_PRIMITIVE_IN_PLACE_OP(*, true)
+    MN_I128_PRIMITIVE_IN_PLACE_OP(/, false)
+    MN_I128_PRIMITIVE_IN_PLACE_OP(%, false)
+    MN_I128_PRIMITIVE_IN_PLACE_OP(&, true)
+    MN_I128_PRIMITIVE_IN_PLACE_OP(|, true)
+    MN_I128_PRIMITIVE_IN_PLACE_OP(^, true)
 
     constexpr _basic_int128& operator<<=(Integral auto r) noexcept {
         if constexpr (IsSigned) {
@@ -215,16 +215,16 @@ struct _basic_int128 {
     }
 };
 
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(+, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(-, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(*, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(/, false)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(%, false)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(&, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(|, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(^, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(>>, true)
-MNSTL_PRIMITIVE_IN_PLACE_OP_WITH_I128(<<, true)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(+, true)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(-, true)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(*, true)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(/, false)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(%, false)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(&, true)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(|, true)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(^, true)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(>>, true)
+MN_PRIMITIVE_IN_PLACE_OP_WITH_I128(<<, true)
 
 // Division Helpers (forward declarations)
 
@@ -752,7 +752,7 @@ constexpr uint128_t _mul_u128(uint128_t a, uint128_t b) noexcept {
 
     if (a._upper == 0 || b._upper == 0) {
         const std::uint64_t small_operand = a._upper == 0 ? a._lower : b._lower;
-        const mnstl::uint128_t other = a._upper == 0 ? b : a;
+        const uint128_t other = a._upper == 0 ? b : a;
         const uint128_t ll = _mul_64(small_operand, other._lower);
         const uint128_t lh = _mul_64(small_operand, other._upper);
 
@@ -861,7 +861,7 @@ constexpr divmod_i128_result _divmod_i128(int128_t numerator, int128_t denominat
 }
 }  // namespace i128_detail
 
-#endif  // !MNSTL_NATIVE_I128
+#endif  // !MN_NATIVE_I128
 
 namespace i128_detail {
 
@@ -876,7 +876,7 @@ constexpr std::string _tostr_u128(const uint128_t& i) {
     *ptr = '\0';
     uint128_t temp = i;
     while (temp != 0) {
-#if MNSTL_NATIVE_I128
+#if MN_NATIVE_I128
         auto quotient = temp / uint128_t{10};
         auto remainder = temp % uint128_t{10};
 #else
@@ -902,39 +902,39 @@ constexpr std::string _tostr_i128(const int128_t& i) {
 constexpr std::string to_string_int128(const int128_t& i) { return i128_detail::_tostr_i128(i); }
 constexpr std::string to_string_uint128(const uint128_t& i) { return i128_detail::_tostr_u128(i); }
 
-}  // namespace mnstl
+}  // namespace Manganese::utils
 
-inline std::ostream& operator<<(std::ostream& os, const mnstl::uint128_t& i) {
-    os << mnstl::i128_detail::_tostr_u128(i);
+inline std::ostream& operator<<(std::ostream& os, const Manganese::utils::uint128_t& i) {
+    os << Manganese::utils::i128_detail::_tostr_u128(i);
     return os;
 }
-inline std::ostream& operator<<(std::ostream& os, const mnstl::int128_t& i) {
-    os << mnstl::i128_detail::_tostr_i128(i);
+inline std::ostream& operator<<(std::ostream& os, const Manganese::utils::int128_t& i) {
+    os << Manganese::utils::i128_detail::_tostr_i128(i);
     return os;
 }
 
 // STL specializations
 
-#if !MNSTL_NATIVE_I128  // only specialize for custom int128
+#if !MN_NATIVE_I128  // only specialize for custom int128
 namespace std {
 template <>
-struct formatter<mnstl::uint128_t> : public std::formatter<std::string> {
+struct formatter<Manganese::utils::uint128_t> : public std::formatter<std::string> {
     template <class FormatContext>
-    auto format(const mnstl::uint128_t& value, FormatContext& ctx) {
-        return std::formatter<std::string>::format(mnstl::to_string_uint128(value), ctx);
+    auto format(const Manganese::utils::uint128_t& value, FormatContext& ctx) {
+        return std::formatter<std::string>::format(Manganese::utils::to_string_uint128(value), ctx);
     }
 };
 
 template <>
-struct formatter<mnstl::int128_t> : public std::formatter<std::string> {
+struct formatter<Manganese::utils::int128_t> : public std::formatter<std::string> {
     template <class FormatContext>
-    auto format(const mnstl::int128_t& value, FormatContext& ctx) {
-        return std::formatter<std::string>::format(mnstl::to_string_int128(value), ctx);
+    auto format(const Manganese::utils::int128_t& value, FormatContext& ctx) {
+        return std::formatter<std::string>::format(Manganese::utils::to_string_int128(value), ctx);
     }
 };
 
 template <>
-class numeric_limits<mnstl::int128_t> {
+class numeric_limits<Manganese::utils::int128_t> {
    public:
     constexpr static inline bool is_specialized = true;
     constexpr static inline bool is_signed = true;
@@ -960,21 +960,21 @@ class numeric_limits<mnstl::int128_t> {
     constexpr static inline bool traps = false;
     constexpr static inline bool tinyness_before = false;
 
-    constexpr static inline mnstl::int128_t min() noexcept { return -(mnstl::int128_t{1} << 127); }
-    constexpr static inline mnstl::int128_t lowest() noexcept { return min(); }
-    constexpr static inline mnstl::int128_t max() noexcept {
-        return mnstl::int128_t{std::numeric_limits<std::int64_t>::max(), std::numeric_limits<std::uint64_t>::max()};
+    constexpr static inline Manganese::utils::int128_t min() noexcept { return -(Manganese::utils::int128_t{1} << 127); }
+    constexpr static inline Manganese::utils::int128_t lowest() noexcept { return min(); }
+    constexpr static inline Manganese::utils::int128_t max() noexcept {
+        return Manganese::utils::int128_t{std::numeric_limits<std::int64_t>::max(), std::numeric_limits<std::uint64_t>::max()};
     }
-    constexpr static inline mnstl::int128_t epsilon() noexcept { return 0; }
-    constexpr static inline mnstl::int128_t round_error() noexcept { return 0; }
-    constexpr static inline mnstl::int128_t infinity() noexcept { return 0; }
-    constexpr static inline mnstl::int128_t quiet_NaN() noexcept { return 0; }
-    constexpr static inline mnstl::int128_t signaling_NaN() noexcept { return 0; }
-    constexpr static inline mnstl::int128_t denorm_min() noexcept { return 0; }
+    constexpr static inline Manganese::utils::int128_t epsilon() noexcept { return 0; }
+    constexpr static inline Manganese::utils::int128_t round_error() noexcept { return 0; }
+    constexpr static inline Manganese::utils::int128_t infinity() noexcept { return 0; }
+    constexpr static inline Manganese::utils::int128_t quiet_NaN() noexcept { return 0; }
+    constexpr static inline Manganese::utils::int128_t signaling_NaN() noexcept { return 0; }
+    constexpr static inline Manganese::utils::int128_t denorm_min() noexcept { return 0; }
 };
 
 template <>
-class numeric_limits<mnstl::uint128_t> {
+class numeric_limits<Manganese::utils::uint128_t> {
    public:
     constexpr static inline bool is_specialized = true;
     constexpr static inline bool is_signed = false;
@@ -1000,22 +1000,23 @@ class numeric_limits<mnstl::uint128_t> {
     constexpr static inline bool traps = false;
     constexpr static inline bool tinyness_before = false;
 
-    constexpr static inline mnstl::uint128_t min() noexcept { return 0; }
-    constexpr static inline mnstl::uint128_t lowest() noexcept { return min(); }
-    constexpr static inline mnstl::uint128_t max() noexcept {
-        return mnstl::uint128_t{std::numeric_limits<std::uint64_t>::max(), std::numeric_limits<std::uint64_t>::max()};
+    constexpr static inline Manganese::utils::uint128_t min() noexcept { return 0; }
+    constexpr static inline Manganese::utils::uint128_t lowest() noexcept { return min(); }
+    constexpr static inline Manganese::utils::uint128_t max() noexcept {
+        return Manganese::utils::uint128_t{std::numeric_limits<std::uint64_t>::max(),
+                                           std::numeric_limits<std::uint64_t>::max()};
     }
-    constexpr static inline mnstl::uint128_t epsilon() noexcept { return 0; }
-    constexpr static inline mnstl::uint128_t round_error() noexcept { return 0; }
-    constexpr static inline mnstl::uint128_t infinity() noexcept { return 0; }
-    constexpr static inline mnstl::uint128_t quiet_NaN() noexcept { return 0; }
-    constexpr static inline mnstl::uint128_t signaling_NaN() noexcept { return 0; }
-    constexpr static inline mnstl::uint128_t denorm_min() noexcept { return 0; }
+    constexpr static inline Manganese::utils::uint128_t epsilon() noexcept { return 0; }
+    constexpr static inline Manganese::utils::uint128_t round_error() noexcept { return 0; }
+    constexpr static inline Manganese::utils::uint128_t infinity() noexcept { return 0; }
+    constexpr static inline Manganese::utils::uint128_t quiet_NaN() noexcept { return 0; }
+    constexpr static inline Manganese::utils::uint128_t signaling_NaN() noexcept { return 0; }
+    constexpr static inline Manganese::utils::uint128_t denorm_min() noexcept { return 0; }
 };
 }  // namespace std
-#endif  // !MNSTL_NATIVE_I128
+#endif  // !MN_NATIVE_I128
 #undef TWO_POW_64
-#undef MNSTL_I128_SELF_IN_PLACE_OP
-#undef MNSTL_I128_PRIMITIVE_IN_PLACE_OP
+#undef MN_I128_SELF_IN_PLACE_OP
+#undef MN_I128_PRIMITIVE_IN_PLACE_OP
 
-#endif  // MNSTL_EXT_NUMS_I128_HXX
+#endif  // MANGANESE_INCULDE_UTILS_I128_HPP

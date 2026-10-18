@@ -5,8 +5,7 @@
 #include <core.hpp>
 #include <cstdint>
 #include <frontend/ast/ast_base.hpp>
-#include <mnstl/ext_num_config.hxx>
-#include <mnstl/i128.hxx>
+#include <utils/i128.hpp>
 
 namespace Manganese::utils {
 
@@ -46,7 +45,7 @@ struct string_conversion_result_t {
     return static_cast<double>(std::pow(10, exp));
 }
 
-template <mnstl::FloatingPoint T>
+template <utils::FloatingPoint T>
 [[nodiscard]] string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b) noexcept {
     string_conversion_result_t<T> result;
     if (ptr >= end) [[unlikely]] {
@@ -137,10 +136,10 @@ template <mnstl::FloatingPoint T>
     return result;
 }
 
-template <mnstl::Integral T>
+template <utils::Integral T>
 string_conversion_result_t<T> _stox(const char* ptr, const char* end, Base b) noexcept {
     string_conversion_result_t<T> result;
-    using U = mnstl::mnstl_make_unsigned_t<T>;
+    using U = utils::make_unsigned_t<T>;
 
     if (ptr >= end) [[unlikely]] {
         result.exists = false;
@@ -187,7 +186,7 @@ string_conversion_result_t<Target> wrap_result(const string_conversion_result_t<
         .value = static_cast<Target>(result.value), .exists = result.exists, .overflowed = result.overflowed};
 }
 
-template <mnstl::Numeric T>
+template <utils::Numeric T>
 inline string_conversion_result_t<T> stringToNumber(std::string_view str, bool isFloat) {
     if (str.empty()) { return {.exists = false}; }
     const char* const base_ptr = str.data();
@@ -264,13 +263,13 @@ inline string_conversion_result_t<T> stringToNumber(std::string_view str, bool i
     if (parsing_end <= base_ptr) { return {.exists = false}; }
 
     if (isFloat) {
-        if (t == float32) { return wrap_result<T>(_stox<mnstl::float32_t>(parsing_start, parsing_end, base)); }
-        if (t == float64) { return wrap_result<T>(_stox<mnstl::float64_t>(parsing_start, parsing_end, base)); }
+        if (t == float32) { return wrap_result<T>(_stox<utils::float32_t>(parsing_start, parsing_end, base)); }
+        if (t == float64) { return wrap_result<T>(_stox<utils::float64_t>(parsing_start, parsing_end, base)); }
 
-        auto result32 = _stox<mnstl::float32_t>(parsing_start, parsing_end, base);
+        auto result32 = _stox<utils::float32_t>(parsing_start, parsing_end, base);
         if (!result32.overflowed) { return wrap_result<T>(result32); }
         // if float32 fails do float64
-        return wrap_result<T>(_stox<mnstl::float64_t>(parsing_start, parsing_end, base));
+        return wrap_result<T>(_stox<utils::float64_t>(parsing_start, parsing_end, base));
 
     } else if (t == int8) {
         return wrap_result<T>(_stox<std::int8_t>(parsing_start, parsing_end, base));
@@ -281,7 +280,7 @@ inline string_conversion_result_t<T> stringToNumber(std::string_view str, bool i
     } else if (t == int64) {
         return wrap_result<T>(_stox<std::int64_t>(parsing_start, parsing_end, base));
     } else if (t == int128) {
-        return wrap_result<T>(_stox<mnstl::int128_t>(parsing_start, parsing_end, base));
+        return wrap_result<T>(_stox<utils::int128_t>(parsing_start, parsing_end, base));
     } else if (t == uint8) {
         return wrap_result<T>(_stox<std::uint8_t>(parsing_start, parsing_end, base));
     } else if (t == uint16) {
@@ -291,7 +290,7 @@ inline string_conversion_result_t<T> stringToNumber(std::string_view str, bool i
     } else if (t == uint64) {
         return wrap_result<T>(_stox<std::uint64_t>(parsing_start, parsing_end, base));
     } else if (t == uint128) {
-        return wrap_result<T>(_stox<mnstl::uint128_t>(parsing_start, parsing_end, base));
+        return wrap_result<T>(_stox<utils::uint128_t>(parsing_start, parsing_end, base));
     } else {
         auto result32 = _stox<std::int32_t>(parsing_start, parsing_end, base);
         if (!result32.overflowed) { return wrap_result<T>(result32); }
@@ -299,10 +298,10 @@ inline string_conversion_result_t<T> stringToNumber(std::string_view str, bool i
         auto result64 = _stox<std::int64_t>(parsing_start, parsing_end, base);
         if (!result64.overflowed) { return wrap_result<T>(result64); }
         // if int64 fails try int128
-        auto result128 = _stox<mnstl::int128_t>(parsing_start, parsing_end, base);
+        auto result128 = _stox<utils::int128_t>(parsing_start, parsing_end, base);
         if (!result128.overflowed) { return wrap_result<T>(result128); }
         // if int128 fails do uint128
-        return wrap_result<T>(_stox<mnstl::uint128_t>(parsing_start, parsing_end, base));
+        return wrap_result<T>(_stox<utils::uint128_t>(parsing_start, parsing_end, base));
     }
 }
 
