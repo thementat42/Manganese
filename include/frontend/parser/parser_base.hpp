@@ -8,7 +8,7 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser/operators.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <optional>
 #include <span>
 #include <string>
@@ -31,7 +31,7 @@ class Parser {
     lexer::Lexer lexer;
     constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
     std::optional<Token> previousToken;
-    mnstl::chunk_allocator& arena;
+    utils::chunk_allocator& arena;
     utils::StringInterner& interner;
 
     // Some flags
@@ -45,7 +45,7 @@ class Parser {
     } flags;
 
    public:
-    Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference,
+    Parser(const std::string& source, lexer::Mode mode, utils::chunk_allocator& allocatorReference,
            utils::StringInterner& internerReference);
 
     ~Parser() noexcept = default;

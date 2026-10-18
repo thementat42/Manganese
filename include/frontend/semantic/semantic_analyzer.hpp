@@ -12,7 +12,7 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <utils/enum_matches.hpp>
 #include <string>
 #include <utility>
@@ -72,7 +72,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     std::vector<parser::ParsedFile>& parsedFiles;
     std::vector<ast::Statement*> instantiatedDeclarations;
     InstantiationCache instantiationCache;
-    mnstl::chunk_allocator& arena;
+    utils::chunk_allocator& arena;
     utils::StringInterner& interner;
 
     struct {
@@ -97,7 +97,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
    public:
     SemanticAnalyzer(std::vector<parser::ParsedFile>& files, const utils::TargetInfo& target,
-                     mnstl::chunk_allocator& _arena, utils::StringInterner& _interner) :
+                     utils::chunk_allocator& _arena, utils::StringInterner& _interner) :
         symbolTable(_arena, _interner),
         typeContext(_arena, target),
         parsedFiles(files),

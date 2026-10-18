@@ -9,7 +9,7 @@
 #include <frontend/parser.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
 #include <vector>

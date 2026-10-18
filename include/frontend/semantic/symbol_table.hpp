@@ -7,7 +7,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <unordered_map>
 #include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
@@ -71,7 +71,7 @@ struct Scope {
 
 class SymbolTable {
    private:
-    mnstl::chunk_allocator& _arena;
+    utils::chunk_allocator& _arena;
     utils::StringInterner& _interner;
     Scope* _root;
     Scope* _currentScope;
@@ -84,7 +84,7 @@ class SymbolTable {
     inline bool noScopeAvailable() const noexcept { return _currentScope == nullptr; }
 
    public:
-    SymbolTable(mnstl::chunk_allocator& arena, utils::StringInterner& interner) noexcept :
+    SymbolTable(utils::chunk_allocator& arena, utils::StringInterner& interner) noexcept :
         _arena(arena), _interner(interner), _root(_arena.emplace<Scope>()), _currentScope(_root) {}
 
     ~SymbolTable() noexcept = default;

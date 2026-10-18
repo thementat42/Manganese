@@ -2,7 +2,7 @@
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_CLONE_CONTEXT_HPP 1
 
 #include <frontend/semantic/type_context.hpp>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <unordered_map>
 #include <utils/string_interner.hpp>
 
@@ -14,7 +14,7 @@ struct Declaration;
 namespace semantic {
 
 struct CloneContext {
-    mnstl::chunk_allocator& arena;
+    utils::chunk_allocator& arena;
 
     std::unordered_map<utils::StringID, const SemanticType*> substitutions;
     std::unordered_map<const ast::Declaration*, ast::Declaration*> declarationSubstitutions;

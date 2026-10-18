@@ -1,5 +1,5 @@
-#ifndef MNSTL_CHUNK_ALLOCATOR
-#define MNSTL_CHUNK_ALLOCATOR 1
+#ifndef MANGANESE_INCLUDE_UTILS_CHUNK_ALLOCATOR_HPP
+#define MANGANESE_INCLUDE_UTILS_CHUNK_ALLOCATOR_HPP 1
 
 #include <core.hpp>
 #include <cstddef>
@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace mnstl {
+namespace Manganese::utils {
 
 class chunk_allocator {
    private:
@@ -84,6 +84,6 @@ class chunk_allocator {
     }
 };
 
-}  // namespace mnstl
+}  // namespace Manganese::utils
 
-#endif  // MNSTL_CHUNK_ALLOCATOR
+#endif  // MANGANESE_INCLUDE_UTILS_CHUNK_ALLOCATOR_HPP

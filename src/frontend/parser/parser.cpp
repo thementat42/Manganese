@@ -2,14 +2,14 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <utils/enum_matches.hpp>
 #include <string>
 #include <vector>
 
 namespace Manganese::parser {
 
-Parser::Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference,
+Parser::Parser(const std::string& source, lexer::Mode mode, utils::chunk_allocator& allocatorReference,
                utils::StringInterner& internerReference) :
     lexer(source, internerReference, mode), arena(allocatorReference), interner(internerReference), flags() {}
 
