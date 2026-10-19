@@ -189,48 +189,14 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
         statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)};
     }
 
-    if (statement->returnType != nullptr && statement->returnType->semanticType == nullptr) {
-        if (visit(statement->returnType) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
-    }
-
-    for (auto& param : statement->parameters) {
-        if (param.type != nullptr && param.type->semanticType == nullptr) {
-            if (visit(param.type) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
-        }
-    }
-
-    const SemanticType* functionType = nullptr;
-    Symbol* symbol = nullptr;
-
-    if (context.isInstantiatingGeneric && statement->mangledName.has_value()) {
-        functionType = getInstantiatedFunctionType(statement);
-        symbol = symbolTable.lookup(*statement->mangledName);
-    } else {
-        symbol = symbolTable.lookup(statement->name);
-        if (symbol == nullptr || symbol->type == nullptr) {
-            ASSERT_UNREACHABLE(std::format("Function '{}' was not properly registered during symbol collection",
-                                           interner.get_view(statement->name)));
-        }
-        functionType = symbol->type;
-    }
-
-    if (symbol != nullptr) {
-        if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
-        if (symbol->status == ResolutionStatus::Failure) { return stmtvisit_t::Failure; }
-        if (symbol->status == ResolutionStatus::InProgress) { return stmtvisit_t::Success; }
-        symbol->status = ResolutionStatus::InProgress;
-    }
-
-    const ContextGuard contextGuard{context.inFunction, true};
-    const auto* fnType = static_cast<const Function*>(functionType);
-
     stmtvisit_t signatureResult = stmtvisit_t::Success;
 
     symbolTable.enterScope();
     statement->associatedScope = symbolTable.getCurrentScope();
     for (std::size_t i = 0; i < statement->parameters.size; ++i) {
         const auto& param = statement->parameters[i];
-        const SemanticType* resolvedParamType = fnType->parameterTypes[i].type;
+        if (visit(param.type) == typevisit_t::Failure) { signatureResult = stmtvisit_t::Failure; }
+        const SemanticType* resolvedParamType = param.type->semanticType;
 
         const stmtvisit_t paramDeclaration = symbolTable.declare(
             param.name,
@@ -266,6 +232,42 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
             }
         }
     }
+
+    // Visit return type afterwards in case it's a typeof expression based on the parameteres
+    if (statement->returnType != nullptr && statement->returnType->semanticType == nullptr) {
+        if (visit(statement->returnType) == typevisit_t::Failure) { return stmtvisit_t::Failure; }
+    }
+
+    for (auto& param : statement->parameters) {
+        if (param.type != nullptr && param.type->semanticType == nullptr) {
+            if (visit(param.type) == exprvisit_t::Failure) { return stmtvisit_t::Failure; }
+        }
+    }
+
+    const SemanticType* functionType = nullptr;
+    Symbol* symbol = nullptr;
+
+    if (context.isInstantiatingGeneric && statement->mangledName.has_value()) {
+        functionType = getInstantiatedFunctionType(statement);
+        symbol = symbolTable.lookup(*statement->mangledName);
+    } else {
+        symbol = symbolTable.lookup(statement->name);
+        if (symbol == nullptr || symbol->type == nullptr) {
+            ASSERT_UNREACHABLE(std::format("Function '{}' was not properly registered during symbol collection",
+                                           interner.get_view(statement->name)));
+        }
+        functionType = symbol->type;
+    }
+
+    if (symbol != nullptr) {
+        if (symbol->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
+        if (symbol->status == ResolutionStatus::Failure) { return stmtvisit_t::Failure; }
+        if (symbol->status == ResolutionStatus::InProgress) { return stmtvisit_t::Success; }
+        symbol->status = ResolutionStatus::InProgress;
+    }
+
+    const ContextGuard contextGuard{context.inFunction, true};
+    const auto* fnType = static_cast<const Function*>(functionType);
 
     const SemanticType* previousReturnType = context.currentFunctionReturnType;
     context.currentFunctionReturnType = fnType->returnType;
