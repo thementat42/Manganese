@@ -342,6 +342,33 @@ bool testCodegenFromFile() {
     } catch (...) { return false; }
 }
 
+bool testTypeOfReturnCodegen() {
+    const std::string source = R"(
+        func add[T, U](a: T, b: U) -> typeof(a + b) {
+            return a + b;
+        }
+        func testTypeof() -> int32 {
+            return add@[int32, int32](40, 2);
+        }
+    )";
+    return validateIRContains(source, {"add$int32$int32", "testTypeof", "add"}, __func__);
+}
+
+bool testNestedGenericRecursionCodegen() {
+    const std::string source = R"(
+        func identity[T](x: T) -> T {
+            return x;
+        }
+        func wrap[T](x: T) -> T {
+            return identity@[T](identity@[T](x));
+        }
+        func main() -> int32 {
+            return wrap@[int32](100);
+        }
+    )";
+    return validateIRContains(source, {"wrap$int32", "identity$int32", "main"}, __func__);
+}
+
 }  // namespace
 }  // namespace codegen_tests
 
@@ -370,6 +397,8 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
     runner.runTest("Ternary Expression Codegen", codegen_tests::testTernaryExpressionCodeGen);
     runner.runTest("Code Generation From File", codegen_tests::testCodegenFromFile);
+    runner.runTest("Typeof Dependent Return Type Codegen", codegen_tests::testTypeOfReturnCodegen);
+    runner.runTest("Nested Generic Recursion Codegen", codegen_tests::testNestedGenericRecursionCodegen);
 }
 
 }  // namespace Manganese::tests

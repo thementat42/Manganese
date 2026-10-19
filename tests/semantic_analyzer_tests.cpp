@@ -806,6 +806,57 @@ bool testUninitializedSemanticRules() {
         && analyzeSource(invalidUninitializedExpression, false, __func__);
 }
 
+bool testTypeOfDependentReturnTypes() {
+    const std::string valid = R"(
+        func add[T, U](a: T, b: U) -> typeof(a + b) {
+            return a + b;
+        }
+
+        func main() {
+            let res = add@[int32, float64](10, 5.5);
+        }
+    )";
+
+    // Invalid return expression that doesn't match the evaluated typeof type
+    const std::string invalidMismatch = R"(
+        func add[T, U](a: T, b: U) -> typeof(a + b) {
+            return "mismatched type string";
+        }
+
+        func main() {
+            add@[int32, int32](1, 2);
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidMismatch, false, __func__);
+}
+
+bool testNestedGenericInstantiationScope() {
+    const std::string source = R"(
+        func identity[T](x: T) -> T {
+            return x;
+        }
+
+        func wrapAndId[T](x: T) -> T {
+            return identity@[T](identity@[T](x));
+        }
+
+        func main() {
+            let val = wrapAndId@[int32](42);
+        }
+    )";
+    return analyzeSource(source, true, __func__);
+}
+
+bool testImmutableCaptureOrReassignment() {
+    const std::string source = R"(
+        func modifyParam(x: int32) {
+            x = 10;
+        }
+    )";
+    return analyzeSource(source, false, __func__);
+}
+
 bool miscTests() {
     const std::string code = R"(
         func foo[T](x: T) -> T {
@@ -873,6 +924,9 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Analysis from file", analyzer_tests::testAnalyzeFromFile);
     runner.runTest("Dereference & Immutability analysis", analyzer_tests::testPointerDereferenceAndMutability);
     runner.runTest("Uninitialized Semantic Rules", analyzer_tests::testUninitializedSemanticRules);
+    runner.runTest("Typeof Dependent Return Types analysis", analyzer_tests::testTypeOfDependentReturnTypes);
+    runner.runTest("Nested Generic Instantiation Scope analysis", analyzer_tests::testNestedGenericInstantiationScope);
+    runner.runTest("Immutable Parameter Reassignment check", analyzer_tests::testImmutableCaptureOrReassignment);
     runner.runTest("Misc analyzer tests", analyzer_tests::miscTests);
 }
 

@@ -174,6 +174,25 @@ bool testExplicitUninitializedKeyword() {
     return analyzeControlFlow(valid, true, __func__);
 }
 
+bool testNestedIfInitialization() {
+    const std::string valid = R"(
+        func foo(a: bool, b: bool) -> int32 {
+            let mut x: int32;
+            if (a) {
+                if (b) {
+                    x = 1;
+                } else {
+                    x = 2;
+                }
+            } else {
+                x = 3;
+            }
+            return x;
+        }
+    )";
+    return analyzeControlFlow(valid, true, __func__);
+}
+
 }  // namespace
 }  // namespace control_flow_tests
 
@@ -193,6 +212,8 @@ void runControlFlowAnalyzerTests(TestRunner& runner) {
     runner.runTest("Conditional Initialization Success", control_flow_tests::testConditionalInitializationSuccess);
     runner.runTest("Runtime Loop Assignment Safety", control_flow_tests::testLoopAssignmentSafety);
     runner.runTest("Explicit uninitialized keyword", control_flow_tests::testExplicitUninitializedKeyword);
+    runner.runTest("Nested If-Else Definite Initialization", control_flow_tests::testNestedIfInitialization);
+
 }
 
 }  // namespace Manganese::tests

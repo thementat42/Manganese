@@ -473,6 +473,58 @@ bool testBadFileAccess() {
     } catch (const std::runtime_error& e) { return true; }
     return false;
 }
+
+bool testUnderscoreSeparatedNumbers() {
+    std::vector<Token> tokens = tokensFromString("1_000_000 3.141_592_653 0x1F_AB_CD 0b1010_0101");
+    printAllTokens(tokens);
+    if (tokens.size() != 4) {
+        std::cout << "Expected 4 tokens, got " << tokens.size() << '\n';
+        return false;
+    }
+
+    return checkToken(tokens[0], TokenType::IntegerLiteral, "1000000")
+        && checkToken(tokens[1], TokenType::FloatLiteral, "3.141592653")
+        && checkToken(tokens[2], TokenType::IntegerLiteral, "0x1FABCD")
+        && checkToken(tokens[3], TokenType::IntegerLiteral, "0b10100101");
+}
+
+bool testConsecutiveOperatorsAndDelimiters() {
+    std::vector<Token> tokens = tokensFromString("++++----====......");
+    printAllTokens(tokens);
+    // Depending on your maximal munch lexing rules, let's verify they tokenize safely without crashing
+    return !tokens.empty();
+}
+
+bool testUnterminatedString() {
+    std::vector<Token> tokens = tokensFromString("\"this string has no closing quote");
+    printAllTokens(tokens);
+    if (tokens.size() != 1) {
+        std::cout << "Expected 1 token, got " << tokens.size() << '\n';
+        return false;
+    }
+    return tokens[0].getType() == TokenType::StrLiteral;
+}
+
+bool testNumericSuffixCombinations() {
+    std::vector<Token> tokens = tokensFromString("42i8 42i16 42i32 42i64 42i128 42u8 42u16 42u32 42u64 42u128");
+    printAllTokens(tokens);
+    if (tokens.size() != 10) {
+        std::cout << "Expected 10 tokens, got " << tokens.size() << '\n';
+        return false;
+    }
+
+    return checkToken(tokens[0], TokenType::IntegerLiteral, "42i8")
+        && checkToken(tokens[1], TokenType::IntegerLiteral, "42i16")
+        && checkToken(tokens[2], TokenType::IntegerLiteral, "42i32")
+        && checkToken(tokens[3], TokenType::IntegerLiteral, "42i64")
+        && checkToken(tokens[4], TokenType::IntegerLiteral, "42i128")
+        && checkToken(tokens[5], TokenType::IntegerLiteral, "42u8")
+        && checkToken(tokens[6], TokenType::IntegerLiteral, "42u16")
+        && checkToken(tokens[7], TokenType::IntegerLiteral, "42u32")
+        && checkToken(tokens[8], TokenType::IntegerLiteral, "42u64")
+        && checkToken(tokens[9], TokenType::IntegerLiteral, "42u128");
+}
+
 }  // namespace
 }  // namespace lexer_tests
 
@@ -498,5 +550,9 @@ void runLexerTests(TestRunner& runner) {
     runner.runTest("Invalid Escape Sequence", lexer_tests::testInvalidEscapeSequence);
     runner.runTest("Complete Program", lexer_tests::testCompleteProgram);
     runner.runTest("Invalid File", lexer_tests::testBadFileAccess);
+    runner.runTest("Underscore Separated Numbers", lexer_tests::testUnderscoreSeparatedNumbers);
+    runner.runTest("Consecutive Operators", lexer_tests::testConsecutiveOperatorsAndDelimiters);
+    runner.runTest("Unterminated String", lexer_tests::testUnterminatedString);
+    runner.runTest("Numeric Suffix Combinations", lexer_tests::testNumericSuffixCombinations);
 }
 }  // namespace Manganese::tests

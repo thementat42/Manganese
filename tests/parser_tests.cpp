@@ -5,11 +5,12 @@
 #include <frontend/parser.hpp>
 #include <fstream>
 #include <iostream>
-#include <utils/chunk_allocator.hpp>
 #include <string>
+#include <utils/chunk_allocator.hpp>
 
 #include "tests.hpp"
 #include "utils/string_interner.hpp"
+
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
@@ -715,6 +716,29 @@ bool testUninitializedKeywordParsing() {
     return validateStatement(getParserResults(expression), expected, "Explicit Uninitialized Keyword Parsing");
 }
 
+bool testComplexFunctionPointersAndAliases() {
+    const std::string expression = "alias Callback = func(int32, string) -> bool;\n"
+                                   "let cb: Callback = uninitialized;\n"
+                                   "func execute(f: func(ptr int32) -> void, ptrVal: ptr int32) {\n"
+                                   "    f(ptrVal);\n"
+                                   "}";
+
+    const std::array<std::string, 3> expected
+        = {"alias Callback = (func(int32, string) -> bool);", "(let cb: private Callback = (uninitialized));",
+           R"(private func execute(f: func(ptr int32) -> void, ptrVal: ptr int32) {
+    f(ptrVal);
+})"};
+
+    return validateStatements(getParserResults(expression), expected, "Complex Function Pointers and Aliases");
+}
+
+bool testDeeplyNestedGenerics() {
+    const std::string expression = "let container: Map@[string, List@[Array@[int32]]] = uninitialized;";
+    const std::string expected = "(let container: private Map@[string, List@[Array@[int32]]] = (uninitialized));";
+
+    return validateStatement(getParserResults(expression), expected, "Deeply Nested Generics");
+}
+
 bool miscTests() {
     const std::string expression = "int x = aggregate{1, \"asdf\", 3.1f32};";
     parser::ParsedFile x = getParserResults(expression);
@@ -756,6 +780,8 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Pathological Expression Recovery", parser_tests::testPathologicalExpressionRecovery);
     runner.runTest("Pathological Error Recovery", parser_tests::testPathologicalExpressionRecovery2);
     runner.runTest("Uninitialized Keyword Parsing", parser_tests::testUninitializedKeywordParsing);
+    runner.runTest("Complex Function Pointers and Aliases", parser_tests::testComplexFunctionPointersAndAliases);
+    runner.runTest("Deeply Nested Generics", parser_tests::testDeeplyNestedGenerics);
     runner.runTest("Miscellaneous Tests", parser_tests::miscTests);
 }
 }  // namespace Manganese::tests
