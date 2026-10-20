@@ -10,6 +10,9 @@
 #include <string>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+
+
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -270,10 +273,7 @@ ast::Statement* Parser::parseNamespace() {
     return makeNode<ast::NamespaceStatement>(startToken, name, body);
 }
 
-ast::Statement* Parser::parseRedundantSemicolon() {
-    DISCARD(consumeToken());
-    return ast::getEmptyStatement();
-}
+ast::Statement* Parser::parseRedundantSemicolon() { return makeNode<ast::EmptyStatement>(consumeToken()); }
 
 ast::Statement* Parser::parseReturnStatement() {
     const Token startToken = consumeToken();
