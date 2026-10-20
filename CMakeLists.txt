@@ -35,7 +35,6 @@ file(GLOB_RECURSE SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
-
 set(MAIN_SRC manganese.cpp)
 set(TEST_MAIN_SRC manganese_tests.cpp)
 
@@ -65,6 +64,13 @@ set_target_properties(manganese PROPERTIES
 target_compile_definitions(manganese PRIVATE
     MN_DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
     NO_ANSI_COLOURS=$<BOOL:${DISABLE_ANSI_COLOURS}>
+)
+
+target_precompile_headers(manganese PRIVATE 
+    <unordered_map>
+    <deque>
+    <format>
+    <string>
 )
 
 # Flags
