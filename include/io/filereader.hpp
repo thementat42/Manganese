@@ -20,15 +20,16 @@ class FileReader final : public Reader {
     std::size_t _position = 0, _line = 1, _column = 1;
 
    public:
-    FileReader(const std::string& filename) {
+    FileReader(const std::string& filename, std::error_code& ec) {
         std::error_code error;
         _mmap = mio::make_mmap_source(filename, error);
 
-        if (error) { logging::logCritical(0, 0, "Could not memory-map file '{}' ({})", filename, error.message()); }
+        if (error) { return; }
 
         _data = _mmap.data();
         _size = _mmap.size();
         if (_size == 0) { logging::logCritical(0, 0, "File '{}' was empty", filename); }
+        ec = error;
     }
 
     [[nodiscard]] char peekChar(std::size_t offset = 0) noexcept override {
