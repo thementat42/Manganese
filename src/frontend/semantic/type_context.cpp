@@ -1,3 +1,5 @@
+#include "frontend/semantic/type_context.hpp"
+
 #include <algorithm>
 #include <core.hpp>
 #include <cstddef>
@@ -81,10 +83,7 @@ std::string Aggregate::toStringWithTypeArguments(const TypeList& typeArguments) 
     return result;
 }
 
-std::string Array::toString() const {
-    if (hasUnspecifiedLength()) { return std::format("{}[]", elementType->toString()); }
-    return std::format("{}[{}]", elementType->toString(), *length);
-}
+std::string Array::toString() const { return std::format("{}[{}]", elementType->toString(), length); }
 
 std::string Enum::toString() const { return std::string(name); }
 
@@ -105,6 +104,8 @@ std::string Pointer::toString() const {
 }
 
 std::string Poison::toString() const { return "<error_type>"; }
+
+std::string Slice::toString() const { return std::format("{}[]", elementType->toString()); }
 
 std::string Uninitialized::toString() const { return "keyword 'uninitialized'"; }
 
@@ -153,9 +154,7 @@ std::size_t Aggregate::alignment(const utils::TargetInfo& target) const noexcept
     return maxAlign;
 }
 
-std::size_t Array::size(const utils::TargetInfo& target) const noexcept {
-    return elementType->size(target) * (length.value_or(0));  //? log error?
-}
+std::size_t Array::size(const utils::TargetInfo& target) const noexcept { return elementType->size(target) * length; }
 
 std::size_t Array::alignment(const utils::TargetInfo& target) const noexcept { return elementType->alignment(target); }
 
@@ -180,6 +179,10 @@ std::size_t Pointer::alignment(const utils::TargetInfo& target) const noexcept {
 std::size_t Poison::size(const utils::TargetInfo& /*target*/) const noexcept { return 0; }
 
 std::size_t Poison::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
+
+std::size_t Slice::size(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment + 8; }
+
+std::size_t Slice::alignment(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment; }
 
 std::size_t Uninitialized::size(const utils::TargetInfo& /*target*/) const noexcept { return 0; }
 
@@ -215,8 +218,7 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             // Since array types have a fixed structure we can just hash the member types
             const auto* array = static_cast<const Array*>(t);
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(array->elementType));
-            const std::size_t lengthHash = std::hash<std::size_t>{}(array->length.value_or(0));
-            hash = hash_combine(hash, std::hash<bool>{}(array->hasUnspecifiedLength()));
+            const std::size_t lengthHash = std::hash<std::size_t>{}(array->length);
             return hash_combine(hash, std::hash<std::size_t>{}(lengthHash));
         }
 
@@ -242,11 +244,16 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(pointer->baseType));
             return hash_combine(hash, std::hash<bool>{}(pointer->isMutable));
         }
+        case SemanticTypeKind::Slice: {
+            const auto* slice = static_cast<const Slice*>(t);
+            return hash_combine(hash, std::hash<const SemanticType*>{}(slice->elementType));
+        }
         case SemanticTypeKind::Poison:
         case SemanticTypeKind::Uninitialized:
         case SemanticTypeKind::Void: {
             return hash;
         }
+
         case SemanticTypeKind::Primitive:
             // Since each primitive value is unique we can just hash the enum type
             return hash_combine(hash, std::hash<prim_int_t>{}(static_cast<prim_int_t>(t->primitiveType)));
@@ -288,6 +295,11 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             const auto* right = static_cast<const Function*>(rhs);
             return (left->returnType == right->returnType) && (left->parameterTypes == right->parameterTypes);
         }
+        case SemanticTypeKind::Slice: {
+            const auto* left = static_cast<const Slice*>(lhs);
+            const auto* right = static_cast<const Slice*>(rhs);
+            return (left->elementType == right->elementType);
+        }
         case SemanticTypeKind::Uninitialized:
         case SemanticTypeKind::Poison:
         case SemanticTypeKind::Void: return true;
@@ -295,16 +307,12 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
     ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
 }
 
-const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::optional<std::size_t> length) {
+const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::size_t length) {
     Array tmp(elementType, length);
     if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
     auto* heapAlloc = _arena.emplace<Array>(elementType, length);
     _cache.insert(heapAlloc);
     return heapAlloc;
-}
-
-const SemanticType* TypeContext::getArray(const SemanticType* elementType, std::size_t length) {
-    return getArray(elementType, std::optional<std::size_t>(length));
 }
 
 const SemanticType* TypeContext::getAnonymousAggregate(TypeList&& fieldTypes) {
@@ -355,6 +363,14 @@ const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType primitive) cons
         ASSERT_UNREACHABLE("Attempted to get a primitive type corresponding to a non-primitive value!");
     }
     return &_primitives[static_cast<unsigned>(primitive)];
+}
+
+const SemanticType* TypeContext::getSlice(const SemanticType* elementType) {
+    Slice tmp(elementType);
+    if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
+    auto* heapAlloc = _arena.emplace<Slice>(elementType);
+    _cache.insert(heapAlloc);
+    return heapAlloc;
 }
 
 const SemanticType* TypeContext::getUninitalized() const noexcept { return &_uninitializedInstance; }
