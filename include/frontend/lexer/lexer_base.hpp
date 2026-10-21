@@ -110,6 +110,7 @@ class Lexer {
 //~ Static helper functions
 
 std::optional<std::string> encodeUTF8(char32_t);
+std::unique_ptr<io::Reader> makeFileReader(const std::string& source);
 
 inline std::string codepointToUTF8(char32_t codepoint) {
     if (codepoint <= 0x7F) { return std::string(1, static_cast<char>(codepoint)); }

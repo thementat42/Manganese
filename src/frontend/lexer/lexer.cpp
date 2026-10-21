@@ -4,11 +4,13 @@
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/filereader.hpp>
+#include <io/heapfilereader.hpp>
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>
 #include <memory>
 #include <optional>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
@@ -17,11 +19,11 @@ namespace Manganese::lexer {
 
 //~ Core Lexer Functions
 
-Lexer::Lexer(const std::string& source, utils::StringInterner& interner, Mode mode) :
-    tokenStartLine(1), tokenStartCol(1), interner(interner) {
+Lexer::Lexer(const std::string& source, utils::StringInterner& _interner, Mode mode) :
+    tokenStartLine(1), tokenStartCol(1), interner(_interner) {
     switch (mode) {
         case Mode::String: reader = std::make_unique<io::StringReader>(source); break;
-        case Mode::File: reader = std::make_unique<io::FileReader>(source); break;
+        case Mode::File: reader = makeFileReader(source); break;
     }
 }
 
@@ -609,6 +611,20 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
     numberLiteral += suffix;
     numberLiteral += width;
     return result;
+}
+
+// ~ Helper functions
+
+std::unique_ptr<io::Reader> makeFileReader(const std::string& source) {
+    std::error_code ec;
+    auto mmapReader = std::make_unique<io::FileReader>(source, ec);
+
+    if (ec) {
+        logging::logInternal(logging::LogLevel::Info,
+                             "Could not memory-map, falling back to in-memory read (error message: {})", ec.message());
+        return std::make_unique<io::HeapFileReader>(source);
+    }
+    return mmapReader;
 }
 
 }  // namespace Manganese::lexer
