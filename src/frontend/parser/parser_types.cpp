@@ -4,6 +4,9 @@
 #include <frontend/parser.hpp>
 #include <utils/type_names.hpp>
 
+#include "frontend/ast/ast_base.hpp"
+#include "frontend/ast/ast_types.hpp"
+
 namespace Manganese::parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
@@ -54,17 +57,17 @@ ast::Type* Parser::parseAggregateType() {
 }
 
 ast::Type* Parser::parseArrayType(ast::Type* left, Precedence /*unused*/) {
+    const Token startToken = consumeToken();  // consume '['
+
     ast::Expression* lengthExpression = nullptr;
-    const Token startToken = consumeToken();  // Consume the left square bracket '['
-    if (peekTokenType() != TokenType::RightSquare) {
-        // If the next token is not a right square bracket, it's a length expression
-        lengthExpression = parseExpression(Precedence::Default);
-    }
-    if (flags.parsingAliasStatement && lengthExpression == nullptr) {
-        logError(*left, "Arrays in alias statements must have an explicit length expression");
-    }
-    expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
-    return makeNode<ast::ArrayType>(startToken, left, lengthExpression);
+    if (peekTokenType() != TokenType::RightSquare) { lengthExpression = parseExpression(Precedence::Default); }
+
+    expectToken(TokenType::RightSquare, "Expected ']' to close type declaration");
+
+    // if there's an explicit length, this is an array
+    if (lengthExpression != nullptr) { return makeNode<ast::ArrayType>(startToken, left, lengthExpression); }
+    // else, slice
+    return makeNode<ast::SliceType>(startToken, left);
 }
 
 ast::Type* Parser::parseFunctionType() {

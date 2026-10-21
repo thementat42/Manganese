@@ -57,13 +57,11 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
 }
 
 ast::Statement* Parser::parseAliasStatement() {
-    flags.parsingAliasStatement = true;
     const Token startToken = consumeToken();  // consume alias
     const auto alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Assignment, "Expected '=' after an alias name to introduce the aliased type.");
     ast::Type* baseType = parseType(Precedence::Default);
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
-    flags.parsingAliasStatement = false;
     return makeNode<ast::AliasStatement>(startToken, baseType, alias);
 }
 
