@@ -5,9 +5,9 @@
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <utils/enum_matches.hpp>
 #include <string>
 #include <utility>
+#include <utils/enum_matches.hpp>
 #include <utils/result.hpp>
 #include <utils/type_names.hpp>
 
@@ -141,21 +141,25 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
                     .message = conversionError + " (aggregates cannot be converted to other types)."};
         case SemanticTypeKind::Array: {
             const auto* arrFrom = static_cast<const Array*>(from);
+
+            // An array can convert to a slice (just loses length)
+            if (to->kind == SemanticTypeKind::Slice) {
+                const auto* sliceTo = static_cast<const Slice*>(to);
+                return areTypesCompatible(arrFrom->elementType, sliceTo->elementType);
+            }
+
+            if (to->kind != SemanticTypeKind::Array) {
+                return {.result = Compatible_t::Error, .message = conversionError};
+            }
+
             const auto* arrTo = static_cast<const Array*>(to);
             if (arrFrom->length != arrTo->length) {
                 return {.result = Compatible_t::Error,
                         .message = conversionError + " (cannot convert between arrays of different lengths)."};
             }
-            typeCompatibilityResult baseCompatible = areTypesCompatible(arrFrom->elementType, arrTo->elementType);
-
-            if (!baseCompatible) {
-                return {.result = Compatible_t::Error,
-                        .message = conversionError
-                            + std::format(" (cannot convert an array of {} to an array of {})",
-                                          arrFrom->elementType->toString(), arrTo->elementType->toString())};
-            }
-            return baseCompatible;
+            return areTypesCompatible(arrFrom->elementType, arrTo->elementType);
         }
+
         case SemanticTypeKind::Enum: {
             // the check that pointers are equal should have caught the case where the enums are the same
             return typeCompatibilityResult{.result = Compatible_t::Error,
@@ -219,6 +223,16 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
         case SemanticTypeKind::Primitive: {
             return arePrimitivesCompatible(from, to);
         };
+
+        case SemanticTypeKind::Slice: {
+            if (to->kind != SemanticTypeKind::Slice) {
+                return {.result = Compatible_t::Error, .message = conversionError};
+            }
+            const auto* sliceFrom = static_cast<const Slice*>(from);
+            const auto* sliceTo = static_cast<const Slice*>(to);
+            return areTypesCompatible(sliceFrom->elementType, sliceTo->elementType);
+        }
+
         case SemanticTypeKind::Void:
             return {.result = Compatible_t::Error, .message = "Cannot use 'void' expression in this context"};
         case SemanticTypeKind::Poison: return {.result = Compatible_t::Error, .message = "Could not deduce types"};
@@ -335,32 +349,6 @@ auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const Semanti
     return {
         .result = Compatible_t::Error,
         .message = std::format("Incompatible types for comparison: '{}' and '{}'", lhs->toString(), rhs->toString())};
-}
-
-const SemanticType* SemanticAnalyzer::unifyArrayInference(const SemanticType* declared,
-                                                          const SemanticType* initializer) {
-    if (declared->isPoison() || initializer->isPoison()) { return typeContext.getPoison(); }
-
-    // If both are arrays, we need to unify their lengths and element types
-    if (declared->isArray() && initializer->isArray()) {
-        const auto* decArray = static_cast<const Array*>(declared);
-        const auto* initArray = static_cast<const Array*>(initializer);
-
-        // Take length from initializer if declared length is unspecified
-        const std::optional<std::size_t> unifiedLength
-            = decArray->length.has_value() ? decArray->length : initArray->length;
-
-        // If declared had a length and initializer has a length, they should ideally match,
-        // but compatibility checks will catch mismatches elsewhere.
-
-        const SemanticType* unifiedElementType = unifyArrayInference(decArray->elementType, initArray->elementType);
-        if (unifiedElementType == nullptr) { return typeContext.getPoison(); }
-
-        return typeContext.getArray(unifiedElementType, unifiedLength);
-    }
-
-    // For non-array types, just return the declared type (or verify compatibility)
-    return areTypesCompatible(initializer, declared) ? declared : nullptr;
 }
 
 Result SemanticAnalyzer::checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i,

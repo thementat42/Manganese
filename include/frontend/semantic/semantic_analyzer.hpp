@@ -137,7 +137,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
-    const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
     utils::StringID getMangledName(utils::StringID baseName) const;
     utils::StringID getMangledName(utils::StringID baseName, const TypeList& typeArgs) const;
 

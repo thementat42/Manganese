@@ -134,10 +134,8 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
         const SemanticType* paramType
             = (paramResult == typevisit_t::Failure ? typeContext.getPoison() : param.type->semanticType);
 
-        if (param.isVariadic) { paramType = typeContext.getArray(paramType, std::nullopt); }
-
         paramTypes.push_back(
-            Parameter{.type = paramType, .isMutable = param.isMutable, .isVariadic = param.isVariadic});
+            Parameter{.type = paramType, .isMutable = param.isMutable});
     }
 
     const SemanticType* resolvedReturnType = typeContext.getVoid();
