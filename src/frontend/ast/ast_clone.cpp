@@ -106,8 +106,7 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
              .defaultValue = (param.defaultValue == nullptr) ? nullptr : param.defaultValue->clone(context),
              .line = param.line,
              .column = param.column,
-             .isMutable = param.isMutable,
-             .isVariadic = param.isVariadic});
+             .isMutable = param.isMutable});
     }
     Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
 
@@ -352,7 +351,7 @@ FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
 
     for (const auto& param : parameterTypes) {
         parameterTypeClones.push_back(
-            {.isMutable = param.isMutable, .isVariadic = param.isVariadic, .type = param.type->clone(context)});
+            {.isMutable = param.isMutable, .type = param.type->clone(context)});
     }
 
     Type* returnTypeClone = returnType == nullptr ? nullptr : returnType->clone(context);

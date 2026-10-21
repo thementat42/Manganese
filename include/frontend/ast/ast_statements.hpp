@@ -126,7 +126,6 @@ struct FunctionParameter {
     Expression* defaultValue;
     std::size_t line, column;
     bool isMutable;
-    bool isVariadic;
 };
 
 struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {

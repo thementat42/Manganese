@@ -246,12 +246,9 @@ function_declaration_statement =
     block
 
 parameter_list =
-      parameter ("," parameter)* ("," variadic_parameter)?
-    | variadic_parameter
+      parameter ("," parameter)*
 
 parameter = identifier ":" type ("=" expression)?
-
-variadic_parameter = identifier "..." ":" type
 
 # semantically, variable declaration needs a type or an expression
 
@@ -350,11 +347,8 @@ function_type = "func" "(" function_type_parameter_list? ")" ("->" type)?
 function_type_parameter_list =
     function_type_parameter
     ("," function_type_parameter)*
-    ("," function_type_variadic_parameter)?
 
 function_type_parameter = type
-
-function_type_variadic_parameter = type "..."
 
 generic_type = generic_base "@[" type ("," type)* "]"
 

@@ -111,48 +111,27 @@ auto SemanticAnalyzer::visit(ast::FunctionCallExpression* expression) -> exprvis
         }
     }
 
-    // Calculate required vs max parameters (accounting for defaults and variadics)
+    // Calculate minimum required arguments (accounting for default parameters)
     std::size_t minRequiredArgs = 0;
-    bool hasVariadic = false;
-    const SemanticType* variadicElementType = nullptr;
-
     for (std::size_t i = 0; i < functionType->parameterTypes.size(); ++i) {
-        const auto& paramInfo = functionType->parameterTypes[i];
-        if (paramInfo.isVariadic) {
-            hasVariadic = true;
-            // paramInfo.type is already T[], so get its element type
-            if (paramInfo.type->isArray()) {
-                variadicElementType = static_cast<const Array*>(paramInfo.type)->elementType;
-            } else {
-                variadicElementType = paramInfo.type;
-            }
-            break;
-        }
-
         bool hasDefault = false;
         if ((baseDeclaration != nullptr) && i < baseDeclaration->parameters.size) {
             hasDefault = (baseDeclaration->parameters[i].defaultValue != nullptr);
         }
-
         if (!hasDefault) { minRequiredArgs++; }
     }
 
-    // size_t(-1) is a sentinel for "basically unlimited"
-    // on any practical system, the compiler would run out of memory long before hitting that value
-    const std::size_t maxPossibleArgs
-        = hasVariadic ? static_cast<std::size_t>(-1) : functionType->parameterTypes.size();
+    const std::size_t maxPossibleArgs = functionType->parameterTypes.size();
     const std::size_t providedArgs = expression->arguments.size;
 
     if (!BETWEEN(providedArgs, minRequiredArgs, maxPossibleArgs)) {
         logError(expression, "Function expected between {} and {} arguments, but got {}", minRequiredArgs,
-                 (hasVariadic ? "unlimited" : std::to_string(maxPossibleArgs)), providedArgs);
+                 maxPossibleArgs, providedArgs);
         return exprvisit_t::Failure;
     }
 
     exprvisit_t result = exprvisit_t::Success;
 
-    // Type-check explicit arguments up to the non-variadic or parameter list size
-    std::size_t paramIndex = 0;
     for (std::size_t i = 0; i < providedArgs; ++i) {
         ast::Expression* argExpr = expression->arguments[i];
         if (visit(argExpr) == exprvisit_t::Failure) {
@@ -160,17 +139,7 @@ auto SemanticAnalyzer::visit(ast::FunctionCallExpression* expression) -> exprvis
             continue;
         }
 
-        const SemanticType* expectedType = nullptr;
-        if (paramIndex < functionType->parameterTypes.size() && functionType->parameterTypes[paramIndex].isVariadic) {
-            expectedType = variadicElementType;
-        } else if (paramIndex < functionType->parameterTypes.size()) {
-            expectedType = functionType->parameterTypes[paramIndex].type;
-            paramIndex++;
-        } else {
-            // Extra arguments packed into variadic
-            expectedType = variadicElementType;
-        }
-
+        const SemanticType* expectedType = functionType->parameterTypes[i].type;
         const SemanticType* actualType = argExpr->semanticType;
 
         if (actualType->isVoid()) {

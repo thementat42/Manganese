@@ -166,7 +166,7 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
                                            .message = conversionError + " (cannot convert between different enums)"};
         }
 
-        case SemanticTypeKind::Function: {
+       case SemanticTypeKind::Function: {
             const auto* funcFrom = static_cast<const Function*>(from);
             const auto* funcTo = static_cast<const Function*>(to);
 
@@ -179,7 +179,7 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
                 const Parameter& funcToParam = funcTo->parameterTypes[i];
                 if (!areTypesCompatible(funcFromParam.type, funcToParam.type)) {
                     const std::string error = std::format(
-                        " (mismatch in position {}: parameter type {} is cannot be converted to parameter type {}).", i,
+                        " (mismatch in position {}: parameter type {} cannot be converted to parameter type {}).", i,
                         funcFromParam.toString(), funcToParam.toString());
 
                     return {.result = Compatible_t::Error, .message = conversionError + error};
@@ -189,14 +189,6 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
                         = std::format(" (parameter in position {} in {} is {} but is {} in {})", i,
                                       funcFrom->toString(), (funcFromParam.isMutable ? "mutable" : "immutable"),
                                       (funcToParam.isMutable ? "mutable" : "immutable"), funcToParam.toString());
-
-                    return {.result = Compatible_t::Error, .message = conversionError + error};
-                }
-                if (funcFromParam.isVariadic != funcToParam.isVariadic) {
-                    const std::string error
-                        = std::format(" (parameter in position {} is {} in {} but {} in {})", i,
-                                      (funcFromParam.isVariadic ? "variadic" : "non-variadic"), funcFrom->toString(),
-                                      (funcToParam.isVariadic ? "variadic" : "non-variadic"), funcTo->toString());
 
                     return {.result = Compatible_t::Error, .message = conversionError + error};
                 }

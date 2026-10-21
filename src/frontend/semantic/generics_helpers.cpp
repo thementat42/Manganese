@@ -215,8 +215,7 @@ const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::Fun
         const SemanticType* paramType = paramNode.type->semanticType;
         if (paramType == nullptr || paramType->isPoison()) { return typeContext.getPoison(); }
 
-        instantiatedParams.push_back(
-            Parameter{.type = paramType, .isMutable = paramNode.isMutable, .isVariadic = paramNode.isVariadic});
+        instantiatedParams.push_back(Parameter{.type = paramType, .isMutable = paramNode.isMutable});
     }
 
     return typeContext.getFunction(std::move(instantiatedParams), resolvedReturnType);

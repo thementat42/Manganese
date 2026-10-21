@@ -28,7 +28,6 @@ struct ArrayType final : public Type {
 
 struct FunctionParameterType {
     bool isMutable;
-    bool isVariadic;
     Type* type;
 };
 

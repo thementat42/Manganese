@@ -106,7 +106,7 @@ class Parser {
 
     std::optional<ast::FunctionParameter> parseFunctionParameter(utils::StringID functionName,
                                                                  std::span<ast::FunctionParameter> existingParams,
-                                                                 bool& hasDefaultParameter, bool& hasVariadicParameter);
+                                                                 bool& hasDefaultParameter);
 
     ast::CaseClause parseCaseClause();
     std::optional<ast::Block> parseDefaultClause();
@@ -128,7 +128,7 @@ class Parser {
     ast::Type* parseTypeofType();
 
     ast::Type* parseAggregateTypeField();
-    ast::FunctionParameterType parseFunctionTypeParameter(bool& seenVariadic);
+    ast::FunctionParameterType parseFunctionTypeParameter();
     utils::StringID parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,
                                               utils::StringID contextName);
 

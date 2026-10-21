@@ -138,7 +138,6 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
     for (std::size_t i = 0; i < parameters.size; ++i) {
         const FunctionParameter& param = parameters[i];
         result += interner.get_view(param.name);
-        if (param.isVariadic) { result += "..."; }
         result += std::format(": {}{}", (param.isMutable ? "mut " : ""), param.type->toString(interner, 0));
 
         if (param.defaultValue != nullptr) {

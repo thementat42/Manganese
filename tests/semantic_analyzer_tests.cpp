@@ -730,20 +730,20 @@ bool testPointerDereferenceAndMutability() {
         && analyzeSource(incImmutable, false, __func__) && analyzeSource(addressOfRValue, false, __func__);
 }
 
-[[maybe_unused]] bool testVariadicAndDefaults() {
+[[maybe_unused]] bool testDefaultsAndSlices() {
     const std::string code = R"(
         # Function with default parameters
         func configure(timeout: int = 30, retries: int = 3) -> int {
             return timeout + retries;
         }
 
-        # Variadic function accessing arguments via indexing
-        func sumFirstTwo(args...: int) -> int {
+        # Function taking a slice parameter (coerced from array literals)
+        func sumFirstTwo(args: int[]) -> int {
             return args[0] + args[1];
         }
 
-        # Generic variadic function
-        func firstOf[T](args...: T) -> T {
+        # Generic function taking a slice parameter
+        func firstOf[T](args: T[]) -> T {
             return args[0];
         }
 
@@ -752,19 +752,22 @@ bool testPointerDereferenceAndMutability() {
             let b = configure(60);       # Should use default retries (60 + 3 = 63)
             let c = configure(10, 5);    # Should override both (10 + 5 = 15)
             
-            let total = sumFirstTwo(10, 20, 30, 40); # Variadic invocation
-            let val = firstOf@[float64](42.12321, 100.01293483910);              # Generic variadic invocation
+            # Pass array literals which implicitly coerce to slices
+            let total = sumFirstTwo([10, 20, 30, 40]); 
+            let val = firstOf@[float64]([42.12321, 100.01293483910]); 
             return 0;
         }
     )";
     const std::string invalid = R"(
-
-        func firstOf[T](args...: T) -> T {
+        func firstOf[T](args: T[]) -> T {
             return args[0];
         }
 
         func main() -> int {
-            let val = firstOf@[string](42.12321, 100.01293483910, "blah");
+            # Invalid: expecting string[] slice, but passing float[2] array literal
+            let val = firstOf@[string]([42.12321, 100.01293483910]);
+            
+            # Invalid: returning string from a function expecting int
             return "hello!";
         }
     )";
@@ -897,7 +900,7 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Generic Scope Resolution analysis", analyzer_tests::testGenericScopeResolution);
     runner.runTest("Scope Resolution Mutability analysis", analyzer_tests::testScopeResolutionMutability);
     runner.runTest("Deeply Nested Scoped Type analysis", analyzer_tests::testDeeplyNestedScopedType);
-    // runner.runTest("Variadic and Default Function analysis", analyzer_tests::testVariadicAndDefaults);
+    runner.runTest("Slices and Defaults", analyzer_tests::testDefaultsAndSlices);
 
     // Expressions
     runner.runTest("Aggregate Instantiation & Literals analysis",

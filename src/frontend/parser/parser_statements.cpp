@@ -12,7 +12,6 @@
 
 #include "frontend/ast/ast_statements.hpp"
 
-
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -171,12 +170,9 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
 
     std::vector<ast::FunctionParameter> params;
     bool hasDefaultParameter = false;
-    bool hasVariadicParameter = false;
 
     while (!done() && peekTokenType() != TokenType::RightParen) {
-        if (auto param = parseFunctionParameter(name, params, hasDefaultParameter, hasVariadicParameter)) {
-            params.push_back(*param);
-        }
+        if (auto param = parseFunctionParameter(name, params, hasDefaultParameter)) { params.push_back(*param); }
 
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
@@ -416,26 +412,12 @@ std::optional<ast::AggregateField> Parser::parseAggregateField(utils::StringID a
 
 std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::StringID functionName,
                                                                      std::span<ast::FunctionParameter> existingParams,
-                                                                     bool& hasDefaultParameter,
-                                                                     bool& hasVariadicParameter) {
+                                                                     bool& hasDefaultParameter) {
     Token t = expectToken(TokenType::Identifier, "Expected a variable name");
     const auto paramName = t.getLexeme();
 
     bool isMutable = false;
-    bool isVariadic = false;
     ast::Expression* defaultValue = nullptr;
-
-    if (peekTokenType() == TokenType::Ellipsis) {
-        DISCARD(consumeToken());
-        if (hasVariadicParameter) {
-            logError(t, "Only one variadic parameter is allowed in function '{}'", interner.get_view(functionName));
-        } else {
-            isVariadic = true;
-            hasVariadicParameter = true;
-        }
-    } else if (hasVariadicParameter) {
-        logError(t, "Parameter '{}' cannot follow a variadic parameter", interner.get_view(paramName));
-    }
 
     expectToken(TokenType::Colon);
     if (peekTokenType() == TokenType::Mut) {
@@ -448,10 +430,6 @@ std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::Stri
         DISCARD(consumeToken());
         hasDefaultParameter = true;
         defaultValue = parseExpression(Precedence::Default);
-
-        if (isVariadic) {
-            logError(t, "Variadic parameter '{}' cannot have a default value", interner.get_view(paramName));
-        }
     } else if (hasDefaultParameter) {
         logError(t, "Non-default parameter '{}' cannot follow a default parameter", interner.get_view(paramName));
     }
@@ -468,8 +446,7 @@ std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::Stri
                                   .defaultValue = defaultValue,
                                   .line = t.getLine(),
                                   .column = t.getColumn(),
-                                  .isMutable = isMutable,
-                                  .isVariadic = isVariadic};
+                                  .isMutable = isMutable};
 }
 
 ast::CaseClause Parser::parseCaseClause() {

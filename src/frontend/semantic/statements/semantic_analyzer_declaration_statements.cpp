@@ -311,12 +311,6 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
         }
     }
 
-    if (variableType == nullptr
-        || (variableType->isArray() && static_cast<const Array*>(variableType)->hasUnspecifiedLength())) {
-        logError(statement, "Cannot infer array length; explicitly specify length or provide an initializer");
-        return stmtvisit_t::Failure;
-    }
-
     const Result declarationResult
         = symbolTable.declare(statement->name,
                               Symbol{.type = variableType,
@@ -341,12 +335,12 @@ Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatem
     if (statement->value->kind == ast::ExpressionKind::UninitializedExpression) {
         if (variableType == nullptr) {
             logError(statement,
-                     "Cannot use keyword 'uninitalized' for variable '{}' without an explicit type annotation",
+                     "Cannot use keyword 'uninitialized' for variable '{}' without an explicit type annotation",
                      interner.get_view(statement->name));
             return stmtvisit_t::Failure;
         }
         if (!statement->isMutable) {
-            logError(statement, "Immutable variable '{}' cannot be initialized with keyword 'uninitalized'",
+            logError(statement, "Immutable variable '{}' cannot be initialized with keyword 'uninitialized'",
                      interner.get_view(statement->name));
             return stmtvisit_t::Failure;
         }
@@ -366,13 +360,13 @@ Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatem
                  interner.get_view(statement->name));
         return stmtvisit_t::Failure;
     }
+    
     if (variableType == nullptr) {
         variableType = initializerType;
     } else {
-        variableType = unifyArrayInference(variableType, initializerType);
-        if (variableType == nullptr) {
-            logError(statement, "Initializer type '{}' is incompatible with declared type",
-                     initializerType->toString());
+        if (!areTypesCompatible(variableType, initializerType)) {
+            logError(statement, "Initializer type '{}' is incompatible with declared type '{}'",
+                     initializerType->toString(), variableType->toString());
             return stmtvisit_t::Failure;
         }
     }

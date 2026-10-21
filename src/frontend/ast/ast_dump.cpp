@@ -170,7 +170,6 @@ void FunctionDeclarationStatement::dump(std::ostream& os, const utils::StringInt
         os << ind.next(2) << "{\n";
         os << ind.next(3) << "name: " << interner.get_view(param.name) << "\n";
         os << ind.next(3) << "isMutable: " << (param.isMutable ? "true" : "false") << "\n";
-        os << ind.next(3) << "isVariadic: " << (param.isVariadic ? "true" : "false") << "\n";
         os << ind.next(3) << "type: \n";
         param.type->dump(os, interner, ind.next(4));
 
