@@ -2,6 +2,7 @@
 #define MANGANESE_INCLUDE_IO_READER_HPP
 
 #include <cstddef>
+#include <string_view>
 
 namespace Manganese::io {
 
@@ -25,6 +26,7 @@ class Reader {
     [[nodiscard]] virtual std::size_t getLine() const noexcept = 0;
     [[nodiscard]] virtual std::size_t getColumn() const noexcept = 0;
     [[nodiscard]] virtual bool done() const noexcept = 0;
+    [[nodiscard]] virtual std::string_view getView(std::size_t start, std::size_t length) const noexcept = 0;
 };
 }  // namespace Manganese::io
 

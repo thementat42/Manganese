@@ -71,46 +71,12 @@ class FileReader final : public Reader {
     [[nodiscard]] std::size_t getLine() const noexcept override { return _line; }
     [[nodiscard]] std::size_t getColumn() const noexcept override { return _column; }
     [[nodiscard]] bool done() const noexcept override { return _position >= _size; }
+
+    [[nodiscard]] std::string_view getView(std::size_t start, std::size_t length) const noexcept override {
+        if (start + length > _size) { return {}; }
+        return {_mmap.data() + start, length};
+    }
 };
 
 }  // namespace Manganese::io
 #endif  // MANGANESE_INCLUDE_IO_FILEREADER_HPP
-
-/*
-class FileReader : public Reader {
-   private:
-    struct FileDeleter {
-        void operator()(std::FILE* fp) const {
-            if (fp != nullptr) { std::fclose(fp); }
-        }
-    };
-
-    std::size_t _position = 0, _line = 1, _column = 1;
-    std::unique_ptr<std::FILE, FileDeleter> _filePtr;
-    std::size_t _bufferSize;
-    std::size_t _bufferCapacity;
-    constexpr static inline std::size_t DEFAULT_BUFFER_CAPACITY = 64ULL * 1024;
-    std::unique_ptr<char[]> _buffer;
-
-    void refillBuffer();
-
-   public:
-    FileReader() = default;
-    explicit FileReader(const std::string& filename, std::size_t bufferCapacity = DEFAULT_BUFFER_CAPACITY);
-    ~FileReader() noexcept override = default;
-
-    char peekChar(std::size_t offset = 0) noexcept override;
-    [[nodiscard]] char consumeChar() noexcept override;
-
-    void setPosition(std::size_t newPosition) noexcept override {
-        while (_position < newPosition && !done()) { DISCARD(consumeChar()); }
-    }
-    [[nodiscard]] std::size_t getPosition() const noexcept override { return _position; }
-    [[nodiscard]] std::size_t getLine() const noexcept override { return _line; }
-    [[nodiscard]] std::size_t getColumn() const noexcept override { return _column; }
-
-    [[nodiscard]] bool done() const noexcept override {
-        return (_position >= _bufferSize) && (std::feof(_filePtr.get()) != 0);
-    }
-};
-*/
