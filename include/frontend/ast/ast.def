@@ -53,6 +53,7 @@ TYPE(GenericInstantiationType)
 TYPE(IdentifierType)
 TYPE(PointerType)
 TYPE(ScopedType)
+TYPE(SliceType)
 TYPE(TypeofType)
 
 // Errors

@@ -3,8 +3,8 @@
 
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <utils/slice.hpp>
 #include <utility>
+#include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::ast {
@@ -18,9 +18,9 @@ struct AggregateType final : public Type {
 
 struct ArrayType final : public Type {
     Type* elementType;
-    Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
+    Expression* lengthExpression;
 
-    explicit ArrayType(Type* _elementType, Expression* _lengthExpr = nullptr) noexcept :
+    ArrayType(Type* _elementType, Expression* _lengthExpr) noexcept :
         Type(TypeKind::ArrayType), elementType(_elementType), lengthExpression(_lengthExpr) {}
 
     MN_AST_STANDARD_INTERFACE(ArrayType);
@@ -80,6 +80,13 @@ struct ScopedType final : public Type {
     ScopedType(Type* _scope, Type* _type) noexcept : Type(TypeKind::ScopedType), scope(_scope), type(_type) {}
 
     MN_AST_STANDARD_INTERFACE(ScopedType)
+};
+
+struct SliceType final : public Type {
+    Type* elementType;
+    explicit SliceType(Type* _elementType) noexcept : Type(TypeKind::SliceType), elementType(_elementType) {}
+
+    MN_AST_STANDARD_INTERFACE(SliceType)
 };
 
 struct TypeofType final : public Type {

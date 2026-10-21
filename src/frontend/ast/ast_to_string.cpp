@@ -373,14 +373,7 @@ std::string AggregateType::toString(const utils::StringInterner& interner, std::
 }
 
 std::string ArrayType::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string lengthStr;
-    if (lengthExpression != nullptr) {
-        lengthStr = lengthExpression->toString(interner, 0);
-    } else if ((semanticType != nullptr) && semanticType->isArray()) {
-        const auto* arrayType = static_cast<const semantic::Array*>(semanticType);
-        lengthStr = arrayType->hasUnspecifiedLength() ? "" : std::to_string(*arrayType->length);
-    }
-    return std::format("{}[{}]", elementType->toString(interner, indent), lengthStr);
+    return std::format("{}[{}]", elementType->toString(interner, indent), lengthExpression->toString(interner));
 }
 
 std::string FunctionType::toString(const utils::StringInterner& interner, std::size_t indent) const {
@@ -409,6 +402,10 @@ std::string PointerType::toString(const utils::StringInterner& interner, std::si
 
 std::string ScopedType::toString(const utils::StringInterner& interner, std::size_t /*indent*/) const {
     return std::format("{}::{}", scope->toString(interner, 0), type->toString(interner, 0));
+}
+
+std::string SliceType::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    return std::format("{}[]", elementType->toString(interner, indent));
 }
 
 std::string TypeofType::toString(const utils::StringInterner& interner, std::size_t indent) const {

@@ -610,10 +610,9 @@ void ArrayType::dump(std::ostream& os, const utils::StringInterner& interner, st
     os << ind.next() << "elementType:\n";
     elementType->dump(os, interner, ind.next(2));
 
-    if (lengthExpression != nullptr) {
-        os << ind.next() << "length:\n";
-        lengthExpression->dump(os, interner, ind.next(2));
-    }
+    os << ind.next() << "length:\n";
+    lengthExpression->dump(os, interner, ind.next(2));
+
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
@@ -681,6 +680,16 @@ void ScopedType::dump(std::ostream& os, const utils::StringInterner& interner, s
     scope->dump(os, interner, ind.next(2));
     os << ind.next() << "base type: \n";
     type->dump(os, interner, ind.next(2));
+    os << ind << "}\n";
+}
+
+void SliceType::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "SliceType", *this);
+    os << ind.next() << "elementType:\n";
+    elementType->dump(os, interner, ind.next(2));
+
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 
