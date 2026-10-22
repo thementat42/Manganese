@@ -339,7 +339,7 @@ bool testFunctionDeclarationAndCall() {
                                    "func increment(value: int32, amount: int32 = 1) -> int32 {\n"
                                    "    return value + amount;\n"
                                    "}\n"
-                                   "func sum(first: int32, numbers...: int32) -> int32 {\n"
+                                   "func sum(first: int32, numbers: int32[]) -> int32 {\n"
                                    "    return first;\n"
                                    "}\n"
                                    "let sum = add(5u32, 3i16);\n"
@@ -362,7 +362,7 @@ bool testFunctionDeclarationAndCall() {
         R"(private func increment(value: int32, amount: int32 = 1) -> int32 {
     return (value + amount);
 })",
-        R"(private func sum(first: int32, numbers...: int32) -> int32 {
+        R"(private func sum(first: int32, numbers: int32[]) -> int32 {
     return first;
 })",
         "(let sum: private auto = add(5u32, 3i16));",
