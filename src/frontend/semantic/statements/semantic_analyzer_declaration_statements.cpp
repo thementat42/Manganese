@@ -136,7 +136,7 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
 
     std::vector<EnumVariant> variants;
 
-    for (ast::EnumValue& variant : statement->values) {
+    for (const ast::EnumValue& variant : statement->values) {
         if (variant.value != nullptr) {
             if (visit(variant.value) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
             if (!variant.value->canFold()) {
@@ -302,7 +302,7 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
     }
 
     if (statement->value != nullptr) {
-        Result initializerResult = checkVariableInitializer(statement, variableType);
+        const Result initializerResult = checkVariableInitializer(statement, variableType);
         if (initializerResult == Result::Failure) { return stmtvisit_t::Failure; }
     } else {
         if (!statement->isMutable) {

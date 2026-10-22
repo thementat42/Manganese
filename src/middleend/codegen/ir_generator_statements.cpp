@@ -90,7 +90,7 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
 
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(statement->semanticType));
 
-    std::string_view mangledNameView = statement->mangledName.has_value() ? interner.get_view(*statement->mangledName)
+const     std::string_view mangledNameView = statement->mangledName.has_value() ? interner.get_view(*statement->mangledName)
                                                                           : interner.get_view(statement->name);
     auto* llvmFunction
         = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, mangledNameView, module.get());
@@ -106,7 +106,7 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     llvm::Argument* currentLLVMArgument = llvmFunction->arg_begin();
     for (std::size_t i = 0; i < statement->parameters.size; ++i, ++currentLLVMArgument) {
         const auto& param = statement->parameters[i];
-        std::string_view paramName = interner.get_view(param.name);
+       const  std::string_view paramName = interner.get_view(param.name);
         currentLLVMArgument->setName(paramName);
 
         llvm::AllocaInst* alloca
@@ -202,7 +202,7 @@ auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
         builder->CreateRetVoid();
         return;
     }
-    llvm::Function* currentFunction = builder->GetInsertBlock()->getParent();
+const     llvm::Function* currentFunction = builder->GetInsertBlock()->getParent();
     llvm::Type* expectedReturnType = currentFunction->getReturnType();
 
     llvm::Value* returnValue = visit(statement->value);
@@ -275,7 +275,7 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
 
 auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     llvm::Type* variableTypeLLVM = visitTypeAsValue(statement->semanticType);
-    std::string_view statementName = interner.get_view(statement->name);
+const     std::string_view statementName = interner.get_view(statement->name);
     llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statementName);
 
     if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {

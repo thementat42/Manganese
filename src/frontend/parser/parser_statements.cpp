@@ -40,7 +40,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
     const Token startToken = consumeToken();
     const auto name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
 
-    std::vector<utils::StringID> genericTypes = parseGenericsList(name);
+    const std::vector<utils::StringID> genericTypes = parseGenericsList(name);
 
     expectToken(TokenType::LeftBrace, "Expected a '{'");
 
@@ -78,7 +78,7 @@ ast::Statement* Parser::parseContinueStatement() {
 
 ast::Statement* Parser::parseDoWhileLoopStatement() {
     const Token startToken = consumeToken();
-    ast::Block body = parseBlock("do-while body");
+    const ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
@@ -107,7 +107,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
 
     std::vector<ast::EnumValue> values;
     while (!done() && peekTokenType() != TokenType::RightBrace) {
-        ast::EnumValue member = parseEnumMember();
+        const ast::EnumValue member = parseEnumMember();
 
         if (auto duplicate = std::ranges::find(values, member.name, &ast::EnumValue::name); duplicate != values.end()) {
             logError(member, "Duplicate member '{}' in enum '{}' (previously declared at line {}, column {})",
@@ -155,7 +155,7 @@ ast::Statement* Parser::parseForLoopStatement() {
     if (peekTokenType() != TokenType::RightParen) { post = parseExpression(Precedence::Default); }
     expectToken(TokenType::RightParen, "Expected ')' to end for loop header");
 
-    ast::Block body = parseBlock("for loop body");
+    const ast::Block body = parseBlock("for loop body");
 
     return makeNode<ast::ForLoopStatement>(startToken, init, condition, post, body);
 }
@@ -164,7 +164,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
     const Token startToken = consumeToken();
     const auto name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
 
-    std::vector<utils::StringID> genericTypes = parseGenericsList(name);
+    const std::vector<utils::StringID> genericTypes = parseGenericsList(name);
 
     expectToken(TokenType::LeftParen);
 
@@ -199,7 +199,7 @@ ast::Statement* Parser::parseIfStatement() {
     expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end if condition");
-    ast::Block body = parseBlock("if body");
+    const ast::Block body = parseBlock("if body");
 
     std::vector<ast::ElifClause> elifs;
     while (peekTokenType() == TokenType::Elif) {
@@ -225,8 +225,8 @@ ast::Statement* Parser::parseIfStatement() {
 ast::Statement* Parser::parseImportStatement() {
     const Token startToken = consumeToken();
 
-    std::vector<utils::StringID> path = parseImportPath();
-    utils::OptionalStringID alias = parseImportAlias();
+    const std::vector<utils::StringID> path = parseImportPath();
+    const utils::OptionalStringID alias = parseImportAlias();
 
     expectToken(TokenType::Semicolon, "Expected a ';' to end an import statement");
 
@@ -263,7 +263,7 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
 ast::Statement* Parser::parseNamespace() {
     const Token startToken = consumeToken();  // skip 'namespace'
     const auto name = expectToken(TokenType::Identifier, "Expected a namespace name after 'namespace'").getLexeme();
-    ast::Block body = parseBlock("namespace " + std::string(interner.get_view(name)));
+    const ast::Block body = parseBlock("namespace " + std::string(interner.get_view(name)));
     return makeNode<ast::NamespaceStatement>(startToken, name, body);
 }
 
@@ -289,7 +289,7 @@ ast::Statement* Parser::parseSwitchStatement() {
     std::vector<ast::CaseClause> cases;
     while (peekTokenType() == TokenType::Case) { cases.push_back(parseCaseClause()); }
 
-    std::optional<ast::Block> defaultBody = parseDefaultClause();
+    const std::optional<ast::Block> defaultBody = parseDefaultClause();
 
     if (cases.empty() && !defaultBody.has_value()) {
         logWarning(startToken, "Switch statement has no cases or default body");

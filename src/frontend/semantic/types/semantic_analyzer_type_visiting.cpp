@@ -111,9 +111,9 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     }
 
     auto* identifierType = static_cast<ast::IdentifierType*>(type->baseType);
-    utils::StringID baseTypeNameID = identifierType->name;
+const     utils::StringID baseTypeNameID = identifierType->name;
 
-    Symbol* symbol = symbolTable.lookup(baseTypeNameID);
+    const Symbol* symbol = symbolTable.lookup(baseTypeNameID);
     if (symbol == nullptr || symbol->kind != SymbolKind::Aggregate) {
         logError(type, "Unknown generic aggregate type '{}'", interner.get_view(baseTypeNameID));
         type->semanticType = typeContext.getPoison();
@@ -140,7 +140,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
         return typevisit_t::Failure;
     }
 
-    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
+   const  InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
 
     if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::Success) {

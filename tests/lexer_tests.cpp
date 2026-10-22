@@ -489,7 +489,7 @@ bool testUnderscoreSeparatedNumbers() {
 }
 
 bool testConsecutiveOperatorsAndDelimiters() {
-    std::vector<Token> tokens = tokensFromString("++++----====......");
+const     std::vector<Token> tokens = tokensFromString("++++----====......");
     printAllTokens(tokens);
     // Depending on your maximal munch lexing rules, let's verify they tokenize safely without crashing
     return !tokens.empty();

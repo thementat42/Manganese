@@ -81,7 +81,7 @@ void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<A
         case LogLevel::Warning: writeToStderr(ansi::YELLOW, "Warning: ", message, line, col); break;
         case LogLevel::Error: writeToStderr(ansi::RED, "Error: ", message, line, col); break;
         case LogLevel::Critical:
-            std::string critMessage
+            const std::string critMessage
                 = std::format("{}Critical error: {} Compilation aborted.{}", ansi::CRITICAL, message, ansi::RESET);
             writeToStderr("", "", critMessage, line, col);
             throw std::runtime_error{message};

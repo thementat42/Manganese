@@ -260,7 +260,7 @@ GenericInstantiationExpression* GenericInstantiationExpression::clone(semantic::
     std::vector<Type*> typeClones;
     typeClones.reserve(types.size);
 
-    for (Type* t : types) { typeClones.push_back(t->clone(context)); }
+    for (const Type* t : types) { typeClones.push_back(t->clone(context)); }
 
     auto* clone = makeClonedNode(this, context, identifierClone, context->arena.emplace_range(typeClones));
 

@@ -97,7 +97,7 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         result = stmtvisit_t::Failure;
     }
 
-    for (ast::ElifClause& elif : statement->elifs) {
+    for (const ast::ElifClause& elif : statement->elifs) {
         DISCARD(visit(elif.condition));
 
         if (elif.condition->semanticType->isPoison()) {
@@ -145,7 +145,7 @@ auto SemanticAnalyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
     }
     stmtvisit_t result = stmtvisit_t::Success;
     bool first = true;
-    for (ast::CaseClause& caseClause : statement->cases) {
+    for (const ast::CaseClause& caseClause : statement->cases) {
         for (ast::Expression* val : caseClause.values) {
             const bool visitSuccess = visit(val) == exprvisit_t::Success;
             if (!visitSuccess) { result = stmtvisit_t::Failure; }
