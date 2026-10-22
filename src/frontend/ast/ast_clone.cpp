@@ -340,9 +340,7 @@ AggregateType* AggregateType::clone(semantic::CloneContext* context) const {
 }
 
 ArrayType* ArrayType::clone(semantic::CloneContext* context) const {
-    Expression* lengthExpressionClone = lengthExpression == nullptr ? nullptr : lengthExpression->clone(context);
-
-    return makeClonedNode(this, context, elementType->clone(context), lengthExpressionClone);
+    return makeClonedNode(this, context, elementType->clone(context), lengthExpression->clone(context));
 }
 
 FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
@@ -350,8 +348,7 @@ FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
     parameterTypeClones.reserve(parameterTypes.size);
 
     for (const auto& param : parameterTypes) {
-        parameterTypeClones.push_back(
-            {.isMutable = param.isMutable, .type = param.type->clone(context)});
+        parameterTypeClones.push_back({.isMutable = param.isMutable, .type = param.type->clone(context)});
     }
 
     Type* returnTypeClone = returnType == nullptr ? nullptr : returnType->clone(context);
@@ -390,6 +387,10 @@ PointerType* PointerType::clone(semantic::CloneContext* context) const {
 
 ScopedType* ScopedType::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context, scope->clone(context), type->clone(context));
+}
+
+SliceType* SliceType::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, elementType->clone(context));
 }
 
 TypeofType* TypeofType::clone(semantic::CloneContext* context) const {
