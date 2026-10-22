@@ -238,16 +238,28 @@ namespace Manganese::codegen {
 [[nodiscard]] auto IRGenerator::visit(const ast::FunctionCallExpression* expression) -> exprvisit_t {
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(expression->callee->semanticType));
 
+    const ast::FunctionDeclarationStatement* baseDeclaration = nullptr;
+    if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
+        const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
+        if (const semantic::Symbol* symbol = analyzer.symbolTable.lookup(idExpr->name); symbol != nullptr && symbol->node != nullptr) {
+            baseDeclaration = static_cast<const ast::FunctionDeclarationStatement*>(symbol->node);
+        }
+    }
+
+    const std::size_t totalParams = functionType->getNumParams();
+    const std::size_t providedArgs = expression->arguments.size;
+    
     std::vector<llvm::Value*> argumentValues;
-    argumentValues.reserve(expression->arguments.size);
+    argumentValues.reserve(totalParams);
 
-    for (unsigned int i = 0; i < expression->arguments.size; ++i) {
-        const ast::Expression* argument = expression->arguments[i];
-        llvm::Value* argumentValue = visit(argument);
+    for (std::size_t i = 0; i < totalParams; ++i) {
+        llvm::Value* argumentValue = (i < providedArgs) 
+            ? visit(expression->arguments[i]) 
+            : visit(baseDeclaration->parameters[i].defaultValue);
 
-        llvm::Type* expectedParameterType = functionType->getParamType(i);
-        if (expectedParameterType->isStructTy() && argumentValue->getType()->isPointerTy()) {
-            argumentValue = builder->CreateLoad(expectedParameterType, argumentValue, "argument_load_tmp");
+        llvm::Type* expectedType = functionType->getParamType(static_cast<unsigned int>(i));
+        if (expectedType->isStructTy() && argumentValue->getType()->isPointerTy()) {
+            argumentValue = builder->CreateLoad(expectedType, argumentValue, "argument_load_tmp");
         }
         argumentValues.push_back(argumentValue);
     }
@@ -255,9 +267,9 @@ namespace Manganese::codegen {
     llvm::Value* calleeValue = nullptr;
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
         const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
-        if (idExpr->resolvedDeclaration != nullptr && idExpr->resolvedDeclaration->mangledName.has_value()) {
+        if (baseDeclaration != nullptr && baseDeclaration->mangledName.has_value()) {
             calleeValue = builder->GetInsertBlock()->getModule()->getFunction(
-                interner.get_view(*idExpr->resolvedDeclaration->mangledName));
+                interner.get_view(*baseDeclaration->mangledName));
         }
         if (calleeValue == nullptr) {
             calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(idExpr->name));
