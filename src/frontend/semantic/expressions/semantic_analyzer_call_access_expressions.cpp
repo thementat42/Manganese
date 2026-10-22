@@ -148,7 +148,7 @@ auto SemanticAnalyzer::visit(ast::FunctionCallExpression* expression) -> exprvis
             continue;
         }
 
-        if (!areTypesCompatible(expectedType, actualType)) {
+        if (!areTypesCompatible(actualType, expectedType)) {
             logError(argExpr, "Type mismatch for argument {}: expected '{}', got '{}'", i + 1, expectedType->toString(),
                      actualType->toString());
             result = exprvisit_t::Failure;
