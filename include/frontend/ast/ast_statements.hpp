@@ -16,7 +16,7 @@ struct Declaration : public Statement {
     const semantic::SemanticType* semanticType = nullptr;
 
     Declaration(StatementKind _kind, utils::StringID _name) noexcept : Statement(_kind), name(_name) {}
-    virtual ~Declaration() = default;
+    ~Declaration() override = default;
 };
 
 struct ScopeOwner {

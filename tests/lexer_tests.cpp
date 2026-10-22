@@ -68,7 +68,7 @@ std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
 bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme,
                 bool wantInvalid = false) {
     const static auto printBytes = [](std::string_view str) {
-        for (char c : str) { std::cout << std::format("{:02X} ", (unsigned char)c); }
+        for (char c : str) { std::cout << std::format("{:02X} ", static_cast<unsigned char>(c)); }
         std::cout << '\n';
     };
     if (token.getType() != expectedType) {

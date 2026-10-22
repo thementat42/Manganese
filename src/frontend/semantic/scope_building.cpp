@@ -2,7 +2,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
-#include <string>
 #include <string_view>
 #include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
