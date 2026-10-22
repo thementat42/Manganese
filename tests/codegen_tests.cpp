@@ -9,8 +9,8 @@
 #include <fstream>
 #include <iostream>
 #include <middleend/codegen/ir_generator.hpp>
-#include <utils/chunk_allocator.hpp>
 #include <string>
+#include <utils/chunk_allocator.hpp>
 #include <utils/target_info.hpp>
 
 #include "testrunner.hpp"

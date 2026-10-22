@@ -4,9 +4,9 @@
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <utils/enum_matches.hpp>
 #include <string>
 #include <string_view>
+#include <utils/enum_matches.hpp>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::lexer {

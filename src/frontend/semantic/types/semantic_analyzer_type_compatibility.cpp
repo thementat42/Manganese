@@ -163,7 +163,7 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
                                            .message = conversionError + " (cannot convert between different enums)"};
         }
 
-       case SemanticTypeKind::Function: {
+        case SemanticTypeKind::Function: {
             const auto* funcFrom = static_cast<const Function*>(from);
             const auto* funcTo = static_cast<const Function*>(to);
 

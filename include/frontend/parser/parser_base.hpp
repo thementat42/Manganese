@@ -8,13 +8,13 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser/operators.hpp>
 #include <io/logging.hpp>
-#include <utils/chunk_allocator.hpp>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <utils/chunk_allocator.hpp>
 #include <vector>
 
 namespace Manganese::parser {

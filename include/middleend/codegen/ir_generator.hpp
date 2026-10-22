@@ -13,11 +13,11 @@
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <memory>
-#include <utils/tiny_stack.hpp>
 #include <ostream>
 #include <string_view>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
+#include <utils/tiny_stack.hpp>
 
 namespace Manganese::codegen {
 

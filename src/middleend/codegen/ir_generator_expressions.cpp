@@ -56,7 +56,7 @@ namespace Manganese::codegen {
     llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "array_literal");
     for (std::size_t i = 0; i < length; ++i) {
         llvm::Value* elementValue = visit(expression->elements[i]);
-const         std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
+        const std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
         llvm::Value* elementPointer
             = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
         builder->CreateStore(elementValue, elementPointer);
@@ -103,7 +103,7 @@ const         std::array<llvm::Value*, 2> indices = {builder->getInt32(0), build
         case Plus: {
             if (expression->semanticType->isString()) {
                 auto* stringType = visit(expression->semanticType);
-const                 llvm::FunctionCallee concatenationFunction
+                const llvm::FunctionCallee concatenationFunction
                     = module->getOrInsertFunction(MN_STRINGIFY(mn_strcat), stringType, stringType, stringType);
                 return builder->CreateCall(concatenationFunction, {lhs, rhs}, "string_concat_tmp");
             }
@@ -122,7 +122,7 @@ const                 llvm::FunctionCallee concatenationFunction
         case Div: return builder->CreateFDiv(lhs, rhs, "truediv_tmp");
 
         case FloorDiv: {
-           const  bool hasFloatOperand = lhsType->isFloat() || rhsType->isFloat();
+            const bool hasFloatOperand = lhsType->isFloat() || rhsType->isFloat();
             if (!hasFloatOperand) {
                 return commonType->isSignedInteger() ? builder->CreateSDiv(lhs, rhs, "sfloordiv_tmp")
                                                      : builder->CreateUDiv(lhs, rhs, "ufloordiv_tmp");
@@ -241,21 +241,21 @@ const                 llvm::FunctionCallee concatenationFunction
     const ast::FunctionDeclarationStatement* baseDeclaration = nullptr;
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
         const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
-        if (const semantic::Symbol* symbol = analyzer.symbolTable.lookup(idExpr->name); symbol != nullptr && symbol->node != nullptr) {
+        if (const semantic::Symbol* symbol = analyzer.symbolTable.lookup(idExpr->name);
+            symbol != nullptr && symbol->node != nullptr) {
             baseDeclaration = static_cast<const ast::FunctionDeclarationStatement*>(symbol->node);
         }
     }
 
     const std::size_t totalParams = functionType->getNumParams();
     const std::size_t providedArgs = expression->arguments.size;
-    
+
     std::vector<llvm::Value*> argumentValues;
     argumentValues.reserve(totalParams);
 
     for (std::size_t i = 0; i < totalParams; ++i) {
-        llvm::Value* argumentValue = (i < providedArgs) 
-            ? visit(expression->arguments[i]) 
-            : visit(baseDeclaration->parameters[i].defaultValue);
+        llvm::Value* argumentValue
+            = (i < providedArgs) ? visit(expression->arguments[i]) : visit(baseDeclaration->parameters[i].defaultValue);
 
         llvm::Type* expectedType = functionType->getParamType(static_cast<unsigned int>(i));
         if (expectedType->isStructTy() && argumentValue->getType()->isPointerTy()) {
@@ -268,8 +268,8 @@ const                 llvm::FunctionCallee concatenationFunction
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
         const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
         if (baseDeclaration != nullptr && baseDeclaration->mangledName.has_value()) {
-            calleeValue = builder->GetInsertBlock()->getModule()->getFunction(
-                interner.get_view(*baseDeclaration->mangledName));
+            calleeValue
+                = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(*baseDeclaration->mangledName));
         }
         if (calleeValue == nullptr) {
             calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(idExpr->name));
@@ -292,7 +292,7 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
             expression->identifier->toString(interner));
     }
 
-const     semantic::InstantiationKey key{.declNode = symbol->node, .typeArgs = expression->semanticTypes};
+    const semantic::InstantiationKey key{.declNode = symbol->node, .typeArgs = expression->semanticTypes};
 
     const auto* instantiationResult = analyzer.instantiationCache.find(key);
     if (instantiationResult == nullptr || instantiationResult->state != ResolutionStatus::Success) {
@@ -315,7 +315,7 @@ const     semantic::InstantiationKey key{.declNode = symbol->node, .typeArgs = e
     }
 
     if (symbol->kind == semantic::SymbolKind::Aggregate || symbol->kind == semantic::SymbolKind::GenericType) {
-const         llvm::StructType* llvmStruct = llvm::StructType::getTypeByName(*context, mangledName);
+        const llvm::StructType* llvmStruct = llvm::StructType::getTypeByName(*context, mangledName);
         if (llvmStruct == nullptr) {
             if (instantiationResult->clonedNode != nullptr) { visit(instantiationResult->clonedNode); }
             llvmStruct = llvm::StructType::getTypeByName(*context, mangledName);
@@ -376,7 +376,7 @@ const         llvm::StructType* llvmStruct = llvm::StructType::getTypeByName(*co
 }
 
 auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprvisit_t {
-const     std::string_view lexeme = interner.get_view(expression->value);
+    const std::string_view lexeme = interner.get_view(expression->value);
     if (expression->isFloat) {
         if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
             std::string mutableLexeme(lexeme);
@@ -439,7 +439,7 @@ const     std::string_view lexeme = interner.get_view(expression->value);
 [[nodiscard]] auto IRGenerator::visit(const ast::PrefixExpression* expression) -> exprvisit_t {
     using enum lexer::TokenType;
 
-const     lexer::TokenType op = expression->op;
+    const lexer::TokenType op = expression->op;
     const semantic::SemanticType* valueType = expression->right->semanticType;
     llvm::Type* valueTypeLLVM = visit(valueType);
 
@@ -508,7 +508,7 @@ const     lexer::TokenType op = expression->op;
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::StringLiteralExpression* expression) -> exprvisit_t {
-const     std::string_view strView = interner.get_view(expression->value);
+    const std::string_view strView = interner.get_view(expression->value);
     llvm::StringRef strRef(strView.data(), strView.size());
     llvm::Constant* globalString = builder->CreateGlobalString(strRef, "str_literal");
 

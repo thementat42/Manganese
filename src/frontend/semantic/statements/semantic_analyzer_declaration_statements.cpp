@@ -360,7 +360,7 @@ Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatem
                  interner.get_view(statement->name));
         return stmtvisit_t::Failure;
     }
-    
+
     if (variableType == nullptr) {
         variableType = initializerType;
     } else {

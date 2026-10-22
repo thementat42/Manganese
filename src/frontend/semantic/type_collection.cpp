@@ -134,8 +134,7 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
         const SemanticType* paramType
             = (paramResult == typevisit_t::Failure ? typeContext.getPoison() : param.type->semanticType);
 
-        paramTypes.push_back(
-            Parameter{.type = paramType, .isMutable = param.isMutable});
+        paramTypes.push_back(Parameter{.type = paramType, .isMutable = param.isMutable});
     }
 
     const SemanticType* resolvedReturnType = typeContext.getVoid();

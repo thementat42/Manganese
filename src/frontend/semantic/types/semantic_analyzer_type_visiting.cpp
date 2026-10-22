@@ -111,7 +111,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     }
 
     auto* identifierType = static_cast<ast::IdentifierType*>(type->baseType);
-const     utils::StringID baseTypeNameID = identifierType->name;
+    const utils::StringID baseTypeNameID = identifierType->name;
 
     const Symbol* symbol = symbolTable.lookup(baseTypeNameID);
     if (symbol == nullptr || symbol->kind != SymbolKind::Aggregate) {
@@ -140,7 +140,7 @@ const     utils::StringID baseTypeNameID = identifierType->name;
         return typevisit_t::Failure;
     }
 
-   const  InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
+    const InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
 
     if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::Success) {

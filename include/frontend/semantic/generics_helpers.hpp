@@ -5,9 +5,9 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <functional>
-#include <utils/slice.hpp>
 #include <unordered_map>
 #include <utils/resolution_status.hpp>
+#include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::semantic {

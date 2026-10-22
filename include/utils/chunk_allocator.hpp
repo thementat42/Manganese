@@ -5,10 +5,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <utils/slice.hpp>
 #include <ranges>
 #include <type_traits>
 #include <utility>
+#include <utils/slice.hpp>
 #include <vector>
 
 namespace Manganese::utils {

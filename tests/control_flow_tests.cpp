@@ -5,8 +5,8 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
-#include <utils/chunk_allocator.hpp>
 #include <string>
+#include <utils/chunk_allocator.hpp>
 #include <utils/target_info.hpp>
 
 #include "testrunner.hpp"
@@ -29,7 +29,7 @@ bool analyzeControlFlow(const std::string& source, bool expectSuccess, std::stri
     DISCARD(semanticAnalyzer.analyze());
 
     cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), interner);
-const     Result result = cfa.analyze();
+    const Result result = cfa.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
     if (logFile) {
@@ -107,7 +107,7 @@ bool testControlFlowFromFile() {
     DISCARD(semanticAnalyzer.analyze());
 
     cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), fileInterner);
-const     Result result = cfa.analyze();
+    const Result result = cfa.analyze();
 
     return result == Result::Success;
 }
@@ -213,7 +213,6 @@ void runControlFlowAnalyzerTests(TestRunner& runner) {
     runner.runTest("Runtime Loop Assignment Safety", control_flow_tests::testLoopAssignmentSafety);
     runner.runTest("Explicit uninitialized keyword", control_flow_tests::testExplicitUninitializedKeyword);
     runner.runTest("Nested If-Else Definite Initialization", control_flow_tests::testNestedIfInitialization);
-
 }
 
 }  // namespace Manganese::tests

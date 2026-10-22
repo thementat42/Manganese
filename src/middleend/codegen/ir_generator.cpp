@@ -23,7 +23,7 @@ void IRGenerator::dump(std::ostream& os) const {
 }
 
 [[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const {
-const     std::string_view lexeme = interner.get_view(expression->value);
+    const std::string_view lexeme = interner.get_view(expression->value);
 
     if (lexeme.ends_with("i8") || lexeme.ends_with("u8") || lexeme.ends_with("I8") || lexeme.ends_with("U8")) {
         return llvm::Type::getInt8Ty(*context);

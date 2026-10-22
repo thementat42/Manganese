@@ -7,8 +7,8 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
-#include <utils/chunk_allocator.hpp>
 #include <unordered_map>
+#include <utils/chunk_allocator.hpp>
 #include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
 #include <utils/string_interner.hpp>

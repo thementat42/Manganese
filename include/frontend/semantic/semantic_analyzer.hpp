@@ -12,10 +12,10 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
-#include <utils/chunk_allocator.hpp>
-#include <utils/enum_matches.hpp>
 #include <string>
 #include <utility>
+#include <utils/chunk_allocator.hpp>
+#include <utils/enum_matches.hpp>
 #include <utils/result.hpp>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>

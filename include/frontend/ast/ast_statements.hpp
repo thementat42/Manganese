@@ -4,8 +4,8 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <utils/slice.hpp>
 #include <optional>
+#include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::ast {

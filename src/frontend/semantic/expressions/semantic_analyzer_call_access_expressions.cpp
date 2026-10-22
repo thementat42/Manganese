@@ -177,8 +177,7 @@ auto SemanticAnalyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
 
     const SemanticType* varType = expression->variable->semanticType;
     if (!varType->isArray() && !varType->isSlice()) {
-        logError(expression->variable, "Cannot index into non-array or non-slice type {}",
-                 varType->toString());
+        logError(expression->variable, "Cannot index into non-array or non-slice type {}", varType->toString());
         return exprvisit_t::Failure;
     }
 
