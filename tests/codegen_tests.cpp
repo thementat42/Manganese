@@ -207,6 +207,18 @@ bool testNestedFunctionCalls() {
     return validateIRContains(source, {"computeNested", "square", "call"}, __func__);
 }
 
+bool testDefaultParameterCodegen() {
+    const std::string source = R"(
+        func increment(value: int32, amount: int32 = 1) -> int32 {
+            return value + amount;
+        }
+        func testDefaults() -> int32 {
+            return increment(10);
+        }
+    )";
+    return validateIRContains(source, {"increment", "testDefaults", "call"}, __func__);
+}
+
 bool testArrayIndexBasedAccess() {
     const std::string source = R"(
         func getElement() -> int32 {
@@ -386,6 +398,7 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Boolean Logic Codegen", codegen_tests::testBooleanLogic);
     runner.runTest("Binary Operator Precedence", codegen_tests::testBinaryOperatorPrecedence);
     runner.runTest("Nested Function Calls", codegen_tests::testNestedFunctionCalls);
+    runner.runTest("Default Parameters codegen", codegen_tests::testDefaultParameterCodegen);
     runner.runTest("Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
     runner.runTest("Generics Codegen", codegen_tests::testGenericsCodegen);
     runner.runTest("Array of Functions Indexed and Called", codegen_tests::testArrayOfFunctionsIndexedAndCalled);
