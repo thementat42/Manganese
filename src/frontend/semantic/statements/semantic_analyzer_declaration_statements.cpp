@@ -364,7 +364,7 @@ Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatem
     if (variableType == nullptr) {
         variableType = initializerType;
     } else {
-        if (!areTypesCompatible(variableType, initializerType)) {
+        if (!areTypesCompatible(initializerType, variableType)) {
             logError(statement, "Initializer type '{}' is incompatible with declared type '{}'",
                      initializerType->toString(), variableType->toString());
             return stmtvisit_t::Failure;

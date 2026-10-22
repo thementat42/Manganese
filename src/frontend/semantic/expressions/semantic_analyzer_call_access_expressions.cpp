@@ -60,7 +60,7 @@ auto SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) 
         }
 
         const SemanticType* actualFieldType = fieldInit.value->semanticType;
-        if (!areTypesCompatible(expectedFieldType, actualFieldType)) {
+        if (!areTypesCompatible(actualFieldType, expectedFieldType)) {
             logError(fieldInit.value, "Type mismatch for field '{}': expected '{}', got '{}'", fieldName,
                      expectedFieldType->toString(), actualFieldType->toString());
             result = exprvisit_t::Failure;
@@ -175,9 +175,10 @@ auto SemanticAnalyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
         return exprvisit_t::Failure;
     }
 
-    if (!expression->variable->semanticType->isArray()) {
-        logError(expression->variable, "Cannot index into non array type {}",
-                 expression->variable->semanticType->toString());
+    const SemanticType* varType = expression->variable->semanticType;
+    if (!varType->isArray() && !varType->isSlice()) {
+        logError(expression->variable, "Cannot index into non-array or non-slice type {}",
+                 varType->toString());
         return exprvisit_t::Failure;
     }
 
@@ -186,7 +187,12 @@ auto SemanticAnalyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
         result = exprvisit_t::Failure;
     }
 
-    expression->semanticType = static_cast<const Array*>(expression->variable->semanticType)->elementType;
+    // Extract element type based on whether it's a fixed array or a dynamic slice
+    if (varType->isArray()) {
+        expression->semanticType = static_cast<const Array*>(varType)->elementType;
+    } else {
+        expression->semanticType = static_cast<const Slice*>(varType)->elementType;
+    }
 
     return result;
 }
