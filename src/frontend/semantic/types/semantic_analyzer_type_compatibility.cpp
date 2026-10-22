@@ -126,6 +126,13 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
                 .message = "Cannot use keyword 'uninitialized' as part of an expression"};
     }
 
+    // arrays can become slices (but not vice versa)
+    if (from->kind == SemanticTypeKind::Array && to->kind == SemanticTypeKind::Slice) {
+        const auto* arrFrom = static_cast<const Array*>(from);
+        const auto* sliceTo = static_cast<const Slice*>(to);
+        return areTypesCompatible(arrFrom->elementType, sliceTo->elementType);
+    }
+
     // Duplicated types point to the same underlying value so we can just do a fast pointer comparison
     if (from == to) { return {.result = Compatible_t::Valid}; }
 
@@ -141,18 +148,8 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
                     .message = conversionError + " (aggregates cannot be converted to other types)."};
         case SemanticTypeKind::Array: {
             const auto* arrFrom = static_cast<const Array*>(from);
-
-            // An array can convert to a slice (just loses length)
-            if (to->kind == SemanticTypeKind::Slice) {
-                const auto* sliceTo = static_cast<const Slice*>(to);
-                return areTypesCompatible(arrFrom->elementType, sliceTo->elementType);
-            }
-
-            if (to->kind != SemanticTypeKind::Array) {
-                return {.result = Compatible_t::Error, .message = conversionError};
-            }
-
             const auto* arrTo = static_cast<const Array*>(to);
+
             if (arrFrom->length != arrTo->length) {
                 return {.result = Compatible_t::Error,
                         .message = conversionError + " (cannot convert between arrays of different lengths)."};
