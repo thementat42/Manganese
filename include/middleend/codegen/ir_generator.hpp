@@ -89,6 +89,7 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visit(const semantic::Function*);
     [[nodiscard]] typevisit_t visit(const semantic::Pointer*);
     [[nodiscard]] static typevisit_t visit(const semantic::Poison*) NOEXCEPT_IF_RELEASE;
+    [[nodiscard]] typevisit_t visit(const semantic::Slice*);
     [[nodiscard]] typevisit_t visit(const semantic::Uninitialized*);
     [[nodiscard]] typevisit_t visit(const semantic::Void*);
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);

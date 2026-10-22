@@ -22,6 +22,7 @@ namespace Manganese::codegen {
         case Pointer: return visit(static_cast<const semantic::Pointer*>(type));
         case Poison: return visit(static_cast<const semantic::Poison*>(type));
         case Uninitialized: return visit(static_cast<const semantic::Uninitialized*>(type));
+        case Slice: return visit(static_cast<const semantic::Slice*>(type));
         case Void: return visit(static_cast<const semantic::Void*>(type));
         case Primitive: return getPrimitiveType(type->primitiveType);
     };
@@ -32,7 +33,12 @@ namespace Manganese::codegen {
     if (type->isArray()) {
         const auto* arrayType = static_cast<const semantic::Array*>(type);
         llvm::Type* elementValType = visitTypeAsValue(arrayType->elementType);
-        return llvm::ArrayType::get(elementValType, *arrayType->length);
+        return llvm::ArrayType::get(elementValType, arrayType->length);
+    }
+    if (type->isSlice()) {
+        llvm::Type* ptrType = llvm::PointerType::get(*context, 0);
+        llvm::Type* lenType = llvm::Type::getInt64Ty(*context);
+        return llvm::StructType::get(*context, {ptrType, lenType});
     }
     if (type->isFunction()) {
         // functions aren't first-class values so we need to store a function pointer
@@ -60,7 +66,7 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Array* type) -> typevisit_t {
     llvm::Type* elementLLVMType = visit(type->elementType);
-    return llvm::ArrayType::get(elementLLVMType, *type->length);
+    return llvm::ArrayType::get(elementLLVMType, type->length);
 }
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Enum* type) -> typevisit_t { return visit(type->underlyingType); }
@@ -79,6 +85,12 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Poison* /*unused*/) -> typevisit_t {
     ASSERT_UNREACHABLE("Poison semantic type was not flagged as semantically invalid");
+}
+
+[[nodiscard]] auto IRGenerator::visit(const semantic::Slice* /*unused*/) -> typevisit_t {
+    llvm::Type* ptrType = llvm::PointerType::get(*context, 0);
+    llvm::Type* lenType = llvm::Type::getInt64Ty(*context);
+    return llvm::StructType::get(*context, {ptrType, lenType});
 }
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Uninitialized* /*unused*/) -> typevisit_t { return nullptr; }
@@ -143,6 +155,8 @@ namespace Manganese::codegen {
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierType* type) -> typevisit_t {
     return visit(type->semanticType);
 }
+
+[[nodiscard]] auto IRGenerator::visit(const ast::SliceType* type) -> typevisit_t { return visit(type->semanticType); }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::TypeofType* type) -> typevisit_t { return visit(type->semanticType); }
 
