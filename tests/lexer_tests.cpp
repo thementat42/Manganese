@@ -9,7 +9,6 @@
 #include <string_view>
 #include <vector>
 
-#include "frontend/lexer/token.hpp"
 #include "tests.hpp"
 
 namespace Manganese::tests {

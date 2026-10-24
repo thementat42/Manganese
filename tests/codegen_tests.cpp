@@ -11,11 +11,12 @@
 #include <middleend/codegen/ir_generator.hpp>
 #include <string>
 #include <utils/chunk_allocator.hpp>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 
 #include "testrunner.hpp"
 #include "tests.hpp"
-#include "utils/string_interner.hpp"
+
 
 namespace Manganese::tests {
 

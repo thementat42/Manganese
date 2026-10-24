@@ -1,11 +1,10 @@
+#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <optional>
 #include <utils/string_interner.hpp>
 #include <vector>
-
-#include "core.hpp"
 
 namespace Manganese::ast {
 

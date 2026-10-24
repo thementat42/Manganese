@@ -7,9 +7,10 @@
 #include <iostream>
 #include <string>
 #include <utils/chunk_allocator.hpp>
+#include <utils/string_interner.hpp>
 
 #include "tests.hpp"
-#include "utils/string_interner.hpp"
+
 
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type

@@ -1,5 +1,3 @@
-#include "frontend/semantic/type_context.hpp"
-
 #include <algorithm>
 #include <core.hpp>
 #include <cstddef>

@@ -8,8 +8,8 @@
 #include <string_view>
 #include <utility>
 #include <utils/result.hpp>
+#include <utils/str_to_num.hpp>
 #include <vector>
-#include "utils/str_to_num.hpp"
 
 namespace Manganese::semantic {
 
@@ -230,7 +230,8 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
     if (numericValue.exists) {
         // A named aggregate should be accessed by field names
         if (!aggregateType->name.empty()) {
-            logError(expression, "Named aggregate '{}' cannot be accessed using positional numeric indices", aggregateType->toString());
+            logError(expression, "Named aggregate '{}' cannot be accessed using positional numeric indices",
+                     aggregateType->toString());
             return exprvisit_t::Failure;
         }
 
