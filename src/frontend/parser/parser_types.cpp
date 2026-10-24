@@ -3,8 +3,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <utils/type_names.hpp>
-
-#include "frontend/ast/ast_base.hpp"
 #include "frontend/ast/ast_types.hpp"
 
 namespace Manganese::parser {
@@ -171,7 +169,7 @@ ast::Type* Parser::parsePointerType() {
 ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
     const Token startToken = consumeToken();  // consume the `::`
     ast::Type* type = parseType(precedence);
-    return makeNode<ast::ScopedType>(startToken, left, type);
+    return makeNode<ast::ScopedType>(startToken, ast::ScopedTypeScope{left}, ast::ScopedTypeType{type});
 }
 
 ast::Type* Parser::parseTypeofType() {

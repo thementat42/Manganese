@@ -93,7 +93,8 @@ ForLoopStatement* ForLoopStatement::clone(semantic::CloneContext* context) const
     if (stopCondition != nullptr) { stopClone = stopCondition->clone(context); }
     if (postExpression != nullptr) { postClone = postExpression->clone(context); }
 
-    return makeClonedNode(this, context, initializationClone, stopClone, postClone, cloneBlock(body, context));
+    return makeClonedNode(this, context, initializationClone, ForLoopCondition{stopClone}, ForLoopPost{postClone},
+                          cloneBlock(body, context));
 }
 
 FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::CloneContext* context) const {
@@ -282,7 +283,8 @@ IdentifierExpression* IdentifierExpression::clone(semantic::CloneContext* contex
 }
 
 IndexExpression* IndexExpression::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, variable->clone(context), index->clone(context));
+    return makeClonedNode(this, context, IndexExpressionVariable{variable->clone(context)},
+                          IndexExpressionIndex{index->clone(context)});
 }
 
 MemberAccessExpression* MemberAccessExpression::clone(semantic::CloneContext* context) const {
@@ -304,7 +306,8 @@ PrefixExpression* PrefixExpression::clone(semantic::CloneContext* context) const
 }
 
 ScopeResolutionExpression* ScopeResolutionExpression::clone(semantic::CloneContext* context) const {
-    auto* clone = makeClonedNode(this, context, scope->clone(context), element->clone(context));
+    auto* clone = makeClonedNode(this, context, ScopeExpressionScope{scope->clone(context)},
+                                 ScopeExpressionElement{element->clone(context)});
     return clone;
 }
 
@@ -321,7 +324,8 @@ TypeCastExpression* TypeCastExpression::clone(semantic::CloneContext* context) c
 }
 
 TernaryExpression* TernaryExpression::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, condition->clone(context), ifTrue->clone(context), ifFalse->clone(context));
+    return makeClonedNode(this, context, TernaryCondition{condition->clone(context)},
+                          TernaryTrueValue{ifTrue->clone(context)}, TernaryFalseValue{ifFalse->clone(context)});
 }
 
 UninitializedExpression* UninitializedExpression::clone(semantic::CloneContext* context) const {
@@ -386,7 +390,7 @@ PointerType* PointerType::clone(semantic::CloneContext* context) const {
 }
 
 ScopedType* ScopedType::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, scope->clone(context), type->clone(context));
+    return makeClonedNode(this, context, ScopedTypeScope{scope->clone(context)}, ScopedTypeType{type->clone(context)});
 }
 
 SliceType* SliceType::clone(semantic::CloneContext* context) const {

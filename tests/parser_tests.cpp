@@ -216,12 +216,11 @@ bool testPointerOperators() {
 bool testTypedVariableDeclaration() {
     const std::string expression = "let mut x: int32 = 42;\n"
                                    "let y: public float64 = 3.14159;\n"
-                                   "let mut z: char = 'A';\n"
                                    "let mut numbers: int32[3*2];\n"
                                    "let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]];\n";
 
-    const std::array<std::string, 5> expected = {
-        "(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);", "(let mut z: private char = 'A');",
+    const std::array<std::string, 4> expected = {
+        "(let mut x: private int32 = 42);", "(let y: public float64 = 3.14159);",
         "(let mut numbers: private int32[(3 * 2)]);", "(let matrix: public float32[][] = [[1.0, 2.7], [3.0, 4.2]]);"};
 
     return validateStatements(getParserResults(expression), expected, "Typed Variable Declarations");

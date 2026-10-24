@@ -6,6 +6,8 @@
 #include <utils/chunk_allocator.hpp>
 #include <vector>
 
+#include "frontend/ast/ast_expressions.hpp"
+
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`
@@ -186,7 +188,8 @@ ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Preceden
     constexpr auto precedence = precedenceAbove(Precedence::Assignment);
     ast::Expression* index = parseExpression(precedence);
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
-    return makeNode<ast::IndexExpression>(startToken, left, index);
+    return makeNode<ast::IndexExpression>(startToken, ast::IndexExpressionVariable{left},
+                                          ast::IndexExpressionIndex{index});
 }
 
 ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence /*unused*/) {
@@ -243,7 +246,9 @@ ast::Expression* Parser::parsePrimaryExpression() {
 ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();  // Consume the scope resolution operator (::)
     if (peekTokenType() != lexer::TokenType::Identifier) { logError(peekToken(), "Expected identifier after '::'"); }
-    return makeNode<ast::ScopeResolutionExpression>(startToken, left, parseExpression(Precedence::ScopeResolution));
+    return makeNode<ast::ScopeResolutionExpression>(
+        startToken, ast::ScopeExpressionScope{left},
+        ast::ScopeExpressionElement{parseExpression(Precedence::ScopeResolution)});
 }
 
 ast::Expression* Parser::parseSizeofExpression() {
@@ -276,7 +281,7 @@ ast::Expression* Parser::parseTernaryExpression(ast::Expression* left, Precedenc
     expectToken(TokenType::Colon, "Expected ':' in ternary expression");
     ast::Expression* ifFalse = parseExpression(precedence);
 
-    return makeNode<ast::TernaryExpression>(startToken, left, ifTrue, ifFalse);
+    return makeNode<ast::TernaryExpression>(startToken, ast::TernaryCondition{left}, ast::TernaryTrueValue{ifTrue}, ast::TernaryFalseValue{ifFalse});
 }
 
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {

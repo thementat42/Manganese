@@ -3,7 +3,7 @@
 
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <utility>
+#include <utils/named_parameter.hpp>
 #include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 
@@ -36,7 +36,7 @@ struct FunctionType final : public Type {
     Type* returnType;
 
     FunctionType(utils::Slice<FunctionParameterType>&& _parameterTypes, Type* _returnType) noexcept :
-        Type(TypeKind::FunctionType), parameterTypes(std::move(_parameterTypes)), returnType(_returnType) {}
+        Type(TypeKind::FunctionType), parameterTypes(_parameterTypes), returnType(_returnType) {}
 
     MN_AST_STANDARD_INTERFACE(FunctionType);
 };
@@ -72,11 +72,14 @@ struct PointerType final : public Type {
     MN_AST_STANDARD_INTERFACE(PointerType);
 };
 
+using ScopedTypeScope = utils::NamedParameter<Type*, struct ScopeTScope>;
+using ScopedTypeType = utils::NamedParameter<Type*, struct ScopeTType>;
+
 struct ScopedType final : public Type {
     Type* scope;
     Type* type;
 
-    ScopedType(Type* _scope, Type* _type) noexcept : Type(TypeKind::ScopedType), scope(_scope), type(_type) {}
+    ScopedType(ScopedTypeScope _scope, ScopedTypeType _type) noexcept : Type(TypeKind::ScopedType), scope(_scope.get()), type(_type.get()) {}
 
     MN_AST_STANDARD_INTERFACE(ScopedType)
 };

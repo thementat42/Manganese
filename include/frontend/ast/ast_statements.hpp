@@ -5,6 +5,7 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <optional>
+#include <utils/named_parameter.hpp>
 #include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 
@@ -103,18 +104,21 @@ struct ExpressionStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE(ExpressionStatement);
 };
 
+using ForLoopCondition = utils::NamedParameter<Expression*, struct ForCond>;
+using ForLoopPost = utils::NamedParameter<Expression*, struct ForPost>;
+
 struct ForLoopStatement final : public Statement, ScopeOwner {
     Statement* initializationStep;
     Expression* stopCondition;
     Expression* postExpression;
     Block body;
 
-    ForLoopStatement(Statement* _initializationStep, Expression* _stopCondition, Expression* _postExpression,
+    ForLoopStatement(Statement* _initializationStep, ForLoopCondition _stopCondition, ForLoopPost _postExpression,
                      Block _body) noexcept :
         Statement(StatementKind::ForLoopStatement),
         initializationStep(_initializationStep),
-        stopCondition(_stopCondition),
-        postExpression(_postExpression),
+        stopCondition(_stopCondition.get()),
+        postExpression(_postExpression.get()),
         body(_body) {}
 
     MN_AST_STANDARD_INTERFACE(ForLoopStatement);
