@@ -4,8 +4,11 @@
 #include <llvm/Passes/OptimizationLevel.h>
 #include <llvm/Passes/PassBuilder.h>
 
+#include <middleend/optimizations.hpp>
+
 // https://llvm.org/docs/NewPassManager.html
 
+namespace Manganese::optimizations {
 void optimizeModule(llvm::Module* module, llvm::OptimizationLevel level) {
     if (level == llvm::OptimizationLevel::O0) { return; }
     llvm::LoopAnalysisManager LAM;
@@ -25,3 +28,4 @@ void optimizeModule(llvm::Module* module, llvm::OptimizationLevel level) {
 
     MPM.run(*module, MAM);
 }
+}  // namespace Manganese::optimizations

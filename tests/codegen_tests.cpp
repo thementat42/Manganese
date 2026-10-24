@@ -8,7 +8,7 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
-#include <middleend/codegen/ir_generator.hpp>
+#include <middleend/ir_generator.hpp>
 #include <string>
 #include <utils/chunk_allocator.hpp>
 #include <utils/string_interner.hpp>

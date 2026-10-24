@@ -14,7 +14,7 @@
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
-#include <middleend/codegen/ir_generator.hpp>
+#include <middleend/ir_generator.hpp>
 #include <runtime/string.hpp>
 
 namespace Manganese::codegen {
