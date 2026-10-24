@@ -3,6 +3,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <utils/type_names.hpp>
+
 #include "frontend/ast/ast_types.hpp"
 
 namespace Manganese::parser {

@@ -5,10 +5,10 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
+#include <utils/named_parameter.hpp>
 #include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
-#include <utils/named_parameter.hpp>
 
 namespace Manganese::ast {
 

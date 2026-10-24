@@ -14,7 +14,6 @@
 #include <utils/target_info.hpp>
 #include <vector>
 
-
 namespace Manganese::cfg {
 
 enum class FlowStatus : std::int8_t {

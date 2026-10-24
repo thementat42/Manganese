@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token.hpp>

@@ -1,7 +1,6 @@
 #ifndef MANGANESE_INCLUDE_UTILS_NAMED_PARAMETER_HPP
 #define MANGANESE_INCLUDE_UTILS_NAMED_PARAMETER_HPP 1
 
-
 namespace Manganese::utils {
 
 template <class T, class>
@@ -12,8 +11,6 @@ struct NamedParameter {
     constexpr T get() const { return value; }
 };
 
+}  // namespace Manganese::utils
 
-} // namespace Manganese::utils
-
-
-#endif // MANGANESE_INCLUDE_UTILS_NAMED_PARAMETER_HPP
+#endif  // MANGANESE_INCLUDE_UTILS_NAMED_PARAMETER_HPP

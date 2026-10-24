@@ -155,7 +155,8 @@ ast::Statement* Parser::parseForLoopStatement() {
 
     const ast::Block body = parseBlock("for loop body");
 
-    return makeNode<ast::ForLoopStatement>(startToken, init, ast::ForLoopCondition{condition}, ast::ForLoopPost{post}, body);
+    return makeNode<ast::ForLoopStatement>(startToken, init, ast::ForLoopCondition{condition}, ast::ForLoopPost{post},
+                                           body);
 }
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {

@@ -11,7 +11,6 @@
 
 #include "tests.hpp"
 
-
 // NOTE: In the parser, any variable declaration without an explicit type is marked as 'auto'
 // The semantic analysis phase is responsible for resolving the actual type
 // So testing for a correct type resolution is outside the scope of these tests

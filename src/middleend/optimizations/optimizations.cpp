@@ -23,5 +23,5 @@ void optimizeModule(llvm::Module* module, llvm::OptimizationLevel level) {
 
     llvm::ModulePassManager MPM = passBuilder.buildPerModuleDefaultPipeline(level);
 
-   MPM.run(*module, MAM);
+    MPM.run(*module, MAM);
 }

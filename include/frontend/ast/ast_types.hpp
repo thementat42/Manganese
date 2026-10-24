@@ -79,7 +79,8 @@ struct ScopedType final : public Type {
     Type* scope;
     Type* type;
 
-    ScopedType(ScopedTypeScope _scope, ScopedTypeType _type) noexcept : Type(TypeKind::ScopedType), scope(_scope.get()), type(_type.get()) {}
+    ScopedType(ScopedTypeScope _scope, ScopedTypeType _type) noexcept :
+        Type(TypeKind::ScopedType), scope(_scope.get()), type(_type.get()) {}
 
     MN_AST_STANDARD_INTERFACE(ScopedType)
 };

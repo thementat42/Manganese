@@ -951,7 +951,8 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Typeof Dependent Return Types analysis", analyzer_tests::testTypeOfDependentReturnTypes);
     runner.runTest("Nested Generic Instantiation Scope analysis", analyzer_tests::testNestedGenericInstantiationScope);
     runner.runTest("Immutable Parameter Reassignment check", analyzer_tests::testImmutableCaptureOrReassignment);
-    runner.runTest("Slice length and anonymous aggregate analysis", analyzer_tests::testSliceLengthAndAnonymousAggregates);
+    runner.runTest("Slice length and anonymous aggregate analysis",
+                   analyzer_tests::testSliceLengthAndAnonymousAggregates);
     runner.runTest("Misc analyzer tests", analyzer_tests::miscTests);
 }
 
