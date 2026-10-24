@@ -860,6 +860,27 @@ bool testImmutableCaptureOrReassignment() {
     return analyzeSource(source, false, __func__);
 }
 
+bool testSliceLengthAndAnonymousAggregates() {
+    const std::string valid = R"(
+        func main() {
+            let arr: int32[4] = [1, 2, 3, 4];
+            let slice: int32[] = arr;
+            let len1 = arr.length;
+            let len2 = slice.length;
+        }
+    )";
+
+    const std::string invalidNamedNumericAccess = R"(
+        aggregate Point { x: int32; y: int32; }
+        func main() {
+            let p = Point { x = 1, y = 2 };
+            let val = p.0;
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidNamedNumericAccess, false, __func__);
+}
+
 bool miscTests() {
     const std::string code = R"(
         func foo[T](x: T) -> T {
@@ -930,6 +951,7 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Typeof Dependent Return Types analysis", analyzer_tests::testTypeOfDependentReturnTypes);
     runner.runTest("Nested Generic Instantiation Scope analysis", analyzer_tests::testNestedGenericInstantiationScope);
     runner.runTest("Immutable Parameter Reassignment check", analyzer_tests::testImmutableCaptureOrReassignment);
+    runner.runTest("Slice length and anonymous aggregate analysis", analyzer_tests::testSliceLengthAndAnonymousAggregates);
     runner.runTest("Misc analyzer tests", analyzer_tests::miscTests);
 }
 

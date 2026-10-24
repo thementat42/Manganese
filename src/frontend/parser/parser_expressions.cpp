@@ -193,9 +193,13 @@ ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Preceden
 }
 
 ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence /*unused*/) {
-    const Token startToken = consumeToken();  // Consume the member access operator (.)
-    return makeNode<ast::MemberAccessExpression>(
-        startToken, left, expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
+    const Token startToken = consumeToken();  // Consume .
+
+    auto fieldToken = peekToken();
+    if (!utils::enum_matches(fieldToken.getType(), TokenType::Identifier, TokenType::IntegerLiteral)) {
+        logError(fieldToken, "Expected identifier or integer literal after '.'");
+    }
+    return makeNode<ast::MemberAccessExpression>(startToken, left, consumeToken().getLexeme());
 }
 
 ast::Expression* Parser::parseParenthesizedExpression() {
@@ -281,7 +285,8 @@ ast::Expression* Parser::parseTernaryExpression(ast::Expression* left, Precedenc
     expectToken(TokenType::Colon, "Expected ':' in ternary expression");
     ast::Expression* ifFalse = parseExpression(precedence);
 
-    return makeNode<ast::TernaryExpression>(startToken, ast::TernaryCondition{left}, ast::TernaryTrueValue{ifTrue}, ast::TernaryFalseValue{ifFalse});
+    return makeNode<ast::TernaryExpression>(startToken, ast::TernaryCondition{left}, ast::TernaryTrueValue{ifTrue},
+                                            ast::TernaryFalseValue{ifFalse});
 }
 
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {

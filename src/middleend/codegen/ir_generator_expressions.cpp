@@ -220,8 +220,6 @@ namespace Manganese::codegen {
             return commonType->isSignedInteger() ? builder->CreateAShr(lhs, rhs, "arithmetic_shr_tmp")
                                                  : builder->CreateLShr(lhs, rhs, "logical_shr_tmp");
         }
-        case MemberAccess:
-        case ScopeResolution:
         default: break;
     }
     ASSERT_UNREACHABLE_FMT("Invalid binary operator {} in codegen", lexer::tokenTypeToString(expression->op));
@@ -370,6 +368,30 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::MemberAccessExpression* expression) -> exprvisit_t {
+    const semantic::SemanticType* objectType = expression->object->semanticType;
+    if (objectType->isPointer()) { objectType = static_cast<const semantic::Pointer*>(objectType)->baseType; }
+
+    std::string_view fieldName = interner.get_view(expression->field);
+
+    // Array length (a compile time constant)
+    if (objectType->isArray() && fieldName == "length") {
+        const auto* arrayType = static_cast<const semantic::Array*>(objectType);
+        return llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context), arrayType->length);
+    }
+
+    // Slice .length (fat pointer, index 1)
+    if (objectType->isSlice() && fieldName == "length") {
+        // Evaluate the slice expression (which yields the { ptr, i64 })
+        llvm::Value* sliceVal = visit(expression->object);
+
+        if (sliceVal->getType()->isPointerTy()) {
+            llvm::Value* lenPtr = builder->CreateStructGEP(visitTypeAsValue(objectType), sliceVal, 1, "slice_len_ptr");
+            return builder->CreateLoad(llvm::Type::getInt64Ty(*context), lenPtr, "load_slice_len");
+        }
+        return builder->CreateExtractValue(sliceVal, 1, "extract_slice_len");
+    }
+
+    // Regular member access
     llvm::Value* fieldPointer = getLValue(expression);
     llvm::Type* fieldLLVMType = visitTypeAsValue(expression->semanticType);
     return builder->CreateLoad(fieldLLVMType, fieldPointer, "load_member_access_expr");

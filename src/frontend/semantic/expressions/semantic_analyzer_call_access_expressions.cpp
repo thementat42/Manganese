@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/lexer/token.hpp>
@@ -8,6 +9,7 @@
 #include <utility>
 #include <utils/result.hpp>
 #include <vector>
+#include "utils/str_to_num.hpp"
 
 namespace Manganese::semantic {
 
@@ -207,14 +209,42 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
     // accessing a member from a pointer to an aggregate is also done using x.y so auto-dereference if that's the case
     if (objectType->isPointer()) { objectType = static_cast<const Pointer*>(objectType)->baseType; }
 
+    std::string_view fieldName = interner.get_view(expression->field);
+
+    if ((objectType->isSlice() || objectType->isArray()) && fieldName == "length") {
+        expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::int64);
+        return exprvisit_t::Success;
+    }
+
     if (!objectType->isAggregate()) {
         logError(expression->object,
-                 "Element access can only be performed on an aggregate type (or a pointer to an aggregate) not '{}'",
+                 "Element access can only be performed on an aggregate type (or a pointer to an aggregate), not '{}'",
                  objectType->toString());
         return exprvisit_t::Failure;
     }
 
     const auto* aggregateType = static_cast<const Aggregate*>(objectType);
+
+    auto numericValue = utils::stringToNumber<std::int64_t>(fieldName, false);
+
+    if (numericValue.exists) {
+        // A named aggregate should be accessed by field names
+        if (!aggregateType->name.empty()) {
+            logError(expression, "Named aggregate '{}' cannot be accessed using positional numeric indices", aggregateType->toString());
+            return exprvisit_t::Failure;
+        }
+
+        auto index = static_cast<std::size_t>(numericValue.value);
+        const SemanticType* fieldType = aggregateType->getFieldTypeByIndex(index);
+        if (fieldType != nullptr) {
+            expression->semanticType = fieldType;
+            expression->fieldIndex = index;
+            return exprvisit_t::Success;
+        }
+
+        logError(expression, "Anonymous aggregate type has no field index {}", fieldName);
+        return exprvisit_t::Failure;
+    }
 
     for (std::size_t i = 0; i < aggregateType->fields.size(); ++i) {
         const AggregateField& field = aggregateType->fields[i];

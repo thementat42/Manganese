@@ -381,6 +381,19 @@ bool testNestedGenericRecursionCodegen() {
     return validateIRContains(source, {"wrap$int32", "identity$int32", "main"}, __func__);
 }
 
+bool testSliceLengthAndNumericAccessCodeGen() {
+    const std::string source = R"(
+        func getSliceLength(arr: int32[]) -> int64 {
+            return arr.length;
+        }
+        func getArrayLength() -> int64 {
+            let a: int32[5] = [1, 2, 3, 4, 5];
+            return a.length;
+        }
+    )";
+    return validateIRContains(source, {"getSliceLength", "getArrayLength", "extractvalue"}, __func__);
+}
+
 }  // namespace
 }  // namespace codegen_tests
 
@@ -412,6 +425,7 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Code Generation From File", codegen_tests::testCodegenFromFile);
     runner.runTest("Typeof Dependent Return Type Codegen", codegen_tests::testTypeOfReturnCodegen);
     runner.runTest("Nested Generic Recursion Codegen", codegen_tests::testNestedGenericRecursionCodegen);
+    runner.runTest("Slice Length and Numeric Access Codegen", codegen_tests::testSliceLengthAndNumericAccessCodeGen);
 }
 
 }  // namespace Manganese::tests
