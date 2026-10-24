@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <middleend/ir_generator.hpp>
+#include <middleend/optimizations.hpp>
 #include <string>
 #include <utils/chunk_allocator.hpp>
 #include <utils/string_interner.hpp>
@@ -38,6 +39,7 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     if (cfa.analyze() != Result::Success) { return false; }
 
     std::string irOutput;
+    std::string optimizedIROutput;
     bool generationPassed = true;
 
     try {
@@ -50,6 +52,16 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
             module->print(rso, nullptr);
             rso.flush();
             irOutput = tempStr;
+
+            // Run the optimizer pass (sanity check)
+            codegen::optimizeModule(module, llvm::OptimizationLevel::O2);
+
+            std::string optTempStr;
+            llvm::raw_string_ostream rso2(optTempStr);
+            module->print(rso2, nullptr);
+            rso.flush();
+            optimizedIROutput = tempStr;
+
         } else {
             generationPassed = false;
         }
@@ -64,17 +76,17 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     if (!generationPassed) {
         std::ofstream logFile(logFileName, std::ios::app);
         if (logFile) {
-            logFile << "Test: " << testName << " failed during generation or module retrieval.\n";
+            logFile << "Test: " << testName << " failed during generation, optimization, or module retrieval.\n";
             logFile << "---------------------\n";
         }
-        std::cout << "Test: " << testName << " failed during generation or module retrieval.\n";
+        std::cout << "Test: " << testName << " failed during generation, optimization, or module retrieval.\n";
         return false;
     }
 
     bool allFound = true;
     std::vector<std::string> missingPatterns;
     for (const auto& pattern : expectedSubstrings) {
-        if (irOutput.find(pattern) == std::string::npos) {
+        if (optimizedIROutput.find(pattern) == std::string::npos) {
             allFound = false;
             missingPatterns.push_back(pattern);
         }
@@ -83,16 +95,17 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     std::ofstream logFile(logFileName, std::ios::app);
     if (logFile) {
         logFile << "Test: " << testName << "\n";
-        logFile << "Result: " << (allFound ? "Passed" : "Failed (Missing pattern)") << "\n";
+        logFile << "Result: " << (allFound ? "Passed" : "Failed (Missing pattern in optimized IR)") << "\n";
         if (!allFound) {
             for (const auto& pattern : missingPatterns) { logFile << "Missing Substring: \"" << pattern << "\"\n"; }
         }
-        logFile << "Generated IR\n" << irOutput << "\n---------------------\n";
+        logFile << "Generated IR (Unoptimized)\n" << irOutput << "\n\n\n";
+        logFile << "Generated IR (Optimized)\n" << optimizedIROutput << "\n\n\n";
         logFile.close();
     }
 
     if (!allFound) {
-        std::cout << "Test: " << testName << "Failed. Missing patterns:\n";
+        std::cout << "Test: " << testName << " Failed. Missing patterns in optimized IR:\n";
         for (const auto& pattern : missingPatterns) { std::cout << "\tMissing Substring: \"" << pattern << "\"\n"; }
     }
 
@@ -335,19 +348,34 @@ bool testCodegenFromFile() {
     try {
         codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, fileInterner, targetInfo);
         irGenerator.generate();
+
+        std::string irOutput;
+        std::string optimizedIROutput;
+
+        if (auto* module = irGenerator.getModule()) {
+            // Log raw IR
+
+            std::string tempStr;
+            llvm::raw_string_ostream rso(tempStr);
+            module->print(rso, nullptr);
+            rso.flush();
+            irOutput = tempStr;
+
+            codegen::optimizeModule(module, llvm::OptimizationLevel::O2);
+
+            // Log optimized
+            std::string optTempStr;
+            llvm::raw_string_ostream rso2(optTempStr);
+            module->print(rso, nullptr);
+            rso.flush();
+            optimizedIROutput = tempStr;
+        }
+
         std::ofstream logFile(logFileName, std::ios::app);
         if (logFile) {
-            std::string irOutput;
-
-            if (auto* module = irGenerator.getModule()) {
-                std::string tempStr;
-                llvm::raw_string_ostream rso(tempStr);
-                module->print(rso, nullptr);
-                rso.flush();
-                irOutput = tempStr;
-            }
             logFile << "Test: " << __func__ << "\n";
-            logFile << "Generated IR\n" << irOutput << "\n---------------------\n";
+            logFile << "Generated IR (Unoptimized)\n" << irOutput << "\n\n\n";
+            logFile << "Generated IR (Optimized)\n" << optimizedIROutput << "\n\n\n";
             logFile.close();
         }
         return irGenerator.getModule() != nullptr;
