@@ -4,7 +4,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/Passes/OptimizationLevel.h>
 
-namespace Manganese::optimizations {
+namespace Manganese::codegen {
 void optimizeModule(llvm::Module* module, llvm::OptimizationLevel level);
 }
 
