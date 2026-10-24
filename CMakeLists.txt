@@ -162,7 +162,7 @@ target_compile_options(manganese PRIVATE ${LLVM_DEFINITIONS_LIST})
 
 llvm_map_components_to_libnames(LLVM_LIBS
     Core Support IRReader ExecutionEngine Analysis
-    BitWriter CodeGen
+    BitWriter CodeGen Passes
 )
 
 target_link_libraries(manganese PRIVATE ${LLVM_LIBS})
