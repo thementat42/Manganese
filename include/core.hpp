@@ -68,7 +68,7 @@
 [[noreturn]] inline void panic(const char* message, const char* file, std::size_t line, const char* func) {
     std::fprintf(stderr, "\033[31mPanic invoked: %s \nIn file %s at line %zu when running %s\033[0m\n", message, file,
                  line, func);
-    throw message;
+    throw;
 }
 
 [[noreturn]] inline void panic(const std::string& message, const char* file, std::size_t line, const char* func) {
