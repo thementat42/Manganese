@@ -20,12 +20,12 @@ Result SemanticAnalyzer::buildScopeTree(parser::ParsedFile& file) {
     return result;
 }
 
-static FORCE_INLINE void _reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) {
-    logging::logError(node->line, node->column, "'{}' was already declared in this scope", redeclaredSymbolName);
-}
-
 Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
     using enum ast::StatementKind;
+
+    auto reportRedeclaration = [](std::string_view redeclaredSymbolName, ast::ASTNode* node) {
+        logging::logError(node->line, node->column, "'{}' was already declared in this scope", redeclaredSymbolName);
+    };
 
     switch (stmt->kind) {
         case AggregateDeclarationStatement: {
@@ -44,7 +44,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .isMutable = false,
                                                       });
             if (result == Result::Failure) {
-                _reportRedeclaration(interner.get_view(aggregateStmt->name), aggregateStmt);
+                reportRedeclaration(interner.get_view(aggregateStmt->name), aggregateStmt);
             }
             return result;
         }
@@ -59,7 +59,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = aliasStmt->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(interner.get_view(aliasStmt->name), aliasStmt); }
+            if (result == Result::Failure) { reportRedeclaration(interner.get_view(aliasStmt->name), aliasStmt); }
             return result;
         }
         case EnumDeclarationStatement: {
@@ -73,7 +73,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = enumDecl->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(interner.get_view(enumDecl->name), enumDecl); }
+            if (result == Result::Failure) { reportRedeclaration(interner.get_view(enumDecl->name), enumDecl); }
             return result;
         }
         case ForLoopStatement: {
@@ -91,7 +91,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                   .visibility = funcStmt->visibility,
                                                   .isMutable = false,
                                               });
-            if (result == Result::Failure) { _reportRedeclaration(interner.get_view(funcStmt->name), funcStmt); }
+            if (result == Result::Failure) { reportRedeclaration(interner.get_view(funcStmt->name), funcStmt); }
 
             if (!funcStmt->genericTypes.empty()) { return result; }
 
