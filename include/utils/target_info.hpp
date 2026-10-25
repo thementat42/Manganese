@@ -9,8 +9,8 @@ struct TargetInfo {
     std::size_t pointerSize;
     std::size_t pointerAlignment;
 
-    static TargetInfo fromTriple(std::string_view triple) noexcept;
-    static TargetInfo fromHostTriple() noexcept;
+    static TargetInfo fromTriple(std::string_view triple);
+    static TargetInfo fromHostTriple();
 };
 }  // namespace Manganese::utils
 
