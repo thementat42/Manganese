@@ -62,7 +62,7 @@ class chunk_allocator {
                   .capacity = size});
     }
 
-    FORCE_INLINE void* allocate(std::size_t size, std::size_t alignment) {
+    inline void* allocate(std::size_t size, std::size_t alignment) {
     _do_allocation:
         chunk& c = _chunks.back();
         const auto current_position = reinterpret_cast<std::uintptr_t>(c.data.get() + c.used);

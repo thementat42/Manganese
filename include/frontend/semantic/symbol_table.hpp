@@ -110,7 +110,7 @@ class SymbolTable {
     void enterNamespace(utils::StringID name, ast::ASTNode* node);
     void enterGenericCheckingMode() noexcept { ++_flags._genericDepth; }
     void exitScope() NOEXCEPT_IF_RELEASE;
-    void FORCE_INLINE exitNamespace() NOEXCEPT_IF_RELEASE { exitScope(); }
+    void exitNamespace() NOEXCEPT_IF_RELEASE { exitScope(); }
     void exitGenericCheckingMode() noexcept { --_flags._genericDepth; }
 
     Scope* getCurrentScope() noexcept { return _currentScope; }

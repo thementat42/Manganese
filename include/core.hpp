@@ -36,16 +36,6 @@
 #define DISCARD(value) (static_cast<void>((value)))  // Explicitly discard a value
 #endif  // DISCARD
 
-//~ Force inline
-#if defined(__clang__) || defined(__GNUC__)
-#define FORCE_INLINE inline __attribute__((always_inline))
-#elif defined(_MSC_VER)
-#define FORCE_INLINE __forceinline
-#else
-// No known force inline, fallback to `inline` keyword
-#define FORCE_INLINE inline
-#endif
-
 [[noreturn]] inline void manganese_unreachable(int /*unused*/) {
     *(static_cast<volatile int*>(nullptr)) = 0;  // still invokes UB (and should crash on most platforms)
     for (;;) {}  // mainly to satisfy the compiler around not returning
@@ -81,7 +71,7 @@
     throw message;
 }
 
-[[noreturn]] FORCE_INLINE void panic(const std::string& message, const char* file, std::size_t line, const char* func) {
+[[noreturn]] inline void panic(const std::string& message, const char* file, std::size_t line, const char* func) {
     panic(message.c_str(), file, line, func);
 }
 
