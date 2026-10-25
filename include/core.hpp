@@ -64,8 +64,12 @@
 
 #define BETWEEN(c, low, high) (((low) <= (c)) && ((c) <= (high)))
 
+#ifndef MN_STRINGIFY_HELPER
+#define MN_STRINGIFY_HELPER(x) #x
+#endif
+
 #ifndef MN_STRINGIFY
-#define MN_STRINGIFY(x) #x
+#define MN_STRINGIFY(x) MN_STRINGIFY_HELPER(x)
 #endif  // MN_STRINGIFY
 
 #if MN_DEBUG
