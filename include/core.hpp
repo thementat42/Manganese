@@ -19,19 +19,6 @@
 #endif  // NDEBUG
 #endif  // MN_DEBUG
 
-/**
- * Indicates that a function will not throw in release builds.
- * This is a no-op in debug builds, where more exceptions are expected.
- * Note: This macro should not be used on functions that will actually never throw (in those cases, use `noexcept`
- * directly).
- */
-
-#if MN_DEBUG
-#define NOEXCEPT_IF_RELEASE  // In debug mode, these can throw (e.g., using ASSERT_UNREACHABLE)
-#else  // ^^ MN_DEBUG vv !MN_DEBUG
-#define NOEXCEPT_IF_RELEASE noexcept  // In release builds, optimize these functions more
-#endif
-
 #ifndef DISCARD
 #define DISCARD(value) (static_cast<void>((value)))  // Explicitly discard a value
 #endif  // DISCARD

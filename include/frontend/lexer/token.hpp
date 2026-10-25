@@ -84,7 +84,7 @@ class Token {
      */
     void overrideType(TokenType newType);
 
-    TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
+    TokenType getUnaryCounterpart() const;
     std::string toString() const;
 };
 
