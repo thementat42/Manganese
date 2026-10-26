@@ -432,6 +432,26 @@ void BoolLiteralExpression::dump(std::ostream& os, const utils::StringInterner& 
     os << ind << "}\n";
 }
 
+void ChainedComparisonExpression::dump(std::ostream& os, const utils::StringInterner& interner,
+                                       std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ChainedComparisonExpression", *this);
+
+    os << ind.next() << "operands: [\n";
+    for (std::size_t i = 0; i < operands.size; ++i) {
+        os << ind.next(2) << "{\n";
+        operands[i]->dump(os, interner, ind.next(3));
+        os << ind.next(2) << "}\n";
+    }
+    os << ind.next() << "]\n";
+
+    os << ind.next() << "operators: [\n";
+    for (std::size_t i = 0; i < operators.size; ++i) { os << ind.next(2) << tokenTypeToString(operators[i]) << "\n"; }
+    os << ind.next() << "]\n";
+
+    os << ind << "}\n";
+}
+
 void CharLiteralExpression::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "CharLiteralExpression", *this);

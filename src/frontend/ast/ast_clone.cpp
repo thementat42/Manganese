@@ -6,6 +6,8 @@
 #include <utils/string_interner.hpp>
 #include <vector>
 
+#include "frontend/ast/ast_expressions.hpp"
+
 namespace Manganese::ast {
 
 // Helpers
@@ -243,6 +245,16 @@ BinaryExpression* BinaryExpression::clone(semantic::CloneContext* context) const
 
 BoolLiteralExpression* BoolLiteralExpression::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context, value);
+}
+
+ChainedComparisonExpression* ChainedComparisonExpression::clone(semantic::CloneContext* context) const {
+    std::vector<Expression*> operandClones;
+    operandClones.reserve(operands.size);
+
+    for (const auto& operand : operands) { operandClones.push_back(operand->clone(context)); }
+
+    return makeClonedNode(this, context, context->arena.emplace_range(operandClones),
+                          context->arena.emplace_range(operators));
 }
 
 CharLiteralExpression* CharLiteralExpression::clone(semantic::CloneContext* context) const {

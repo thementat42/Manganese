@@ -7,6 +7,8 @@
 #include <string>
 #include <utils/string_interner.hpp>
 
+#include "frontend/ast/ast_expressions.hpp"
+
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
 #else
@@ -300,6 +302,18 @@ std::string BinaryExpression::toString(const utils::StringInterner& interner, st
 
 std::string BoolLiteralExpression::toString(const utils::StringInterner& /*unused*/, std::size_t /*indent*/) const {
     return value ? "true" : "false";
+}
+
+std::string ChainedComparisonExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    if (operands.empty()) [[unlikely]] { return ""; }
+
+    std::string result = getIndent(indent) + operands[0]->toString(interner, indent);
+
+    for (std::size_t i = 0; i < operators.size; ++i) {
+        result += std::format(" {} {}", tokenTypeToString(operators[i]), operands[i + 1]->toString(interner, indent));
+    }
+
+    return result;
 }
 
 std::string CharLiteralExpression::toString(const utils::StringInterner& /*unused*/, std::size_t /*indent*/) const {
