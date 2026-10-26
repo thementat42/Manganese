@@ -903,6 +903,27 @@ bool testSliceLengthAndAnonymousAggregates() {
     return analyzeSource(valid, true, __func__) && analyzeSource(invalidNamedNumericAccess, false, __func__);
 }
 
+bool testChainedComparisonSemantics() {
+    const std::string valid = R"(
+        func main() -> bool {
+            let a = 1;
+            let b = 5;
+            let c = 10;
+            return a < b <= c && c == 10;
+        }
+    )";
+
+    const std::string invalidType = R"(
+        func main() -> bool {
+            let a = 1;
+            let b = 5;
+            return a < b <= "not an int";
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidType, false, __func__);
+}
+
 bool miscTests() {
     const std::string code = R"(
         func foo[T](x: T) -> T {
@@ -975,6 +996,7 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Immutable Parameter Reassignment check", analyzer_tests::testImmutableCaptureOrReassignment);
     runner.runTest("Slice length and anonymous aggregate analysis",
                    analyzer_tests::testSliceLengthAndAnonymousAggregates);
+    runner.runTest("Chained Comparison Expression analysis", analyzer_tests::testChainedComparisonSemantics);
     runner.runTest("Misc analyzer tests", analyzer_tests::miscTests);
 }
 
