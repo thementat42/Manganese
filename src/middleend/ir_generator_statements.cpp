@@ -151,7 +151,8 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::BasicBlock* mainFalseDest
         = !elifBlocks.empty() ? elifBlocks[0].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
 
-    // Run codegen for the main if statement
+    // Run codegen for the main variable declaration (if present) and condition
+    if (statement->variableDeclaration != nullptr) { visit(statement->variableDeclaration); }
     llvm::Value* condVal = visit(statement->condition);
     builder->CreateCondBr(condVal, thenBlock, mainFalseDest);
 
@@ -163,6 +164,7 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
     for (size_t i = 0; i < statement->elifs.size; ++i) {
         auto [condBlk, bodyBlk] = elifBlocks[i];
+        const auto& elifClause = statement->elifs[i];
 
         // If this elif fails, jump to the next elif, the else block, or the merge block
         llvm::BasicBlock* nextFalseDest
@@ -170,12 +172,13 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
         // Emit the elif condition block
         builder->SetInsertPoint(condBlk);
-        llvm::Value* elifCondVal = visit(statement->elifs[i].condition);
+        if (elifClause.variableDeclaration != nullptr) { visit(elifClause.variableDeclaration); }
+        llvm::Value* elifCondVal = visit(elifClause.condition);
         builder->CreateCondBr(elifCondVal, bodyBlk, nextFalseDest);
 
         // Emit the elif body block
         builder->SetInsertPoint(bodyBlk);
-        visit(statement->elifs[i].body);
+        visit(elifClause.body);
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
