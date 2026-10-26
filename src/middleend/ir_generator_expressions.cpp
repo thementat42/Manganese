@@ -109,6 +109,14 @@ namespace Manganese::codegen {
                     = module->getOrInsertFunction(MN_STRINGIFY(mn_strcat), stringType, stringType, stringType);
                 return builder->CreateCall(concatenationFunction, {lhs, rhs}, "string_concat_tmp");
             }
+            if (lhs->getType()->isPointerTy()) {
+                return builder->CreateInBoundsGEP(visitTypeAsValue(expression->right->semanticType), lhs, {rhs},
+                                                  "ptr_add_gep");
+            }
+            if (rhs->getType()->isPointerTy()) {
+                return builder->CreateInBoundsGEP(visitTypeAsValue(expression->left->semanticType), rhs, {lhs},
+                                                  "ptr_add_gep");
+            }
             return doFloatOperation ? builder->CreateFAdd(lhs, rhs, "fadd_tmp")
                                     : builder->CreateAdd(lhs, rhs, "iadd_tmp");
         }
@@ -525,7 +533,8 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     if (op == AddressOf) { return getLValue(expression->right); }
     if (op == Dereference) {
         llvm::Value* value = visit(expression->right);
-        return builder->CreateLoad(valueTypeLLVM, value, "deref_load");
+        llvm::Type* pointeeTypeLLVM = visit(expression->semanticType);
+        return builder->CreateLoad(pointeeTypeLLVM, value, "deref_load");
     }
 
     if (op == Inc || op == Dec) {
