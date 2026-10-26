@@ -200,6 +200,11 @@ void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, 
     const Indent ind{indent};
     dumpHeader(os, ind, "IfStatement", *this);
 
+    if (variableDeclaration != nullptr) {
+        os << ind.next() << "variable declaration: \n";
+        variableDeclaration->dump(os, interner, ind.next(2));
+    }
+
     os << ind.next() << "condition: \n";
     condition->dump(os, interner, ind.next(2));
 
@@ -209,6 +214,12 @@ void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, 
         os << ind.next() << "elif clauses: [\n";
         for (const auto& elif : elifs) {
             os << ind.next(2) << "{\n";
+
+            if (elif.variableDeclaration != nullptr) {
+                os << ind.next(3) << "variable declaration: \n";
+                elif.variableDeclaration->dump(os, interner, ind.next(4));
+            }
+
             os << ind.next(3) << "condition: \n";
             elif.condition->dump(os, interner, ind.next(4));
             dumpBlock(os, "body", interner, ind.next(3), elif.body);

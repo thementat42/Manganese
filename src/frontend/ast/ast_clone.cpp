@@ -118,12 +118,17 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
 }
 
 IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
+    Statement* variableDeclarationClone
+        = variableDeclaration == nullptr ? nullptr : variableDeclaration->clone(context);
     Expression* conditionClone = condition->clone(context);
     std::vector<ElifClause> elifClones;
     elifClones.reserve(elifs.size);
 
     for (const auto& elif : elifs) {
-        elifClones.push_back({.condition = elif.condition->clone(context),
+        Statement* elifVariableDeclarationCLone
+            = elif.variableDeclaration == nullptr ? nullptr : elif.variableDeclaration->clone(context);
+        elifClones.push_back({.variableDeclaration = elifVariableDeclarationCLone,
+                              .condition = elif.condition->clone(context),
                               .body = cloneBlock(elif.body, context),
                               .associatedScope = nullptr});
     }
@@ -131,7 +136,7 @@ IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
     std::optional<ast::Block> elseBodyClone = std::nullopt;
     if (elseBody.has_value()) { elseBodyClone = cloneBlock(*elseBody, context); }
 
-    return makeClonedNode(this, context, conditionClone, cloneBlock(body, context),
+    return makeClonedNode(this, context, variableDeclarationClone, conditionClone, cloneBlock(body, context),
                           context->arena.emplace_range(elifClones), elseBodyClone);
 }
 

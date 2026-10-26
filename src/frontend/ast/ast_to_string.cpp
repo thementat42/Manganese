@@ -154,13 +154,24 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
 }
 
 std::string IfStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string result = getIndent(indent) + std::format("if ({}) ", condition->toString(interner, indent))
-        + blockToString(body, interner, indent);
-    for (const ElifClause& elif : elifs) {
-        result += std::format(" elif ({}) ", elif.condition->toString(interner, indent))
-            + blockToString(elif.body, interner, indent);
+    std::string condStr = condition->toString(interner, indent);
+    if (variableDeclaration != nullptr) {
+        condStr = std::format("{} {}", variableDeclaration->toString(interner, indent), condStr);
     }
+
+    std::string result = getIndent(indent) + std::format("if ({}) ", condStr) + blockToString(body, interner, indent);
+
+    for (const ElifClause& elif : elifs) {
+        std::string elifCondStr = elif.condition->toString(interner, indent);
+        if (elif.variableDeclaration != nullptr) {
+            elifCondStr = std::format("{} {}", elif.variableDeclaration->toString(interner, indent), elifCondStr);
+        }
+
+        result += std::format(" elif ({}) ", elifCondStr) + blockToString(elif.body, interner, indent);
+    }
+
     if (elseBody.has_value()) { result += " else " + blockToString(*elseBody, interner, indent); }
+
     return result;
 }
 
