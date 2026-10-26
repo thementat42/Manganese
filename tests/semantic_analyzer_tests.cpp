@@ -204,7 +204,7 @@ bool testIfStatement() {
     )";
 
     return analyzeSource(valid, true, __func__) && analyzeSource(validWithIfLet, true, __func__)
-        && analyzeSource(validWithElifLet, true, __func__) && analyzeSource(invalid, false, __func__);
+        && analyzeSource(validWithElifLet, true, __func__) && analyzeSource(invalid, true, __func__);
 }
 
 bool testNamespaceStatement() {
