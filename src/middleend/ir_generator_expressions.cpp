@@ -17,6 +17,8 @@
 #include <middleend/ir_generator.hpp>
 #include <runtime/string.hpp>
 
+#include "frontend/ast/ast_expressions.hpp"
+
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {
@@ -227,6 +229,75 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::BoolLiteralExpression* expression) -> exprvisit_t {
     return llvm::ConstantInt::getBool(*context, expression->value);
+}
+
+[[nodiscard]] auto IRGenerator::visit(const ast::ChainedComparisonExpression* expression) -> exprvisit_t {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
+    const std::size_t numComparisons = expression->operators.size;
+
+    llvm::BasicBlock* successBlock = llvm::BasicBlock::Create(*context, "chain_success", function);
+    llvm::BasicBlock* failBlock = llvm::BasicBlock::Create(*context, "chain_fail", function);
+    llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(*context, "chain_end", function);
+
+    std::vector<llvm::BasicBlock*> checkBlocks;
+    checkBlocks.reserve(numComparisons - 1);
+    for (std::size_t i = 1; i < numComparisons; ++i) {
+        checkBlocks.push_back(llvm::BasicBlock::Create(*context, std::format("chain_check_{}", i), function));
+    }
+
+    // Allocate stack slots for each operand so values can be safely stored and
+    // reused across basic block boundaries without re-evaluation.
+    std::vector<llvm::AllocaInst*> operandAllocas;
+    operandAllocas.reserve(expression->operands.size);
+    for (std::size_t i = 0; i < expression->operands.size; ++i) {
+        llvm::Type* llvmTy = visit(expression->operands[i]->semanticType);
+        operandAllocas.push_back(builder->CreateAlloca(llvmTy, nullptr, std::format("chain_op_{}", i)));
+    }
+
+    llvm::Value* leftVal = visit(expression->operands[0]);
+    builder->CreateStore(leftVal, operandAllocas[0]);
+
+    llvm::Value* rightVal0 = visit(expression->operands[1]);
+    builder->CreateStore(rightVal0, operandAllocas[1]);
+
+    llvm::Value* loadedLeft0 = builder->CreateLoad(operandAllocas[0]->getAllocatedType(), operandAllocas[0]);
+    llvm::Value* loadedRight0 = builder->CreateLoad(operandAllocas[1]->getAllocatedType(), operandAllocas[1]);
+
+    llvm::Value* cmp0 = emitComparison(expression->operators[0], loadedLeft0, loadedRight0);
+
+    llvm::BasicBlock* trueDest0 = (numComparisons == 1) ? successBlock : checkBlocks[0];
+    builder->CreateCondBr(cmp0, trueDest0, failBlock);
+
+    for (std::size_t i = 1; i < numComparisons; ++i) {
+        builder->SetInsertPoint(checkBlocks[i - 1]);
+
+        // The left operand for this step is already evaluated and stored in operandAllocas[i].
+        // Evaluate only the new right operand (operands[i + 1]) once and store it.
+        llvm::Value* rightVal = visit(expression->operands[i + 1]);
+        builder->CreateStore(rightVal, operandAllocas[i + 1]);
+
+        llvm::Value* loadedLeft = builder->CreateLoad(operandAllocas[i]->getAllocatedType(), operandAllocas[i]);
+        llvm::Value* loadedRight
+            = builder->CreateLoad(operandAllocas[i + 1]->getAllocatedType(), operandAllocas[i + 1]);
+
+        llvm::Value* cmp = emitComparison(expression->operators[i], loadedLeft, loadedRight);
+
+        llvm::BasicBlock* trueDest = (i == numComparisons - 1) ? successBlock : checkBlocks[i];
+        builder->CreateCondBr(cmp, trueDest, failBlock);
+    }
+
+    builder->SetInsertPoint(successBlock);
+    builder->CreateBr(mergeBlock);
+
+    builder->SetInsertPoint(failBlock);
+    builder->CreateBr(mergeBlock);
+
+    builder->SetInsertPoint(mergeBlock);
+    llvm::PHINode* phi = builder->CreatePHI(builder->getInt1Ty(), 2, "chain_result");
+    phi->addIncoming(builder->getInt1(true), successBlock);
+    phi->addIncoming(builder->getInt1(false), failBlock);
+
+    return phi;
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::CharLiteralExpression* expression) -> exprvisit_t {

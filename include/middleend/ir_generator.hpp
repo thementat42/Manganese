@@ -88,7 +88,7 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visit(const semantic::Enum*);
     [[nodiscard]] typevisit_t visit(const semantic::Function*);
     [[nodiscard]] typevisit_t visit(const semantic::Pointer*);
-    [[nodiscard]] static typevisit_t visit(const semantic::Poison*) ;
+    [[nodiscard]] static typevisit_t visit(const semantic::Poison*);
     [[nodiscard]] typevisit_t visit(const semantic::Slice*);
     [[nodiscard]] typevisit_t visit(const semantic::Uninitialized*);
     [[nodiscard]] typevisit_t visit(const semantic::Void*);
@@ -97,9 +97,10 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const;
     [[nodiscard]] llvm::Value* convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
                                                    const semantic::SemanticType* toType);
-    static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op) ;
-    static llvm::CmpInst::Predicate getIntPredicate(lexer::TokenType op, bool isSigned) ;
+    static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op);
+    static llvm::CmpInst::Predicate getIntPredicate(lexer::TokenType op, bool isSigned);
     [[nodiscard]] exprvisit_t getLValue(const ast::Expression* expr);
+    llvm::Value* emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right);
 };
 
 }  // namespace Manganese::codegen

@@ -9,6 +9,7 @@
 #include <frontend/semantic/type_context.hpp>
 #include <middleend/ir_generator.hpp>
 
+
 namespace Manganese::codegen {
 
 void IRGenerator::generate() noexcept {
@@ -167,6 +168,34 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
     }
 
     ASSERT_UNREACHABLE_FMT("Unknown lvalue expression '{}' in IRGenerator::getLValue", expr->toString(interner));
+}
+
+// TODO: handle other types (e.g. strings)
+llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right) {
+    const bool isFloat = left->getType()->isFloatingPointTy();
+
+    using enum lexer::TokenType;
+    switch (op) {
+        case LessThan:
+            return isFloat ? builder->CreateFCmpOLT(left, right, "cmplt")
+                           : builder->CreateICmpSLT(left, right, "cmplt");
+        case LessThanOrEqual:
+            return isFloat ? builder->CreateFCmpOLE(left, right, "cmple")
+                           : builder->CreateICmpSLE(left, right, "cmple");
+        case GreaterThan:
+            return isFloat ? builder->CreateFCmpOGT(left, right, "cmpgt")
+                           : builder->CreateICmpSGT(left, right, "cmpgt");
+        case GreaterThanOrEqual:
+            return isFloat ? builder->CreateFCmpOGE(left, right, "cmpge")
+                           : builder->CreateICmpSGE(left, right, "cmpge");
+        case Equal:
+            return isFloat ? builder->CreateFCmpOEQ(left, right, "cmpeq") : builder->CreateICmpEQ(left, right, "cmpeq");
+        case NotEqual:
+            return isFloat ? builder->CreateFCmpONE(left, right, "cmpne") : builder->CreateICmpNE(left, right, "cmpne");
+        default:
+            ASSERT_UNREACHABLE_FMT("Unsupported comparison operator '{}' in code generation",
+                                   lexer::tokenTypeToString(op));
+    }
 }
 
 }  // namespace Manganese::codegen
