@@ -229,6 +229,32 @@ llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left,
                                                     const semantic::SemanticType* fromType,
                                                     const semantic::SemanticType* toType) {
     if (fromType == toType) { return originalValue; }
+
+    if (fromType->isArray() && toType->isSlice()) {
+        const auto* arraySemanticType = static_cast<const semantic::Array*>(fromType);
+        const auto* sliceSemanticType = static_cast<const semantic::Slice*>(toType);
+
+        llvm::Type* arrayLLVMType = visit(arraySemanticType);
+        llvm::Type* sliceLLVMType = visit(sliceSemanticType);
+
+        llvm::Value* arrayPtr = originalValue;
+        if (!arrayPtr->getType()->isPointerTy()) {
+            llvm::AllocaInst* tempAlloca = builder->CreateAlloca(arrayLLVMType, nullptr, "array_to_slice_temp");
+            builder->CreateStore(arrayPtr, tempAlloca);
+            arrayPtr = tempAlloca;
+        }
+
+        std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt32(0)};
+        llvm::Value* elementPtr = builder->CreateInBoundsGEP(arrayLLVMType, arrayPtr, indices, "array_to_slice_ptr");
+        llvm::Value* lengthVal = builder->getInt64(arraySemanticType->length);
+
+        llvm::Value* sliceVal = llvm::Constant::getNullValue(sliceLLVMType);
+        sliceVal = builder->CreateInsertValue(sliceVal, elementPtr, 0, "slice_ptr_ins");
+        sliceVal = builder->CreateInsertValue(sliceVal, lengthVal, 1, "slice_len_ins");
+
+        return sliceVal;
+    }
+
     const llvm::Type* sourceTypeLLVM = visit(fromType);
     llvm::Type* destTypeLLVM = visit(toType);
 
