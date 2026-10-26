@@ -88,7 +88,11 @@ auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
 auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
     if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
 
-    auto* functionType = llvm::cast<llvm::FunctionType>(visit(statement->semanticType));
+    const semantic::SemanticType* oldFunctionSemanticReturnType = currentFunctionSemanticReturnType;
+    const auto* funcSemanticType = static_cast<const semantic::Function*>(statement->semanticType);
+    currentFunctionSemanticReturnType = funcSemanticType->returnType;
+
+    auto* functionType = llvm::cast<llvm::FunctionType>(visit(funcSemanticType));
 
     const std::string_view mangledNameView = statement->mangledName.has_value()
         ? interner.get_view(*statement->mangledName)
@@ -128,10 +132,9 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
         }
     }
 
-    // Restore the previous insertion point so the caller can continue cleanly
     if (oldInsertBlock != nullptr) { builder->SetInsertPoint(oldInsertBlock); }
+    currentFunctionSemanticReturnType = oldFunctionSemanticReturnType;
 }
-
 auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
 
@@ -222,6 +225,10 @@ auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
 
     if (expectedReturnType->isStructTy() && returnValue->getType()->isPointerTy()) {
         returnValue = builder->CreateLoad(expectedReturnType, returnValue, "return");
+    }
+
+    if (returnValue->getType() != expectedReturnType) {
+        returnValue = emitTypeCast(returnValue, statement->value->semanticType, currentFunctionSemanticReturnType);
     }
 
     builder->CreateRet(returnValue);

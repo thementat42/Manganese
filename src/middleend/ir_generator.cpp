@@ -225,4 +225,30 @@ llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left,
     return builder->CreateICmp(pred, left, right, "icmp_tmp");
 }
 
+[[nodiscard]] llvm::Value* IRGenerator::emitTypeCast(llvm::Value* originalValue,
+                                                    const semantic::SemanticType* fromType,
+                                                    const semantic::SemanticType* toType) {
+    if (fromType == toType) { return originalValue; }
+    const llvm::Type* sourceTypeLLVM = visit(fromType);
+    llvm::Type* destTypeLLVM = visit(toType);
+
+    if (sourceTypeLLVM->isIntOrIntVectorTy() && destTypeLLVM->isIntOrIntVectorTy()) {
+        return builder->CreateIntCast(originalValue, destTypeLLVM, /*isSigned=*/fromType->isSignedInteger(),
+                                      "int_to_int_cast");
+    }
+    if (sourceTypeLLVM->isFPOrFPVectorTy() && destTypeLLVM->isFPOrFPVectorTy()) {
+        return builder->CreateFPCast(originalValue, destTypeLLVM, "fp_cast");
+    }
+    if (sourceTypeLLVM->isIntOrIntVectorTy() && destTypeLLVM->isFPOrFPVectorTy()) {
+        return fromType->isSignedInteger() ? builder->CreateSIToFP(originalValue, destTypeLLVM, "si_to_fp_cast")
+                                           : builder->CreateUIToFP(originalValue, destTypeLLVM, "ui_to_fp_cast");
+    }
+    if (sourceTypeLLVM->isFPOrFPVectorTy() && destTypeLLVM->isIntOrIntVectorTy()) {
+        return toType->isSignedInteger() ? builder->CreateFPToSI(originalValue, destTypeLLVM, "fp_to_si_cast")
+                                         : builder->CreateFPToUI(originalValue, destTypeLLVM, "fp_to_ui_cast");
+    }
+
+    ASSERT_UNREACHABLE_FMT("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString());
+}
+
 }  // namespace Manganese::codegen

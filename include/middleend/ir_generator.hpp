@@ -40,6 +40,7 @@ class IRGenerator final : public _irgen_base_t {
     utils::tiny_stack<LoopTarget> loopStack;
     semantic::SemanticAnalyzer& analyzer;
     utils::StringInterner& interner;
+    const semantic::SemanticType* currentFunctionSemanticReturnType = nullptr;
 
    public:
     IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles,
@@ -81,7 +82,7 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visitTypeAsValue(const semantic::SemanticType* type);
     [[nodiscard]] typevisit_t visitTypeAsValue(const ast::Type* type);
 
-    stmtvisit_t visit(const ast::Block block);
+    stmtvisit_t visit(ast::Block block);
 
     [[nodiscard]] typevisit_t visit(const semantic::Aggregate*);
     [[nodiscard]] typevisit_t visit(const semantic::Array*);
@@ -101,7 +102,9 @@ class IRGenerator final : public _irgen_base_t {
     static llvm::CmpInst::Predicate getIntPredicate(lexer::TokenType op, bool isSigned);
     [[nodiscard]] exprvisit_t getLValue(const ast::Expression* expr);
     llvm::Value* emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right,
-                                         const semantic::SemanticType* semanticType);
+                                const semantic::SemanticType* semanticType);
+    [[nodiscard]] llvm::Value* emitTypeCast(llvm::Value* originalValue, const semantic::SemanticType* fromType,
+                                            const semantic::SemanticType* toType);
 };
 
 }  // namespace Manganese::codegen
