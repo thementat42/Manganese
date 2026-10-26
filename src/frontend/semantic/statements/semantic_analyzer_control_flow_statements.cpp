@@ -72,6 +72,12 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     const ContextGuard guard{context.ifStatementDepth,
                              static_cast<decltype(context.ifStatementDepth)>(context.ifStatementDepth + 1)};
 
+    const bool hasVar = (statement->variableDeclaration != nullptr);
+    if (hasVar) {
+        symbolTable.enterScope(statement->associatedScope);
+        if (visit(statement->variableDeclaration) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    }
+
     context.inIfCondition = true;
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     context.inIfCondition = false;
@@ -93,11 +99,17 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         }
     }
 
-    if (visit(statement->body, true, statement->associatedScope) == stmtvisit_t::Failure) {
+    if (visit(statement->body, !hasVar, statement->associatedScope) == stmtvisit_t::Failure) {
         result = stmtvisit_t::Failure;
     }
 
     for (const ast::ElifClause& elif : statement->elifs) {
+        const bool elifHasVar = (elif.variableDeclaration != nullptr);
+        if (elifHasVar) {
+            symbolTable.enterScope(elif.associatedScope);
+            if (visit(elif.variableDeclaration) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        }
+
         DISCARD(visit(elif.condition));
 
         if (elif.condition->semanticType->isPoison()) {
@@ -117,7 +129,9 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
             }
         }
 
-        if (visit(elif.body, true, elif.associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        if (visit(elif.body, !elifHasVar, elif.associatedScope) == stmtvisit_t::Failure) {
+            result = stmtvisit_t::Failure;
+        }
     }
 
     if (statement->elseBody.has_value()) {

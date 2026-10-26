@@ -169,20 +169,42 @@ bool testFunctionDeclarationAndReturnStatement() {
 }
 
 bool testIfStatement() {
-    // Non-boolean condition must fail
     const std::string valid = R"(
-        func main() {
-            if ("not a bool") {}
-        }
-    )";
-
-    const std::string valid2 = R"(
         func main() {
             if (1 < 2) {} else {}
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && analyzeSource(valid2, true, __func__);
+    const std::string validWithIfLet = R"(
+        func main() -> int32 {
+            if (let x = 10; x > 5) {
+                return x;
+            } else {
+                return 0;
+            }
+        }
+    )";
+
+    const std::string validWithElifLet = R"(
+        func main() -> int32 {
+            if (let x = 0; x > 5) {
+                return 1;
+            } elif (let y = 10; y == 10) {
+                return y;
+            } else {
+                return 0;
+            }
+        }
+    )";
+
+    const std::string invalid = R"(
+        func main() {
+            if ("not a bool") {}
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(validWithIfLet, true, __func__)
+        && analyzeSource(validWithElifLet, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
 bool testNamespaceStatement() {
