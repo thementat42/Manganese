@@ -225,9 +225,8 @@ llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left,
     return builder->CreateICmp(pred, left, right, "icmp_tmp");
 }
 
-[[nodiscard]] llvm::Value* IRGenerator::emitTypeCast(llvm::Value* originalValue,
-                                                    const semantic::SemanticType* fromType,
-                                                    const semantic::SemanticType* toType) {
+[[nodiscard]] llvm::Value* IRGenerator::emitTypeCast(llvm::Value* originalValue, const semantic::SemanticType* fromType,
+                                                     const semantic::SemanticType* toType) {
     if (fromType == toType) { return originalValue; }
 
     if (fromType->isArray() && toType->isSlice()) {
@@ -240,6 +239,7 @@ llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left,
         llvm::Value* arrayPtr = originalValue;
         if (!arrayPtr->getType()->isPointerTy()) {
             llvm::AllocaInst* tempAlloca = builder->CreateAlloca(arrayLLVMType, nullptr, "array_to_slice_temp");
+            // clang-tidy complains about arguments maybe being swapped (this is a false positive)
             builder->CreateStore(arrayPtr, tempAlloca);
             arrayPtr = tempAlloca;
         }
@@ -249,6 +249,8 @@ llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left,
         llvm::Value* lengthVal = builder->getInt64(arraySemanticType->length);
 
         llvm::Value* sliceVal = llvm::Constant::getNullValue(sliceLLVMType);
+
+        // clang-tidy complains about arguments maybe being swapped (this is a false positive)
         sliceVal = builder->CreateInsertValue(sliceVal, elementPtr, 0, "slice_ptr_ins");
         sliceVal = builder->CreateInsertValue(sliceVal, lengthVal, 1, "slice_len_ins");
 
