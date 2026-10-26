@@ -6,6 +6,10 @@
 #include <utils/chunk_allocator.hpp>
 #include <vector>
 
+#include "frontend/ast/ast_expressions.hpp"
+#include "frontend/lexer/token.hpp"
+#include "utils/enum_matches.hpp"
+
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`
@@ -159,6 +163,9 @@ ast::Expression* Parser::parseAssignmentExpression(ast::Expression* left, Preced
 ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence precedence) {
     const Token startToken = consumeToken();
     const lexer::TokenType op = startToken.getType();
+
+    if (isComparisonOperator(op)) { return parseChainedComparison(left, startToken, precedence); }
+
     ast::Expression* right = parseExpression(precedence);
 
     return makeNode<ast::BinaryExpression>(startToken, left, op, right);
@@ -291,6 +298,28 @@ ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Preceden
     const Token startToken = consumeToken();  // Consume the 'as' token
     ast::Type* type = parseType(precedence);
     return makeNode<ast::TypeCastExpression>(startToken, left, type);
+}
+
+// Helpers
+
+ast::Expression* Parser::parseChainedComparison(ast::Expression* left, const Token& op, Precedence precedence) {
+    std::vector<ast::Expression*> operands;
+    std::vector<TokenType> operators;
+
+    operands.push_back(left);
+    operators.push_back(op.getType());
+
+    // keep parsing a sub expression
+    operands.push_back(parseExpression(precedence));
+
+    using enum lexer::TokenType;
+    while (isComparisonOperator(peekTokenType())) {
+        operators.push_back(consumeToken().getType());
+        operands.push_back(parseExpression(precedence));
+    }
+
+    return makeNode<ast::ChainedComparisonExpression>(op, arena.emplace_range(operands),
+                                                      arena.emplace_range(operators));
 }
 
 }  // namespace Manganese::parser

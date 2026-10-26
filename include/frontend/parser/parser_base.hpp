@@ -17,6 +17,8 @@
 #include <utils/chunk_allocator.hpp>
 #include <vector>
 
+#include "frontend/lexer/token.hpp"
+
 namespace Manganese::parser {
 using lexer::TokenType, lexer::Token;
 
@@ -65,6 +67,7 @@ class Parser {
     ast::Expression* parseArrayInstantiationExpression();
     ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseBinaryExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseChainedComparison(ast::Expression* left, const Token& op, Precedence precedence);
     ast::Expression* parseFunctionCallExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseGenericInstantiationExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseIndexingExpression(ast::Expression* left, Precedence precedence);
@@ -169,6 +172,11 @@ class Parser {
     [[nodiscard]] inline Token consumeToken() {
         previousToken = peekToken();
         return lexer.consumeToken();
+    }
+
+    constexpr static bool isComparisonOperator(TokenType op) noexcept {
+        using enum TokenType;
+        return utils::enum_matches(op, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual);
     }
 
     Token expectToken(TokenType expectedType);
