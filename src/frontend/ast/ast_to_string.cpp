@@ -305,15 +305,19 @@ std::string BoolLiteralExpression::toString(const utils::StringInterner& /*unuse
 }
 
 std::string ChainedComparisonExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    if (operands.empty()) [[unlikely]] { return ""; }
+    if (operands.empty()) { return ""; }
 
-    std::string result = getIndent(indent) + operands[0]->toString(interner, indent);
+    if (operands.size == 2 && operators.size == 1) {
+        return std::format(WRAP("{} {} {}"), operands[0]->toString(interner, indent), tokenTypeToString(operators[0]),
+                           operands[1]->toString(interner, indent));
+    }
 
+    std::string result = operands[0]->toString(interner, indent);
     for (std::size_t i = 0; i < operators.size; ++i) {
         result += std::format(" {} {}", tokenTypeToString(operators[i]), operands[i + 1]->toString(interner, indent));
     }
 
-    return result;
+    return std::format(WRAP("{}"), result);
 }
 
 std::string CharLiteralExpression::toString(const utils::StringInterner& /*unused*/, std::size_t /*indent*/) const {
