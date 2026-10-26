@@ -55,11 +55,6 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
             if (llvm::verifyModule(*module, &verifyErrorOS)) {
                 verifyErrorOS.flush();
                 std::ofstream logFile(logFileName, std::ios::app);
-                if (logFile) {
-                    logFile << "Test: " << testName << " failed LLVM Module Verification (Unoptimized):\n" 
-                            << verifyErrorStr << "\n---------------------\n";
-                }
-                std::cout << "Test: " << testName << " failed LLVM Module Verification (Unoptimized).\n";
                 return false;
             }
 
@@ -76,11 +71,6 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
             if (llvm::verifyModule(*module, &verifyOptErrorOS)) {
                 verifyOptErrorOS.flush();
                 std::ofstream logFile(logFileName, std::ios::app);
-                if (logFile) {
-                    logFile << "Test: " << testName << " failed LLVM Module Verification (Optimized):\n" 
-                            << verifyOptErrorStr << "\n---------------------\n";
-                }
-                std::cout << "Test: " << testName << " failed LLVM Module Verification (Optimized).\n";
                 return false;
             }
 
@@ -104,10 +94,9 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     if (!generationPassed) {
         std::ofstream logFile(logFileName, std::ios::app);
         if (logFile) {
-            logFile << "Test: " << testName << " failed during generation, optimization, or module retrieval.\n";
+            logFile << "Test: " << testName << " failed.\n";
             logFile << "---------------------\n";
         }
-        std::cout << "Test: " << testName << " failed during generation, optimization, or module retrieval.\n";
         return false;
     }
 
