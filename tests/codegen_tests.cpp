@@ -85,7 +85,8 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     bool allFound = true;
     std::vector<std::string> missingPatterns;
     for (const auto& pattern : expectedSubstrings) {
-        if (optimizedIROutput.find(pattern) == std::string::npos) {
+        // Chceck unoptimized IR to make sure it's emiiting correct instructions
+        if (irOutput.find(pattern) == std::string::npos) {
             allFound = false;
             missingPatterns.push_back(pattern);
         }
@@ -94,7 +95,7 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     std::ofstream logFile(logFileName, std::ios::app);
     if (logFile) {
         logFile << "Test: " << testName << "\n";
-        logFile << "Result: " << (allFound ? "Passed" : "Failed (Missing pattern in optimized IR)") << "\n";
+        logFile << "Result: " << (allFound ? "Passed" : "Failed (Missing pattern in unoptimized IR)") << "\n";
         if (!allFound) {
             for (const auto& pattern : missingPatterns) { logFile << "Missing Substring: \"" << pattern << "\"\n"; }
         }
@@ -104,7 +105,7 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     }
 
     if (!allFound) {
-        std::cout << "Test: " << testName << " Failed. Missing patterns in optimized IR:\n";
+        std::cout << "Test: " << testName << " Failed. Missing patterns in unoptimized IR:\n";
         for (const auto& pattern : missingPatterns) { std::cout << "\tMissing Substring: \"" << pattern << "\"\n"; }
     }
 
@@ -354,7 +355,6 @@ bool testCodegenFromFile() {
 
         if (auto* module = irGenerator.getModule()) {
             // Log raw IR
-
             std::string tempStr;
             llvm::raw_string_ostream rso(tempStr);
             module->print(rso, nullptr);
@@ -368,7 +368,7 @@ bool testCodegenFromFile() {
             llvm::raw_string_ostream rso2(optTempStr);
             module->print(rso2, nullptr);
             rso2.flush();
-            optimizedIROutput = tempStr;
+            optimizedIROutput = optTempStr;
         }
 
         std::ofstream logFile(logFileName, std::ios::app);
