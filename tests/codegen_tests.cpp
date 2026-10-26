@@ -25,17 +25,16 @@ namespace {
 constexpr const char* logFileName = "logs/codegen_tests.log";
 utils::chunk_allocator arena;
 utils::StringInterner interner;
-utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
 bool validateIRContains(const std::string& source, const std::initializer_list<std::string>& expectedSubstrings,
                         std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena, interner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
-    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena, interner);
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, utils::getTargetInfo(), arena, interner);
     if (semanticAnalyzer.analyze() != Result::Success) { return false; }
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), interner);
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, utils::getTargetInfo(), semanticAnalyzer.getSymbolTable(), interner);
     if (cfa.analyze() != Result::Success) { return false; }
 
     std::string irOutput;
@@ -43,7 +42,7 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     bool generationPassed = true;
 
     try {
-        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, interner, targetInfo);
+        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, interner, utils::getTargetInfo());
         irGenerator.generate();
 
         if (auto* module = irGenerator.getModule()) {
@@ -54,7 +53,7 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
             irOutput = tempStr;
 
             // Run the optimizer pass (sanity check)
-            // codegen::optimizeModule(module, llvm::OptimizationLevel::O2);
+            codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
 
             std::string optTempStr;
             llvm::raw_string_ostream rso2(optTempStr);
@@ -339,14 +338,14 @@ bool testCodegenFromFile() {
     parser::Parser parser(fullPath.string(), lexer::Mode::File, fileAllocator, fileInterner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
-    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, fileAllocator, fileInterner);
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, utils::getTargetInfo(), fileAllocator, fileInterner);
     if (semanticAnalyzer.analyze() != Result::Success) { return false; }
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), fileInterner);
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, utils::getTargetInfo(), semanticAnalyzer.getSymbolTable(), fileInterner);
     if (cfa.analyze() != Result::Success) { return false; }
 
     try {
-        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, fileInterner, targetInfo);
+        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, fileInterner, utils::getTargetInfo());
         irGenerator.generate();
 
         std::string irOutput;

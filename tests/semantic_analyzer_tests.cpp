@@ -18,7 +18,6 @@ namespace {
 constexpr const char* logFileName = "logs/semantic_analyzer_tests.log";
 utils::chunk_allocator arena;
 utils::StringInterner interner;
-utils::TargetInfo target = utils::TargetInfo{.pointerSize = sizeof(void*), .pointerAlignment = alignof(void*)};
 
 // Helper: Parses and runs full semantic analysis on source code
 bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {
@@ -26,7 +25,7 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
     auto& parsedFile = parsedFiles[0];
 
-    semantic::SemanticAnalyzer analyzer(parsedFiles, target, arena, interner);
+    semantic::SemanticAnalyzer analyzer(parsedFiles, utils::getTargetInfo(), arena, interner);
     const Result result = analyzer.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -678,7 +677,7 @@ bool testAnalyzeFromFile() {
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
     auto& parsedFile = parsedFiles[0];
 
-    semantic::SemanticAnalyzer analyzer(parsedFiles, target, fileAllocator, fileInterner);
+    semantic::SemanticAnalyzer analyzer(parsedFiles, utils::getTargetInfo(), fileAllocator, fileInterner);
 
     std::ofstream logFile(logFileName, std::ios::app);
     const Result result = analyzer.analyze();

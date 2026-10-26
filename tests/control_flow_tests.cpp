@@ -19,16 +19,15 @@ namespace {
 constexpr const char* logFileName = "logs/control_flow_tests.log";
 utils::chunk_allocator arena;
 utils::StringInterner interner;
-utils::TargetInfo targetInfo = utils::TargetInfo::fromHostTriple();
 
 bool analyzeControlFlow(const std::string& source, bool expectSuccess, std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena, interner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
-    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, arena, interner);
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, utils::getTargetInfo(), arena, interner);
     DISCARD(semanticAnalyzer.analyze());
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), interner);
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, utils::getTargetInfo(), semanticAnalyzer.getSymbolTable(), interner);
     const Result result = cfa.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -103,10 +102,10 @@ bool testControlFlowFromFile() {
     parser::Parser parser(fullPath.string(), lexer::Mode::File, fileAllocator, fileInterner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
 
-    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, targetInfo, fileAllocator, fileInterner);
+    semantic::SemanticAnalyzer semanticAnalyzer(parsedFiles, utils::getTargetInfo(), fileAllocator, fileInterner);
     DISCARD(semanticAnalyzer.analyze());
 
-    cfg::ControlFlowAnalyzer cfa(parsedFiles, targetInfo, semanticAnalyzer.getSymbolTable(), fileInterner);
+    cfg::ControlFlowAnalyzer cfa(parsedFiles, utils::getTargetInfo(), semanticAnalyzer.getSymbolTable(), fileInterner);
     const Result result = cfa.analyze();
 
     return result == Result::Success;

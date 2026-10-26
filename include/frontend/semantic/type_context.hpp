@@ -308,7 +308,7 @@ inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
 class TypeContext {
    private:
     utils::chunk_allocator& _arena;
-    utils::TargetInfo _targetInfo;
+    const utils::TargetInfo& _targetInfo;
     constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::boolean) + 1;
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
@@ -324,7 +324,7 @@ class TypeContext {
     }
 
    public:
-    explicit TypeContext(utils::chunk_allocator& arena, utils::TargetInfo target) noexcept :
+    explicit TypeContext(utils::chunk_allocator& arena, const utils::TargetInfo& target) noexcept :
         _arena(arena), _targetInfo(target), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
 
     ~TypeContext() = default;

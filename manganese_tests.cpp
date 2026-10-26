@@ -1,3 +1,5 @@
+#include <llvm/Support/TargetSelect.h>
+
 #include <chrono>
 #include <cstddef>
 #include <cstring>
@@ -30,6 +32,12 @@ int main(int argc, char const* argv[]) {
     bool semantic = false;
     bool controlflow = false;
     bool codegen = false;
+
+    LLVMInitializeX86TargetInfo();
+    LLVMInitializeX86Target();
+    LLVMInitializeX86TargetMC();
+    LLVMInitializeX86AsmPrinter();
+    LLVMInitializeX86AsmParser();
 
     // TODO: Replace this with proper argument parser later (when working on argparser for main executable)
 

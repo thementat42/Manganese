@@ -36,7 +36,7 @@ class IRGenerator final : public _irgen_base_t {
     std::unordered_map<utils::StringID, llvm::Value*> namedValues;
     std::unordered_map<const semantic::SemanticType*, llvm::StructType*> savedTypes;
     std::vector<parser::ParsedFile>& files;
-    utils::TargetInfo targetInfo;
+    utils::TargetInfo& targetInfo;
     utils::tiny_stack<LoopTarget> loopStack;
     semantic::SemanticAnalyzer& analyzer;
     utils::StringInterner& interner;
@@ -44,7 +44,7 @@ class IRGenerator final : public _irgen_base_t {
    public:
     IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles,
                 semantic::SemanticAnalyzer& analyzerReference, utils::StringInterner& internerReference,
-                utils::TargetInfo info) :
+                utils::TargetInfo& info) :
         context(std::make_unique<llvm::LLVMContext>()),
         module(std::make_unique<llvm::Module>(moduleName, *context)),
         builder(std::make_unique<llvm::IRBuilder<>>(*context)),
