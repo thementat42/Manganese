@@ -58,8 +58,8 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
             std::string optTempStr;
             llvm::raw_string_ostream rso2(optTempStr);
             module->print(rso2, nullptr);
-            rso.flush();
-            optimizedIROutput = tempStr;
+            rso2.flush();
+            optimizedIROutput = optTempStr;
 
         } else {
             generationPassed = false;
@@ -345,7 +345,8 @@ bool testCodegenFromFile() {
     if (cfa.analyze() != Result::Success) { return false; }
 
     try {
-        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, fileInterner, utils::getTargetInfo());
+        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, fileInterner,
+                                         utils::getTargetInfo());
         irGenerator.generate();
 
         std::string irOutput;
@@ -360,13 +361,13 @@ bool testCodegenFromFile() {
             rso.flush();
             irOutput = tempStr;
 
-            // codegen::optimizeModule(module, llvm::OptimizationLevel::O2);
+            codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
 
-            // Log optimized
+            // Log optimized IR
             std::string optTempStr;
             llvm::raw_string_ostream rso2(optTempStr);
-            module->print(rso, nullptr);
-            rso.flush();
+            module->print(rso2, nullptr);
+            rso2.flush();
             optimizedIROutput = tempStr;
         }
 
