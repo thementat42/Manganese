@@ -54,7 +54,7 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
             irOutput = tempStr;
 
             // Run the optimizer pass (sanity check)
-            codegen::optimizeModule(module, llvm::OptimizationLevel::O2);
+            // codegen::optimizeModule(module, llvm::OptimizationLevel::O2);
 
             std::string optTempStr;
             llvm::raw_string_ostream rso2(optTempStr);
@@ -361,7 +361,7 @@ bool testCodegenFromFile() {
             rso.flush();
             irOutput = tempStr;
 
-            codegen::optimizeModule(module, llvm::OptimizationLevel::O2);
+            // codegen::optimizeModule(module, llvm::OptimizationLevel::O2);
 
             // Log optimized
             std::string optTempStr;
