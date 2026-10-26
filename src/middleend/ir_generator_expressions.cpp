@@ -286,6 +286,7 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::FunctionCallExpression* expression) -> exprvisit_t {
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(expression->callee->semanticType));
+    const auto* funcSemanticType = static_cast<const semantic::Function*>(expression->callee->semanticType);
 
     const ast::FunctionDeclarationStatement* baseDeclaration = nullptr;
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
@@ -310,6 +311,13 @@ namespace Manganese::codegen {
         if (expectedType->isStructTy() && argumentValue->getType()->isPointerTy()) {
             argumentValue = builder->CreateLoad(expectedType, argumentValue, "argument_load_tmp");
         }
+
+        // Do an implicit cast if needed
+        if (i < providedArgs && expression->arguments[i]->semanticType != funcSemanticType->parameterTypes[i].type) {
+            argumentValue = emitTypeCast(argumentValue, expression->arguments[i]->semanticType,
+                                         funcSemanticType->parameterTypes[i].type);
+        }
+
         argumentValues.push_back(argumentValue);
     }
 

@@ -300,6 +300,9 @@ auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> s
 
     if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {
         llvm::Value* initializerValue = visit(statement->value);
+        if (statement->value->semanticType != statement->semanticType) {
+            initializerValue = emitTypeCast(initializerValue, statement->value->semanticType, statement->semanticType);
+        }
         builder->CreateStore(initializerValue, alloca);
     }
     namedValues[statement->name] = alloca;
