@@ -194,22 +194,27 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
 
 ast::Statement* Parser::parseIfStatement() {
     const Token startToken = consumeToken();
+    ast::Statement* declaredVariable = nullptr;
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
+    if (peekTokenType() == TokenType::Let) { declaredVariable = parseVariableDeclarationStatement(); }
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end if condition");
     const ast::Block body = parseBlock("if body");
 
     std::vector<ast::ElifClause> elifs;
     while (peekTokenType() == TokenType::Elif) {
+        ast::Statement* elifVariable = nullptr;
         DISCARD(consumeToken());
 
         expectToken(TokenType::LeftParen, "Expected '(' to introduce elif condition");
+        if (peekTokenType() == TokenType::Let) { elifVariable = parseVariableDeclarationStatement(); }
+
         ast::Expression* elifCondition = parseExpression(Precedence::Default);
 
         expectToken(TokenType::RightParen, "Expected ')' to end elif condition");
 
-        elifs.emplace_back(elifCondition, parseBlock("elif body"));
+        elifs.emplace_back(elifVariable, elifCondition, parseBlock("elif body"));
     }
     std::optional<ast::Block> elseBody;
     if (peekTokenType() == TokenType::Else) {
@@ -217,8 +222,8 @@ ast::Statement* Parser::parseIfStatement() {
         elseBody = parseBlock("else body");
         if (elseBody->empty()) { elseBody = std::nullopt; }
     }
-    return makeNode<ast::IfStatement>(startToken, condition, arena.emplace_range(body), arena.emplace_range(elifs),
-                                      elseBody);
+    return makeNode<ast::IfStatement>(startToken, declaredVariable, condition, arena.emplace_range(body),
+                                      arena.emplace_range(elifs), elseBody);
 }
 
 ast::Statement* Parser::parseImportStatement() {

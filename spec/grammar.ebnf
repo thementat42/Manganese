@@ -290,8 +290,8 @@ for_initializer =
     | expression
 
 if_statement =
-    "if" "(" expression ")" block
-    ("elif" "(" expression ")" block)*
+    "if" "(" variable_declaration_statement? expression ")" block
+    ("elif" "(" variable_declaration_statement? expression ")" block)*
     ("else" block)?
 
 return_statement = "return" expression? ";"

@@ -152,21 +152,28 @@ struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {
 };
 
 struct ElifClause {
+    Statement* variableDeclaration;
     Expression* condition;
     Block body;
     semantic::Scope* associatedScope;
 };
 
 struct IfStatement final : public Statement, ScopeOwner {
+    Statement* variableDeclaration;
     Expression* condition;
     Block body;
     std::optional<Block> elseBody;  // elseBody might be empty
     semantic::Scope* elseAssociatedScope = nullptr;
     utils::Slice<ElifClause> elifs;
 
-    IfStatement(Expression* _condition, Block _body, utils::Slice<ElifClause> _elifs,
+    IfStatement(Statement* _variableDeclaration, Expression* _condition, Block _body, utils::Slice<ElifClause> _elifs,
                 std::optional<Block> _elseBody = {}) noexcept :
-        Statement(StatementKind::IfStatement), condition(_condition), body(_body), elseBody(_elseBody), elifs(_elifs) {}
+        Statement(StatementKind::IfStatement),
+        variableDeclaration(_variableDeclaration),
+        condition(_condition),
+        body(_body),
+        elseBody(_elseBody),
+        elifs(_elifs) {}
 
     MN_AST_STANDARD_INTERFACE(IfStatement);
 };
