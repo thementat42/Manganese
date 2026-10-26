@@ -88,6 +88,17 @@ struct BoolLiteralExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE(BoolLiteralExpression);
 };
 
+struct ChainedComparisonExpression final : public Expression {
+    utils::Slice<Expression*> operands;
+    utils::Slice<lexer::TokenType> operators;
+
+    ChainedComparisonExpression(utils::Slice<Expression*> _operands, utils::Slice<lexer::TokenType> _operators) noexcept
+        :
+        Expression(ExpressionKind::ChainedComparisonExpression), operands(_operands), operators(_operators) {}
+
+    MN_AST_STANDARD_INTERFACE(ChainedComparisonExpression);
+};
+
 struct CharLiteralExpression final : public Expression {
     const char32_t value;
 
