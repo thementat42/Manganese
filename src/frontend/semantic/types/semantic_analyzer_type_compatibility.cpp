@@ -301,6 +301,7 @@ auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const S
     return {.result = Compatible_t::Valid};  // Widening conversion is fine
 }
 
+// TODO: should this be stricter? (e.g. bool < bool not allowed, but bool == bool is fine)
 auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const
     -> typeCompatibilityResult {
     if (lhs->isVoid() || rhs->isVoid()) {
