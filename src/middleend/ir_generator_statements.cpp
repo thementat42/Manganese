@@ -119,6 +119,15 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
 
     visit(statement->body);
 
+    // Make sure a return instruction is always emitted (e.g. if no explicit return instruction is written)
+    if (builder->GetInsertBlock()->getTerminator() == nullptr) {
+        if (llvmFunction->getReturnType()->isVoidTy()) {
+            builder->CreateRetVoid();
+        } else {
+            builder->CreateUnreachable();
+        }
+    }
+
     // Restore the previous insertion point so the caller can continue cleanly
     if (oldInsertBlock != nullptr) { builder->SetInsertPoint(oldInsertBlock); }
 }

@@ -34,7 +34,7 @@ TargetInfo TargetInfo::fromTriple(std::string_view tripleString) {
     if (target != nullptr) {
         llvm::TargetOptions opt;
         tm = std::unique_ptr<llvm::TargetMachine>(target->createTargetMachine(
-            triple, "generic", "", opt, std::nullopt, std::nullopt, llvm::CodeGenOptLevel::Default, false));
+            triple, "", "", opt, std::nullopt, std::nullopt, llvm::CodeGenOptLevel::Default, false));
     } else {
         logging::logCritical(0, 0, "Failed to lookup LLVM target for triple '{}': {}", tripleString, error);
     }
