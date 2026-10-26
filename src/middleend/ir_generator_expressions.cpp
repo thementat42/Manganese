@@ -150,37 +150,7 @@ namespace Manganese::codegen {
         case LessThan:
         case LessThanOrEqual:
         case Equal:
-        case NotEqual: {
-            if (expression->left->semanticType->isString()) {
-                auto* stringType = visit(expression->left->semanticType);
-
-                const llvm::FunctionCallee strcmpFn = module->getOrInsertFunction(
-                    MN_STRINGIFY(mn_strcmp), builder->getInt32Ty(), stringType, stringType);
-
-                llvm::Value* cmpResult = builder->CreateCall(strcmpFn, {lhs, rhs}, "strcmp_tmp");
-                llvm::Value* zero = builder->getInt32(0);
-
-                llvm::CmpInst::Predicate pred;
-                switch (expression->op) {
-                    case Equal: pred = llvm::CmpInst::ICMP_EQ; break;
-                    case NotEqual: pred = llvm::CmpInst::ICMP_NE; break;
-                    case LessThan: pred = llvm::CmpInst::ICMP_SLT; break;
-                    case LessThanOrEqual: pred = llvm::CmpInst::ICMP_SLE; break;
-                    case GreaterThan: pred = llvm::CmpInst::ICMP_SGT; break;
-                    case GreaterThanOrEqual: pred = llvm::CmpInst::ICMP_SGE; break;
-                    default: ASSERT_UNREACHABLE("Invalid string comparison operator");
-                }
-
-                return builder->CreateICmp(pred, cmpResult, zero, "str_cmp_bool");
-            }
-            if (doFloatOperation) {
-                const llvm::CmpInst::Predicate predicate = getFloatPredicate(expression->op);
-                return builder->CreateFCmp(predicate, lhs, rhs, "fcmp_tmp");
-            }
-            const bool isSigned = commonType->isSignedInteger();
-            const llvm::CmpInst::Predicate predicate = getIntPredicate(expression->op, isSigned);
-            return builder->CreateICmp(predicate, lhs, rhs, "icmp_tmp");
-        }
+        case NotEqual: return emitComparison(expression->op, lhs, rhs, commonType);
 
         case And:
         case Or: {
@@ -231,7 +201,7 @@ namespace Manganese::codegen {
     return llvm::ConstantInt::getBool(*context, expression->value);
 }
 
-[[nodiscard]] auto IRGenerator::visit(const ast::ChainedComparisonExpression* expression) -> exprvisit_t {
+[[nodiscard]] auto IRGenerator::visit(const ast::ChainedComparisonExpression* expression) -> llvm::Value* {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
     const std::size_t numComparisons = expression->operators.size;
 
@@ -263,7 +233,8 @@ namespace Manganese::codegen {
     llvm::Value* loadedLeft0 = builder->CreateLoad(operandAllocas[0]->getAllocatedType(), operandAllocas[0]);
     llvm::Value* loadedRight0 = builder->CreateLoad(operandAllocas[1]->getAllocatedType(), operandAllocas[1]);
 
-    llvm::Value* cmp0 = emitComparison(expression->operators[0], loadedLeft0, loadedRight0);
+    llvm::Value* cmp0
+        = emitComparison(expression->operators[0], loadedLeft0, loadedRight0, expression->operands[1]->semanticType);
 
     llvm::BasicBlock* trueDest0 = (numComparisons == 1) ? successBlock : checkBlocks[0];
     builder->CreateCondBr(cmp0, trueDest0, failBlock);
@@ -280,7 +251,8 @@ namespace Manganese::codegen {
         llvm::Value* loadedRight
             = builder->CreateLoad(operandAllocas[i + 1]->getAllocatedType(), operandAllocas[i + 1]);
 
-        llvm::Value* cmp = emitComparison(expression->operators[i], loadedLeft, loadedRight);
+        llvm::Value* cmp = emitComparison(expression->operators[i], loadedLeft, loadedRight,
+                                          expression->operands[i + 1]->semanticType);
 
         llvm::BasicBlock* trueDest = (i == numComparisons - 1) ? successBlock : checkBlocks[i];
         builder->CreateCondBr(cmp, trueDest, failBlock);

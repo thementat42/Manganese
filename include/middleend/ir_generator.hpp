@@ -100,7 +100,8 @@ class IRGenerator final : public _irgen_base_t {
     static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op);
     static llvm::CmpInst::Predicate getIntPredicate(lexer::TokenType op, bool isSigned);
     [[nodiscard]] exprvisit_t getLValue(const ast::Expression* expr);
-    llvm::Value* emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right);
+    llvm::Value* emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right,
+                                         const semantic::SemanticType* semanticType);
 };
 
 }  // namespace Manganese::codegen

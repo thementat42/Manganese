@@ -9,7 +9,6 @@
 #include <frontend/semantic/type_context.hpp>
 #include <middleend/ir_generator.hpp>
 
-
 namespace Manganese::codegen {
 
 void IRGenerator::generate() noexcept {
@@ -170,32 +169,60 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
     ASSERT_UNREACHABLE_FMT("Unknown lvalue expression '{}' in IRGenerator::getLValue", expr->toString(interner));
 }
 
-// TODO: handle other types (e.g. strings)
-llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right) {
-    const bool isFloat = left->getType()->isFloatingPointTy();
-
+llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right,
+                                         const semantic::SemanticType* semanticType) {
     using enum lexer::TokenType;
-    switch (op) {
-        case LessThan:
-            return isFloat ? builder->CreateFCmpOLT(left, right, "cmplt")
-                           : builder->CreateICmpSLT(left, right, "cmplt");
-        case LessThanOrEqual:
-            return isFloat ? builder->CreateFCmpOLE(left, right, "cmple")
-                           : builder->CreateICmpSLE(left, right, "cmple");
-        case GreaterThan:
-            return isFloat ? builder->CreateFCmpOGT(left, right, "cmpgt")
-                           : builder->CreateICmpSGT(left, right, "cmpgt");
-        case GreaterThanOrEqual:
-            return isFloat ? builder->CreateFCmpOGE(left, right, "cmpge")
-                           : builder->CreateICmpSGE(left, right, "cmpge");
-        case Equal:
-            return isFloat ? builder->CreateFCmpOEQ(left, right, "cmpeq") : builder->CreateICmpEQ(left, right, "cmpeq");
-        case NotEqual:
-            return isFloat ? builder->CreateFCmpONE(left, right, "cmpne") : builder->CreateICmpNE(left, right, "cmpne");
-        default:
-            ASSERT_UNREACHABLE_FMT("Unsupported comparison operator '{}' in code generation",
-                                   lexer::tokenTypeToString(op));
+
+    if (semanticType != nullptr && semanticType->isString()) {
+        auto* stringType = visit(semanticType);
+
+        const llvm::FunctionCallee strcmpFn
+            = module->getOrInsertFunction(MN_STRINGIFY(mn_strcmp), builder->getInt32Ty(), stringType, stringType);
+
+        llvm::Value* cmpResult = builder->CreateCall(strcmpFn, {left, right}, "strcmp_tmp");
+        llvm::Value* zero = builder->getInt32(0);
+
+        llvm::CmpInst::Predicate pred;
+        switch (op) {
+            case Equal: pred = llvm::CmpInst::ICMP_EQ; break;
+            case NotEqual: pred = llvm::CmpInst::ICMP_NE; break;
+            case LessThan: pred = llvm::CmpInst::ICMP_SLT; break;
+            case LessThanOrEqual: pred = llvm::CmpInst::ICMP_SLE; break;
+            case GreaterThan: pred = llvm::CmpInst::ICMP_SGT; break;
+            case GreaterThanOrEqual: pred = llvm::CmpInst::ICMP_SGE; break;
+            default: llvm_unreachable("Invalid string comparison operator");
+        }
+
+        return builder->CreateICmp(pred, cmpResult, zero, "str_cmp_bool");
     }
+
+    if (left->getType()->isFloatingPointTy()) {
+        llvm::CmpInst::Predicate pred;
+        switch (op) {
+            case Equal: pred = llvm::CmpInst::FCMP_OEQ; break;
+            case NotEqual: pred = llvm::CmpInst::FCMP_ONE; break;
+            case LessThan: pred = llvm::CmpInst::FCMP_OLT; break;
+            case LessThanOrEqual: pred = llvm::CmpInst::FCMP_OLE; break;
+            case GreaterThan: pred = llvm::CmpInst::FCMP_OGT; break;
+            case GreaterThanOrEqual: pred = llvm::CmpInst::FCMP_OGE; break;
+            default: llvm_unreachable("Invalid float comparison operator");
+        }
+        return builder->CreateFCmp(pred, left, right, "fcmp_tmp");
+    }
+
+    const bool isSigned = semanticType != nullptr ? semanticType->isSignedInteger() : true;
+    llvm::CmpInst::Predicate pred;
+    switch (op) {
+        case Equal: pred = llvm::CmpInst::ICMP_EQ; break;
+        case NotEqual: pred = llvm::CmpInst::ICMP_NE; break;
+        case LessThan: pred = isSigned ? llvm::CmpInst::ICMP_SLT : llvm::CmpInst::ICMP_ULT; break;
+        case LessThanOrEqual: pred = isSigned ? llvm::CmpInst::ICMP_SLE : llvm::CmpInst::ICMP_ULE; break;
+        case GreaterThan: pred = isSigned ? llvm::CmpInst::ICMP_SGT : llvm::CmpInst::ICMP_UGT; break;
+        case GreaterThanOrEqual: pred = isSigned ? llvm::CmpInst::ICMP_SGE : llvm::CmpInst::ICMP_UGE; break;
+        default: llvm_unreachable("Invalid integer comparison operator");
+    }
+
+    return builder->CreateICmp(pred, left, right, "icmp_tmp");
 }
 
 }  // namespace Manganese::codegen
