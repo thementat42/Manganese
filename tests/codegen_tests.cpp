@@ -1,4 +1,5 @@
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include <core.hpp>
@@ -18,6 +19,7 @@
 #include "testrunner.hpp"
 #include "tests.hpp"
 
+
 namespace Manganese::tests {
 
 namespace {
@@ -25,6 +27,8 @@ namespace {
 constexpr const char* logFileName = "logs/codegen_tests.log";
 utils::chunk_allocator arena;
 utils::StringInterner interner;
+
+#include <llvm/IR/Verifier.h> // Make sure to include this header
 
 bool validateIRContains(const std::string& source, const std::initializer_list<std::string>& expectedSubstrings,
                         std::string_view testName) {
@@ -46,14 +50,39 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
         irGenerator.generate();
 
         if (auto* module = irGenerator.getModule()) {
+            std::string verifyErrorStr;
+            llvm::raw_string_ostream verifyErrorOS(verifyErrorStr);
+            if (llvm::verifyModule(*module, &verifyErrorOS)) {
+                verifyErrorOS.flush();
+                std::ofstream logFile(logFileName, std::ios::app);
+                if (logFile) {
+                    logFile << "Test: " << testName << " failed LLVM Module Verification (Unoptimized):\n" 
+                            << verifyErrorStr << "\n---------------------\n";
+                }
+                std::cout << "Test: " << testName << " failed LLVM Module Verification (Unoptimized).\n";
+                return false;
+            }
+
             std::string tempStr;
             llvm::raw_string_ostream rso(tempStr);
             module->print(rso, nullptr);
             rso.flush();
             irOutput = tempStr;
 
-            // Run the optimizer pass (sanity check)
             codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
+
+            std::string verifyOptErrorStr;
+            llvm::raw_string_ostream verifyOptErrorOS(verifyOptErrorStr);
+            if (llvm::verifyModule(*module, &verifyOptErrorOS)) {
+                verifyOptErrorOS.flush();
+                std::ofstream logFile(logFileName, std::ios::app);
+                if (logFile) {
+                    logFile << "Test: " << testName << " failed LLVM Module Verification (Optimized):\n" 
+                            << verifyOptErrorStr << "\n---------------------\n";
+                }
+                std::cout << "Test: " << testName << " failed LLVM Module Verification (Optimized).\n";
+                return false;
+            }
 
             std::string optTempStr;
             llvm::raw_string_ostream rso2(optTempStr);
@@ -85,7 +114,7 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     bool allFound = true;
     std::vector<std::string> missingPatterns;
     for (const auto& pattern : expectedSubstrings) {
-        // Chceck unoptimized IR to make sure it's emiiting correct instructions
+        // Check unoptimized IR to make sure it's emitting correct instructions
         if (irOutput.find(pattern) == std::string::npos) {
             allFound = false;
             missingPatterns.push_back(pattern);
