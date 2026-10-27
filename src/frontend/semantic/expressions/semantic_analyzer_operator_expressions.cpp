@@ -304,10 +304,11 @@ auto SemanticAnalyzer::visit(ast::TernaryExpression* expression) -> exprvisit_t 
     if (visit(expression->ifTrue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->ifFalse) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
-    context.inTernaryCondition = true;
+    context.inTernary = true;
     const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
         expression->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
-    context.inTernaryCondition = false;
+    context.inTernary = false;
+
     const typeCompatibilityResult branchTypesAreCompatible
         = areTypesCompatible(expression->ifTrue->semanticType, expression->ifFalse->semanticType);
 
