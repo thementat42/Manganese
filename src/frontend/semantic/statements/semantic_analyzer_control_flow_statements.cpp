@@ -5,10 +5,12 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
+#include "frontend/semantic/symbol_table.hpp"
+
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
-    if ((context.whileLoopDepth == 0U) && (context.forLoopDepth == 0U)) {
+    if ((context.whileLoopDepth == 0U) && (context.forLoopDepth == 0U) && (context.forEachLoopDepth == 0)) {
         logError(statement, "'break' can only be used in loops ");
         return stmtvisit_t::Failure;
     }
@@ -16,11 +18,74 @@ auto SemanticAnalyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
 }
 
 auto SemanticAnalyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
-    if ((context.whileLoopDepth == 0U) && (context.forLoopDepth == 0U)) {
+    if ((context.whileLoopDepth == 0U) && (context.forLoopDepth == 0U) && (context.forEachLoopDepth == 0)) {
         logError(statement, "'continue' can only be used in loops");
         return stmtvisit_t::Failure;
     }
     return stmtvisit_t::Success;
+}
+
+auto SemanticAnalyzer::visit(ast::ForEachLoopStatement* statement) -> stmtvisit_t {
+    auto result = stmtvisit_t::Success;
+    const ContextGuard guard{context.forEachLoopDepth,
+                             static_cast<decltype(context.forEachLoopDepth)>(context.forEachLoopDepth + 1)};
+
+    statement->container->semanticType = typeContext.getPoison();
+    if (visit(statement->container) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+
+    const SemanticType* containerType = statement->container->semanticType;
+    const SemanticType* elementType = typeContext.getPoison();
+
+    if (containerType->isPoison()) {
+        logError(statement->container, "Could not deduce type of container in foreach statement");
+        result = stmtvisit_t::Failure;
+    } else {
+        if (containerType->isSlice()) {
+            elementType = static_cast<const Slice*>(containerType)->elementType;
+        } else if (containerType->isArray()) {
+            elementType = static_cast<const Array*>(containerType)->elementType;
+        } else {
+            logError(statement->container, "Type '{}' is not iterable (expected array or slice)",
+                     containerType->toString());
+            result = stmtvisit_t::Failure;
+        }
+    }
+
+    const SemanticType* resolvedElementType = elementType;
+
+    if (statement->element.type != nullptr) {
+        if (visit(statement->element.type) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        resolvedElementType = statement->element.type->semanticType;
+        if (elementType != nullptr && !areTypesCompatible(resolvedElementType, elementType)) {
+            logError(statement,
+                     "Type mismatch in foreach loop: variable has type '{}', but container element type is '{}'",
+                     statement->element.type->toString(interner), elementType->toString());
+            result = stmtvisit_t::Failure;
+        }
+    }
+    statement->element.semanticType = resolvedElementType;
+
+    symbolTable.enterScope();
+    statement->associatedScope = symbolTable.getCurrentScope();
+
+    if (!statement->element.semanticType->isPoison()) {
+        Result insertResult = symbolTable.declare(statement->element.name,
+                                                  Symbol{.type = resolvedElementType,
+                                                         .node = statement,
+                                                         .kind = SymbolKind::Variable,
+                                                         .isMutable = statement->element.isMutable});
+        if (insertResult == Result::Failure) {
+            logError(statement, "Variable '{}' is already declared in this scope",
+                     interner.get_view(statement->element.name));
+            result = stmtvisit_t::Failure;
+        }
+    }
+
+    if (visit(statement->body, false, statement->associatedScope) == stmtvisit_t::Failure) {
+        result = stmtvisit_t::Failure;
+    }
+
+    return result;
 }
 
 auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
