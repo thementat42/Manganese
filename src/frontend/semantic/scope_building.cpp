@@ -76,6 +76,10 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
             if (result == Result::Failure) { reportRedeclaration(interner.get_view(enumDecl->name), enumDecl); }
             return result;
         }
+        case ForEachLoopStatement: {
+            auto* forEachLoopStmt = static_cast<ast::ForEachLoopStatement*>(stmt);
+            return _buildBodyScope(forEachLoopStmt->body, &forEachLoopStmt->associatedScope);
+        }
         case ForLoopStatement: {
             auto* forLoopStmt = static_cast<ast::ForLoopStatement*>(stmt);
             return _buildBodyScope(forLoopStmt->body, &forLoopStmt->associatedScope);
