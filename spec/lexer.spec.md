@@ -5,11 +5,11 @@
 
 ## Whitespace and Comments
 
-- Whitespace is ignored, except where it temrinates a token
+- Whitespace is ignored, except where it terminates a token
   - Whitespace refers to spaces (` `), newlines (`\n`), tabs (`\t` and `\v`), form feeds (`\f`) and carriage returns (`\r`)
 - A `#` begins a single-line comment, extending to the end of the line (i.e. until a `\n`, 0xA)
 - A `/*` begins a block comment, which extends until the next `*/`
-  - Nested block comments are supported; each `/*` must be matched by a correspoinding `*/`
+  - Nested block comments are supported; each `/*` must be matched by a corresponding `*/`
 
 ## String Literals
 
@@ -17,7 +17,7 @@
 - String literals begin and end with `"`
 - Raw string literals begin with `r` followed immediately (i.e. no whitespace) by one or more backticks
   - The number of backticks after the `r` determines the delimiter length
-  - The literal ends at the next occurence of the same number of consecutive backticks
+  - The literal ends at the next occurrence of the same number of consecutive backticks
   - The contents are interpreted literally; escape sequences are not processed
   - Raw strings must contain at least one character
 
