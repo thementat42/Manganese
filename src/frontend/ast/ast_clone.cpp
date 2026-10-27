@@ -6,8 +6,6 @@
 #include <utils/string_interner.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_expressions.hpp"
-
 namespace Manganese::ast {
 
 // Helpers

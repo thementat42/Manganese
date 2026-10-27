@@ -17,8 +17,6 @@
 #include <utils/chunk_allocator.hpp>
 #include <vector>
 
-#include "frontend/lexer/token.hpp"
-
 namespace Manganese::parser {
 using lexer::TokenType, lexer::Token;
 

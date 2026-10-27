@@ -17,8 +17,6 @@
 #include <middleend/ir_generator.hpp>
 #include <runtime/string.hpp>
 
-#include "frontend/ast/ast_expressions.hpp"
-
 namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateInstantiationExpression* expression) -> exprvisit_t {

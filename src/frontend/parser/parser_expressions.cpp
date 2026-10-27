@@ -4,11 +4,9 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <utils/chunk_allocator.hpp>
+#include <utils/enum_matches.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_expressions.hpp"
-#include "frontend/lexer/token.hpp"
-#include "utils/enum_matches.hpp"
 
 /**
  * Ambiguous cases:
