@@ -5,12 +5,10 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
-#include "frontend/semantic/symbol_table.hpp"
-
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
-    if ((context.whileLoopDepth == 0U) && (context.forLoopDepth == 0U) && (context.forEachLoopDepth == 0)) {
+    if (context.loopDepth == 0U) {
         logError(statement, "'break' can only be used in loops ");
         return stmtvisit_t::Failure;
     }
@@ -18,7 +16,7 @@ auto SemanticAnalyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
 }
 
 auto SemanticAnalyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
-    if ((context.whileLoopDepth == 0U) && (context.forLoopDepth == 0U) && (context.forEachLoopDepth == 0)) {
+    if (context.loopDepth == 0U) {
         logError(statement, "'continue' can only be used in loops");
         return stmtvisit_t::Failure;
     }
@@ -27,8 +25,7 @@ auto SemanticAnalyzer::visit(ast::ContinueStatement* statement) -> stmtvisit_t {
 
 auto SemanticAnalyzer::visit(ast::ForEachLoopStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
-    const ContextGuard guard{context.forEachLoopDepth,
-                             static_cast<decltype(context.forEachLoopDepth)>(context.forEachLoopDepth + 1)};
+    const ContextGuard guard{context.loopDepth, static_cast<decltype(context.loopDepth)>(context.loopDepth + 1)};
 
     statement->container->semanticType = typeContext.getPoison();
     if (visit(statement->container) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
@@ -90,8 +87,7 @@ auto SemanticAnalyzer::visit(ast::ForEachLoopStatement* statement) -> stmtvisit_
 
 auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     auto result = stmtvisit_t::Success;
-    const ContextGuard guard{context.forLoopDepth,
-                             static_cast<decltype(context.forLoopDepth)>(context.forLoopDepth + 1)};
+    const ContextGuard guard{context.loopDepth, static_cast<decltype(context.loopDepth)>(context.loopDepth + 1)};
     const bool blockNeedsToEnterScope = statement->initializationStep == nullptr;
 
     if (statement->initializationStep != nullptr) {
@@ -101,9 +97,9 @@ auto SemanticAnalyzer::visit(ast::ForLoopStatement* statement) -> stmtvisit_t {
     }
 
     if (statement->stopCondition != nullptr) {
-        context.inForLoopCondition = true;
+        context.inCondition = true;
         if (visit(statement->stopCondition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-        context.inForLoopCondition = false;
+        context.inCondition = false;
 
         if (statement->stopCondition->semanticType->isPoison()) {
             logError(statement->stopCondition, "Could not deduce type of for loop stop condition {}",
@@ -143,9 +139,9 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
         if (visit(statement->variableDeclaration) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
     }
 
-    context.inIfCondition = true;
+    context.inCondition = true;
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-    context.inIfCondition = false;
+    context.inCondition = false;
 
     if (statement->condition->semanticType->isPoison()) {
         logError(statement, "Could not deduce type of condition {}", statement->condition->toString(interner));
@@ -256,14 +252,13 @@ auto SemanticAnalyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
 }
 
 auto SemanticAnalyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t {
-    const ContextGuard guard{context.whileLoopDepth,
-                             static_cast<decltype(context.whileLoopDepth)>(context.whileLoopDepth + 1)};
+    const ContextGuard guard{context.loopDepth, static_cast<decltype(context.loopDepth)>(context.loopDepth + 1)};
 
     auto result = stmtvisit_t::Success;
 
-    context.inWhileLoopCondition = true;
+    context.inCondition = true;
     if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-    context.inWhileLoopCondition = false;
+    context.inCondition = false;
 
     if (statement->condition->semanticType->isPoison()) {
         logError(statement, "Could not deduce type of expression {}", statement->condition->toString(interner));

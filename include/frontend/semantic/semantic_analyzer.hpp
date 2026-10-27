@@ -83,16 +83,12 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
         std::uint8_t typeCastDepth = 0;
         std::uint8_t ifStatementDepth = 0;
-        std::uint8_t forLoopDepth = 0;
-        std::uint8_t forEachLoopDepth = 0;
-        std::uint8_t whileLoopDepth = 0;
+        std::uint8_t loopDepth = 0;
 
         bool inFunction = false;
         bool isInstantiatingGeneric = false;
-        bool inIfCondition : 1 = false;
-        bool inForLoopCondition : 1 = false;
-        bool inWhileLoopCondition : 1 = false;
-        bool inTernaryCondition : 1 = false;
+        bool inCondition : 1 = false;
+        bool inTernary : 1 = false;
 
     } context;
 

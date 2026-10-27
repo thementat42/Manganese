@@ -239,10 +239,10 @@ auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const S
 
     const PrimitiveInfo src = getPrimitiveInfo(from->primitiveType);
     const PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType);
-    const bool is_conditional_context = context.inIfCondition || context.inForLoopCondition
-        || context.inWhileLoopCondition || context.inTernaryCondition;
 
-    if (dest.category == Cat::Bool && is_conditional_context) { return {.result = Compatible_t::Valid}; }
+    if (dest.category == Cat::Bool && (context.inCondition || context.inTernary)) {
+        return {.result = Compatible_t::Valid};
+    }
 
     auto yield_warning = [this](std::string&& msg) -> typeCompatibilityResult {
         if (context.typeCastDepth) { return {.result = Compatible_t::Valid}; }
