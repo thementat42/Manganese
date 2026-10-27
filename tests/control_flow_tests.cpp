@@ -9,7 +9,6 @@
 #include <utils/chunk_allocator.hpp>
 #include <utils/target_info.hpp>
 
-#include "testrunner.hpp"
 #include "tests.hpp"
 
 namespace Manganese::tests {

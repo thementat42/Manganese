@@ -9,7 +9,6 @@
 #include <iostream>
 #include <string>
 
-#include "testrunner.hpp"
 #include "tests.hpp"
 
 namespace Manganese::tests {

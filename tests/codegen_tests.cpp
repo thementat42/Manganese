@@ -16,7 +16,6 @@
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 
-#include "testrunner.hpp"
 #include "tests.hpp"
 
 

@@ -760,7 +760,8 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Parser: Postfix Operators", parser_tests::testPostfixOperators);
     runner.runTest("Parser: Bitwise Operators", parser_tests::testBitwiseOperators);
     runner.runTest("Parser: Ternary Operator", parser_tests::testTernaryOperator);
-    runner.runTest("Parser: Aggregate Declaration and Instantiation", parser_tests::testAggregateDeclarationAndInstantiation);
+    runner.runTest("Parser: Aggregate Declaration and Instantiation",
+                   parser_tests::testAggregateDeclarationAndInstantiation);
     runner.runTest("Parser: Function Declaration and Call", parser_tests::testFunctionDeclarationAndCall);
     runner.runTest("Parser: Loops", parser_tests::testLoops);
     runner.runTest("Parser: If/Elif/Else Statements", parser_tests::testIfElseStatements);
@@ -778,7 +779,8 @@ void runParserTests(TestRunner& runner) {
     runner.runTest("Parser: Pathological Expression Recovery", parser_tests::testPathologicalExpressionRecovery);
     runner.runTest("Parser: Pathological Error Recovery", parser_tests::testPathologicalExpressionRecovery2);
     runner.runTest("Parser: Uninitialized Keyword Parsing", parser_tests::testUninitializedKeywordParsing);
-    runner.runTest("Parser: Complex Function Pointers and Aliases", parser_tests::testComplexFunctionPointersAndAliases);
+    runner.runTest("Parser: Complex Function Pointers and Aliases",
+                   parser_tests::testComplexFunctionPointersAndAliases);
     runner.runTest("Parser: Deeply Nested Generics", parser_tests::testDeeplyNestedGenerics);
     runner.runTest("Parser: Miscellaneous Tests", parser_tests::miscTests);
 }
