@@ -11,7 +11,6 @@
 #include <io/stringreader.hpp>
 #include <iostream>
 
-#include "tests/testrunner.hpp"
 #include "tests/tests.hpp"
 
 static bool strneq(const char* a, const char* b, std::size_t max_count) {

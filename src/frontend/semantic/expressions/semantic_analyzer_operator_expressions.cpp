@@ -8,8 +8,6 @@
 #include <utils/enum_matches.hpp>
 #include <utils/result.hpp>
 
-#include "frontend/ast/ast_expressions.hpp"
-
 namespace Manganese::semantic {
 auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
