@@ -49,21 +49,6 @@ std::vector<Token> tokensFromString(const std::string& source) {
     return tokens;
 }
 
-std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / filename;
-    lexer::Lexer lexer(fullPath.string(), interner, lexer::Mode::File);
-    std::vector<Token> tokens;
-
-    // Consume tokens until we hit EOF
-    while (true) {
-        Token token = lexer.consumeToken();
-        if (token.getType() == TokenType::EndOfFile) { break; }
-        tokens.push_back(token);
-    }
-
-    return tokens;
-}
-
 bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme,
                 bool wantInvalid = false) {
     const static auto printBytes = [](std::string_view str) {
@@ -405,7 +390,17 @@ bool testPunctuation() {
 }
 
 bool testCompleteProgram() {
-    std::vector<Token> tokens = tokensFromFile("tests/lexer_tests.mn");
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests" / "fixtures" / "lexer_tests.mn";
+    lexer::Lexer lexer(fullPath.string(), interner, lexer::Mode::File);
+    std::vector<Token> tokens;
+
+    // Consume tokens until we hit EOF
+    while (true) {
+        Token token = lexer.consumeToken();
+        if (token.getType() == TokenType::EndOfFile) { break; }
+        tokens.push_back(token);
+    }
+
     printAllTokens(tokens);
     if (tokens.empty()) {
         std::cout << "Expected non-empty tokens" << '\n';
@@ -468,7 +463,8 @@ bool testInvalidEscapeSequence() {
 
 bool testBadFileAccess() {
     try {
-        tokensFromFile("__nonexistentfile.mn");
+        std::filesystem::path path = std::filesystem::current_path() / "tests" / "fixtures" / "__nonexistentfile.mn";
+        lexer::Lexer lexer(path.string(), interner, lexer::Mode::File);
     } catch (const std::runtime_error& e) { return true; }
     return false;
 }

@@ -18,7 +18,6 @@
 
 #include "tests.hpp"
 
-
 namespace Manganese::tests {
 
 namespace {
@@ -347,7 +346,7 @@ bool testArrayOfInstantiatedGenericFunctions() {
 }
 
 bool testCodegenFromFile() {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/codegen_tests.mn";
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests" / "fixtures" / "codegen_tests.mn";
     utils::chunk_allocator fileAllocator{};
     utils::StringInterner fileInterner;
 
@@ -466,13 +465,15 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Codegen: Default Parameters", codegen_tests::testDefaultParameterCodegen);
     runner.runTest("Codegen: Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
     runner.runTest("Codegen: Generics", codegen_tests::testGenericsCodegen);
-    runner.runTest("Codegen: Array of Functions Indexed and Called", codegen_tests::testArrayOfFunctionsIndexedAndCalled);
+    runner.runTest("Codegen: Array of Functions Indexed and Called",
+                   codegen_tests::testArrayOfFunctionsIndexedAndCalled);
 
     runner.runTest("Codegen: Generic Aggregate Instantiation", codegen_tests::testGenericAggregateInstantiation);
     runner.runTest("Codegen: Multi-Parameter Generic Functions", codegen_tests::testMultiParamGenerics);
     runner.runTest("Codegen: Array of Generic Aggregates", codegen_tests::testArrayOfGenericAggregates);
 
-    runner.runTest("Codegen: Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
+    runner.runTest("Codegen: Array of Instantiated Generic Functions",
+                   codegen_tests::testArrayOfInstantiatedGenericFunctions);
     runner.runTest("Codegen: Ternary Expression", codegen_tests::testTernaryExpressionCodeGen);
     runner.runTest("Codegen: File", codegen_tests::testCodegenFromFile);
     runner.runTest("Codegen: Typeof Dependent Return Type", codegen_tests::testTypeOfReturnCodegen);

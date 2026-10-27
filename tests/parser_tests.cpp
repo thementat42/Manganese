@@ -590,7 +590,7 @@ bool testImportsAndAliases() {
 }
 
 bool testParseFromFile() {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/parser_tests.mn";
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests" / "fixtures" / "parser_tests.mn";
     utils::chunk_allocator fielAllocator{};
     utils::StringInterner fileInterner;
     parser::Parser p(fullPath.string(), lexer::Mode::File, fielAllocator, fileInterner);

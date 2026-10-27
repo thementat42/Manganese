@@ -94,7 +94,8 @@ bool testPartialReturnBranching() {
 }
 
 bool testControlFlowFromFile() {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/control_flow_tests.mn";
+    const std::filesystem::path fullPath
+        = std::filesystem::current_path() / "tests" / "fixtures" / "control_flow_tests.mn";
     utils::chunk_allocator fileAllocator{};
     utils::StringInterner fileInterner;
 
@@ -206,11 +207,15 @@ void runControlFlowAnalyzerTests(TestRunner& runner) {
     runner.runTest("Control Flow: File", control_flow_tests::testControlFlowFromFile);
 
     runner.runTest("Control Flow: Uninitialized Variable Read", control_flow_tests::testUninitializedRead);
-    runner.runTest("Control Flow: Conditional Initialization Failure", control_flow_tests::testConditionalInitializationFailure);
-    runner.runTest("Control Flow: Conditional Initialization Success", control_flow_tests::testConditionalInitializationSuccess);
+    runner.runTest("Control Flow: Conditional Initialization Failure",
+                   control_flow_tests::testConditionalInitializationFailure);
+    runner.runTest("Control Flow: Conditional Initialization Success",
+                   control_flow_tests::testConditionalInitializationSuccess);
     runner.runTest("Control Flow: Runtime Loop Assignment Safety", control_flow_tests::testLoopAssignmentSafety);
-    runner.runTest("Control Flow: Explicit Uninitialized Keyword", control_flow_tests::testExplicitUninitializedKeyword);
-    runner.runTest("Control Flow: Nested If-Else Definite Initialization", control_flow_tests::testNestedIfInitialization);
+    runner.runTest("Control Flow: Explicit Uninitialized Keyword",
+                   control_flow_tests::testExplicitUninitializedKeyword);
+    runner.runTest("Control Flow: Nested If-Else Definite Initialization",
+                   control_flow_tests::testNestedIfInitialization);
 }
 
 }  // namespace Manganese::tests

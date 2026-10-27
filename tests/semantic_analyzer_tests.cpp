@@ -667,7 +667,8 @@ bool testScopedType() {
 // Other
 
 bool testAnalyzeFromFile() {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/semantic_analyzer_tests.mn";
+    const std::filesystem::path fullPath
+        = std::filesystem::current_path() / "tests" / "fixtures" / "semantic_analyzer_tests.mn";
 
     utils::chunk_allocator fileAllocator{};
     utils::StringInterner fileInterner;
@@ -946,7 +947,8 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
     // Statements
-    runner.runTest("Semantic Analyzer: Aggregate Declaration Statement", analyzer_tests::testAggregateDeclarationStatement);
+    runner.runTest("Semantic Analyzer: Aggregate Declaration Statement",
+                   analyzer_tests::testAggregateDeclarationStatement);
     runner.runTest("Semantic Analyzer: Alias Statement", analyzer_tests::testAliasStatement);
     runner.runTest("Semantic Analyzer: Break and Continue Statements", analyzer_tests::testBreakAndContinueStatement);
     runner.runTest("Semantic Analyzer: Enum Declaration Statement", analyzer_tests::testEnumDeclarationStatement);
@@ -957,7 +959,8 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Semantic Analyzer: Namespace Statement", analyzer_tests::testNamespaceStatement);
     runner.runTest("Semantic Analyzer: Scope Resolution Expression", analyzer_tests::testScopeResolutionExpression);
     runner.runTest("Semantic Analyzer: Switch Statement", analyzer_tests::testSwitchStatement);
-    runner.runTest("Semantic Analyzer: Variable Declaration Statement", analyzer_tests::testVariableDeclarationStatement);
+    runner.runTest("Semantic Analyzer: Variable Declaration Statement",
+                   analyzer_tests::testVariableDeclarationStatement);
     runner.runTest("Semantic Analyzer: While Loop Statement", analyzer_tests::testWhileLoopStatement);
     runner.runTest("Semantic Analyzer: Generic Scope Resolution", analyzer_tests::testGenericScopeResolution);
     runner.runTest("Semantic Analyzer: Scope Resolution Mutability", analyzer_tests::testScopeResolutionMutability);
@@ -987,11 +990,14 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
 
     // Other
     runner.runTest("Semantic Analyzer: File", analyzer_tests::testAnalyzeFromFile);
-    runner.runTest("Semantic Analyzer: Dereference & Immutability", analyzer_tests::testPointerDereferenceAndMutability);
+    runner.runTest("Semantic Analyzer: Dereference & Immutability",
+                   analyzer_tests::testPointerDereferenceAndMutability);
     runner.runTest("Semantic Analyzer: Uninitialized Semantic Rules", analyzer_tests::testUninitializedSemanticRules);
     runner.runTest("Semantic Analyzer: Typeof Dependent Return Types", analyzer_tests::testTypeOfDependentReturnTypes);
-    runner.runTest("Semantic Analyzer: Nested Generic Instantiation Scope", analyzer_tests::testNestedGenericInstantiationScope);
-    runner.runTest("Semantic Analyzer: Immutable Parameter Reassignment check", analyzer_tests::testImmutableCaptureOrReassignment);
+    runner.runTest("Semantic Analyzer: Nested Generic Instantiation Scope",
+                   analyzer_tests::testNestedGenericInstantiationScope);
+    runner.runTest("Semantic Analyzer: Immutable Parameter Reassignment check",
+                   analyzer_tests::testImmutableCaptureOrReassignment);
     runner.runTest("Semantic Analyzer: Slice length and anonymous aggregate",
                    analyzer_tests::testSliceLengthAndAnonymousAggregates);
     runner.runTest("Semantic Analyzer: Chained Comparison Expression", analyzer_tests::testChainedComparisonSemantics);
