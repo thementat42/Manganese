@@ -30,7 +30,8 @@ namespace Manganese::codegen {
         llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
         builder->CreateStore(fieldValue, fieldPointer);
     }
-    return alloca;
+
+    return builder->CreateLoad(aggregateType, alloca, "load_aggregate_instantiation");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateLiteralExpression* expression) -> exprvisit_t {
@@ -42,7 +43,8 @@ namespace Manganese::codegen {
         llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
         builder->CreateStore(fieldValue, fieldPointer);
     }
-    return alloca;
+
+    return builder->CreateLoad(aggregateType, alloca, "load_anonymous_aggregate");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AlignofExpression* expression) -> exprvisit_t {
@@ -52,10 +54,13 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::ArrayLiteralExpression* expression) -> exprvisit_t {
-    llvm::Type* elementType = visitTypeAsValue(expression->semanticType);
-    const std::size_t length = expression->elements.size;
+    const auto* arraySemanticType = static_cast<const semantic::Array*>(expression->semanticType);
+    llvm::Type* elementType = visitTypeAsValue(arraySemanticType->elementType);
+    const std::size_t length = arraySemanticType->length;
+
     llvm::ArrayType* arrayType = llvm::ArrayType::get(elementType, length);
     llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "array_literal");
+
     for (std::size_t i = 0; i < length; ++i) {
         llvm::Value* elementValue = visit(expression->elements[i]);
         const std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
@@ -63,7 +68,8 @@ namespace Manganese::codegen {
             = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
         builder->CreateStore(elementValue, elementPointer);
     }
-    return arrayAlloca;
+
+    return builder->CreateLoad(arrayType, arrayAlloca, "load_array_literal");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AssignmentExpression* expression) -> exprvisit_t {
