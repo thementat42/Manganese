@@ -923,6 +923,44 @@ bool testChainedComparisonSemantics() {
     return analyzeSource(valid, true, __func__) && analyzeSource(invalidType, false, __func__);
 }
 
+bool testForEachLoopStatement() {
+    const std::string valid = R"(
+        func main() {
+            let arr: int32[3] = [1, 2, 3];
+            let slice: int32[] = arr;
+            
+            foreach (x in arr) {
+                let val: int32 = x;
+            }
+            
+            foreach (item: int32 in slice) {
+                let val: int32 = item;
+            }
+
+            foreach (mut mutItem: int32 in arr) {
+                mutItem = mutItem * 2;
+            }
+        }
+    )";
+
+    const std::string invalidContainer = R"(
+        func main() {
+            let x: int32 = 10;
+            foreach (item in x) {}
+        }
+    )";
+
+    const std::string invalidTypeMismatch = R"(
+        func main() {
+            let arr: int32[3] = [1, 2, 3];
+            foreach (item: string in arr) {}
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidContainer, false, __func__)
+        && analyzeSource(invalidTypeMismatch, false, __func__);
+}
+
 bool miscTests() {
     const std::string code = R"(
         func foo[T](x: T) -> T {
@@ -966,6 +1004,7 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     runner.runTest("Semantic Analyzer: Scope Resolution Mutability", analyzer_tests::testScopeResolutionMutability);
     runner.runTest("Semantic Analyzer: Deeply Nested Scoped Type", analyzer_tests::testDeeplyNestedScopedType);
     runner.runTest("Semantic Analyzer: Slices and Defaults", analyzer_tests::testDefaultsAndSlices);
+    runner.runTest("Semantic Analyzer: ForEach Loop Statement", analyzer_tests::testForEachLoopStatement);
 
     // Expressions
     runner.runTest("Semantic Analyzer: Aggregate Instantiation & Literals",

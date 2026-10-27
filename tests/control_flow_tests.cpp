@@ -192,6 +192,20 @@ bool testNestedIfInitialization() {
     return analyzeControlFlow(valid, true, __func__);
 }
 
+bool testForEachLoopAssignmentSafety() {
+    const std::string invalid = R"(
+        func foo() -> int32 {
+            let mut x: int32;
+            let arr: int32[3] = [1, 2, 3];
+            foreach item in arr {
+                x = item;
+            }
+            return x; # Fails: collection could theoretically be empty (0 iterations), so x is not definitely initialized
+        }
+    )";
+    return analyzeControlFlow(invalid, false, __func__);
+}
+
 }  // namespace
 }  // namespace control_flow_tests
 
@@ -216,6 +230,7 @@ void runControlFlowAnalyzerTests(TestRunner& runner) {
                    control_flow_tests::testExplicitUninitializedKeyword);
     runner.runTest("Control Flow: Nested If-Else Definite Initialization",
                    control_flow_tests::testNestedIfInitialization);
+    runner.runTest("Control Flow: ForEach Loop Assignment Safety", control_flow_tests::testForEachLoopAssignmentSafety);
 }
 
 }  // namespace Manganese::tests
