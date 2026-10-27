@@ -190,6 +190,7 @@ consteval void initializeLookups(LookupTable& table) noexcept {
     registerStmtHandler(table, Do, &Parser::parseDoWhileLoopStatement);
     registerStmtHandler(table, Enum, &Parser::parseEnumDeclarationStatement);
     registerStmtHandler(table, For, &Parser::parseForLoopStatement);
+    registerStmtHandler(table, Foreach, &Parser::parseForEachLoopStatement);
     registerStmtHandler(table, Func, &Parser::parseFunctionDeclarationStatement);
     registerStmtHandler(table, If, &Parser::parseIfStatement);
     registerStmtHandler(table, Import, &Parser::parseImportStatement);

@@ -10,6 +10,10 @@
 #include <string>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+#include "frontend/lexer/token.hpp"
+#include "frontend/parser/operators.hpp"
+
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -122,6 +126,41 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     expectToken(TokenType::RightBrace, "Expected '}' to close the enum body");
 
     return makeNode<ast::EnumDeclarationStatement>(startToken, name, baseType, arena.emplace_range(values));
+}
+
+ast::Statement* Parser::parseForEachLoopStatement() {
+    Token startToken = consumeToken();  // skip 'foreach'
+    bool isMutable = false;
+    ast::Type* elementType = nullptr;
+    ast::Expression* container = nullptr;
+    ast::Block body;
+
+    expectToken(TokenType::LeftParen, "Expected '(' after foreach");
+
+    if (peekTokenType() == TokenType::Mut) {
+        isMutable = true;
+        DISCARD(consumeToken());
+    }
+
+    utils::StringID elementName
+        = expectToken(TokenType::Identifier, "Expected identifier for foreach loop variable").getLexeme();
+
+    if (peekTokenType() == TokenType::Colon) {
+        // Explicit type annotation
+        DISCARD(consumeToken());
+        elementType = parseType(Precedence::Default);
+    }
+    expectToken(TokenType::In, "Expected 'in' in foreach statement");
+
+    container = parseExpression(Precedence::Default);
+
+    expectToken(TokenType::RightParen, "Expected ')' to end foreach");
+
+    body = parseBlock("foreach loop body");
+
+    return makeNode<ast::ForEachLoopStatement>(
+        startToken, ast::ForEachElement{.name = elementName, .type = elementType, .isMutable = isMutable}, container,
+        body);
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
