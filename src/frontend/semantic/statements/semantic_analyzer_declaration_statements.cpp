@@ -11,6 +11,9 @@
 #include <utils/result.hpp>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+#include "frontend/semantic/semantic_analyzer.hpp"
+
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
@@ -137,38 +140,9 @@ auto SemanticAnalyzer::visit(ast::EnumDeclarationStatement* statement) -> stmtvi
     std::vector<EnumVariant> variants;
 
     for (const ast::EnumValue& variant : statement->values) {
-        if (variant.value != nullptr) {
-            if (visit(variant.value) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-            if (!variant.value->canFold()) {
-                logging::logError(variant.line, variant.column,
-                                  "Variant {} (in enum {}) must have a compile-time value",
-                                  interner.get_view(variant.name), interner.get_view(statement->name));
-                symbol->status = ResolutionStatus::Failure;
-                result = stmtvisit_t::Failure;
-            }
-            if (!variant.value->semanticType->isInteger()) {
-                logging::logError(variant.line, variant.column, "Variant {} (in enum {}) must have an integer value",
-                                  interner.get_view(variant.name), interner.get_view(statement->name));
-                symbol->status = ResolutionStatus::Failure;
-                result = stmtvisit_t::Failure;
-            }
-            auto tmp = utils::computeExpression<std::int64_t>(
-                variant.value, typeContext.getTargetInfo(), interner,
-                [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
-                    this->logError(expr, fmt, std::forward<Args>(args)...);
-                });
-            if (!tmp.has_value()) {
-                logError(variant.value, "Invalid value '{}' for variant '{}' in enum '{}'",
-                         variant.value->toString(interner), interner.get_view(variant.name),
-                         interner.get_view(statement->name));
-
-            } else {
-                currentVariantValue = *tmp;
-            }
-        }
-
-        variants.emplace_back(interner.get_view(variant.name), currentVariantValue);
-        currentVariantValue++;
+        auto variantResult = checkEnumVariant(statement, variant, symbol, currentVariantValue, variants);
+        currentVariantValue = variantResult.newVariantValue;
+        if (variantResult.result == Result::Failure) { result = stmtvisit_t::Failure; }
     }
     enumType->variants = std::move(variants);
     statement->semanticType = enumType;
@@ -194,42 +168,8 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     symbolTable.enterScope();
     statement->associatedScope = symbolTable.getCurrentScope();
     for (std::size_t i = 0; i < statement->parameters.size; ++i) {
-        const auto& param = statement->parameters[i];
-        if (visit(param.type) == typevisit_t::Failure) { signatureResult = stmtvisit_t::Failure; }
-        const SemanticType* resolvedParamType = param.type->semanticType;
-
-        const stmtvisit_t paramDeclaration = symbolTable.declare(
-            param.name,
-            Symbol{.type = resolvedParamType,
-                   .node = statement,
-                   .kind = (param.isMutable) ? SymbolKind::Parameter : SymbolKind::ConstantParameter,
-                   .isMutable = param.isMutable});
-
-        if (paramDeclaration == stmtvisit_t::Failure) [[unlikely]] {
-            logError(statement, "Failed to declare parameter '{}' in scope for function '{}'",
-                     interner.get_view(param.name), interner.get_view(statement->name));
+        if (checkFunctionParameter(statement, statement->parameters[i]) == Result::Failure) {
             signatureResult = stmtvisit_t::Failure;
-        }
-
-        if (param.defaultValue != nullptr) {
-            if (visit(param.defaultValue) == exprvisit_t::Failure) {
-                signatureResult = stmtvisit_t::Failure;
-                continue;
-            }
-
-            const SemanticType* defaultValueType = param.defaultValue->semanticType;
-            if (defaultValueType == nullptr || defaultValueType->isPoison()) {
-                logError(statement, "Unable to determine type of default value for parameter '{}' in function '{}'",
-                         interner.get_view(param.name), interner.get_view(statement->name));
-                signatureResult = stmtvisit_t::Failure;
-            } else if (!areTypesCompatible(defaultValueType, resolvedParamType)) {
-                logError(statement,
-                         "Default value for parameter '{}' in function '{}' has type '{}', "
-                         "but '{}' was expected",
-                         interner.get_view(param.name), interner.get_view(statement->name),
-                         defaultValueType->toString(), resolvedParamType->toString());
-                signatureResult = stmtvisit_t::Failure;
-            }
         }
     }
 
@@ -372,6 +312,83 @@ Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatem
     }
 
     return stmtvisit_t::Success;
+}
+
+EnumVariantCheckResult SemanticAnalyzer::checkEnumVariant(ast::EnumDeclarationStatement* statement,
+                                                          const ast::EnumValue& variant, Symbol* symbol,
+                                                          std::int64_t currentVariantValue,
+                                                          std::vector<EnumVariant>& variants) {
+    Result result = stmtvisit_t::Success;
+    if (variant.value != nullptr) {
+        if (visit(variant.value) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        if (!variant.value->canFold()) {
+            logging::logError(variant.line, variant.column, "Variant {} (in enum {}) must have a compile-time value",
+                              interner.get_view(variant.name), interner.get_view(statement->name));
+            symbol->status = ResolutionStatus::Failure;
+            result = stmtvisit_t::Failure;
+        }
+        if (!variant.value->semanticType->isInteger()) {
+            logging::logError(variant.line, variant.column, "Variant {} (in enum {}) must have an integer value",
+                              interner.get_view(variant.name), interner.get_view(statement->name));
+            symbol->status = ResolutionStatus::Failure;
+            result = stmtvisit_t::Failure;
+        }
+        auto tmp = utils::computeExpression<std::int64_t>(
+            variant.value, typeContext.getTargetInfo(), interner,
+            [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
+                this->logError(expr, fmt, std::forward<Args>(args)...);
+            });
+        if (!tmp.has_value()) {
+            logError(variant.value, "Invalid value '{}' for variant '{}' in enum '{}'",
+                     variant.value->toString(interner), interner.get_view(variant.name),
+                     interner.get_view(statement->name));
+
+        } else {
+            currentVariantValue = *tmp;
+        }
+    }
+
+    variants.emplace_back(interner.get_view(variant.name), currentVariantValue);
+    return EnumVariantCheckResult{.newVariantValue = currentVariantValue + 1, .result = result};
+}
+
+Result SemanticAnalyzer::checkFunctionParameter(ast::FunctionDeclarationStatement* statement,
+                                                const ast::FunctionParameter& param) {
+    Result result = Result::Success;
+    if (visit(param.type) == typevisit_t::Failure) { result = Result::Failure; }
+    const SemanticType* resolvedParamType = param.type->semanticType;
+
+    const stmtvisit_t paramDeclaration
+        = symbolTable.declare(param.name,
+                              Symbol{.type = resolvedParamType,
+                                     .node = statement,
+                                     .kind = (param.isMutable) ? SymbolKind::Parameter : SymbolKind::ConstantParameter,
+                                     .isMutable = param.isMutable});
+
+    if (paramDeclaration == Result::Failure) [[unlikely]] {
+        logError(statement, "Failed to declare parameter '{}' in scope for function '{}'",
+                 interner.get_view(param.name), interner.get_view(statement->name));
+        result = Result::Failure;
+    }
+
+    if (param.defaultValue != nullptr) {
+        if (visit(param.defaultValue) == exprvisit_t::Failure) { return Result::Failure; }
+
+        const SemanticType* defaultValueType = param.defaultValue->semanticType;
+        if (defaultValueType == nullptr || defaultValueType->isPoison()) {
+            logError(statement, "Unable to determine type of default value for parameter '{}' in function '{}'",
+                     interner.get_view(param.name), interner.get_view(statement->name));
+            result = Result::Failure;
+        } else if (!areTypesCompatible(defaultValueType, resolvedParamType)) {
+            logError(statement,
+                     "Default value for parameter '{}' in function '{}' has type '{}', "
+                     "but '{}' was expected",
+                     interner.get_view(param.name), interner.get_view(statement->name), defaultValueType->toString(),
+                     resolvedParamType->toString());
+            result = Result::Failure;
+        }
+    }
+    return result;
 }
 
 }  // namespace Manganese::semantic

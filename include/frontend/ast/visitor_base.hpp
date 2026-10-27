@@ -7,6 +7,7 @@
 #include <frontend/ast/ast_expressions.hpp>
 #include <frontend/ast/ast_statements.hpp>
 #include <frontend/ast/ast_types.hpp>
+#include <type_traits>
 
 namespace Manganese::ast {
 

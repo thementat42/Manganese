@@ -62,6 +62,11 @@ struct typeCompatibilityResult {
     constexpr operator bool() const noexcept { return result != Compatible_t::Error; }
 };
 
+struct EnumVariantCheckResult {
+    std::int64_t newVariantValue;
+    Result result;
+};
+
 using _analyzer_base_t = ast::Visitor<Result, Result, Result, true>;
 
 class SemanticAnalyzer final : public _analyzer_base_t {
@@ -129,6 +134,10 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result analyzePointerArithmetic(ast::BinaryExpression* expr) const;
     Result checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element);
     Result checkVariableInitializer(ast::VariableDeclarationStatement* statement, const SemanticType*& variableType);
+    EnumVariantCheckResult checkEnumVariant(ast::EnumDeclarationStatement* statement, const ast::EnumValue& variant,
+                                            Symbol* symbol, std::int64_t currentVariantValue,
+                                            std::vector<EnumVariant>& variants);
+    Result checkFunctionParameter(ast::FunctionDeclarationStatement* statement, const ast::FunctionParameter& param);
 
     bool isMutableExpression(const ast::Expression* expr) const;
 
