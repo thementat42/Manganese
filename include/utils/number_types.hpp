@@ -1,5 +1,5 @@
-#ifndef MANGANESE_INCLUDE_UTILS_EXT_NUM_CONFIG
-#define MANGANESE_INCLUDE_UTILS_EXT_NUM_CONFIG 1
+#ifndef MANGANESE_INCLUDE_UTILS_NUMBER_TYPES
+#define MANGANESE_INCLUDE_UTILS_NUMBER_TYPES 1
 
 // native indicates the compiler fully supports that 128-bit type
 
@@ -61,4 +61,4 @@ concept Numeric = Integral<T> || FloatingPoint<T>;
 
 }  // namespace Manganese::utils
 
-#endif  // MANGANESE_INCLUDE_UTILS_EXT_NUM_CONFIG
+#endif  // MANGANESE_INCLUDE_UTILS_NUMBER_TYPES
