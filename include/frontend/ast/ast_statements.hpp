@@ -107,6 +107,7 @@ struct ExpressionStatement final : public Statement {
 struct ForEachElement {
     utils::StringID name;
     Type* type = nullptr;
+    const semantic::SemanticType* semanticType;
     bool isMutable = false;
 };
 

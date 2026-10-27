@@ -88,6 +88,7 @@ ExpressionStatement* ExpressionStatement::clone(semantic::CloneContext* context)
 ForEachLoopStatement* ForEachLoopStatement::clone(semantic::CloneContext* context) const {
     auto elementClone = ForEachElement{.name = element.name,
                                        .type = element.type == nullptr ? nullptr : element.type->clone(context),
+                                       .semanticType = element.semanticType,
                                        .isMutable = element.isMutable};
     Expression* containerClone = container->clone(context);
 

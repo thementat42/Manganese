@@ -141,7 +141,9 @@ void ForEachLoopStatement::dump(std::ostream& os, const utils::StringInterner& i
     os << ind.next(2) << "name: " << interner.get_view(element.name) << "\n";
 
     os << ind.next(2) << "type: ";
-    if (element.type == nullptr) {
+    if (element.semanticType != nullptr) {
+        os << element.semanticType->toString() << "\n";
+    } else if (element.type == nullptr) {
         os << "not yet deduced\n";
     } else {
         os << "{\n";
