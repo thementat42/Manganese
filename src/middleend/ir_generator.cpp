@@ -136,11 +136,26 @@ llvm::CmpInst::Predicate IRGenerator::getIntPredicate(lexer::TokenType op, bool 
 
     if (expr->kind == ast::ExpressionKind::IndexExpression) {
         const auto* indexExpression = static_cast<const ast::IndexExpression*>(expr);
-        llvm::Value* arrayPtr = getLValue(indexExpression->variable);  // Get pointer to the array
-        llvm::Value* indexVal = visit(indexExpression->index);  // Index is an rvalue calculation
+        const semantic::SemanticType* varType = indexExpression->variable->semanticType;
+        llvm::Value* indexVal = visit(indexExpression->index);
 
-        // like array literals, we first need a pointer to the start of the array then an offset from that pointer
-        llvm::Type* arrayLlvmType = visitTypeAsValue(indexExpression->variable->semanticType);
+        if (varType->isSlice()) {
+            llvm::Value* sliceDescPtr = getLValue(indexExpression->variable);  // Pointer to { ptr, i64 }
+            llvm::Type* sliceDescLLVMType = visitTypeAsValue(varType);
+
+            // Get pointer to the data pointer field (index 0 of the slice descriptor)
+            llvm::Value* dataPtrField
+                = builder->CreateStructGEP(sliceDescLLVMType, sliceDescPtr, 0, "slice_data_field_ptr");
+            // Load the actual raw data pointer (ptr) stored in the slice descriptor
+            llvm::Value* dataPtr = builder->CreateLoad(builder->getPtrTy(), dataPtrField, "slice_data_ptr");
+
+            const auto* sliceType = static_cast<const semantic::Slice*>(varType);
+            llvm::Type* elementType = visitTypeAsValue(sliceType->elementType);
+            return builder->CreateInBoundsGEP(elementType, dataPtr, {indexVal}, "slice_element_ptr");
+        }
+
+        llvm::Value* arrayPtr = getLValue(indexExpression->variable);  // Get pointer to the array
+        llvm::Type* arrayLlvmType = visitTypeAsValue(varType);
         return builder->CreateInBoundsGEP(arrayLlvmType, arrayPtr, {builder->getInt32(0), indexVal},
                                           "array_element_ptr");
     }
