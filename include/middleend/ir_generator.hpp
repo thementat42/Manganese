@@ -24,22 +24,27 @@ namespace Manganese::codegen {
 using _irgen_base_t = ast::Visitor<llvm::Value*, void, llvm::Type*, false>;
 
 struct LoopTarget {
-    llvm::BasicBlock* continueBlock;  // where a 'continue' statement jumps to
-    llvm::BasicBlock* exitBlock;  // where a 'break' statement jumps to
+    llvm::BasicBlock* continueBlock;  // Where a 'continue' statement jumps to
+    llvm::BasicBlock* exitBlock;  // Where a 'break' statement jumps to
 };
 
 class IRGenerator final : public _irgen_base_t {
    private:
+    // LLVM state
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
-    std::unordered_map<utils::StringID, llvm::Value*> namedValues;
-    std::unordered_map<const semantic::SemanticType*, llvm::StructType*> savedTypes;
+
+    // References to other stuff
     std::vector<parser::ParsedFile>& files;
     utils::TargetInfo& targetInfo;
-    utils::tiny_stack<LoopTarget> loopStack;
     semantic::SemanticAnalyzer& analyzer;
     utils::StringInterner& interner;
+
+    // Context Tracking
+    std::unordered_map<utils::StringID, llvm::Value*> namedValues;
+    std::unordered_map<const semantic::SemanticType*, llvm::StructType*> savedTypes;
+    utils::tiny_stack<LoopTarget> loopStack;
     const semantic::SemanticType* currentFunctionSemanticReturnType = nullptr;
 
    public:
@@ -54,14 +59,16 @@ class IRGenerator final : public _irgen_base_t {
         analyzer(analyzerReference),
         interner(internerReference) {}
 
-    std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
-    llvm::Module* getModule() const noexcept { return module.get(); }
+    ~IRGenerator() noexcept = default;
+
+    [[nodiscard]] std::unique_ptr<llvm::Module> takeModule() noexcept { return std::move(module); }
+    [[nodiscard]] llvm::Module* getModule() const noexcept { return module.get(); }
 
     void generate() noexcept;
     void dump(std::ostream&) const;
 
    protected:
-    // overrides for visitor functions
+    // Visitor Overrides
     using _irgen_base_t::visit;
 
     [[nodiscard]] exprvisit_t visit(const ast::Expression* expr) { return _irgen_base_t::visit(expr); }
@@ -79,10 +86,11 @@ class IRGenerator final : public _irgen_base_t {
 #undef TYPE
 #undef SEMANTIC
 
+    stmtvisit_t visit(ast::Block block);
+
+    // Semantic Type to LLVM Type Conversion
     [[nodiscard]] typevisit_t visitTypeAsValue(const semantic::SemanticType* type);
     [[nodiscard]] typevisit_t visitTypeAsValue(const ast::Type* type);
-
-    stmtvisit_t visit(ast::Block block);
 
     [[nodiscard]] typevisit_t visit(const semantic::Aggregate*);
     [[nodiscard]] typevisit_t visit(const semantic::Array*);
@@ -95,20 +103,26 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visit(const semantic::Void*);
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
 
+    // Expression Helpers
     [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const;
     [[nodiscard]] llvm::Value* convertNumberToType(llvm::Value* val, const semantic::SemanticType* fromType,
                                                    const semantic::SemanticType* toType);
-    static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op);
-    static llvm::CmpInst::Predicate getIntPredicate(lexer::TokenType op, bool isSigned);
+
+    [[nodiscard]] static llvm::CmpInst::Predicate getFloatPredicate(lexer::TokenType op);
+    [[nodiscard]] static llvm::CmpInst::Predicate getIntPredicate(lexer::TokenType op, bool isSigned);
+
     [[nodiscard]] exprvisit_t getLValue(const ast::Expression* expr);
-    llvm::Value* emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right,
-                                const semantic::SemanticType* semanticType);
+
+    [[nodiscard]] llvm::Value* emitComparison(lexer::TokenType op, llvm::Value* left, llvm::Value* right,
+                                              const semantic::SemanticType* semanticType);
     [[nodiscard]] llvm::Value* emitTypeCast(llvm::Value* originalValue, const semantic::SemanticType* fromType,
                                             const semantic::SemanticType* toType);
 
-    llvm::Value* emitContainerLengthInForeach(const semantic::SemanticType* containerType, llvm::Value* containerVal);
-    llvm::Value* emitElementAccessInForeach(const semantic::SemanticType* containerType,
-                                                     llvm::Value* containerVal, llvm::Value* indexVal);
+    // Foreach Loop Helpers
+    [[nodiscard]] llvm::Value* emitContainerLengthInForeach(const semantic::SemanticType* containerType,
+                                                            llvm::Value* containerVal);
+    [[nodiscard]] llvm::Value* emitElementAccessInForeach(const semantic::SemanticType* containerType,
+                                                          llvm::Value* containerVal, llvm::Value* indexVal);
 };
 
 }  // namespace Manganese::codegen
