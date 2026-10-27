@@ -266,6 +266,7 @@ generic_parameter = identifier
 control_flow_statement =
       break_statement
     | continue_statement
+    | foreach_loop_statement
     | for_loop_statement
     | if_statement
     | return_statement
@@ -274,6 +275,11 @@ control_flow_statement =
 
 break_statement = "break" ";"
 continue_statement = "continue" ";"
+
+foreach_loop_statement = 
+    "foreach" "("
+    "mut"? identifier (":" type)? "in" expression
+    ")" block
 
 for_loop_statement =
     "for" "("
