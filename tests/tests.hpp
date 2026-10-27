@@ -9,6 +9,7 @@ void runParserTests(TestRunner& runner);
 void runSemanticAnalyzerTests(TestRunner& runner);
 void runControlFlowAnalyzerTests(TestRunner& runner);
 void runCodeGenerationTests(TestRunner& runner);
+void runExecutionTests(TestRunner& runner);
 
 }  // namespace Manganese::tests
 #endif  // MANGANESE_TESTS_TESTS_HPP

@@ -20,7 +20,7 @@ static bool strneq(const char* a, const char* b, std::size_t max_count) {
 
 int main(int argc, char const* argv[]) {
     if (argc == 1) {
-        std::cout << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--all]\n",
+        std::cout << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--execution] [--all]\n",
                                  argv[0]);
         return 1;
     }
@@ -32,6 +32,7 @@ int main(int argc, char const* argv[]) {
     bool semantic = false;
     bool controlflow = false;
     bool codegen = false;
+    bool execution = false;
 
     LLVMInitializeX86TargetInfo();
     LLVMInitializeX86Target();
@@ -52,12 +53,15 @@ int main(int argc, char const* argv[]) {
             codegen = true;
         } else if (strneq(argv[i], "--controlflow", 13)) {
             controlflow = true;
+        } else if (strneq(argv[i], "--execution", 13)) {
+            execution = true;
         } else if (strneq(argv[i], "--all", 5)) {
             lexer = true;
             parser = true;
             semantic = true;
             controlflow = true;
             codegen = true;
+            execution = true;
             break;
         } else {
             std::cout << std::format("Skipping unknown argument: {}\n", argv[i]);
@@ -90,6 +94,11 @@ int main(int argc, char const* argv[]) {
     if (codegen) {
         std::cout << ansi::PINK << "Codegen Tests\n" << ansi::RESET;
         Manganese::tests::runCodeGenerationTests(runner);
+        std::cout << "\n----------\n";
+    }
+    if (execution) {
+        std::cout << ansi::PINK << "Execution Tests\n" << ansi::RESET;
+        Manganese::tests::runExecutionTests(runner);
         std::cout << "\n----------\n";
     }
 

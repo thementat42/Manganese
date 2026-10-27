@@ -28,8 +28,6 @@ constexpr const char* logFileName = "logs/codegen_tests.log";
 utils::chunk_allocator arena;
 utils::StringInterner interner;
 
-#include <llvm/IR/Verifier.h> // Make sure to include this header
-
 bool validateIRContains(const std::string& source, const std::initializer_list<std::string>& expectedSubstrings,
                         std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena, interner);

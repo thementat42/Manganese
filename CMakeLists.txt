@@ -175,3 +175,16 @@ llvm_map_components_to_libnames(LLVM_LIBS
 )
 
 target_link_libraries(manganese PRIVATE ${LLVM_LIBS})
+
+if(BUILD_TESTS)
+llvm_map_components_to_libnames(LLVM_JIT_LIBS
+    OrcJIT
+    RuntimeDyld
+    ExecutionEngine
+    Core
+    Support
+    CodeGen
+    TargetParser
+)
+target_link_libraries(manganese PRIVATE ${LLVM_JIT_LIBS})
+endif()
