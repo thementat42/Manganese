@@ -33,6 +33,18 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ExpressionStatement* statement)
     return FlowStatus::FallsThrough;
 }
 
+FlowStatus ControlFlowAnalyzer::visit(const ast::ForEachLoopStatement* statement) noexcept {
+    visit(statement->container);
+    auto preLoopStates = symbolAssignmentStates;
+    symbolTable.enterScope(statement->associatedScope);
+
+    visit(statement->body, false, statement->associatedScope);
+
+    mergeStates(symbolAssignmentStates, preLoopStates);
+
+    return FlowStatus::FallsThrough;
+}
+
 FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) noexcept {
     const bool shouldEnterScope = statement->initializationStep == nullptr;
     if (statement->initializationStep != nullptr) {
