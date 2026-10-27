@@ -91,7 +91,7 @@ ForEachLoopStatement* ForEachLoopStatement::clone(semantic::CloneContext* contex
                                        .isMutable = element.isMutable};
     Expression* containerClone = container->clone(context);
 
-    return makeClonedNode(this, context, elementClone, ForEachLoopContainer{containerClone}, cloneBlock(body, context));
+    return makeClonedNode(this, context, elementClone, containerClone, cloneBlock(body, context));
 }
 
 ForLoopStatement* ForLoopStatement::clone(semantic::CloneContext* context) const {
