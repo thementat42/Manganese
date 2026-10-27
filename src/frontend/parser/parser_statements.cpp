@@ -159,8 +159,9 @@ ast::Statement* Parser::parseForEachLoopStatement() {
     body = parseBlock("foreach loop body");
 
     return makeNode<ast::ForEachLoopStatement>(
-        startToken, ast::ForEachElement{.name = elementName, .type = elementType, .isMutable = isMutable}, container,
-        body);
+        startToken,
+        ast::ForEachElement{.name = elementName, .type = elementType, .semanticType = nullptr, .isMutable = isMutable},
+        container, body);
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
