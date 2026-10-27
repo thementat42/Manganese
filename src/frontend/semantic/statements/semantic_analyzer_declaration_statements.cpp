@@ -211,11 +211,14 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
 
     const SemanticType* previousReturnType = context.currentFunctionReturnType;
     context.currentFunctionReturnType = fnType->returnType;
+
     const stmtvisit_t bodyResult = visit(statement->body, false, statement->associatedScope);
     context.currentFunctionReturnType = previousReturnType;
 
     const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);
+
     if (symbol != nullptr) { symbol->status = isSuccess ? ResolutionStatus::Success : ResolutionStatus::Failure; }
+
     statement->semanticType = fnType;
 
     return isSuccess ? stmtvisit_t::Success : stmtvisit_t::Failure;
@@ -269,6 +272,8 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
 
     return stmtvisit_t::Success;
 }
+
+// Helpers
 
 Result SemanticAnalyzer::checkVariableInitializer(ast::VariableDeclarationStatement* statement,
                                                   const SemanticType*& variableType) {

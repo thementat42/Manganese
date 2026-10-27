@@ -129,7 +129,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
-    typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
+    static typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs);
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
     Result analyzePointerArithmetic(ast::BinaryExpression* expr) const;
     Result checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element);
@@ -138,6 +138,21 @@ class SemanticAnalyzer final : public _analyzer_base_t {
                                             Symbol* symbol, std::int64_t currentVariantValue,
                                             std::vector<EnumVariant>& variants);
     Result checkFunctionParameter(ast::FunctionDeclarationStatement* statement, const ast::FunctionParameter& param);
+    Result checkCaseClause(ast::SwitchStatement* statement, const ast::CaseClause& caseClause,
+                           const SemanticType* targetType, bool first);
+    Result checkElifClause(const ast::IfStatement* statement, const ast::ElifClause& elif);
+
+    typeCompatibilityResult checkArrayCompatibility(const SemanticType* from, const SemanticType* to,
+                                                    const std::string& conversionError) const;
+
+    typeCompatibilityResult checkFunctionCompatibility(const SemanticType* from, const SemanticType* to,
+                                                       const std::string& conversionError) const;
+
+    typeCompatibilityResult checkPointerCompatibility(const SemanticType* from, const SemanticType* to,
+                                                      const std::string& conversionError) const;
+
+    typeCompatibilityResult checkSliceCompatibility(const SemanticType* from, const SemanticType* to,
+                                                    const std::string& conversionError) const;
 
     bool isMutableExpression(const ast::Expression* expr) const;
 

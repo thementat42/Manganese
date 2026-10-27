@@ -5,6 +5,8 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
+#include "frontend/semantic/semantic_analyzer.hpp"
+
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {
@@ -165,34 +167,7 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     }
 
     for (const ast::ElifClause& elif : statement->elifs) {
-        const bool elifHasVar = (elif.variableDeclaration != nullptr);
-        if (elifHasVar) {
-            symbolTable.enterScope(elif.associatedScope);
-            if (visit(elif.variableDeclaration) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-        }
-
-        DISCARD(visit(elif.condition));
-
-        if (elif.condition->semanticType->isPoison()) {
-            logError(statement, "Could not deduce type of condition {}", elif.condition->toString(interner));
-            result = stmtvisit_t::Failure;
-        } else {
-            const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
-                elif.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
-
-            if (!conditionCanBeBool) {
-                logError(statement,
-                         "Condition in elif statement must be a boolean type or implicitly convertible to it, not {}",
-                         elif.condition->semanticType->toString());
-                result = stmtvisit_t::Failure;
-            } else if (conditionCanBeBool.result == Compatible_t::Warning) {
-                logWarning(statement, "{}", conditionCanBeBool.message);
-            }
-        }
-
-        if (visit(elif.body, !elifHasVar, elif.associatedScope) == stmtvisit_t::Failure) {
-            result = stmtvisit_t::Failure;
-        }
+        if (checkElifClause(statement, elif) == Result::Failure) { result = stmtvisit_t::Failure; }
     }
 
     if (statement->elseBody.has_value()) {
@@ -221,24 +196,7 @@ auto SemanticAnalyzer::visit(ast::SwitchStatement* statement) -> stmtvisit_t {
     stmtvisit_t result = stmtvisit_t::Success;
     bool first = true;
     for (const ast::CaseClause& caseClause : statement->cases) {
-        for (ast::Expression* val : caseClause.values) {
-            const bool visitSuccess = visit(val) == exprvisit_t::Success;
-            if (!visitSuccess) { result = stmtvisit_t::Failure; }
-            if (!val->canFold()) {
-                logError(val, "case value must be a constant expression");
-                result = stmtvisit_t::Failure;
-            }
-            if (visitSuccess) {
-                const SemanticType* valType = val->semanticType;
-                if (!areTypesComparable(targetType, valType)) {
-                    logError(val, "Type mismatch in switch case: target has type '{}', but case value has type '{}'",
-                             targetType->toString(), valType->toString());
-                    result = stmtvisit_t::Failure;
-                }
-            }
-        }
-        if (visit(caseClause.body, true, first ? statement->associatedScope : caseClause.associatedScope)
-            == Result::Failure) {
+        if (checkCaseClause(statement, caseClause, targetType, first) == Result::Failure) {
             result = stmtvisit_t::Failure;
         }
         first = false;
@@ -278,6 +236,65 @@ auto SemanticAnalyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t 
         result = stmtvisit_t::Failure;
     }
 
+    return result;
+}
+
+// Helpers
+
+Result SemanticAnalyzer::checkElifClause(const ast::IfStatement* statement, const ast::ElifClause& elif) {
+    Result result = Result::Success;
+    const bool elifHasVar = (elif.variableDeclaration != nullptr);
+    if (elifHasVar) {
+        symbolTable.enterScope(elif.associatedScope);
+        if (visit(elif.variableDeclaration) == Result::Failure) { result = Result::Failure; }
+    }
+
+    if (visit(elif.condition) == exprvisit_t::Failure) { result = Result::Failure; }
+
+    if (elif.condition->semanticType->isPoison()) {
+        logError(statement, "Could not deduce type of condition {}", elif.condition->toString(interner));
+        result = Result::Failure;
+    } else {
+        const typeCompatibilityResult conditionCanBeBool
+            = areTypesCompatible(elif.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
+
+        if (!conditionCanBeBool) {
+            logError(statement,
+                     "Condition in elif statement must be a boolean type or implicitly convertible to it, not {}",
+                     elif.condition->semanticType->toString());
+            result = Result::Failure;
+        } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+            logWarning(statement, "{}", conditionCanBeBool.message);
+        }
+    }
+
+    if (visit(elif.body, !elifHasVar, elif.associatedScope) == Result::Failure) { result = Result::Failure; }
+    return result;
+}
+
+Result SemanticAnalyzer::checkCaseClause(ast::SwitchStatement* statement, const ast::CaseClause& caseClause,
+                                         const SemanticType* targetType, bool first) {
+    Result result = Result::Success;
+    for (ast::Expression* val : caseClause.values) {
+        const bool visitSuccess = visit(val) == exprvisit_t::Success;
+        if (!visitSuccess) { result = stmtvisit_t::Failure; }
+        if (!val->canFold()) {
+            logError(val, "case value must be a constant expression");
+            result = stmtvisit_t::Failure;
+        }
+        if (visitSuccess) {
+            const SemanticType* valType = val->semanticType;
+            if (!areTypesComparable(targetType, valType)) {
+                logError(val, "Type mismatch in switch case: target has type '{}', but case value has type '{}'",
+                         targetType->toString(), valType->toString());
+                result = stmtvisit_t::Failure;
+            }
+        }
+    }
+    if (visit(caseClause.body, true, first ? statement->associatedScope : caseClause.associatedScope)
+        == Result::Failure) {
+        result = stmtvisit_t::Failure;
+    }
     return result;
 }
 

@@ -112,8 +112,7 @@ const SemanticType* SemanticAnalyzer::promoteNumericTypes(const SemanticType* lh
     return typeContext.getPoison();
 }
 
-auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const
-    -> typeCompatibilityResult {
+typeCompatibilityResult SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const SemanticType* to) const {
     if (from->isVoid() || to->isVoid()) {
         return {.result = Compatible_t::Error,
                 .message = "Cannot use an expression that evaluates to 'void' in this context"};
@@ -133,103 +132,106 @@ auto SemanticAnalyzer::areTypesCompatible(const SemanticType* from, const Semant
         return areTypesCompatible(arrFrom->elementType, sliceTo->elementType);
     }
 
-    // Duplicated types point to the same underlying value so we can just do a fast pointer comparison
+    // Special cross-kind promotion: arrays can become slices
+    if (from->kind == SemanticTypeKind::Array && to->kind == SemanticTypeKind::Slice) {
+        const auto* arrFrom = static_cast<const Array*>(from);
+        const auto* sliceTo = static_cast<const Slice*>(to);
+        return areTypesCompatible(arrFrom->elementType, sliceTo->elementType);
+    }
+
+    // Fast path for identical type pointers
     if (from == to) { return {.result = Compatible_t::Valid}; }
 
     const std::string conversionError = std::format("Cannot convert {} to {}", from->toString(), to->toString());
 
-    // Totally distinct types are not interconvertible
     if (from->kind != to->kind) { return {.result = Compatible_t::Error, .message = conversionError}; }
 
-    // Same structure but different instances (e.g. pointers to different types)
+    // Dispatch to kind-specific helper functions
     switch (from->kind) {
         case SemanticTypeKind::Aggregate:
             return {.result = Compatible_t::Error,
                     .message = conversionError + " (aggregates cannot be converted to other types)."};
-        case SemanticTypeKind::Array: {
-            const auto* arrFrom = static_cast<const Array*>(from);
-            const auto* arrTo = static_cast<const Array*>(to);
-
-            if (arrFrom->length != arrTo->length) {
-                return {.result = Compatible_t::Error,
-                        .message = conversionError + " (cannot convert between arrays of different lengths)."};
-            }
-            return areTypesCompatible(arrFrom->elementType, arrTo->elementType);
-        }
-
-        case SemanticTypeKind::Enum: {
-            // the check that pointers are equal should have caught the case where the enums are the same
+        case SemanticTypeKind::Array: return checkArrayCompatibility(from, to, conversionError);
+        case SemanticTypeKind::Enum:
             return typeCompatibilityResult{.result = Compatible_t::Error,
                                            .message = conversionError + " (cannot convert between different enums)"};
-        }
-
-        case SemanticTypeKind::Function: {
-            const auto* funcFrom = static_cast<const Function*>(from);
-            const auto* funcTo = static_cast<const Function*>(to);
-
-            if (funcFrom->parameterTypes.size() != funcTo->parameterTypes.size()) {
-                return {.result = Compatible_t::Error,
-                        .message = conversionError + " (different number of parameters)."};
-            }
-            for (std::size_t i = 0; i < funcFrom->parameterTypes.size(); ++i) {
-                const Parameter& funcFromParam = funcFrom->parameterTypes[i];
-                const Parameter& funcToParam = funcTo->parameterTypes[i];
-                if (!areTypesCompatible(funcFromParam.type, funcToParam.type)) {
-                    const std::string error = std::format(
-                        " (mismatch in position {}: parameter type {} cannot be converted to parameter type {}).", i,
-                        funcFromParam.toString(), funcToParam.toString());
-
-                    return {.result = Compatible_t::Error, .message = conversionError + error};
-                }
-                if (funcFromParam.isMutable != funcToParam.isMutable) {
-                    const std::string error
-                        = std::format(" (parameter in position {} in {} is {} but is {} in {})", i,
-                                      funcFrom->toString(), (funcFromParam.isMutable ? "mutable" : "immutable"),
-                                      (funcToParam.isMutable ? "mutable" : "immutable"), funcToParam.toString());
-
-                    return {.result = Compatible_t::Error, .message = conversionError + error};
-                }
-            }
-            if (funcFrom->returnType->isVoid() && funcTo->returnType->isVoid()) {
-                return {.result = Compatible_t::Valid};
-            }
-            return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
-        }
-
-        case SemanticTypeKind::Pointer: {
-            const auto* ptrFrom = static_cast<const Pointer*>(from);
-            const auto* ptrTo = static_cast<const Pointer*>(to);
-
-            // making an immutable pointer (ptr int) mutable (ptr mut int) is not allowed
-            // but making a mutable pointer (ptr mut int) mutable (ptr int) is fine
-            if (!ptrFrom->isMutable && ptrTo->isMutable) {
-                return {.result = Compatible_t::Error,
-                        .message = conversionError + " (cannot convert an immutable pointer to a mutable pointer)."};
-            }
-            return areTypesCompatible(ptrFrom->baseType, ptrTo->baseType);
-        };
-
-        case SemanticTypeKind::Primitive: {
-            return arePrimitivesCompatible(from, to);
-        };
-
-        case SemanticTypeKind::Slice: {
-            if (to->kind != SemanticTypeKind::Slice) {
-                return {.result = Compatible_t::Error, .message = conversionError};
-            }
-            const auto* sliceFrom = static_cast<const Slice*>(from);
-            const auto* sliceTo = static_cast<const Slice*>(to);
-            return areTypesCompatible(sliceFrom->elementType, sliceTo->elementType);
-        }
-
+        case SemanticTypeKind::Function: return checkFunctionCompatibility(from, to, conversionError);
+        case SemanticTypeKind::Pointer: return checkPointerCompatibility(from, to, conversionError);
+        case SemanticTypeKind::Primitive: return arePrimitivesCompatible(from, to);
+        case SemanticTypeKind::Slice: return checkSliceCompatibility(from, to, conversionError);
         case SemanticTypeKind::Void:
-            return {.result = Compatible_t::Error, .message = "Cannot use 'void' expression in this context"};
-        case SemanticTypeKind::Poison: return {.result = Compatible_t::Error, .message = "Could not deduce types"};
-        case SemanticTypeKind::Uninitialized:
-            return {.result = Compatible_t::Error,
-                    .message = "Cannot use keyword 'uninitialized' as part of an expression"};
+        case SemanticTypeKind::Poison:
+        case SemanticTypeKind::Uninitialized: break;  // Handled by guards
     }
+
     ASSERT_UNREACHABLE("Unknown semantic type kind in areTypesCompatible");
+}
+typeCompatibilityResult SemanticAnalyzer::checkArrayCompatibility(const SemanticType* from, const SemanticType* to,
+                                                                  const std::string& conversionError) const {
+    const auto* arrFrom = static_cast<const Array*>(from);
+    const auto* arrTo = static_cast<const Array*>(to);
+
+    if (arrFrom->length != arrTo->length) {
+        return {.result = Compatible_t::Error,
+                .message = conversionError + " (cannot convert between arrays of different lengths)."};
+    }
+    return areTypesCompatible(arrFrom->elementType, arrTo->elementType);
+}
+
+typeCompatibilityResult SemanticAnalyzer::checkFunctionCompatibility(const SemanticType* from, const SemanticType* to,
+                                                                     const std::string& conversionError) const {
+    const auto* funcFrom = static_cast<const Function*>(from);
+    const auto* funcTo = static_cast<const Function*>(to);
+
+    if (funcFrom->parameterTypes.size() != funcTo->parameterTypes.size()) {
+        return {.result = Compatible_t::Error, .message = conversionError + " (different number of parameters)."};
+    }
+
+    for (std::size_t i = 0; i < funcFrom->parameterTypes.size(); ++i) {
+        const Parameter& funcFromParam = funcFrom->parameterTypes[i];
+        const Parameter& funcToParam = funcTo->parameterTypes[i];
+
+        if (!areTypesCompatible(funcFromParam.type, funcToParam.type)) {
+            const std::string error
+                = std::format(" (mismatch in position {}: parameter type {} cannot be converted to parameter type {}).",
+                              i, funcFromParam.toString(), funcToParam.toString());
+
+            return {.result = Compatible_t::Error, .message = conversionError + error};
+        }
+
+        if (funcFromParam.isMutable != funcToParam.isMutable) {
+            const std::string error
+                = std::format(" (parameter in position {} in {} is {} but is {} in {})", i, funcFrom->toString(),
+                              (funcFromParam.isMutable ? "mutable" : "immutable"),
+                              (funcToParam.isMutable ? "mutable" : "immutable"), funcToParam.toString());
+
+            return {.result = Compatible_t::Error, .message = conversionError + error};
+        }
+    }
+
+    if (funcFrom->returnType->isVoid() && funcTo->returnType->isVoid()) { return {.result = Compatible_t::Valid}; }
+    return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
+}
+
+typeCompatibilityResult SemanticAnalyzer::checkPointerCompatibility(const SemanticType* from, const SemanticType* to,
+                                                                    const std::string& conversionError) const {
+    const auto* ptrFrom = static_cast<const Pointer*>(from);
+    const auto* ptrTo = static_cast<const Pointer*>(to);
+
+    // Making an immutable pointer mutable is not allowed
+    if (!ptrFrom->isMutable && ptrTo->isMutable) {
+        return {.result = Compatible_t::Error,
+                .message = conversionError + " (cannot convert an immutable pointer to a mutable pointer)."};
+    }
+    return areTypesCompatible(ptrFrom->baseType, ptrTo->baseType);
+}
+
+typeCompatibilityResult SemanticAnalyzer::checkSliceCompatibility(const SemanticType* from, const SemanticType* to,
+                                                                  const std::string& conversionError) const {
+    if (to->kind != SemanticTypeKind::Slice) { return {.result = Compatible_t::Error, .message = conversionError}; }
+    const auto* sliceFrom = static_cast<const Slice*>(from);
+    const auto* sliceTo = static_cast<const Slice*>(to);
+    return areTypesCompatible(sliceFrom->elementType, sliceTo->elementType);
 }
 
 auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
@@ -301,9 +303,7 @@ auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const S
     return {.result = Compatible_t::Valid};  // Widening conversion is fine
 }
 
-// TODO: should this be stricter? (e.g. bool < bool not allowed, but bool == bool is fine)
-auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const
-    -> typeCompatibilityResult {
+auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) -> typeCompatibilityResult {
     if (lhs->isVoid() || rhs->isVoid()) {
         return {.result = Compatible_t::Error, .message = "Cannot compare void types"};
     }
