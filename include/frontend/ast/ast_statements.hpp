@@ -104,6 +104,25 @@ struct ExpressionStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE(ExpressionStatement);
 };
 
+using ForEachLoopContainer = utils::NamedParameter<Expression*, struct ForEachContainer>;
+
+struct ForEachElement {
+    utils::StringID name;
+    Type* type = nullptr;
+    bool isMutable = false;
+};
+
+struct ForEachLoopStatement final : public Statement, ScopeOwner {
+    ForEachElement element;
+    Expression* container;
+    Block body;
+
+    ForEachLoopStatement(ForEachElement _element, ForEachLoopContainer _container, Block _body) noexcept :
+        Statement(StatementKind::ForEachLoopStatement), element(_element), container(_container.get()), body(_body) {}
+
+    MN_AST_STANDARD_INTERFACE(ForEachLoopStatement);
+};
+
 using ForLoopCondition = utils::NamedParameter<Expression*, struct ForCond>;
 using ForLoopPost = utils::NamedParameter<Expression*, struct ForPost>;
 

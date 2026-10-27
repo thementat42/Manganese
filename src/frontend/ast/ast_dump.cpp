@@ -1,3 +1,5 @@
+#include "frontend/ast/ast_statements.hpp"
+#include "utils/string_interner.hpp"
 #if MN_DEBUG  // only include dump methods in debug builds
 
 #include <core.hpp>
@@ -128,6 +130,32 @@ void ExpressionStatement::dump(std::ostream& os, const utils::StringInterner& in
     const Indent ind{indent};
     dumpHeader(os, ind, "ExpressionStatement", *this);
     expression->dump(os, interner, ind.next());
+    os << ind << "}\n";
+}
+
+void ForEachLoopStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ForEachLoopStatement", *this);
+
+    os << ind.next() << "Element: {\n";
+    os << ind.next(2) << "name: " << interner.get_view(element.name) << "\n";
+
+    os << ind.next(2) << "type: ";
+    if (element.type == nullptr) {
+        os << "not yet deduced\n";
+    } else {
+        os << "{\n";
+        element.type->dump(os, interner, ind.next(3));
+        os << ind.next(2) << "}\n";
+    }
+
+    os << ind.next(2) << "is mutable: " << (element.isMutable ? "true" : "false") << "\n";
+    os << ind.next() << "}\n";
+
+    os << ind.next() << "Container:\n";
+    container->dump(os, interner, ind.next(2));
+
+    dumpBlock(os, "body", interner, ind.next(), body);
     os << ind << "}\n";
 }
 

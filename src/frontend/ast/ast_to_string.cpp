@@ -7,6 +7,8 @@
 #include <string>
 #include <utils/string_interner.hpp>
 
+#include "frontend/ast/ast_statements.hpp"
+
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
 #else
@@ -108,6 +110,21 @@ std::string EnumDeclarationStatement::toString(const utils::StringInterner& inte
 
 std::string ExpressionStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
     return getIndent(indent) + std::format("{};", expression->toString(interner, indent));
+}
+
+std::string ForEachLoopStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string result = getIndent(indent) + "foreach (";
+
+    if (element.isMutable) { result += "mut "; }
+    result += interner.get_view(element.name);
+
+    if (element.type != nullptr) { result += ": " + element.type->toString(interner); }
+
+    result += " in " + container->toString(interner) + ") ";
+
+    result += blockToString(body, interner, indent);
+
+    return result;
 }
 
 std::string ForLoopStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {

@@ -6,6 +6,8 @@
 #include <utils/string_interner.hpp>
 #include <vector>
 
+#include "frontend/ast/ast_statements.hpp"
+
 namespace Manganese::ast {
 
 // Helpers
@@ -81,6 +83,15 @@ EnumDeclarationStatement* EnumDeclarationStatement::clone(semantic::CloneContext
 
 ExpressionStatement* ExpressionStatement::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context, expression->clone(context));
+}
+
+ForEachLoopStatement* ForEachLoopStatement::clone(semantic::CloneContext* context) const {
+    auto elementClone = ForEachElement{.name = element.name,
+                                       .type = element.type == nullptr ? nullptr : element.type->clone(context),
+                                       .isMutable = element.isMutable};
+    Expression* containerClone = container->clone(context);
+
+    return makeClonedNode(this, context, elementClone, ForEachLoopContainer{containerClone}, cloneBlock(body, context));
 }
 
 ForLoopStatement* ForLoopStatement::clone(semantic::CloneContext* context) const {
