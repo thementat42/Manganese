@@ -38,6 +38,9 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ForEachLoopStatement* statement
     auto preLoopStates = symbolAssignmentStates;
     symbolTable.enterScope(statement->associatedScope);
 
+    const semantic::Symbol* elementSymbol = symbolTable.lookup(statement->element.name);
+    if (elementSymbol != nullptr) { setAssignmentState(*elementSymbol, AssignmentState::Initialized); }
+
     visit(statement->body, false, statement->associatedScope);
 
     mergeStates(symbolAssignmentStates, preLoopStates);

@@ -105,6 +105,10 @@ class IRGenerator final : public _irgen_base_t {
                                 const semantic::SemanticType* semanticType);
     [[nodiscard]] llvm::Value* emitTypeCast(llvm::Value* originalValue, const semantic::SemanticType* fromType,
                                             const semantic::SemanticType* toType);
+
+    llvm::Value* emitContainerLengthInForeach(const semantic::SemanticType* containerType, llvm::Value* containerVal);
+    llvm::Value* emitElementAccessInForeach(const semantic::SemanticType* containerType,
+                                                     llvm::Value* containerVal, llvm::Value* indexVal);
 };
 
 }  // namespace Manganese::codegen

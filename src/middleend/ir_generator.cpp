@@ -294,4 +294,38 @@ llvm::Value* IRGenerator::emitComparison(lexer::TokenType op, llvm::Value* left,
     ASSERT_UNREACHABLE_FMT("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString());
 }
 
+llvm::Value* IRGenerator::emitContainerLengthInForeach(const semantic::SemanticType* containerType,
+                                                       llvm::Value* containerVal) {
+    if (containerType->isSlice()) { return builder->CreateExtractValue(containerVal, {1}, "slice_length"); }
+    if (containerType->isArray()) {
+        uint64_t arraySize = static_cast<const semantic::Array*>(containerType)->length;
+        return builder->getInt64(arraySize);
+    }
+    ASSERT_UNREACHABLE_FMT("Non-indexable type '{}' in IRGenerator::emitContainerLength", containerType->toString());
+}
+
+llvm::Value* IRGenerator::emitElementAccessInForeach(const semantic::SemanticType* containerType,
+                                                     llvm::Value* containerVal, llvm::Value* indexVal) {
+    if (containerType->isSlice()) {
+        llvm::Value* dataPtr = builder->CreateExtractValue(containerVal, {0}, "slice_data");
+
+        const auto* sliceType = static_cast<const semantic::Slice*>(containerType);
+        llvm::Type* elementType = visitTypeAsValue(sliceType->elementType);
+        llvm::Value* elemPtr = builder->CreateInBoundsGEP(elementType, dataPtr, {indexVal}, "elem_ptr");
+        return builder->CreateLoad(elementType, elemPtr, "elem_val");
+    }
+    if (containerType->isArray()) {
+        llvm::AllocaInst* tempArrayAlloca = builder->CreateAlloca(containerVal->getType(), nullptr, "temp_array");
+        builder->CreateStore(containerVal, tempArrayAlloca);
+
+        const auto* arrayType = static_cast<const semantic::Array*>(containerType);
+        llvm::Type* elementType = visitTypeAsValue(arrayType->elementType);
+
+        llvm::Value* elemPtr = builder->CreateInBoundsGEP(containerVal->getType(), tempArrayAlloca,
+                                                          {builder->getInt32(0), indexVal}, "array_elem_ptr");
+        return builder->CreateLoad(elementType, elemPtr, "array_elem_val");
+    }
+    ASSERT_UNREACHABLE_FMT("Type '{}' is not iterable in emitElementAccess", containerType->toString());
+}
+
 }  // namespace Manganese::codegen

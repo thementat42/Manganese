@@ -197,10 +197,10 @@ bool testForEachLoopAssignmentSafety() {
         func foo() -> int32 {
             let mut x: int32;
             let arr: int32[3] = [1, 2, 3];
-            foreach item in arr {
+            foreach (item in arr) {
                 x = item;
             }
-            return x; # Fails: collection could theoretically be empty (0 iterations), so x is not definitely initialized
+            return x;
         }
     )";
     return analyzeControlFlow(invalid, false, __func__);

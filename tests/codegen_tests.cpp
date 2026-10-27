@@ -445,6 +445,20 @@ bool testChainedComparisonCodeGen() {
     return validateIRContains(source, {"chain_success", "chain_fail", "chain_result", "phi"}, __func__);
 }
 
+bool testForEachLoopCodegen() {
+    const std::string source = R"(
+        func sumArray() -> int32 {
+            let arr: int32[3] = [10, 20, 30];
+            let mut total: int32 = 0;
+            foreach (x in arr) {
+                total = total + x;
+            }
+            return total;
+        }
+    )";
+    return validateIRContains(source, {"sumArray", "foreach_cond", "foreach_body", "icmp ult"}, __func__);
+}
+
 }  // namespace
 }  // namespace codegen_tests
 
@@ -480,6 +494,7 @@ void runCodeGenerationTests(TestRunner& runner) {
     runner.runTest("Codegen: Nested Generic Recursion", codegen_tests::testNestedGenericRecursionCodegen);
     runner.runTest("Codegen: Slice Length and Numeric Access", codegen_tests::testSliceLengthAndNumericAccessCodeGen);
     runner.runTest("Codegen: Chained Comparison", codegen_tests::testChainedComparisonCodeGen);
+    runner.runTest("Codegen: ForEach Loops", codegen_tests::testForEachLoopCodegen);
 }
 
 }  // namespace Manganese::tests

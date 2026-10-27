@@ -46,6 +46,56 @@ auto IRGenerator::visit(const ast::EnumDeclarationStatement* /*unused*/) -> stmt
 auto IRGenerator::visit(const ast::ExpressionStatement* statement) -> stmtvisit_t {
     DISCARD(visit(statement->expression));
 }
+auto IRGenerator::visit(const ast::ForEachLoopStatement* statement) -> stmtvisit_t {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
+
+    llvm::Value* containerVal = visit(statement->container);
+
+    llvm::Value* lengthVal = emitContainerLengthInForeach(statement->container->semanticType, containerVal);
+
+    llvm::AllocaInst* indexAlloca = builder->CreateAlloca(builder->getInt64Ty(), nullptr, "_foreach_idx");
+    builder->CreateStore(builder->getInt64(0), indexAlloca);
+
+    llvm::Type* elementLLVMType = visit(statement->element.semanticType);
+    llvm::AllocaInst* elementAlloca
+        = builder->CreateAlloca(elementLLVMType, nullptr, interner.get_view(statement->element.name));
+
+    namedValues[statement->element.name] = elementAlloca;
+
+    llvm::BasicBlock* condBlock = llvm::BasicBlock::Create(*context, "foreach_cond", function);
+    llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(*context, "foreach_body", function);
+    llvm::BasicBlock* postBlock = llvm::BasicBlock::Create(*context, "foreach_post", function);
+    llvm::BasicBlock* exitBlock = llvm::BasicBlock::Create(*context, "foreach_exit", function);
+
+    builder->CreateBr(condBlock);
+
+    builder->SetInsertPoint(condBlock);
+    llvm::Value* currentIdx = builder->CreateLoad(builder->getInt64Ty(), indexAlloca, "_idx_load");
+    llvm::Value* condVal = builder->CreateICmpULT(currentIdx, lengthVal, "_foreach_bounds_check");
+    builder->CreateCondBr(condVal, bodyBlock, exitBlock);
+
+    // Register loop stack for break/continue statements
+    loopStack.push({.continueBlock = postBlock, .exitBlock = exitBlock});
+
+    builder->SetInsertPoint(bodyBlock);
+
+    llvm::Value* fetchedElement = emitElementAccessInForeach(statement->container->semanticType, containerVal, currentIdx);
+
+    builder->CreateStore(fetchedElement, elementAlloca);
+
+    visit(statement->body);
+
+    if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(postBlock); }
+
+    loopStack.pop();
+
+    builder->SetInsertPoint(postBlock);
+    llvm::Value* nextIdx = builder->CreateAdd(currentIdx, builder->getInt64(1), "_idx_next");
+    builder->CreateStore(nextIdx, indexAlloca);
+    builder->CreateBr(condBlock);
+
+    builder->SetInsertPoint(exitBlock);
+}
 
 auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
