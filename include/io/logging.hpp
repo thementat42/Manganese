@@ -8,6 +8,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 // defined in CMake; if a terminal doesn't support ANSI colour sequences
 // This macro can disable them
@@ -36,6 +37,24 @@ enum class LogLevel : std::uint8_t {
     Warning,
     Error,
     Critical
+};
+
+struct LogRecord {
+    LogLevel level;
+    std::size_t line;
+    std::size_t col;
+    std::string message;
+};
+
+struct [[nodiscard]] ThreadLogBufferGuard {
+    std::vector<LogRecord> records;
+    std::vector<LogRecord>* oldBuffer = nullptr;
+
+    ThreadLogBufferGuard();
+    ~ThreadLogBufferGuard();
+
+    ThreadLogBufferGuard(const ThreadLogBufferGuard&) = delete;
+    ThreadLogBufferGuard& operator=(const ThreadLogBufferGuard&) = delete;
 };
 
 void writeToStderr(std::string_view prefixColor, std::string_view label, std::string_view message, std::size_t line,
