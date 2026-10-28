@@ -1,7 +1,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/cfg.hpp>
 
-
 namespace Manganese::cfg {
 
 auto ControlFlowAnalyzer::visit(const ast::AggregateInstantiationExpression* expression) noexcept -> exprvisit_t {

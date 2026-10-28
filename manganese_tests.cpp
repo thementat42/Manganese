@@ -19,8 +19,8 @@ static bool strneq(const char* a, const char* b, std::size_t max_count) {
 
 int main(int argc, char const* argv[]) {
     if (argc == 1) {
-        std::cout << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--execution] [--all]\n",
-                                 argv[0]);
+        std::cout << std::format(
+            "Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--execution] [--all]\n", argv[0]);
         return 1;
     }
 

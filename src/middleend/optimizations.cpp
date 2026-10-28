@@ -8,7 +8,6 @@
 
 #include <middleend/optimizations.hpp>
 
-
 // https://llvm.org/docs/NewPassManager.html
 
 namespace Manganese::codegen {

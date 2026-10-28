@@ -79,7 +79,8 @@ auto IRGenerator::visit(const ast::ForEachLoopStatement* statement) -> stmtvisit
 
     builder->SetInsertPoint(bodyBlock);
 
-    llvm::Value* fetchedElement = emitElementAccessInForeach(statement->container->semanticType, containerVal, currentIdx);
+    llvm::Value* fetchedElement
+        = emitElementAccessInForeach(statement->container->semanticType, containerVal, currentIdx);
 
     builder->CreateStore(fetchedElement, elementAlloca);
 
