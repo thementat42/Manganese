@@ -1,7 +1,6 @@
 #ifndef MANGANESE_INCLUDE_UTILS_CHUNK_ALLOCATOR_HPP
 #define MANGANESE_INCLUDE_UTILS_CHUNK_ALLOCATOR_HPP 1
 
-#include <algorithm>
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -47,6 +46,13 @@ class chunk_allocator {
 
         std::uninitialized_copy(range.begin(), range.end(), dest);
         return Slice<value_type>{.data = dest, .size = count};
+    }
+
+    void merge_with(chunk_allocator&& other) {
+        _chunks.reserve(_chunks.size() + other._chunks.size());
+        _chunks.insert(_chunks.end(), std::make_move_iterator(other._chunks.begin()),
+                       std::make_move_iterator(other._chunks.end()));
+        other._chunks.clear();
     }
 
    private:

@@ -2,15 +2,26 @@
 #include <execution>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utils/chunk_allocator.hpp>
 #include <utils/resolution_status.hpp>
 
 namespace Manganese::parser {
 
 namespace {
+
+std::string flattenPath(const utils::Slice<utils::StringID>& pathSlice, const utils::StringInterner& interner) {
+    std::string result;
+    for (std::size_t i = 0; i < pathSlice.size; ++i) {
+        if (i > 0) { result += "::"; }
+        result.append(interner.get_view(pathSlice[i]));
+    }
+    return result;
+}
+
 struct SortContext {
     const std::unordered_map<std::string, Module>& modules;
     std::unordered_map<std::string_view, ResolutionStatus>& states;
@@ -34,43 +45,44 @@ void topologicalSort(const std::string& moduleName, SortContext& context) {
                              moduleName, loopString);
     }
 
-    if (state == ResolutionStatus::Success) { return; /* already handled */ }
+    if (state == ResolutionStatus::Success) { return; }
 
     state = ResolutionStatus::InProgress;
     context.resolutionStack.push_back(moduleName);
 
     if (auto it = context.modules.find(moduleName); it != context.modules.end()) {
-        // for each dependency, first sort its dependencies
         for (const auto& dependency : it->second.dependencies) { topologicalSort(dependency, context); }
 
-        // this is hit once all a module's dependencies have been analyzed, or a module has no dependencies
-        // the semantic analyzer will now have all the symbols from any and all imported modules so it's safe to
-        // analyze this one
         state = ResolutionStatus::Success;
         context.orderedModules.push_back(context.modules.at(moduleName));
         context.resolutionStack.pop_back();
+        return;
     }
 
     logging::logCritical(0, 0, "Imported module '{}' was not found", moduleName);
 }
+
 }  // namespace
 
-std::vector<Module> sortModules(const std::vector<ParsedFile>& parsedFiles) {
+std::vector<Module> sortModules(const std::vector<ParsedFile>& parsedFiles, const utils::StringInterner& interner) {
     std::unordered_map<std::string, Module> modules;
 
     // Group files by their modules
-
     for (const auto& file : parsedFiles) {
-        std::string name = (file.fileModule != nullptr) ? flattenPath(file.fileModule->path) : "anonymous";
+        std::string name = "anonymous";
+        if (file.fileModule != nullptr) { name = interner.get_copy(file.fileModule->name); }
+
         Module& currentModule = modules[name];
+        if (currentModule.name.empty()) { currentModule.name = name; }
 
-        if (currentModule.name.empty()) { currentModule.name = std::move(name); }
-
+        // Extract import path strings via interner from ImportStatement
         for (const auto* importStatement : file.imports) {
-            currentModule.dependencies.insert(flattenPath(importStatement->path));
+            currentModule.dependencies.insert(flattenPath(importStatement->path, interner));
         }
 
-        currentModule.fullProgram.insert(currentModule.fullProgram.end(), file.program.begin(), file.program.end());
+        // Collect statements into the temporary vector buffer
+        currentModule.statementsBuffer.insert(currentModule.statementsBuffer.end(), file.program.begin(),
+                                              file.program.end());
     }
 
     std::unordered_map<std::string_view, ResolutionStatus> states;
@@ -90,31 +102,54 @@ std::vector<Module> sortModules(const std::vector<ParsedFile>& parsedFiles) {
     return orderedModules;
 }
 
-std::vector<ParsedFile> parseInParallel(const std::vector<std::string>& filenames,
-                                        mnstl::chunk_allocator& globalArena) {
+std::vector<ParsedFile> parseInParallel(const std::vector<std::string>& filenames, utils::chunk_allocator& globalArena,
+                                        utils::StringInterner& interner) {
     std::vector<ParsedFile> parsedFiles;
+    parsedFiles.resize(filenames.size());
 
-    // the mutex will lock the output vector while a thread calls push_back so that multiple threads don't try to append
-    // files at the same time
     std::mutex resultsMutex;
-
-    parsedFiles.reserve(filenames.size());
+    std::vector<logging::LogRecord> aggregatedLogs;
+    std::mutex logsMutex;
 
     std::for_each(std::execution::par, filenames.begin(), filenames.end(), [&](const std::string& path) {
-        mnstl::chunk_allocator localArena;
-        Parser p{path, lexer::Mode::File, localArena};
-        // defined as a variable so that parsing can happen thread independently
+        logging::ThreadLogBufferGuard logGuard;
+
+        utils::chunk_allocator localArena;
+        Parser p{path, lexer::Mode::File, localArena, interner};
         ParsedFile file = p.parse();
 
         {
-            // temporarily lock the mutex so there's no data race when appending the results
-            // this is in a nested scope so the lock_guard's destructor will automatically run once
-            // this small nested scope ends, releasing the mutex
             std::lock_guard<std::mutex> lock{resultsMutex};
+
             globalArena.merge_with(std::move(localArena));
-            parsedFiles.push_back(std::move(file));
+
+            // Store the result at the correct index to preserve input file ordering
+            auto idx = static_cast<std::size_t>(&path - filenames.data());
+            parsedFiles[idx] = file;
+        }
+
+        if (!logGuard.records.empty()) {
+            std::lock_guard<std::mutex> lock{logsMutex};
+            for (auto& rec : logGuard.records) { aggregatedLogs.push_back(std::move(rec)); }
         }
     });
+
+    // flush logs on the main thread
+    if (!aggregatedLogs.empty()) {
+        std::ranges::sort(aggregatedLogs, [](const auto& a, const auto& b) {
+            if (a.line != b.line) { return a.line < b.line; }
+            return a.col < b.col;
+        });
+
+        for (const auto& rec : aggregatedLogs) {
+            if (rec.level == logging::LogLevel::Error) {
+                logging::logError(rec.line, rec.col, "{}", rec.message);
+            } else if (rec.level == logging::LogLevel::Warning) {
+                logging::logWarning(rec.line, rec.col, "{}", rec.message);
+            }
+        }
+    }
+
     return parsedFiles;
 }
 
