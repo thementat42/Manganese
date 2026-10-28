@@ -5,8 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <iostream>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -40,31 +38,22 @@ enum class LogLevel : std::uint8_t {
     Critical
 };
 
-inline void writeToStderr(std::string_view prefixColor, std::string_view label, std::string_view message,
-                          std::size_t line, std::size_t col) {
-    std::string out
-        = std::format("{}{}{} {} (line {}, column {})\n", prefixColor, label, message, ansi::RESET, line, col);
+void writeToStderr(std::string_view prefixColor, std::string_view label, std::string_view message, std::size_t line,
+                   std::size_t col);
 
-    // Using .write() bypasses operator<<
-    std::cout.write(out.data(), static_cast<std::streamsize>(out.size()));
-}
+void logInternalRaw(LogLevel level, std::string_view message);
+void logRaw(LogLevel level, std::size_t line, std::size_t col, std::string_view message);
 
+// Template functions kept in header because they need std::format_string evaluation
 template <class... Args>
 void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
 #if MN_DEBUG
     std::string message = std::format(fmt, std::forward<Args>(args)...);
-    std::string out;
-    switch (level) {
-        case LogLevel::Info: out = std::format("{}[Internal Info] {}{}\n", ansi::BLUE, message, ansi::RESET); break;
-        case LogLevel::Warning:
-            out = std::format("{}[Internal Warning] {}{}\n", ansi::YELLOW, message, ansi::RESET);
-            break;
-        case LogLevel::Error: out = std::format("{}[Internal Error] {}{}\n", ansi::RED, message, ansi::RESET); break;
-        case LogLevel::Critical:
-            out = std::format("{}[Internal Critical Error] {}{}\n", ansi::RED, message, ansi::RESET);
+    logInternalRaw(level, message);
+    if (level == LogLevel::Critical) {
+        // Re-construct formatted string for exception message if needed
+        throw std::runtime_error{message};
     }
-    std::cout.write(out.data(), static_cast<std::streamsize>(out.size()));
-    if (level == LogLevel::Critical) { throw std::runtime_error{out}; }
 #else
     DISCARD(level);
     DISCARD(fmt);
@@ -74,20 +63,12 @@ void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args
 
 template <class... Args>
 void log(LogLevel level, std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) {
+    if (level == LogLevel::Info) { return; }
     std::string message = std::format(fmt, std::forward<Args>(args)...);
-
-    switch (level) {
-        case LogLevel::Info: return;
-        case LogLevel::Warning: writeToStderr(ansi::YELLOW, "Warning: ", message, line, col); break;
-        case LogLevel::Error: writeToStderr(ansi::RED, "Error: ", message, line, col); break;
-        case LogLevel::Critical:
-            const std::string critMessage
-                = std::format("{}Critical error: {} Compilation aborted.{}", ansi::CRITICAL, message, ansi::RESET);
-            writeToStderr("", "", critMessage, line, col);
-            throw std::runtime_error{message};
-            break;
-    }
+    logRaw(level, line, col, message);
 }
+
+// Convenience wrappers
 
 template <class... Args>
 inline void logWarning(std::size_t line, std::size_t col, std::format_string<Args...> fmt, Args&&... args) {
