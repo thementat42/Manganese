@@ -25,7 +25,7 @@ auto SemanticAnalyzer::instantiateGenericAggregate(ast::GenericInstantiationExpr
         return exprvisit_t::Failure;
     }
 
-    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
+    const InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
 
     if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::Success) {
@@ -107,7 +107,7 @@ auto SemanticAnalyzer::instantiateGenericFunction(ast::GenericInstantiationExpre
         return exprvisit_t::Failure;
     }
 
-    InstantiationKey key{.declNode = functionDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
+    const InstantiationKey key{.declNode = functionDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
 
     if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::Success) {
@@ -197,7 +197,7 @@ const SemanticType* SemanticAnalyzer::getInstantiatedAggregateType(
         instantiatedFields.push_back(AggregateField{.name = interner.get_view(fieldNode.name), .type = fieldType});
     }
 
-    std::string_view mangledNameView
+    const std::string_view mangledNameView
         = clonedDecl->mangledName.has_value() ? interner.get_view(*clonedDecl->mangledName) : std::string_view{};
     return typeContext.getNamedAggregate(mangledNameView, std::move(instantiatedFields));
 }
@@ -215,8 +215,7 @@ const SemanticType* SemanticAnalyzer::getInstantiatedFunctionType(const ast::Fun
         const SemanticType* paramType = paramNode.type->semanticType;
         if (paramType == nullptr || paramType->isPoison()) { return typeContext.getPoison(); }
 
-        instantiatedParams.push_back(
-            Parameter{.type = paramType, .isMutable = paramNode.isMutable, .isVariadic = paramNode.isVariadic});
+        instantiatedParams.push_back(Parameter{.type = paramType, .isMutable = paramNode.isMutable});
     }
 
     return typeContext.getFunction(std::move(instantiatedParams), resolvedReturnType);

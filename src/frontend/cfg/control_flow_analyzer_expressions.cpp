@@ -1,7 +1,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/cfg.hpp>
 
-#include "frontend/ast/ast_expressions.hpp"
 
 namespace Manganese::cfg {
 
@@ -42,6 +41,10 @@ auto ControlFlowAnalyzer::visit(const ast::BinaryExpression* expression) noexcep
 }
 
 auto ControlFlowAnalyzer::visit(const ast::BoolLiteralExpression* /*unused*/) noexcept -> exprvisit_t {}
+
+auto ControlFlowAnalyzer::visit(const ast::ChainedComparisonExpression* expression) noexcept -> exprvisit_t {
+    for (const auto& operand : expression->operands) { visit(operand); }
+}
 
 auto ControlFlowAnalyzer::visit(const ast::CharLiteralExpression* /*unused*/) noexcept -> exprvisit_t {}
 

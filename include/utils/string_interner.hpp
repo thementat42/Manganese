@@ -8,6 +8,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 
 namespace Manganese::utils {
 
@@ -30,7 +31,7 @@ class StringInterner {
     StringID intern(std::string&& str) {
         if (auto it = _str_to_id.find(str); it != _str_to_id.end()) { return it->second; }
         _strings.push_back(std::move(str));
-        StringID id = _strings.size() - 1;
+        const StringID id = _strings.size() - 1;
         _str_to_id[_strings.back()] = id;
 
         return id;
@@ -39,7 +40,7 @@ class StringInterner {
     StringID intern(std::string_view str) {
         if (auto it = _str_to_id.find(str); it != _str_to_id.end()) { return it->second; }
         _strings.emplace_back(str);
-        StringID id = _strings.size() - 1;
+        const StringID id = _strings.size() - 1;
         _str_to_id[_strings.back()] = id;
 
         return id;

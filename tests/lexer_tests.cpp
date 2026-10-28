@@ -9,7 +9,6 @@
 #include <string_view>
 #include <vector>
 
-#include "frontend/lexer/token.hpp"
 #include "tests.hpp"
 
 namespace Manganese::tests {
@@ -50,25 +49,10 @@ std::vector<Token> tokensFromString(const std::string& source) {
     return tokens;
 }
 
-std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / filename;
-    lexer::Lexer lexer(fullPath.string(), interner, lexer::Mode::File);
-    std::vector<Token> tokens;
-
-    // Consume tokens until we hit EOF
-    while (true) {
-        Token token = lexer.consumeToken();
-        if (token.getType() == TokenType::EndOfFile) { break; }
-        tokens.push_back(token);
-    }
-
-    return tokens;
-}
-
 bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme,
                 bool wantInvalid = false) {
     const static auto printBytes = [](std::string_view str) {
-        for (char c : str) { std::cout << std::format("{:02X} ", (unsigned char)c); }
+        for (char c : str) { std::cout << std::format("{:02X} ", static_cast<unsigned char>(c)); }
         std::cout << '\n';
     };
     if (token.getType() != expectedType) {
@@ -406,7 +390,17 @@ bool testPunctuation() {
 }
 
 bool testCompleteProgram() {
-    std::vector<Token> tokens = tokensFromFile("tests/lexer_tests.mn");
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests" / "fixtures" / "lexer_tests.mn";
+    lexer::Lexer lexer(fullPath.string(), interner, lexer::Mode::File);
+    std::vector<Token> tokens;
+
+    // Consume tokens until we hit EOF
+    while (true) {
+        Token token = lexer.consumeToken();
+        if (token.getType() == TokenType::EndOfFile) { break; }
+        tokens.push_back(token);
+    }
+
     printAllTokens(tokens);
     if (tokens.empty()) {
         std::cout << "Expected non-empty tokens" << '\n';
@@ -469,7 +463,8 @@ bool testInvalidEscapeSequence() {
 
 bool testBadFileAccess() {
     try {
-        tokensFromFile("__nonexistentfile.mn");
+        std::filesystem::path path = std::filesystem::current_path() / "tests" / "fixtures" / "__nonexistentfile.mn";
+        lexer::Lexer lexer(path.string(), interner, lexer::Mode::File);
     } catch (const std::runtime_error& e) { return true; }
     return false;
 }
@@ -489,7 +484,7 @@ bool testUnderscoreSeparatedNumbers() {
 }
 
 bool testConsecutiveOperatorsAndDelimiters() {
-    std::vector<Token> tokens = tokensFromString("++++----====......");
+    const std::vector<Token> tokens = tokensFromString("++++----====......");
     printAllTokens(tokens);
     // Depending on your maximal munch lexing rules, let's verify they tokenize safely without crashing
     return !tokens.empty();
@@ -530,29 +525,29 @@ bool testNumericSuffixCombinations() {
 
 void runLexerTests(TestRunner& runner) {
     // Register all tests
-    runner.runTest("Empty String", lexer_tests::testEmptyString);
-    runner.runTest("Whitespace", lexer_tests::testWhitespace);
-    runner.runTest("Comments", lexer_tests::testComments);
-    runner.runTest("Identifiers", lexer_tests::testIdentifiers);
-    runner.runTest("Keywords", lexer_tests::testKeywords);
-    runner.runTest("Operators", lexer_tests::testOperators);
-    runner.runTest("Integer Literals", lexer_tests::testIntegerLiterals);
-    runner.runTest("Float Literals", lexer_tests::testFloatLiterals);
-    runner.runTest("Invalid Number Literals", lexer_tests::testInvalidNumberLiterals);
-    runner.runTest("Character Literals", lexer_tests::testCharLiterals);
-    runner.runTest("String Literals", lexer_tests::testStringLiterals);
-    runner.runTest("Invalid Character Literals", lexer_tests::testInvalidCharLiterals);
-    runner.runTest("Invalid String Literals", lexer_tests::testInvalidStringLiterals);
-    runner.runTest("Brackets", lexer_tests::testBrackets);
-    runner.runTest("Punctuation", lexer_tests::testPunctuation);
-    runner.runTest("Nested Brackets", lexer_tests::testNestedBrackets);
-    runner.runTest("Invalid Character", lexer_tests::testInvalidChar);
-    runner.runTest("Invalid Escape Sequence", lexer_tests::testInvalidEscapeSequence);
-    runner.runTest("Complete Program", lexer_tests::testCompleteProgram);
-    runner.runTest("Invalid File", lexer_tests::testBadFileAccess);
-    runner.runTest("Underscore Separated Numbers", lexer_tests::testUnderscoreSeparatedNumbers);
-    runner.runTest("Consecutive Operators", lexer_tests::testConsecutiveOperatorsAndDelimiters);
-    runner.runTest("Unterminated String", lexer_tests::testUnterminatedString);
-    runner.runTest("Numeric Suffix Combinations", lexer_tests::testNumericSuffixCombinations);
+    runner.runTest("Lexer: Empty String", lexer_tests::testEmptyString);
+    runner.runTest("Lexer: Whitespace", lexer_tests::testWhitespace);
+    runner.runTest("Lexer: Comments", lexer_tests::testComments);
+    runner.runTest("Lexer: Identifiers", lexer_tests::testIdentifiers);
+    runner.runTest("Lexer: Keywords", lexer_tests::testKeywords);
+    runner.runTest("Lexer: Operators", lexer_tests::testOperators);
+    runner.runTest("Lexer: Integer Literals", lexer_tests::testIntegerLiterals);
+    runner.runTest("Lexer: Float Literals", lexer_tests::testFloatLiterals);
+    runner.runTest("Lexer: Invalid Number Literals", lexer_tests::testInvalidNumberLiterals);
+    runner.runTest("Lexer: Character Literals", lexer_tests::testCharLiterals);
+    runner.runTest("Lexer: String Literals", lexer_tests::testStringLiterals);
+    runner.runTest("Lexer: Invalid Character Literals", lexer_tests::testInvalidCharLiterals);
+    runner.runTest("Lexer: Invalid String Literals", lexer_tests::testInvalidStringLiterals);
+    runner.runTest("Lexer: Brackets", lexer_tests::testBrackets);
+    runner.runTest("Lexer: Punctuation", lexer_tests::testPunctuation);
+    runner.runTest("Lexer: Nested Brackets", lexer_tests::testNestedBrackets);
+    runner.runTest("Lexer: Invalid Character", lexer_tests::testInvalidChar);
+    runner.runTest("Lexer: Invalid Escape Sequence", lexer_tests::testInvalidEscapeSequence);
+    runner.runTest("Lexer: Complete Program", lexer_tests::testCompleteProgram);
+    runner.runTest("Lexer: Invalid File", lexer_tests::testBadFileAccess);
+    runner.runTest("Lexer: Underscore Separated Numbers", lexer_tests::testUnderscoreSeparatedNumbers);
+    runner.runTest("Lexer: Consecutive Operators", lexer_tests::testConsecutiveOperatorsAndDelimiters);
+    runner.runTest("Lexer: Unterminated String", lexer_tests::testUnterminatedString);
+    runner.runTest("Lexer: Numeric Suffix Combinations", lexer_tests::testNumericSuffixCombinations);
 }
 }  // namespace Manganese::tests

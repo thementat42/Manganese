@@ -12,10 +12,10 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
-#include <utils/chunk_allocator.hpp>
-#include <utils/enum_matches.hpp>
 #include <string>
 #include <utility>
+#include <utils/chunk_allocator.hpp>
+#include <utils/enum_matches.hpp>
 #include <utils/result.hpp>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
@@ -31,9 +31,9 @@ namespace semantic {
 class SemanticAnalyzer;
 
 /**
- * Makes updating context flags easier
- * the destructor handles resetting a value rather than having to manually reset it everywhere
- * useful on branches that exit early
+ * Makes updating context flags easier.
+ * The destructor handles resetting a value rather than having to manually reset it everywhere,
+ * which is especially useful on branches that exit early.
  */
 template <class T>
 struct [[nodiscard]] ContextGuard {
@@ -62,11 +62,17 @@ struct typeCompatibilityResult {
     constexpr operator bool() const noexcept { return result != Compatible_t::Error; }
 };
 
+struct EnumVariantCheckResult {
+    std::int64_t newVariantValue;
+    Result result;
+};
+
 using _analyzer_base_t = ast::Visitor<Result, Result, Result, true>;
 
 class SemanticAnalyzer final : public _analyzer_base_t {
    private:
     friend class codegen::IRGenerator;
+
     SymbolTable symbolTable;
     TypeContext typeContext;
     std::vector<parser::ParsedFile>& parsedFiles;
@@ -83,16 +89,12 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 
         std::uint8_t typeCastDepth = 0;
         std::uint8_t ifStatementDepth = 0;
-        std::uint8_t forLoopDepth = 0;
-        std::uint8_t whileLoopDepth = 0;
+        std::uint8_t loopDepth = 0;
 
         bool inFunction = false;
         bool isInstantiatingGeneric = false;
-        bool inIfCondition : 1 = false;
-        bool inForLoopCondition : 1 = false;
-        bool inWhileLoopCondition : 1 = false;
-        bool inTernaryCondition : 1 = false;
-
+        bool inCondition : 1 = false;
+        bool inTernary : 1 = false;
     } context;
 
    public:
@@ -104,43 +106,89 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         arena(_arena),
         interner(_interner) {}
 
+    ~SemanticAnalyzer() override = default;
+
     Result analyze();
-    SymbolTable& getSymbolTable() noexcept { return symbolTable; }
-    const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
-    const std::vector<ast::Statement*>& getInstantiatedDeclarations() const noexcept {
+
+    [[nodiscard]] SymbolTable& getSymbolTable() noexcept { return symbolTable; }
+    [[nodiscard]] const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
+    [[nodiscard]] const std::vector<ast::Statement*>& getInstantiatedDeclarations() const noexcept {
         return instantiatedDeclarations;
     }
 
-    ~SemanticAnalyzer() override = default;
-
    private:
+    // Phase 1: Scope Building & Global Collection
     Result buildScopeTree(parser::ParsedFile& file);
-
     Result _buildStatementScope(ast::Statement* stmt);
     Result _buildBodyScope(ast::Block block, Scope**);
     Result _buildNamespaceScope(ast::NamespaceStatement* node);
+
     Result collectGlobals(parser::ParsedFile& file);
     Result _collectGlobalsInStatement(ast::Statement* statement, ast::StatementKind targetKind);
     Result collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate);
     Result collectGlobalFunction(ast::FunctionDeclarationStatement* function);
     Result checkStatements(parser::ParsedFile& file);
 
+    // Phase 2: Type Checking & Compatibility Helpers
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
-    typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
+    static typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs);
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
+
+    std::optional<typeCompatibilityResult> checkSpecialTypeCompatibility(const SemanticType* from,
+                                                                         const SemanticType* to) const;
+    typeCompatibilityResult checkAggregateCompatibility(const SemanticType* from, const SemanticType* to,
+                                                        const std::string& conversionError) const;
+    typeCompatibilityResult checkArrayCompatibility(const SemanticType* from, const SemanticType* to,
+                                                    const std::string& conversionError) const;
+    typeCompatibilityResult checkEnumCompatibility(const SemanticType* from, const SemanticType* to,
+                                                   const std::string& conversionError) const;
+    typeCompatibilityResult checkFunctionCompatibility(const SemanticType* from, const SemanticType* to,
+                                                       const std::string& conversionError) const;
+    typeCompatibilityResult checkPointerCompatibility(const SemanticType* from, const SemanticType* to,
+                                                      const std::string& conversionError) const;
+    typeCompatibilityResult checkSliceCompatibility(const SemanticType* from, const SemanticType* to,
+                                                    const std::string& conversionError) const;
+
     Result analyzePointerArithmetic(ast::BinaryExpression* expr) const;
     Result checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element);
     Result checkVariableInitializer(ast::VariableDeclarationStatement* statement, const SemanticType*& variableType);
+    EnumVariantCheckResult checkEnumVariant(ast::EnumDeclarationStatement* statement, const ast::EnumValue& variant,
+                                            Symbol* symbol, std::int64_t currentVariantValue,
+                                            std::vector<EnumVariant>& variants);
+    Result checkFunctionParameter(ast::FunctionDeclarationStatement* statement, const ast::FunctionParameter& param);
+    Result checkCaseClause(ast::SwitchStatement* statement, const ast::CaseClause& caseClause,
+                           const SemanticType* targetType, bool first);
+    Result checkElifClause(const ast::IfStatement* statement, const ast::ElifClause& elif);
 
+    // Generics Specialization & Instantiation
+    exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
+                                           const TypeList& typeArgs);
+    exprvisit_t instantiateGenericAggregate(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
+                                            const TypeList& typeArgs);
+
+    const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl);
+    const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl);
+
+    static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
+        using enum ast::ExpressionKind;
+        switch (expr->kind) {
+            case GenericInstantiationExpression:
+                return unwrapBaseDeclaration(static_cast<ast::GenericInstantiationExpression*>(expr)->identifier);
+            case ScopeResolutionExpression:
+                return unwrapBaseDeclaration(static_cast<ast::ScopeResolutionExpression*>(expr)->element);
+            default: return expr;
+        }
+    }
+
+    // Resolution & Utility Helpers
     bool isMutableExpression(const ast::Expression* expr) const;
-
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
-    const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
     utils::StringID getMangledName(utils::StringID baseName) const;
     utils::StringID getMangledName(utils::StringID baseName, const TypeList& typeArgs) const;
 
+    // Logging Helpers
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logError(node->line, node->column, message, std::forward<Args>(args)...);
@@ -152,7 +200,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 
    protected:
-    // overrides for visitor functions
+    // AST Visitor Overrides
     using _analyzer_base_t::visit;
 
 #define STMT(name) stmtvisit_t visit(ast::name*) override;
@@ -186,29 +234,9 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         symbolTable.exitScope();
         return result;
     }
-
-    // Overloads to handle generics specializations
-
-    exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
-                                           const TypeList& typeArgs);
-    exprvisit_t instantiateGenericAggregate(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
-                                            const TypeList& typeArgs);
-
-    const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl);
-    const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl);
-
-    static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
-        using enum ast::ExpressionKind;
-        switch (expr->kind) {
-            case GenericInstantiationExpression:
-                return unwrapBaseDeclaration(static_cast<ast::GenericInstantiationExpression*>(expr)->identifier);
-            case ScopeResolutionExpression:
-                return unwrapBaseDeclaration(static_cast<ast::ScopeResolutionExpression*>(expr)->element);
-            default: return expr;
-        }
-    }
 };
 
+// Other helpers
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
     return utils::enum_matches(t, And, Or, Not);
@@ -238,6 +266,7 @@ constexpr bool isLvalue(const ast::Expression* expr) noexcept {
     return utils::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression,
                                ScopeResolutionExpression);
 }
+
 }  // namespace semantic
 }  // namespace Manganese
 

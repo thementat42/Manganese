@@ -4,9 +4,9 @@
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <utils/enum_matches.hpp>
 #include <string>
 #include <string_view>
+#include <utils/enum_matches.hpp>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::lexer {
@@ -84,7 +84,7 @@ class Token {
      */
     void overrideType(TokenType newType);
 
-    TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
+    TokenType getUnaryCounterpart() const;
     std::string toString() const;
 };
 

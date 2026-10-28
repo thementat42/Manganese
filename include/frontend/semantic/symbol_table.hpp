@@ -7,8 +7,8 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
-#include <utils/chunk_allocator.hpp>
 #include <unordered_map>
+#include <utils/chunk_allocator.hpp>
 #include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
 #include <utils/string_interner.hpp>
@@ -109,8 +109,8 @@ class SymbolTable {
     void enterScope(Scope* scope);
     void enterNamespace(utils::StringID name, ast::ASTNode* node);
     void enterGenericCheckingMode() noexcept { ++_flags._genericDepth; }
-    void exitScope() NOEXCEPT_IF_RELEASE;
-    void FORCE_INLINE exitNamespace() NOEXCEPT_IF_RELEASE { exitScope(); }
+    void exitScope() ;
+    void exitNamespace()  { exitScope(); }
     void exitGenericCheckingMode() noexcept { --_flags._genericDepth; }
 
     Scope* getCurrentScope() noexcept { return _currentScope; }
@@ -128,8 +128,8 @@ class SymbolTable {
         return _currentScope->insert(name, symbol);
     }
 
-    Symbol* lookup(utils::StringID name) NOEXCEPT_IF_RELEASE;
-    const Symbol* lookup(utils::StringID name) const NOEXCEPT_IF_RELEASE;
+    Symbol* lookup(utils::StringID name) ;
+    const Symbol* lookup(utils::StringID name) const ;
 
     static Symbol* scopedLookup(Scope* targetScope, utils::StringID member) noexcept {
         return targetScope->lookup(member);

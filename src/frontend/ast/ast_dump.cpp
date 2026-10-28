@@ -1,3 +1,5 @@
+#include "frontend/ast/ast_statements.hpp"
+#include "utils/string_interner.hpp"
 #if MN_DEBUG  // only include dump methods in debug builds
 
 #include <core.hpp>
@@ -131,6 +133,34 @@ void ExpressionStatement::dump(std::ostream& os, const utils::StringInterner& in
     os << ind << "}\n";
 }
 
+void ForEachLoopStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ForEachLoopStatement", *this);
+
+    os << ind.next() << "Element: {\n";
+    os << ind.next(2) << "name: " << interner.get_view(element.name) << "\n";
+
+    os << ind.next(2) << "type: ";
+    if (element.semanticType != nullptr) {
+        os << element.semanticType->toString() << "\n";
+    } else if (element.type == nullptr) {
+        os << "not yet deduced\n";
+    } else {
+        os << "{\n";
+        element.type->dump(os, interner, ind.next(3));
+        os << ind.next(2) << "}\n";
+    }
+
+    os << ind.next(2) << "is mutable: " << (element.isMutable ? "true" : "false") << "\n";
+    os << ind.next() << "}\n";
+
+    os << ind.next() << "Container:\n";
+    container->dump(os, interner, ind.next(2));
+
+    dumpBlock(os, "body", interner, ind.next(), body);
+    os << ind << "}\n";
+}
+
 void ForLoopStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ForLoopStatement", *this);
@@ -170,7 +200,6 @@ void FunctionDeclarationStatement::dump(std::ostream& os, const utils::StringInt
         os << ind.next(2) << "{\n";
         os << ind.next(3) << "name: " << interner.get_view(param.name) << "\n";
         os << ind.next(3) << "isMutable: " << (param.isMutable ? "true" : "false") << "\n";
-        os << ind.next(3) << "isVariadic: " << (param.isVariadic ? "true" : "false") << "\n";
         os << ind.next(3) << "type: \n";
         param.type->dump(os, interner, ind.next(4));
 
@@ -201,6 +230,11 @@ void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, 
     const Indent ind{indent};
     dumpHeader(os, ind, "IfStatement", *this);
 
+    if (variableDeclaration != nullptr) {
+        os << ind.next() << "variable declaration: \n";
+        variableDeclaration->dump(os, interner, ind.next(2));
+    }
+
     os << ind.next() << "condition: \n";
     condition->dump(os, interner, ind.next(2));
 
@@ -210,6 +244,12 @@ void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, 
         os << ind.next() << "elif clauses: [\n";
         for (const auto& elif : elifs) {
             os << ind.next(2) << "{\n";
+
+            if (elif.variableDeclaration != nullptr) {
+                os << ind.next(3) << "variable declaration: \n";
+                elif.variableDeclaration->dump(os, interner, ind.next(4));
+            }
+
             os << ind.next(3) << "condition: \n";
             elif.condition->dump(os, interner, ind.next(4));
             dumpBlock(os, "body", interner, ind.next(3), elif.body);
@@ -422,6 +462,26 @@ void BoolLiteralExpression::dump(std::ostream& os, const utils::StringInterner& 
     os << ind << "}\n";
 }
 
+void ChainedComparisonExpression::dump(std::ostream& os, const utils::StringInterner& interner,
+                                       std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ChainedComparisonExpression", *this);
+
+    os << ind.next() << "operands: [\n";
+    for (std::size_t i = 0; i < operands.size; ++i) {
+        os << ind.next(2) << "{\n";
+        operands[i]->dump(os, interner, ind.next(3));
+        os << ind.next(2) << "}\n";
+    }
+    os << ind.next() << "]\n";
+
+    os << ind.next() << "operators: [\n";
+    for (std::size_t i = 0; i < operators.size; ++i) { os << ind.next(2) << tokenTypeToString(operators[i]) << "\n"; }
+    os << ind.next() << "]\n";
+
+    os << ind << "}\n";
+}
+
 void CharLiteralExpression::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "CharLiteralExpression", *this);
@@ -610,10 +670,9 @@ void ArrayType::dump(std::ostream& os, const utils::StringInterner& interner, st
     os << ind.next() << "elementType:\n";
     elementType->dump(os, interner, ind.next(2));
 
-    if (lengthExpression != nullptr) {
-        os << ind.next() << "length:\n";
-        lengthExpression->dump(os, interner, ind.next(2));
-    }
+    os << ind.next() << "length:\n";
+    lengthExpression->dump(os, interner, ind.next(2));
+
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
@@ -681,6 +740,16 @@ void ScopedType::dump(std::ostream& os, const utils::StringInterner& interner, s
     scope->dump(os, interner, ind.next(2));
     os << ind.next() << "base type: \n";
     type->dump(os, interner, ind.next(2));
+    os << ind << "}\n";
+}
+
+void SliceType::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "SliceType", *this);
+    os << ind.next() << "elementType:\n";
+    elementType->dump(os, interner, ind.next(2));
+
+    dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
 

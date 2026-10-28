@@ -5,7 +5,7 @@
 #include <core.hpp>
 #include <cstdint>
 #include <frontend/ast/ast_base.hpp>
-#include <utils/ext_num_config.hpp>
+#include <utils/number_types.hpp>
 
 namespace Manganese::utils {
 

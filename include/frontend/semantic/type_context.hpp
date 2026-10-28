@@ -5,14 +5,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <frontend/ast.hpp>
-#include <utils/chunk_allocator.hpp>
-#include <utils/enum_matches.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <utils/chunk_allocator.hpp>
+#include <utils/enum_matches.hpp>
 #include <utils/resolution_status.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
@@ -32,6 +32,7 @@ enum class SemanticTypeKind : std::uint8_t {
     Pointer,
     Poison,
     Primitive,
+    Slice,
     Uninitialized,
     Void,
 };
@@ -58,6 +59,7 @@ struct SemanticType {
     constexpr bool isPointer() const noexcept { return kind == SemanticTypeKind::Pointer; }
     constexpr bool isPoison() const noexcept { return kind == SemanticTypeKind::Poison; }
     constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
+    constexpr bool isSlice() const noexcept { return kind == SemanticTypeKind::Slice; }
     constexpr bool isUninitialized() const noexcept { return kind == SemanticTypeKind::Uninitialized; }
     constexpr bool isVoid() const noexcept { return kind == SemanticTypeKind::Void; }
 
@@ -140,16 +142,12 @@ struct Aggregate final : public SemanticType {
 
 struct Array final : public SemanticType {
     const SemanticType* elementType;
-    const std::optional<std::size_t> length;
+    std::size_t length;
 
     Array(const SemanticType* baseType, std::size_t len) noexcept :
         SemanticType(SemanticTypeKind::Array), elementType(baseType), length(len) {}
 
-    Array(const SemanticType* baseType, std::optional<std::size_t> optionalLength) noexcept :
-        SemanticType(SemanticTypeKind::Array), elementType(baseType), length(optionalLength) {}
     ~Array() override = default;
-
-    bool hasUnspecifiedLength() const noexcept { return !length.has_value(); }
 
     std::string toString() const override;
     std::size_t size(const utils::TargetInfo& target) const noexcept override;
@@ -189,13 +187,11 @@ struct Enum final : public SemanticType {
 struct Parameter {
     const SemanticType* type;
     bool isMutable;
-    bool isVariadic;
 
     friend bool operator==(const Parameter&, const Parameter&) noexcept = default;
 
     inline std::string toString() const {
         std::string result = type->toString();
-        if (isVariadic) { result += "..."; }
         if (isMutable) { result = "mut " + result; }
         return result;
     }
@@ -257,6 +253,18 @@ struct PrimitiveInfo {
 
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type);
 
+struct Slice final : public SemanticType {
+    const SemanticType* elementType;
+
+    Slice(const SemanticType* baseType) noexcept : SemanticType(SemanticTypeKind::Slice), elementType(baseType) {}
+
+    ~Slice() override = default;
+
+    std::string toString() const override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
+};
+
 /**
  * Note: this is the "type" of the 'uninitialized' keyword, not of an uninitialized variable
  */
@@ -300,7 +308,7 @@ inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
 class TypeContext {
    private:
     utils::chunk_allocator& _arena;
-    utils::TargetInfo _targetInfo;
+    const utils::TargetInfo& _targetInfo;
     constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::boolean) + 1;
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
@@ -316,7 +324,7 @@ class TypeContext {
     }
 
    public:
-    explicit TypeContext(utils::chunk_allocator& arena, utils::TargetInfo target) noexcept :
+    explicit TypeContext(utils::chunk_allocator& arena, const utils::TargetInfo& target) noexcept :
         _arena(arena), _targetInfo(target), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
 
     ~TypeContext() = default;
@@ -327,7 +335,6 @@ class TypeContext {
     TypeContext(TypeContext&&) = delete;
     TypeContext& operator=(TypeContext&&) = delete;
 
-    const SemanticType* getArray(const SemanticType* elementType, std::optional<std::size_t> length);
     const SemanticType* getArray(const SemanticType* elementType, std::size_t length);
 
     const SemanticType* getAnonymousAggregate(TypeList&& fieldTypes);
@@ -343,6 +350,8 @@ class TypeContext {
     const SemanticType* getPoison() const noexcept;
 
     const SemanticType* getPrimitive(ast::PrimitiveType primitive) const noexcept;
+
+    const SemanticType* getSlice(const SemanticType* elementType);
 
     const SemanticType* getUninitalized() const noexcept;
     const SemanticType* getVoid() const noexcept;

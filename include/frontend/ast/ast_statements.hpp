@@ -4,8 +4,9 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <utils/slice.hpp>
 #include <optional>
+#include <utils/named_parameter.hpp>
+#include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::ast {
@@ -16,7 +17,7 @@ struct Declaration : public Statement {
     const semantic::SemanticType* semanticType = nullptr;
 
     Declaration(StatementKind _kind, utils::StringID _name) noexcept : Statement(_kind), name(_name) {}
-    virtual ~Declaration() = default;
+    ~Declaration() override = default;
 };
 
 struct ScopeOwner {
@@ -103,18 +104,39 @@ struct ExpressionStatement final : public Statement {
     MN_AST_STANDARD_INTERFACE(ExpressionStatement);
 };
 
+struct ForEachElement {
+    utils::StringID name;
+    Type* type = nullptr;
+    const semantic::SemanticType* semanticType;
+    bool isMutable = false;
+};
+
+struct ForEachLoopStatement final : public Statement, ScopeOwner {
+    ForEachElement element;
+    Expression* container;
+    Block body;
+
+    ForEachLoopStatement(ForEachElement _element, Expression* _container, Block _body) noexcept :
+        Statement(StatementKind::ForEachLoopStatement), element(_element), container(_container), body(_body) {}
+
+    MN_AST_STANDARD_INTERFACE(ForEachLoopStatement);
+};
+
+using ForLoopCondition = utils::NamedParameter<Expression*, struct ForCond>;
+using ForLoopPost = utils::NamedParameter<Expression*, struct ForPost>;
+
 struct ForLoopStatement final : public Statement, ScopeOwner {
     Statement* initializationStep;
     Expression* stopCondition;
     Expression* postExpression;
     Block body;
 
-    ForLoopStatement(Statement* _initializationStep, Expression* _stopCondition, Expression* _postExpression,
+    ForLoopStatement(Statement* _initializationStep, ForLoopCondition _stopCondition, ForLoopPost _postExpression,
                      Block _body) noexcept :
         Statement(StatementKind::ForLoopStatement),
         initializationStep(_initializationStep),
-        stopCondition(_stopCondition),
-        postExpression(_postExpression),
+        stopCondition(_stopCondition.get()),
+        postExpression(_postExpression.get()),
         body(_body) {}
 
     MN_AST_STANDARD_INTERFACE(ForLoopStatement);
@@ -126,7 +148,6 @@ struct FunctionParameter {
     Expression* defaultValue;
     std::size_t line, column;
     bool isMutable;
-    bool isVariadic;
 };
 
 struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {
@@ -149,21 +170,28 @@ struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {
 };
 
 struct ElifClause {
+    Statement* variableDeclaration;
     Expression* condition;
     Block body;
     semantic::Scope* associatedScope;
 };
 
 struct IfStatement final : public Statement, ScopeOwner {
+    Statement* variableDeclaration;
     Expression* condition;
     Block body;
     std::optional<Block> elseBody;  // elseBody might be empty
     semantic::Scope* elseAssociatedScope = nullptr;
     utils::Slice<ElifClause> elifs;
 
-    IfStatement(Expression* _condition, Block _body, utils::Slice<ElifClause> _elifs,
+    IfStatement(Statement* _variableDeclaration, Expression* _condition, Block _body, utils::Slice<ElifClause> _elifs,
                 std::optional<Block> _elseBody = {}) noexcept :
-        Statement(StatementKind::IfStatement), condition(_condition), body(_body), elseBody(_elseBody), elifs(_elifs) {}
+        Statement(StatementKind::IfStatement),
+        variableDeclaration(_variableDeclaration),
+        condition(_condition),
+        body(_body),
+        elseBody(_elseBody),
+        elifs(_elifs) {}
 
     MN_AST_STANDARD_INTERFACE(IfStatement);
 };

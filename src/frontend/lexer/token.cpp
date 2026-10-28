@@ -26,7 +26,7 @@ std::string tokenTypeToString(TokenType type) {
     ASSERT_UNREACHABLE_FMT("No string representation for TokenType: {}", static_cast<int>(type));
 }
 
-TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
+TokenType Token::getUnaryCounterpart() const  {
     switch (_type) {
         case TokenType::Plus: return TokenType::UnaryPlus;
         case TokenType::Minus: return TokenType::UnaryMinus;

@@ -1,5 +1,4 @@
 
-#include "utils/string_interner.hpp"
 #ifndef MANGANESE_INCLUDE_FRONTEND_CFG_CONTROL_FLOW_ANALYZER_HPP
 #define MANGANESE_INCLUDE_FRONTEND_CFG_CONTROL_FLOW_ANALYZER_HPP 1
 
@@ -11,6 +10,7 @@
 #include <io/logging.hpp>
 #include <utils/chunk_allocator.hpp>
 #include <utils/result.hpp>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
 

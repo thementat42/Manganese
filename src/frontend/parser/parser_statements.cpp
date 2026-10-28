@@ -11,7 +11,8 @@
 #include <vector>
 
 #include "frontend/ast/ast_statements.hpp"
-
+#include "frontend/lexer/token.hpp"
+#include "frontend/parser/operators.hpp"
 
 namespace Manganese::parser {
 
@@ -41,7 +42,7 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
     const Token startToken = consumeToken();
     const auto name = expectToken(TokenType::Identifier, "Expected aggregate name after 'aggregate'").getLexeme();
 
-    std::vector<utils::StringID> genericTypes = parseGenericsList(name);
+    const std::vector<utils::StringID> genericTypes = parseGenericsList(name);
 
     expectToken(TokenType::LeftBrace, "Expected a '{'");
 
@@ -57,13 +58,11 @@ ast::Statement* Parser::parseAggregateDeclarationStatement() {
 }
 
 ast::Statement* Parser::parseAliasStatement() {
-    flags.parsingAliasStatement = true;
     const Token startToken = consumeToken();  // consume alias
     const auto alias = expectToken(TokenType::Identifier, "Expected an alias name").getLexeme();
     expectToken(TokenType::Assignment, "Expected '=' after an alias name to introduce the aliased type.");
     ast::Type* baseType = parseType(Precedence::Default);
     expectToken(TokenType::Semicolon, "Expected a ';' after an alias statement");
-    flags.parsingAliasStatement = false;
     return makeNode<ast::AliasStatement>(startToken, baseType, alias);
 }
 
@@ -81,7 +80,7 @@ ast::Statement* Parser::parseContinueStatement() {
 
 ast::Statement* Parser::parseDoWhileLoopStatement() {
     const Token startToken = consumeToken();
-    ast::Block body = parseBlock("do-while body");
+    const ast::Block body = parseBlock("do-while body");
     expectToken(TokenType::While, "Expected 'while' after a 'do' block");
     expectToken(TokenType::LeftParen, "Expected '(' to introduce while condition");
     ast::Expression* condition = parseExpression(Precedence::Default);
@@ -110,7 +109,7 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
 
     std::vector<ast::EnumValue> values;
     while (!done() && peekTokenType() != TokenType::RightBrace) {
-        ast::EnumValue member = parseEnumMember();
+        const ast::EnumValue member = parseEnumMember();
 
         if (auto duplicate = std::ranges::find(values, member.name, &ast::EnumValue::name); duplicate != values.end()) {
             logError(member, "Duplicate member '{}' in enum '{}' (previously declared at line {}, column {})",
@@ -127,6 +126,42 @@ ast::Statement* Parser::parseEnumDeclarationStatement() {
     expectToken(TokenType::RightBrace, "Expected '}' to close the enum body");
 
     return makeNode<ast::EnumDeclarationStatement>(startToken, name, baseType, arena.emplace_range(values));
+}
+
+ast::Statement* Parser::parseForEachLoopStatement() {
+    Token startToken = consumeToken();  // skip 'foreach'
+    bool isMutable = false;
+    ast::Type* elementType = nullptr;
+    ast::Expression* container = nullptr;
+    ast::Block body;
+
+    expectToken(TokenType::LeftParen, "Expected '(' after foreach");
+
+    if (peekTokenType() == TokenType::Mut) {
+        isMutable = true;
+        DISCARD(consumeToken());
+    }
+
+    utils::StringID elementName
+        = expectToken(TokenType::Identifier, "Expected identifier for foreach loop variable").getLexeme();
+
+    if (peekTokenType() == TokenType::Colon) {
+        // Explicit type annotation
+        DISCARD(consumeToken());
+        elementType = parseType(Precedence::Default);
+    }
+    expectToken(TokenType::In, "Expected 'in' in foreach statement");
+
+    container = parseExpression(Precedence::Default);
+
+    expectToken(TokenType::RightParen, "Expected ')' to end foreach");
+
+    body = parseBlock("foreach loop body");
+
+    return makeNode<ast::ForEachLoopStatement>(
+        startToken,
+        ast::ForEachElement{.name = elementName, .type = elementType, .semanticType = nullptr, .isMutable = isMutable},
+        container, body);
 }
 
 ast::Statement* Parser::parseForLoopStatement() {
@@ -158,27 +193,25 @@ ast::Statement* Parser::parseForLoopStatement() {
     if (peekTokenType() != TokenType::RightParen) { post = parseExpression(Precedence::Default); }
     expectToken(TokenType::RightParen, "Expected ')' to end for loop header");
 
-    ast::Block body = parseBlock("for loop body");
+    const ast::Block body = parseBlock("for loop body");
 
-    return makeNode<ast::ForLoopStatement>(startToken, init, condition, post, body);
+    return makeNode<ast::ForLoopStatement>(startToken, init, ast::ForLoopCondition{condition}, ast::ForLoopPost{post},
+                                           body);
 }
 
 ast::Statement* Parser::parseFunctionDeclarationStatement() {
     const Token startToken = consumeToken();
     const auto name = expectToken(TokenType::Identifier, "Expected function name").getLexeme();
 
-    std::vector<utils::StringID> genericTypes = parseGenericsList(name);
+    const std::vector<utils::StringID> genericTypes = parseGenericsList(name);
 
     expectToken(TokenType::LeftParen);
 
     std::vector<ast::FunctionParameter> params;
     bool hasDefaultParameter = false;
-    bool hasVariadicParameter = false;
 
     while (!done() && peekTokenType() != TokenType::RightParen) {
-        if (auto param = parseFunctionParameter(name, params, hasDefaultParameter, hasVariadicParameter)) {
-            params.push_back(*param);
-        }
+        if (auto param = parseFunctionParameter(name, params, hasDefaultParameter)) { params.push_back(*param); }
 
         if (peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::EndOfFile) {
             expectToken(TokenType::Comma,
@@ -201,22 +234,27 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
 
 ast::Statement* Parser::parseIfStatement() {
     const Token startToken = consumeToken();
+    ast::Statement* declaredVariable = nullptr;
 
     expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
+    if (peekTokenType() == TokenType::Let) { declaredVariable = parseVariableDeclarationStatement(); }
     ast::Expression* condition = parseExpression(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to end if condition");
-    ast::Block body = parseBlock("if body");
+    const ast::Block body = parseBlock("if body");
 
     std::vector<ast::ElifClause> elifs;
     while (peekTokenType() == TokenType::Elif) {
+        ast::Statement* elifVariable = nullptr;
         DISCARD(consumeToken());
 
         expectToken(TokenType::LeftParen, "Expected '(' to introduce elif condition");
+        if (peekTokenType() == TokenType::Let) { elifVariable = parseVariableDeclarationStatement(); }
+
         ast::Expression* elifCondition = parseExpression(Precedence::Default);
 
         expectToken(TokenType::RightParen, "Expected ')' to end elif condition");
 
-        elifs.emplace_back(elifCondition, parseBlock("elif body"));
+        elifs.emplace_back(elifVariable, elifCondition, parseBlock("elif body"));
     }
     std::optional<ast::Block> elseBody;
     if (peekTokenType() == TokenType::Else) {
@@ -224,15 +262,15 @@ ast::Statement* Parser::parseIfStatement() {
         elseBody = parseBlock("else body");
         if (elseBody->empty()) { elseBody = std::nullopt; }
     }
-    return makeNode<ast::IfStatement>(startToken, condition, arena.emplace_range(body), arena.emplace_range(elifs),
-                                      elseBody);
+    return makeNode<ast::IfStatement>(startToken, declaredVariable, condition, arena.emplace_range(body),
+                                      arena.emplace_range(elifs), elseBody);
 }
 
 ast::Statement* Parser::parseImportStatement() {
     const Token startToken = consumeToken();
 
-    std::vector<utils::StringID> path = parseImportPath();
-    utils::OptionalStringID alias = parseImportAlias();
+    const std::vector<utils::StringID> path = parseImportPath();
+    const utils::OptionalStringID alias = parseImportAlias();
 
     expectToken(TokenType::Semicolon, "Expected a ';' to end an import statement");
 
@@ -269,7 +307,7 @@ ast::Statement* Parser::parseModuleDeclarationStatement() {
 ast::Statement* Parser::parseNamespace() {
     const Token startToken = consumeToken();  // skip 'namespace'
     const auto name = expectToken(TokenType::Identifier, "Expected a namespace name after 'namespace'").getLexeme();
-    ast::Block body = parseBlock("namespace " + std::string(interner.get_view(name)));
+    const ast::Block body = parseBlock("namespace " + std::string(interner.get_view(name)));
     return makeNode<ast::NamespaceStatement>(startToken, name, body);
 }
 
@@ -295,7 +333,7 @@ ast::Statement* Parser::parseSwitchStatement() {
     std::vector<ast::CaseClause> cases;
     while (peekTokenType() == TokenType::Case) { cases.push_back(parseCaseClause()); }
 
-    std::optional<ast::Block> defaultBody = parseDefaultClause();
+    const std::optional<ast::Block> defaultBody = parseDefaultClause();
 
     if (cases.empty() && !defaultBody.has_value()) {
         logWarning(startToken, "Switch statement has no cases or default body");
@@ -418,26 +456,12 @@ std::optional<ast::AggregateField> Parser::parseAggregateField(utils::StringID a
 
 std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::StringID functionName,
                                                                      std::span<ast::FunctionParameter> existingParams,
-                                                                     bool& hasDefaultParameter,
-                                                                     bool& hasVariadicParameter) {
+                                                                     bool& hasDefaultParameter) {
     Token t = expectToken(TokenType::Identifier, "Expected a variable name");
     const auto paramName = t.getLexeme();
 
     bool isMutable = false;
-    bool isVariadic = false;
     ast::Expression* defaultValue = nullptr;
-
-    if (peekTokenType() == TokenType::Ellipsis) {
-        DISCARD(consumeToken());
-        if (hasVariadicParameter) {
-            logError(t, "Only one variadic parameter is allowed in function '{}'", interner.get_view(functionName));
-        } else {
-            isVariadic = true;
-            hasVariadicParameter = true;
-        }
-    } else if (hasVariadicParameter) {
-        logError(t, "Parameter '{}' cannot follow a variadic parameter", interner.get_view(paramName));
-    }
 
     expectToken(TokenType::Colon);
     if (peekTokenType() == TokenType::Mut) {
@@ -450,10 +474,6 @@ std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::Stri
         DISCARD(consumeToken());
         hasDefaultParameter = true;
         defaultValue = parseExpression(Precedence::Default);
-
-        if (isVariadic) {
-            logError(t, "Variadic parameter '{}' cannot have a default value", interner.get_view(paramName));
-        }
     } else if (hasDefaultParameter) {
         logError(t, "Non-default parameter '{}' cannot follow a default parameter", interner.get_view(paramName));
     }
@@ -470,8 +490,7 @@ std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::Stri
                                   .defaultValue = defaultValue,
                                   .line = t.getLine(),
                                   .column = t.getColumn(),
-                                  .isMutable = isMutable,
-                                  .isVariadic = isVariadic};
+                                  .isMutable = isMutable};
 }
 
 ast::CaseClause Parser::parseCaseClause() {

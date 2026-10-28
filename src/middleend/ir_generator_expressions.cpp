@@ -14,7 +14,7 @@
 #include <format>
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
-#include <middleend/codegen/ir_generator.hpp>
+#include <middleend/ir_generator.hpp>
 #include <runtime/string.hpp>
 
 namespace Manganese::codegen {
@@ -28,7 +28,8 @@ namespace Manganese::codegen {
         llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
         builder->CreateStore(fieldValue, fieldPointer);
     }
-    return alloca;
+
+    return builder->CreateLoad(aggregateType, alloca, "load_aggregate_instantiation");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AggregateLiteralExpression* expression) -> exprvisit_t {
@@ -40,7 +41,8 @@ namespace Manganese::codegen {
         llvm::Value* fieldPointer = builder->CreateStructGEP(aggregateType, alloca, i, "field_gep");
         builder->CreateStore(fieldValue, fieldPointer);
     }
-    return alloca;
+
+    return builder->CreateLoad(aggregateType, alloca, "load_anonymous_aggregate");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AlignofExpression* expression) -> exprvisit_t {
@@ -50,18 +52,22 @@ namespace Manganese::codegen {
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::ArrayLiteralExpression* expression) -> exprvisit_t {
-    llvm::Type* elementType = visitTypeAsValue(expression->semanticType);
-    const std::size_t length = expression->elements.size;
+    const auto* arraySemanticType = static_cast<const semantic::Array*>(expression->semanticType);
+    llvm::Type* elementType = visitTypeAsValue(arraySemanticType->elementType);
+    const std::size_t length = arraySemanticType->length;
+
     llvm::ArrayType* arrayType = llvm::ArrayType::get(elementType, length);
     llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "array_literal");
+
     for (std::size_t i = 0; i < length; ++i) {
         llvm::Value* elementValue = visit(expression->elements[i]);
-        std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
+        const std::array<llvm::Value*, 2> indices = {builder->getInt32(0), builder->getInt64(i)};
         llvm::Value* elementPointer
             = builder->CreateInBoundsGEP(arrayType, arrayAlloca, indices, "array_literal_element");
         builder->CreateStore(elementValue, elementPointer);
     }
-    return arrayAlloca;
+
+    return builder->CreateLoad(arrayType, arrayAlloca, "load_array_literal");
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::AssignmentExpression* expression) -> exprvisit_t {
@@ -72,8 +78,8 @@ namespace Manganese::codegen {
 
     if ((type->isAggregate() || type->isArray()) && newValue->getType()->isPointerTy()) {
         DISCARD(visit(type));
-        std::size_t sizeInBytes = type->size(targetInfo);
-        std::size_t alignment = type->alignment(targetInfo);
+        const std::size_t sizeInBytes = type->size(targetInfo);
+        const std::size_t alignment = type->alignment(targetInfo);
 
         builder->CreateMemCpy(assigneePointer, llvm::MaybeAlign(alignment), newValue, llvm::MaybeAlign(alignment),
                               sizeInBytes);
@@ -103,9 +109,17 @@ namespace Manganese::codegen {
         case Plus: {
             if (expression->semanticType->isString()) {
                 auto* stringType = visit(expression->semanticType);
-                llvm::FunctionCallee concatenationFunction
+                const llvm::FunctionCallee concatenationFunction
                     = module->getOrInsertFunction(MN_STRINGIFY(mn_strcat), stringType, stringType, stringType);
                 return builder->CreateCall(concatenationFunction, {lhs, rhs}, "string_concat_tmp");
+            }
+            if (lhs->getType()->isPointerTy()) {
+                return builder->CreateInBoundsGEP(visitTypeAsValue(expression->right->semanticType), lhs, {rhs},
+                                                  "ptr_add_gep");
+            }
+            if (rhs->getType()->isPointerTy()) {
+                return builder->CreateInBoundsGEP(visitTypeAsValue(expression->left->semanticType), rhs, {lhs},
+                                                  "ptr_add_gep");
             }
             return doFloatOperation ? builder->CreateFAdd(lhs, rhs, "fadd_tmp")
                                     : builder->CreateAdd(lhs, rhs, "iadd_tmp");
@@ -122,7 +136,7 @@ namespace Manganese::codegen {
         case Div: return builder->CreateFDiv(lhs, rhs, "truediv_tmp");
 
         case FloorDiv: {
-            bool hasFloatOperand = lhsType->isFloat() || rhsType->isFloat();
+            const bool hasFloatOperand = lhsType->isFloat() || rhsType->isFloat();
             if (!hasFloatOperand) {
                 return commonType->isSignedInteger() ? builder->CreateSDiv(lhs, rhs, "sfloordiv_tmp")
                                                      : builder->CreateUDiv(lhs, rhs, "ufloordiv_tmp");
@@ -148,37 +162,7 @@ namespace Manganese::codegen {
         case LessThan:
         case LessThanOrEqual:
         case Equal:
-        case NotEqual: {
-            if (expression->left->semanticType->isString()) {
-                auto* stringType = visit(expression->left->semanticType);
-
-                llvm::FunctionCallee strcmpFn = module->getOrInsertFunction(
-                    MN_STRINGIFY(mn_strcmp), builder->getInt32Ty(), stringType, stringType);
-
-                llvm::Value* cmpResult = builder->CreateCall(strcmpFn, {lhs, rhs}, "strcmp_tmp");
-                llvm::Value* zero = builder->getInt32(0);
-
-                llvm::CmpInst::Predicate pred;
-                switch (expression->op) {
-                    case Equal: pred = llvm::CmpInst::ICMP_EQ; break;
-                    case NotEqual: pred = llvm::CmpInst::ICMP_NE; break;
-                    case LessThan: pred = llvm::CmpInst::ICMP_SLT; break;
-                    case LessThanOrEqual: pred = llvm::CmpInst::ICMP_SLE; break;
-                    case GreaterThan: pred = llvm::CmpInst::ICMP_SGT; break;
-                    case GreaterThanOrEqual: pred = llvm::CmpInst::ICMP_SGE; break;
-                    default: ASSERT_UNREACHABLE("Invalid string comparison operator");
-                }
-
-                return builder->CreateICmp(pred, cmpResult, zero, "str_cmp_bool");
-            }
-            if (doFloatOperation) {
-                const llvm::CmpInst::Predicate predicate = getFloatPredicate(expression->op);
-                return builder->CreateFCmp(predicate, lhs, rhs, "fcmp_tmp");
-            }
-            const bool isSigned = commonType->isSignedInteger();
-            const llvm::CmpInst::Predicate predicate = getIntPredicate(expression->op, isSigned);
-            return builder->CreateICmp(predicate, lhs, rhs, "icmp_tmp");
-        }
+        case NotEqual: return emitComparison(expression->op, lhs, rhs, commonType);
 
         case And:
         case Or: {
@@ -220,8 +204,6 @@ namespace Manganese::codegen {
             return commonType->isSignedInteger() ? builder->CreateAShr(lhs, rhs, "arithmetic_shr_tmp")
                                                  : builder->CreateLShr(lhs, rhs, "logical_shr_tmp");
         }
-        case MemberAccess:
-        case ScopeResolution:
         default: break;
     }
     ASSERT_UNREACHABLE_FMT("Invalid binary operator {} in codegen", lexer::tokenTypeToString(expression->op));
@@ -231,33 +213,124 @@ namespace Manganese::codegen {
     return llvm::ConstantInt::getBool(*context, expression->value);
 }
 
+[[nodiscard]] auto IRGenerator::visit(const ast::ChainedComparisonExpression* expression) -> llvm::Value* {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
+    const std::size_t numComparisons = expression->operators.size;
+
+    llvm::BasicBlock* successBlock = llvm::BasicBlock::Create(*context, "chain_success", function);
+    llvm::BasicBlock* failBlock = llvm::BasicBlock::Create(*context, "chain_fail", function);
+    llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(*context, "chain_end", function);
+
+    std::vector<llvm::BasicBlock*> checkBlocks;
+    checkBlocks.reserve(numComparisons - 1);
+    for (std::size_t i = 1; i < numComparisons; ++i) {
+        checkBlocks.push_back(llvm::BasicBlock::Create(*context, std::format("chain_check_{}", i), function));
+    }
+
+    // Allocate stack slots for each operand so values can be safely stored and
+    // reused across basic block boundaries without re-evaluation.
+    std::vector<llvm::AllocaInst*> operandAllocas;
+    operandAllocas.reserve(expression->operands.size);
+    for (std::size_t i = 0; i < expression->operands.size; ++i) {
+        llvm::Type* llvmTy = visit(expression->operands[i]->semanticType);
+        operandAllocas.push_back(builder->CreateAlloca(llvmTy, nullptr, std::format("chain_op_{}", i)));
+    }
+
+    llvm::Value* leftVal = visit(expression->operands[0]);
+    builder->CreateStore(leftVal, operandAllocas[0]);
+
+    llvm::Value* rightVal0 = visit(expression->operands[1]);
+    builder->CreateStore(rightVal0, operandAllocas[1]);
+
+    llvm::Value* loadedLeft0 = builder->CreateLoad(operandAllocas[0]->getAllocatedType(), operandAllocas[0]);
+    llvm::Value* loadedRight0 = builder->CreateLoad(operandAllocas[1]->getAllocatedType(), operandAllocas[1]);
+
+    llvm::Value* cmp0
+        = emitComparison(expression->operators[0], loadedLeft0, loadedRight0, expression->operands[1]->semanticType);
+
+    llvm::BasicBlock* trueDest0 = (numComparisons == 1) ? successBlock : checkBlocks[0];
+    builder->CreateCondBr(cmp0, trueDest0, failBlock);
+
+    for (std::size_t i = 1; i < numComparisons; ++i) {
+        builder->SetInsertPoint(checkBlocks[i - 1]);
+
+        // The left operand for this step is already evaluated and stored in operandAllocas[i].
+        // Evaluate only the new right operand (operands[i + 1]) once and store it.
+        llvm::Value* rightVal = visit(expression->operands[i + 1]);
+        builder->CreateStore(rightVal, operandAllocas[i + 1]);
+
+        llvm::Value* loadedLeft = builder->CreateLoad(operandAllocas[i]->getAllocatedType(), operandAllocas[i]);
+        llvm::Value* loadedRight
+            = builder->CreateLoad(operandAllocas[i + 1]->getAllocatedType(), operandAllocas[i + 1]);
+
+        llvm::Value* cmp = emitComparison(expression->operators[i], loadedLeft, loadedRight,
+                                          expression->operands[i + 1]->semanticType);
+
+        llvm::BasicBlock* trueDest = (i == numComparisons - 1) ? successBlock : checkBlocks[i];
+        builder->CreateCondBr(cmp, trueDest, failBlock);
+    }
+
+    builder->SetInsertPoint(successBlock);
+    builder->CreateBr(mergeBlock);
+
+    builder->SetInsertPoint(failBlock);
+    builder->CreateBr(mergeBlock);
+
+    builder->SetInsertPoint(mergeBlock);
+    llvm::PHINode* phi = builder->CreatePHI(builder->getInt1Ty(), 2, "chain_result");
+    phi->addIncoming(builder->getInt1(true), successBlock);
+    phi->addIncoming(builder->getInt1(false), failBlock);
+
+    return phi;
+}
+
 [[nodiscard]] auto IRGenerator::visit(const ast::CharLiteralExpression* expression) -> exprvisit_t {
     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), static_cast<std::uint64_t>(expression->value));
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::FunctionCallExpression* expression) -> exprvisit_t {
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(expression->callee->semanticType));
+    const auto* funcSemanticType = static_cast<const semantic::Function*>(expression->callee->semanticType);
+
+    const ast::FunctionDeclarationStatement* baseDeclaration = nullptr;
+    if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
+        const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
+        if (const semantic::Symbol* symbol = analyzer.symbolTable.lookup(idExpr->name);
+            symbol != nullptr && symbol->node != nullptr) {
+            baseDeclaration = static_cast<const ast::FunctionDeclarationStatement*>(symbol->node);
+        }
+    }
+
+    const std::size_t totalParams = functionType->getNumParams();
+    const std::size_t providedArgs = expression->arguments.size;
 
     std::vector<llvm::Value*> argumentValues;
-    argumentValues.reserve(expression->arguments.size);
+    argumentValues.reserve(totalParams);
 
-    for (unsigned int i = 0; i < expression->arguments.size; ++i) {
-        const ast::Expression* argument = expression->arguments[i];
-        llvm::Value* argumentValue = visit(argument);
+    for (std::size_t i = 0; i < totalParams; ++i) {
+        llvm::Value* argumentValue
+            = (i < providedArgs) ? visit(expression->arguments[i]) : visit(baseDeclaration->parameters[i].defaultValue);
 
-        llvm::Type* expectedParameterType = functionType->getParamType(i);
-        if (expectedParameterType->isStructTy() && argumentValue->getType()->isPointerTy()) {
-            argumentValue = builder->CreateLoad(expectedParameterType, argumentValue, "argument_load_tmp");
+        llvm::Type* expectedType = functionType->getParamType(static_cast<unsigned int>(i));
+        if (expectedType->isStructTy() && argumentValue->getType()->isPointerTy()) {
+            argumentValue = builder->CreateLoad(expectedType, argumentValue, "argument_load_tmp");
         }
+
+        // Do an implicit cast if needed
+        if (i < providedArgs && expression->arguments[i]->semanticType != funcSemanticType->parameterTypes[i].type) {
+            argumentValue = emitTypeCast(argumentValue, expression->arguments[i]->semanticType,
+                                         funcSemanticType->parameterTypes[i].type);
+        }
+
         argumentValues.push_back(argumentValue);
     }
 
     llvm::Value* calleeValue = nullptr;
     if (expression->callee->kind == ast::ExpressionKind::IdentifierExpression) {
         const auto* idExpr = static_cast<const ast::IdentifierExpression*>(expression->callee);
-        if (idExpr->resolvedDeclaration != nullptr && idExpr->resolvedDeclaration->mangledName.has_value()) {
-            calleeValue = builder->GetInsertBlock()->getModule()->getFunction(
-                interner.get_view(*idExpr->resolvedDeclaration->mangledName));
+        if (baseDeclaration != nullptr && baseDeclaration->mangledName.has_value()) {
+            calleeValue
+                = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(*baseDeclaration->mangledName));
         }
         if (calleeValue == nullptr) {
             calleeValue = builder->GetInsertBlock()->getModule()->getFunction(interner.get_view(idExpr->name));
@@ -280,7 +353,7 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
             expression->identifier->toString(interner));
     }
 
-    semantic::InstantiationKey key{.declNode = symbol->node, .typeArgs = expression->semanticTypes};
+    const semantic::InstantiationKey key{.declNode = symbol->node, .typeArgs = expression->semanticTypes};
 
     const auto* instantiationResult = analyzer.instantiationCache.find(key);
     if (instantiationResult == nullptr || instantiationResult->state != ResolutionStatus::Success) {
@@ -303,7 +376,7 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
     }
 
     if (symbol->kind == semantic::SymbolKind::Aggregate || symbol->kind == semantic::SymbolKind::GenericType) {
-        llvm::StructType* llvmStruct = llvm::StructType::getTypeByName(*context, mangledName);
+        const llvm::StructType* llvmStruct = llvm::StructType::getTypeByName(*context, mangledName);
         if (llvmStruct == nullptr) {
             if (instantiationResult->clonedNode != nullptr) { visit(instantiationResult->clonedNode); }
             llvmStruct = llvm::StructType::getTypeByName(*context, mangledName);
@@ -358,13 +431,37 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::MemberAccessExpression* expression) -> exprvisit_t {
+    const semantic::SemanticType* objectType = expression->object->semanticType;
+    if (objectType->isPointer()) { objectType = static_cast<const semantic::Pointer*>(objectType)->baseType; }
+
+    std::string_view fieldName = interner.get_view(expression->field);
+
+    // Array length (a compile time constant)
+    if (objectType->isArray() && fieldName == "length") {
+        const auto* arrayType = static_cast<const semantic::Array*>(objectType);
+        return llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context), arrayType->length);
+    }
+
+    // Slice .length (fat pointer, index 1)
+    if (objectType->isSlice() && fieldName == "length") {
+        // Evaluate the slice expression (which yields the { ptr, i64 })
+        llvm::Value* sliceVal = visit(expression->object);
+
+        if (sliceVal->getType()->isPointerTy()) {
+            llvm::Value* lenPtr = builder->CreateStructGEP(visitTypeAsValue(objectType), sliceVal, 1, "slice_len_ptr");
+            return builder->CreateLoad(llvm::Type::getInt64Ty(*context), lenPtr, "load_slice_len");
+        }
+        return builder->CreateExtractValue(sliceVal, 1, "extract_slice_len");
+    }
+
+    // Regular member access
     llvm::Value* fieldPointer = getLValue(expression);
     llvm::Type* fieldLLVMType = visitTypeAsValue(expression->semanticType);
     return builder->CreateLoad(fieldLLVMType, fieldPointer, "load_member_access_expr");
 }
 
 auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprvisit_t {
-    std::string_view lexeme = interner.get_view(expression->value);
+    const std::string_view lexeme = interner.get_view(expression->value);
     if (expression->isFloat) {
         if (lexeme.ends_with("f32") || lexeme.ends_with("F32")) {
             std::string mutableLexeme(lexeme);
@@ -427,7 +524,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 [[nodiscard]] auto IRGenerator::visit(const ast::PrefixExpression* expression) -> exprvisit_t {
     using enum lexer::TokenType;
 
-    lexer::TokenType op = expression->op;
+    const lexer::TokenType op = expression->op;
     const semantic::SemanticType* valueType = expression->right->semanticType;
     llvm::Type* valueTypeLLVM = visit(valueType);
 
@@ -448,7 +545,8 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     if (op == AddressOf) { return getLValue(expression->right); }
     if (op == Dereference) {
         llvm::Value* value = visit(expression->right);
-        return builder->CreateLoad(valueTypeLLVM, value, "deref_load");
+        llvm::Type* pointeeTypeLLVM = visit(expression->semanticType);
+        return builder->CreateLoad(pointeeTypeLLVM, value, "deref_load");
     }
 
     if (op == Inc || op == Dec) {
@@ -496,13 +594,13 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::StringLiteralExpression* expression) -> exprvisit_t {
-    std::string_view strView = interner.get_view(expression->value);
+    const std::string_view strView = interner.get_view(expression->value);
     llvm::StringRef strRef(strView.data(), strView.size());
     llvm::Constant* globalString = builder->CreateGlobalString(strRef, "str_literal");
 
     auto* stringType = llvm::cast<llvm::StructType>(visit(expression->semanticType));
     llvm::Constant* zero = builder->getInt32(0);
-    std::vector<llvm::Constant*> indices = {zero, zero};
+    const std::vector<llvm::Constant*> indices = {zero, zero};
     llvm::Constant* dataPtr
         = llvm::ConstantExpr::getInBoundsGetElementPtr(globalString->getType(), globalString, indices);
     llvm::Constant* length = builder->getInt64(strView.size());
@@ -541,31 +639,7 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
 
 [[nodiscard]] auto IRGenerator::visit(const ast::TypeCastExpression* expression) -> exprvisit_t {
     llvm::Value* originalValue = visit(expression->originalValue);
-
-    const semantic::SemanticType* fromType = expression->originalValue->semanticType;
-    const semantic::SemanticType* toType = expression->targetType->semanticType;
-
-    if (fromType == toType) { return originalValue; }
-    llvm::Type* sourceTypeLLVM = visit(fromType);
-    llvm::Type* destTypeLLVM = visit(toType);
-
-    if (sourceTypeLLVM->isIntOrIntVectorTy() && destTypeLLVM->isIntOrIntVectorTy()) {
-        return builder->CreateIntCast(originalValue, destTypeLLVM, /*isSigned=*/fromType->isSignedInteger(),
-                                      "int_to_int_cast");
-    }
-    if (sourceTypeLLVM->isFPOrFPVectorTy() && destTypeLLVM->isFPOrFPVectorTy()) {
-        return builder->CreateFPCast(originalValue, destTypeLLVM, "fp_cast");
-    }
-    if (sourceTypeLLVM->isIntOrIntVectorTy() && destTypeLLVM->isFPOrFPVectorTy()) {
-        return fromType->isSignedInteger() ? builder->CreateSIToFP(originalValue, destTypeLLVM, "si_to_fp_cast")
-                                           : builder->CreateUIToFP(originalValue, destTypeLLVM, "ui_to_fp_cast");
-    }
-    if (sourceTypeLLVM->isFPOrFPVectorTy() && destTypeLLVM->isIntOrIntVectorTy()) {
-        return toType->isSignedInteger() ? builder->CreateFPToSI(originalValue, destTypeLLVM, "fp_to_si_cast")
-                                         : builder->CreateFPToUI(originalValue, destTypeLLVM, "fp_to_ui_cast");
-    }
-
-    ASSERT_UNREACHABLE_FMT("Unsupported LLVM type cast from '{}' to '{}'", fromType->toString(), toType->toString());
+    return emitTypeCast(originalValue, expression->originalValue->semanticType, expression->targetType->semanticType);
 }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::UninitializedExpression* /*unused*/) -> exprvisit_t { return nullptr; }

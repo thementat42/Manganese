@@ -3,7 +3,7 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <utils/ext_num_config.hpp>
+#include <utils/number_types.hpp>
 #include <utils/str_to_num.hpp>
 #include <utils/string_interner.hpp>
 

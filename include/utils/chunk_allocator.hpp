@@ -5,10 +5,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <utils/slice.hpp>
 #include <ranges>
 #include <type_traits>
 #include <utility>
+#include <utils/slice.hpp>
 #include <vector>
 
 namespace Manganese::utils {
@@ -28,7 +28,7 @@ class chunk_allocator {
     ~chunk_allocator() noexcept = default;
 
     template <class T, class... Args>
-        requires(std::is_constructible_v<T, Args...>)
+        requires(std::is_nothrow_constructible_v<T, Args...>)
     T* emplace(Args&&... args) {
         void* mem = allocate(sizeof(T), alignof(T));
         T* ptr = new (mem) T(std::forward<Args>(args)...);
@@ -38,7 +38,7 @@ class chunk_allocator {
 
     template <std::ranges::sized_range Range>
     auto emplace_range(const Range& range) {
-        using value_type = std::remove_cvref_t<decltype(*range.begin())>;
+        using value_type = std::ranges::range_value_t<Range>;
         auto count = static_cast<std::size_t>(std::ranges::distance(range));
         if (count == 0) { return Slice<value_type>{.data = nullptr, .size = 0}; }
         auto* dest = static_cast<value_type*>(allocate(sizeof(value_type) * count, alignof(value_type)));
@@ -50,11 +50,6 @@ class chunk_allocator {
    private:
     constexpr static inline std::size_t _max(std::size_t a, std::size_t b) noexcept { return a > b ? a : b; }
 
-    constexpr static std::uintptr_t align_up(std::uintptr_t ptr, std::uintptr_t alignment) noexcept {
-        std::uintptr_t mask = alignment - 1;
-        return (ptr + mask) & ~mask;
-    }
-
     void add_chunk(std::size_t size = _default_chunksize) {
         _chunks.push_back(
             chunk{.data = std::make_unique_for_overwrite<std::byte[]>(size),  // avoids initialization of values
@@ -62,16 +57,18 @@ class chunk_allocator {
                   .capacity = size});
     }
 
-    FORCE_INLINE void* allocate(std::size_t size, std::size_t alignment) {
+    inline void* allocate(std::size_t size, std::size_t alignment) {
     _do_allocation:
         chunk& c = _chunks.back();
         const auto current_position = reinterpret_cast<std::uintptr_t>(c.data.get() + c.used);
         // the next place we can safely construct a type, taking padding into account
-        const std::uintptr_t aligned_position = align_up(current_position, alignment);
+        std::uintptr_t mask = alignment - 1;
+        const std::uintptr_t aligned_position = (current_position + mask) & ~mask;
+
         // how much room to leave before the next allocation
         const std::uintptr_t adjustment = aligned_position - current_position;
 
-        if (c.used + adjustment + size > c.capacity) {
+        if (adjustment > c.capacity - c.used || size > c.capacity - c.used - adjustment) {
             // can't fit data here anymore
             add_chunk(_max(_default_chunksize, size + alignment));
             goto _do_allocation;  // avoids recursion

@@ -62,10 +62,12 @@ KEYWORD(Case, "case")
 KEYWORD(Default, "default")
 
 KEYWORD(For, "for")
+KEYWORD(Foreach, "foreach")
 KEYWORD(While, "while")
 KEYWORD(Do, "do")
 KEYWORD(Break, "break")
 KEYWORD(Continue, "continue")
+KEYWORD(In, "in")
 
 KEYWORD(Func, "func")
 KEYWORD(Lambda, "lambda")

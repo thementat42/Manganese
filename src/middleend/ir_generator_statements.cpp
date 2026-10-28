@@ -8,7 +8,7 @@
 
 #include <core.hpp>
 #include <frontend/ast.hpp>
-#include <middleend/codegen/ir_generator.hpp>
+#include <middleend/ir_generator.hpp>
 
 namespace Manganese::codegen {
 
@@ -45,6 +45,56 @@ auto IRGenerator::visit(const ast::EnumDeclarationStatement* /*unused*/) -> stmt
 
 auto IRGenerator::visit(const ast::ExpressionStatement* statement) -> stmtvisit_t {
     DISCARD(visit(statement->expression));
+}
+auto IRGenerator::visit(const ast::ForEachLoopStatement* statement) -> stmtvisit_t {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
+
+    llvm::Value* containerVal = visit(statement->container);
+
+    llvm::Value* lengthVal = emitContainerLengthInForeach(statement->container->semanticType, containerVal);
+
+    llvm::AllocaInst* indexAlloca = builder->CreateAlloca(builder->getInt64Ty(), nullptr, "_foreach_idx");
+    builder->CreateStore(builder->getInt64(0), indexAlloca);
+
+    llvm::Type* elementLLVMType = visit(statement->element.semanticType);
+    llvm::AllocaInst* elementAlloca
+        = builder->CreateAlloca(elementLLVMType, nullptr, interner.get_view(statement->element.name));
+
+    namedValues[statement->element.name] = elementAlloca;
+
+    llvm::BasicBlock* condBlock = llvm::BasicBlock::Create(*context, "foreach_cond", function);
+    llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(*context, "foreach_body", function);
+    llvm::BasicBlock* postBlock = llvm::BasicBlock::Create(*context, "foreach_post", function);
+    llvm::BasicBlock* exitBlock = llvm::BasicBlock::Create(*context, "foreach_exit", function);
+
+    builder->CreateBr(condBlock);
+
+    builder->SetInsertPoint(condBlock);
+    llvm::Value* currentIdx = builder->CreateLoad(builder->getInt64Ty(), indexAlloca, "_idx_load");
+    llvm::Value* condVal = builder->CreateICmpULT(currentIdx, lengthVal, "_foreach_bounds_check");
+    builder->CreateCondBr(condVal, bodyBlock, exitBlock);
+
+    // Register loop stack for break/continue statements
+    loopStack.push({.continueBlock = postBlock, .exitBlock = exitBlock});
+
+    builder->SetInsertPoint(bodyBlock);
+
+    llvm::Value* fetchedElement = emitElementAccessInForeach(statement->container->semanticType, containerVal, currentIdx);
+
+    builder->CreateStore(fetchedElement, elementAlloca);
+
+    visit(statement->body);
+
+    if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(postBlock); }
+
+    loopStack.pop();
+
+    builder->SetInsertPoint(postBlock);
+    llvm::Value* nextIdx = builder->CreateAdd(currentIdx, builder->getInt64(1), "_idx_next");
+    builder->CreateStore(nextIdx, indexAlloca);
+    builder->CreateBr(condBlock);
+
+    builder->SetInsertPoint(exitBlock);
 }
 
 auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
@@ -88,10 +138,15 @@ auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
 auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
     if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
 
-    auto* functionType = llvm::cast<llvm::FunctionType>(visit(statement->semanticType));
+    const semantic::SemanticType* oldFunctionSemanticReturnType = currentFunctionSemanticReturnType;
+    const auto* funcSemanticType = static_cast<const semantic::Function*>(statement->semanticType);
+    currentFunctionSemanticReturnType = funcSemanticType->returnType;
 
-    std::string_view mangledNameView = statement->mangledName.has_value() ? interner.get_view(*statement->mangledName)
-                                                                          : interner.get_view(statement->name);
+    auto* functionType = llvm::cast<llvm::FunctionType>(visit(funcSemanticType));
+
+    const std::string_view mangledNameView = statement->mangledName.has_value()
+        ? interner.get_view(*statement->mangledName)
+        : interner.get_view(statement->name);
     auto* llvmFunction
         = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, mangledNameView, module.get());
 
@@ -106,7 +161,7 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     llvm::Argument* currentLLVMArgument = llvmFunction->arg_begin();
     for (std::size_t i = 0; i < statement->parameters.size; ++i, ++currentLLVMArgument) {
         const auto& param = statement->parameters[i];
-        std::string_view paramName = interner.get_view(param.name);
+        const std::string_view paramName = interner.get_view(param.name);
         currentLLVMArgument->setName(paramName);
 
         llvm::AllocaInst* alloca
@@ -118,10 +173,18 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
 
     visit(statement->body);
 
-    // Restore the previous insertion point so the caller can continue cleanly
-    if (oldInsertBlock != nullptr) { builder->SetInsertPoint(oldInsertBlock); }
-}
+    // Make sure a return instruction is always emitted (e.g. if no explicit return instruction is written)
+    if (builder->GetInsertBlock()->getTerminator() == nullptr) {
+        if (llvmFunction->getReturnType()->isVoidTy()) {
+            builder->CreateRetVoid();
+        } else {
+            builder->CreateUnreachable();
+        }
+    }
 
+    if (oldInsertBlock != nullptr) { builder->SetInsertPoint(oldInsertBlock); }
+    currentFunctionSemanticReturnType = oldFunctionSemanticReturnType;
+}
 auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
 
@@ -150,7 +213,8 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::BasicBlock* mainFalseDest
         = !elifBlocks.empty() ? elifBlocks[0].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
 
-    // Run codegen for the main if statement
+    // Run codegen for the main variable declaration (if present) and condition
+    if (statement->variableDeclaration != nullptr) { visit(statement->variableDeclaration); }
     llvm::Value* condVal = visit(statement->condition);
     builder->CreateCondBr(condVal, thenBlock, mainFalseDest);
 
@@ -162,6 +226,7 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
     for (size_t i = 0; i < statement->elifs.size; ++i) {
         auto [condBlk, bodyBlk] = elifBlocks[i];
+        const auto& elifClause = statement->elifs[i];
 
         // If this elif fails, jump to the next elif, the else block, or the merge block
         llvm::BasicBlock* nextFalseDest
@@ -169,12 +234,13 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
         // Emit the elif condition block
         builder->SetInsertPoint(condBlk);
-        llvm::Value* elifCondVal = visit(statement->elifs[i].condition);
+        if (elifClause.variableDeclaration != nullptr) { visit(elifClause.variableDeclaration); }
+        llvm::Value* elifCondVal = visit(elifClause.condition);
         builder->CreateCondBr(elifCondVal, bodyBlk, nextFalseDest);
 
         // Emit the elif body block
         builder->SetInsertPoint(bodyBlk);
-        visit(statement->elifs[i].body);
+        visit(elifClause.body);
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
@@ -202,13 +268,17 @@ auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
         builder->CreateRetVoid();
         return;
     }
-    llvm::Function* currentFunction = builder->GetInsertBlock()->getParent();
+    const llvm::Function* currentFunction = builder->GetInsertBlock()->getParent();
     llvm::Type* expectedReturnType = currentFunction->getReturnType();
 
     llvm::Value* returnValue = visit(statement->value);
 
     if (expectedReturnType->isStructTy() && returnValue->getType()->isPointerTy()) {
         returnValue = builder->CreateLoad(expectedReturnType, returnValue, "return");
+    }
+
+    if (returnValue->getType() != expectedReturnType) {
+        returnValue = emitTypeCast(returnValue, statement->value->semanticType, currentFunctionSemanticReturnType);
     }
 
     builder->CreateRet(returnValue);
@@ -275,11 +345,14 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
 
 auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     llvm::Type* variableTypeLLVM = visitTypeAsValue(statement->semanticType);
-    std::string_view statementName = interner.get_view(statement->name);
+    const std::string_view statementName = interner.get_view(statement->name);
     llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statementName);
 
     if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {
         llvm::Value* initializerValue = visit(statement->value);
+        if (statement->value->semanticType != statement->semanticType) {
+            initializerValue = emitTypeCast(initializerValue, statement->value->semanticType, statement->semanticType);
+        }
         builder->CreateStore(initializerValue, alloca);
     }
     namedValues[statement->name] = alloca;

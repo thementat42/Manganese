@@ -54,28 +54,27 @@ ast::Type* Parser::parseAggregateType() {
 }
 
 ast::Type* Parser::parseArrayType(ast::Type* left, Precedence /*unused*/) {
+    const Token startToken = consumeToken();  // consume '['
+
     ast::Expression* lengthExpression = nullptr;
-    const Token startToken = consumeToken();  // Consume the left square bracket '['
-    if (peekTokenType() != TokenType::RightSquare) {
-        // If the next token is not a right square bracket, it's a length expression
-        lengthExpression = parseExpression(Precedence::Default);
-    }
-    if (flags.parsingAliasStatement && lengthExpression == nullptr) {
-        logError(*left, "Arrays in alias statements must have an explicit length expression");
-    }
-    expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
-    return makeNode<ast::ArrayType>(startToken, left, lengthExpression);
+    if (peekTokenType() != TokenType::RightSquare) { lengthExpression = parseExpression(Precedence::Default); }
+
+    expectToken(TokenType::RightSquare, "Expected ']' to close type declaration");
+
+    // if there's an explicit length, this is an array
+    if (lengthExpression != nullptr) { return makeNode<ast::ArrayType>(startToken, left, lengthExpression); }
+    // else, slice
+    return makeNode<ast::SliceType>(startToken, left);
 }
 
 ast::Type* Parser::parseFunctionType() {
     const Token startToken = consumeToken();  // Consume 'func'
     expectToken(TokenType::LeftParen, "Expected '(' after 'func' in a function type");
 
-    bool seenVariadic = false;
     std::vector<ast::FunctionParameterType> parameterTypes;
 
     while (!done() && peekTokenType() != TokenType::RightParen) {
-        parameterTypes.push_back(parseFunctionTypeParameter(seenVariadic));
+        parameterTypes.push_back(parseFunctionTypeParameter());
 
         if (peekTokenType() != TokenType::RightParen) {
             expectToken(TokenType::Comma, "Expected ',' to separate parameter types or ')' to end parameter list");
@@ -169,7 +168,7 @@ ast::Type* Parser::parsePointerType() {
 ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
     const Token startToken = consumeToken();  // consume the `::`
     ast::Type* type = parseType(precedence);
-    return makeNode<ast::ScopedType>(startToken, left, type);
+    return makeNode<ast::ScopedType>(startToken, ast::ScopedTypeScope{left}, ast::ScopedTypeType{type});
 }
 
 ast::Type* Parser::parseTypeofType() {
@@ -195,7 +194,7 @@ ast::Type* Parser::parseAggregateTypeField() {
     return parseType(Precedence::Default);
 }
 
-ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic) {
+ast::FunctionParameterType Parser::parseFunctionTypeParameter() {
     bool isMutable = false;
     if (peekTokenType() == TokenType::Mut) {
         isMutable = true;
@@ -204,20 +203,7 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
 
     ast::Type* parameterType = parseType(Precedence::Default);
 
-    bool isVariadic = false;
-    if (peekTokenType() == TokenType::Ellipsis) {
-        DISCARD(consumeToken());
-        isVariadic = true;
-
-        if (seenVariadic) { logError(peekToken(), "A function type cannot have more than one variadic parameter"); }
-        seenVariadic = true;
-    }
-
-    if (isVariadic && peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::Comma) {
-        logError(peekToken(), "A variadic parameter must be the last parameter");
-    }
-
-    return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
+    return ast::FunctionParameterType{.isMutable = isMutable, .type = parameterType};
 }
 
 utils::StringID Parser::parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,

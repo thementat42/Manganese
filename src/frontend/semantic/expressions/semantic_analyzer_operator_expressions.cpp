@@ -131,6 +131,42 @@ auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     ASSERT_UNREACHABLE_FMT("Unhandled binary operator {} in visit(BinaryExpression)", lexer::tokenTypeToString(op));
 };
 
+auto SemanticAnalyzer::visit(ast::ChainedComparisonExpression* expression) -> exprvisit_t {
+    exprvisit_t result = exprvisit_t::Success;
+    for (auto* operand : expression->operands) {
+        if (visit(operand) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    }
+
+    // make sure all operands are valid
+
+    for (auto* operand : expression->operands) {
+        if (operand->semanticType == nullptr || operand->semanticType->isPoison()) {
+            expression->semanticType = typeContext.getPoison();
+            return exprvisit_t::Failure;
+        }
+    }
+
+    // make sure each comparison is valid
+    for (std::size_t i = 0; i < expression->operators.size; ++i) {
+        auto* left = expression->operands[i];
+        auto* right = expression->operands[i + 1];
+        auto op = expression->operators[i];
+
+        const typeCompatibilityResult comparisonResult = areTypesComparable(left->semanticType, right->semanticType);
+
+        if (!areTypesComparable(left->semanticType, right->semanticType)) {
+            logError(expression, "Cannot compare types {} and {} with operator {}", left->semanticType->toString(),
+                     right->semanticType->toString(), tokenTypeToString(op));
+            result = exprvisit_t::Failure;
+        } else if (comparisonResult.result == Compatible_t::Warning) {
+            logWarning(expression, "{}", comparisonResult.message);
+        }
+    }
+
+    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
+    return result;
+}
+
 auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     exprvisit_t result = visit(expression->left);
@@ -268,10 +304,11 @@ auto SemanticAnalyzer::visit(ast::TernaryExpression* expression) -> exprvisit_t 
     if (visit(expression->ifTrue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->ifFalse) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
 
-    context.inTernaryCondition = true;
+    context.inTernary = true;
     const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
         expression->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
-    context.inTernaryCondition = false;
+    context.inTernary = false;
+
     const typeCompatibilityResult branchTypesAreCompatible
         = areTypesCompatible(expression->ifTrue->semanticType, expression->ifFalse->semanticType);
 

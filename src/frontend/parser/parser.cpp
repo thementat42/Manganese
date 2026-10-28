@@ -2,9 +2,9 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
+#include <string>
 #include <utils/chunk_allocator.hpp>
 #include <utils/enum_matches.hpp>
-#include <string>
 #include <vector>
 
 namespace Manganese::parser {

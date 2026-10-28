@@ -7,6 +7,8 @@
 #include <string>
 #include <utils/string_interner.hpp>
 
+#include "frontend/ast/ast_statements.hpp"
+
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
 #else
@@ -110,6 +112,21 @@ std::string ExpressionStatement::toString(const utils::StringInterner& interner,
     return getIndent(indent) + std::format("{};", expression->toString(interner, indent));
 }
 
+std::string ForEachLoopStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string result = getIndent(indent) + "foreach (";
+
+    if (element.isMutable) { result += "mut "; }
+    result += interner.get_view(element.name);
+
+    if (element.type != nullptr) { result += ": " + element.type->toString(interner); }
+
+    result += " in " + container->toString(interner) + ") ";
+
+    result += blockToString(body, interner, indent);
+
+    return result;
+}
+
 std::string ForLoopStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string result = getIndent(indent) + "for (";
     if (initializationStep != nullptr) {
@@ -138,7 +155,6 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
     for (std::size_t i = 0; i < parameters.size; ++i) {
         const FunctionParameter& param = parameters[i];
         result += interner.get_view(param.name);
-        if (param.isVariadic) { result += "..."; }
         result += std::format(": {}{}", (param.isMutable ? "mut " : ""), param.type->toString(interner, 0));
 
         if (param.defaultValue != nullptr) {
@@ -155,13 +171,24 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
 }
 
 std::string IfStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string result = getIndent(indent) + std::format("if ({}) ", condition->toString(interner, indent))
-        + blockToString(body, interner, indent);
-    for (const ElifClause& elif : elifs) {
-        result += std::format(" elif ({}) ", elif.condition->toString(interner, indent))
-            + blockToString(elif.body, interner, indent);
+    std::string condStr = condition->toString(interner, indent);
+    if (variableDeclaration != nullptr) {
+        condStr = std::format("{} {}", variableDeclaration->toString(interner, indent), condStr);
     }
+
+    std::string result = getIndent(indent) + std::format("if ({}) ", condStr) + blockToString(body, interner, indent);
+
+    for (const ElifClause& elif : elifs) {
+        std::string elifCondStr = elif.condition->toString(interner, indent);
+        if (elif.variableDeclaration != nullptr) {
+            elifCondStr = std::format("{} {}", elif.variableDeclaration->toString(interner, indent), elifCondStr);
+        }
+
+        result += std::format(" elif ({}) ", elifCondStr) + blockToString(elif.body, interner, indent);
+    }
+
     if (elseBody.has_value()) { result += " else " + blockToString(*elseBody, interner, indent); }
+
     return result;
 }
 
@@ -292,6 +319,22 @@ std::string BoolLiteralExpression::toString(const utils::StringInterner& /*unuse
     return value ? "true" : "false";
 }
 
+std::string ChainedComparisonExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    if (operands.empty()) { return ""; }
+
+    if (operands.size == 2 && operators.size == 1) {
+        return std::format(WRAP("{} {} {}"), operands[0]->toString(interner, indent), tokenTypeToString(operators[0]),
+                           operands[1]->toString(interner, indent));
+    }
+
+    std::string result = operands[0]->toString(interner, indent);
+    for (std::size_t i = 0; i < operators.size; ++i) {
+        result += std::format(" {} {}", tokenTypeToString(operators[i]), operands[i + 1]->toString(interner, indent));
+    }
+
+    return std::format(WRAP("{}"), result);
+}
+
 std::string CharLiteralExpression::toString(const utils::StringInterner& /*unused*/, std::size_t /*indent*/) const {
     return std::format("'{}'", lexer::codepointToUTF8(value));
 }
@@ -373,14 +416,7 @@ std::string AggregateType::toString(const utils::StringInterner& interner, std::
 }
 
 std::string ArrayType::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string lengthStr;
-    if (lengthExpression != nullptr) {
-        lengthStr = lengthExpression->toString(interner, 0);
-    } else if ((semanticType != nullptr) && semanticType->isArray()) {
-        const auto* arrayType = static_cast<const semantic::Array*>(semanticType);
-        lengthStr = arrayType->hasUnspecifiedLength() ? "" : std::to_string(*arrayType->length);
-    }
-    return std::format("{}[{}]", elementType->toString(interner, indent), lengthStr);
+    return std::format("{}[{}]", elementType->toString(interner, indent), lengthExpression->toString(interner));
 }
 
 std::string FunctionType::toString(const utils::StringInterner& interner, std::size_t indent) const {
@@ -409,6 +445,10 @@ std::string PointerType::toString(const utils::StringInterner& interner, std::si
 
 std::string ScopedType::toString(const utils::StringInterner& interner, std::size_t /*indent*/) const {
     return std::format("{}::{}", scope->toString(interner, 0), type->toString(interner, 0));
+}
+
+std::string SliceType::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    return std::format("{}[]", elementType->toString(interner, indent));
 }
 
 std::string TypeofType::toString(const utils::StringInterner& interner, std::size_t indent) const {

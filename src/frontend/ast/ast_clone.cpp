@@ -1,3 +1,4 @@
+#include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/type_context.hpp>
@@ -5,7 +6,7 @@
 #include <utils/string_interner.hpp>
 #include <vector>
 
-#include "core.hpp"
+#include "frontend/ast/ast_statements.hpp"
 
 namespace Manganese::ast {
 
@@ -84,6 +85,16 @@ ExpressionStatement* ExpressionStatement::clone(semantic::CloneContext* context)
     return makeClonedNode(this, context, expression->clone(context));
 }
 
+ForEachLoopStatement* ForEachLoopStatement::clone(semantic::CloneContext* context) const {
+    auto elementClone = ForEachElement{.name = element.name,
+                                       .type = element.type == nullptr ? nullptr : element.type->clone(context),
+                                       .semanticType = element.semanticType,
+                                       .isMutable = element.isMutable};
+    Expression* containerClone = container->clone(context);
+
+    return makeClonedNode(this, context, elementClone, containerClone, cloneBlock(body, context));
+}
+
 ForLoopStatement* ForLoopStatement::clone(semantic::CloneContext* context) const {
     Statement* initializationClone = nullptr;
     Expression* stopClone = nullptr;
@@ -93,7 +104,8 @@ ForLoopStatement* ForLoopStatement::clone(semantic::CloneContext* context) const
     if (stopCondition != nullptr) { stopClone = stopCondition->clone(context); }
     if (postExpression != nullptr) { postClone = postExpression->clone(context); }
 
-    return makeClonedNode(this, context, initializationClone, stopClone, postClone, cloneBlock(body, context));
+    return makeClonedNode(this, context, initializationClone, ForLoopCondition{stopClone}, ForLoopPost{postClone},
+                          cloneBlock(body, context));
 }
 
 FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::CloneContext* context) const {
@@ -106,8 +118,7 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
              .defaultValue = (param.defaultValue == nullptr) ? nullptr : param.defaultValue->clone(context),
              .line = param.line,
              .column = param.column,
-             .isMutable = param.isMutable,
-             .isVariadic = param.isVariadic});
+             .isMutable = param.isMutable});
     }
     Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
 
@@ -119,12 +130,17 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
 }
 
 IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
+    Statement* variableDeclarationClone
+        = variableDeclaration == nullptr ? nullptr : variableDeclaration->clone(context);
     Expression* conditionClone = condition->clone(context);
     std::vector<ElifClause> elifClones;
     elifClones.reserve(elifs.size);
 
     for (const auto& elif : elifs) {
-        elifClones.push_back({.condition = elif.condition->clone(context),
+        Statement* elifVariableDeclarationCLone
+            = elif.variableDeclaration == nullptr ? nullptr : elif.variableDeclaration->clone(context);
+        elifClones.push_back({.variableDeclaration = elifVariableDeclarationCLone,
+                              .condition = elif.condition->clone(context),
                               .body = cloneBlock(elif.body, context),
                               .associatedScope = nullptr});
     }
@@ -132,7 +148,7 @@ IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
     std::optional<ast::Block> elseBodyClone = std::nullopt;
     if (elseBody.has_value()) { elseBodyClone = cloneBlock(*elseBody, context); }
 
-    return makeClonedNode(this, context, conditionClone, cloneBlock(body, context),
+    return makeClonedNode(this, context, variableDeclarationClone, conditionClone, cloneBlock(body, context),
                           context->arena.emplace_range(elifClones), elseBodyClone);
 }
 
@@ -241,6 +257,16 @@ BoolLiteralExpression* BoolLiteralExpression::clone(semantic::CloneContext* cont
     return makeClonedNode(this, context, value);
 }
 
+ChainedComparisonExpression* ChainedComparisonExpression::clone(semantic::CloneContext* context) const {
+    std::vector<Expression*> operandClones;
+    operandClones.reserve(operands.size);
+
+    for (const auto& operand : operands) { operandClones.push_back(operand->clone(context)); }
+
+    return makeClonedNode(this, context, context->arena.emplace_range(operandClones),
+                          context->arena.emplace_range(operators));
+}
+
 CharLiteralExpression* CharLiteralExpression::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context, value);
 }
@@ -261,7 +287,7 @@ GenericInstantiationExpression* GenericInstantiationExpression::clone(semantic::
     std::vector<Type*> typeClones;
     typeClones.reserve(types.size);
 
-    for (Type* t : types) { typeClones.push_back(t->clone(context)); }
+    for (const Type* t : types) { typeClones.push_back(t->clone(context)); }
 
     auto* clone = makeClonedNode(this, context, identifierClone, context->arena.emplace_range(typeClones));
 
@@ -283,7 +309,8 @@ IdentifierExpression* IdentifierExpression::clone(semantic::CloneContext* contex
 }
 
 IndexExpression* IndexExpression::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, variable->clone(context), index->clone(context));
+    return makeClonedNode(this, context, IndexExpressionVariable{variable->clone(context)},
+                          IndexExpressionIndex{index->clone(context)});
 }
 
 MemberAccessExpression* MemberAccessExpression::clone(semantic::CloneContext* context) const {
@@ -305,7 +332,8 @@ PrefixExpression* PrefixExpression::clone(semantic::CloneContext* context) const
 }
 
 ScopeResolutionExpression* ScopeResolutionExpression::clone(semantic::CloneContext* context) const {
-    auto* clone = makeClonedNode(this, context, scope->clone(context), element->clone(context));
+    auto* clone = makeClonedNode(this, context, ScopeExpressionScope{scope->clone(context)},
+                                 ScopeExpressionElement{element->clone(context)});
     return clone;
 }
 
@@ -322,7 +350,8 @@ TypeCastExpression* TypeCastExpression::clone(semantic::CloneContext* context) c
 }
 
 TernaryExpression* TernaryExpression::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, condition->clone(context), ifTrue->clone(context), ifFalse->clone(context));
+    return makeClonedNode(this, context, TernaryCondition{condition->clone(context)},
+                          TernaryTrueValue{ifTrue->clone(context)}, TernaryFalseValue{ifFalse->clone(context)});
 }
 
 UninitializedExpression* UninitializedExpression::clone(semantic::CloneContext* context) const {
@@ -341,9 +370,7 @@ AggregateType* AggregateType::clone(semantic::CloneContext* context) const {
 }
 
 ArrayType* ArrayType::clone(semantic::CloneContext* context) const {
-    Expression* lengthExpressionClone = lengthExpression == nullptr ? nullptr : lengthExpression->clone(context);
-
-    return makeClonedNode(this, context, elementType->clone(context), lengthExpressionClone);
+    return makeClonedNode(this, context, elementType->clone(context), lengthExpression->clone(context));
 }
 
 FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
@@ -351,8 +378,7 @@ FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
     parameterTypeClones.reserve(parameterTypes.size);
 
     for (const auto& param : parameterTypes) {
-        parameterTypeClones.push_back(
-            {.isMutable = param.isMutable, .isVariadic = param.isVariadic, .type = param.type->clone(context)});
+        parameterTypeClones.push_back({.isMutable = param.isMutable, .type = param.type->clone(context)});
     }
 
     Type* returnTypeClone = returnType == nullptr ? nullptr : returnType->clone(context);
@@ -390,7 +416,11 @@ PointerType* PointerType::clone(semantic::CloneContext* context) const {
 }
 
 ScopedType* ScopedType::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, scope->clone(context), type->clone(context));
+    return makeClonedNode(this, context, ScopedTypeScope{scope->clone(context)}, ScopedTypeType{type->clone(context)});
+}
+
+SliceType* SliceType::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, elementType->clone(context));
 }
 
 TypeofType* TypeofType::clone(semantic::CloneContext* context) const {

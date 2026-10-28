@@ -4,10 +4,10 @@
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <utils/slice.hpp>
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 #include <utils/type_names.hpp>

@@ -28,7 +28,7 @@ Result SemanticAnalyzer::analyze() {
 }
 
 utils::StringID SemanticAnalyzer::getMangledName(utils::StringID baseNameID) const {
-    std::string_view baseName = interner.get_view(baseNameID);
+    const std::string_view baseName = interner.get_view(baseNameID);
     if (context.namespaceStack.empty()) { return baseNameID; }
     std::string result;
     for (const auto& name : context.namespaceStack) { result += std::format("${}", name); }

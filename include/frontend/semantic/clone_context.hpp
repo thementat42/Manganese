@@ -2,8 +2,8 @@
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_CLONE_CONTEXT_HPP 1
 
 #include <frontend/semantic/type_context.hpp>
-#include <utils/chunk_allocator.hpp>
 #include <unordered_map>
+#include <utils/chunk_allocator.hpp>
 #include <utils/string_interner.hpp>
 
 namespace Manganese {

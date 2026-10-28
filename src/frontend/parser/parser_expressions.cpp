@@ -4,7 +4,9 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
 #include <utils/chunk_allocator.hpp>
+#include <utils/enum_matches.hpp>
 #include <vector>
+
 
 /**
  * Ambiguous cases:
@@ -159,6 +161,9 @@ ast::Expression* Parser::parseAssignmentExpression(ast::Expression* left, Preced
 ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence precedence) {
     const Token startToken = consumeToken();
     const lexer::TokenType op = startToken.getType();
+
+    if (isComparisonOperator(op)) { return parseChainedComparison(left, startToken, precedence); }
+
     ast::Expression* right = parseExpression(precedence);
 
     return makeNode<ast::BinaryExpression>(startToken, left, op, right);
@@ -186,13 +191,18 @@ ast::Expression* Parser::parseIndexingExpression(ast::Expression* left, Preceden
     constexpr auto precedence = precedenceAbove(Precedence::Assignment);
     ast::Expression* index = parseExpression(precedence);
     expectToken(lexer::TokenType::RightSquare, "Expected ']' to end indexing expression");
-    return makeNode<ast::IndexExpression>(startToken, left, index);
+    return makeNode<ast::IndexExpression>(startToken, ast::IndexExpressionVariable{left},
+                                          ast::IndexExpressionIndex{index});
 }
 
 ast::Expression* Parser::parseMemberAccessExpression(ast::Expression* left, Precedence /*unused*/) {
-    const Token startToken = consumeToken();  // Consume the member access operator (.)
-    return makeNode<ast::MemberAccessExpression>(
-        startToken, left, expectToken(lexer::TokenType::Identifier, "Expected identifier after '.'").getLexeme());
+    const Token startToken = consumeToken();  // Consume .
+
+    auto fieldToken = peekToken();
+    if (!utils::enum_matches(fieldToken.getType(), TokenType::Identifier, TokenType::IntegerLiteral)) {
+        logError(fieldToken, "Expected identifier or integer literal after '.'");
+    }
+    return makeNode<ast::MemberAccessExpression>(startToken, left, consumeToken().getLexeme());
 }
 
 ast::Expression* Parser::parseParenthesizedExpression() {
@@ -243,7 +253,9 @@ ast::Expression* Parser::parsePrimaryExpression() {
 ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();  // Consume the scope resolution operator (::)
     if (peekTokenType() != lexer::TokenType::Identifier) { logError(peekToken(), "Expected identifier after '::'"); }
-    return makeNode<ast::ScopeResolutionExpression>(startToken, left, parseExpression(Precedence::ScopeResolution));
+    return makeNode<ast::ScopeResolutionExpression>(
+        startToken, ast::ScopeExpressionScope{left},
+        ast::ScopeExpressionElement{parseExpression(Precedence::ScopeResolution)});
 }
 
 ast::Expression* Parser::parseSizeofExpression() {
@@ -276,13 +288,36 @@ ast::Expression* Parser::parseTernaryExpression(ast::Expression* left, Precedenc
     expectToken(TokenType::Colon, "Expected ':' in ternary expression");
     ast::Expression* ifFalse = parseExpression(precedence);
 
-    return makeNode<ast::TernaryExpression>(startToken, left, ifTrue, ifFalse);
+    return makeNode<ast::TernaryExpression>(startToken, ast::TernaryCondition{left}, ast::TernaryTrueValue{ifTrue},
+                                            ast::TernaryFalseValue{ifFalse});
 }
 
 ast::Expression* Parser::parseTypeCastExpression(ast::Expression* left, Precedence precedence) {
     const Token startToken = consumeToken();  // Consume the 'as' token
     ast::Type* type = parseType(precedence);
     return makeNode<ast::TypeCastExpression>(startToken, left, type);
+}
+
+// Helpers
+
+ast::Expression* Parser::parseChainedComparison(ast::Expression* left, const Token& op, Precedence precedence) {
+    std::vector<ast::Expression*> operands;
+    std::vector<TokenType> operators;
+
+    operands.push_back(left);
+    operators.push_back(op.getType());
+
+    // keep parsing a sub expression
+    operands.push_back(parseExpression(precedence));
+
+    using enum lexer::TokenType;
+    while (isComparisonOperator(peekTokenType())) {
+        operators.push_back(consumeToken().getType());
+        operands.push_back(parseExpression(precedence));
+    }
+
+    return makeNode<ast::ChainedComparisonExpression>(op, arena.emplace_range(operands),
+                                                      arena.emplace_range(operators));
 }
 
 }  // namespace Manganese::parser

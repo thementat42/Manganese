@@ -8,13 +8,13 @@
 #include <frontend/lexer.hpp>
 #include <frontend/parser/operators.hpp>
 #include <io/logging.hpp>
-#include <utils/chunk_allocator.hpp>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <utils/chunk_allocator.hpp>
 #include <vector>
 
 namespace Manganese::parser {
@@ -29,17 +29,16 @@ struct ParsedFile {
 class Parser {
    private:
     lexer::Lexer lexer;
-    constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
-    std::optional<Token> previousToken;
     utils::chunk_allocator& arena;
     utils::StringInterner& interner;
+    std::optional<Token> previousToken;
 
-    // Some flags
+    constexpr static inline ast::Visibility defaultVisibility = ast::Visibility::Private;
+
     struct {
         bool hasParsedFileHeader : 1 = false;  // Processing module and import
         bool hasError : 1 = false;
         bool hasWarning : 1 = false;
-        bool parsingAliasStatement : 1 = false;
         bool hasModuleDeclaration : 1 = false;
         bool hasImports : 1 = false;
     } flags;
@@ -52,11 +51,9 @@ class Parser {
 
     ParsedFile parse();
 
-   private:  // private methods
+   private:
     friend consteval void initializeLookups(struct LookupTable&) noexcept;
     friend consteval void initializeTypeLookups(struct LookupTable&) noexcept;
-
-    //~ Parsing functions
 
     // Expression Parsing
     ast::Expression* parseExpression(Precedence precedence);
@@ -66,6 +63,7 @@ class Parser {
     ast::Expression* parseArrayInstantiationExpression();
     ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseBinaryExpression(ast::Expression* left, Precedence precedence);
+    ast::Expression* parseChainedComparison(ast::Expression* left, const Token& op, Precedence precedence);
     ast::Expression* parseFunctionCallExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseGenericInstantiationExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseIndexingExpression(ast::Expression* left, Precedence precedence);
@@ -87,6 +85,7 @@ class Parser {
     ast::Statement* parseContinueStatement();
     ast::Statement* parseDoWhileLoopStatement();
     ast::Statement* parseEnumDeclarationStatement();
+    ast::Statement* parseForEachLoopStatement();
     ast::Statement* parseForLoopStatement();
     ast::Statement* parseFunctionDeclarationStatement();
     ast::Statement* parseIfStatement();
@@ -100,23 +99,7 @@ class Parser {
     ast::Statement* parseVisibilityAffectedStatement();
     ast::Statement* parseWhileLoopStatement();
 
-    ast::EnumValue parseEnumMember();
-    std::vector<utils::StringID> parseGenericsList(utils::StringID contextName);
-    std::optional<ast::AggregateField> parseAggregateField(utils::StringID aggregateName,
-                                                           std::span<ast::AggregateField> existingFields);
-
-    std::optional<ast::FunctionParameter> parseFunctionParameter(utils::StringID functionName,
-                                                                 std::span<ast::FunctionParameter> existingParams,
-                                                                 bool& hasDefaultParameter, bool& hasVariadicParameter);
-
-    ast::CaseClause parseCaseClause();
-    std::optional<ast::Block> parseDefaultClause();
-
-    std::vector<utils::StringID> parseImportPath();
-    utils::OptionalStringID parseImportAlias();
-
     // Type Parsing
-
     ast::Type* parseType(Precedence precedence);
     ast::Type* parseArrayType(ast::Type* left, Precedence precedence);
     ast::Type* parseAggregateType();
@@ -129,11 +112,24 @@ class Parser {
     ast::Type* parseTypeofType();
 
     ast::Type* parseAggregateTypeField();
-    ast::FunctionParameterType parseFunctionTypeParameter(bool& seenVariadic);
+    ast::FunctionParameterType parseFunctionTypeParameter();
     utils::StringID parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,
                                               utils::StringID contextName);
 
-    // ~ Helpers
+        // Parsing Helpers
+    ast::EnumValue parseEnumMember();
+    std::vector<utils::StringID> parseGenericsList(utils::StringID contextName);
+    std::optional<ast::AggregateField> parseAggregateField(utils::StringID aggregateName,
+                                                           std::span<ast::AggregateField> existingFields);
+    std::optional<ast::FunctionParameter> parseFunctionParameter(utils::StringID functionName,
+                                                                 std::span<ast::FunctionParameter> existingParams,
+                                                                 bool& hasDefaultParameter);
+    ast::CaseClause parseCaseClause();
+    std::optional<ast::Block> parseDefaultClause();
+    std::vector<utils::StringID> parseImportPath();
+    utils::OptionalStringID parseImportAlias();
+
+    // Other helpers
     ast::Block parseBlock(std::string_view blockName);
 
     template <class T, class ParseFunction>
@@ -153,7 +149,7 @@ class Parser {
     T* makeNode(const Token& startToken, Args&&... args) {
         if constexpr (std::is_same_v<T, ast::PoisonedExpression> || std::is_same_v<T, ast::PoisonedStatement>
                       || std::is_same_v<T, ast::PoisonedType>) {
-            // any poisoned node should be treated as having an error
+            // Any poisoned node should be treated as having an error
             flags.hasError = true;
         }
         T* const node = arena.emplace<T>(std::forward<Args>(args)...);
@@ -162,7 +158,14 @@ class Parser {
         return node;
     }
 
-    bool isUnaryContext() const noexcept;
+    [[nodiscard]] bool isUnaryContext() const noexcept;
+    
+    [[nodiscard]] constexpr static bool isComparisonOperator(TokenType op) noexcept {
+        using enum TokenType;
+        return utils::enum_matches(op, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual);
+    }
+    
+    [[nodiscard]] inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
 
     [[nodiscard]] inline Token& peekToken() { return lexer.peekToken(); }
     [[nodiscard]] inline TokenType peekTokenType() { return lexer.peekToken().getType(); }
@@ -175,6 +178,7 @@ class Parser {
     Token expectToken(TokenType expectedType);
     Token expectToken(TokenType expectedType, std::string_view errorMessage);
 
+    // Logging
     template <class... Args>
     inline void logError(const Token& token, std::format_string<Args...> message, Args&&... args) {
         logging::logError(token.getLine(), token.getColumn(), message, std::forward<Args>(args)...);
@@ -196,8 +200,6 @@ class Parser {
         logging::logWarning(token.getLine(), token.getColumn(), message, std::forward<Args>(args)...);
         flags.hasWarning = true;
     }
-
-    inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
 };
 
 }  // namespace Manganese::parser

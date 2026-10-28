@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
+#include <utils/named_parameter.hpp>
 #include <utils/slice.hpp>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
@@ -87,6 +88,17 @@ struct BoolLiteralExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE(BoolLiteralExpression);
 };
 
+struct ChainedComparisonExpression final : public Expression {
+    utils::Slice<Expression*> operands;
+    utils::Slice<lexer::TokenType> operators;
+
+    ChainedComparisonExpression(utils::Slice<Expression*> _operands, utils::Slice<lexer::TokenType> _operators) noexcept
+        :
+        Expression(ExpressionKind::ChainedComparisonExpression), operands(_operands), operators(_operators) {}
+
+    MN_AST_STANDARD_INTERFACE(ChainedComparisonExpression);
+};
+
 struct CharLiteralExpression final : public Expression {
     const char32_t value;
 
@@ -134,12 +146,15 @@ struct IdentifierExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE(IdentifierExpression);
 };
 
+using IndexExpressionVariable = utils::NamedParameter<Expression*, struct IndexVarTag>;
+using IndexExpressionIndex = utils::NamedParameter<Expression*, struct IndexIndexTag>;
+
 struct IndexExpression final : public Expression {
     Expression* variable;
     Expression* index;
 
-    IndexExpression(Expression* _variable, Expression* _index) noexcept :
-        Expression(ExpressionKind::IndexExpression), variable(_variable), index(_index) {}
+    IndexExpression(IndexExpressionVariable _variable, IndexExpressionIndex _index) noexcept :
+        Expression(ExpressionKind::IndexExpression), variable(_variable.get()), index(_index.get()) {}
 
     MN_AST_STANDARD_INTERFACE(IndexExpression);
 };
@@ -191,13 +206,16 @@ struct PrefixExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE(PrefixExpression);
 };
 
+using ScopeExpressionScope = utils::NamedParameter<Expression*, struct ScopeName>;
+using ScopeExpressionElement = utils::NamedParameter<Expression*, struct ScopeElement>;
+
 struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
     Expression* element;
     utils::StringID mangledName;
 
-    ScopeResolutionExpression(Expression* _scope, Expression* _element) noexcept :
-        Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope), element(_element) {}
+    ScopeResolutionExpression(ScopeExpressionScope _scope, ScopeExpressionElement _element) noexcept :
+        Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope.get()), element(_element.get()) {}
 
     MN_AST_STANDARD_INTERFACE(ScopeResolutionExpression);
 };
@@ -221,13 +239,20 @@ struct StringLiteralExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE(StringLiteralExpression);
 };
 
+using TernaryCondition = utils::NamedParameter<Expression*, struct TernaryCond>;
+using TernaryTrueValue = utils::NamedParameter<Expression*, struct TernaryTrue>;
+using TernaryFalseValue = utils::NamedParameter<Expression*, struct TernaryFalse>;
+
 struct TernaryExpression final : public Expression {
     Expression* condition;
     Expression* ifTrue;
     Expression* ifFalse;
 
-    TernaryExpression(Expression* _condition, Expression* _ifTrue, Expression* _ifFalse) noexcept :
-        Expression(ExpressionKind::TernaryExpression), condition(_condition), ifTrue(_ifTrue), ifFalse(_ifFalse) {}
+    TernaryExpression(TernaryCondition _condition, TernaryTrueValue _ifTrue, TernaryFalseValue _ifFalse) noexcept :
+        Expression(ExpressionKind::TernaryExpression),
+        condition(_condition.get()),
+        ifTrue(_ifTrue.get()),
+        ifFalse(_ifFalse.get()) {}
 
     MN_AST_STANDARD_INTERFACE(TernaryExpression);
 };

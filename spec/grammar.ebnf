@@ -246,12 +246,9 @@ function_declaration_statement =
     block
 
 parameter_list =
-      parameter ("," parameter)* ("," variadic_parameter)?
-    | variadic_parameter
+      parameter ("," parameter)*
 
 parameter = identifier ":" type ("=" expression)?
-
-variadic_parameter = identifier "..." ":" type
 
 # semantically, variable declaration needs a type or an expression
 
@@ -269,6 +266,7 @@ generic_parameter = identifier
 control_flow_statement =
       break_statement
     | continue_statement
+    | foreach_loop_statement
     | for_loop_statement
     | if_statement
     | return_statement
@@ -277,6 +275,11 @@ control_flow_statement =
 
 break_statement = "break" ";"
 continue_statement = "continue" ";"
+
+foreach_loop_statement = 
+    "foreach" "("
+    "mut"? identifier (":" type)? "in" expression
+    ")" block
 
 for_loop_statement =
     "for" "("
@@ -293,8 +296,8 @@ for_initializer =
     | expression
 
 if_statement =
-    "if" "(" expression ")" block
-    ("elif" "(" expression ")" block)*
+    "if" "(" variable_declaration_statement? expression ")" block
+    ("elif" "(" variable_declaration_statement? expression ")" block)*
     ("else" block)?
 
 return_statement = "return" expression? ";"
@@ -350,11 +353,8 @@ function_type = "func" "(" function_type_parameter_list? ")" ("->" type)?
 function_type_parameter_list =
     function_type_parameter
     ("," function_type_parameter)*
-    ("," function_type_variadic_parameter)?
 
 function_type_parameter = type
-
-function_type_variadic_parameter = type "..."
 
 generic_type = generic_base "@[" type ("," type)* "]"
 

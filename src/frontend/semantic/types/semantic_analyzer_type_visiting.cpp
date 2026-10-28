@@ -50,33 +50,28 @@ auto SemanticAnalyzer::visit(ast::ArrayType* type) -> typevisit_t {
     }
     if (elementType->isVoid()) { logError(type, "Cannot form an array of 'void'"); }
 
-    std::optional<std::size_t> length = std::nullopt;
-    if (arrayType->lengthExpression != nullptr) {
-        if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
-        if (!arrayType->lengthExpression->semanticType->isInteger() || !arrayType->lengthExpression->canFold()) {
-            logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
-            return typevisit_t::Failure;
-        }
-        const auto lengthVal = utils::computeExpression<std::uint64_t>(
-            arrayType->lengthExpression, typeContext.getTargetInfo(), interner,
-            [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
-                this->logError(expr, fmt, std::forward<Args>(args)...);
-            });
-
-        if (!lengthVal.has_value()) {
-            logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
-            return typevisit_t::Failure;
-        }
-        if (*lengthVal == 0) {
-            logError(arrayType->lengthExpression, "Array length must be greater than 0");
-            return typevisit_t::Failure;
-        }
-        length = lengthVal;
-    } else if (outerVarType != nullptr && outerVarType->isArray()) {
-        length = static_cast<const Array*>(outerVarType)->length;
+    if (visit(arrayType->lengthExpression) == typevisit_t::Failure) { return typevisit_t::Failure; }
+    if (!arrayType->lengthExpression->semanticType->isInteger() || !arrayType->lengthExpression->canFold()) {
+        logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
+        return typevisit_t::Failure;
     }
 
-    type->semanticType = typeContext.getArray(elementType, length);
+    const auto lengthVal = utils::computeExpression<std::uint64_t>(
+        arrayType->lengthExpression, typeContext.getTargetInfo(), interner,
+        [this]<class... Args>(const auto* expr, std::format_string<Args...> fmt, Args&&... args) {
+            this->logError(expr, fmt, std::forward<Args>(args)...);
+        });
+
+    if (!lengthVal.has_value()) {
+        logError(arrayType->lengthExpression, "Array length must be a constant integer expression");
+        return typevisit_t::Failure;
+    }
+    if (*lengthVal == 0) {
+        logError(arrayType->lengthExpression, "Array length must be greater than 0");
+        return typevisit_t::Failure;
+    }
+
+    type->semanticType = typeContext.getArray(elementType, *lengthVal);
     return typevisit_t::Success;
 }
 
@@ -88,9 +83,10 @@ auto SemanticAnalyzer::visit(ast::FunctionType* type) -> typevisit_t {
         const SemanticType* resolvedParameterType = parameterType.type->semanticType;
         if (resolvedParameterType->isPoison()) { return typevisit_t::Failure; }
 
-        resolvedParameterTypes.push_back({.type = resolvedParameterType,
-                                          .isMutable = parameterType.isMutable,
-                                          .isVariadic = parameterType.isVariadic});
+        resolvedParameterTypes.push_back({
+            .type = resolvedParameterType,
+            .isMutable = parameterType.isMutable,
+        });
     }
     const SemanticType* returnType = typeContext.getVoid();
     if (functionType->returnType != nullptr) {
@@ -115,9 +111,9 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     }
 
     auto* identifierType = static_cast<ast::IdentifierType*>(type->baseType);
-    utils::StringID baseTypeNameID = identifierType->name;
+    const utils::StringID baseTypeNameID = identifierType->name;
 
-    Symbol* symbol = symbolTable.lookup(baseTypeNameID);
+    const Symbol* symbol = symbolTable.lookup(baseTypeNameID);
     if (symbol == nullptr || symbol->kind != SymbolKind::Aggregate) {
         logError(type, "Unknown generic aggregate type '{}'", interner.get_view(baseTypeNameID));
         type->semanticType = typeContext.getPoison();
@@ -144,7 +140,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
         return typevisit_t::Failure;
     }
 
-    InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
+    const InstantiationKey key{.declNode = aggregateDeclaration, .typeArgs = arena.emplace_range(typeArgs)};
 
     if (const auto* cached = instantiationCache.find(key)) {
         if (cached->state == ResolutionStatus::Success) {
@@ -273,6 +269,27 @@ auto SemanticAnalyzer::visit(ast::ScopedType* type) -> typevisit_t {
     }
     type->semanticType = memberSymbol->type;
     context.nestedScopeResolutionCurrentSymbol = memberSymbol;
+    return typevisit_t::Success;
+}
+
+auto SemanticAnalyzer::visit(ast::SliceType* type) -> typevisit_t {
+    const auto* sliceType = static_cast<const ast::SliceType*>(type);
+
+    const SemanticType* outerVarType = context.currentVariableDeclarationType;
+    context.currentVariableDeclarationType = nullptr;
+    auto visitResult = visit(sliceType->elementType);
+    context.currentVariableDeclarationType = outerVarType;
+
+    if (visitResult == typevisit_t::Failure) { return typevisit_t::Failure; }
+
+    const SemanticType* elementType = sliceType->elementType->semanticType;
+    if (elementType->isPoison()) {
+        logError(type, "Cannot form slice of invalid type '{}'", sliceType->elementType->toString(interner));
+        return typevisit_t::Failure;
+    }
+    if (elementType->isVoid()) { logError(type, "Cannot form a slice of 'void'"); }
+
+    type->semanticType = typeContext.getSlice(elementType);
     return typevisit_t::Success;
 }
 

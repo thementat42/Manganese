@@ -3,8 +3,8 @@
 
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
+#include <utils/named_parameter.hpp>
 #include <utils/slice.hpp>
-#include <utility>
 #include <utils/string_interner.hpp>
 
 namespace Manganese::ast {
@@ -18,9 +18,9 @@ struct AggregateType final : public Type {
 
 struct ArrayType final : public Type {
     Type* elementType;
-    Expression* lengthExpression;  // If not given, the length is inferred from the number of elements
+    Expression* lengthExpression;
 
-    explicit ArrayType(Type* _elementType, Expression* _lengthExpr = nullptr) noexcept :
+    ArrayType(Type* _elementType, Expression* _lengthExpr) noexcept :
         Type(TypeKind::ArrayType), elementType(_elementType), lengthExpression(_lengthExpr) {}
 
     MN_AST_STANDARD_INTERFACE(ArrayType);
@@ -28,7 +28,6 @@ struct ArrayType final : public Type {
 
 struct FunctionParameterType {
     bool isMutable;
-    bool isVariadic;
     Type* type;
 };
 
@@ -37,7 +36,7 @@ struct FunctionType final : public Type {
     Type* returnType;
 
     FunctionType(utils::Slice<FunctionParameterType>&& _parameterTypes, Type* _returnType) noexcept :
-        Type(TypeKind::FunctionType), parameterTypes(std::move(_parameterTypes)), returnType(_returnType) {}
+        Type(TypeKind::FunctionType), parameterTypes(_parameterTypes), returnType(_returnType) {}
 
     MN_AST_STANDARD_INTERFACE(FunctionType);
 };
@@ -73,13 +72,24 @@ struct PointerType final : public Type {
     MN_AST_STANDARD_INTERFACE(PointerType);
 };
 
+using ScopedTypeScope = utils::NamedParameter<Type*, struct ScopeTScope>;
+using ScopedTypeType = utils::NamedParameter<Type*, struct ScopeTType>;
+
 struct ScopedType final : public Type {
     Type* scope;
     Type* type;
 
-    ScopedType(Type* _scope, Type* _type) noexcept : Type(TypeKind::ScopedType), scope(_scope), type(_type) {}
+    ScopedType(ScopedTypeScope _scope, ScopedTypeType _type) noexcept :
+        Type(TypeKind::ScopedType), scope(_scope.get()), type(_type.get()) {}
 
     MN_AST_STANDARD_INTERFACE(ScopedType)
+};
+
+struct SliceType final : public Type {
+    Type* elementType;
+    explicit SliceType(Type* _elementType) noexcept : Type(TypeKind::SliceType), elementType(_elementType) {}
+
+    MN_AST_STANDARD_INTERFACE(SliceType)
 };
 
 struct TypeofType final : public Type {

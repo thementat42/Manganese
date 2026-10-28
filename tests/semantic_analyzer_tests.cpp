@@ -9,7 +9,6 @@
 #include <iostream>
 #include <string>
 
-#include "testrunner.hpp"
 #include "tests.hpp"
 
 namespace Manganese::tests {
@@ -18,7 +17,6 @@ namespace {
 constexpr const char* logFileName = "logs/semantic_analyzer_tests.log";
 utils::chunk_allocator arena;
 utils::StringInterner interner;
-utils::TargetInfo target = utils::TargetInfo{.pointerSize = sizeof(void*), .pointerAlignment = alignof(void*)};
 
 // Helper: Parses and runs full semantic analysis on source code
 bool analyzeSource(const std::string& source, bool expectSuccess, std::string_view testName) {
@@ -26,7 +24,7 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
     auto& parsedFile = parsedFiles[0];
 
-    semantic::SemanticAnalyzer analyzer(parsedFiles, target, arena, interner);
+    semantic::SemanticAnalyzer analyzer(parsedFiles, utils::getTargetInfo(), arena, interner);
     const Result result = analyzer.analyze();
 
     std::ofstream logFile(logFileName, std::ios::app);
@@ -169,20 +167,42 @@ bool testFunctionDeclarationAndReturnStatement() {
 }
 
 bool testIfStatement() {
-    // Non-boolean condition must fail
     const std::string valid = R"(
-        func main() {
-            if ("not a bool") {}
-        }
-    )";
-
-    const std::string valid2 = R"(
         func main() {
             if (1 < 2) {} else {}
         }
     )";
 
-    return analyzeSource(valid, true, __func__) && analyzeSource(valid2, true, __func__);
+    const std::string validWithIfLet = R"(
+        func main() -> int32 {
+            if (let x = 10; x > 5) {
+                return x;
+            } else {
+                return 0;
+            }
+        }
+    )";
+
+    const std::string validWithElifLet = R"(
+        func main() -> int32 {
+            if (let x = 0; x > 5) {
+                return 1;
+            } elif (let y = 10; y == 10) {
+                return y;
+            } else {
+                return 0;
+            }
+        }
+    )";
+
+    const std::string invalid = R"(
+        func main() {
+            if ("not a bool") {}
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(validWithIfLet, true, __func__)
+        && analyzeSource(validWithElifLet, true, __func__) && analyzeSource(invalid, true, __func__);
 }
 
 bool testNamespaceStatement() {
@@ -647,7 +667,8 @@ bool testScopedType() {
 // Other
 
 bool testAnalyzeFromFile() {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests/semantic_analyzer_tests.mn";
+    const std::filesystem::path fullPath
+        = std::filesystem::current_path() / "tests" / "fixtures" / "semantic_analyzer_tests.mn";
 
     utils::chunk_allocator fileAllocator{};
     utils::StringInterner fileInterner;
@@ -656,7 +677,7 @@ bool testAnalyzeFromFile() {
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
     auto& parsedFile = parsedFiles[0];
 
-    semantic::SemanticAnalyzer analyzer(parsedFiles, target, fileAllocator, fileInterner);
+    semantic::SemanticAnalyzer analyzer(parsedFiles, utils::getTargetInfo(), fileAllocator, fileInterner);
 
     std::ofstream logFile(logFileName, std::ios::app);
     const Result result = analyzer.analyze();
@@ -730,20 +751,20 @@ bool testPointerDereferenceAndMutability() {
         && analyzeSource(incImmutable, false, __func__) && analyzeSource(addressOfRValue, false, __func__);
 }
 
-[[maybe_unused]] bool testVariadicAndDefaults() {
+[[maybe_unused]] bool testDefaultsAndSlices() {
     const std::string code = R"(
         # Function with default parameters
         func configure(timeout: int = 30, retries: int = 3) -> int {
             return timeout + retries;
         }
 
-        # Variadic function accessing arguments via indexing
-        func sumFirstTwo(args...: int) -> int {
+        # Function taking a slice parameter (coerced from array literals)
+        func sumFirstTwo(args: int[]) -> int {
             return args[0] + args[1];
         }
 
-        # Generic variadic function
-        func firstOf[T](args...: T) -> T {
+        # Generic function taking a slice parameter
+        func firstOf[T](args: T[]) -> T {
             return args[0];
         }
 
@@ -752,19 +773,22 @@ bool testPointerDereferenceAndMutability() {
             let b = configure(60);       # Should use default retries (60 + 3 = 63)
             let c = configure(10, 5);    # Should override both (10 + 5 = 15)
             
-            let total = sumFirstTwo(10, 20, 30, 40); # Variadic invocation
-            let val = firstOf@[float64](42.12321, 100.01293483910);              # Generic variadic invocation
+            # Pass array literals which implicitly coerce to slices
+            let total = sumFirstTwo([10, 20, 30, 40]); 
+            let val = firstOf@[float64]([42.12321, 100.01293483910]); 
             return 0;
         }
     )";
     const std::string invalid = R"(
-
-        func firstOf[T](args...: T) -> T {
+        func firstOf[T](args: T[]) -> T {
             return args[0];
         }
 
         func main() -> int {
-            let val = firstOf@[string](42.12321, 100.01293483910, "blah");
+            # Invalid: expecting string[] slice, but passing float[2] array literal
+            let val = firstOf@[string]([42.12321, 100.01293483910]);
+            
+            # Invalid: returning string from a function expecting int
             return "hello!";
         }
     )";
@@ -857,6 +881,86 @@ bool testImmutableCaptureOrReassignment() {
     return analyzeSource(source, false, __func__);
 }
 
+bool testSliceLengthAndAnonymousAggregates() {
+    const std::string valid = R"(
+        func main() {
+            let arr: int32[4] = [1, 2, 3, 4];
+            let slice: int32[] = arr;
+            let len1 = arr.length;
+            let len2 = slice.length;
+        }
+    )";
+
+    const std::string invalidNamedNumericAccess = R"(
+        aggregate Point { x: int32; y: int32; }
+        func main() {
+            let p = Point { x = 1, y = 2 };
+            let val = p.0;
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidNamedNumericAccess, false, __func__);
+}
+
+bool testChainedComparisonSemantics() {
+    const std::string valid = R"(
+        func main() -> bool {
+            let a = 1;
+            let b = 5;
+            let c = 10;
+            return a < b <= c && c == 10;
+        }
+    )";
+
+    const std::string invalidType = R"(
+        func main() -> bool {
+            let a = 1;
+            let b = 5;
+            return a < b <= "not an int";
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidType, false, __func__);
+}
+
+bool testForEachLoopStatement() {
+    const std::string valid = R"(
+        func main() {
+            let arr: int32[3] = [1, 2, 3];
+            let slice: int32[] = arr;
+            
+            foreach (x in arr) {
+                let val: int32 = x;
+            }
+            
+            foreach (item: int32 in slice) {
+                let val: int32 = item;
+            }
+
+            foreach (mut mutItem: int32 in arr) {
+                mutItem = mutItem * 2;
+            }
+        }
+    )";
+
+    const std::string invalidContainer = R"(
+        func main() {
+            let x: int32 = 10;
+            foreach (item in x) {}
+        }
+    )";
+
+    const std::string invalidTypeMismatch = R"(
+        func main() {
+            let arr: int32[3] = [1, 2, 3];
+            foreach (item: string in arr) {}
+        }
+    )";
+
+    return analyzeSource(valid, true, __func__) && analyzeSource(invalidContainer, false, __func__)
+        && analyzeSource(invalidTypeMismatch, false, __func__);
+}
+
 bool miscTests() {
     const std::string code = R"(
         func foo[T](x: T) -> T {
@@ -881,53 +985,62 @@ void runSemanticAnalyzerTests(TestRunner& runner) {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
     // Statements
-    runner.runTest("Aggregate Declaration Statement analysis", analyzer_tests::testAggregateDeclarationStatement);
-    runner.runTest("Alias Statement analysis", analyzer_tests::testAliasStatement);
-    runner.runTest("Break and Continue Statements analysis", analyzer_tests::testBreakAndContinueStatement);
-    runner.runTest("Enum Declaration Statement analysis", analyzer_tests::testEnumDeclarationStatement);
-    runner.runTest("For Loop Statement analysis", analyzer_tests::testForLoopStatement);
-    runner.runTest("Function Declaration & Returns analysis",
+    runner.runTest("Semantic Analyzer: Aggregate Declaration Statement",
+                   analyzer_tests::testAggregateDeclarationStatement);
+    runner.runTest("Semantic Analyzer: Alias Statement", analyzer_tests::testAliasStatement);
+    runner.runTest("Semantic Analyzer: Break and Continue Statements", analyzer_tests::testBreakAndContinueStatement);
+    runner.runTest("Semantic Analyzer: Enum Declaration Statement", analyzer_tests::testEnumDeclarationStatement);
+    runner.runTest("Semantic Analyzer: For Loop Statement", analyzer_tests::testForLoopStatement);
+    runner.runTest("Semantic Analyzer: Function Declaration & Returns",
                    analyzer_tests::testFunctionDeclarationAndReturnStatement);
-    runner.runTest("If Statement Conditions analysis", analyzer_tests::testIfStatement);
-    runner.runTest("Namespace Statement analysis", analyzer_tests::testNamespaceStatement);
-    runner.runTest("Scope Resolution Expression analysis", analyzer_tests::testScopeResolutionExpression);
-    runner.runTest("Switch Statement analysis", analyzer_tests::testSwitchStatement);
-    runner.runTest("Variable Declaration Statement analysis", analyzer_tests::testVariableDeclarationStatement);
-    runner.runTest("While Loop Statement analysis", analyzer_tests::testWhileLoopStatement);
-    runner.runTest("Generic Scope Resolution analysis", analyzer_tests::testGenericScopeResolution);
-    runner.runTest("Scope Resolution Mutability analysis", analyzer_tests::testScopeResolutionMutability);
-    runner.runTest("Deeply Nested Scoped Type analysis", analyzer_tests::testDeeplyNestedScopedType);
-    // runner.runTest("Variadic and Default Function analysis", analyzer_tests::testVariadicAndDefaults);
+    runner.runTest("Semantic Analyzer: If Statement Conditions", analyzer_tests::testIfStatement);
+    runner.runTest("Semantic Analyzer: Namespace Statement", analyzer_tests::testNamespaceStatement);
+    runner.runTest("Semantic Analyzer: Scope Resolution Expression", analyzer_tests::testScopeResolutionExpression);
+    runner.runTest("Semantic Analyzer: Switch Statement", analyzer_tests::testSwitchStatement);
+    runner.runTest("Semantic Analyzer: Variable Declaration Statement",
+                   analyzer_tests::testVariableDeclarationStatement);
+    runner.runTest("Semantic Analyzer: While Loop Statement", analyzer_tests::testWhileLoopStatement);
+    runner.runTest("Semantic Analyzer: Generic Scope Resolution", analyzer_tests::testGenericScopeResolution);
+    runner.runTest("Semantic Analyzer: Scope Resolution Mutability", analyzer_tests::testScopeResolutionMutability);
+    runner.runTest("Semantic Analyzer: Deeply Nested Scoped Type", analyzer_tests::testDeeplyNestedScopedType);
+    runner.runTest("Semantic Analyzer: Slices and Defaults", analyzer_tests::testDefaultsAndSlices);
+    runner.runTest("Semantic Analyzer: ForEach Loop Statement", analyzer_tests::testForEachLoopStatement);
 
     // Expressions
-    runner.runTest("Aggregate Instantiation & Literals analysis",
+    runner.runTest("Semantic Analyzer: Aggregate Instantiation & Literals",
                    analyzer_tests::testAggregateInstantiationAndLiteralExpression);
-    runner.runTest("Array Literals & Indexing analysis", analyzer_tests::testArrayLiteralAndIndexExpression);
-    runner.runTest("Assignment Expression analysis", analyzer_tests::testAssignmentExpression);
-    runner.runTest("Unary & Binary Expressions analysis", analyzer_tests::testBinaryAndUnaryExpressions);
-    runner.runTest("Function Calls & Void Args analysis", analyzer_tests::testFunctionCallExpression);
-    runner.runTest("Generic Expressions analysis", analyzer_tests::testGenericInstantiationExpression);
-    runner.runTest("Member Access Expression analysis", analyzer_tests::testMemberAccessExpression);
-    runner.runTest("Pointer Operators (& and *) analysis", analyzer_tests::testPrefixPostfixPointerOperators);
-    runner.runTest("Sizeof & Alignof Expressions analysis", analyzer_tests::testSizeofAndAlignofExpression);
-    runner.runTest("Ternary Expression analysis", analyzer_tests::testTernaryExpressionSemantics);
+    runner.runTest("Semantic Analyzer: Array Literals & Indexing", analyzer_tests::testArrayLiteralAndIndexExpression);
+    runner.runTest("Semantic Analyzer: Assignment Expression", analyzer_tests::testAssignmentExpression);
+    runner.runTest("Semantic Analyzer: Unary & Binary Expressions", analyzer_tests::testBinaryAndUnaryExpressions);
+    runner.runTest("Semantic Analyzer: Function Calls & Void Args", analyzer_tests::testFunctionCallExpression);
+    runner.runTest("Semantic Analyzer: Generic Expressions", analyzer_tests::testGenericInstantiationExpression);
+    runner.runTest("Semantic Analyzer: Member Access Expression", analyzer_tests::testMemberAccessExpression);
+    runner.runTest("Semantic Analyzer: Pointer Operators (& and *)", analyzer_tests::testPrefixPostfixPointerOperators);
+    runner.runTest("Semantic Analyzer: Sizeof & Alignof Expressions", analyzer_tests::testSizeofAndAlignofExpression);
+    runner.runTest("Semantic Analyzer: Ternary Expression", analyzer_tests::testTernaryExpressionSemantics);
 
-    runner.runTest("TypeCast Expression analysis", analyzer_tests::testTypeCastExpression);
+    runner.runTest("Semantic Analyzer: TypeCast Expression", analyzer_tests::testTypeCastExpression);
 
     // Types
-    runner.runTest("Pointer Mutability Rules analysis", analyzer_tests::testPointerTypeMutability);
-    runner.runTest("Disallow Array of Void analysis", analyzer_tests::testArrayOfVoidDisallowed);
-    runner.runTest("First-class Function Types analysis", analyzer_tests::testFunctionTypeAsValue);
-    runner.runTest("Scoped Type analysis", analyzer_tests::testScopedType);
+    runner.runTest("Semantic Analyzer: Pointer Mutability Rules", analyzer_tests::testPointerTypeMutability);
+    runner.runTest("Semantic Analyzer: Disallow Array of Void", analyzer_tests::testArrayOfVoidDisallowed);
+    runner.runTest("Semantic Analyzer: First-class Function Types", analyzer_tests::testFunctionTypeAsValue);
+    runner.runTest("Semantic Analyzer: Scoped Type", analyzer_tests::testScopedType);
 
     // Other
-    runner.runTest("Analysis from file", analyzer_tests::testAnalyzeFromFile);
-    runner.runTest("Dereference & Immutability analysis", analyzer_tests::testPointerDereferenceAndMutability);
-    runner.runTest("Uninitialized Semantic Rules", analyzer_tests::testUninitializedSemanticRules);
-    runner.runTest("Typeof Dependent Return Types analysis", analyzer_tests::testTypeOfDependentReturnTypes);
-    runner.runTest("Nested Generic Instantiation Scope analysis", analyzer_tests::testNestedGenericInstantiationScope);
-    runner.runTest("Immutable Parameter Reassignment check", analyzer_tests::testImmutableCaptureOrReassignment);
-    runner.runTest("Misc analyzer tests", analyzer_tests::miscTests);
+    runner.runTest("Semantic Analyzer: File", analyzer_tests::testAnalyzeFromFile);
+    runner.runTest("Semantic Analyzer: Dereference & Immutability",
+                   analyzer_tests::testPointerDereferenceAndMutability);
+    runner.runTest("Semantic Analyzer: Uninitialized Semantic Rules", analyzer_tests::testUninitializedSemanticRules);
+    runner.runTest("Semantic Analyzer: Typeof Dependent Return Types", analyzer_tests::testTypeOfDependentReturnTypes);
+    runner.runTest("Semantic Analyzer: Nested Generic Instantiation Scope",
+                   analyzer_tests::testNestedGenericInstantiationScope);
+    runner.runTest("Semantic Analyzer: Immutable Parameter Reassignment check",
+                   analyzer_tests::testImmutableCaptureOrReassignment);
+    runner.runTest("Semantic Analyzer: Slice length and anonymous aggregate",
+                   analyzer_tests::testSliceLengthAndAnonymousAggregates);
+    runner.runTest("Semantic Analyzer: Chained Comparison Expression", analyzer_tests::testChainedComparisonSemantics);
+    runner.runTest("Semantic Analyzer: Miscellaneous Tests", analyzer_tests::miscTests);
 }
 
 }  // namespace Manganese::tests
