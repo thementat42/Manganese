@@ -1,0 +1,41 @@
+# Test file for codegen
+/*
+Comments should be stripped
+/*
+Even nested block comments
+*/
+*/
+
+aggregate Point {
+    x: int32;
+    y: int32;
+}
+
+func identity[T](val: T) -> T {
+    return val;
+}
+
+func computeTotal(n: int32) -> int32 {
+    let mut sum: int32 = 0;
+    let mut i: int32 = n;
+    
+    while (i > 0) {
+        if (i % 2 == 0) {
+            sum = sum + i;
+        } else {
+            sum = sum - 1;
+        }
+        i = i - 1;
+    }
+    
+    return sum;
+}
+
+func main() -> int32 {
+    let p = Point { x = 10, y = 20 };
+    let res = identity@[int32](p.x);
+    let total = computeTotal(5);
+    
+    let arr: int32[3] = [1, 2, 3];
+    return res + total + arr[0];
+}

@@ -7,50 +7,45 @@
 #include <functional>
 #include <unordered_map>
 #include <utils/resolution_status.hpp>
+#include <utils/slice.hpp>
+#include <utils/string_interner.hpp>
 
 namespace Manganese::semantic {
 struct Scope;
 
-struct generic_tag_t {
-    constexpr explicit generic_tag_t() noexcept = default;
-};
-
-constexpr inline generic_tag_t generic_tag{};
-
 struct InstantiationKey {
     const ast::ASTNode* declNode;
-    TypeList typeArgs;
+    utils::Slice<const semantic::SemanticType*> typeArgs;
 
-    friend bool operator==(const InstantiationKey&, const InstantiationKey&) noexcept = default;
+    friend constexpr bool operator==(const InstantiationKey& a, const InstantiationKey& b) noexcept {
+        if (a.declNode != b.declNode) { return false; }
+        if (a.typeArgs.size != b.typeArgs.size) { return false; }
+        for (std::size_t i = 0; i < a.typeArgs.size; ++i) {
+            if (a.typeArgs[i] != b.typeArgs[i]) { return false; }
+        }
+        return true;
+    }
 };
 
 struct InstantiationResult {
     ResolutionStatus state = ResolutionStatus::InProgress;
-    const SemanticType* returnType = nullptr;  // for functions
-    std::string mangledName;
+    const SemanticType* semanticType = nullptr;  // for functions
+    utils::StringID mangledName;
+    ast::Statement* clonedNode;
 };
 
-}  // namespace Manganese::semantic
-
-namespace std {
-
-template <>
-struct hash<Manganese::semantic::InstantiationKey> {
-    std::size_t operator()(const Manganese::semantic::InstantiationKey& key) const noexcept {
-        std::size_t hash_value = std::hash<const Manganese::ast::ASTNode*>{}(key.declNode);
+struct _insthasher {
+    constexpr std::size_t operator()(const InstantiationKey& key) const noexcept {
+        std::size_t hash_value = std::hash<const ast::ASTNode*>{}(key.declNode);
         for (const auto* type : key.typeArgs) {
-            hash_value = Manganese::semantic::hash_combine(hash_value, std::hash<decltype(type)>{}(type));
+            hash_value = hash_combine(hash_value, std::hash<decltype(type)>{}(type));
         }
         return hash_value;
     }
 };
 
-}  // namespace std
-
-namespace Manganese::semantic {
-
 class InstantiationCache {
-    std::unordered_map<InstantiationKey, InstantiationResult> _map;
+    std::unordered_map<InstantiationKey, InstantiationResult, _insthasher> _map;
 
    public:
     InstantiationCache() noexcept = default;
@@ -61,15 +56,19 @@ class InstantiationCache {
     }
 
     void markAsInProgress(const InstantiationKey& key) { _map.insert_or_assign(key, InstantiationResult{}); }
-    void markAsSuccess(const InstantiationKey& key, const SemanticType* returnType, std::string&& mangledName) {
-        _map.insert_or_assign(
-            key,
-            InstantiationResult{
-                .state = ResolutionStatus::Success, .returnType = returnType, .mangledName = std::move(mangledName)});
+    void markAsSuccess(const InstantiationKey& key, const SemanticType* semanticType, utils::StringID mangledName,
+                       ast::Statement* clonedNode) {
+        _map.insert_or_assign(key,
+                              InstantiationResult{.state = ResolutionStatus::Success,
+                                                  .semanticType = semanticType,
+                                                  .mangledName = mangledName,
+                                                  .clonedNode = clonedNode});
     }
     void markAsFailure(const InstantiationKey& key) {
         _map.insert_or_assign(
-            key, InstantiationResult{.state = ResolutionStatus::Failure, .returnType = nullptr, .mangledName = ""});
+            key,
+            InstantiationResult{
+                .state = ResolutionStatus::Failure, .semanticType = nullptr, .mangledName = {}, .clonedNode = nullptr});
     }
 
     bool contains(const InstantiationKey& key) const { return _map.contains(key); }

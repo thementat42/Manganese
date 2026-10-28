@@ -58,7 +58,8 @@ Result SemanticAnalyzer::collectGlobalAggregate(ast::AggregateDeclarationStateme
     // Skip uninstantiated generics
     Symbol* symbol = symbolTable.lookup(aggregate->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not recorded during type collection", aggregate->name);
+        ASSERT_UNREACHABLE_FMT("Aggregate '{}' was not recorded during type collection",
+                               interner.get_view(aggregate->name));
     }
 
     // Skip if already processed
@@ -72,22 +73,22 @@ Result SemanticAnalyzer::collectGlobalAggregate(ast::AggregateDeclarationStateme
 
     Result result = Result::Success;
     std::vector<AggregateField> fields;
-    fields.reserve(aggregate->fields.size());
+    fields.reserve(aggregate->fields.size);
 
     for (const auto& field : aggregate->fields) {
         const typevisit_t fieldResult = visit(field.type);
         if (fieldResult == typevisit_t::Failure) {
-            logError(aggregate, "Unknown type '{}' for field '{}' in aggregate '{}'", field.type->toString(),
-                     field.name, aggregate->name);
+            logError(aggregate, "Unknown type '{}' for field '{}' in aggregate '{}'", field.type->toString(interner),
+                     interner.get_view(field.name), interner.get_view(aggregate->name));
             result = Result::Failure;
         }
 
         const SemanticType* fieldType
             = (fieldResult == typevisit_t::Failure ? typeContext.getPoison() : field.type->semanticType);
-        fields.push_back(AggregateField{.name = field.name, .type = fieldType});
+        fields.push_back(AggregateField{.name = interner.get_view(field.name), .type = fieldType});
     }
 
-    symbol->type = typeContext.getNamedAggregate(std::string(aggregate->name), std::move(fields));
+    symbol->type = typeContext.getNamedAggregate(interner.get_view(aggregate->name), std::move(fields));
     symbol->status = ResolutionStatus::NotStarted;
 
     return result;
@@ -99,7 +100,8 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
     Symbol* symbol = symbolTable.lookup(function->name);
     if (symbol == nullptr) {
-        ASSERT_UNREACHABLE_FMT("Function '{}' was not recorded during type collection", function->name);
+        ASSERT_UNREACHABLE_FMT("Function '{}' was not recorded during type collection",
+                               interner.get_view(function->name));
     }
 
     if (!function->genericTypes.empty()) {
@@ -109,7 +111,8 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
     // Detect direct signature cycles (e.g. infinite parameter expansion)
     if (symbol->status == ResolutionStatus::InProgress) {
-        logError(function, "Cyclic dependency detected in signature of function '{}'", function->name);
+        logError(function, "Cyclic dependency detected in signature of function '{}'",
+                 interner.get_view(function->name));
         symbol->status = ResolutionStatus::Failure;
         return Result::Failure;
     }
@@ -117,32 +120,29 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
     symbol->status = ResolutionStatus::InProgress;
 
     std::vector<Parameter> paramTypes;
-    paramTypes.reserve(function->parameters.size());
+    paramTypes.reserve(function->parameters.size);
     Result funcResult = Result::Success;
 
     for (const auto& param : function->parameters) {
         const typevisit_t paramResult = visit(param.type);
         if (paramResult == typevisit_t::Failure) {
             logError(function, "Unknown parameter type '{}' for parameter '{}' in function '{}'",
-                     param.type->toString(), param.name, function->name);
+                     param.type->toString(interner), interner.get_view(param.name), interner.get_view(function->name));
             funcResult = Result::Failure;
         }
 
         const SemanticType* paramType
             = (paramResult == typevisit_t::Failure ? typeContext.getPoison() : param.type->semanticType);
 
-        if (param.isVariadic) { paramType = typeContext.getArray(paramType, std::nullopt); }
-
-        paramTypes.push_back(
-            Parameter{.type = paramType, .isMutable = param.isMutable, .isVariadic = param.isVariadic});
+        paramTypes.push_back(Parameter{.type = paramType, .isMutable = param.isMutable});
     }
 
     const SemanticType* resolvedReturnType = typeContext.getVoid();
     if (function->returnType != nullptr) {
         const typevisit_t returnResult = visit(function->returnType);
         if (returnResult == typevisit_t::Failure) {
-            logError(function, "Unknown return type '{}' in function '{}'", function->returnType->toString(),
-                     function->name);
+            logError(function, "Unknown return type '{}' in function '{}'", function->returnType->toString(interner),
+                     interner.get_view(function->name));
             funcResult = Result::Failure;
             resolvedReturnType = typeContext.getPoison();
         } else {
@@ -158,11 +158,12 @@ Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement
 
 Result SemanticAnalyzer::checkStatements(
     parser::ParsedFile& file) {  // semantic analysis pass (this can also check the generic specializations)
-    Result programIsSemanticallyValid = Result::Success;
-    for (ast::Statement* stmt : file.program) {
-        if (this->visit(stmt) == Result::Failure) { programIsSemanticallyValid = Result::Failure; }
+    Result result = Result::Success;
+    for (std::size_t i = 0; i < file.program.size; ++i) {
+        ast::Statement* statement = file.program[i];
+        if (visit(statement) == Result::Failure) { result = Result::Failure; }
     }
-    return programIsSemanticallyValid;
+    return result;
 }
 
 }  // namespace Manganese::semantic

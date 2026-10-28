@@ -8,18 +8,18 @@
 
 #include <core.hpp>
 #include <frontend/ast.hpp>
-#include <middleend/codegen/ir_generator.hpp>
+#include <middleend/ir_generator.hpp>
 
 namespace Manganese::codegen {
 
 auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
     if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
-    auto* llvmType = llvm::StructType::create(*context, statement->name);
+    auto* llvmType = llvm::StructType::create(*context, interner.get_view(statement->name));
     savedTypes[statement->semanticType]
         = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
 
     std::vector<llvm::Type*> memberTypes;
-    memberTypes.reserve(statement->fields.size());
+    memberTypes.reserve(statement->fields.size);
     for (const auto& field : statement->fields) { memberTypes.push_back(visitTypeAsValue(field.type->semanticType)); }
     llvmType->setBody(memberTypes);
 }
@@ -45,6 +45,56 @@ auto IRGenerator::visit(const ast::EnumDeclarationStatement* /*unused*/) -> stmt
 
 auto IRGenerator::visit(const ast::ExpressionStatement* statement) -> stmtvisit_t {
     DISCARD(visit(statement->expression));
+}
+auto IRGenerator::visit(const ast::ForEachLoopStatement* statement) -> stmtvisit_t {
+    llvm::Function* function = builder->GetInsertBlock()->getParent();
+
+    llvm::Value* containerVal = visit(statement->container);
+
+    llvm::Value* lengthVal = emitContainerLengthInForeach(statement->container->semanticType, containerVal);
+
+    llvm::AllocaInst* indexAlloca = builder->CreateAlloca(builder->getInt64Ty(), nullptr, "_foreach_idx");
+    builder->CreateStore(builder->getInt64(0), indexAlloca);
+
+    llvm::Type* elementLLVMType = visit(statement->element.semanticType);
+    llvm::AllocaInst* elementAlloca
+        = builder->CreateAlloca(elementLLVMType, nullptr, interner.get_view(statement->element.name));
+
+    namedValues[statement->element.name] = elementAlloca;
+
+    llvm::BasicBlock* condBlock = llvm::BasicBlock::Create(*context, "foreach_cond", function);
+    llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(*context, "foreach_body", function);
+    llvm::BasicBlock* postBlock = llvm::BasicBlock::Create(*context, "foreach_post", function);
+    llvm::BasicBlock* exitBlock = llvm::BasicBlock::Create(*context, "foreach_exit", function);
+
+    builder->CreateBr(condBlock);
+
+    builder->SetInsertPoint(condBlock);
+    llvm::Value* currentIdx = builder->CreateLoad(builder->getInt64Ty(), indexAlloca, "_idx_load");
+    llvm::Value* condVal = builder->CreateICmpULT(currentIdx, lengthVal, "_foreach_bounds_check");
+    builder->CreateCondBr(condVal, bodyBlock, exitBlock);
+
+    // Register loop stack for break/continue statements
+    loopStack.push({.continueBlock = postBlock, .exitBlock = exitBlock});
+
+    builder->SetInsertPoint(bodyBlock);
+
+    llvm::Value* fetchedElement = emitElementAccessInForeach(statement->container->semanticType, containerVal, currentIdx);
+
+    builder->CreateStore(fetchedElement, elementAlloca);
+
+    visit(statement->body);
+
+    if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(postBlock); }
+
+    loopStack.pop();
+
+    builder->SetInsertPoint(postBlock);
+    llvm::Value* nextIdx = builder->CreateAdd(currentIdx, builder->getInt64(1), "_idx_next");
+    builder->CreateStore(nextIdx, indexAlloca);
+    builder->CreateBr(condBlock);
+
+    builder->SetInsertPoint(exitBlock);
 }
 
 auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
@@ -88,28 +138,53 @@ auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
 auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
     if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
 
-    auto* functionType = llvm::cast<llvm::FunctionType>(visit(statement->semanticType));
+    const semantic::SemanticType* oldFunctionSemanticReturnType = currentFunctionSemanticReturnType;
+    const auto* funcSemanticType = static_cast<const semantic::Function*>(statement->semanticType);
+    currentFunctionSemanticReturnType = funcSemanticType->returnType;
 
+    auto* functionType = llvm::cast<llvm::FunctionType>(visit(funcSemanticType));
+
+    const std::string_view mangledNameView = statement->mangledName.has_value()
+        ? interner.get_view(*statement->mangledName)
+        : interner.get_view(statement->name);
     auto* llvmFunction
-        = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, statement->mangledName, module.get());
+        = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, mangledNameView, module.get());
+
+    // Save the previous insertion point
+    // Since generic instantiations skip around insertion points, we need to make sure to go back to the
+    // old function's insert point
+    llvm::BasicBlock* oldInsertBlock = builder->GetInsertBlock();
 
     llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(*context, "entry", llvmFunction);
     builder->SetInsertPoint(entryBlock);
 
     llvm::Argument* currentLLVMArgument = llvmFunction->arg_begin();
-    for (std::size_t i = 0; i < statement->parameters.size(); ++i, ++currentLLVMArgument) {
+    for (std::size_t i = 0; i < statement->parameters.size; ++i, ++currentLLVMArgument) {
         const auto& param = statement->parameters[i];
-        currentLLVMArgument->setName(param.name);
+        const std::string_view paramName = interner.get_view(param.name);
+        currentLLVMArgument->setName(paramName);
 
-        llvm::AllocaInst* alloca = builder->CreateAlloca(currentLLVMArgument->getType(), nullptr, param.name + "_addr");
+        llvm::AllocaInst* alloca
+            = builder->CreateAlloca(currentLLVMArgument->getType(), nullptr, std::string(paramName) + "_addr");
         builder->CreateStore(currentLLVMArgument, alloca);
 
         namedValues[param.name] = alloca;
     }
 
     visit(statement->body);
-}
 
+    // Make sure a return instruction is always emitted (e.g. if no explicit return instruction is written)
+    if (builder->GetInsertBlock()->getTerminator() == nullptr) {
+        if (llvmFunction->getReturnType()->isVoidTy()) {
+            builder->CreateRetVoid();
+        } else {
+            builder->CreateUnreachable();
+        }
+    }
+
+    if (oldInsertBlock != nullptr) { builder->SetInsertPoint(oldInsertBlock); }
+    currentFunctionSemanticReturnType = oldFunctionSemanticReturnType;
+}
 auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
 
@@ -120,9 +195,9 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(*context, "if_true", function);
 
     std::vector<std::pair<llvm::BasicBlock*, llvm::BasicBlock*>> elifBlocks;
-    elifBlocks.reserve(statement->elifs.size());
+    elifBlocks.reserve(statement->elifs.size);
 
-    for (std::size_t i = 0; i < statement->elifs.size(); ++i) {
+    for (std::size_t i = 0; i < statement->elifs.size; ++i) {
         llvm::BasicBlock* elifConditionBlock
             = llvm::BasicBlock::Create(*context, std::format("elif_condition_{}", i), function);
         llvm::BasicBlock* elifBodyBlock
@@ -131,14 +206,15 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     }
 
     llvm::BasicBlock* elseBlock
-        = statement->elseBody.empty() ? nullptr : llvm::BasicBlock::Create(*context, "else_body", function);
+        = statement->elseBody.has_value() ? llvm::BasicBlock::Create(*context, "else_body", function) : nullptr;
 
     // Determine where the primary 'if' false branch should jump
     // If there are elifs, jump to the first one, otherwise we can just go straight to else
     llvm::BasicBlock* mainFalseDest
         = !elifBlocks.empty() ? elifBlocks[0].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
 
-    // Run codegen for the main if statement
+    // Run codegen for the main variable declaration (if present) and condition
+    if (statement->variableDeclaration != nullptr) { visit(statement->variableDeclaration); }
     llvm::Value* condVal = visit(statement->condition);
     builder->CreateCondBr(condVal, thenBlock, mainFalseDest);
 
@@ -148,8 +224,9 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
     // emit each elif branch
 
-    for (size_t i = 0; i < statement->elifs.size(); ++i) {
+    for (size_t i = 0; i < statement->elifs.size; ++i) {
         auto [condBlk, bodyBlk] = elifBlocks[i];
+        const auto& elifClause = statement->elifs[i];
 
         // If this elif fails, jump to the next elif, the else block, or the merge block
         llvm::BasicBlock* nextFalseDest
@@ -157,18 +234,19 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
         // Emit the elif condition block
         builder->SetInsertPoint(condBlk);
-        llvm::Value* elifCondVal = visit(statement->elifs[i].condition);
+        if (elifClause.variableDeclaration != nullptr) { visit(elifClause.variableDeclaration); }
+        llvm::Value* elifCondVal = visit(elifClause.condition);
         builder->CreateCondBr(elifCondVal, bodyBlk, nextFalseDest);
 
         // Emit the elif body block
         builder->SetInsertPoint(bodyBlk);
-        visit(statement->elifs[i].body);
+        visit(elifClause.body);
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
     if (elseBlock != nullptr) {
         builder->SetInsertPoint(elseBlock);
-        visit(statement->elseBody);
+        visit(*statement->elseBody);
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
@@ -190,7 +268,7 @@ auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
         builder->CreateRetVoid();
         return;
     }
-    llvm::Function* currentFunction = builder->GetInsertBlock()->getParent();
+    const llvm::Function* currentFunction = builder->GetInsertBlock()->getParent();
     llvm::Type* expectedReturnType = currentFunction->getReturnType();
 
     llvm::Value* returnValue = visit(statement->value);
@@ -198,7 +276,10 @@ auto IRGenerator::visit(const ast::ReturnStatement* statement) -> stmtvisit_t {
     if (expectedReturnType->isStructTy() && returnValue->getType()->isPointerTy()) {
         returnValue = builder->CreateLoad(expectedReturnType, returnValue, "return");
     }
-    std::cout << "EEEEEE " << statement->value->semanticType->toString() << "\n";
+
+    if (returnValue->getType() != expectedReturnType) {
+        returnValue = emitTypeCast(returnValue, statement->value->semanticType, currentFunctionSemanticReturnType);
+    }
 
     builder->CreateRet(returnValue);
 }
@@ -212,8 +293,9 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
     llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(*context, "switch_end", function);
 
     // create the default block if there's a default body otherwise just the merge block
-    llvm::BasicBlock* defaultBlock
-        = statement->defaultBody.empty() ? mergeBlock : llvm::BasicBlock::Create(*context, "switch_default", function);
+    llvm::BasicBlock* defaultBlock = statement->defaultBody.has_value()
+        ? llvm::BasicBlock::Create(*context, "switch_default", function)
+        : mergeBlock;
 
     // Pre-create basic blocks for each case
     struct CaseInfo {
@@ -222,19 +304,19 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
     };
 
     std::vector<CaseInfo> caseInfos;
-    caseInfos.reserve(statement->cases.size());
+    caseInfos.reserve(statement->cases.size);
 
-    for (size_t i = 0; i < statement->cases.size(); ++i) {
+    for (size_t i = 0; i < statement->cases.size; ++i) {
         llvm::BasicBlock* caseBlk = llvm::BasicBlock::Create(*context, std::format("switch_case_{}", i), function);
         caseInfos.push_back({.block = caseBlk, .astCase = &statement->cases[i]});
     }
 
     // LLVM has a built-in switch which usually becomes a jump table
     llvm::SwitchInst* switchInstance
-        = builder->CreateSwitch(condVal, defaultBlock, static_cast<unsigned>(statement->cases.size()));
+        = builder->CreateSwitch(condVal, defaultBlock, static_cast<unsigned>(statement->cases.size));
 
     // Populate each case value and emit its body
-    for (size_t i = 0; i < statement->cases.size(); ++i) {
+    for (size_t i = 0; i < statement->cases.size; ++i) {
         auto [caseBlock, astCase] = caseInfos[i];
 
         // A single case can often match multiple values (e.g., `case 1, 2, 3:`)
@@ -252,9 +334,9 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
     }
 
     // Emit default body if there is one
-    if (!statement->defaultBody.empty()) {
+    if (statement->defaultBody.has_value()) {
         builder->SetInsertPoint(defaultBlock);
-        visit(statement->defaultBody);
+        visit(*statement->defaultBody);
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
@@ -263,13 +345,17 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
 
 auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     llvm::Type* variableTypeLLVM = visitTypeAsValue(statement->semanticType);
-    llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statement->name);
+    const std::string_view statementName = interner.get_view(statement->name);
+    llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statementName);
 
     if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {
         llvm::Value* initializerValue = visit(statement->value);
+        if (statement->value->semanticType != statement->semanticType) {
+            initializerValue = emitTypeCast(initializerValue, statement->value->semanticType, statement->semanticType);
+        }
         builder->CreateStore(initializerValue, alloca);
     }
-    namedValues[std::string(statement->name)] = alloca;
+    namedValues[statement->name] = alloca;
 }
 
 auto IRGenerator::visit(const ast::WhileLoopStatement* statement) -> stmtvisit_t {
@@ -322,76 +408,8 @@ auto IRGenerator::visit(const ast::PoisonedStatement* /*unused*/) -> stmtvisit_t
     ASSERT_UNREACHABLE("Poisoned statement was not flagged as semantically invalid during semantic analysis");
 }
 
-auto IRGenerator::visit(const ast::Block& block) -> stmtvisit_t {
+auto IRGenerator::visit(ast::Block block) -> stmtvisit_t {
     for (const ast::Statement* statement : block) { visit(statement); }
-}
-
-auto IRGenerator::visit(semantic::generic_tag_t /*unused*/,
-                        const ast::AggregateDeclarationStatement* aggregateDeclaration, const std::string& mangledName,
-                        semantic::TypeList&& typeArgs) -> stmtvisit_t {
-    const semantic::StackGuard stackGuard{genericsStack, std::move(typeArgs)};
-
-    auto oldParams = activeGenericParams;
-    activeGenericParams.clear();
-    for (std::size_t i = 0; i < aggregateDeclaration->genericTypes.size(); ++i) {
-        activeGenericParams[aggregateDeclaration->genericTypes[i]] = i;
-    }
-
-    llvm::StructType* llvmStruct = llvm::StructType::create(*context, mangledName);
-
-    std::vector<llvm::Type*> fieldTypes;
-    fieldTypes.reserve(aggregateDeclaration->fields.size());
-    for (const auto& field : aggregateDeclaration->fields) {
-        llvm::Type* llvmFieldType = visitTypeAsValue(field.type);
-        if (llvmFieldType == nullptr) { return; }
-        fieldTypes.push_back(llvmFieldType);
-    }
-
-    llvmStruct->setBody(fieldTypes, /*isPacked=*/false);
-
-    activeGenericParams = std::move(oldParams);
-}
-
-auto IRGenerator::visit(semantic::generic_tag_t /*unused*/, const ast::FunctionDeclarationStatement* funcDecl,
-                        const std::string& mangledName, semantic::TypeList&& typeArgs) -> stmtvisit_t {
-    const llvm::IRBuilder<>::InsertPointGuard insertGuard(*builder);
-
-    const semantic::StackGuard stackGuard{genericsStack, std::move(typeArgs)};
-
-    auto oldParams = activeGenericParams;
-    activeGenericParams.clear();
-    for (std::size_t i = 0; i < funcDecl->genericTypes.size(); ++i) {
-        activeGenericParams[funcDecl->genericTypes[i]] = i;
-    }
-
-    std::vector<llvm::Type*> paramTypes;
-    paramTypes.reserve(funcDecl->parameters.size());
-
-    for (const auto& param : funcDecl->parameters) { paramTypes.push_back(visitTypeAsValue(param.type)); }
-
-    llvm::Type* returnType
-        = (funcDecl->returnType != nullptr) ? visitTypeAsValue(funcDecl->returnType) : llvm::Type::getVoidTy(*context);
-
-    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, /*isVarArg=*/false);
-
-    llvm::Function* llvmFunc
-        = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mangledName, module.get());
-    llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(*context, "entry", llvmFunc);
-    builder->SetInsertPoint(entryBlock);
-
-    // Bind function arguments
-    auto* argIt = llvmFunc->arg_begin();
-    for (std::size_t i = 0; i < funcDecl->parameters.size(); ++i, ++argIt) {
-        argIt->setName(funcDecl->parameters[i].name);
-        llvm::AllocaInst* alloca
-            = builder->CreateAlloca(argIt->getType(), nullptr, funcDecl->parameters[i].name + "_addr");
-        builder->CreateStore(&*argIt, alloca);
-        namedValues[std::string(funcDecl->parameters[i].name)] = alloca;
-    }
-
-    visit(funcDecl->body);
-
-    activeGenericParams = std::move(oldParams);
 }
 
 }  // namespace Manganese::codegen

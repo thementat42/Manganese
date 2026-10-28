@@ -5,7 +5,7 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <mnstl/enum_matches.hxx>
+#include <utils/enum_matches.hpp>
 #include <utils/result.hpp>
 
 namespace Manganese::semantic {
@@ -20,7 +20,8 @@ auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit
     }
 
     if (!isLvalue(expression->assignee)) {
-        logError(expression->assignee, "Cannot assign a value to expression '{}'", expression->assignee->toString());
+        logError(expression->assignee, "Cannot assign a value to expression '{}'",
+                 expression->assignee->toString(interner));
         result = exprvisit_t::Failure;
     }
 
@@ -35,7 +36,7 @@ auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit
     }
     if (!isMutableExpression(expression->assignee)) {
         logError(expression->assignee, "Cannot assign a value to immutable value '{}'",
-                 expression->assignee->toString());
+                 expression->assignee->toString(interner));
         result = exprvisit_t::Failure;
     }
 
@@ -50,11 +51,11 @@ auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     if (visit(expression->left) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (visit(expression->right) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (expression->left->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->left->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->left->toString(interner));
         return exprvisit_t::Failure;
     }
     if (expression->right->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->right->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->right->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -130,13 +131,49 @@ auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
     ASSERT_UNREACHABLE_FMT("Unhandled binary operator {} in visit(BinaryExpression)", lexer::tokenTypeToString(op));
 };
 
+auto SemanticAnalyzer::visit(ast::ChainedComparisonExpression* expression) -> exprvisit_t {
+    exprvisit_t result = exprvisit_t::Success;
+    for (auto* operand : expression->operands) {
+        if (visit(operand) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    }
+
+    // make sure all operands are valid
+
+    for (auto* operand : expression->operands) {
+        if (operand->semanticType == nullptr || operand->semanticType->isPoison()) {
+            expression->semanticType = typeContext.getPoison();
+            return exprvisit_t::Failure;
+        }
+    }
+
+    // make sure each comparison is valid
+    for (std::size_t i = 0; i < expression->operators.size; ++i) {
+        auto* left = expression->operands[i];
+        auto* right = expression->operands[i + 1];
+        auto op = expression->operators[i];
+
+        const typeCompatibilityResult comparisonResult = areTypesComparable(left->semanticType, right->semanticType);
+
+        if (!areTypesComparable(left->semanticType, right->semanticType)) {
+            logError(expression, "Cannot compare types {} and {} with operator {}", left->semanticType->toString(),
+                     right->semanticType->toString(), tokenTypeToString(op));
+            result = exprvisit_t::Failure;
+        } else if (comparisonResult.result == Compatible_t::Warning) {
+            logWarning(expression, "{}", comparisonResult.message);
+        }
+    }
+
+    expression->semanticType = typeContext.getPrimitive(ast::PrimitiveType::boolean);
+    return result;
+}
+
 auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     exprvisit_t result = visit(expression->left);
     if (result == exprvisit_t::Failure) { return result; }
     // the only postfix operators are ++ and -- so the expression must be an integer
     if (expression->left->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -144,7 +181,7 @@ auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t 
 
     if (!isLvalue(operand)) {
         logError(operand, "Cannot apply operator {} to an rvalue '{}'", lexer::tokenTypeToString(expression->op),
-                 operand->toString());
+                 operand->toString(interner));
         result = exprvisit_t::Failure;
     }
     if (!operand->semanticType->isInteger() && !operand->semanticType->isPointer()) {
@@ -154,7 +191,7 @@ auto SemanticAnalyzer::visit(ast::PostfixExpression* expression) -> exprvisit_t 
     }
     if (!isMutableExpression(operand)) {
         logError(operand, "Cannot apply operator {} to an immutable value '{}'",
-                 lexer::tokenTypeToString(expression->op), operand->toString());
+                 lexer::tokenTypeToString(expression->op), operand->toString(interner));
         result = exprvisit_t::Failure;
     }
 
@@ -167,7 +204,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     if (expression->right->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -180,7 +217,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             expression->semanticType = rhsType;
             if (!isLvalue(expression->right)) {
                 logError(expression->right, "Cannot apply operator {} to an rvalue '{}'",
-                         lexer::tokenTypeToString(expression->op), expression->right->toString());
+                         lexer::tokenTypeToString(expression->op), expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
             if (!rhsType->isInteger() && !rhsType->isPointer()) {
@@ -190,7 +227,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             }
             if (!isMutableExpression(expression->right)) {
                 logError(expression->right, "Cannot apply operator {} to an immutable value '{}'",
-                         lexer::tokenTypeToString(expression->op), expression->right->toString());
+                         lexer::tokenTypeToString(expression->op), expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
         } break;
@@ -226,7 +263,8 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
             bool isMut = false;
             expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMut);
             if (!isLvalue(expression->right)) {
-                logError(expression->right, "Cannot take the address of r-value '{}'", expression->right->toString());
+                logError(expression->right, "Cannot take the address of r-value '{}'",
+                         expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
             isMut = isMutableExpression(expression->right);
@@ -259,6 +297,46 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
     return exprvisit_t::Success;
 }
 
+auto SemanticAnalyzer::visit(ast::TernaryExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
+    exprvisit_t result = exprvisit_t::Success;
+    if (visit(expression->condition) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    if (visit(expression->ifTrue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+    if (visit(expression->ifFalse) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
+
+    context.inTernary = true;
+    const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
+        expression->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
+    context.inTernary = false;
+
+    const typeCompatibilityResult branchTypesAreCompatible
+        = areTypesCompatible(expression->ifTrue->semanticType, expression->ifFalse->semanticType);
+
+    if (!conditionCanBeBool) {
+        logError(expression->condition,
+                 "Condition in ternary expression must be a boolean type or implicitly convertible to it, not {}",
+                 expression->condition->semanticType->toString());
+        result = exprvisit_t::Failure;
+    } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+        logWarning(expression->condition, "{}", conditionCanBeBool.message);
+    }
+
+    if (!branchTypesAreCompatible) {
+        logError(
+            expression->ifFalse,
+            "Both branches in a ternary expression must be convertible to each other (cannot convert between '{}' and '{}')",
+            expression->ifTrue->semanticType->toString(), expression->ifFalse->semanticType->toString());
+        result = exprvisit_t::Failure;
+    } else if (branchTypesAreCompatible.result == Compatible_t::Warning) {
+        logWarning(expression->condition, "{}", branchTypesAreCompatible.message);
+    }
+
+    // TODO: choose the "best fit" of the two types
+    expression->semanticType = expression->ifTrue->semanticType;
+
+    return result;
+}
+
 auto SemanticAnalyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
@@ -266,7 +344,7 @@ auto SemanticAnalyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t
                              static_cast<decltype(context.typeCastDepth)>(context.typeCastDepth + 1));
     if (visit(expression->originalValue) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     if (expression->originalValue->semanticType->isPoison()) {
-        logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString());
+        logError(expression, "Could not deduce type of expression {}", expression->originalValue->toString(interner));
         return exprvisit_t::Failure;
     }
     if (visit(expression->targetType) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
@@ -278,7 +356,7 @@ auto SemanticAnalyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t
     if (fromType == toType) {
         isValidCast = true;
     } else if (fromType->isPrimitive() && toType->isPrimitive()) {
-        isValidCast = !mnstl::enum_matches(ast::PrimitiveType::string, fromType->primitiveType, toType->primitiveType);
+        isValidCast = !utils::enum_matches(ast::PrimitiveType::string, fromType->primitiveType, toType->primitiveType);
     } else if (fromType->isEnum() && toType->isInteger()) {
         isValidCast = true;
     } else if (fromType->isInteger() && toType->isEnum()) {

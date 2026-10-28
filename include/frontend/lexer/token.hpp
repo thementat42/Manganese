@@ -4,10 +4,10 @@
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <mnstl/enum_matches.hxx>
 #include <string>
 #include <string_view>
-#include <utility>
+#include <utils/enum_matches.hpp>
+#include <utils/string_interner.hpp>
 
 namespace Manganese::lexer {
 
@@ -27,24 +27,15 @@ std::string tokenTypeToString(TokenType type);
 
 class Token {
    private:
-    std::string _lexeme;
+    utils::StringID _lexeme;
     std::size_t _line, _column;
     TokenType _type;
     bool _isInvalid;
 
    public:
     Token() noexcept = default;
-    Token(TokenType type, std::string&& lexeme, std::size_t line, std::size_t column, bool isInvalid = false) :
-        _line(line), _column(column), _type(type), _isInvalid(isInvalid) {
-        // Special lexeme override cases
-        if (_type == TokenType::Int32) {
-            _lexeme = "int32";
-        } else if (_type == TokenType::Float32) {
-            _lexeme = "float32";
-        } else {
-            _lexeme = std::move(lexeme);
-        }
-    }
+    Token(TokenType type, utils::StringID lexeme, std::size_t line, std::size_t column, bool isInvalid = false) :
+        _lexeme(lexeme), _line(line), _column(column), _type(type), _isInvalid(isInvalid) {}
     ~Token() noexcept = default;
 
     bool isKeyword() const noexcept { return BETWEEN(_type, TokenType::_keywordStart, TokenType::_keywordEnd); }
@@ -52,37 +43,37 @@ class Token {
 
     bool isInvalid() const noexcept { return _isInvalid; }
     TokenType getType() const noexcept { return _type; }
-    std::string getLexeme() const noexcept { return _lexeme; }
+    utils::StringID getLexeme() const noexcept { return _lexeme; }
     std::size_t getLine() const noexcept { return _line; }
     std::size_t getColumn() const noexcept { return _column; }
 
     bool isPrefixOperator() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, Inc, Dec, BitAnd, Mul, AddressOf, Dereference);
+        return utils::enum_matches<TokenType>(_type, Inc, Dec, BitAnd, Mul, AddressOf, Dereference);
     }
     bool isLiteral() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True,
+        return utils::enum_matches<TokenType>(_type, IntegerLiteral, FloatLiteral, StrLiteral, CharLiteral, True,
                                               False);
     }
     bool isBracket() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare,
+        return utils::enum_matches<TokenType>(_type, LeftParen, RightParen, LeftBrace, RightBrace, LeftSquare,
                                               RightSquare);
     }
     bool isPrimitiveType() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32,
+        return utils::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32,
                                               Float64, Int128, UInt128, Char, Bool, String);
     }
     bool isInteger() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128,
+        return utils::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Int128,
                                               UInt128);
     }
     bool hasUnaryCounterpart() const noexcept {
         using enum TokenType;
-        return mnstl::enum_matches<TokenType>(_type, Plus,  // + can be addition or unary plus
+        return utils::enum_matches<TokenType>(_type, Plus,  // + can be addition or unary plus
                                               Minus,  // - can be subtraction or unary minus
                                               BitAnd,  // & can be bitwise AND or address-of operator
                                               Mul);  // * can be multiplication or dereference operator
@@ -91,9 +82,9 @@ class Token {
     /**
      * @note Parser only: be careful
      */
-    void overrideType(TokenType newType, std::string&& newLexeme);
+    void overrideType(TokenType newType);
 
-    TokenType getUnaryCounterpart() const NOEXCEPT_IF_RELEASE;
+    TokenType getUnaryCounterpart() const;
     std::string toString() const;
 };
 

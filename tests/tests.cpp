@@ -1,9 +1,10 @@
-#include "testrunner.hpp"
-
 #include <format>
 #include <io/logging.hpp>
 #include <iostream>
 #include <string>
+
+#include "tests.hpp"
+
 
 namespace Manganese::tests {
 void TestRunner::runTest(const std::string& testName, bool (*testFunction)()) {

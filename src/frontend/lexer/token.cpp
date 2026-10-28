@@ -3,7 +3,6 @@
 #include <frontend/lexer/token.hpp>
 #include <io/logging.hpp>
 #include <string>
-#include <utility>
 
 namespace Manganese::lexer {
 
@@ -27,7 +26,7 @@ std::string tokenTypeToString(TokenType type) {
     ASSERT_UNREACHABLE_FMT("No string representation for TokenType: {}", static_cast<int>(type));
 }
 
-TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
+TokenType Token::getUnaryCounterpart() const  {
     switch (_type) {
         case TokenType::Plus: return TokenType::UnaryPlus;
         case TokenType::Minus: return TokenType::UnaryMinus;
@@ -37,13 +36,11 @@ TokenType Token::getUnaryCounterpart() const NOEXCEPT_IF_RELEASE {
     }
 }
 
-void Token::overrideType(TokenType newType, std::string&& newLexeme) {
-    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {}{} with lexeme '{}'",
-                         tokenTypeToString(_type), tokenTypeToString(newType),
-                         (hasUnaryCounterpart() ? " (unary)" : ""), newLexeme);
+void Token::overrideType(TokenType newType) {
+    logging::logInternal(logging::LogLevel::Info, "Overriding token type from {} to {}", tokenTypeToString(_type),
+                         tokenTypeToString(newType));
 
     _type = newType;
-    if (!newLexeme.empty()) { _lexeme = std::move(newLexeme); }
 }
 
 namespace {

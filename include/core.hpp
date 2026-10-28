@@ -19,32 +19,9 @@
 #endif  // NDEBUG
 #endif  // MN_DEBUG
 
-/**
- * Indicates that a function will not throw in release builds.
- * This is a no-op in debug builds, where more exceptions are expected.
- * Note: This macro should not be used on functions that will actually never throw (in those cases, use `noexcept`
- * directly).
- */
-
-#if MN_DEBUG
-#define NOEXCEPT_IF_RELEASE  // In debug mode, these can throw (e.g., using ASSERT_UNREACHABLE)
-#else  // ^^ MN_DEBUG vv !MN_DEBUG
-#define NOEXCEPT_IF_RELEASE noexcept  // In release builds, optimize these functions more
-#endif
-
 #ifndef DISCARD
 #define DISCARD(value) (static_cast<void>((value)))  // Explicitly discard a value
 #endif  // DISCARD
-
-//~ Force inline
-#if defined(__clang__) || defined(__GNUC__)
-#define FORCE_INLINE inline __attribute__((always_inline))
-#elif defined(_MSC_VER)
-#define FORCE_INLINE __forceinline
-#else
-// No known force inline, fallback to `inline` keyword
-#define FORCE_INLINE inline
-#endif
 
 [[noreturn]] inline void manganese_unreachable(int /*unused*/) {
     *(static_cast<volatile int*>(nullptr)) = 0;  // still invokes UB (and should crash on most platforms)
@@ -78,17 +55,21 @@
 [[noreturn]] inline void panic(const char* message, const char* file, std::size_t line, const char* func) {
     std::fprintf(stderr, "\033[31mPanic invoked: %s \nIn file %s at line %zu when running %s\033[0m\n", message, file,
                  line, func);
-    throw message;
+    throw;
 }
 
-[[noreturn]] FORCE_INLINE void panic(const std::string& message, const char* file, std::size_t line, const char* func) {
+[[noreturn]] inline void panic(const std::string& message, const char* file, std::size_t line, const char* func) {
     panic(message.c_str(), file, line, func);
 }
 
 #define BETWEEN(c, low, high) (((low) <= (c)) && ((c) <= (high)))
 
+#ifndef MN_STRINGIFY_HELPER
+#define MN_STRINGIFY_HELPER(x) #x
+#endif
+
 #ifndef MN_STRINGIFY
-#define MN_STRINGIFY(x) #x
+#define MN_STRINGIFY(x) MN_STRINGIFY_HELPER(x)
 #endif  // MN_STRINGIFY
 
 #if MN_DEBUG
@@ -113,14 +94,6 @@
 #else
 #define MN_END_C_LINKAGE
 #endif
-#endif
-
-#if defined(_WIN32) || defined(__CYGWIN__)
-#define MN_RUNTIME_API_FUNCTION __declspec(dllexport)
-#elif defined(__GNUC__) || defined(__clang__)
-#define MN_RUNTIME_API_FUNCTION __attribute__((visibility("default")))
-#else
-#define MN_RUNTIME_API_FUNCTION
 #endif
 
 #endif  // MANGANESE_INCLUDE_CORE_HPP

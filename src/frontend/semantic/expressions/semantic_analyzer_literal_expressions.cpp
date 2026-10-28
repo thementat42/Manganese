@@ -6,7 +6,6 @@
 #include <frontend/semantic/type_context.hpp>
 #include <utility>
 #include <utils/result.hpp>
-#include <vector>
 
 namespace Manganese::semantic {
 
@@ -14,7 +13,7 @@ auto SemanticAnalyzer::visit(ast::AggregateLiteralExpression* expression) -> exp
     expression->semanticType = typeContext.getPoison();
     auto result = exprvisit_t::Success;
     TypeList elementTypes;
-    elementTypes.reserve(expression->elements.size());
+    elementTypes.reserve(expression->elements.size);
 
     for (ast::Expression* element : expression->elements) {
         if (visit(element) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
@@ -56,7 +55,7 @@ auto SemanticAnalyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvis
     const SemanticType* synthesizedElementType = nullptr;
     const SemanticType* targetElementType = expectedElementType;
 
-    for (std::size_t elementIndex = 0; elementIndex < expression->elements.size(); ++elementIndex) {
+    for (std::size_t elementIndex = 0; elementIndex < expression->elements.size; ++elementIndex) {
         ast::Expression* element = expression->elements[elementIndex];
 
         const SemanticType* outerVarType = context.currentVariableDeclarationType;
@@ -90,7 +89,7 @@ auto SemanticAnalyzer::visit(ast::ArrayLiteralExpression* expression) -> exprvis
 
     const SemanticType* finalElementType
         = (expectedElementType != nullptr) ? expectedElementType : synthesizedElementType;
-    expression->semanticType = typeContext.getArray(finalElementType, expression->elements.size());
+    expression->semanticType = typeContext.getArray(finalElementType, expression->elements.size);
     return exprvisit_t::Success;
 }
 
@@ -109,11 +108,12 @@ auto SemanticAnalyzer::visit(ast::IdentifierExpression* expression) -> exprvisit
     expression->semanticType = typeContext.getPoison();
     const Symbol* symbol = symbolTable.lookup(expression->name);
     if (symbol == nullptr) {
-        logError(expression, "Identifier '{}' was not found in the current scope", expression->name);
+        logError(expression, "Identifier '{}' was not found in the current scope", interner.get_view(expression->name));
         return exprvisit_t::Failure;
     }
     if (symbol->type->isPoison()) [[unlikely]] {
-        logError(expression, "Identifier '{}' used before its type could be determined", expression->name);
+        logError(expression, "Identifier '{}' used before its type could be determined",
+                 interner.get_view(expression->name));
         return exprvisit_t::Failure;
     }
     expression->semanticType = symbol->type;
@@ -123,7 +123,7 @@ auto SemanticAnalyzer::visit(ast::IdentifierExpression* expression) -> exprvisit
 
 auto SemanticAnalyzer::visit(ast::NumberLiteralExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
-    const std::string_view lexeme = expression->value;
+    const std::string_view lexeme = interner.get_view(expression->value);
     using enum ast::PrimitiveType;
     ast::PrimitiveType deducedPrimitiveType;
 

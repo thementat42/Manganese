@@ -12,14 +12,12 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
-#include <mnstl/enum_matches.hxx>
-#include <mnstl/tiny_stack.hxx>
 #include <string>
-#include <string_view>
-#include <unordered_map>
 #include <utility>
+#include <utils/chunk_allocator.hpp>
+#include <utils/enum_matches.hpp>
 #include <utils/result.hpp>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 
 namespace Manganese {
@@ -33,9 +31,9 @@ namespace semantic {
 class SemanticAnalyzer;
 
 /**
- * Makes updating context flags easier
- * the destructor handles resetting a value rather than having to manually reset it everywhere
- * useful on branches that exit early
+ * Makes updating context flags easier.
+ * The destructor handles resetting a value rather than having to manually reset it everywhere,
+ * which is especially useful on branches that exit early.
  */
 template <class T>
 struct [[nodiscard]] ContextGuard {
@@ -51,18 +49,22 @@ struct [[nodiscard]] ContextGuard {
     ContextGuard& operator=(ContextGuard&&) = delete;
 };
 
-template <class T>
-struct [[nodiscard]] StackGuard {
-    mnstl::tiny_stack<T>& stack;
-    explicit StackGuard(mnstl::tiny_stack<T>& _stack, T&& _new_element) : stack(_stack) {
-        stack.push(std::move(_new_element));
-    }
-    ~StackGuard() noexcept { stack.pop(); }
+enum class Compatible_t : std::int8_t {
+    Error = -1,
+    Warning = 0,
+    Valid = 1
+};
 
-    StackGuard(const StackGuard&) = delete;
-    StackGuard& operator=(const StackGuard&) = delete;
-    StackGuard(StackGuard&&) = delete;
-    StackGuard& operator=(StackGuard&&) = delete;
+struct typeCompatibilityResult {
+    const Compatible_t result;
+    const std::string message{};
+
+    constexpr operator bool() const noexcept { return result != Compatible_t::Error; }
+};
+
+struct EnumVariantCheckResult {
+    std::int64_t newVariantValue;
+    Result result;
 };
 
 using _analyzer_base_t = ast::Visitor<Result, Result, Result, true>;
@@ -70,84 +72,123 @@ using _analyzer_base_t = ast::Visitor<Result, Result, Result, true>;
 class SemanticAnalyzer final : public _analyzer_base_t {
    private:
     friend class codegen::IRGenerator;
+
     SymbolTable symbolTable;
     TypeContext typeContext;
     std::vector<parser::ParsedFile>& parsedFiles;
-    mnstl::tiny_stack<TypeList> genericsStack;
+    std::vector<ast::Statement*> instantiatedDeclarations;
     InstantiationCache instantiationCache;
-    std::unordered_map<std::string_view, std::size_t> activeGenericParams;
+    utils::chunk_allocator& arena;
+    utils::StringInterner& interner;
 
     struct {
-        std::vector<std::string_view> namespaceStack;
+        std::vector<utils::StringID> namespaceStack;
         const SemanticType* currentFunctionReturnType = nullptr;
         const SemanticType* currentVariableDeclarationType = nullptr;
         const Symbol* nestedScopeResolutionCurrentSymbol = nullptr;
 
         std::uint8_t typeCastDepth = 0;
         std::uint8_t ifStatementDepth = 0;
-        std::uint8_t forLoopDepth = 0;
-        std::uint8_t whileLoopDepth = 0;
+        std::uint8_t loopDepth = 0;
 
         bool inFunction = false;
-        bool inIfCondition : 1 = false;
-        bool inForLoopCondition : 1 = false;
-        bool inWhileLoopCondition : 1 = false;
-
+        bool isInstantiatingGeneric = false;
+        bool inCondition : 1 = false;
+        bool inTernary : 1 = false;
     } context;
-
-    enum class Compatible_t : std::int8_t {
-        Error = -1,
-        Warning = 0,
-        Valid = 1
-    };
-
-    struct typeCompatibilityResult {
-        const Compatible_t result;
-        const std::string message{};
-
-        constexpr operator bool() const noexcept { return result != Compatible_t::Error; }
-    };
 
    public:
     SemanticAnalyzer(std::vector<parser::ParsedFile>& files, const utils::TargetInfo& target,
-                     mnstl::chunk_allocator& arena) :
-        symbolTable(arena), typeContext(arena, target), parsedFiles(files), genericsStack() {}
-
-    Result analyze();
-    SymbolTable& getSymbolTable() noexcept { return symbolTable; }
-    const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
+                     utils::chunk_allocator& _arena, utils::StringInterner& _interner) :
+        symbolTable(_arena, _interner),
+        typeContext(_arena, target),
+        parsedFiles(files),
+        arena(_arena),
+        interner(_interner) {}
 
     ~SemanticAnalyzer() override = default;
 
-   private:
-    Result buildScopeTree(parser::ParsedFile& file);
+    Result analyze();
 
+    [[nodiscard]] SymbolTable& getSymbolTable() noexcept { return symbolTable; }
+    [[nodiscard]] const SymbolTable& getSymbolTable() const noexcept { return symbolTable; }
+    [[nodiscard]] const std::vector<ast::Statement*>& getInstantiatedDeclarations() const noexcept {
+        return instantiatedDeclarations;
+    }
+
+   private:
+    // Phase 1: Scope Building & Global Collection
+    Result buildScopeTree(parser::ParsedFile& file);
     Result _buildStatementScope(ast::Statement* stmt);
-    Result _buildBodyScope(const ast::Block& block);
+    Result _buildBodyScope(ast::Block block, Scope**);
     Result _buildNamespaceScope(ast::NamespaceStatement* node);
+
     Result collectGlobals(parser::ParsedFile& file);
     Result _collectGlobalsInStatement(ast::Statement* statement, ast::StatementKind targetKind);
     Result collectGlobalAggregate(ast::AggregateDeclarationStatement* aggregate);
     Result collectGlobalFunction(ast::FunctionDeclarationStatement* function);
     Result checkStatements(parser::ParsedFile& file);
 
+    // Phase 2: Type Checking & Compatibility Helpers
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
-    typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) const;
+    static typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs);
     const SemanticType* promoteNumericTypes(const SemanticType* lhs, const SemanticType* rhs) const;
+
+    std::optional<typeCompatibilityResult> checkSpecialTypeCompatibility(const SemanticType* from,
+                                                                         const SemanticType* to) const;
+    typeCompatibilityResult checkAggregateCompatibility(const SemanticType* from, const SemanticType* to,
+                                                        const std::string& conversionError) const;
+    typeCompatibilityResult checkArrayCompatibility(const SemanticType* from, const SemanticType* to,
+                                                    const std::string& conversionError) const;
+    typeCompatibilityResult checkEnumCompatibility(const SemanticType* from, const SemanticType* to,
+                                                   const std::string& conversionError) const;
+    typeCompatibilityResult checkFunctionCompatibility(const SemanticType* from, const SemanticType* to,
+                                                       const std::string& conversionError) const;
+    typeCompatibilityResult checkPointerCompatibility(const SemanticType* from, const SemanticType* to,
+                                                      const std::string& conversionError) const;
+    typeCompatibilityResult checkSliceCompatibility(const SemanticType* from, const SemanticType* to,
+                                                    const std::string& conversionError) const;
+
     Result analyzePointerArithmetic(ast::BinaryExpression* expr) const;
     Result checkArrayElementCompatibility(const SemanticType* targetType, std::size_t i, ast::Expression* element);
     Result checkVariableInitializer(ast::VariableDeclarationStatement* statement, const SemanticType*& variableType);
+    EnumVariantCheckResult checkEnumVariant(ast::EnumDeclarationStatement* statement, const ast::EnumValue& variant,
+                                            Symbol* symbol, std::int64_t currentVariantValue,
+                                            std::vector<EnumVariant>& variants);
+    Result checkFunctionParameter(ast::FunctionDeclarationStatement* statement, const ast::FunctionParameter& param);
+    Result checkCaseClause(ast::SwitchStatement* statement, const ast::CaseClause& caseClause,
+                           const SemanticType* targetType, bool first);
+    Result checkElifClause(const ast::IfStatement* statement, const ast::ElifClause& elif);
 
+    // Generics Specialization & Instantiation
+    exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
+                                           const TypeList& typeArgs);
+    exprvisit_t instantiateGenericAggregate(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
+                                            const TypeList& typeArgs);
+
+    const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl);
+    const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl);
+
+    static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
+        using enum ast::ExpressionKind;
+        switch (expr->kind) {
+            case GenericInstantiationExpression:
+                return unwrapBaseDeclaration(static_cast<ast::GenericInstantiationExpression*>(expr)->identifier);
+            case ScopeResolutionExpression:
+                return unwrapBaseDeclaration(static_cast<ast::ScopeResolutionExpression*>(expr)->element);
+            default: return expr;
+        }
+    }
+
+    // Resolution & Utility Helpers
     bool isMutableExpression(const ast::Expression* expr) const;
-
-    const SemanticType* resolveGenericType(const ast::Type* type, mnstl::tiny_stack<TypeList>& types, const std::unordered_map<std::string_view, std::size_t>& typeMapping);
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
-    const SemanticType* unifyArrayInference(const SemanticType* declared, const SemanticType* initializer);
-    std::string getMangledName(std::string_view baseName) const;
-    std::string getMangledName(std::string_view baseName, const TypeList& typeArgs) const;
+    utils::StringID getMangledName(utils::StringID baseName) const;
+    utils::StringID getMangledName(utils::StringID baseName, const TypeList& typeArgs) const;
 
+    // Logging Helpers
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logError(node->line, node->column, message, std::forward<Args>(args)...);
@@ -159,7 +200,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 
    protected:
-    // overrides for visitor functions
+    // AST Visitor Overrides
     using _analyzer_base_t::visit;
 
 #define STMT(name) stmtvisit_t visit(ast::name*) override;
@@ -177,9 +218,15 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         return Result::Failure;
     }
 
-    Result visit(ast::Block& block, bool enterNewScope = true) {
+    Result visit(ast::Block block, bool enterNewScope, semantic::Scope* explicitScope) {
         Result result = Result::Success;
-        if (enterNewScope) { symbolTable.enterScope(); }
+        if (enterNewScope) {
+            if (explicitScope != nullptr) {
+                symbolTable.enterScope(explicitScope);
+            } else {
+                symbolTable.enterScope();
+            }
+        }
         for (ast::Statement* statement : block) {
             auto stmtResult = visit(statement);
             if (stmtResult == Result::Failure) { result = Result::Failure; }
@@ -187,55 +234,27 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         symbolTable.exitScope();
         return result;
     }
-
-    // Overloads to handle generics specializations
-    stmtvisit_t visit(generic_tag_t, ast::AggregateDeclarationStatement*);
-    stmtvisit_t visit(generic_tag_t, ast::FunctionDeclarationStatement*);
-
-    exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol);
-    exprvisit_t instantiateGenericAggregate(ast::GenericInstantiationExpression* expression, const Symbol* symbol);
-
-    const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl,
-                                                    const TypeList& typeArgs);
-    const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl,
-                                                     const TypeList& typeArgs);
-
-    [[nodiscard]] const InstantiationResult* getInstantiationResult(const ast::ASTNode* declNode,
-                                                                    const TypeList& typeArgs) const {
-        const InstantiationKey key{.declNode = declNode, .typeArgs = typeArgs};
-        return instantiationCache.find(key);
-    }
-
-    static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
-        using enum ast::ExpressionKind;
-        switch (expr->kind) {
-            case GenericInstantiationExpression:
-                return unwrapBaseDeclaration(static_cast<ast::GenericInstantiationExpression*>(expr)->identifier);
-            case ScopeResolutionExpression:
-                return unwrapBaseDeclaration(static_cast<ast::ScopeResolutionExpression*>(expr)->element);
-            default: return expr;
-        }
-    }
 };
 
+// Other helpers
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches(t, And, Or, Not);
+    return utils::enum_matches(t, And, Or, Not);
 }
 
 constexpr bool isArithmeticOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches(t, Plus, Minus, Mul, Div, FloorDiv, Mod);
+    return utils::enum_matches(t, Plus, Minus, Mul, Div, FloorDiv, Mod);
 }
 
 constexpr bool isRelationalOp(lexer::TokenType t) {
     using enum lexer::TokenType;
-    return mnstl::enum_matches(t, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual);
+    return utils::enum_matches(t, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual);
 }
 
 constexpr bool isBitwiseOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
-    return mnstl::enum_matches(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
+    return utils::enum_matches(t, BitAnd, BitOr, BitNot, BitXor, BitLShift, BitRShift);
 }
 
 constexpr bool isLvalue(const ast::Expression* expr) noexcept {
@@ -244,9 +263,10 @@ constexpr bool isLvalue(const ast::Expression* expr) noexcept {
     if (k == PrefixExpression) {
         return static_cast<const ast::PrefixExpression*>(expr)->op == lexer::TokenType::Dereference;
     }
-    return mnstl::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression,
+    return utils::enum_matches(expr->kind, IdentifierExpression, IndexExpression, MemberAccessExpression,
                                ScopeResolutionExpression);
 }
+
 }  // namespace semantic
 }  // namespace Manganese
 

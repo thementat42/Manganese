@@ -7,9 +7,7 @@
 
 namespace Manganese::semantic {
 
-auto SemanticAnalyzer::visit(ast::EmptyStatement* /*unused*/) -> stmtvisit_t {
-    return stmtvisit_t::Success;  // nothing to check
-}
+auto SemanticAnalyzer::visit(ast::EmptyStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 auto SemanticAnalyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t {
     if (visit(statement->expression) == exprvisit_t::Failure) {
@@ -19,7 +17,7 @@ auto SemanticAnalyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t
 #if MN_DEBUG
     if (statement->expression->semanticType == nullptr) {
         logging::logInternal(logging::LogLevel::Warning, "Expression '{}' did not have its semantic type set",
-                             statement->expression->toString());
+                             statement->expression->toString(interner));
         statement->expression->semanticType = typeContext.getPoison();
         return stmtvisit_t::Failure;
     }
@@ -27,11 +25,14 @@ auto SemanticAnalyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t
     return stmtvisit_t::Success;
 }
 
-auto SemanticAnalyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t { return visit(statement->block); }
+auto SemanticAnalyzer::visit(ast::NestedBlockStatement* statement) -> stmtvisit_t {
+    return visit(statement->block, true, statement->associatedScope);
+}
 
 auto SemanticAnalyzer::visit(ast::ModuleDeclarationStatement* /*unused*/) -> stmtvisit_t {
     return stmtvisit_t::Success;
 }
+
 auto SemanticAnalyzer::visit(ast::ImportStatement* /*unused*/) -> stmtvisit_t { return stmtvisit_t::Success; }
 
 auto SemanticAnalyzer::visit(ast::NamespaceStatement* statement) -> stmtvisit_t {
@@ -52,7 +53,6 @@ auto SemanticAnalyzer::visit(ast::ReturnStatement* statement) -> stmtvisit_t {
         return stmtvisit_t::Failure;
     }
 
-    // void return
     if (statement->value == nullptr) {
         if (context.currentFunctionReturnType != typeContext.getVoid()) {
             logError(statement, "Non-void function must return a value");

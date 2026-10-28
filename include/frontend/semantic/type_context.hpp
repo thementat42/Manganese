@@ -5,14 +5,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <frontend/ast.hpp>
-#include <mnstl/chunk_allocator.hxx>
-#include <mnstl/enum_matches.hxx>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <utils/chunk_allocator.hpp>
+#include <utils/enum_matches.hpp>
 #include <utils/resolution_status.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
@@ -32,6 +32,7 @@ enum class SemanticTypeKind : std::uint8_t {
     Pointer,
     Poison,
     Primitive,
+    Slice,
     Uninitialized,
     Void,
 };
@@ -58,6 +59,7 @@ struct SemanticType {
     constexpr bool isPointer() const noexcept { return kind == SemanticTypeKind::Pointer; }
     constexpr bool isPoison() const noexcept { return kind == SemanticTypeKind::Poison; }
     constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
+    constexpr bool isSlice() const noexcept { return kind == SemanticTypeKind::Slice; }
     constexpr bool isUninitialized() const noexcept { return kind == SemanticTypeKind::Uninitialized; }
     constexpr bool isVoid() const noexcept { return kind == SemanticTypeKind::Void; }
 
@@ -65,20 +67,20 @@ struct SemanticType {
 
     constexpr bool isUnsignedInteger() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, uint8, uint16, uint32, uint64, uint128);
+        return isPrimitive() && utils::enum_matches(primitiveType, uint8, uint16, uint32, uint64, uint128);
     }
     constexpr bool isSignedInteger() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, int8, int16, int32, int64, int128);
+        return isPrimitive() && utils::enum_matches(primitiveType, int8, int16, int32, int64, int128);
     }
     constexpr bool isString() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, string);
+        return isPrimitive() && utils::enum_matches(primitiveType, string);
     }
     constexpr bool isInteger() const noexcept { return isSignedInteger() || isUnsignedInteger(); }
     constexpr bool isFloat() const noexcept {
         using enum ast::PrimitiveType;
-        return isPrimitive() && mnstl::enum_matches(primitiveType, float32, float64);
+        return isPrimitive() && utils::enum_matches(primitiveType, float32, float64);
     }
 
     constexpr bool isNumeric() const noexcept { return isInteger() || isFloat(); }
@@ -102,20 +104,20 @@ struct AggregateField {
 
 struct Aggregate final : public SemanticType {
     mutable std::vector<AggregateField> fields;
-    std::string name;
+    std::string_view name;
     mutable ResolutionStatus status;
 
-    Aggregate(std::vector<AggregateField>&& fieldTypes, std::string&& aggregateName = "") noexcept :
+    Aggregate(std::vector<AggregateField>&& fieldTypes, std::string_view aggregateName = {}) noexcept :
         SemanticType(SemanticTypeKind::Aggregate),
         fields(std::move(fieldTypes)),
-        name(std::move(aggregateName)),
+        name(aggregateName),
         status(ResolutionStatus::NotStarted) {}
 
     // For anonymous aggregates
     Aggregate(TypeList&& rawTypes) noexcept :
         SemanticType(SemanticTypeKind::Aggregate), status(ResolutionStatus::Success) {
         fields.reserve(rawTypes.size());
-        for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = "", .type = t}); }
+        for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = {}, .type = t}); }
     }
 
     const SemanticType* getFieldType(std::string_view fieldName) const noexcept {
@@ -125,7 +127,7 @@ struct Aggregate final : public SemanticType {
         return nullptr;
     }
 
-    const SemanticType* getFieldType(std::size_t index) const noexcept {
+    const SemanticType* getFieldTypeByIndex(std::size_t index) const noexcept {
         if (index < fields.size()) [[likely]] { return fields[index].type; }
         return nullptr;
     }
@@ -140,16 +142,12 @@ struct Aggregate final : public SemanticType {
 
 struct Array final : public SemanticType {
     const SemanticType* elementType;
-    const std::optional<std::size_t> length;
+    std::size_t length;
 
     Array(const SemanticType* baseType, std::size_t len) noexcept :
         SemanticType(SemanticTypeKind::Array), elementType(baseType), length(len) {}
 
-    Array(const SemanticType* baseType, std::optional<std::size_t> optionalLength) noexcept :
-        SemanticType(SemanticTypeKind::Array), elementType(baseType), length(optionalLength) {}
     ~Array() override = default;
-
-    bool hasUnspecifiedLength() const noexcept { return !length.has_value(); }
 
     std::string toString() const override;
     std::size_t size(const utils::TargetInfo& target) const noexcept override;
@@ -189,13 +187,11 @@ struct Enum final : public SemanticType {
 struct Parameter {
     const SemanticType* type;
     bool isMutable;
-    bool isVariadic;
 
     friend bool operator==(const Parameter&, const Parameter&) noexcept = default;
 
     inline std::string toString() const {
         std::string result = type->toString();
-        if (isVariadic) { result += "..."; }
         if (isMutable) { result = "mut " + result; }
         return result;
     }
@@ -257,6 +253,18 @@ struct PrimitiveInfo {
 
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type);
 
+struct Slice final : public SemanticType {
+    const SemanticType* elementType;
+
+    Slice(const SemanticType* baseType) noexcept : SemanticType(SemanticTypeKind::Slice), elementType(baseType) {}
+
+    ~Slice() override = default;
+
+    std::string toString() const override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
+};
+
 /**
  * Note: this is the "type" of the 'uninitialized' keyword, not of an uninitialized variable
  */
@@ -279,7 +287,7 @@ struct Void final : public SemanticType {
 };
 
 struct TypeLookup {
-    using is_transparent = void;  // enables heterogenous lookup inside std::unordered_set
+    using is_transparent = void;  // enables heterogeneous lookup inside std::unordered_set
     using kind_int_t = std::underlying_type_t<SemanticTypeKind>;
     using prim_int_t = std::underlying_type_t<ast::PrimitiveType>;
 
@@ -299,8 +307,8 @@ inline std::size_t hash_combine(std::size_t seed, std::size_t value) noexcept {
 
 class TypeContext {
    private:
-    mnstl::chunk_allocator& _arena;
-    utils::TargetInfo _targetInfo;
+    utils::chunk_allocator& _arena;
+    const utils::TargetInfo& _targetInfo;
     constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::boolean) + 1;
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
@@ -316,7 +324,7 @@ class TypeContext {
     }
 
    public:
-    explicit TypeContext(mnstl::chunk_allocator& arena, utils::TargetInfo target) noexcept :
+    explicit TypeContext(utils::chunk_allocator& arena, const utils::TargetInfo& target) noexcept :
         _arena(arena), _targetInfo(target), _primitives(_makePrimitives(std::make_index_sequence<NUM_PRIMITIVES>{})) {}
 
     ~TypeContext() = default;
@@ -327,12 +335,11 @@ class TypeContext {
     TypeContext(TypeContext&&) = delete;
     TypeContext& operator=(TypeContext&&) = delete;
 
-    const SemanticType* getArray(const SemanticType* elementType, std::optional<std::size_t> length);
     const SemanticType* getArray(const SemanticType* elementType, std::size_t length);
 
     const SemanticType* getAnonymousAggregate(TypeList&& fieldTypes);
 
-    const SemanticType* getNamedAggregate(std::string&& name, std::vector<AggregateField>&& fieldTypes);
+    const SemanticType* getNamedAggregate(std::string_view name, std::vector<AggregateField>&& fieldTypes);
 
     const SemanticType* getEnum(std::string_view name);
 
@@ -343,6 +350,8 @@ class TypeContext {
     const SemanticType* getPoison() const noexcept;
 
     const SemanticType* getPrimitive(ast::PrimitiveType primitive) const noexcept;
+
+    const SemanticType* getSlice(const SemanticType* elementType);
 
     const SemanticType* getUninitalized() const noexcept;
     const SemanticType* getVoid() const noexcept;

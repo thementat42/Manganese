@@ -2,7 +2,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
-#include <string>
 #include <string_view>
 #include <utils/resolution_status.hpp>
 #include <utils/result.hpp>
@@ -21,12 +20,12 @@ Result SemanticAnalyzer::buildScopeTree(parser::ParsedFile& file) {
     return result;
 }
 
-static FORCE_INLINE void _reportRedeclaration(std::string_view redeclaredSymbolName, ast::ASTNode* node) {
-    logging::logError(node->line, node->column, "'{}' was already declared in this scope", redeclaredSymbolName);
-}
-
 Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
     using enum ast::StatementKind;
+
+    auto reportRedeclaration = [](std::string_view redeclaredSymbolName, ast::ASTNode* node) {
+        logging::logError(node->line, node->column, "'{}' was already declared in this scope", redeclaredSymbolName);
+    };
 
     switch (stmt->kind) {
         case AggregateDeclarationStatement: {
@@ -34,7 +33,7 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
 
             // Creates an Aggregate shell with name, empty fields ({}), and ResolutionStatus::Unresolved
             const SemanticType* shellType
-                = typeContext.getNamedAggregate(std::string(aggregateStmt->name), /*fields=*/{});
+                = typeContext.getNamedAggregate(interner.get_view(aggregateStmt->name), /*fieldTypes=*/{});
 
             const Result result = symbolTable.declare(aggregateStmt->name,
                                                       Symbol{
@@ -44,7 +43,9 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = aggregateStmt->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(aggregateStmt->name, aggregateStmt); }
+            if (result == Result::Failure) {
+                reportRedeclaration(interner.get_view(aggregateStmt->name), aggregateStmt);
+            }
             return result;
         }
         case AliasStatement: {
@@ -58,12 +59,12 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = aliasStmt->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(aliasStmt->name, aliasStmt); }
+            if (result == Result::Failure) { reportRedeclaration(interner.get_view(aliasStmt->name), aliasStmt); }
             return result;
         }
         case EnumDeclarationStatement: {
             auto* enumDecl = static_cast<ast::EnumDeclarationStatement*>(stmt);
-            const SemanticType* enumType = typeContext.getEnum(enumDecl->name);
+            const SemanticType* enumType = typeContext.getEnum(interner.get_view(enumDecl->name));
             const Result result = symbolTable.declare(enumDecl->name,
                                                       Symbol{
                                                           .type = enumType,
@@ -72,16 +73,19 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                           .visibility = enumDecl->visibility,
                                                           .isMutable = false,
                                                       });
-            if (result == Result::Failure) { _reportRedeclaration(enumDecl->name, enumDecl); }
+            if (result == Result::Failure) { reportRedeclaration(interner.get_view(enumDecl->name), enumDecl); }
             return result;
+        }
+        case ForEachLoopStatement: {
+            auto* forEachLoopStmt = static_cast<ast::ForEachLoopStatement*>(stmt);
+            return _buildBodyScope(forEachLoopStmt->body, &forEachLoopStmt->associatedScope);
         }
         case ForLoopStatement: {
             auto* forLoopStmt = static_cast<ast::ForLoopStatement*>(stmt);
-            return _buildBodyScope(forLoopStmt->body);
+            return _buildBodyScope(forLoopStmt->body, &forLoopStmt->associatedScope);
         }
         case FunctionDeclarationStatement: {
             auto* funcStmt = static_cast<ast::FunctionDeclarationStatement*>(stmt);
-
             // Register the function itself in the current scope
             auto result = symbolTable.declare(funcStmt->name,
                                               Symbol{
@@ -91,20 +95,25 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
                                                   .visibility = funcStmt->visibility,
                                                   .isMutable = false,
                                               });
-            if (result == Result::Failure) { _reportRedeclaration(funcStmt->name, funcStmt); }
+            if (result == Result::Failure) { reportRedeclaration(interner.get_view(funcStmt->name), funcStmt); }
+
+            if (!funcStmt->genericTypes.empty()) { return result; }
 
             // Process the internal block statements
-            const Result bodyResult = _buildBodyScope(funcStmt->body);
+            const Result bodyResult = _buildBodyScope(funcStmt->body, &funcStmt->associatedScope);
             return (result == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
         }
         case IfStatement: {
             auto* ifStmt = static_cast<ast::IfStatement*>(stmt);
             Result result = Result::Success;
-            if (_buildBodyScope(ifStmt->body) == Result::Failure) { result = Result::Failure; }
-            for (const ast::ElifClause& elif : ifStmt->elifs) {
-                if (_buildBodyScope(elif.body) == Result::Failure) { result = Result::Failure; }
+            if (_buildBodyScope(ifStmt->body, &ifStmt->associatedScope) == Result::Failure) {
+                result = Result::Failure;
             }
-            if (!ifStmt->elseBody.empty() && _buildBodyScope(ifStmt->elseBody) == Result::Failure) {
+            for (ast::ElifClause& elif : ifStmt->elifs) {
+                if (_buildBodyScope(elif.body, &elif.associatedScope) == Result::Failure) { result = Result::Failure; }
+            }
+            if (ifStmt->elseBody.has_value()
+                && _buildBodyScope(*ifStmt->elseBody, &ifStmt->elseAssociatedScope) == Result::Failure) {
                 result = Result::Failure;
             }
 
@@ -116,29 +125,33 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
         }
         case NestedBlockStatement: {
             auto* block = static_cast<ast::NestedBlockStatement*>(stmt);
-            return _buildBodyScope(block->block);
+            return _buildBodyScope(block->block, &block->associatedScope);
         }
         case SwitchStatement: {
             auto* switchStmt = static_cast<ast::SwitchStatement*>(stmt);
             Result result = Result::Success;
-            for (const ast::CaseClause& clause : switchStmt->cases) {
-                if (_buildBodyScope(clause.body) == Result::Failure) { result = Result::Failure; }
+            for (ast::CaseClause& clause : switchStmt->cases) {
+                if (_buildBodyScope(clause.body, &clause.associatedScope) == Result::Failure) {
+                    result = Result::Failure;
+                }
             }
-            if (!switchStmt->defaultBody.empty() && _buildBodyScope(switchStmt->defaultBody) == Result::Failure) {
+            if (switchStmt->defaultBody.has_value()
+                && _buildBodyScope(*switchStmt->defaultBody, &switchStmt->defaultAssociatedScope) == Result::Failure) {
                 result = Result::Failure;
             }
             return result;
         }
         case WhileLoopStatement: {
             auto* whileStmt = static_cast<ast::WhileLoopStatement*>(stmt);
-            return _buildBodyScope(whileStmt->body);
+            return _buildBodyScope(whileStmt->body, &whileStmt->associatedScope);
         }
         default: return Result::Success;  // Statements that don't introduce scopes or declare types
     }
 }
 
-Result SemanticAnalyzer::_buildBodyScope(const ast::Block& block) {
+Result SemanticAnalyzer::_buildBodyScope(ast::Block block, Scope** outScope) {
     symbolTable.enterScope();
+    if (outScope != nullptr) { *outScope = symbolTable.getCurrentScope(); }
     Result result = Result::Success;
 
     for (ast::Statement* statement : block) {
@@ -151,6 +164,7 @@ Result SemanticAnalyzer::_buildBodyScope(const ast::Block& block) {
 
 Result SemanticAnalyzer::_buildNamespaceScope(ast::NamespaceStatement* node) {
     symbolTable.enterNamespace(node->name, node);
+    node->associatedScope = symbolTable.getCurrentScope();
     Result result = Result::Success;
 
     for (ast::Statement* subStatement : node->block) {

@@ -2,20 +2,20 @@
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
-#include <mnstl/enum_matches.hxx>
 #include <string>
-#include <utility>
+#include <utils/chunk_allocator.hpp>
+#include <utils/enum_matches.hpp>
 #include <vector>
 
 namespace Manganese::parser {
 
-Parser::Parser(const std::string& source, lexer::Mode mode, mnstl::chunk_allocator& allocatorReference) :
-    lexer(source, mode), arena(allocatorReference), flags() {}
+Parser::Parser(const std::string& source, lexer::Mode mode, utils::chunk_allocator& allocatorReference,
+               utils::StringInterner& internerReference) :
+    lexer(source, internerReference, mode), arena(allocatorReference), interner(internerReference), flags() {}
 
 ParsedFile Parser::parse() {
     ast::ModuleDeclarationStatement* fileModule = nullptr;
-    ast::Block program;
+    std::vector<ast::Statement*> program;
     std::vector<ast::ImportStatement*> imports;
     // Parse the header (module declaration and imports)
     if (peekTokenType() == TokenType::Module) {
@@ -24,9 +24,10 @@ ParsedFile Parser::parse() {
     }
     while (peekTokenType() == TokenType::Import) {
         imports.push_back(static_cast<ast::ImportStatement*>(parseImportStatement()));
+        flags.hasImports = true;
     }
 
-    flags.hasParsedFileHeader = true;  // Now, setting a module or import name should be a warning
+    flags.hasParsedFileHeader = true;  // Now, setting a module or import name should be an error
 
     while (!done()) {
         ast::Statement* stmt = parseStatement();
@@ -45,7 +46,8 @@ ParsedFile Parser::parse() {
     program.shrink_to_fit();  // Avoid having a bunch of allocated but unused memory
     if (lexer.hasError()) { flags.hasError = true; }
     if (lexer.hasWarning()) { flags.hasWarning = true; }
-    return ParsedFile{.fileModule = fileModule, .imports = std::move(imports), .program = std::move(program)};
+    return ParsedFile{
+        .fileModule = fileModule, .imports = arena.emplace_range(imports), .program = arena.emplace_range(program)};
 }
 
 // Helper functions
@@ -64,7 +66,7 @@ bool Parser::isUnaryContext() const noexcept {
     const TokenType lastType = previousToken->getType();
 
     // Statement or expression delimiters
-    if (mnstl::enum_matches(lastType, TokenType::Semicolon, TokenType::LeftParen, TokenType::LeftBrace,
+    if (utils::enum_matches(lastType, TokenType::Semicolon, TokenType::LeftParen, TokenType::LeftBrace,
                             TokenType::LeftSquare, TokenType::Comma, TokenType::Colon, TokenType::Assignment)) {
         return true;
     }
@@ -87,7 +89,7 @@ Token Parser::expectToken(TokenType expectedType, std::string_view errorMessage)
 
 ast::Block Parser::parseBlock(std::string_view blockName) {
     expectToken(TokenType::LeftBrace, std::format("Expected a '{{' to start {}", blockName));
-    ast::Block block;
+    std::vector<ast::Statement*> block;
     while (!done() && peekTokenType() != TokenType::RightBrace) {
         if (peekTokenType() == TokenType::Semicolon) {
             // skip bare semicolons
@@ -97,7 +99,7 @@ ast::Block Parser::parseBlock(std::string_view blockName) {
         block.push_back(parseStatement());
     }
     expectToken(TokenType::RightBrace, std::format("Expected '}}' to end {}", blockName));
-    return block;
+    return arena.emplace_range(block);
 }
 
 ast::Statement* Parser::parseVisibilityAffectedStatement() {

@@ -8,8 +8,9 @@
 #include <frontend/parser.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
-#include <mnstl/chunk_allocator.hxx>
+#include <utils/chunk_allocator.hpp>
 #include <utils/result.hpp>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
 
@@ -36,6 +37,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     const std::vector<parser::ParsedFile>& files;
     const utils::TargetInfo& targetInfo;
     semantic::SymbolTable& symbolTable;  // need to look up symbols for definite assignment
+    utils::StringInterner& interner;
 
     struct states_t {
         std::vector<std::uint64_t> isUnInitialized;
@@ -49,8 +51,8 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 
    public:
     ControlFlowAnalyzer(const std::vector<parser::ParsedFile>& _files, utils::TargetInfo& _targetInfo,
-                        semantic::SymbolTable& _symbolTable) :
-        files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable) {
+                        semantic::SymbolTable& _symbolTable, utils::StringInterner& _interner) :
+        files(_files), targetInfo(_targetInfo), symbolTable(_symbolTable), interner(_interner) {
         const std::size_t numWords = (symbolTable.getSize() + 63) / 64;
         symbolAssignmentStates.isUnInitialized.resize(numWords, static_cast<std::size_t>(-1));
         symbolAssignmentStates.isMaybeInitialized.resize(numWords, 0);
@@ -93,7 +95,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 #undef EXPR
 #undef TYPE
 
-    FlowStatus visit(const ast::Block& block, bool shouldEnterScope = true);
+    FlowStatus visit(ast::Block block, bool shouldEnterScope, semantic::Scope* explicitScope);
 };
 
 }  // namespace Manganese::cfg

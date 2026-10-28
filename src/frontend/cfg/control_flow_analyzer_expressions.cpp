@@ -1,6 +1,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/cfg.hpp>
 
+
 namespace Manganese::cfg {
 
 auto ControlFlowAnalyzer::visit(const ast::AggregateInstantiationExpression* expression) noexcept -> exprvisit_t {
@@ -41,6 +42,10 @@ auto ControlFlowAnalyzer::visit(const ast::BinaryExpression* expression) noexcep
 
 auto ControlFlowAnalyzer::visit(const ast::BoolLiteralExpression* /*unused*/) noexcept -> exprvisit_t {}
 
+auto ControlFlowAnalyzer::visit(const ast::ChainedComparisonExpression* expression) noexcept -> exprvisit_t {
+    for (const auto& operand : expression->operands) { visit(operand); }
+}
+
 auto ControlFlowAnalyzer::visit(const ast::CharLiteralExpression* /*unused*/) noexcept -> exprvisit_t {}
 
 auto ControlFlowAnalyzer::visit(const ast::FunctionCallExpression* expression) noexcept -> exprvisit_t {
@@ -59,9 +64,10 @@ auto ControlFlowAnalyzer::visit(const ast::IdentifierExpression* expression) noe
 
     if (const auto state = getAssignmentState(*symbol); symbol->kind == Variable) {
         if (state == AssignmentState::Uninitialized) {
-            logError(expression, "Identifier '{}' does not have a value", expression->name);
+            logError(expression, "Identifier '{}' does not have a value", interner.get_view(expression->name));
         } else if (state == AssignmentState::MaybeInitialized) {
-            logError(expression, "Identifier '{}' may not have a value on all control paths", expression->name);
+            logError(expression, "Identifier '{}' may not have a value on all control paths",
+                     interner.get_view(expression->name));
         }
     }
 }
@@ -93,6 +99,12 @@ auto ControlFlowAnalyzer::visit(const ast::ScopeResolutionExpression* expression
 auto ControlFlowAnalyzer::visit(const ast::SizeofExpression* /*unused*/) noexcept -> exprvisit_t {}
 
 auto ControlFlowAnalyzer::visit(const ast::StringLiteralExpression* /*unused*/) noexcept -> exprvisit_t {}
+
+auto ControlFlowAnalyzer::visit(const ast::TernaryExpression* expression) noexcept -> exprvisit_t {
+    visit(expression->condition);
+    visit(expression->ifTrue);
+    visit(expression->ifFalse);
+}
 
 auto ControlFlowAnalyzer::visit(const ast::TypeCastExpression* expression) noexcept -> exprvisit_t {
     visit(expression->originalValue);

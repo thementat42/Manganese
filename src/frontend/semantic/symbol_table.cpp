@@ -9,7 +9,7 @@
 namespace Manganese::semantic {
 
 void SymbolTable::enterScope() {
-    if (_flags._isFirstPass || _flags._isInsideGenericInstantiation) {
+    if (_flags._isFirstPass || _flags._genericDepth > 0) {
         // Allocate memory to build a new scope
         auto* newScope = _arena.emplace<Scope>();
         newScope->parent = _currentScope;
@@ -26,7 +26,9 @@ void SymbolTable::enterScope() {
     }
 }
 
-void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
+void SymbolTable::enterScope(Scope* scope) { setCurrentScope(scope); }
+
+void SymbolTable::enterNamespace(utils::StringID name, ast::ASTNode* node) {
     if (_flags._isFirstPass) {
         Symbol* namespaceSymbol = _currentScope->lookup(name);
         // Declare the namespace in the current scope if it's not already declared
@@ -69,12 +71,14 @@ void SymbolTable::enterNamespace(std::string_view name, ast::ASTNode* node) {
     }
 }
 
-std::string Scope::getQualifiedName() const {
-    if (parent == nullptr || parent->namespaceName.empty()) { return std::string(namespaceName); }
-    return parent->getQualifiedName() + "::" + std::string(namespaceName);
+std::string Scope::getQualifiedName(const utils::StringInterner& interner) const {
+    if (parent == nullptr || parent->namespaceName == utils::StringID{}) {
+        return std::string(interner.get_view(namespaceName));
+    }
+    return parent->getQualifiedName(interner) + "::" + std::string(interner.get_view(namespaceName));
 }
 
-void SymbolTable::exitScope() NOEXCEPT_IF_RELEASE {
+void SymbolTable::exitScope()  {
     if (noScopeAvailable() || _currentScope->parent == nullptr) [[unlikely]] {
         logging::logInternal(logging::LogLevel::Warning, "Attempted to exit scope when no parent scope was available");
         return;
@@ -82,7 +86,7 @@ void SymbolTable::exitScope() NOEXCEPT_IF_RELEASE {
     _currentScope = _currentScope->parent;
 }
 
-Symbol* SymbolTable::lookup(std::string_view name) NOEXCEPT_IF_RELEASE {
+Symbol* SymbolTable::lookup(utils::StringID name)  {
     Scope* probe = _currentScope;
     while (probe != nullptr) {
         Symbol* symbol = probe->lookup(name);
@@ -90,11 +94,12 @@ Symbol* SymbolTable::lookup(std::string_view name) NOEXCEPT_IF_RELEASE {
         probe = probe->parent;
     }
 
-    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", name);
+    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.",
+                         _interner.get_view(name));
     return nullptr;
 }
 
-const Symbol* SymbolTable::lookup(std::string_view name) const NOEXCEPT_IF_RELEASE {
+const Symbol* SymbolTable::lookup(utils::StringID name) const  {
     const Scope* probe = _currentScope;
     while (probe != nullptr) {
         const Symbol* symbol = probe->lookup(name);
@@ -102,7 +107,8 @@ const Symbol* SymbolTable::lookup(std::string_view name) const NOEXCEPT_IF_RELEA
         probe = probe->parent;
     }
 
-    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.", name);
+    logging::logInternal(logging::LogLevel::Warning, "Symbol '{}' not found in any visible lexical scope.",
+                         _interner.get_view(name));
     return nullptr;
 }
 

@@ -1,5 +1,5 @@
-#ifndef MNSTL_CHUNK_ALLOCATOR
-#define MNSTL_CHUNK_ALLOCATOR 1
+#ifndef MANGANESE_INCLUDE_UTILS_CHUNK_ALLOCATOR_HPP
+#define MANGANESE_INCLUDE_UTILS_CHUNK_ALLOCATOR_HPP 1
 
 #include <algorithm>
 #include <core.hpp>
@@ -10,10 +10,10 @@
 #include <ranges>
 #include <type_traits>
 #include <utility>
+#include <utils/slice.hpp>
 #include <vector>
 
-
-namespace mnstl {
+namespace Manganese::utils {
 
 class chunk_allocator {
    private:
@@ -22,55 +22,35 @@ class chunk_allocator {
         std::unique_ptr<std::byte[]> data;
         std::size_t used, capacity;
     };
-    struct destructor {
-        void (*destructor)(void*);
-        void* object;
-    };
 
     std::vector<chunk> _chunks;
-    std::vector<destructor> _destructors;
 
    public:
     chunk_allocator() { add_chunk(); }
-
-    ~chunk_allocator() noexcept {
-        // Destroy in reverse order
-        for (destructor& _destructor : std::views::reverse(_destructors)) {
-            _destructor.destructor(_destructor.object);
-        }
-    }
+    ~chunk_allocator() noexcept = default;
 
     template <class T, class... Args>
-        requires(std::is_constructible_v<T, Args...>)
+        requires(std::is_nothrow_constructible_v<T, Args...>)
     T* emplace(Args&&... args) {
         void* mem = allocate(sizeof(T), alignof(T));
         T* ptr = new (mem) T(std::forward<Args>(args)...);
 
-        if constexpr (!std::is_trivially_destructible_v<T>) {
-            _destructors.push_back(
-                destructor{.destructor = [](void* obj) { static_cast<T*>(obj)->~T(); }, .object = ptr});
-        }
         return ptr;
     }
 
-    void merge_with(chunk_allocator&& other) noexcept {
-        if (this == &other) { return; }
-        _chunks.reserve(_chunks.size() + other._chunks.size());
-        _destructors.reserve(_destructors.size() + other._destructors.size());
+    template <std::ranges::sized_range Range>
+    auto emplace_range(const Range& range) {
+        using value_type = std::ranges::range_value_t<Range>;
+        auto count = static_cast<std::size_t>(std::ranges::distance(range));
+        if (count == 0) { return Slice<value_type>{.data = nullptr, .size = 0}; }
+        auto* dest = static_cast<value_type*>(allocate(sizeof(value_type) * count, alignof(value_type)));
 
-        std::ranges::move(other._chunks, std::back_inserter(_chunks));
-        std::ranges::move(other._destructors, std::back_inserter(_destructors));
-        other._chunks.clear();
-        other._destructors.clear();
+        std::uninitialized_copy(range.begin(), range.end(), dest);
+        return Slice<value_type>{.data = dest, .size = count};
     }
 
    private:
     constexpr static inline std::size_t _max(std::size_t a, std::size_t b) noexcept { return a > b ? a : b; }
-
-    constexpr static std::uintptr_t align_up(std::uintptr_t ptr, std::uintptr_t alignment) noexcept {
-        std::uintptr_t mask = alignment - 1;
-        return (ptr + mask) & ~mask;
-    }
 
     void add_chunk(std::size_t size = _default_chunksize) {
         _chunks.push_back(
@@ -79,16 +59,18 @@ class chunk_allocator {
                   .capacity = size});
     }
 
-    FORCE_INLINE void* allocate(std::size_t size, std::size_t alignment) {
+    inline void* allocate(std::size_t size, std::size_t alignment) {
     _do_allocation:
         chunk& c = _chunks.back();
         const auto current_position = reinterpret_cast<std::uintptr_t>(c.data.get() + c.used);
         // the next place we can safely construct a type, taking padding into account
-        const std::uintptr_t aligned_position = align_up(current_position, alignment);
+        std::uintptr_t mask = alignment - 1;
+        const std::uintptr_t aligned_position = (current_position + mask) & ~mask;
+
         // how much room to leave before the next allocation
         const std::uintptr_t adjustment = aligned_position - current_position;
 
-        if (c.used + adjustment + size > c.capacity) {
+        if (adjustment > c.capacity - c.used || size > c.capacity - c.used - adjustment) {
             // can't fit data here anymore
             add_chunk(_max(_default_chunksize, size + alignment));
             goto _do_allocation;  // avoids recursion
@@ -101,6 +83,6 @@ class chunk_allocator {
     }
 };
 
-}  // namespace mnstl
+}  // namespace Manganese::utils
 
-#endif  // MNSTL_CHUNK_ALLOCATOR
+#endif  // MANGANESE_INCLUDE_UTILS_CHUNK_ALLOCATOR_HPP

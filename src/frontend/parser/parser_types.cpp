@@ -2,8 +2,6 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <string>
-#include <utility>
 #include <utils/type_names.hpp>
 
 namespace Manganese::parser {
@@ -52,32 +50,31 @@ ast::Type* Parser::parseAggregateType() {
         "Expected ',' to separate fields in aggregate type declaration or '}' to end the declaration",
         [this]() { return parseAggregateTypeField(); });
 
-    return makeNode<ast::AggregateType>(startToken, std::move(fieldTypes));
+    return makeNode<ast::AggregateType>(startToken, arena.emplace_range(fieldTypes));
 }
 
 ast::Type* Parser::parseArrayType(ast::Type* left, Precedence /*unused*/) {
+    const Token startToken = consumeToken();  // consume '['
+
     ast::Expression* lengthExpression = nullptr;
-    const Token startToken = consumeToken();  // Consume the left square bracket '['
-    if (peekTokenType() != TokenType::RightSquare) {
-        // If the next token is not a right square bracket, it's a length expression
-        lengthExpression = parseExpression(Precedence::Default);
-    }
-    if (flags.parsingAliasStatement && lengthExpression == nullptr) {
-        logError(*left, "Arrays in alias statements must have an explicit length expression");
-    }
-    expectToken(TokenType::RightSquare, "Expected ']' to close array type declaration");
-    return makeNode<ast::ArrayType>(startToken, left, lengthExpression);
+    if (peekTokenType() != TokenType::RightSquare) { lengthExpression = parseExpression(Precedence::Default); }
+
+    expectToken(TokenType::RightSquare, "Expected ']' to close type declaration");
+
+    // if there's an explicit length, this is an array
+    if (lengthExpression != nullptr) { return makeNode<ast::ArrayType>(startToken, left, lengthExpression); }
+    // else, slice
+    return makeNode<ast::SliceType>(startToken, left);
 }
 
 ast::Type* Parser::parseFunctionType() {
     const Token startToken = consumeToken();  // Consume 'func'
     expectToken(TokenType::LeftParen, "Expected '(' after 'func' in a function type");
 
-    bool seenVariadic = false;
     std::vector<ast::FunctionParameterType> parameterTypes;
 
     while (!done() && peekTokenType() != TokenType::RightParen) {
-        parameterTypes.push_back(parseFunctionTypeParameter(seenVariadic));
+        parameterTypes.push_back(parseFunctionTypeParameter());
 
         if (peekTokenType() != TokenType::RightParen) {
             expectToken(TokenType::Comma, "Expected ',' to separate parameter types or ')' to end parameter list");
@@ -92,7 +89,7 @@ ast::Type* Parser::parseFunctionType() {
         returnType = parseType(Precedence::Default);
     }
 
-    return makeNode<ast::FunctionType>(startToken, std::move(parameterTypes), returnType);
+    return makeNode<ast::FunctionType>(startToken, arena.emplace_range(parameterTypes), returnType);
 }
 
 ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence /*unused*/) {
@@ -101,7 +98,7 @@ ast::Type* Parser::parseGenericInstantiationType(ast::Type* left, Precedence /*u
     auto typeParameters
         = parseCommaSeparatedList<ast::Type*>(TokenType::RightSquare, "Expected ',' to separate generic types",
                                               [this]() { return parseType(precedenceAbove(Precedence::Assignment)); });
-    return makeNode<ast::GenericInstantiationType>(startToken, left, std::move(typeParameters));
+    return makeNode<ast::GenericInstantiationType>(startToken, left, arena.emplace_range(typeParameters));
 }
 
 ast::Type* Parser::parseIdentifierType() {
@@ -110,15 +107,16 @@ ast::Type* Parser::parseIdentifierType() {
     if (!startToken.isPrimitiveType()) {
         return makeNode<ast::IdentifierType>(startToken, expectToken(TokenType::Identifier).getLexeme());
     }
-    // If the token is a primitive type, we can directly create a IdentifierType
+    // If the token is a primitive type, we can directly create an IdentifierType
     DISCARD(consumeToken());
-    const std::string lexeme = startToken.getLexeme();
+    const auto lexemeId = startToken.getLexeme();
+    const std::string_view lexeme = interner.get_view(lexemeId);
     ast::PrimitiveType prim_t = not_primitive;
     if (lexeme == int8_str) {
         prim_t = int8;
     } else if (lexeme == int16_str) {
         prim_t = int16;
-    } else if (lexeme == int32_str) {
+    } else if (lexeme == int32_str || lexeme == int_str) {
         prim_t = int32;
     } else if (lexeme == int64_str) {
         prim_t = int64;
@@ -128,7 +126,7 @@ ast::Type* Parser::parseIdentifierType() {
         prim_t = uint8;
     } else if (lexeme == uint16_str) {
         prim_t = uint16;
-    } else if (lexeme == uint32_str) {
+    } else if (lexeme == uint32_str || lexeme == uint_str) {
         prim_t = uint32;
     } else if (lexeme == uint64_str) {
         prim_t = uint64;
@@ -136,7 +134,7 @@ ast::Type* Parser::parseIdentifierType() {
         prim_t = uint128;
     } else if (lexeme == float32_str) {
         prim_t = float32;
-    } else if (lexeme == float64_str) {
+    } else if (lexeme == float64_str || lexeme == float_str) {
         prim_t = float64;
     } else if (lexeme == string_str) {
         prim_t = string;
@@ -147,11 +145,11 @@ ast::Type* Parser::parseIdentifierType() {
     } else {
         ASSERT_UNREACHABLE_FMT("Unknown primitive type '{}'", lexeme);
     }
-    return makeNode<ast::IdentifierType>(startToken, startToken.getLexeme(), prim_t);
+    return makeNode<ast::IdentifierType>(startToken, lexemeId, prim_t);
 }
 
 ast::Type* Parser::parseParenthesizedType() {
-    const Token startToken = consumeToken();  // Skip the '('
+    DISCARD(consumeToken());  // Skip the '('
     ast::Type* innerType = parseType(Precedence::Default);
     expectToken(TokenType::RightParen, "Expected ')' to close parenthesized type");
     return innerType;
@@ -170,7 +168,7 @@ ast::Type* Parser::parsePointerType() {
 ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
     const Token startToken = consumeToken();  // consume the `::`
     ast::Type* type = parseType(precedence);
-    return makeNode<ast::ScopedType>(startToken, left, type);
+    return makeNode<ast::ScopedType>(startToken, ast::ScopedTypeScope{left}, ast::ScopedTypeType{type});
 }
 
 ast::Type* Parser::parseTypeofType() {
@@ -181,7 +179,7 @@ ast::Type* Parser::parseTypeofType() {
         logError(peekToken(), "Expected a valid expression inside 'typeof(...)'.");
         innerExpression = makeNode<ast::PoisonedExpression>(startToken);
     }
-    expectToken(lexer::TokenType::RightParen, "Expected ')' to close typeof");
+    expectToken(TokenType::RightParen, "Expected ')' to close typeof");
     return makeNode<ast::TypeofType>(startToken, innerExpression);
 }
 
@@ -196,7 +194,7 @@ ast::Type* Parser::parseAggregateTypeField() {
     return parseType(Precedence::Default);
 }
 
-ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic) {
+ast::FunctionParameterType Parser::parseFunctionTypeParameter() {
     bool isMutable = false;
     if (peekTokenType() == TokenType::Mut) {
         isMutable = true;
@@ -205,30 +203,18 @@ ast::FunctionParameterType Parser::parseFunctionTypeParameter(bool& seenVariadic
 
     ast::Type* parameterType = parseType(Precedence::Default);
 
-    bool isVariadic = false;
-    if (peekTokenType() == TokenType::Ellipsis) {
-        DISCARD(consumeToken());
-        isVariadic = true;
-
-        if (seenVariadic) { logError(peekToken(), "A function type cannot have more than one variadic parameter"); }
-        seenVariadic = true;
-    }
-
-    if (isVariadic && peekTokenType() != TokenType::RightParen && peekTokenType() != TokenType::Comma) {
-        logError(peekToken(), "A variadic parameter must be the last parameter");
-    }
-
-    return ast::FunctionParameterType{.isMutable = isMutable, .isVariadic = isVariadic, .type = parameterType};
+    return ast::FunctionParameterType{.isMutable = isMutable, .type = parameterType};
 }
 
-std::string Parser::parseGenericTypeParameter(std::vector<std::string>& existingGenerics,
-                                              std::string_view contextName) {
+utils::StringID Parser::parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,
+                                                  utils::StringID contextName) {
     Token genericToken = expectToken(TokenType::Identifier, "Expected a generic type name");
-    std::string genericName = genericToken.getLexeme();
+    const auto genericName = genericToken.getLexeme();
 
     if (std::ranges::find(existingGenerics, genericName) != existingGenerics.end()) {
-        logError(genericToken, "Duplicate generic type '{}' in '{}'", genericName, contextName);
-        return "";
+        logError(genericToken, "Duplicate generic type '{}' in '{}'", interner.get_view(genericName),
+                 interner.get_view(contextName));
+        return {};
     }
     return genericName;
 }

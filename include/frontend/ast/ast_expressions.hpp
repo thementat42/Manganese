@@ -5,36 +5,36 @@
 #include <cstddef>
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
-#include <string>
-#include <utility>
+#include <utils/named_parameter.hpp>
+#include <utils/slice.hpp>
+#include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
-#include <vector>
 
 namespace Manganese::ast {
 
 struct AggregateInstantiationField {
-    std::string name;
+    utils::StringID name;
     Expression* value;
     std::size_t line, column;
 };
 
 struct AggregateInstantiationExpression final : public Expression {
     Expression* base;
-    std::vector<AggregateInstantiationField> fields;
+    utils::Slice<AggregateInstantiationField> fields;
 
-    AggregateInstantiationExpression(Expression* _base, std::vector<AggregateInstantiationField>&& _fields) noexcept :
-        Expression(ExpressionKind::AggregateInstantiationExpression), base(_base), fields(std::move(_fields)) {}
+    AggregateInstantiationExpression(Expression* _base, utils::Slice<AggregateInstantiationField> _fields) noexcept :
+        Expression(ExpressionKind::AggregateInstantiationExpression), base(_base), fields(_fields) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AggregateInstantiationExpression);
 };
 
 struct AggregateLiteralExpression final : public Expression {
-    std::vector<Expression*> elements;
+    utils::Slice<Expression*> elements;
 
-    explicit AggregateLiteralExpression(std::vector<Expression*>&& _elements) noexcept :
-        Expression(ExpressionKind::AggregateLiteralExpression), elements(std::move(_elements)) {}
+    explicit AggregateLiteralExpression(utils::Slice<Expression*>&& _elements) noexcept :
+        Expression(ExpressionKind::AggregateLiteralExpression), elements(_elements) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AggregateLiteralExpression);
 };
 
 struct AlignofExpression final : public Expression {
@@ -43,16 +43,16 @@ struct AlignofExpression final : public Expression {
     AlignofExpression(Type* t) noexcept : Expression(ExpressionKind::AlignofExpression), type(t) {}
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE
+    MN_AST_STANDARD_INTERFACE(AlignofExpression);
 };
 
 struct ArrayLiteralExpression final : public Expression {
-    std::vector<Expression*> elements;
+    utils::Slice<Expression*> elements;
 
-    explicit ArrayLiteralExpression(std::vector<Expression*>&& _elements) noexcept :
-        Expression(ExpressionKind::ArrayLiteralExpression), elements(std::move(_elements)) {}
+    explicit ArrayLiteralExpression(utils::Slice<Expression*> _elements) noexcept :
+        Expression(ExpressionKind::ArrayLiteralExpression), elements(_elements) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ArrayLiteralExpression);
 };
 
 struct AssignmentExpression final : public Expression {
@@ -63,7 +63,7 @@ struct AssignmentExpression final : public Expression {
     AssignmentExpression(Expression* _assignee, lexer::TokenType _op, Expression* _value) noexcept :
         Expression(ExpressionKind::AssignmentExpression), assignee(_assignee), value(_value), op(_op) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(AssignmentExpression);
 };
 
 struct BinaryExpression final : public Expression {
@@ -75,7 +75,7 @@ struct BinaryExpression final : public Expression {
         Expression(ExpressionKind::BinaryExpression), left(_left), right(_right), op(_op) {}
     bool canFold() const noexcept override { return left->canFold() && right->canFold(); }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(BinaryExpression);
 };
 
 struct BoolLiteralExpression final : public Expression {
@@ -85,7 +85,18 @@ struct BoolLiteralExpression final : public Expression {
         Expression(ExpressionKind::BoolLiteralExpression), value(_value) {}
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(BoolLiteralExpression);
+};
+
+struct ChainedComparisonExpression final : public Expression {
+    utils::Slice<Expression*> operands;
+    utils::Slice<lexer::TokenType> operators;
+
+    ChainedComparisonExpression(utils::Slice<Expression*> _operands, utils::Slice<lexer::TokenType> _operators) noexcept
+        :
+        Expression(ExpressionKind::ChainedComparisonExpression), operands(_operands), operators(_operators) {}
+
+    MN_AST_STANDARD_INTERFACE(ChainedComparisonExpression);
 };
 
 struct CharLiteralExpression final : public Expression {
@@ -98,17 +109,17 @@ struct CharLiteralExpression final : public Expression {
 
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(CharLiteralExpression);
 };
 
 struct FunctionCallExpression final : public Expression {
     Expression* callee;
-    std::vector<Expression*> arguments;
+    utils::Slice<Expression*> arguments;
 
-    FunctionCallExpression(Expression* _callee, std::vector<Expression*>&& _arguments) noexcept :
-        Expression(ExpressionKind::FunctionCallExpression), callee(_callee), arguments(std::move(_arguments)) {}
+    FunctionCallExpression(Expression* _callee, utils::Slice<Expression*> _arguments) noexcept :
+        Expression(ExpressionKind::FunctionCallExpression), callee(_callee), arguments(_arguments) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(FunctionCallExpression);
 };
 
 /**
@@ -116,56 +127,59 @@ struct FunctionCallExpression final : public Expression {
  */
 struct GenericInstantiationExpression final : public Expression {
     Expression* identifier;
-    std::vector<Type*> types;
-    std::vector<const semantic::SemanticType*> semanticTypes;
+    utils::Slice<Type*> types;
+    utils::Slice<const semantic::SemanticType*> semanticTypes;
 
-    GenericInstantiationExpression(Expression* _identifier, std::vector<Type*>&& _types) noexcept :
-        Expression(ExpressionKind::GenericInstantiationExpression), identifier(_identifier), types(std::move(_types)) {}
+    GenericInstantiationExpression(Expression* _identifier, utils::Slice<Type*> _types) noexcept :
+        Expression(ExpressionKind::GenericInstantiationExpression), identifier(_identifier), types(_types) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(GenericInstantiationExpression);
 };
 
 struct IdentifierExpression final : public Expression {
-    const std::string name;
+    const utils::StringID name;
     const Declaration* resolvedDeclaration = nullptr;
 
-    explicit IdentifierExpression(std::string&& _name) noexcept :
-        Expression(ExpressionKind::IdentifierExpression), name(std::move(_name)) {}
+    explicit IdentifierExpression(utils::StringID _name) noexcept :
+        Expression(ExpressionKind::IdentifierExpression), name(_name) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(IdentifierExpression);
 };
+
+using IndexExpressionVariable = utils::NamedParameter<Expression*, struct IndexVarTag>;
+using IndexExpressionIndex = utils::NamedParameter<Expression*, struct IndexIndexTag>;
 
 struct IndexExpression final : public Expression {
     Expression* variable;
     Expression* index;
 
-    IndexExpression(Expression* _variable, Expression* _index) noexcept :
-        Expression(ExpressionKind::IndexExpression), variable(_variable), index(_index) {}
+    IndexExpression(IndexExpressionVariable _variable, IndexExpressionIndex _index) noexcept :
+        Expression(ExpressionKind::IndexExpression), variable(_variable.get()), index(_index.get()) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(IndexExpression);
 };
 
 struct MemberAccessExpression final : public Expression {
     Expression* object;
-    const std::string field;
+    const utils::StringID field;
     std::size_t fieldIndex = static_cast<std::size_t>(-1);
 
-    MemberAccessExpression(Expression* _object, std::string&& _field) noexcept :
-        Expression(ExpressionKind::MemberAccessExpression), object(_object), field(std::move(_field)) {}
+    MemberAccessExpression(Expression* _object, utils::StringID _field) noexcept :
+        Expression(ExpressionKind::MemberAccessExpression), object(_object), field(_field) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(MemberAccessExpression);
 };
 
 struct NumberLiteralExpression final : public Expression {
-    const std::string value;
+    const utils::StringID value;
     const bool isFloat;
 
-    explicit NumberLiteralExpression(std::string&& _value, bool _isFloat) noexcept :
-        Expression(ExpressionKind::NumberLiteralExpression), value(std::move(_value)), isFloat(_isFloat) {}
+    explicit NumberLiteralExpression(utils::StringID _value, bool _isFloat) noexcept :
+        Expression(ExpressionKind::NumberLiteralExpression), value(_value), isFloat(_isFloat) {}
 
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(NumberLiteralExpression);
 };
 
 struct PostfixExpression final : public Expression {
@@ -177,7 +191,7 @@ struct PostfixExpression final : public Expression {
 
     bool canFold() const noexcept override { return left->canFold(); }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PostfixExpression);
 };
 
 struct PrefixExpression final : public Expression {
@@ -189,18 +203,21 @@ struct PrefixExpression final : public Expression {
 
     bool canFold() const noexcept override { return right->canFold(); }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PrefixExpression);
 };
+
+using ScopeExpressionScope = utils::NamedParameter<Expression*, struct ScopeName>;
+using ScopeExpressionElement = utils::NamedParameter<Expression*, struct ScopeElement>;
 
 struct ScopeResolutionExpression final : public Expression {
     Expression* scope;
     Expression* element;
-    std::string mangledName;
+    utils::StringID mangledName;
 
-    ScopeResolutionExpression(Expression* _scope, Expression* _element) noexcept :
-        Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope), element(_element) {}
+    ScopeResolutionExpression(ScopeExpressionScope _scope, ScopeExpressionElement _element) noexcept :
+        Expression(ExpressionKind::ScopeResolutionExpression), scope(_scope.get()), element(_element.get()) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(ScopeResolutionExpression);
 };
 
 struct SizeofExpression final : public Expression {
@@ -209,17 +226,35 @@ struct SizeofExpression final : public Expression {
     SizeofExpression(Type* t) noexcept : Expression(ExpressionKind::SizeofExpression), type(t) {}
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE
+    MN_AST_STANDARD_INTERFACE(SizeofExpression)
 };
 
 struct StringLiteralExpression final : public Expression {
-    const std::string value;
+    const utils::StringID value;
 
-    explicit StringLiteralExpression(std::string&& _value) noexcept :
-        Expression(ExpressionKind::StringLiteralExpression), value(std::move(_value)) {}
+    explicit StringLiteralExpression(utils::StringID _value) noexcept :
+        Expression(ExpressionKind::StringLiteralExpression), value(_value) {}
     bool canFold() const noexcept override { return true; }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(StringLiteralExpression);
+};
+
+using TernaryCondition = utils::NamedParameter<Expression*, struct TernaryCond>;
+using TernaryTrueValue = utils::NamedParameter<Expression*, struct TernaryTrue>;
+using TernaryFalseValue = utils::NamedParameter<Expression*, struct TernaryFalse>;
+
+struct TernaryExpression final : public Expression {
+    Expression* condition;
+    Expression* ifTrue;
+    Expression* ifFalse;
+
+    TernaryExpression(TernaryCondition _condition, TernaryTrueValue _ifTrue, TernaryFalseValue _ifFalse) noexcept :
+        Expression(ExpressionKind::TernaryExpression),
+        condition(_condition.get()),
+        ifTrue(_ifTrue.get()),
+        ifFalse(_ifFalse.get()) {}
+
+    MN_AST_STANDARD_INTERFACE(TernaryExpression);
 };
 
 struct TypeCastExpression final : public Expression {
@@ -230,19 +265,19 @@ struct TypeCastExpression final : public Expression {
         Expression(ExpressionKind::TypeCastExpression), originalValue(_originalValue), targetType(_targetType) {}
     bool canFold() const noexcept override { return originalValue->canFold(); }
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(TypeCastExpression);
 };
 
 struct UninitializedExpression final : public Expression {
     UninitializedExpression() noexcept : Expression(ExpressionKind::UninitializedExpression) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(UninitializedExpression);
 };
 
 struct PoisonedExpression final : public Expression {
     PoisonedExpression() noexcept : Expression(ExpressionKind::PoisonedExpression) {}
 
-    MN_AST_STANDARD_INTERFACE;
+    MN_AST_STANDARD_INTERFACE(PoisonedExpression);
 };
 
 }  // namespace Manganese::ast

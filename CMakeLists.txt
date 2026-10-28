@@ -19,28 +19,7 @@ endif()
 
 # Build options
 option(BUILD_TESTS "Build the test suite" OFF)
-option(MEMORY_TRACKING "Enable memory allocation tracking" OFF)
-option(CONTINUOUS_MEMORY_TRACKING "Enable continuous memory tracking" OFF)
 option(DISABLE_ANSI_COLOURS "Disable ANSI terminal colours" OFF)
-
-# Memory tracking configuration
-
-if(MEMORY_TRACKING)
-    add_compile_definitions(MEMORY_TRACKING=1)
-    message(STATUS "Memory tracking is enabled. This will track total memory allocations but may not be 100% accurate, and will vary by compiler")
-else()
-    add_compile_definitions(MEMORY_TRACKING=0)
-endif()
-
-if(CONTINUOUS_MEMORY_TRACKING)
-    if(NOT MEMORY_TRACKING)
-        message(WARNING "CONTINUOUS_MEMORY_TRACKING requires MEMORY_TRACKING to be enabled. Continuous memory tracking will have no effect unless MEMORY_TRACKING is also enabled.")
-    endif()
-    message(STATUS "CONTINUOUS_MEMORY_TRACKING may not be 100% accurate and can vary between compilers and platforms.")
-    add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=1)
-else()
-    add_compile_definitions(CONTINUOUS_MEMORY_TRACKING=0)
-endif()
 
 # LLVM Configuration
 
@@ -55,7 +34,6 @@ file(GLOB_RECURSE SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
-
 
 set(MAIN_SRC manganese.cpp)
 set(TEST_MAIN_SRC manganese_tests.cpp)
@@ -85,8 +63,14 @@ set_target_properties(manganese PROPERTIES
 
 target_compile_definitions(manganese PRIVATE
     MN_DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
-    MNSTL_USE_COMPILER_EXTENDED_TYPES=0
     NO_ANSI_COLOURS=$<BOOL:${DISABLE_ANSI_COLOURS}>
+)
+
+target_precompile_headers(manganese PRIVATE 
+    <unordered_map>
+    <deque>
+    <format>
+    <string>
 )
 
 # Flags
@@ -177,8 +161,30 @@ separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 target_compile_options(manganese PRIVATE ${LLVM_DEFINITIONS_LIST})
 
 llvm_map_components_to_libnames(LLVM_LIBS
-    Core Support IRReader ExecutionEngine Analysis
-    BitWriter CodeGen
+    Core 
+    Support 
+    IRReader 
+    ExecutionEngine 
+    Analysis
+    BitWriter 
+    CodeGen 
+    Passes
+    MC            
+    TargetParser
+    X86     
 )
 
 target_link_libraries(manganese PRIVATE ${LLVM_LIBS})
+
+if(BUILD_TESTS)
+llvm_map_components_to_libnames(LLVM_JIT_LIBS
+    OrcJIT
+    RuntimeDyld
+    ExecutionEngine
+    Core
+    Support
+    CodeGen
+    TargetParser
+)
+target_link_libraries(manganese PRIVATE ${LLVM_JIT_LIBS})
+endif()

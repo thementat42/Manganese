@@ -17,6 +17,7 @@ using lexer::Token, lexer::TokenType;
 // Helpers
 
 namespace {
+utils::StringInterner interner;
 
 inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true) {
     if (tokens.empty()) {
@@ -35,22 +36,7 @@ inline void printAllTokens(const std::vector<Token>& tokens, bool verbose = true
 }
 
 std::vector<Token> tokensFromString(const std::string& source) {
-    lexer::Lexer lexer(source, lexer::Mode::String);
-    std::vector<Token> tokens;
-
-    // Consume tokens until we hit EOF
-    while (true) {
-        Token token = lexer.consumeToken();
-        if (token.getType() == TokenType::EndOfFile) { break; }
-        tokens.push_back(token);
-    }
-
-    return tokens;
-}
-
-std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
-    const std::filesystem::path fullPath = std::filesystem::current_path() / filename;
-    lexer::Lexer lexer(fullPath.string(), lexer::Mode::File);
+    lexer::Lexer lexer(source, interner, lexer::Mode::String);
     std::vector<Token> tokens;
 
     // Consume tokens until we hit EOF
@@ -66,22 +52,24 @@ std::vector<Token> tokensFromFile(const std::filesystem::path& filename) {
 bool checkToken(const Token& token, TokenType expectedType, const std::string& expectedLexeme,
                 bool wantInvalid = false) {
     const static auto printBytes = [](std::string_view str) {
-        for (char c : str) { std::cout << std::format("{:02X} ", (unsigned char)c); }
+        for (char c : str) { std::cout << std::format("{:02X} ", static_cast<unsigned char>(c)); }
         std::cout << '\n';
     };
     if (token.getType() != expectedType) {
-        std::cout << "Expected token type " << tokenTypeToString(expectedType) << " but got "
-                  << tokenTypeToString(token.getType()) << " (lexeme was " << token.getLexeme() << ")" << '\n';
+        std::cout << std::format("Expected token type {} but got {} (lexeme was {})\n",
+                                 lexer::tokenTypeToString(token.getType()), lexer::tokenTypeToString(token.getType()),
+                                 interner.get_view(token.getLexeme()));
         return false;
     }
-    if (token.getLexeme() != expectedLexeme) {
-        std::cout << "Expected lexeme '" << expectedLexeme << "' but got '" << token.getLexeme() << "'" << '\n';
+    if (interner.get_view(token.getLexeme()) != expectedLexeme) {
+        std::cout << std::format("Expected lexeme '{}' but got '{}'\n", expectedLexeme,
+                                 interner.get_view(token.getLexeme()));
 
         std::cout << "Expected bytes: ";
         printBytes(expectedLexeme);
 
         std::cout << "Actual bytes:   ";
-        printBytes(token.getLexeme());
+        printBytes(interner.get_view(token.getLexeme()));
         return false;
     }
     if (wantInvalid && !token.isInvalid()) {
@@ -116,7 +104,7 @@ bool testComments() {
         return false;
     }
 
-    return checkToken(tokens[0], TokenType::Int32, "int32") && checkToken(tokens[1], TokenType::Identifier, "x")
+    return checkToken(tokens[0], TokenType::Int32, "int") && checkToken(tokens[1], TokenType::Identifier, "x")
         && checkToken(tokens[2], TokenType::Semicolon, ";");
 }
 
@@ -402,7 +390,17 @@ bool testPunctuation() {
 }
 
 bool testCompleteProgram() {
-    std::vector<Token> tokens = tokensFromFile("tests/lexer_tests.mn");
+    const std::filesystem::path fullPath = std::filesystem::current_path() / "tests" / "fixtures" / "lexer_tests.mn";
+    lexer::Lexer lexer(fullPath.string(), interner, lexer::Mode::File);
+    std::vector<Token> tokens;
+
+    // Consume tokens until we hit EOF
+    while (true) {
+        Token token = lexer.consumeToken();
+        if (token.getType() == TokenType::EndOfFile) { break; }
+        tokens.push_back(token);
+    }
+
     printAllTokens(tokens);
     if (tokens.empty()) {
         std::cout << "Expected non-empty tokens" << '\n';
@@ -410,11 +408,11 @@ bool testCompleteProgram() {
     }
     return checkToken(tokens[0], TokenType::Func, "func") && checkToken(tokens[1], TokenType::Identifier, "main")
         && checkToken(tokens[2], TokenType::LeftParen, "(") && checkToken(tokens[3], TokenType::RightParen, ")")
-        && checkToken(tokens[4], TokenType::Arrow, "->") && checkToken(tokens[5], TokenType::Int32, "int32")
-        && checkToken(tokens[6], TokenType::LeftBrace, "{") && checkToken(tokens[7], TokenType::Int32, "int32")
+        && checkToken(tokens[4], TokenType::Arrow, "->") && checkToken(tokens[5], TokenType::Int32, "int")
+        && checkToken(tokens[6], TokenType::LeftBrace, "{") && checkToken(tokens[7], TokenType::Int32, "int")
         && checkToken(tokens[8], TokenType::Identifier, "x") && checkToken(tokens[9], TokenType::Assignment, "=")
         && checkToken(tokens[10], TokenType::IntegerLiteral, "5") && checkToken(tokens[11], TokenType::Semicolon, ";")
-        && checkToken(tokens[12], TokenType::Float32, "float32") && checkToken(tokens[13], TokenType::Identifier, "y")
+        && checkToken(tokens[12], TokenType::Float32, "float") && checkToken(tokens[13], TokenType::Identifier, "y")
         && checkToken(tokens[14], TokenType::Assignment, "=") && checkToken(tokens[15], TokenType::FloatLiteral, "10.5")
         && checkToken(tokens[16], TokenType::Semicolon, ";") && checkToken(tokens[17], TokenType::Identifier, "print")
         && checkToken(tokens[18], TokenType::LeftParen, "(") && checkToken(tokens[19], TokenType::Identifier, "x")
@@ -465,34 +463,91 @@ bool testInvalidEscapeSequence() {
 
 bool testBadFileAccess() {
     try {
-        tokensFromFile("__nonexistentfile.mn");
+        std::filesystem::path path = std::filesystem::current_path() / "tests" / "fixtures" / "__nonexistentfile.mn";
+        lexer::Lexer lexer(path.string(), interner, lexer::Mode::File);
     } catch (const std::runtime_error& e) { return true; }
     return false;
 }
+
+bool testUnderscoreSeparatedNumbers() {
+    std::vector<Token> tokens = tokensFromString("1_000_000 3.141_592_653 0x1F_AB_CD 0b1010_0101");
+    printAllTokens(tokens);
+    if (tokens.size() != 4) {
+        std::cout << "Expected 4 tokens, got " << tokens.size() << '\n';
+        return false;
+    }
+
+    return checkToken(tokens[0], TokenType::IntegerLiteral, "1000000")
+        && checkToken(tokens[1], TokenType::FloatLiteral, "3.141592653")
+        && checkToken(tokens[2], TokenType::IntegerLiteral, "0x1FABCD")
+        && checkToken(tokens[3], TokenType::IntegerLiteral, "0b10100101");
+}
+
+bool testConsecutiveOperatorsAndDelimiters() {
+    const std::vector<Token> tokens = tokensFromString("++++----====......");
+    printAllTokens(tokens);
+    // Depending on your maximal munch lexing rules, let's verify they tokenize safely without crashing
+    return !tokens.empty();
+}
+
+bool testUnterminatedString() {
+    std::vector<Token> tokens = tokensFromString("\"this string has no closing quote");
+    printAllTokens(tokens);
+    if (tokens.size() != 1) {
+        std::cout << "Expected 1 token, got " << tokens.size() << '\n';
+        return false;
+    }
+    return tokens[0].getType() == TokenType::StrLiteral;
+}
+
+bool testNumericSuffixCombinations() {
+    std::vector<Token> tokens = tokensFromString("42i8 42i16 42i32 42i64 42i128 42u8 42u16 42u32 42u64 42u128");
+    printAllTokens(tokens);
+    if (tokens.size() != 10) {
+        std::cout << "Expected 10 tokens, got " << tokens.size() << '\n';
+        return false;
+    }
+
+    return checkToken(tokens[0], TokenType::IntegerLiteral, "42i8")
+        && checkToken(tokens[1], TokenType::IntegerLiteral, "42i16")
+        && checkToken(tokens[2], TokenType::IntegerLiteral, "42i32")
+        && checkToken(tokens[3], TokenType::IntegerLiteral, "42i64")
+        && checkToken(tokens[4], TokenType::IntegerLiteral, "42i128")
+        && checkToken(tokens[5], TokenType::IntegerLiteral, "42u8")
+        && checkToken(tokens[6], TokenType::IntegerLiteral, "42u16")
+        && checkToken(tokens[7], TokenType::IntegerLiteral, "42u32")
+        && checkToken(tokens[8], TokenType::IntegerLiteral, "42u64")
+        && checkToken(tokens[9], TokenType::IntegerLiteral, "42u128");
+}
+
 }  // namespace
 }  // namespace lexer_tests
 
 void runLexerTests(TestRunner& runner) {
     // Register all tests
-    runner.runTest("Empty String", lexer_tests::testEmptyString);
-    runner.runTest("Whitespace", lexer_tests::testWhitespace);
-    runner.runTest("Comments", lexer_tests::testComments);
-    runner.runTest("Identifiers", lexer_tests::testIdentifiers);
-    runner.runTest("Keywords", lexer_tests::testKeywords);
-    runner.runTest("Operators", lexer_tests::testOperators);
-    runner.runTest("Integer Literals", lexer_tests::testIntegerLiterals);
-    runner.runTest("Float Literals", lexer_tests::testFloatLiterals);
-    runner.runTest("Invalid Number Literals", lexer_tests::testInvalidNumberLiterals);
-    runner.runTest("Character Literals", lexer_tests::testCharLiterals);
-    runner.runTest("String Literals", lexer_tests::testStringLiterals);
-    runner.runTest("Invalid Character Literals", lexer_tests::testInvalidCharLiterals);
-    runner.runTest("Invalid String Literals", lexer_tests::testInvalidStringLiterals);
-    runner.runTest("Brackets", lexer_tests::testBrackets);
-    runner.runTest("Punctuation", lexer_tests::testPunctuation);
-    runner.runTest("Nested Brackets", lexer_tests::testNestedBrackets);
-    runner.runTest("Invalid Character", lexer_tests::testInvalidChar);
-    runner.runTest("Invalid Escape Sequence", lexer_tests::testInvalidEscapeSequence);
-    runner.runTest("Complete Program", lexer_tests::testCompleteProgram);
-    runner.runTest("Invalid File", lexer_tests::testBadFileAccess);
+    runner.runTest("Lexer: Empty String", lexer_tests::testEmptyString);
+    runner.runTest("Lexer: Whitespace", lexer_tests::testWhitespace);
+    runner.runTest("Lexer: Comments", lexer_tests::testComments);
+    runner.runTest("Lexer: Identifiers", lexer_tests::testIdentifiers);
+    runner.runTest("Lexer: Keywords", lexer_tests::testKeywords);
+    runner.runTest("Lexer: Operators", lexer_tests::testOperators);
+    runner.runTest("Lexer: Integer Literals", lexer_tests::testIntegerLiterals);
+    runner.runTest("Lexer: Float Literals", lexer_tests::testFloatLiterals);
+    runner.runTest("Lexer: Invalid Number Literals", lexer_tests::testInvalidNumberLiterals);
+    runner.runTest("Lexer: Character Literals", lexer_tests::testCharLiterals);
+    runner.runTest("Lexer: String Literals", lexer_tests::testStringLiterals);
+    runner.runTest("Lexer: Invalid Character Literals", lexer_tests::testInvalidCharLiterals);
+    runner.runTest("Lexer: Invalid String Literals", lexer_tests::testInvalidStringLiterals);
+    runner.runTest("Lexer: Brackets", lexer_tests::testBrackets);
+    runner.runTest("Lexer: Punctuation", lexer_tests::testPunctuation);
+    runner.runTest("Lexer: Nested Brackets", lexer_tests::testNestedBrackets);
+    runner.runTest("Lexer: Invalid Character", lexer_tests::testInvalidChar);
+    runner.runTest("Lexer: Invalid Escape Sequence", lexer_tests::testInvalidEscapeSequence);
+    runner.runTest("Lexer: Complete Program", lexer_tests::testCompleteProgram);
+    runner.runTest("Lexer: Invalid File", lexer_tests::testBadFileAccess);
+    runner.runTest("Lexer: Underscore Separated Numbers", lexer_tests::testUnderscoreSeparatedNumbers);
+    runner.runTest("Lexer: Consecutive Operators", lexer_tests::testConsecutiveOperatorsAndDelimiters);
+    runner.runTest("Lexer: Unterminated String", lexer_tests::testUnterminatedString);
+    runner.runTest("Lexer: Numeric Suffix Combinations", lexer_tests::testNumericSuffixCombinations);
 }
 }  // namespace Manganese::tests

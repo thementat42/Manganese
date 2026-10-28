@@ -1,3 +1,5 @@
+#include <llvm/Support/TargetSelect.h>
+
 #include <chrono>
 #include <cstddef>
 #include <cstring>
@@ -8,9 +10,7 @@
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>
 #include <iostream>
-#include <utils/memory_tracking.hpp>
 
-#include "tests/testrunner.hpp"
 #include "tests/tests.hpp"
 
 static bool strneq(const char* a, const char* b, std::size_t max_count) {
@@ -19,7 +19,7 @@ static bool strneq(const char* a, const char* b, std::size_t max_count) {
 
 int main(int argc, char const* argv[]) {
     if (argc == 1) {
-        std::cout << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--all]\n",
+        std::cout << std::format("Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--execution] [--all]\n",
                                  argv[0]);
         return 1;
     }
@@ -31,6 +31,13 @@ int main(int argc, char const* argv[]) {
     bool semantic = false;
     bool controlflow = false;
     bool codegen = false;
+    bool execution = false;
+
+    LLVMInitializeX86TargetInfo();
+    LLVMInitializeX86Target();
+    LLVMInitializeX86TargetMC();
+    LLVMInitializeX86AsmPrinter();
+    LLVMInitializeX86AsmParser();
 
     // TODO: Replace this with proper argument parser later (when working on argparser for main executable)
 
@@ -45,12 +52,15 @@ int main(int argc, char const* argv[]) {
             codegen = true;
         } else if (strneq(argv[i], "--controlflow", 13)) {
             controlflow = true;
+        } else if (strneq(argv[i], "--execution", 13)) {
+            execution = true;
         } else if (strneq(argv[i], "--all", 5)) {
             lexer = true;
             parser = true;
             semantic = true;
             controlflow = true;
             codegen = true;
+            execution = true;
             break;
         } else {
             std::cout << std::format("Skipping unknown argument: {}\n", argv[i]);
@@ -85,8 +95,12 @@ int main(int argc, char const* argv[]) {
         Manganese::tests::runCodeGenerationTests(runner);
         std::cout << "\n----------\n";
     }
+    if (execution) {
+        std::cout << ansi::PINK << "Execution Tests\n" << ansi::RESET;
+        Manganese::tests::runExecutionTests(runner);
+        std::cout << "\n----------\n";
+    }
 
-    logTotalAllocatedMemory();  // Only does something if memory tracking is enabled
     runner.printSummary();
     auto end = std::chrono::high_resolution_clock::now();
 
