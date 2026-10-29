@@ -33,13 +33,10 @@ int main(int argc, char const* argv[]) {
     bool codegen = false;
     bool execution = false;
 
-    LLVMInitializeX86TargetInfo();
-    LLVMInitializeX86Target();
-    LLVMInitializeX86TargetMC();
-    LLVMInitializeX86AsmPrinter();
-    LLVMInitializeX86AsmParser();
-
-    // TODO: Replace this with proper argument parser later (when working on argparser for main executable)
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllAsmParsers();
 
     for (int i = 1; i < argc; ++i) {
         if (strneq(argv[i], "--lexer", 7)) {
