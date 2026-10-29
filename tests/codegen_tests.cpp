@@ -2,6 +2,8 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include <backend/ir_generator.hpp>
+#include <backend/optimizations.hpp>
 #include <core.hpp>
 #include <filesystem>
 #include <frontend/cfg/control_flow_analyzer.hpp>
@@ -9,8 +11,6 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
-#include <backend/ir_generator.hpp>
-#include <backend/optimizations.hpp>
 #include <string>
 #include <utils/chunk_allocator.hpp>
 #include <utils/string_interner.hpp>
@@ -26,7 +26,65 @@ constexpr const char* logFileName = "logs/codegen_tests.log";
 utils::chunk_allocator arena;
 utils::StringInterner interner;
 
-bool validateIRContains(const std::string& source, const std::initializer_list<std::string>& expectedSubstrings,
+struct CompilationResult {
+    bool success;
+    std::string irOutput;
+    std::string optimizedIROutput;
+    std::string errorMsg;
+};
+
+// Helper function isolating the LLVM IR generation, verification, and optimization pipeline
+CompilationResult generateAndOptimizeModule(std::vector<parser::ParsedFile>& parsedFiles,
+                                            semantic::SemanticAnalyzer& semanticAnalyzer) {
+    codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, interner, utils::getTargetInfo());
+    irGenerator.generate();
+
+    auto* module = irGenerator.getModule();
+    if (module == nullptr) {
+        return {.success = false,
+                .irOutput = "",
+                .optimizedIROutput = "",
+                .errorMsg = "IR generator returned a null module."};
+    }
+
+    std::string verifyErrorStr;
+    llvm::raw_string_ostream verifyErrorOS(verifyErrorStr);
+    if (llvm::verifyModule(*module, &verifyErrorOS)) {
+        verifyErrorOS.flush();
+        return {.success = false,
+                .irOutput = "",
+                .optimizedIROutput = "",
+                .errorMsg = "Module verification failed:\n" + verifyErrorStr};
+    }
+
+    std::string irOutput;
+    {
+        llvm::raw_string_ostream rso(irOutput);
+        module->print(rso, nullptr);
+    }
+
+    codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
+
+    std::string verifyOptErrorStr;
+    llvm::raw_string_ostream verifyOptErrorOS(verifyOptErrorStr);
+    if (llvm::verifyModule(*module, &verifyOptErrorOS)) {
+        verifyOptErrorOS.flush();
+        return {.success = false,
+                .irOutput = irOutput,
+                .optimizedIROutput = "",
+                .errorMsg = "Optimized module verification failed:\n" + verifyOptErrorStr};
+    }
+
+    std::string optimizedIROutput;
+    {
+        llvm::raw_string_ostream rso2(optimizedIROutput);
+        module->print(rso2, nullptr);
+    }
+
+    return {.success = true, .irOutput = irOutput, .optimizedIROutput = optimizedIROutput, .errorMsg = ""};
+}
+
+bool validateIRContains(const std::string& source, std::initializer_list<std::string_view> expectedSubstrings,
                         std::string_view testName) {
     parser::Parser parser(source, lexer::Mode::String, arena, interner);
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
@@ -37,70 +95,35 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
     cfg::ControlFlowAnalyzer cfa(parsedFiles, utils::getTargetInfo(), semanticAnalyzer.getSymbolTable(), interner);
     if (cfa.analyze() != Result::Success) { return false; }
 
-    std::string irOutput;
-    std::string optimizedIROutput;
-    bool generationPassed = true;
-
+    CompilationResult compResult;
     try {
-        codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, interner, utils::getTargetInfo());
-        irGenerator.generate();
-
-        if (auto* module = irGenerator.getModule()) {
-            std::string verifyErrorStr;
-            llvm::raw_string_ostream verifyErrorOS(verifyErrorStr);
-            if (llvm::verifyModule(*module, &verifyErrorOS)) {
-                verifyErrorOS.flush();
-                std::ofstream logFile(logFileName, std::ios::app);
-                return false;
-            }
-
-            std::string tempStr;
-            llvm::raw_string_ostream rso(tempStr);
-            module->print(rso, nullptr);
-            rso.flush();
-            irOutput = tempStr;
-
-            codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
-
-            std::string verifyOptErrorStr;
-            llvm::raw_string_ostream verifyOptErrorOS(verifyOptErrorStr);
-            if (llvm::verifyModule(*module, &verifyOptErrorOS)) {
-                verifyOptErrorOS.flush();
-                std::ofstream logFile(logFileName, std::ios::app);
-                return false;
-            }
-
-            std::string optTempStr;
-            llvm::raw_string_ostream rso2(optTempStr);
-            module->print(rso2, nullptr);
-            rso2.flush();
-            optimizedIROutput = optTempStr;
-
-        } else {
-            generationPassed = false;
-        }
+        compResult = generateAndOptimizeModule(parsedFiles, semanticAnalyzer);
     } catch (const std::exception& e) {
-        generationPassed = false;
-        irOutput = std::string("Exception: ") + e.what();
+        compResult = {.success = false,
+                      .irOutput = "",
+                      .optimizedIROutput = "",
+                      .errorMsg = std::string("Exception: ") + e.what()};
     } catch (...) {
-        generationPassed = false;
-        irOutput = "Unknown exception during IR generation.";
+        compResult = {.success = false,
+                      .irOutput = "",
+                      .optimizedIROutput = "",
+                      .errorMsg = "Unknown exception during IR generation."};
     }
 
-    if (!generationPassed) {
+    if (!compResult.success) {
         std::ofstream logFile(logFileName, std::ios::app);
         if (logFile) {
             logFile << "Test: " << testName << " failed.\n";
+            logFile << "Reason: " << compResult.errorMsg << "\n";
             logFile << "---------------------\n";
         }
         return false;
     }
 
     bool allFound = true;
-    std::vector<std::string> missingPatterns;
+    std::vector<std::string_view> missingPatterns;
     for (const auto& pattern : expectedSubstrings) {
-        // Check unoptimized IR to make sure it's emitting correct instructions
-        if (irOutput.find(pattern) == std::string::npos) {
+        if (compResult.irOutput.find(pattern) == std::string::npos) {
             allFound = false;
             missingPatterns.push_back(pattern);
         }
@@ -113,9 +136,8 @@ bool validateIRContains(const std::string& source, const std::initializer_list<s
         if (!allFound) {
             for (const auto& pattern : missingPatterns) { logFile << "Missing Substring: \"" << pattern << "\"\n"; }
         }
-        logFile << "Generated IR (Unoptimized)\n" << irOutput << "\n\n\n";
-        logFile << "Generated IR (Optimized)\n" << optimizedIROutput << "\n\n\n";
-        logFile.close();
+        logFile << "Generated IR (Unoptimized)\n" << compResult.irOutput << "\n\n\n";
+        logFile << "Generated IR (Optimized)\n" << compResult.optimizedIROutput << "\n\n\n";
     }
 
     if (!allFound) {
@@ -479,15 +501,13 @@ void TestRunner::runCodeGenerationTests() {
     runTest("Codegen: Default Parameters", codegen_tests::testDefaultParameterCodegen);
     runTest("Codegen: Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
     runTest("Codegen: Generics", codegen_tests::testGenericsCodegen);
-    runTest("Codegen: Array of Functions Indexed and Called",
-                   codegen_tests::testArrayOfFunctionsIndexedAndCalled);
+    runTest("Codegen: Array of Functions Indexed and Called", codegen_tests::testArrayOfFunctionsIndexedAndCalled);
 
     runTest("Codegen: Generic Aggregate Instantiation", codegen_tests::testGenericAggregateInstantiation);
     runTest("Codegen: Multi-Parameter Generic Functions", codegen_tests::testMultiParamGenerics);
     runTest("Codegen: Array of Generic Aggregates", codegen_tests::testArrayOfGenericAggregates);
 
-    runTest("Codegen: Array of Instantiated Generic Functions",
-                   codegen_tests::testArrayOfInstantiatedGenericFunctions);
+    runTest("Codegen: Array of Instantiated Generic Functions", codegen_tests::testArrayOfInstantiatedGenericFunctions);
     runTest("Codegen: Ternary Expression", codegen_tests::testTernaryExpressionCodeGen);
     runTest("Codegen: File", codegen_tests::testCodegenFromFile);
     runTest("Codegen: Typeof Dependent Return Type", codegen_tests::testTypeOfReturnCodegen);
