@@ -160,31 +160,4 @@ target_include_directories(manganese SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 target_compile_options(manganese PRIVATE ${LLVM_DEFINITIONS_LIST})
 
-llvm_map_components_to_libnames(LLVM_LIBS
-    Core 
-    Support 
-    IRReader 
-    ExecutionEngine 
-    Analysis
-    BitWriter 
-    CodeGen 
-    Passes
-    MC            
-    TargetParser
-    X86     
-)
-
-target_link_libraries(manganese PRIVATE ${LLVM_LIBS})
-
-if(BUILD_TESTS)
-llvm_map_components_to_libnames(LLVM_JIT_LIBS
-    OrcJIT
-    RuntimeDyld
-    ExecutionEngine
-    Core
-    Support
-    CodeGen
-    TargetParser
-)
-target_link_libraries(manganese PRIVATE ${LLVM_JIT_LIBS})
-endif()
+target_link_libraries(manganese PRIVATE LLVM)
