@@ -4,20 +4,21 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Transforms/Utils/Cloning.h>
 
+#include <backend/ir_generator.hpp>
+#include <backend/optimizations.hpp>
 #include <core.hpp>
 #include <frontend/cfg/control_flow_analyzer.hpp>
 #include <frontend/parser.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
-#include <backend/ir_generator.hpp>
-#include <backend/optimizations.hpp>
 #include <string>
 #include <utils/chunk_allocator.hpp>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 
 #include "tests.hpp"
+
 
 namespace Manganese::tests {
 
@@ -182,15 +183,14 @@ bool testExecutionSecondGenericAggregateSlice() {
 }  // namespace
 }  // namespace execution_tests
 
-void runExecutionTests(TestRunner& runner) {
+void TestRunner::runExecutionTests() {
     std::ofstream logFile(executionLogFileName, std::ios::trunc);
     logFile.close();
 
-    runner.runTest("Execution: Arithmetic & Loops", execution_tests::testExecutionArithmeticAndLoops);
-    runner.runTest("Execution: Array Indexing", execution_tests::testExecutionArrayAccess);
-    runner.runTest("Execution: Generic Aggregate Slice Index 0", execution_tests::testExecutionGenericAggregateSlice);
-    runner.runTest("Execution: Generic Aggregate Slice Index 1",
-                   execution_tests::testExecutionSecondGenericAggregateSlice);
+    runTest("Execution: Arithmetic & Loops", execution_tests::testExecutionArithmeticAndLoops);
+    runTest("Execution: Array Indexing", execution_tests::testExecutionArrayAccess);
+    runTest("Execution: Generic Aggregate Slice Index 0", execution_tests::testExecutionGenericAggregateSlice);
+    runTest("Execution: Generic Aggregate Slice Index 1", execution_tests::testExecutionSecondGenericAggregateSlice);
 }
 
 }  // namespace Manganese::tests

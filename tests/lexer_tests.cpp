@@ -523,31 +523,31 @@ bool testNumericSuffixCombinations() {
 }  // namespace
 }  // namespace lexer_tests
 
-void runLexerTests(TestRunner& runner) {
+void TestRunner::runLexerTests() {
     // Register all tests
-    runner.runTest("Lexer: Empty String", lexer_tests::testEmptyString);
-    runner.runTest("Lexer: Whitespace", lexer_tests::testWhitespace);
-    runner.runTest("Lexer: Comments", lexer_tests::testComments);
-    runner.runTest("Lexer: Identifiers", lexer_tests::testIdentifiers);
-    runner.runTest("Lexer: Keywords", lexer_tests::testKeywords);
-    runner.runTest("Lexer: Operators", lexer_tests::testOperators);
-    runner.runTest("Lexer: Integer Literals", lexer_tests::testIntegerLiterals);
-    runner.runTest("Lexer: Float Literals", lexer_tests::testFloatLiterals);
-    runner.runTest("Lexer: Invalid Number Literals", lexer_tests::testInvalidNumberLiterals);
-    runner.runTest("Lexer: Character Literals", lexer_tests::testCharLiterals);
-    runner.runTest("Lexer: String Literals", lexer_tests::testStringLiterals);
-    runner.runTest("Lexer: Invalid Character Literals", lexer_tests::testInvalidCharLiterals);
-    runner.runTest("Lexer: Invalid String Literals", lexer_tests::testInvalidStringLiterals);
-    runner.runTest("Lexer: Brackets", lexer_tests::testBrackets);
-    runner.runTest("Lexer: Punctuation", lexer_tests::testPunctuation);
-    runner.runTest("Lexer: Nested Brackets", lexer_tests::testNestedBrackets);
-    runner.runTest("Lexer: Invalid Character", lexer_tests::testInvalidChar);
-    runner.runTest("Lexer: Invalid Escape Sequence", lexer_tests::testInvalidEscapeSequence);
-    runner.runTest("Lexer: Complete Program", lexer_tests::testCompleteProgram);
-    runner.runTest("Lexer: Invalid File", lexer_tests::testBadFileAccess);
-    runner.runTest("Lexer: Underscore Separated Numbers", lexer_tests::testUnderscoreSeparatedNumbers);
-    runner.runTest("Lexer: Consecutive Operators", lexer_tests::testConsecutiveOperatorsAndDelimiters);
-    runner.runTest("Lexer: Unterminated String", lexer_tests::testUnterminatedString);
-    runner.runTest("Lexer: Numeric Suffix Combinations", lexer_tests::testNumericSuffixCombinations);
+    runTest("Lexer: Empty String", lexer_tests::testEmptyString);
+    runTest("Lexer: Whitespace", lexer_tests::testWhitespace);
+    runTest("Lexer: Comments", lexer_tests::testComments);
+    runTest("Lexer: Identifiers", lexer_tests::testIdentifiers);
+    runTest("Lexer: Keywords", lexer_tests::testKeywords);
+    runTest("Lexer: Operators", lexer_tests::testOperators);
+    runTest("Lexer: Integer Literals", lexer_tests::testIntegerLiterals);
+    runTest("Lexer: Float Literals", lexer_tests::testFloatLiterals);
+    runTest("Lexer: Invalid Number Literals", lexer_tests::testInvalidNumberLiterals);
+    runTest("Lexer: Character Literals", lexer_tests::testCharLiterals);
+    runTest("Lexer: String Literals", lexer_tests::testStringLiterals);
+    runTest("Lexer: Invalid Character Literals", lexer_tests::testInvalidCharLiterals);
+    runTest("Lexer: Invalid String Literals", lexer_tests::testInvalidStringLiterals);
+    runTest("Lexer: Brackets", lexer_tests::testBrackets);
+    runTest("Lexer: Punctuation", lexer_tests::testPunctuation);
+    runTest("Lexer: Nested Brackets", lexer_tests::testNestedBrackets);
+    runTest("Lexer: Invalid Character", lexer_tests::testInvalidChar);
+    runTest("Lexer: Invalid Escape Sequence", lexer_tests::testInvalidEscapeSequence);
+    runTest("Lexer: Complete Program", lexer_tests::testCompleteProgram);
+    runTest("Lexer: Invalid File", lexer_tests::testBadFileAccess);
+    runTest("Lexer: Underscore Separated Numbers", lexer_tests::testUnderscoreSeparatedNumbers);
+    runTest("Lexer: Consecutive Operators", lexer_tests::testConsecutiveOperatorsAndDelimiters);
+    runTest("Lexer: Unterminated String", lexer_tests::testUnterminatedString);
+    runTest("Lexer: Numeric Suffix Combinations", lexer_tests::testNumericSuffixCombinations);
 }
 }  // namespace Manganese::tests

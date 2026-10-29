@@ -462,39 +462,39 @@ bool testForEachLoopCodegen() {
 }  // namespace
 }  // namespace codegen_tests
 
-void runCodeGenerationTests(TestRunner& runner) {
+void TestRunner::runCodeGenerationTests() {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
 
-    runner.runTest("Codegen: Basic Function Emission", codegen_tests::testBasicFunctionEmission);
-    runner.runTest("Codegen: Variable Allocation and Assignment", codegen_tests::testVariableAllocationAndAssignment);
-    runner.runTest("Codegen: Control Flow Lowering (If/Else)", codegen_tests::testControlFlowLoweringIfElse);
-    runner.runTest("Codegen: While Loop Lowering", codegen_tests::testWhileLoopLowering);
-    runner.runTest("Codegen: Aggregate Layout Emission", codegen_tests::testAggregateLayoutEmission);
-    runner.runTest("Codegen: Pointer Dereference Codegen", codegen_tests::testPointerDereferenceCodegen);
+    runTest("Codegen: Basic Function Emission", codegen_tests::testBasicFunctionEmission);
+    runTest("Codegen: Variable Allocation and Assignment", codegen_tests::testVariableAllocationAndAssignment);
+    runTest("Codegen: Control Flow Lowering (If/Else)", codegen_tests::testControlFlowLoweringIfElse);
+    runTest("Codegen: While Loop Lowering", codegen_tests::testWhileLoopLowering);
+    runTest("Codegen: Aggregate Layout Emission", codegen_tests::testAggregateLayoutEmission);
+    runTest("Codegen: Pointer Dereference Codegen", codegen_tests::testPointerDereferenceCodegen);
 
-    runner.runTest("Codegen: Boolean Logic", codegen_tests::testBooleanLogic);
-    runner.runTest("Codegen: Binary Operator Precedence", codegen_tests::testBinaryOperatorPrecedence);
-    runner.runTest("Codegen: Nested Function Calls", codegen_tests::testNestedFunctionCalls);
-    runner.runTest("Codegen: Default Parameters", codegen_tests::testDefaultParameterCodegen);
-    runner.runTest("Codegen: Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
-    runner.runTest("Codegen: Generics", codegen_tests::testGenericsCodegen);
-    runner.runTest("Codegen: Array of Functions Indexed and Called",
+    runTest("Codegen: Boolean Logic", codegen_tests::testBooleanLogic);
+    runTest("Codegen: Binary Operator Precedence", codegen_tests::testBinaryOperatorPrecedence);
+    runTest("Codegen: Nested Function Calls", codegen_tests::testNestedFunctionCalls);
+    runTest("Codegen: Default Parameters", codegen_tests::testDefaultParameterCodegen);
+    runTest("Codegen: Array Index-Based Access", codegen_tests::testArrayIndexBasedAccess);
+    runTest("Codegen: Generics", codegen_tests::testGenericsCodegen);
+    runTest("Codegen: Array of Functions Indexed and Called",
                    codegen_tests::testArrayOfFunctionsIndexedAndCalled);
 
-    runner.runTest("Codegen: Generic Aggregate Instantiation", codegen_tests::testGenericAggregateInstantiation);
-    runner.runTest("Codegen: Multi-Parameter Generic Functions", codegen_tests::testMultiParamGenerics);
-    runner.runTest("Codegen: Array of Generic Aggregates", codegen_tests::testArrayOfGenericAggregates);
+    runTest("Codegen: Generic Aggregate Instantiation", codegen_tests::testGenericAggregateInstantiation);
+    runTest("Codegen: Multi-Parameter Generic Functions", codegen_tests::testMultiParamGenerics);
+    runTest("Codegen: Array of Generic Aggregates", codegen_tests::testArrayOfGenericAggregates);
 
-    runner.runTest("Codegen: Array of Instantiated Generic Functions",
+    runTest("Codegen: Array of Instantiated Generic Functions",
                    codegen_tests::testArrayOfInstantiatedGenericFunctions);
-    runner.runTest("Codegen: Ternary Expression", codegen_tests::testTernaryExpressionCodeGen);
-    runner.runTest("Codegen: File", codegen_tests::testCodegenFromFile);
-    runner.runTest("Codegen: Typeof Dependent Return Type", codegen_tests::testTypeOfReturnCodegen);
-    runner.runTest("Codegen: Nested Generic Recursion", codegen_tests::testNestedGenericRecursionCodegen);
-    runner.runTest("Codegen: Slice Length and Numeric Access", codegen_tests::testSliceLengthAndNumericAccessCodeGen);
-    runner.runTest("Codegen: Chained Comparison", codegen_tests::testChainedComparisonCodeGen);
-    runner.runTest("Codegen: ForEach Loops", codegen_tests::testForEachLoopCodegen);
+    runTest("Codegen: Ternary Expression", codegen_tests::testTernaryExpressionCodeGen);
+    runTest("Codegen: File", codegen_tests::testCodegenFromFile);
+    runTest("Codegen: Typeof Dependent Return Type", codegen_tests::testTypeOfReturnCodegen);
+    runTest("Codegen: Nested Generic Recursion", codegen_tests::testNestedGenericRecursionCodegen);
+    runTest("Codegen: Slice Length and Numeric Access", codegen_tests::testSliceLengthAndNumericAccessCodeGen);
+    runTest("Codegen: Chained Comparison", codegen_tests::testChainedComparisonCodeGen);
+    runTest("Codegen: ForEach Loops", codegen_tests::testForEachLoopCodegen);
 }
 
 }  // namespace Manganese::tests

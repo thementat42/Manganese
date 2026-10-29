@@ -105,32 +105,32 @@ Result runTestSuite(int argc, const char** argv) {
 
     if (lexer) {
         std::cout << ansi::PINK << "Lexer Tests\n" << ansi::RESET;
-        tests::runLexerTests(runner);
+        runner.runLexerTests();
         std::cout << "\n----------\n";
     }
     if (parser) {
         std::cout << ansi::PINK << "Parser Tests\n" << ansi::RESET;
-        tests::runParserTests(runner);
+        runner.runParserTests();
         std::cout << "\n----------\n";
     }
     if (semantic) {
         std::cout << ansi::PINK << "Semantic Analyzer Tests\n" << ansi::RESET;
-        tests::runSemanticAnalyzerTests(runner);
+        runner.runSemanticAnalyzerTests();
         std::cout << "\n----------\n";
     }
     if (controlflow) {
         std::cout << ansi::PINK << "Control Flow Analysis Tests\n" << ansi::RESET;
-        tests::runControlFlowAnalyzerTests(runner);
+        runner.runControlFlowAnalyzerTests();
         std::cout << "\n----------\n";
     }
     if (codegen) {
         std::cout << ansi::PINK << "Codegen Tests\n" << ansi::RESET;
-        tests::runCodeGenerationTests(runner);
+        runner.runCodeGenerationTests();
         std::cout << "\n----------\n";
     }
     if (execution) {
         std::cout << ansi::PINK << "Execution Tests\n" << ansi::RESET;
-        tests::runExecutionTests(runner);
+        runner.runExecutionTests();
         std::cout << "\n----------\n";
     }
 

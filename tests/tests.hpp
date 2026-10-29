@@ -17,14 +17,14 @@ class TestRunner {
     void runTest(const std::string& testName, bool (*testFunction)());
     void printSummary() const noexcept;
     bool allTestsPassed() const noexcept { return failed == 0; }
-};
 
-void runLexerTests(TestRunner& runner);
-void runParserTests(TestRunner& runner);
-void runSemanticAnalyzerTests(TestRunner& runner);
-void runControlFlowAnalyzerTests(TestRunner& runner);
-void runCodeGenerationTests(TestRunner& runner);
-void runExecutionTests(TestRunner& runner);
+    void runLexerTests();
+    void runParserTests();
+    void runSemanticAnalyzerTests();
+    void runControlFlowAnalyzerTests();
+    void runCodeGenerationTests();
+    void runExecutionTests();
+};
 Result runTestSuite(int argc, const char** argv);
 
 }  // namespace Manganese::tests
