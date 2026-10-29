@@ -2,6 +2,7 @@
 #define MANGANESE_TESTS_TESTS_HPP
 
 #include <string>
+#include <utils/result.hpp>
 
 namespace Manganese::tests {
 
@@ -24,6 +25,7 @@ void runSemanticAnalyzerTests(TestRunner& runner);
 void runControlFlowAnalyzerTests(TestRunner& runner);
 void runCodeGenerationTests(TestRunner& runner);
 void runExecutionTests(TestRunner& runner);
+Result runTestSuite(int argc, const char** argv);
 
 }  // namespace Manganese::tests
 #endif  // MANGANESE_TESTS_TESTS_HPP
