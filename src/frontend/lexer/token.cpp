@@ -8,24 +8,28 @@ namespace Manganese::lexer {
 
 std::string tokenTypeToString(TokenType type) {
     switch (type) {
-#define TOKEN(name, text) \
+#define SPECIAL_TOKEN(name, text) \
     case TokenType::name: return text;
 
-#define PUNCTUATION(name, text) \
+#define LITERAL_TOKEN(name, text) \
     case TokenType::name: return text;
 
-#define KEYWORD(name, text) \
+#define PUNCTUATION_TOKEN(name, text) \
     case TokenType::name: return text;
 
-#define OPERATOR(name, text) \
+#define KEYWORD_TOKEN(name, text) \
+    case TokenType::name: return text;
+
+#define OPERATOR_TOKEN(name, text) \
     case TokenType::name: return text;
 
 #include <frontend/lexer/tokens.def>
 
-#undef TOKEN
-#undef PUNCTUATION
-#undef KEYWORD
-#undef OPERATOR
+#undef SPECIAL_TOKEN
+#undef LITERAL_TOKEN
+#undef PUNCTUATION_TOKEN
+#undef KEYWORD_TOKEN
+#undef OPERATOR_TOKEN
     }
     ASSERT_UNREACHABLE_FMT("No string representation for TokenType: {}", static_cast<int>(type));
 }
@@ -60,18 +64,20 @@ struct operator_map_entry {
 
 // let template argument deduction figure out the size (more flexible for adding/removing keywords)
 constexpr std::array _keywordTableHelper = {
-#define TOKEN(name, text)
-#define PUNCTUATION(name, text)
-#define OPERATOR(name, text)
+#define SPECIAL_TOKEN(name, text)
+#define LITERAL_TOKEN(name, text)
+#define PUNCTUATION_TOKEN(name, text)
+#define OPERATOR_TOKEN(name, text)
 
-#define KEYWORD(name, text) keyword_map_entry{.str = (text), .type = TokenType::name},
+#define KEYWORD_TOKEN(name, text) keyword_map_entry{.str = (text), .type = TokenType::name},
 
 #include <frontend/lexer/tokens.def>
 
-#undef TOKEN
-#undef PUNCTUATION
-#undef KEYWORD
-#undef OPERATOR
+#undef SPECIAL_TOKEN
+#undef LITERAL_TOKEN
+#undef PUNCTUATION_TOKEN
+#undef KEYWORD_TOKEN
+#undef OPERATOR_TOKEN
     // if no width is specified, default to a 32-bit float
     keyword_map_entry{.str = "float", .type = TokenType::Float32},
     // if no width is specified, default to a 32-bit integer
@@ -81,16 +87,19 @@ constexpr std::array _keywordTableHelper = {
 };
 
 constexpr std::array _operatorTableHelper{
-#define TOKEN(name, text)
-#define PUNCTUATION(name, text) operator_map_entry{.str = (text), .type = TokenType::name},
-#define OPERATOR(name, text) operator_map_entry{.str = (text), .type = TokenType::name},
-#define KEYWORD(name, text)
+#define SPECIAL_TOKEN(name, text)
+#define LITERAL_TOKEN(name, text)
+#define PUNCTUATION_TOKEN(name, text) operator_map_entry{.str = (text), .type = TokenType::name},
+#define OPERATOR_TOKEN(name, text)    operator_map_entry{.str = (text), .type = TokenType::name},
+#define KEYWORD_TOKEN(name, text)
 
 #include <frontend/lexer/tokens.def>
 
-#undef TOKEN
-#undef KEYWORD
-#undef OPERATOR
+#undef SPECIAL_TOKEN
+#undef LITERAL_TOKEN
+#undef PUNCTUATION_TOKEN
+#undef KEYWORD_TOKEN
+#undef OPERATOR_TOKEN
 };
 
 }  // namespace

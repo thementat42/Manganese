@@ -12,17 +12,19 @@
 namespace Manganese::lexer {
 
 enum class TokenType : std::uint8_t {
-#define TOKEN(name, text)       name,
-#define PUNCTUATION(name, text) name,
-#define KEYWORD(name, text)     name,
-#define OPERATOR(name, text)    name,
+#define SPECIAL_TOKEN(name, text)             name,
+#define LITERAL_TOKEN(name, text)     name,
+#define PUNCTUATION_TOKEN(name, text) name,
+#define KEYWORD_TOKEN(name, text)     name,
+#define OPERATOR_TOKEN(name, text)    name,
 
 #include <frontend/lexer/tokens.def>
 
-#undef TOKEN
-#undef KEYWORD
-#undef OPERATOR
-#undef PUNCTUATION
+#undef SPECIAL_TOKEN
+#undef LITERAL_TOKEN
+#undef KEYWORD_TOKEN
+#undef OPERATOR_TOKEN
+#undef PUNCTUATION_TOKEN
 };
 
 std::string tokenTypeToString(TokenType type);
