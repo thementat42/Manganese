@@ -11,6 +11,9 @@ std::string tokenTypeToString(TokenType type) {
 #define TOKEN(name, text) \
     case TokenType::name: return text;
 
+#define PUNCTUATION(name, text) \
+    case TokenType::name: return text;
+
 #define KEYWORD(name, text) \
     case TokenType::name: return text;
 
@@ -20,6 +23,7 @@ std::string tokenTypeToString(TokenType type) {
 #include <frontend/lexer/tokens.def>
 
 #undef TOKEN
+#undef PUNCTUATION
 #undef KEYWORD
 #undef OPERATOR
     }
@@ -49,9 +53,15 @@ struct keyword_map_entry {
     TokenType type;
 };
 
+struct operator_map_entry {
+    std::string_view str;
+    TokenType type;
+};
+
 // let template argument deduction figure out the size (more flexible for adding/removing keywords)
 constexpr std::array _keywordTableHelper = {
 #define TOKEN(name, text)
+#define PUNCTUATION(name, text)
 #define OPERATOR(name, text)
 
 #define KEYWORD(name, text) keyword_map_entry{.str = (text), .type = TokenType::name},
@@ -59,6 +69,7 @@ constexpr std::array _keywordTableHelper = {
 #include <frontend/lexer/tokens.def>
 
 #undef TOKEN
+#undef PUNCTUATION
 #undef KEYWORD
 #undef OPERATOR
     // if no width is specified, default to a 32-bit float
@@ -68,6 +79,20 @@ constexpr std::array _keywordTableHelper = {
     // if no width is specified, default to a 32-bit unsigned integer
     keyword_map_entry{.str = "uint", .type = TokenType::UInt32},
 };
+
+constexpr std::array _operatorTableHelper{
+#define TOKEN(name, text)
+#define PUNCTUATION(name, text) operator_map_entry{.str = (text), .type = TokenType::name},
+#define OPERATOR(name, text) operator_map_entry{.str = (text), .type = TokenType::name},
+#define KEYWORD(name, text)
+
+#include <frontend/lexer/tokens.def>
+
+#undef TOKEN
+#undef KEYWORD
+#undef OPERATOR
+};
+
 }  // namespace
 
 // Sort the helper table to allow for binary search lookups
@@ -77,12 +102,29 @@ constexpr auto keywordTable = []() {
     return arr;
 }();
 
+constexpr auto operatorTable = []() {
+    // Note: sorting by length helps satisfy maximal munch
+    auto arr = _operatorTableHelper;
+    std::ranges::sort(arr, [](const auto& a, const auto& b) {
+        if (a.str.length() != b.str.length()) { return a.str.length() > b.str.length(); }
+        return a.str < b.str;
+    });
+    return arr;
+}();
+
 TokenType keywordLookup(std::string_view s) noexcept {
     if (const auto* entry = std::ranges::lower_bound(keywordTable, s, {}, &keyword_map_entry::str);
         entry != keywordTable.end() && entry->str == s) {
         return entry->type;
     }
     return TokenType::Unknown;
+}
+
+OperatorMatch operatorLookup(std::string_view s) noexcept {
+    for (const auto& entry : operatorTable) {
+        if (s.starts_with(entry.str)) { return {.type = entry.type, .length = entry.str.length()}; }
+    }
+    return {.type = TokenType::Unknown, .length = 1};
 }
 
 std::string Token::toString() const {

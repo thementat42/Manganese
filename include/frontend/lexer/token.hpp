@@ -12,15 +12,17 @@
 namespace Manganese::lexer {
 
 enum class TokenType : std::uint8_t {
-#define TOKEN(name, text)    name,
-#define KEYWORD(name, text)  name,
-#define OPERATOR(name, text) name,
+#define TOKEN(name, text)       name,
+#define PUNCTUATION(name, text) name,
+#define KEYWORD(name, text)     name,
+#define OPERATOR(name, text)    name,
 
 #include <frontend/lexer/tokens.def>
 
 #undef TOKEN
 #undef KEYWORD
 #undef OPERATOR
+#undef PUNCTUATION
 };
 
 std::string tokenTypeToString(TokenType type);
@@ -88,7 +90,13 @@ class Token {
     std::string toString() const;
 };
 
+struct OperatorMatch {
+    TokenType type;
+    std::size_t length;
+};
+
 TokenType keywordLookup(std::string_view s) noexcept;
+OperatorMatch operatorLookup(std::string_view s) noexcept;
 
 }  // namespace Manganese::lexer
 #endif  // MANGANESE_INCLUDE_FRONTEND_AST_LEXER_TOKEN_HPP

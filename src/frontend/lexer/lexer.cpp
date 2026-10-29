@@ -13,6 +13,8 @@
 #include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
 
+#include "frontend/lexer/token.hpp"
+
 namespace Manganese::lexer {
 
 //~ Core Lexer Functions
@@ -322,6 +324,139 @@ Result Lexer::tokenizeStringLiteral() {
 }
 
 Result Lexer::tokenizeSymbol() {
+    std::string lookahead;
+    for (std::size_t i = 0; i < 3; ++i) {
+        char c = peekChar(i);
+        if (c == '\0') { break; }  // Stop if EOF is reached
+        lookahead += c;
+    }
+
+    auto lookupResult = operatorLookup(lookahead);
+
+    if (lookupResult.type == TokenType::Unknown) {
+        const char c = peekChar();
+        logError("Unknown Character '{}'", c);
+        advance();
+        emitToken(TokenType::Unknown, std::string{1, c}, true);
+        return Result::Failure;
+    }
+    std::string lexeme = lookahead.substr(0, lookupResult.length);
+    advance(lookupResult.length);
+
+    //* For ambiguous operators , always emit the binary version and let the parser handle the distinction
+    switch (lookupResult.type) {
+        using enum TokenType;
+        case UnaryPlus: lookupResult.type = Plus; break;
+        case UnaryMinus: lookupResult.type = Minus; break;
+        case AddressOf: lookupResult.type = And; break;
+        case Dereference: lookupResult.type = Mul; break;
+        default: break;
+    }
+
+    emitToken(lookupResult.type, std::move(lexeme), false);
+    return Result::Success;
+}
+
+//~ Helper Functions
+
+void Lexer::emitToken(TokenType type, std::string&& lexeme, bool invalid) {
+    tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
+}
+
+NumberPrefixResult Lexer::processNumberPrefix() {
+    const char currentChar = peekChar();
+    if (currentChar != '0') {
+        // Decimal number
+        return NumberPrefixResult{.base = utils::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
+    }
+    // Could be a base indicator (0x, 0b, 0o) -- check next char
+    switch (peekChar(1)) {
+        case 'x':
+        case 'X':
+            advance(2);
+            return NumberPrefixResult{.base = utils::Base::Hexadecimal, .isValidBaseChar = is_xdigit, .prefix = "0x"};
+        case 'b':
+        case 'B':
+            advance(2);
+            return NumberPrefixResult{.base = utils::Base::Binary, .isValidBaseChar = is_bdigit, .prefix = "0b"};
+        case 'o':
+        case 'O':
+            advance(2);
+            return NumberPrefixResult{.base = utils::Base::Octal, .isValidBaseChar = is_odigit, .prefix = "0o"};
+        case 'd':
+        case 'D':
+            advance(2);
+            return NumberPrefixResult{.base = utils::Base::Octal, .isValidBaseChar = is_digit, .prefix = "0d"};
+        default:
+            if (is_digit(peekChar(1))) {
+                logWarning("Leading zeros in numeric literals are treated as decimal numbers."
+                           "Use a 0o prefix for octal numbers.");
+            }
+            return NumberPrefixResult{.base = utils::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
+    }
+}
+
+Result Lexer::processScientificNotation(std::string& numberLiteral) {
+    numberLiteral += to_lowercase(consumeChar());
+    if (peekChar() == '+' || peekChar() == '-') { numberLiteral += consumeChar(); }
+
+    if (!is_digit(peekChar())) {
+        logError("Invalid exponent: must be a number");
+        return Result::Failure;
+    }
+
+    while (!done() && is_digit(peekChar())) { numberLiteral += consumeChar(); }
+
+    return Result::Success;
+}
+
+Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
+    const char suffix = to_lowercase(peekChar());
+
+    if (suffix != 'i' && suffix != 'u' && suffix != 'f') { return Result::Success; }
+
+    DISCARD(consumeChar());
+
+    std::string width;
+
+    while (!done() && is_digit(peekChar())) { width += consumeChar(); }
+
+    if (width.empty()) { logError("Numeric suffix '{}' must specify a bit width", suffix); }
+
+    const bool isIntegerSuffix = suffix == 'i' || suffix == 'u';
+    const bool isFloatSuffix = suffix == 'f';
+
+    Result result = Result::Success;
+
+    if (isIntegerSuffix) {
+        if (width != "8" && width != "16" && width != "32" && width != "64" && width != "128") {
+            logError("Invalid integer suffix '{}': must be 8, 16, 32, 64 or 128", width);
+            result = Result::Failure;
+        }
+        if (isFloat) {
+            logError("Integer suffix '{}' cannot be used with floating-point literals", suffix);
+            result = Result::Failure;
+        }
+    }
+    if (isFloatSuffix) {
+        if (width != "32" && width != "64") {
+            logError("Invalid float suffix '{}' : must be 32 or 64", width);
+            result = Result::Failure;
+        }
+        if (!isFloat) {
+            logError("Float suffix '{}' can only be used with floating point literals", suffix);
+            result = Result::Failure;
+        }
+    }
+    numberLiteral += suffix;
+    numberLiteral += width;
+    return result;
+}
+
+}  // namespace Manganese::lexer
+
+/*
+Result Lexer::tokenizeSymbol() {
     Result result = Result::Success;
     TokenType type;
     const char current = peekChar();
@@ -513,102 +648,4 @@ Result Lexer::tokenizeSymbol() {
     advance(lexeme.length());
     emitToken(type, std::move(lexeme), result == Result::Failure);
     return result;
-}
-
-//~ Helper Functions
-
-void Lexer::emitToken(TokenType type, std::string&& lexeme, bool invalid) {
-    tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
-}
-
-NumberPrefixResult Lexer::processNumberPrefix() {
-    const char currentChar = peekChar();
-    if (currentChar != '0') {
-        // Decimal number
-        return NumberPrefixResult{.base = utils::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
-    }
-    // Could be a base indicator (0x, 0b, 0o) -- check next char
-    switch (peekChar(1)) {
-        case 'x':
-        case 'X':
-            advance(2);
-            return NumberPrefixResult{.base = utils::Base::Hexadecimal, .isValidBaseChar = is_xdigit, .prefix = "0x"};
-        case 'b':
-        case 'B':
-            advance(2);
-            return NumberPrefixResult{.base = utils::Base::Binary, .isValidBaseChar = is_bdigit, .prefix = "0b"};
-        case 'o':
-        case 'O':
-            advance(2);
-            return NumberPrefixResult{.base = utils::Base::Octal, .isValidBaseChar = is_odigit, .prefix = "0o"};
-        case 'd':
-        case 'D':
-            advance(2);
-            return NumberPrefixResult{.base = utils::Base::Octal, .isValidBaseChar = is_digit, .prefix = "0d"};
-        default:
-            if (is_digit(peekChar(1))) {
-                logWarning("Leading zeros in numeric literals are treated as decimal numbers."
-                           "Use a 0o prefix for octal numbers.");
-            }
-            return NumberPrefixResult{.base = utils::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
-    }
-}
-
-Result Lexer::processScientificNotation(std::string& numberLiteral) {
-    numberLiteral += to_lowercase(consumeChar());
-    if (peekChar() == '+' || peekChar() == '-') { numberLiteral += consumeChar(); }
-
-    if (!is_digit(peekChar())) {
-        logError("Invalid exponent: must be a number");
-        return Result::Failure;
-    }
-
-    while (!done() && is_digit(peekChar())) { numberLiteral += consumeChar(); }
-
-    return Result::Success;
-}
-
-Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
-    const char suffix = to_lowercase(peekChar());
-
-    if (suffix != 'i' && suffix != 'u' && suffix != 'f') { return Result::Success; }
-
-    DISCARD(consumeChar());
-
-    std::string width;
-
-    while (!done() && is_digit(peekChar())) { width += consumeChar(); }
-
-    if (width.empty()) { logError("Numeric suffix '{}' must specify a bit width", suffix); }
-
-    const bool isIntegerSuffix = suffix == 'i' || suffix == 'u';
-    const bool isFloatSuffix = suffix == 'f';
-
-    Result result = Result::Success;
-
-    if (isIntegerSuffix) {
-        if (width != "8" && width != "16" && width != "32" && width != "64" && width != "128") {
-            logError("Invalid integer suffix '{}': must be 8, 16, 32, 64 or 128", width);
-            result = Result::Failure;
-        }
-        if (isFloat) {
-            logError("Integer suffix '{}' cannot be used with floating-point literals", suffix);
-            result = Result::Failure;
-        }
-    }
-    if (isFloatSuffix) {
-        if (width != "32" && width != "64") {
-            logError("Invalid float suffix '{}' : must be 32 or 64", width);
-            result = Result::Failure;
-        }
-        if (!isFloat) {
-            logError("Float suffix '{}' can only be used with floating point literals", suffix);
-            result = Result::Failure;
-        }
-    }
-    numberLiteral += suffix;
-    numberLiteral += width;
-    return result;
-}
-
-}  // namespace Manganese::lexer
+    */

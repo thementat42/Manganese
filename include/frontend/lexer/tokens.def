@@ -4,22 +4,22 @@ TOKEN(StrLiteral, "string literal")
 TOKEN(CharLiteral, "char literal")
 TOKEN(IntegerLiteral, "integer literal")
 TOKEN(FloatLiteral, "float literal")
+TOKEN(EndOfFile, "<eof>")
 
 // Brackets
-TOKEN(LeftParen, "(")
-TOKEN(RightParen, ")")
-TOKEN(LeftBrace, "{")
-TOKEN(RightBrace, "}")
-TOKEN(LeftSquare, "[")
-TOKEN(RightSquare, "]")
+PUNCTUATION(LeftParen, "(")
+PUNCTUATION(RightParen, ")")
+PUNCTUATION(LeftBrace, "{")
+PUNCTUATION(RightBrace, "}")
+PUNCTUATION(LeftSquare, "[")
+PUNCTUATION(RightSquare, "]")
 
 // Punctuation
-TOKEN(Semicolon, ";")
-TOKEN(Colon, ":")
-TOKEN(Comma, ",")
+PUNCTUATION(Semicolon, ";")
+PUNCTUATION(Colon, ":")
+PUNCTUATION(Comma, ",")
 
 // Misc
-TOKEN(EndOfFile, "<eof>")
 
 // Keywords
 TOKEN(_keywordStart, "<keyword-start>")  // meta for keyword info (nothing lexes to this)
