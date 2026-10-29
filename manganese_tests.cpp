@@ -1,5 +1,4 @@
-#include <llvm/Support/TargetSelect.h>
-
+#include <backend/object_code_emitter.hpp>
 #include <chrono>
 #include <cstddef>
 #include <cstring>
@@ -12,16 +11,19 @@
 #include <iostream>
 
 #include "tests/tests.hpp"
+#include "utils/result.hpp"
 
-static bool strneq(const char* a, const char* b, std::size_t max_count) {
+namespace Manganese {
+namespace {
+bool strneq(const char* a, const char* b, std::size_t max_count) {
     return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
 }
 
-int main(int argc, char const* argv[]) {
+Result runTestSuite(int argc, const char** argv) {
     if (argc == 1) {
         std::cout << std::format(
             "Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--execution] [--all]\n", argv[0]);
-        return 1;
+        return Result::Failure;
     }
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -33,10 +35,7 @@ int main(int argc, char const* argv[]) {
     bool codegen = false;
     bool execution = false;
 
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmPrinters();
-    llvm::InitializeAllAsmParsers();
+    backend::initializeLLVM();
 
     for (int i = 1; i < argc; ++i) {
         if (strneq(argv[i], "--lexer", 7)) {
@@ -65,36 +64,36 @@ int main(int argc, char const* argv[]) {
     }
     std::filesystem::create_directories("logs");
 
-    Manganese::tests::TestRunner runner;
+    tests::TestRunner runner;
 
     if (lexer) {
         std::cout << ansi::PINK << "Lexer Tests\n" << ansi::RESET;
-        Manganese::tests::runLexerTests(runner);
+        tests::runLexerTests(runner);
         std::cout << "\n----------\n";
     }
     if (parser) {
         std::cout << ansi::PINK << "Parser Tests\n" << ansi::RESET;
-        Manganese::tests::runParserTests(runner);
+        tests::runParserTests(runner);
         std::cout << "\n----------\n";
     }
     if (semantic) {
         std::cout << ansi::PINK << "Semantic Analyzer Tests\n" << ansi::RESET;
-        Manganese::tests::runSemanticAnalyzerTests(runner);
+        tests::runSemanticAnalyzerTests(runner);
         std::cout << "\n----------\n";
     }
     if (controlflow) {
         std::cout << ansi::PINK << "Control Flow Analysis Tests\n" << ansi::RESET;
-        Manganese::tests::runControlFlowAnalyzerTests(runner);
+        tests::runControlFlowAnalyzerTests(runner);
         std::cout << "\n----------\n";
     }
     if (codegen) {
         std::cout << ansi::PINK << "Codegen Tests\n" << ansi::RESET;
-        Manganese::tests::runCodeGenerationTests(runner);
+        tests::runCodeGenerationTests(runner);
         std::cout << "\n----------\n";
     }
     if (execution) {
         std::cout << ansi::PINK << "Execution Tests\n" << ansi::RESET;
-        Manganese::tests::runExecutionTests(runner);
+        tests::runExecutionTests(runner);
         std::cout << "\n----------\n";
     }
 
@@ -105,5 +104,13 @@ int main(int argc, char const* argv[]) {
     std::cout << ansi::PINK << std::format("Elapsed Time: {:.3f} ms\n", static_cast<double>(duration.count()))
               << ansi::RESET;
 
-    return runner.allTestsPassed() ? 0 : 1;
+    return runner.allTestsPassed() ? Result::Success : Result::Failure;
+}
+}  // namespace
+
+}  // namespace Manganese
+
+int main(int argc, const char** argv) {
+    const auto testResult = Manganese::runTestSuite(argc, argv);
+    return static_cast<int>(testResult == Manganese::Result::Success);
 }
