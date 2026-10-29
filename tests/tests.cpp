@@ -2,7 +2,6 @@
 
 #include <backend/object_code_emitter.hpp>
 #include <chrono>
-#include <cstring>
 #include <filesystem>
 #include <format>
 #include <io/logging.hpp>
@@ -11,10 +10,11 @@
 
 namespace Manganese::tests {
 namespace {
-bool strneq(const char* a, const char* b, std::size_t max_count) {
-    return (strncmp(a, b, max_count) == 0) && (strlen(a) == strlen(b));
-}
-
+struct Phase {
+    std::string_view name;
+    bool enabled;
+    void (TestRunner::*run)();
+};
 }  // namespace
 
 void TestRunner::runTest(const std::string& testName, bool (*testFunction)()) {
@@ -57,14 +57,6 @@ void TestRunner::printSummary() const noexcept {
 }
 
 Result runTestSuite(int argc, const char** argv) {
-    if (argc == 1) {
-        std::cout << std::format(
-            "Usage: {} [--lexer] [--parser] [--semantic] [--controlflow] [--codegen] [--execution] [--all]\n", argv[0]);
-        return Result::Failure;
-    }
-
-    auto start = std::chrono::high_resolution_clock::now();
-
     bool lexer = false;
     bool parser = false;
     bool semantic = false;
@@ -72,65 +64,53 @@ Result runTestSuite(int argc, const char** argv) {
     bool codegen = false;
     bool execution = false;
 
-    backend::initializeLLVM();
-
-    for (int i = 1; i < argc; ++i) {
-        if (strneq(argv[i], "--lexer", 7)) {
-            lexer = true;
-        } else if (strneq(argv[i], "--parser", 8)) {
-            parser = true;
-        } else if (strneq(argv[i], "--semantic", 10)) {
-            semantic = true;
-        } else if (strneq(argv[i], "--codegen", 9)) {
-            codegen = true;
-        } else if (strneq(argv[i], "--controlflow", 13)) {
-            controlflow = true;
-        } else if (strneq(argv[i], "--execution", 13)) {
-            execution = true;
-        } else if (strneq(argv[i], "--all", 5)) {
-            lexer = true;
-            parser = true;
-            semantic = true;
-            controlflow = true;
-            codegen = true;
-            execution = true;
-            break;
-        } else {
-            std::cout << std::format("Skipping unknown argument: {}\n", argv[i]);
+    if (argc == 1) {
+        lexer = parser = semantic = controlflow = codegen = execution = true;
+    } else {
+        for (int i = 1; i < argc; ++i) {
+            std::string_view arg{argv[i]};
+            if (arg == "--lexer") {
+                lexer = true;
+            } else if (arg == "--parser") {
+                parser = true;
+            } else if (arg == "--semantic") {
+                semantic = true;
+            } else if (arg == "--codegen") {
+                codegen = true;
+            } else if (arg == "--controlflow") {
+                controlflow = true;
+            } else if (arg == "--execution") {
+                execution = true;
+            } else if (arg == "--all") {
+                lexer = parser = semantic = controlflow = codegen = execution = true;
+                break;
+                break;
+            } else {
+                std::cout << std::format("Skipping unknown argument: {}\n", argv[i]);
+            }
         }
     }
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    backend::initializeLLVM();
     std::filesystem::create_directories("logs");
 
     tests::TestRunner runner;
 
-    if (lexer) {
-        std::cout << ansi::PINK << "Lexer Tests\n" << ansi::RESET;
-        runner.runLexerTests();
-        std::cout << "\n----------\n";
-    }
-    if (parser) {
-        std::cout << ansi::PINK << "Parser Tests\n" << ansi::RESET;
-        runner.runParserTests();
-        std::cout << "\n----------\n";
-    }
-    if (semantic) {
-        std::cout << ansi::PINK << "Semantic Analyzer Tests\n" << ansi::RESET;
-        runner.runSemanticAnalyzerTests();
-        std::cout << "\n----------\n";
-    }
-    if (controlflow) {
-        std::cout << ansi::PINK << "Control Flow Analysis Tests\n" << ansi::RESET;
-        runner.runControlFlowAnalyzerTests();
-        std::cout << "\n----------\n";
-    }
-    if (codegen) {
-        std::cout << ansi::PINK << "Codegen Tests\n" << ansi::RESET;
-        runner.runCodeGenerationTests();
-        std::cout << "\n----------\n";
-    }
-    if (execution) {
-        std::cout << ansi::PINK << "Execution Tests\n" << ansi::RESET;
-        runner.runExecutionTests();
+    std::array suites{
+        Phase{.name = "Lexer Tests", .enabled = lexer, .run = &TestRunner::runLexerTests},
+        Phase{.name = "Parser Tests", .enabled = parser, .run = &TestRunner::runParserTests},
+        Phase{.name = "Semantic Analyzer Tests", .enabled = semantic, .run = &TestRunner::runSemanticAnalyzerTests},
+        Phase{.name = "Control Flow Tests", .enabled = controlflow, .run = &TestRunner::runControlFlowAnalyzerTests},
+        Phase{.name = "Codegen Tests", .enabled = codegen, .run = &TestRunner::runCodeGenerationTests},
+        Phase{.name = "Execution Tests", .enabled = execution, .run = &TestRunner::runExecutionTests},
+    };
+
+    for (const auto& suite : suites) {
+        if (!suite.enabled) { continue; }
+        std::cout << ansi::PINK << suite.name << "\n" << ansi::RESET;
+        (runner.*suite.run)();
         std::cout << "\n----------\n";
     }
 
