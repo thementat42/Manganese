@@ -8,7 +8,7 @@
 
 #include <core.hpp>
 #include <frontend/ast.hpp>
-#include <middleend/ir_generator.hpp>
+#include <backend/ir_generator.hpp>
 
 namespace Manganese::codegen {
 

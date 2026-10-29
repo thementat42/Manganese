@@ -9,8 +9,8 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
-#include <middleend/ir_generator.hpp>
-#include <middleend/optimizations.hpp>
+#include <backend/ir_generator.hpp>
+#include <backend/optimizations.hpp>
 #include <string>
 #include <utils/chunk_allocator.hpp>
 #include <utils/string_interner.hpp>
