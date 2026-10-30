@@ -746,42 +746,42 @@ bool miscTests() {
 }  // namespace
 }  // namespace parser_tests
 
-void runParserTests(TestRunner& runner) {
+void TestRunner::runParserTests() {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
 
-    runner.runTest("Parser: Arithmetic Expression and Casting", parser_tests::testArithmeticOperatorsAndCasting);
-    runner.runTest("Parser: Variable Declaration", parser_tests::testVariableDeclaration);
-    runner.runTest("Parser: Assignment Expressions", parser_tests::testAssignmentExpressions);
-    runner.runTest("Parser: Prefix Operators", parser_tests::testPrefixOperators);
-    runner.runTest("Parser: Parenthesized Expressions", parser_tests::testParenthesizedExpressions);
-    runner.runTest("Parser: Address and Dereference Operators", parser_tests::testPointerOperators);
-    runner.runTest("Parser: Typed Variable Declaration", parser_tests::testTypedVariableDeclaration);
-    runner.runTest("Parser: Postfix Operators", parser_tests::testPostfixOperators);
-    runner.runTest("Parser: Bitwise Operators", parser_tests::testBitwiseOperators);
-    runner.runTest("Parser: Ternary Operator", parser_tests::testTernaryOperator);
-    runner.runTest("Parser: Aggregate Declaration and Instantiation",
+    runTest("Parser: Arithmetic Expression and Casting", parser_tests::testArithmeticOperatorsAndCasting);
+    runTest("Parser: Variable Declaration", parser_tests::testVariableDeclaration);
+    runTest("Parser: Assignment Expressions", parser_tests::testAssignmentExpressions);
+    runTest("Parser: Prefix Operators", parser_tests::testPrefixOperators);
+    runTest("Parser: Parenthesized Expressions", parser_tests::testParenthesizedExpressions);
+    runTest("Parser: Address and Dereference Operators", parser_tests::testPointerOperators);
+    runTest("Parser: Typed Variable Declaration", parser_tests::testTypedVariableDeclaration);
+    runTest("Parser: Postfix Operators", parser_tests::testPostfixOperators);
+    runTest("Parser: Bitwise Operators", parser_tests::testBitwiseOperators);
+    runTest("Parser: Ternary Operator", parser_tests::testTernaryOperator);
+    runTest("Parser: Aggregate Declaration and Instantiation",
                    parser_tests::testAggregateDeclarationAndInstantiation);
-    runner.runTest("Parser: Function Declaration and Call", parser_tests::testFunctionDeclarationAndCall);
-    runner.runTest("Parser: Loops", parser_tests::testLoops);
-    runner.runTest("Parser: If/Elif/Else Statements", parser_tests::testIfElseStatements);
-    runner.runTest("Parser: Enum Declaration Statement", parser_tests::testEnumDeclarationStatement);
-    runner.runTest("Parser: Switch Statement", parser_tests::testSwitchStatement);
-    runner.runTest("Parser: Access Expressions", parser_tests::testAccessExpressions);
-    runner.runTest("Parser: Generics", parser_tests::testGenerics);
-    runner.runTest("Parser: Imports and Type Aliases", parser_tests::testImportsAndAliases);
-    runner.runTest("Parser: File", parser_tests::testParseFromFile);
-    runner.runTest("Parser: Redundant Semicolons", parser_tests::testRedundantSemicolons);
-    runner.runTest("Parser: Sizeof, Typeof & Alignof", parser_tests::testSizeofTypeofAlignof);
-    runner.runTest("Parser: Nested Blocks", parser_tests::testNestedBlocks);
-    runner.runTest("Parser: Namespaces", parser_tests::testNamespaces);
-    runner.runTest("Parser: Cascading Syntax Failures", parser_tests::testCascadingSyntaxFailures);
-    runner.runTest("Parser: Pathological Expression Recovery", parser_tests::testPathologicalExpressionRecovery);
-    runner.runTest("Parser: Pathological Error Recovery", parser_tests::testPathologicalExpressionRecovery2);
-    runner.runTest("Parser: Uninitialized Keyword Parsing", parser_tests::testUninitializedKeywordParsing);
-    runner.runTest("Parser: Complex Function Pointers and Aliases",
+    runTest("Parser: Function Declaration and Call", parser_tests::testFunctionDeclarationAndCall);
+    runTest("Parser: Loops", parser_tests::testLoops);
+    runTest("Parser: If/Elif/Else Statements", parser_tests::testIfElseStatements);
+    runTest("Parser: Enum Declaration Statement", parser_tests::testEnumDeclarationStatement);
+    runTest("Parser: Switch Statement", parser_tests::testSwitchStatement);
+    runTest("Parser: Access Expressions", parser_tests::testAccessExpressions);
+    runTest("Parser: Generics", parser_tests::testGenerics);
+    runTest("Parser: Imports and Type Aliases", parser_tests::testImportsAndAliases);
+    runTest("Parser: File", parser_tests::testParseFromFile);
+    runTest("Parser: Redundant Semicolons", parser_tests::testRedundantSemicolons);
+    runTest("Parser: Sizeof, Typeof & Alignof", parser_tests::testSizeofTypeofAlignof);
+    runTest("Parser: Nested Blocks", parser_tests::testNestedBlocks);
+    runTest("Parser: Namespaces", parser_tests::testNamespaces);
+    runTest("Parser: Cascading Syntax Failures", parser_tests::testCascadingSyntaxFailures);
+    runTest("Parser: Pathological Expression Recovery", parser_tests::testPathologicalExpressionRecovery);
+    runTest("Parser: Pathological Error Recovery", parser_tests::testPathologicalExpressionRecovery2);
+    runTest("Parser: Uninitialized Keyword Parsing", parser_tests::testUninitializedKeywordParsing);
+    runTest("Parser: Complex Function Pointers and Aliases",
                    parser_tests::testComplexFunctionPointersAndAliases);
-    runner.runTest("Parser: Deeply Nested Generics", parser_tests::testDeeplyNestedGenerics);
-    runner.runTest("Parser: Miscellaneous Tests", parser_tests::miscTests);
+    runTest("Parser: Deeply Nested Generics", parser_tests::testDeeplyNestedGenerics);
+    runTest("Parser: Miscellaneous Tests", parser_tests::miscTests);
 }
 }  // namespace Manganese::tests

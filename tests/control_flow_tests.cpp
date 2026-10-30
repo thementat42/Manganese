@@ -209,28 +209,28 @@ bool testForEachLoopAssignmentSafety() {
 }  // namespace
 }  // namespace control_flow_tests
 
-void runControlFlowAnalyzerTests(TestRunner& runner) {
+void TestRunner::runControlFlowAnalyzerTests() {
     // clear the log file
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
 
-    runner.runTest("Control Flow: Unreachable Code", control_flow_tests::testUnreachableCode);
-    runner.runTest("Control Flow: Missing Return Paths", control_flow_tests::testMissingReturnPaths);
-    runner.runTest("Control Flow: Valid Branching Returns", control_flow_tests::testValidBranchingReturns);
-    runner.runTest("Control Flow: Partial Return Branching", control_flow_tests::testPartialReturnBranching);
-    runner.runTest("Control Flow: File", control_flow_tests::testControlFlowFromFile);
+    runTest("Control Flow: Unreachable Code", control_flow_tests::testUnreachableCode);
+    runTest("Control Flow: Missing Return Paths", control_flow_tests::testMissingReturnPaths);
+    runTest("Control Flow: Valid Branching Returns", control_flow_tests::testValidBranchingReturns);
+    runTest("Control Flow: Partial Return Branching", control_flow_tests::testPartialReturnBranching);
+    runTest("Control Flow: File", control_flow_tests::testControlFlowFromFile);
 
-    runner.runTest("Control Flow: Uninitialized Variable Read", control_flow_tests::testUninitializedRead);
-    runner.runTest("Control Flow: Conditional Initialization Failure",
+    runTest("Control Flow: Uninitialized Variable Read", control_flow_tests::testUninitializedRead);
+    runTest("Control Flow: Conditional Initialization Failure",
                    control_flow_tests::testConditionalInitializationFailure);
-    runner.runTest("Control Flow: Conditional Initialization Success",
+    runTest("Control Flow: Conditional Initialization Success",
                    control_flow_tests::testConditionalInitializationSuccess);
-    runner.runTest("Control Flow: Runtime Loop Assignment Safety", control_flow_tests::testLoopAssignmentSafety);
-    runner.runTest("Control Flow: Explicit Uninitialized Keyword",
+    runTest("Control Flow: Runtime Loop Assignment Safety", control_flow_tests::testLoopAssignmentSafety);
+    runTest("Control Flow: Explicit Uninitialized Keyword",
                    control_flow_tests::testExplicitUninitializedKeyword);
-    runner.runTest("Control Flow: Nested If-Else Definite Initialization",
+    runTest("Control Flow: Nested If-Else Definite Initialization",
                    control_flow_tests::testNestedIfInitialization);
-    runner.runTest("Control Flow: ForEach Loop Assignment Safety", control_flow_tests::testForEachLoopAssignmentSafety);
+    runTest("Control Flow: ForEach Loop Assignment Safety", control_flow_tests::testForEachLoopAssignmentSafety);
 }
 
 }  // namespace Manganese::tests

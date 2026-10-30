@@ -37,6 +37,12 @@ class StringReader : public Reader {
         _column = (c == '\n') ? 1 : _column + 1;
         return c;
     }
+
+    [[nodiscard]] std::string_view getView(std::size_t start, std::size_t length) const noexcept override {
+        if (start + length > _source.size()) { return {}; }
+
+        return _source.substr(start, length);
+    }
 };
 }  // namespace Manganese::io
 

@@ -82,18 +82,18 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 
     using _flow_base_t::visit;
 
-#define STMT(name) stmtvisit_t visit(const ast::name*) noexcept override;
+#define STMT_NODE(name) stmtvisit_t visit(const ast::name*) noexcept override;
 
-#define EXPR(name) exprvisit_t visit(const ast::name*) noexcept override;
+#define EXPR_NODE(name) exprvisit_t visit(const ast::name*) noexcept override;
     // Types don't contribute to control flow or assignment so they can just be no-ops
-#define TYPE(name) \
+#define TYPE_NODE(name) \
     constexpr typevisit_t visit(const ast::name*) noexcept override {}
 
 #include <frontend/ast/ast.def>
 
-#undef STMT
-#undef EXPR
-#undef TYPE
+#undef STMT_NODE
+#undef EXPR_NODE
+#undef TYPE_NODE
 
     FlowStatus visit(ast::Block block, bool shouldEnterScope, semantic::Scope* explicitScope);
 };

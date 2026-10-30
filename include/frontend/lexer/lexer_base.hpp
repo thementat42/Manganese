@@ -81,6 +81,7 @@ class Lexer {
 
     //~ Helper functions
     void emitToken(TokenType type, std::string&& lexeme, bool invalid);
+    void emitToken(TokenType type, std::string_view lexeme, bool invalid);
     NumberPrefixResult processNumberPrefix();
     Result processScientificNotation(std::string& numberLiteral);
     Result processNumberSuffix(std::string& numberLiteral, bool isFloat);
@@ -110,6 +111,7 @@ class Lexer {
 //~ Static helper functions
 
 std::optional<std::string> encodeUTF8(char32_t);
+std::unique_ptr<io::Reader> makeFileReader(const std::string& source);
 
 inline std::string codepointToUTF8(char32_t codepoint) {
     if (codepoint <= 0x7F) { return {1, static_cast<char>(codepoint)}; }

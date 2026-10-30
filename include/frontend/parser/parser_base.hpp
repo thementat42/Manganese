@@ -118,7 +118,7 @@ class Parser {
     utils::StringID parseGenericTypeParameter(std::vector<utils::StringID>& existingGenerics,
                                               utils::StringID contextName);
 
-        // Parsing Helpers
+    // Parsing Helpers
     ast::EnumValue parseEnumMember();
     std::vector<utils::StringID> parseGenericsList(utils::StringID contextName);
     std::optional<ast::AggregateField> parseAggregateField(utils::StringID aggregateName,
@@ -161,12 +161,12 @@ class Parser {
     }
 
     [[nodiscard]] bool isUnaryContext() const noexcept;
-    
+
     [[nodiscard]] constexpr static bool isComparisonOperator(TokenType op) noexcept {
         using enum TokenType;
         return utils::enum_matches(op, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual);
     }
-    
+
     [[nodiscard]] inline bool done() noexcept { return peekTokenType() == TokenType::EndOfFile; }
 
     [[nodiscard]] inline Token& peekToken() { return lexer.peekToken(); }

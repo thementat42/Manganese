@@ -4,11 +4,14 @@
 #include <format>
 #include <frontend/lexer.hpp>
 #include <io/filereader.hpp>
+#include <io/heapfilereader.hpp>
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <system_error>
 #include <utility>
 #include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
@@ -17,11 +20,11 @@ namespace Manganese::lexer {
 
 //~ Core Lexer Functions
 
-Lexer::Lexer(const std::string& source, utils::StringInterner& interner, Mode mode) :
-    tokenStartLine(1), tokenStartCol(1), interner(interner) {
+Lexer::Lexer(const std::string& source, utils::StringInterner& _interner, Mode mode) :
+    tokenStartLine(1), tokenStartCol(1), interner(_interner) {
     switch (mode) {
         case Mode::String: reader = std::make_unique<io::StringReader>(source); break;
-        case Mode::File: reader = std::make_unique<io::FileReader>(source); break;
+        case Mode::File: reader = makeFileReader(source); break;
     }
 }
 
@@ -67,14 +70,14 @@ void Lexer::lex(std::size_t numTokens) {
     }
     if (done()) {
         // Just finished tokenizing
-        emitToken(TokenType::EndOfFile, "EOF", false);
+        emitToken(TokenType::EndOfFile, std::string_view{"EOF"}, false);
     }
 }
 
 Token& Lexer::peekToken() {
     if (tokenStream.empty()) {
         if (done()) {
-            emitToken(TokenType::EndOfFile, "EOF", false);
+            emitToken(TokenType::EndOfFile, std::string_view{"EOF"}, false);
         } else {
             lex(QUEUE_LOOKAHEAD_AMOUNT);
         }
@@ -99,28 +102,26 @@ Token Lexer::consumeToken() {
 Result Lexer::tokenizeCharLiteral() {
     advance();  // Move past the opening quote
     std::string charLiteral;
-    // For simplicity, just extract a chunk of text, handle it later
-    // Look for a closing quote
+    
     while (true) {
         if (done()) {
             logError("Unclosed character literal");
-            emitToken(TokenType::CharLiteral, std::move(charLiteral), true);
+            emitToken(TokenType::CharLiteral, std::string(""), true);
             return Result::Failure;
         }
         if (peekChar() == '\'') { break; }
         if (peekChar() == '\n') {
             logError("Unclosed character literal");
-
-            emitToken(TokenType::CharLiteral, std::move(charLiteral), true);
+            emitToken(TokenType::CharLiteral, std::string(""), true);
             return Result::Failure;
         }
         if (peekChar() == '\\') {
-            // Skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
-            charLiteral += consumeChar();  // Add the backslash to the string
+            charLiteral += consumeChar();  // Keep backslash for escape sequence processing
         }
-        charLiteral += consumeChar();  // Add the character to the string
+        charLiteral += consumeChar(); 
     }
-    advance();
+    advance(); // Move past closing quote
+
     Result result = Result::Success;
     if (charLiteral.empty()) {
         logError("Empty character literal");
@@ -142,12 +143,15 @@ Result Lexer::tokenizeCharLiteral() {
 }
 
 Result Lexer::tokenizeKeywordOrIdentifier() {
-    std::string lexeme;
-    while (!done() && (is_alphanumeric(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
+    const std::size_t startPos = reader->getPosition();
+    while (!done() && (is_alphanumeric(peekChar()) || peekChar() == '_')) { 
+        advance(); 
+    }
+    const std::size_t length = reader->getPosition() - startPos;
+    std::string_view lexeme = reader->getView(startPos, length);
+    
     const TokenType t = keywordLookup(lexeme);
-
-    // if type is unknown, assume it's an identifier, otherwise use the given keyword type
-    emitToken(t == TokenType::Unknown ? TokenType::Identifier : t, std::move(lexeme), false);
+    emitToken(t == TokenType::Unknown ? TokenType::Identifier : t, lexeme, false);
     return Result::Success;
 }
 
@@ -239,76 +243,79 @@ Result Lexer::skipBlockComment() {
 }
 
 Result Lexer::tokenizeRawStringLiteral() {
-    DISCARD(consumeChar());  // skip the 'r'
+    advance();  // skip the 'r'
     std::size_t backtickCount = 0;
-    while (peekChar() == '`') {
+    while (peekChar() == '`') {  // count how many
         ++backtickCount;
         DISCARD(consumeChar());
     }
-    //* we've passed the opening backticks now; start reading text
-    std::string rawStringLiteral;
+    
+    const std::size_t contentStart = reader->getPosition();
+    
     while (!done()) {
         if (peekChar() != '`') {
-            // regular character
-            rawStringLiteral += consumeChar();
+            advance();
             continue;
         }
-        // seen a '`', this could be the end of the string
+        
+        const std::size_t potentialEnd = reader->getPosition();
         std::size_t closingBacktickCount = 0;
 
         while (peekChar() == '`') {
             ++closingBacktickCount;
             DISCARD(consumeChar());
             if (closingBacktickCount == backtickCount) {
-                // end of string literal
-                emitToken(TokenType::StrLiteral, std::move(rawStringLiteral), false);
+                // End of raw string literal
+                std::size_t contentLen = potentialEnd - contentStart;
+                std::string_view rawView = reader->getView(contentStart, contentLen);
+                emitToken(TokenType::StrLiteral, std::string(rawView), false);
                 return Result::Success;
             }
         }
-        // we didn't see the same number of closing backticks, so these are just backticks inside the string
-        rawStringLiteral.append(closingBacktickCount, '`');
     }
-    logError("Unterminated raw string literal {} (expected {} backticks to close the string)", rawStringLiteral,
-             backtickCount);
-    emitToken(TokenType::StrLiteral, std::move(rawStringLiteral), true);
+    
+    logError("Unterminated raw string literal (expected {} backticks to close the string)", backtickCount);
+    emitToken(TokenType::StrLiteral, std::string(""), true);
     return Result::Failure;
 }
 
 Result Lexer::tokenizeStringLiteral() {
+    const std::size_t contentStart = reader->getPosition() + 1; // Position right after opening quote
     advance();  // Move past the opening quote
     bool containsEscapeSequence = false;
-    std::string stringLiteral;
 
-    // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
+    // for simplicity, just extract a chunk of text until the closing quote and check it afterwards
     while (true) {
         if (done()) {
             logError("Unclosed string literal");
-            emitToken(TokenType::StrLiteral, std::move(stringLiteral), true);
+            emitToken(TokenType::StrLiteral, std::string(""), true);
             return Result::Failure;
         }
         if (peekChar() == '"') { break; }
         if (peekChar() == '\\') {
             if (peekChar(1) == '\n') {
-                // continuing a string literal across lines
-                advance(2);  // Skip the backslash and the newline
+                advance(2);  // Skip backslash and newline
                 continue;
             }
-            // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
-            stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
+            advance(); // skip backslash
         } else if (peekChar() == '\n') {
             logging::logError(
                 getLine(), getCol(),
                 "String literal cannot span multiple lines. If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line");
-
-            emitToken(TokenType::StrLiteral, std::move(stringLiteral), true);
+            emitToken(TokenType::StrLiteral, std::string(""), true);
             return Result::Failure;
         }
-        stringLiteral += consumeChar();  // Add the character to the string
+        advance();
     }
 
+    const std::size_t contentEnd = reader->getPosition();
+    std::string_view rawContent = reader->getView(contentStart, contentEnd - contentStart);
+    std::string stringLiteral(rawContent);
+
+    advance(); // Move past the closing quote
+
     Result result = Result::Success;
-    advance();
     if (containsEscapeSequence) {
         std::optional<std::string> processedString = resolveEscapeCharacters(stringLiteral);
         if (!processedString) {
@@ -321,6 +328,157 @@ Result Lexer::tokenizeStringLiteral() {
     return result;
 }
 
+Result Lexer::tokenizeSymbol() {
+    std::string lookahead;
+    for (std::size_t i = 0; i < 3; ++i) {
+        char c = peekChar(i);
+        if (c == '\0') { break; }  // Stop if EOF is reached
+        lookahead += c;
+    }
+
+    auto lookupResult = operatorLookup(lookahead);
+
+    if (lookupResult.type == TokenType::Unknown) {
+        const char c = peekChar();
+        logError("Unknown Character '{}'", c);
+        advance();
+        emitToken(TokenType::Unknown, std::string{1, c}, true);
+        return Result::Failure;
+    }
+    std::string lexeme = lookahead.substr(0, lookupResult.length);
+    advance(lookupResult.length);
+
+    //* For ambiguous operators , always emit the binary version and let the parser handle the distinction
+    switch (lookupResult.type) {
+        using enum TokenType;
+        case UnaryPlus: lookupResult.type = Plus; break;
+        case UnaryMinus: lookupResult.type = Minus; break;
+        case AddressOf: lookupResult.type = And; break;
+        case Dereference: lookupResult.type = Mul; break;
+        default: break;
+    }
+
+    emitToken(lookupResult.type, std::move(lexeme), false);
+    return Result::Success;
+}
+
+//~ Helper Functions
+
+void Lexer::emitToken(TokenType type, std::string&& lexeme, bool invalid) {
+    tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
+}
+
+void Lexer::emitToken(TokenType type, std::string_view lexeme, bool invalid) {
+    tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
+}
+
+std::unique_ptr<io::Reader> makeFileReader(const std::string& source) {
+    std::error_code ec;
+    auto mmapReader = std::make_unique<io::FileReader>(source, ec);
+
+    if (ec) {
+        logging::logInternal(logging::LogLevel::Info,
+                             "Could not memory-map, falling back to in-memory read (error message: {})", ec.message());
+        return std::make_unique<io::HeapFileReader>(source);
+    }
+    return mmapReader;
+}
+
+NumberPrefixResult Lexer::processNumberPrefix() {
+    const char currentChar = peekChar();
+    if (currentChar != '0') {
+        // Decimal number
+        return NumberPrefixResult{.base = utils::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
+    }
+    // Could be a base indicator (0x, 0b, 0o) -- check next char
+    switch (peekChar(1)) {
+        case 'x':
+        case 'X':
+            advance(2);
+            return NumberPrefixResult{.base = utils::Base::Hexadecimal, .isValidBaseChar = is_xdigit, .prefix = "0x"};
+        case 'b':
+        case 'B':
+            advance(2);
+            return NumberPrefixResult{.base = utils::Base::Binary, .isValidBaseChar = is_bdigit, .prefix = "0b"};
+        case 'o':
+        case 'O':
+            advance(2);
+            return NumberPrefixResult{.base = utils::Base::Octal, .isValidBaseChar = is_odigit, .prefix = "0o"};
+        case 'd':
+        case 'D':
+            advance(2);
+            return NumberPrefixResult{.base = utils::Base::Octal, .isValidBaseChar = is_digit, .prefix = "0d"};
+        default:
+            if (is_digit(peekChar(1))) {
+                logWarning("Leading zeros in numeric literals are treated as decimal numbers."
+                           "Use a 0o prefix for octal numbers.");
+            }
+            return NumberPrefixResult{.base = utils::Base::Decimal, .isValidBaseChar = is_digit, .prefix = ""};
+    }
+}
+
+Result Lexer::processScientificNotation(std::string& numberLiteral) {
+    numberLiteral += to_lowercase(consumeChar());
+    if (peekChar() == '+' || peekChar() == '-') { numberLiteral += consumeChar(); }
+
+    if (!is_digit(peekChar())) {
+        logError("Invalid exponent: must be a number");
+        return Result::Failure;
+    }
+
+    while (!done() && is_digit(peekChar())) { numberLiteral += consumeChar(); }
+
+    return Result::Success;
+}
+
+Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
+    const char suffix = to_lowercase(peekChar());
+
+    if (suffix != 'i' && suffix != 'u' && suffix != 'f') { return Result::Success; }
+
+    DISCARD(consumeChar());
+
+    std::string width;
+
+    while (!done() && is_digit(peekChar())) { width += consumeChar(); }
+
+    if (width.empty()) { logError("Numeric suffix '{}' must specify a bit width", suffix); }
+
+    const bool isIntegerSuffix = suffix == 'i' || suffix == 'u';
+    const bool isFloatSuffix = suffix == 'f';
+
+    Result result = Result::Success;
+
+    if (isIntegerSuffix) {
+        if (width != "8" && width != "16" && width != "32" && width != "64" && width != "128") {
+            logError("Invalid integer suffix '{}': must be 8, 16, 32, 64 or 128", width);
+            result = Result::Failure;
+        }
+        if (isFloat) {
+            logError("Integer suffix '{}' cannot be used with floating-point literals", suffix);
+            result = Result::Failure;
+        }
+    }
+    if (isFloatSuffix) {
+        if (width != "32" && width != "64") {
+            logError("Invalid float suffix '{}' : must be 32 or 64", width);
+            result = Result::Failure;
+        }
+        if (!isFloat) {
+            logError("Float suffix '{}' can only be used with floating point literals", suffix);
+            result = Result::Failure;
+        }
+    }
+    numberLiteral += suffix;
+    numberLiteral += width;
+    return result;
+}
+
+
+
+}  // namespace Manganese::lexer
+
+/*
 Result Lexer::tokenizeSymbol() {
     Result result = Result::Success;
     TokenType type;
@@ -611,4 +769,19 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
     return result;
 }
 
+// ~ Helper functions
+
+std::unique_ptr<io::Reader> makeFileReader(const std::string& source) {
+    std::error_code ec;
+    auto mmapReader = std::make_unique<io::FileReader>(source, ec);
+
+    if (ec) {
+        logging::logInternal(logging::LogLevel::Info,
+                             "Could not memory-map, falling back to in-memory read (error message: {})", ec.message());
+        return std::make_unique<io::HeapFileReader>(source);
+    }
+    return mmapReader;
+}
+
 }  // namespace Manganese::lexer
+*/
