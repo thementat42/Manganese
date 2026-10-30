@@ -21,15 +21,13 @@ class FileReader final : public Reader {
 
    public:
     FileReader(const std::string& filename, std::error_code& ec) {
-        std::error_code error;
-        _mmap = mio::make_mmap_source(filename, error);
+        _mmap = mio::make_mmap_source(filename, ec);
 
-        if (error) { return; }
+        if (ec) { return; }
 
         _data = _mmap.data();
         _size = _mmap.size();
         if (_size == 0) { logging::logCritical(0, 0, "File '{}' was empty", filename); }
-        ec = error;
     }
 
     [[nodiscard]] char peekChar(std::size_t offset = 0) noexcept override {
