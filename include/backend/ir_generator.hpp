@@ -76,14 +76,14 @@ class IRGenerator final : public _irgen_base_t {
     typevisit_t visit(const ast::Type* type) { return _irgen_base_t::visit(type); }
     [[nodiscard]] typevisit_t visit(const semantic::SemanticType*);
 
-#define STMT(name)     stmtvisit_t visit(const ast::name*) override;
-#define EXPR(name)     [[nodiscard]] exprvisit_t visit(const ast::name*) override;
-#define TYPE(name)     [[nodiscard]] typevisit_t visit(const ast::name*) override;
+#define STMT_NODE(name)     stmtvisit_t visit(const ast::name*) override;
+#define EXPR_NODE(name)     [[nodiscard]] exprvisit_t visit(const ast::name*) override;
+#define TYPE_NODE(name)     [[nodiscard]] typevisit_t visit(const ast::name*) override;
 #define SEMANTIC(name) [[nodiscard]] typevisit_t visit(const semantic::name*);
 #include <frontend/ast/ast.def>
-#undef STMT
-#undef EXPR
-#undef TYPE
+#undef STMT_NODE
+#undef EXPR_NODE
+#undef TYPE_NODE
 #undef SEMANTIC
 
     stmtvisit_t visit(ast::Block block);
