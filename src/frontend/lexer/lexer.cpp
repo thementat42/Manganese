@@ -365,6 +365,18 @@ void Lexer::emitToken(TokenType type, std::string&& lexeme, bool invalid) {
     tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
 }
 
+std::unique_ptr<io::Reader> makeFileReader(const std::string& source) {
+    std::error_code ec;
+    auto mmapReader = std::make_unique<io::FileReader>(source, ec);
+
+    if (ec) {
+        logging::logInternal(logging::LogLevel::Info,
+                             "Could not memory-map, falling back to in-memory read (error message: {})", ec.message());
+        return std::make_unique<io::HeapFileReader>(source);
+    }
+    return mmapReader;
+}
+
 NumberPrefixResult Lexer::processNumberPrefix() {
     const char currentChar = peekChar();
     if (currentChar != '0') {
@@ -454,6 +466,8 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
     numberLiteral += width;
     return result;
 }
+
+
 
 }  // namespace Manganese::lexer
 
@@ -763,3 +777,4 @@ std::unique_ptr<io::Reader> makeFileReader(const std::string& source) {
 }
 
 }  // namespace Manganese::lexer
+*/
