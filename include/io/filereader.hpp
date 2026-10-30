@@ -7,14 +7,15 @@
 #include <filesystem>
 #include <io/logging.hpp>
 #include <io/reader.hpp>
-#include <mio/mio.hpp>
-#include <system_error>
+#include <mio/mn_mio.hpp>
 #include <string_view>
+#include <system_error>
+
 
 namespace Manganese::io {
 
 class FileReader final : public Reader {
-    mio::mmap_source _mmap;
+    mio::basic_mmap<char> _mmap;
     std::size_t _position = 0, _line = 1, _column = 1;
 
     char _advance(char c) noexcept {
@@ -29,7 +30,7 @@ class FileReader final : public Reader {
 
    public:
     FileReader(const std::filesystem::path& filename, std::error_code& ec) {
-        _mmap = mio::make_mmap_source(filename, ec);
+        _mmap = mio::make_mmap<mio::basic_mmap<char>>(filename, 0, mio::map_entire_file, ec);
 
         if (ec) { return; }
 
@@ -54,9 +55,7 @@ class FileReader final : public Reader {
             _column = 1;
         }
 
-        while (_position < newPosition) {
-            _advance(_mmap[_position++]);
-        }
+        while (_position < newPosition) { _advance(_mmap[_position++]); }
     }
 
     [[nodiscard]] std::size_t getPosition() const noexcept override { return _position; }
