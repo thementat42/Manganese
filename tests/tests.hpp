@@ -24,6 +24,7 @@ class TestRunner {
     void runControlFlowAnalyzerTests();
     void runCodeGenerationTests();
     void runExecutionTests();
+    void runObjectCodeTests();
 };
 Result runTestSuite(int argc, const char** argv);
 

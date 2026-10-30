@@ -17,6 +17,77 @@ struct Phase {
 };
 }  // namespace
 
+Result runTestSuite(int argc, const char** argv) {
+    bool lexer = false;
+    bool parser = false;
+    bool semantic = false;
+    bool controlflow = false;
+    bool codegen = false;
+    bool execution = false;
+    bool objectcode = false;
+
+    if (argc == 1) {
+        lexer = parser = semantic = controlflow = codegen = execution = objectcode = true;
+    } else {
+        for (int i = 1; i < argc; ++i) {
+            std::string_view arg{argv[i]};
+            if (arg == "--lexer") {
+                lexer = true;
+            } else if (arg == "--parser") {
+                parser = true;
+            } else if (arg == "--semantic") {
+                semantic = true;
+            } else if (arg == "--codegen") {
+                codegen = true;
+            } else if (arg == "--controlflow") {
+                controlflow = true;
+            } else if (arg == "--execution") {
+                execution = true;
+            } else if (arg == "--objectcode") {
+                objectcode = true;
+            } else if (arg == "--all") {
+                lexer = parser = semantic = controlflow = codegen = execution = objectcode = true;
+                break;
+            } else {
+                std::cout << std::format("Skipping unknown argument: {}\n", argv[i]);
+            }
+        }
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    backend::initializeLLVM();
+    std::filesystem::create_directories("logs");
+
+    tests::TestRunner runner;
+
+    std::array suites{
+        Phase{.name = "Lexer Tests", .enabled = lexer, .run = &TestRunner::runLexerTests},
+        Phase{.name = "Parser Tests", .enabled = parser, .run = &TestRunner::runParserTests},
+        Phase{.name = "Semantic Analyzer Tests", .enabled = semantic, .run = &TestRunner::runSemanticAnalyzerTests},
+        Phase{.name = "Control Flow Tests", .enabled = controlflow, .run = &TestRunner::runControlFlowAnalyzerTests},
+        Phase{.name = "Codegen Tests", .enabled = codegen, .run = &TestRunner::runCodeGenerationTests},
+        Phase{.name = "Execution Tests", .enabled = execution, .run = &TestRunner::runExecutionTests},
+        Phase{.name = "Object Code Tests", .enabled = objectcode, .run = &TestRunner::runObjectCodeTests},
+    };
+
+    for (const auto& suite : suites) {
+        if (!suite.enabled) { continue; }
+        std::cout << ansi::PINK << suite.name << "\n" << ansi::RESET;
+        (runner.*suite.run)();
+        std::cout << "\n----------\n";
+    }
+
+    runner.printSummary();
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << ansi::PINK << std::format("Elapsed Time: {:.3f} ms\n", static_cast<double>(duration.count()))
+              << ansi::RESET;
+
+    return runner.allTestsPassed() ? Result::Success : Result::Failure;
+}
+
 void TestRunner::runTest(const std::string& testName, bool (*testFunction)()) {
     std::cout << "Running test: " << testName << "...\n";
 
@@ -54,74 +125,6 @@ void TestRunner::printSummary() const noexcept {
     std::cout << ansi::RED << std::format("Failed: {}/{} ({:.2f}%)\n", failed, total, percentFailed) << ansi::RESET;
     std::cout << ansi::PINK << "Total: " << total << ansi::RESET << '\n';
     if (failed == 0) { std::cout << ansi::GREEN << "All tests passed!" << ansi::RESET << '\n'; }
-}
-
-Result runTestSuite(int argc, const char** argv) {
-    bool lexer = false;
-    bool parser = false;
-    bool semantic = false;
-    bool controlflow = false;
-    bool codegen = false;
-    bool execution = false;
-
-    if (argc == 1) {
-        lexer = parser = semantic = controlflow = codegen = execution = true;
-    } else {
-        for (int i = 1; i < argc; ++i) {
-            std::string_view arg{argv[i]};
-            if (arg == "--lexer") {
-                lexer = true;
-            } else if (arg == "--parser") {
-                parser = true;
-            } else if (arg == "--semantic") {
-                semantic = true;
-            } else if (arg == "--codegen") {
-                codegen = true;
-            } else if (arg == "--controlflow") {
-                controlflow = true;
-            } else if (arg == "--execution") {
-                execution = true;
-            } else if (arg == "--all") {
-                lexer = parser = semantic = controlflow = codegen = execution = true;
-                break;
-                break;
-            } else {
-                std::cout << std::format("Skipping unknown argument: {}\n", argv[i]);
-            }
-        }
-    }
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-    backend::initializeLLVM();
-    std::filesystem::create_directories("logs");
-
-    tests::TestRunner runner;
-
-    std::array suites{
-        Phase{.name = "Lexer Tests", .enabled = lexer, .run = &TestRunner::runLexerTests},
-        Phase{.name = "Parser Tests", .enabled = parser, .run = &TestRunner::runParserTests},
-        Phase{.name = "Semantic Analyzer Tests", .enabled = semantic, .run = &TestRunner::runSemanticAnalyzerTests},
-        Phase{.name = "Control Flow Tests", .enabled = controlflow, .run = &TestRunner::runControlFlowAnalyzerTests},
-        Phase{.name = "Codegen Tests", .enabled = codegen, .run = &TestRunner::runCodeGenerationTests},
-        Phase{.name = "Execution Tests", .enabled = execution, .run = &TestRunner::runExecutionTests},
-    };
-
-    for (const auto& suite : suites) {
-        if (!suite.enabled) { continue; }
-        std::cout << ansi::PINK << suite.name << "\n" << ansi::RESET;
-        (runner.*suite.run)();
-        std::cout << "\n----------\n";
-    }
-
-    runner.printSummary();
-    auto end = std::chrono::high_resolution_clock::now();
-
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << ansi::PINK << std::format("Elapsed Time: {:.3f} ms\n", static_cast<double>(duration.count()))
-              << ansi::RESET;
-
-    return runner.allTestsPassed() ? Result::Success : Result::Failure;
 }
 
 }  // namespace Manganese::tests
