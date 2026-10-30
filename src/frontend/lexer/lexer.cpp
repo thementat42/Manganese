@@ -10,12 +10,11 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 #include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
-
-#include "frontend/lexer/token.hpp"
 
 namespace Manganese::lexer {
 
@@ -71,14 +70,14 @@ void Lexer::lex(std::size_t numTokens) {
     }
     if (done()) {
         // Just finished tokenizing
-        emitToken(TokenType::EndOfFile, "EOF", false);
+        emitToken(TokenType::EndOfFile, std::string_view{"EOF"}, false);
     }
 }
 
 Token& Lexer::peekToken() {
     if (tokenStream.empty()) {
         if (done()) {
-            emitToken(TokenType::EndOfFile, "EOF", false);
+            emitToken(TokenType::EndOfFile, std::string_view{"EOF"}, false);
         } else {
             lex(QUEUE_LOOKAHEAD_AMOUNT);
         }
@@ -103,28 +102,26 @@ Token Lexer::consumeToken() {
 Result Lexer::tokenizeCharLiteral() {
     advance();  // Move past the opening quote
     std::string charLiteral;
-    // For simplicity, just extract a chunk of text, handle it later
-    // Look for a closing quote
+    
     while (true) {
         if (done()) {
             logError("Unclosed character literal");
-            emitToken(TokenType::CharLiteral, std::move(charLiteral), true);
+            emitToken(TokenType::CharLiteral, std::string(""), true);
             return Result::Failure;
         }
         if (peekChar() == '\'') { break; }
         if (peekChar() == '\n') {
             logError("Unclosed character literal");
-
-            emitToken(TokenType::CharLiteral, std::move(charLiteral), true);
+            emitToken(TokenType::CharLiteral, std::string(""), true);
             return Result::Failure;
         }
         if (peekChar() == '\\') {
-            // Skip past a \ so that in '\'' the ' preceded by a \ doesn't get misinterpreted as a closing quote
-            charLiteral += consumeChar();  // Add the backslash to the string
+            charLiteral += consumeChar();  // Keep backslash for escape sequence processing
         }
-        charLiteral += consumeChar();  // Add the character to the string
+        charLiteral += consumeChar(); 
     }
-    advance();
+    advance(); // Move past closing quote
+
     Result result = Result::Success;
     if (charLiteral.empty()) {
         logError("Empty character literal");
@@ -146,12 +143,15 @@ Result Lexer::tokenizeCharLiteral() {
 }
 
 Result Lexer::tokenizeKeywordOrIdentifier() {
-    std::string lexeme;
-    while (!done() && (is_alphanumeric(peekChar()) || peekChar() == '_')) { lexeme += consumeChar(); }
+    const std::size_t startPos = reader->getPosition();
+    while (!done() && (is_alphanumeric(peekChar()) || peekChar() == '_')) { 
+        advance(); 
+    }
+    const std::size_t length = reader->getPosition() - startPos;
+    std::string_view lexeme = reader->getView(startPos, length);
+    
     const TokenType t = keywordLookup(lexeme);
-
-    // if type is unknown, assume it's an identifier, otherwise use the given keyword type
-    emitToken(t == TokenType::Unknown ? TokenType::Identifier : t, std::move(lexeme), false);
+    emitToken(t == TokenType::Unknown ? TokenType::Identifier : t, lexeme, false);
     return Result::Success;
 }
 
@@ -243,76 +243,79 @@ Result Lexer::skipBlockComment() {
 }
 
 Result Lexer::tokenizeRawStringLiteral() {
-    DISCARD(consumeChar());  // skip the 'r'
+    advance();  // skip the 'r'
     std::size_t backtickCount = 0;
-    while (peekChar() == '`') {
+    while (peekChar() == '`') {  // count how many
         ++backtickCount;
         DISCARD(consumeChar());
     }
-    //* we've passed the opening backticks now; start reading text
-    std::string rawStringLiteral;
+    
+    const std::size_t contentStart = reader->getPosition();
+    
     while (!done()) {
         if (peekChar() != '`') {
-            // regular character
-            rawStringLiteral += consumeChar();
+            advance();
             continue;
         }
-        // seen a '`', this could be the end of the string
+        
+        const std::size_t potentialEnd = reader->getPosition();
         std::size_t closingBacktickCount = 0;
 
         while (peekChar() == '`') {
             ++closingBacktickCount;
             DISCARD(consumeChar());
             if (closingBacktickCount == backtickCount) {
-                // end of string literal
-                emitToken(TokenType::StrLiteral, std::move(rawStringLiteral), false);
+                // End of raw string literal
+                std::size_t contentLen = potentialEnd - contentStart;
+                std::string_view rawView = reader->getView(contentStart, contentLen);
+                emitToken(TokenType::StrLiteral, std::string(rawView), false);
                 return Result::Success;
             }
         }
-        // we didn't see the same number of closing backticks, so these are just backticks inside the string
-        rawStringLiteral.append(closingBacktickCount, '`');
     }
-    logError("Unterminated raw string literal {} (expected {} backticks to close the string)", rawStringLiteral,
-             backtickCount);
-    emitToken(TokenType::StrLiteral, std::move(rawStringLiteral), true);
+    
+    logError("Unterminated raw string literal (expected {} backticks to close the string)", backtickCount);
+    emitToken(TokenType::StrLiteral, std::string(""), true);
     return Result::Failure;
 }
 
 Result Lexer::tokenizeStringLiteral() {
+    const std::size_t contentStart = reader->getPosition() + 1; // Position right after opening quote
     advance();  // Move past the opening quote
     bool containsEscapeSequence = false;
-    std::string stringLiteral;
 
-    // for simplicity, just extract a chunk of text until the closing quote -- check it afterwards
+    // for simplicity, just extract a chunk of text until the closing quote and check it afterwards
     while (true) {
         if (done()) {
             logError("Unclosed string literal");
-            emitToken(TokenType::StrLiteral, std::move(stringLiteral), true);
+            emitToken(TokenType::StrLiteral, std::string(""), true);
             return Result::Failure;
         }
         if (peekChar() == '"') { break; }
         if (peekChar() == '\\') {
             if (peekChar(1) == '\n') {
-                // continuing a string literal across lines
-                advance(2);  // Skip the backslash and the newline
+                advance(2);  // Skip backslash and newline
                 continue;
             }
-            // Escape sequence -- skip past the next character (e.g., don't consider a \" as a closing quote)
-            stringLiteral += consumeChar();  // Add the backslash to the string
             containsEscapeSequence = true;
+            advance(); // skip backslash
         } else if (peekChar() == '\n') {
             logging::logError(
                 getLine(), getCol(),
                 "String literal cannot span multiple lines. If you wanted a string literal that spans lines, add a backslash ('\\') at the end of the line");
-
-            emitToken(TokenType::StrLiteral, std::move(stringLiteral), true);
+            emitToken(TokenType::StrLiteral, std::string(""), true);
             return Result::Failure;
         }
-        stringLiteral += consumeChar();  // Add the character to the string
+        advance();
     }
 
+    const std::size_t contentEnd = reader->getPosition();
+    std::string_view rawContent = reader->getView(contentStart, contentEnd - contentStart);
+    std::string stringLiteral(rawContent);
+
+    advance(); // Move past the closing quote
+
     Result result = Result::Success;
-    advance();
     if (containsEscapeSequence) {
         std::optional<std::string> processedString = resolveEscapeCharacters(stringLiteral);
         if (!processedString) {
@@ -362,6 +365,10 @@ Result Lexer::tokenizeSymbol() {
 //~ Helper Functions
 
 void Lexer::emitToken(TokenType type, std::string&& lexeme, bool invalid) {
+    tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
+}
+
+void Lexer::emitToken(TokenType type, std::string_view lexeme, bool invalid) {
     tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
 }
 
