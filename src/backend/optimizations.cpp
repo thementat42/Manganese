@@ -6,8 +6,7 @@
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Target/TargetMachine.h>
 
-#include <middleend/optimizations.hpp>
-
+#include <backend/optimizations.hpp>
 
 // https://llvm.org/docs/NewPassManager.html
 

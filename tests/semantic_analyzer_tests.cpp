@@ -981,66 +981,63 @@ bool miscTests() {
 }  // namespace
 }  // namespace analyzer_tests
 
-void runSemanticAnalyzerTests(TestRunner& runner) {
+void TestRunner::runSemanticAnalyzerTests() {
     std::ofstream logFile(logFileName, std::ios::trunc);
     logFile.close();
     // Statements
-    runner.runTest("Semantic Analyzer: Aggregate Declaration Statement",
-                   analyzer_tests::testAggregateDeclarationStatement);
-    runner.runTest("Semantic Analyzer: Alias Statement", analyzer_tests::testAliasStatement);
-    runner.runTest("Semantic Analyzer: Break and Continue Statements", analyzer_tests::testBreakAndContinueStatement);
-    runner.runTest("Semantic Analyzer: Enum Declaration Statement", analyzer_tests::testEnumDeclarationStatement);
-    runner.runTest("Semantic Analyzer: For Loop Statement", analyzer_tests::testForLoopStatement);
-    runner.runTest("Semantic Analyzer: Function Declaration & Returns",
-                   analyzer_tests::testFunctionDeclarationAndReturnStatement);
-    runner.runTest("Semantic Analyzer: If Statement Conditions", analyzer_tests::testIfStatement);
-    runner.runTest("Semantic Analyzer: Namespace Statement", analyzer_tests::testNamespaceStatement);
-    runner.runTest("Semantic Analyzer: Scope Resolution Expression", analyzer_tests::testScopeResolutionExpression);
-    runner.runTest("Semantic Analyzer: Switch Statement", analyzer_tests::testSwitchStatement);
-    runner.runTest("Semantic Analyzer: Variable Declaration Statement",
-                   analyzer_tests::testVariableDeclarationStatement);
-    runner.runTest("Semantic Analyzer: While Loop Statement", analyzer_tests::testWhileLoopStatement);
-    runner.runTest("Semantic Analyzer: Generic Scope Resolution", analyzer_tests::testGenericScopeResolution);
-    runner.runTest("Semantic Analyzer: Scope Resolution Mutability", analyzer_tests::testScopeResolutionMutability);
-    runner.runTest("Semantic Analyzer: Deeply Nested Scoped Type", analyzer_tests::testDeeplyNestedScopedType);
-    runner.runTest("Semantic Analyzer: Slices and Defaults", analyzer_tests::testDefaultsAndSlices);
-    runner.runTest("Semantic Analyzer: ForEach Loop Statement", analyzer_tests::testForEachLoopStatement);
+    runTest("Semantic Analyzer: Aggregate Declaration Statement", analyzer_tests::testAggregateDeclarationStatement);
+    runTest("Semantic Analyzer: Alias Statement", analyzer_tests::testAliasStatement);
+    runTest("Semantic Analyzer: Break and Continue Statements", analyzer_tests::testBreakAndContinueStatement);
+    runTest("Semantic Analyzer: Enum Declaration Statement", analyzer_tests::testEnumDeclarationStatement);
+    runTest("Semantic Analyzer: For Loop Statement", analyzer_tests::testForLoopStatement);
+    runTest("Semantic Analyzer: Function Declaration & Returns",
+            analyzer_tests::testFunctionDeclarationAndReturnStatement);
+    runTest("Semantic Analyzer: If Statement Conditions", analyzer_tests::testIfStatement);
+    runTest("Semantic Analyzer: Namespace Statement", analyzer_tests::testNamespaceStatement);
+    runTest("Semantic Analyzer: Scope Resolution Expression", analyzer_tests::testScopeResolutionExpression);
+    runTest("Semantic Analyzer: Switch Statement", analyzer_tests::testSwitchStatement);
+    runTest("Semantic Analyzer: Variable Declaration Statement", analyzer_tests::testVariableDeclarationStatement);
+    runTest("Semantic Analyzer: While Loop Statement", analyzer_tests::testWhileLoopStatement);
+    runTest("Semantic Analyzer: Generic Scope Resolution", analyzer_tests::testGenericScopeResolution);
+    runTest("Semantic Analyzer: Scope Resolution Mutability", analyzer_tests::testScopeResolutionMutability);
+    runTest("Semantic Analyzer: Deeply Nested Scoped Type", analyzer_tests::testDeeplyNestedScopedType);
+    runTest("Semantic Analyzer: Slices and Defaults", analyzer_tests::testDefaultsAndSlices);
+    runTest("Semantic Analyzer: ForEach Loop Statement", analyzer_tests::testForEachLoopStatement);
 
     // Expressions
-    runner.runTest("Semantic Analyzer: Aggregate Instantiation & Literals",
-                   analyzer_tests::testAggregateInstantiationAndLiteralExpression);
-    runner.runTest("Semantic Analyzer: Array Literals & Indexing", analyzer_tests::testArrayLiteralAndIndexExpression);
-    runner.runTest("Semantic Analyzer: Assignment Expression", analyzer_tests::testAssignmentExpression);
-    runner.runTest("Semantic Analyzer: Unary & Binary Expressions", analyzer_tests::testBinaryAndUnaryExpressions);
-    runner.runTest("Semantic Analyzer: Function Calls & Void Args", analyzer_tests::testFunctionCallExpression);
-    runner.runTest("Semantic Analyzer: Generic Expressions", analyzer_tests::testGenericInstantiationExpression);
-    runner.runTest("Semantic Analyzer: Member Access Expression", analyzer_tests::testMemberAccessExpression);
-    runner.runTest("Semantic Analyzer: Pointer Operators (& and *)", analyzer_tests::testPrefixPostfixPointerOperators);
-    runner.runTest("Semantic Analyzer: Sizeof & Alignof Expressions", analyzer_tests::testSizeofAndAlignofExpression);
-    runner.runTest("Semantic Analyzer: Ternary Expression", analyzer_tests::testTernaryExpressionSemantics);
+    runTest("Semantic Analyzer: Aggregate Instantiation & Literals",
+            analyzer_tests::testAggregateInstantiationAndLiteralExpression);
+    runTest("Semantic Analyzer: Array Literals & Indexing", analyzer_tests::testArrayLiteralAndIndexExpression);
+    runTest("Semantic Analyzer: Assignment Expression", analyzer_tests::testAssignmentExpression);
+    runTest("Semantic Analyzer: Unary & Binary Expressions", analyzer_tests::testBinaryAndUnaryExpressions);
+    runTest("Semantic Analyzer: Function Calls & Void Args", analyzer_tests::testFunctionCallExpression);
+    runTest("Semantic Analyzer: Generic Expressions", analyzer_tests::testGenericInstantiationExpression);
+    runTest("Semantic Analyzer: Member Access Expression", analyzer_tests::testMemberAccessExpression);
+    runTest("Semantic Analyzer: Pointer Operators (& and *)", analyzer_tests::testPrefixPostfixPointerOperators);
+    runTest("Semantic Analyzer: Sizeof & Alignof Expressions", analyzer_tests::testSizeofAndAlignofExpression);
+    runTest("Semantic Analyzer: Ternary Expression", analyzer_tests::testTernaryExpressionSemantics);
 
-    runner.runTest("Semantic Analyzer: TypeCast Expression", analyzer_tests::testTypeCastExpression);
+    runTest("Semantic Analyzer: TypeCast Expression", analyzer_tests::testTypeCastExpression);
 
     // Types
-    runner.runTest("Semantic Analyzer: Pointer Mutability Rules", analyzer_tests::testPointerTypeMutability);
-    runner.runTest("Semantic Analyzer: Disallow Array of Void", analyzer_tests::testArrayOfVoidDisallowed);
-    runner.runTest("Semantic Analyzer: First-class Function Types", analyzer_tests::testFunctionTypeAsValue);
-    runner.runTest("Semantic Analyzer: Scoped Type", analyzer_tests::testScopedType);
+    runTest("Semantic Analyzer: Pointer Mutability Rules", analyzer_tests::testPointerTypeMutability);
+    runTest("Semantic Analyzer: Disallow Array of Void", analyzer_tests::testArrayOfVoidDisallowed);
+    runTest("Semantic Analyzer: First-class Function Types", analyzer_tests::testFunctionTypeAsValue);
+    runTest("Semantic Analyzer: Scoped Type", analyzer_tests::testScopedType);
 
     // Other
-    runner.runTest("Semantic Analyzer: File", analyzer_tests::testAnalyzeFromFile);
-    runner.runTest("Semantic Analyzer: Dereference & Immutability",
-                   analyzer_tests::testPointerDereferenceAndMutability);
-    runner.runTest("Semantic Analyzer: Uninitialized Semantic Rules", analyzer_tests::testUninitializedSemanticRules);
-    runner.runTest("Semantic Analyzer: Typeof Dependent Return Types", analyzer_tests::testTypeOfDependentReturnTypes);
-    runner.runTest("Semantic Analyzer: Nested Generic Instantiation Scope",
-                   analyzer_tests::testNestedGenericInstantiationScope);
-    runner.runTest("Semantic Analyzer: Immutable Parameter Reassignment check",
-                   analyzer_tests::testImmutableCaptureOrReassignment);
-    runner.runTest("Semantic Analyzer: Slice length and anonymous aggregate",
-                   analyzer_tests::testSliceLengthAndAnonymousAggregates);
-    runner.runTest("Semantic Analyzer: Chained Comparison Expression", analyzer_tests::testChainedComparisonSemantics);
-    runner.runTest("Semantic Analyzer: Miscellaneous Tests", analyzer_tests::miscTests);
+    runTest("Semantic Analyzer: File", analyzer_tests::testAnalyzeFromFile);
+    runTest("Semantic Analyzer: Dereference & Immutability", analyzer_tests::testPointerDereferenceAndMutability);
+    runTest("Semantic Analyzer: Uninitialized Semantic Rules", analyzer_tests::testUninitializedSemanticRules);
+    runTest("Semantic Analyzer: Typeof Dependent Return Types", analyzer_tests::testTypeOfDependentReturnTypes);
+    runTest("Semantic Analyzer: Nested Generic Instantiation Scope",
+            analyzer_tests::testNestedGenericInstantiationScope);
+    runTest("Semantic Analyzer: Immutable Parameter Reassignment check",
+            analyzer_tests::testImmutableCaptureOrReassignment);
+    runTest("Semantic Analyzer: Slice length and anonymous aggregate",
+            analyzer_tests::testSliceLengthAndAnonymousAggregates);
+    runTest("Semantic Analyzer: Chained Comparison Expression", analyzer_tests::testChainedComparisonSemantics);
+    runTest("Semantic Analyzer: Miscellaneous Tests", analyzer_tests::miscTests);
 }
 
 }  // namespace Manganese::tests

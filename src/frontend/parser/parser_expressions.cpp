@@ -7,7 +7,6 @@
 #include <utils/enum_matches.hpp>
 #include <vector>
 
-
 /**
  * Ambiguous cases:
  * Ambiguous case 1: `*`, `&`, `+` and `-`

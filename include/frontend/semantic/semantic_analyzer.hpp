@@ -203,15 +203,15 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     // AST Visitor Overrides
     using _analyzer_base_t::visit;
 
-#define STMT(name) stmtvisit_t visit(ast::name*) override;
-#define EXPR(name) exprvisit_t visit(ast::name*) override;
-#define TYPE(name) typevisit_t visit(ast::name*) override;
+#define STMT_NODE(name) stmtvisit_t visit(ast::name*) override;
+#define EXPR_NODE(name) exprvisit_t visit(ast::name*) override;
+#define TYPE_NODE(name) typevisit_t visit(ast::name*) override;
 
 #include <frontend/ast/ast.def>
 
-#undef STMT
-#undef EXPR
-#undef TYPE
+#undef STMT_NODE
+#undef EXPR_NODE
+#undef TYPE_NODE
 
     static Result visit(std::nullptr_t) {
         logging::logInternal(logging::LogLevel::Warning, "visit() called on nullptr in analyzer");
