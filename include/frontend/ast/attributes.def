@@ -1,0 +1,7 @@
+ATTRIBUTE(extern)
+ATTRIBUTE(likely)
+ATTRIBUTE(unlikely)
+ATTRIBUTE(packed)
+ATTRIBUTE(align)
+ATTRIBUTE(noreturn)
+ATTRIBUTE(deprecated)
