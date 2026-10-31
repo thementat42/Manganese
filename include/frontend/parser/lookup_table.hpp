@@ -205,6 +205,7 @@ consteval void initializeLookups(LookupTable& table) noexcept {
 
     //~ Misc
     registerLedHandler_binary(table, As, Precedence::TypeCast, &Parser::parseTypeCastExpression);
+    registerStmtHandler(table, At, &Parser::parseAttributes);
     registerStmtHandler(table, Semicolon, &Parser::parseRedundantSemicolon);
     registerNudHandler_binary(table, Aggregate, &Parser::parseAggregateLiteralExpression);
     registerNudHandler_binary(table, Sizeof, &Parser::parseSizeofExpression);

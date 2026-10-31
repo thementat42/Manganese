@@ -119,6 +119,8 @@ class Parser {
                                               utils::StringID contextName);
 
     // Parsing Helpers
+    ast::Attribute parseAttribute();
+    ast::Statement* parseAttributes();
     ast::EnumValue parseEnumMember();
     std::vector<utils::StringID> parseGenericsList(utils::StringID contextName);
     std::optional<ast::AggregateField> parseAggregateField(utils::StringID aggregateName,

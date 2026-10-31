@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include "frontend/ast/ast_base.hpp"
+
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -30,6 +32,33 @@ ast::Statement* Parser::parseStatement() {
     ast::Expression* expr = parseExpression(Precedence::Default);
     expectToken(TokenType::Semicolon, "Expected semicolon after expression");
     return makeNode<ast::ExpressionStatement>(startToken, expr);
+}
+
+ast::Attribute Parser::parseAttribute() {
+    DISCARD(consumeToken());  // skip the '@'
+    utils::StringID name = expectToken(TokenType::Identifier, "Expected an attribute identifier after '@'").getLexeme();
+
+    ast::Expression* argument = nullptr;
+
+    if (peekTokenType() == TokenType::LeftParen) {
+        DISCARD(consumeToken());  // Consume the left parenthesis
+        argument = parseExpression(Precedence::Default);
+        expectToken(lexer::TokenType::RightParen, "Expected a ')' to after an attribute argument");
+    }
+
+    return ast::Attribute{
+        .name = name,
+        .argument = argument,
+        .known = false  // TODO have a lookup table for attributes?
+    };
+}
+
+ast::Statement* Parser::parseAttributes() {
+    std::vector<ast::Attribute> attributes;
+    while (peekTokenType() == TokenType::At) { attributes.push_back(parseAttribute()); }
+    ast::Statement* taggedStatement = parseStatement();
+    taggedStatement->attributes = arena.emplace_range(attributes);
+    return taggedStatement;
 }
 
 // Specific statement parsing methods
@@ -239,14 +268,18 @@ ast::Statement* Parser::parseIfStatement() {
         ast::Expression* condition = parseExpression(Precedence::Default);
         expectToken(TokenType::RightParen, std::format("Expected ')' to end {} condition", bodyName));
 
+        // Parse any trailing attributes (e.g. if (cond) @likely)
+
+        std::vector<ast::Attribute> branchAttributes;
+        while (peekTokenType() == TokenType::At) { branchAttributes.push_back(parseAttribute()); }
+
         const ast::Block body = parseBlock(std::format("{} body", bodyName));
 
-        return ast::IfBranch{
-            .variableDeclaration = declaredVariable,
-            .condition = condition,
-            .body = body,
-            .associatedScope = nullptr,
-        };
+        return ast::IfBranch{.variableDeclaration = declaredVariable,
+                             .condition = condition,
+                             .body = body,
+                             .associatedScope = nullptr,
+                             .attributes = arena.emplace_range(branchAttributes)};
     };
 
     ast::IfBranch primaryBranch = parseBranch("if");
