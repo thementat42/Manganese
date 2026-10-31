@@ -760,8 +760,7 @@ void TestRunner::runParserTests() {
     runTest("Parser: Postfix Operators", parser_tests::testPostfixOperators);
     runTest("Parser: Bitwise Operators", parser_tests::testBitwiseOperators);
     runTest("Parser: Ternary Operator", parser_tests::testTernaryOperator);
-    runTest("Parser: Aggregate Declaration and Instantiation",
-                   parser_tests::testAggregateDeclarationAndInstantiation);
+    runTest("Parser: Aggregate Declaration and Instantiation", parser_tests::testAggregateDeclarationAndInstantiation);
     runTest("Parser: Function Declaration and Call", parser_tests::testFunctionDeclarationAndCall);
     runTest("Parser: Loops", parser_tests::testLoops);
     runTest("Parser: If/Elif/Else Statements", parser_tests::testIfElseStatements);
@@ -779,8 +778,7 @@ void TestRunner::runParserTests() {
     runTest("Parser: Pathological Expression Recovery", parser_tests::testPathologicalExpressionRecovery);
     runTest("Parser: Pathological Error Recovery", parser_tests::testPathologicalExpressionRecovery2);
     runTest("Parser: Uninitialized Keyword Parsing", parser_tests::testUninitializedKeywordParsing);
-    runTest("Parser: Complex Function Pointers and Aliases",
-                   parser_tests::testComplexFunctionPointersAndAliases);
+    runTest("Parser: Complex Function Pointers and Aliases", parser_tests::testComplexFunctionPointersAndAliases);
     runTest("Parser: Deeply Nested Generics", parser_tests::testDeeplyNestedGenerics);
     runTest("Parser: Miscellaneous Tests", parser_tests::miscTests);
 }

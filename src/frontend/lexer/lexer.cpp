@@ -102,7 +102,7 @@ Token Lexer::consumeToken() {
 Result Lexer::tokenizeCharLiteral() {
     advance();  // Move past the opening quote
     std::string charLiteral;
-    
+
     while (true) {
         if (done()) {
             logError("Unclosed character literal");
@@ -118,9 +118,9 @@ Result Lexer::tokenizeCharLiteral() {
         if (peekChar() == '\\') {
             charLiteral += consumeChar();  // Keep backslash for escape sequence processing
         }
-        charLiteral += consumeChar(); 
+        charLiteral += consumeChar();
     }
-    advance(); // Move past closing quote
+    advance();  // Move past closing quote
 
     Result result = Result::Success;
     if (charLiteral.empty()) {
@@ -144,12 +144,10 @@ Result Lexer::tokenizeCharLiteral() {
 
 Result Lexer::tokenizeKeywordOrIdentifier() {
     const std::size_t startPos = reader->getPosition();
-    while (!done() && (is_alphanumeric(peekChar()) || peekChar() == '_')) { 
-        advance(); 
-    }
+    while (!done() && (is_alphanumeric(peekChar()) || peekChar() == '_')) { advance(); }
     const std::size_t length = reader->getPosition() - startPos;
     std::string_view lexeme = reader->getView(startPos, length);
-    
+
     const TokenType t = keywordLookup(lexeme);
     emitToken(t == TokenType::Unknown ? TokenType::Identifier : t, lexeme, false);
     return Result::Success;
@@ -249,15 +247,15 @@ Result Lexer::tokenizeRawStringLiteral() {
         ++backtickCount;
         DISCARD(consumeChar());
     }
-    
+
     const std::size_t contentStart = reader->getPosition();
-    
+
     while (!done()) {
         if (peekChar() != '`') {
             advance();
             continue;
         }
-        
+
         const std::size_t potentialEnd = reader->getPosition();
         std::size_t closingBacktickCount = 0;
 
@@ -273,14 +271,14 @@ Result Lexer::tokenizeRawStringLiteral() {
             }
         }
     }
-    
+
     logError("Unterminated raw string literal (expected {} backticks to close the string)", backtickCount);
     emitToken(TokenType::StrLiteral, std::string(""), true);
     return Result::Failure;
 }
 
 Result Lexer::tokenizeStringLiteral() {
-    const std::size_t contentStart = reader->getPosition() + 1; // Position right after opening quote
+    const std::size_t contentStart = reader->getPosition() + 1;  // Position right after opening quote
     advance();  // Move past the opening quote
     bool containsEscapeSequence = false;
 
@@ -298,7 +296,7 @@ Result Lexer::tokenizeStringLiteral() {
                 continue;
             }
             containsEscapeSequence = true;
-            advance(); // skip backslash
+            advance();  // skip backslash
         } else if (peekChar() == '\n') {
             logging::logError(
                 getLine(), getCol(),
@@ -313,7 +311,7 @@ Result Lexer::tokenizeStringLiteral() {
     std::string_view rawContent = reader->getView(contentStart, contentEnd - contentStart);
     std::string stringLiteral(rawContent);
 
-    advance(); // Move past the closing quote
+    advance();  // Move past the closing quote
 
     Result result = Result::Success;
     if (containsEscapeSequence) {
@@ -473,8 +471,6 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
     numberLiteral += width;
     return result;
 }
-
-
 
 }  // namespace Manganese::lexer
 

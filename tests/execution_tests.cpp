@@ -19,7 +19,6 @@
 
 #include "tests.hpp"
 
-
 namespace Manganese::tests {
 
 namespace {

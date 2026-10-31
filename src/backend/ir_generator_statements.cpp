@@ -6,9 +6,9 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
+#include <backend/ir_generator.hpp>
 #include <core.hpp>
 #include <frontend/ast.hpp>
-#include <backend/ir_generator.hpp>
 
 namespace Manganese::codegen {
 

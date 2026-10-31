@@ -6,9 +6,8 @@
 #include <frontend/parser/parser_base.hpp>
 #include <string>
 #include <unordered_set>
-#include <utils/string_interner.hpp>
 #include <utils/chunk_allocator.hpp>
-
+#include <utils/string_interner.hpp>
 
 namespace Manganese::parser {
 

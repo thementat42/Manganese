@@ -9,7 +9,6 @@
 #include <utils/result.hpp>
 #include <utils/target_info.hpp>
 
-
 namespace Manganese::backend {
 
 Result emitObjectCode(llvm::Module* module, utils::TargetInfo& targetInfo, std::string_view filename) {

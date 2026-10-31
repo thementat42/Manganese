@@ -222,14 +222,12 @@ void TestRunner::runControlFlowAnalyzerTests() {
 
     runTest("Control Flow: Uninitialized Variable Read", control_flow_tests::testUninitializedRead);
     runTest("Control Flow: Conditional Initialization Failure",
-                   control_flow_tests::testConditionalInitializationFailure);
+            control_flow_tests::testConditionalInitializationFailure);
     runTest("Control Flow: Conditional Initialization Success",
-                   control_flow_tests::testConditionalInitializationSuccess);
+            control_flow_tests::testConditionalInitializationSuccess);
     runTest("Control Flow: Runtime Loop Assignment Safety", control_flow_tests::testLoopAssignmentSafety);
-    runTest("Control Flow: Explicit Uninitialized Keyword",
-                   control_flow_tests::testExplicitUninitializedKeyword);
-    runTest("Control Flow: Nested If-Else Definite Initialization",
-                   control_flow_tests::testNestedIfInitialization);
+    runTest("Control Flow: Explicit Uninitialized Keyword", control_flow_tests::testExplicitUninitializedKeyword);
+    runTest("Control Flow: Nested If-Else Definite Initialization", control_flow_tests::testNestedIfInitialization);
     runTest("Control Flow: ForEach Loop Assignment Safety", control_flow_tests::testForEachLoopAssignmentSafety);
 }
 
