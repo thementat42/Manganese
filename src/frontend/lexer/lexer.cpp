@@ -377,7 +377,7 @@ std::unique_ptr<io::Reader> makeFileReader(const std::string& source) {
     auto mmapReader = std::make_unique<io::FileReader>(source, ec);
 
     if (ec) {
-        logging::logInternal(logging::LogLevel::Info,
+        logging::logInternal(logging::LogLevel::Warning,
                              "Could not memory-map, falling back to in-memory read (error message: {})", ec.message());
         return std::make_unique<io::HeapFileReader>(source);
     }
@@ -768,20 +768,4 @@ Result Lexer::processNumberSuffix(std::string& numberLiteral, bool isFloat) {
     numberLiteral += width;
     return result;
 }
-
-// ~ Helper functions
-
-std::unique_ptr<io::Reader> makeFileReader(const std::string& source) {
-    std::error_code ec;
-    auto mmapReader = std::make_unique<io::FileReader>(source, ec);
-
-    if (ec) {
-        logging::logInternal(logging::LogLevel::Info,
-                             "Could not memory-map, falling back to in-memory read (error message: {})", ec.message());
-        return std::make_unique<io::HeapFileReader>(source);
-    }
-    return mmapReader;
-}
-
-}  // namespace Manganese::lexer
 */
