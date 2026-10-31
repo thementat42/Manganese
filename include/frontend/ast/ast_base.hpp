@@ -70,8 +70,6 @@ enum class TypeKind : std::uint8_t {
 #undef TYPE_NODE
 };
 
-using Block = utils::Slice<Statement*>;
-
 enum class PrimitiveType : std::uint8_t {
     int8,
     uint8,
@@ -91,16 +89,25 @@ enum class PrimitiveType : std::uint8_t {
     not_primitive,
 };
 
-std::string_view primitiveTypeToString(PrimitiveType prim);
-
 enum class Visibility : std::uint8_t {
     Public,
     Private,
 };
 
+std::string_view primitiveTypeToString(PrimitiveType prim);
+
 constexpr const char* visibilityToString(Visibility visibility) noexcept {
     return visibility == Visibility::Public ? "public" : "private";
 }
+
+
+struct Attribute {
+    utils::StringID name;
+    Expression* argument;
+    bool known;
+};
+
+using Block = utils::Slice<Statement*>;
 
 struct ASTNode {
     std::size_t line = 0, column = 0;
@@ -117,6 +124,7 @@ struct ASTNode {
 
 struct Statement : public ASTNode {
     const StatementKind kind;
+    utils::Slice<Attribute> attributes;
 
     constexpr bool isPoisoned() const noexcept { return kind == StatementKind::PoisonedStatement; };
     virtual bool isDeclaration() const noexcept { return false; }

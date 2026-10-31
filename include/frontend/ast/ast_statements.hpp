@@ -174,6 +174,7 @@ struct IfBranch {
     Expression* condition;
     Block body;
     semantic::Scope* associatedScope;
+    utils::Slice<Attribute> attributes;
 };
 
 struct IfStatement final : public Statement, ScopeOwner {

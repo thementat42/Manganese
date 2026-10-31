@@ -1,3 +1,4 @@
+#include <concepts>
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/semantic/clone_context.hpp>
@@ -6,7 +7,7 @@
 #include <utils/string_interner.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
+#include "frontend/ast/ast_base.hpp"
 
 namespace Manganese::ast {
 
@@ -14,23 +15,40 @@ namespace Manganese::ast {
 
 namespace {
 
-template <class T, class... Args>
-    requires(std::is_convertible_v<T*, ast::ASTNode*> && std::is_constructible_v<T, Args...>)
-T* makeClonedNode(const T* t, semantic::CloneContext* context, Args&&... args) {
-    T* const node = context->arena.emplace<T>(std::forward<Args>(args)...);
-    node->line = t->line;
-    node->column = t->column;
-    return node;
-}
 
 // Type alias for temporary statement collection during cloning
-using StatementVector = std::vector<ast::Statement*>;
+using StatementVector = std::vector<Statement*>;
 
-ast::Block cloneBlock(ast::Block block, semantic::CloneContext* context) {
+Block cloneBlock(Block block, semantic::CloneContext* context) {
     StatementVector result;
     result.reserve(block.size);
     for (const auto* statement : block) { result.push_back(statement->clone(context)); }
     return context->arena.emplace_range(result);
+}
+
+utils::Slice<Attribute> cloneAttributes(utils::Slice<Attribute> attributes, semantic::CloneContext* context) {
+    std::vector<Attribute> result;
+    result.reserve(attributes.size);
+    for (const auto& attribute : attributes) {
+        result.push_back(
+            Attribute{.name = attribute.name,
+                      .argument = attribute.argument == nullptr ? nullptr : attribute.argument->clone(context),
+                      .known = attribute.known});
+    }
+    return context->arena.emplace_range(result);
+}
+
+
+template <class T, class... Args>
+    requires(std::derived_from<T, ASTNode> && std::is_constructible_v<T, Args...>)
+T* makeClonedNode(const T* t, semantic::CloneContext* context, Args&&... args) {
+    T* const node = context->arena.emplace<T>(std::forward<Args>(args)...);
+    node->line = t->line;
+    node->column = t->column;
+    if constexpr (std::derived_from<T, Statement>) {
+        node->attributes = cloneAttributes(t->attributes, context);
+    }
+    return node;
 }
 
 }  // namespace
@@ -136,12 +154,11 @@ IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
     for (const auto& branch : branches) {
         auto* variableClone
             = branch.variableDeclaration != nullptr ? branch.variableDeclaration->clone(context) : nullptr;
-        branchClones.push_back(IfBranch{
-            .variableDeclaration = variableClone,
-            .condition = branch.condition->clone(context),
-            .body = cloneBlock(branch.body, context),
-            .associatedScope = nullptr  // set by the semanic analyzer
-        });
+        branchClones.push_back(IfBranch{.variableDeclaration = variableClone,
+                                        .condition = branch.condition->clone(context),
+                                        .body = cloneBlock(branch.body, context),
+                                        .associatedScope = nullptr,  // set by the semanic analyzer
+                                        .attributes = cloneAttributes(attributes, context)});
     }
 
     std::optional<Block> elseBodyClone;
@@ -187,7 +204,7 @@ SwitchStatement* SwitchStatement::clone(semantic::CloneContext* context) const {
                               .associatedScope = nullptr});
     }
 
-    std::optional<ast::Block> defaultBodyClone = std::nullopt;
+    std::optional<Block> defaultBodyClone = std::nullopt;
     if (defaultBody.has_value()) { defaultBodyClone = cloneBlock(*defaultBody, context); }
 
     return makeClonedNode(this, context, targetClone, context->arena.emplace_range(caseClones), defaultBodyClone);
