@@ -114,7 +114,7 @@ std::vector<ParsedFile> parseInParallel(const std::vector<std::string>& filename
     std::vector<std::size_t> indices(filenames.size());
     std::iota(indices.begin(), indices.end(), 0);
 
-    std::for_each(std::execution::par, indices.begin(), indices.end(), [&](std::size_t idx) {
+    auto parseFileAtIndex = [&](std::size_t idx) {
         const std::string& path = filenames[idx];
         logging::ThreadLogBufferGuard logGuard;
 
@@ -132,7 +132,9 @@ std::vector<ParsedFile> parseInParallel(const std::vector<std::string>& filename
             std::lock_guard<std::mutex> lock{logsMutex};
             for (auto& rec : logGuard.records) { logs.push_back(std::move(rec)); }
         }
-    });
+    };
+
+    std::for_each(std::execution::par, indices.begin(), indices.end(), parseFileAtIndex);
 
     // flush logs on the main thread
     if (!logs.empty()) {
