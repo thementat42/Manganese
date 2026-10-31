@@ -25,9 +25,10 @@ Result runTestSuite(int argc, const char** argv) {
     bool codegen = false;
     bool execution = false;
     bool objectcode = false;
+    bool multifile = false;
 
     if (argc == 1) {
-        lexer = parser = semantic = controlflow = codegen = execution = objectcode = true;
+        lexer = parser = semantic = controlflow = codegen = execution = objectcode = multifile = true;
     } else {
         for (int i = 1; i < argc; ++i) {
             std::string_view arg{argv[i]};
@@ -45,8 +46,10 @@ Result runTestSuite(int argc, const char** argv) {
                 execution = true;
             } else if (arg == "--objectcode") {
                 objectcode = true;
+            } else if (arg == "--multifile") {
+                multifile = true;
             } else if (arg == "--all") {
-                lexer = parser = semantic = controlflow = codegen = execution = objectcode = true;
+                lexer = parser = semantic = controlflow = codegen = execution = objectcode = multifile = true;
                 break;
             } else {
                 std::cout << std::format("Skipping unknown argument: {}\n", argv[i]);
@@ -69,6 +72,7 @@ Result runTestSuite(int argc, const char** argv) {
         Phase{.name = "Codegen Tests", .enabled = codegen, .run = &TestRunner::runCodeGenerationTests},
         Phase{.name = "Execution Tests", .enabled = execution, .run = &TestRunner::runExecutionTests},
         Phase{.name = "Object Code Tests", .enabled = objectcode, .run = &TestRunner::runObjectCodeTests},
+        Phase{.name = "Multi-File Tests", .enabled = multifile, .run = &TestRunner::runMultiFileTests},
     };
 
     for (const auto& suite : suites) {

@@ -1,0 +1,5 @@
+module graphics::rendering;
+import math::vector;
+
+public func draw(v: math::vector::Vector2) {
+}

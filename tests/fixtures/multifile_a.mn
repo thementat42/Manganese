@@ -1,0 +1,6 @@
+module math::vector;
+
+public aggregate Vector2 {
+    x: float32;
+    y: float32;
+}

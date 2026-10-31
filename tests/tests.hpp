@@ -25,6 +25,7 @@ class TestRunner {
     void runCodeGenerationTests();
     void runExecutionTests();
     void runObjectCodeTests();
+    void runMultiFileTests();
 };
 Result runTestSuite(int argc, const char** argv);
 
