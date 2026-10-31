@@ -11,9 +11,6 @@
 #include <utils/result.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
-#include "frontend/semantic/semantic_analyzer.hpp"
-
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {

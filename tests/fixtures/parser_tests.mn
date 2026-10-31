@@ -37,7 +37,7 @@ func main() -> int {
         x = A,
         y = 1.23f32,
         z = [[true, false], [true, false]]
-    };  # This is an inline comment -- it doesn't get lexed
+    };  # This is an inline comment; it doesn't get lexed
     io::print(b.x);
     io::print(b.y);
     io::print(b.z);

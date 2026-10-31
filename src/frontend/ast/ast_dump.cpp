@@ -1,6 +1,5 @@
-#include "frontend/ast/ast_statements.hpp"
-#include "utils/string_interner.hpp"
-#if MN_DEBUG  // only include dump methods in debug builds
+
+#if MN_DEBUG  // dump methods are only for debug builds
 
 #include <core.hpp>
 #include <cstddef>
@@ -12,6 +11,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <utils/string_interner.hpp>
 #include <utils/type_names.hpp>
 
 namespace Manganese::ast {
@@ -112,14 +112,12 @@ void BreakStatement::dump(std::ostream& os, const utils::StringInterner& interne
     const Indent ind{indent};
     dumpHeader(os, ind, "BreakStatement", *this);
     dumpAttributes(os, interner, ind, attributes);
-
 }
 
 void ContinueStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ContinueStatement", *this);
     dumpAttributes(os, interner, ind, attributes);
-
 }
 
 void EmptyStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
@@ -134,7 +132,6 @@ void EnumDeclarationStatement::dump(std::ostream& os, const utils::StringInterne
     const Indent ind{indent};
     dumpHeader(os, ind, "EnumDeclarationStatement", *this);
     dumpAttributes(os, interner, ind, attributes);
-
 
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
@@ -167,7 +164,6 @@ void ForEachLoopStatement::dump(std::ostream& os, const utils::StringInterner& i
     dumpHeader(os, ind, "ForEachLoopStatement", *this);
     dumpAttributes(os, interner, ind, attributes);
 
-
     os << ind.next() << "Element: {\n";
     os << ind.next(2) << "name: " << interner.get_view(element.name) << "\n";
 
@@ -196,7 +192,6 @@ void ForLoopStatement::dump(std::ostream& os, const utils::StringInterner& inter
     const Indent ind{indent};
     dumpHeader(os, ind, "ForLoopStatement", *this);
     dumpAttributes(os, interner, ind, attributes);
-
 
     auto dumpOptionalNode = [&](std::string_view label, const auto* node) {
         os << ind.next() << label << ": \n";
@@ -266,7 +261,6 @@ void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, 
     dumpHeader(os, ind, "IfStatement", *this);
     dumpAttributes(os, interner, ind, attributes);
 
-
     const auto& ifBranch = branches[0];
 
     if (ifBranch.variableDeclaration != nullptr) {
@@ -301,7 +295,6 @@ void ImportStatement::dump(std::ostream& os, const utils::StringInterner& intern
     const Indent ind{indent};
     dumpHeader(os, ind, "ImportStatement", *this);
     dumpAttributes(os, interner, ind, attributes);
-
 
     os << ind.next() << "path: [";
     for (std::size_t i = 0; i < path.size; ++i) {
@@ -361,7 +354,6 @@ void SwitchStatement::dump(std::ostream& os, const utils::StringInterner& intern
     const Indent ind{indent};
     dumpHeader(os, ind, "SwitchStatement", *this);
     dumpAttributes(os, interner, ind, attributes);
-
 
     os << ind.next() << "target: \n";
     target->dump(os, interner, ind.next(2));

@@ -227,8 +227,6 @@ namespace Manganese::codegen {
         checkBlocks.push_back(llvm::BasicBlock::Create(*context, std::format("chain_check_{}", i), function));
     }
 
-    // Allocate stack slots for each operand so values can be safely stored and
-    // reused across basic block boundaries without re-evaluation.
     std::vector<llvm::AllocaInst*> operandAllocas;
     operandAllocas.reserve(expression->operands.size);
     for (std::size_t i = 0; i < expression->operands.size; ++i) {
@@ -444,7 +442,6 @@ auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -
 
     // Slice .length (fat pointer, index 1)
     if (objectType->isSlice() && fieldName == "length") {
-        // Evaluate the slice expression (which yields the { ptr, i64 })
         llvm::Value* sliceVal = visit(expression->object);
 
         if (sliceVal->getType()->isPointerTy()) {

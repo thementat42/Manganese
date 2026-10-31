@@ -7,8 +7,7 @@
 #include <string>
 #include <utils/string_interner.hpp>
 
-#include "frontend/ast/ast_statements.hpp"
-
+// In tests, add extra parentheses around sub expressions to make sure operator precedence works
 #if MN_DEBUG
 #define WRAP(str) "(" str ")"
 #else
@@ -168,8 +167,7 @@ std::string ForLoopStatement::toString(const utils::StringInterner& interner, st
 
 std::string FunctionDeclarationStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string result = attributesToString(attributes, interner, indent);
-    result
-        += getIndent(indent) + std::format("{} func {}", visibilityToString(visibility), interner.get_view(name));
+    result += getIndent(indent) + std::format("{} func {}", visibilityToString(visibility), interner.get_view(name));
 
     if (!genericTypes.empty()) { result += std::format("[{}]", commaSeparatedList(genericTypes, interner)); }
 
@@ -204,19 +202,20 @@ std::string IfStatement::toString(const utils::StringInterner& interner, std::si
         std::string attributesSuffix;
         if (!branch.attributes.empty()) {
             for (const auto& attribute : branch.attributes) {
-                std::string argStr = (attribute.argument != nullptr) ? std::format("({})", attribute.argument->toString(interner, 0)) : "";
+                std::string argStr = (attribute.argument != nullptr)
+                    ? std::format("({})", attribute.argument->toString(interner, 0))
+                    : "";
                 attributesSuffix += std::format(" @{}{}", interner.get_view(attribute.name), argStr);
             }
         }
 
-        return std::format("{} ({}){} ", keyword, condStr, attributesSuffix) + blockToString(branch.body, interner, indent);
+        return std::format("{} ({}){} ", keyword, condStr, attributesSuffix)
+            + blockToString(branch.body, interner, indent);
     };
 
     result += getIndent(indent) + branchToString(branches[0], "if");
 
-    for (std::size_t i = 1; i < branches.size; ++i) {
-        result += branchToString(branches[i], " elif");
-    }
+    for (std::size_t i = 1; i < branches.size; ++i) { result += branchToString(branches[i], " elif"); }
 
     if (elseBody.has_value()) { result += " else " + blockToString(*elseBody, interner, indent); }
 

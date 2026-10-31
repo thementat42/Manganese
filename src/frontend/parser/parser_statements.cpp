@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "frontend/ast/ast_base.hpp"
-
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -46,11 +44,7 @@ ast::Attribute Parser::parseAttribute() {
         expectToken(lexer::TokenType::RightParen, "Expected a ')' to after an attribute argument");
     }
 
-    return ast::Attribute{
-        .name = name,
-        .argument = argument,
-        .known = isKnownAttribute(interner.get_view(name))
-    };
+    return ast::Attribute{.name = name, .argument = argument, .known = isKnownAttribute(interner.get_view(name))};
 }
 
 ast::Statement* Parser::parseAttributes() {

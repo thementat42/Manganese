@@ -221,25 +221,23 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::BasicBlock* mainFalseDest
         = (statement->branches.size > 1) ? branchBlocks[1].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
 
-    // 1. Emit the primary 'if' condition and branch
     const auto& ifBranch = statement->branches[0];
     if (ifBranch.variableDeclaration != nullptr) { visit(ifBranch.variableDeclaration); }
     llvm::Value* condVal = visit(ifBranch.condition);
     builder->CreateCondBr(condVal, branchBlocks[0].second, mainFalseDest);
 
-    // Emit the primary 'if' body block
     builder->SetInsertPoint(branchBlocks[0].second);
     visit(ifBranch.body);
     if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
 
-    // 2. Emit each subsequent 'elif' branch
     for (size_t i = 1; i < statement->branches.size; ++i) {
         auto [condBlk, bodyBlk] = branchBlocks[i];
         const auto& elifClause = statement->branches[i];
 
         // If this elif fails, jump to the next elif condition, the else block, or the merge block
-        llvm::BasicBlock* nextFalseDest
-            = (i + 1 < statement->branches.size) ? branchBlocks[i + 1].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
+        llvm::BasicBlock* nextFalseDest = (i + 1 < statement->branches.size)
+            ? branchBlocks[i + 1].first
+            : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
 
         // Emit the elif condition block
         builder->SetInsertPoint(condBlk);
@@ -253,7 +251,6 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
-    // 3. Emit the 'else' block if present
     if (elseBlock != nullptr) {
         builder->SetInsertPoint(elseBlock);
         visit(*statement->elseBody);

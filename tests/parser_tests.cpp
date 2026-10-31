@@ -565,7 +565,6 @@ bool testImportsAndAliases() {
                                    "alias StringIntMap = std::HashMap@[string, Integer];\n"
                                    "let value: Integer = 42;\n";
 
-    // Only non-header AST statements expected in parsedFile.program
     const std::array<std::string, 5> expected
         = {"alias IntegerArray = (int32[5]);", "alias pf64 = (ptr float64);",
            "alias blah = (func(mut Integer, pf64, func(int64) -> int64) -> bool);",
@@ -573,13 +572,11 @@ bool testImportsAndAliases() {
 
     const parser::ParsedFile parsedFile = getParserResults(expression);
 
-    // Verify module header metadata
     if (parsedFile.fileModule == nullptr || interner.get_view(parsedFile.fileModule->name) != "dataprocessing") {
         std::cout << "ERROR: Module declaration not parsed correctly in testImportsAndAliases\n";
         return false;
     }
 
-    // Verify import metadata count
     if (parsedFile.imports.size != 3) {
         std::cout << std::format("ERROR: Expected 3 imports, got {} in testImportsAndAliases\n",
                                  parsedFile.imports.size);

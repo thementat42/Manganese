@@ -5,8 +5,6 @@
 #include <io/logging.hpp>
 #include <utils/result.hpp>
 
-#include "frontend/semantic/semantic_analyzer.hpp"
-
 namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::BreakStatement* statement) -> stmtvisit_t {

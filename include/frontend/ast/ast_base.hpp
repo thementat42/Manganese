@@ -100,7 +100,6 @@ constexpr const char* visibilityToString(Visibility visibility) noexcept {
     return visibility == Visibility::Public ? "public" : "private";
 }
 
-
 struct Attribute {
     utils::StringID name;
     Expression* argument;

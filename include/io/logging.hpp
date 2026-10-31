@@ -63,16 +63,12 @@ void writeToStderr(std::string_view prefixColor, std::string_view label, std::st
 void logInternalRaw(LogLevel level, std::string_view message);
 void logRaw(LogLevel level, std::size_t line, std::size_t col, std::string_view message);
 
-// Template functions kept in header because they need std::format_string evaluation
 template <class... Args>
 void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
 #if MN_DEBUG
     std::string message = std::format(fmt, std::forward<Args>(args)...);
     logInternalRaw(level, message);
-    if (level == LogLevel::Critical) {
-        // Re-construct formatted string for exception message if needed
-        throw std::runtime_error{message};
-    }
+    if (level == LogLevel::Critical) { throw std::runtime_error{message}; }
 #else
     DISCARD(level);
     DISCARD(fmt);

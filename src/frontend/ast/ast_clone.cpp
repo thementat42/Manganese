@@ -7,14 +7,11 @@
 #include <utils/string_interner.hpp>
 #include <vector>
 
-#include "frontend/ast/ast_base.hpp"
-
 namespace Manganese::ast {
 
 // Helpers
 
 namespace {
-
 
 // Type alias for temporary statement collection during cloning
 using StatementVector = std::vector<Statement*>;
@@ -38,16 +35,13 @@ utils::Slice<Attribute> cloneAttributes(utils::Slice<Attribute> attributes, sema
     return context->arena.emplace_range(result);
 }
 
-
 template <class T, class... Args>
     requires(std::derived_from<T, ASTNode> && std::is_constructible_v<T, Args...>)
 T* makeClonedNode(const T* t, semantic::CloneContext* context, Args&&... args) {
     T* const node = context->arena.emplace<T>(std::forward<Args>(args)...);
     node->line = t->line;
     node->column = t->column;
-    if constexpr (std::derived_from<T, Statement>) {
-        node->attributes = cloneAttributes(t->attributes, context);
-    }
+    if constexpr (std::derived_from<T, Statement>) { node->attributes = cloneAttributes(t->attributes, context); }
     return node;
 }
 

@@ -117,7 +117,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 
    private:
-    // Phase 1: Scope Building & Global Collection
+    // 1st pass helpers (building scope tree)
     Result buildScopeTree(parser::ParsedFile& file);
     Result _buildStatementScope(ast::Statement* stmt);
     Result _buildBodyScope(ast::Block block, Scope**);
@@ -129,7 +129,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result collectGlobalFunction(ast::FunctionDeclarationStatement* function);
     Result checkStatements(parser::ParsedFile& file);
 
-    // Phase 2: Type Checking & Compatibility Helpers
+    // 2nd pass helpers (actual semantic analysis)
     typeCompatibilityResult areTypesCompatible(const SemanticType* from, const SemanticType* to) const;
     typeCompatibilityResult arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const;
     static typeCompatibilityResult areTypesComparable(const SemanticType* lhs, const SemanticType* rhs);
@@ -160,7 +160,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result checkCaseClause(ast::SwitchStatement* statement, const ast::CaseClause& caseClause,
                            const SemanticType* targetType, bool first);
 
-    // Generics Specialization & Instantiation
+    // Helpers for generic instantiation
     exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
                                            const TypeList& typeArgs);
     exprvisit_t instantiateGenericAggregate(ast::GenericInstantiationExpression* expression, const Symbol* symbol,
@@ -180,7 +180,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         }
     }
 
-    // Resolution & Utility Helpers
+    // Other helpers
     bool isMutableExpression(const ast::Expression* expr) const;
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
@@ -235,7 +235,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 };
 
-// Other helpers
+// Static helpers
 constexpr bool isLogicalOp(lexer::TokenType t) noexcept {
     using enum lexer::TokenType;
     return utils::enum_matches(t, And, Or, Not);

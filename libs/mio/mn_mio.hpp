@@ -21,7 +21,6 @@
 #ifndef MN_MIO_MMAP_HEADER
 #define MN_MIO_MMAP_HEADER
 
-// #include "mio/page.hpp"
 /* Copyright 2017 https://github.com/mandreyel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -470,7 +469,7 @@ struct basic_mmap {
 #ifdef _WIN32
         if (is_mapped()) {
             ::UnmapViewOfFile(get_mapping_start());
-            _file_mapping_handle.close();  // Cleanly closes and resets via RAII
+            _file_mapping_handle.close();
         }
 #else
         if (_data) { ::munmap(const_cast<pointer>(get_mapping_start()), _mapped_length); }

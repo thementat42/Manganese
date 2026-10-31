@@ -128,7 +128,7 @@ bool testConditionalInitializationFailure() {
             if (cond) {
                 x = 10;
             }
-            return x; # Fails: x is MaybeInitialized
+            return x;
         }
     )";
     return analyzeControlFlow(invalid, false, __func__);
@@ -143,7 +143,7 @@ bool testConditionalInitializationSuccess() {
             } else {
                 x = 20;
             }
-            return x; # Succeeds: x is fully Initialized on all paths
+            return x;
         }
     )";
     return analyzeControlFlow(valid, true, __func__);
@@ -157,7 +157,7 @@ bool testLoopAssignmentSafety() {
                 x = 5;
                 n = n - 1;
             }
-            return x; # Fails: runtime loop might execute 0 times
+            return x;
         }
     )";
     return analyzeControlFlow(invalid, false, __func__);
@@ -167,7 +167,7 @@ bool testExplicitUninitializedKeyword() {
     const std::string valid = R"(
         func foo() -> int32 {
             let mut x: int32 = uninitialized;
-            return x;  # should be fine (but UB)
+            return x;  # UB, but valid
         }
     )";
     return analyzeControlFlow(valid, true, __func__);
