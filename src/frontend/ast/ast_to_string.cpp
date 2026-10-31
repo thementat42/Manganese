@@ -29,6 +29,19 @@ std::string blockToString(Block block, const utils::StringInterner& interner, st
     return result;
 }
 
+std::string attributesToString(const utils::Slice<Attribute>& attributes, const utils::StringInterner& interner,
+                               std::size_t indent = 0) {
+    if (attributes.empty()) { return ""; }
+    std::string result;
+    for (const auto& attribute : attributes) {
+        std::string argStr = (attribute.argument != nullptr)
+            ? std::format("({})", attribute.argument->toString(interner, indent))
+            : "";
+        result += getIndent(indent) + std::format("@{}{}\n", interner.get_view(attribute.name), argStr);
+    }
+    return result;
+}
+
 template <class T>
     requires(std::derived_from<T, ASTNode>)
 std::string commaSeparatedList(const utils::Slice<T*>& values, const utils::StringInterner& interner,
@@ -63,8 +76,9 @@ std::string genericsToString(const utils::Slice<Type*>& params, const utils::Str
 // Statements
 
 std::string AggregateDeclarationStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string result
-        = getIndent(indent) + std::format("{} aggregate {}", visibilityToString(visibility), interner.get_view(name));
+    std::string result = attributesToString(attributes, interner, indent);
+    result
+        += getIndent(indent) + std::format("{} aggregate {}", visibilityToString(visibility), interner.get_view(name));
     if (!genericTypes.empty()) { result += std::format("[{}]", commaSeparatedList(genericTypes, interner)); }
     result += " {\n";
     for (const AggregateField& field : fields) {
@@ -76,16 +90,19 @@ std::string AggregateDeclarationStatement::toString(const utils::StringInterner&
 }
 
 std::string AliasStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    return getIndent(indent)
+    std::string result = attributesToString(attributes, interner, indent);
+    return result + getIndent(indent)
         + std::format("alias {} = " WRAP("{}") ";", interner.get_view(name), baseType->toString(interner, indent));
 }
 
-std::string BreakStatement::toString(const utils::StringInterner& /*unused*/, std::size_t indent) const {
-    return getIndent(indent) + "break;";
+std::string BreakStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string result = attributesToString(attributes, interner, indent);
+    return result + getIndent(indent) + "break;";
 }
 
-std::string ContinueStatement::toString(const utils::StringInterner& /*unused*/, std::size_t indent) const {
-    return getIndent(indent) + "continue;";
+std::string ContinueStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string result = attributesToString(attributes, interner, indent);
+    return result + getIndent(indent) + "continue;";
 }
 
 std::string EmptyStatement::toString(const utils::StringInterner& /*unused*/, std::size_t /*indent*/) const {
@@ -93,8 +110,9 @@ std::string EmptyStatement::toString(const utils::StringInterner& /*unused*/, st
 }
 
 std::string EnumDeclarationStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string result = attributesToString(attributes, interner, indent);
     std::string baseTypeStr = (baseType != nullptr) ? std::format(": {}", baseType->toString(interner, indent)) : "";
-    std::string result = getIndent(indent)
+    result += getIndent(indent)
         + std::format("{} enum {}{}", visibilityToString(visibility), interner.get_view(name), baseTypeStr);
     result += " {\n";
     for (std::size_t i = 0; i < values.size; ++i) {
@@ -109,11 +127,13 @@ std::string EnumDeclarationStatement::toString(const utils::StringInterner& inte
 }
 
 std::string ExpressionStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    return getIndent(indent) + std::format("{};", expression->toString(interner, indent));
+    std::string result = attributesToString(attributes, interner, indent);
+    return result + getIndent(indent) + std::format("{};", expression->toString(interner, indent));
 }
 
 std::string ForEachLoopStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string result = getIndent(indent) + "foreach (";
+    std::string result = attributesToString(attributes, interner, indent);
+    result += getIndent(indent) + "foreach (";
 
     if (element.isMutable) { result += "mut "; }
     result += interner.get_view(element.name);
@@ -128,7 +148,8 @@ std::string ForEachLoopStatement::toString(const utils::StringInterner& interner
 }
 
 std::string ForLoopStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string result = getIndent(indent) + "for (";
+    std::string result = attributesToString(attributes, interner, indent);
+    result += getIndent(indent) + "for (";
     if (initializationStep != nullptr) {
         result += initializationStep->toString(interner, 0) + " ";
     } else {
@@ -146,8 +167,9 @@ std::string ForLoopStatement::toString(const utils::StringInterner& interner, st
 }
 
 std::string FunctionDeclarationStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string result
-        = getIndent(indent) + std::format("{} func {}", visibilityToString(visibility), interner.get_view(name));
+    std::string result = attributesToString(attributes, interner, indent);
+    result
+        += getIndent(indent) + std::format("{} func {}", visibilityToString(visibility), interner.get_view(name));
 
     if (!genericTypes.empty()) { result += std::format("[{}]", commaSeparatedList(genericTypes, interner)); }
 
@@ -171,24 +193,29 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
 }
 
 std::string IfStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    const auto& ifBranch = branches[0];
-    std::string condStr = ifBranch.condition->toString(interner, indent);
+    std::string result = attributesToString(attributes, interner, indent);
 
-    if (ifBranch.variableDeclaration != nullptr) {
-        condStr = std::format("{} {}", ifBranch.variableDeclaration->toString(interner, indent), condStr);
-    }
+    auto branchToString = [&](const IfBranch& branch, std::string_view keyword) -> std::string {
+        std::string condStr = branch.condition->toString(interner, indent);
+        if (branch.variableDeclaration != nullptr) {
+            condStr = std::format("{} {}", branch.variableDeclaration->toString(interner, indent), condStr);
+        }
 
-    std::string result
-        = getIndent(indent) + std::format("if ({}) ", condStr) + blockToString(ifBranch.body, interner, indent);
+        std::string attributesSuffix;
+        if (!branch.attributes.empty()) {
+            for (const auto& attribute : branch.attributes) {
+                std::string argStr = (attribute.argument != nullptr) ? std::format("({})", attribute.argument->toString(interner, 0)) : "";
+                attributesSuffix += std::format(" @{}{}", interner.get_view(attribute.name), argStr);
+            }
+        }
+
+        return std::format("{} ({}){} ", keyword, condStr, attributesSuffix) + blockToString(branch.body, interner, indent);
+    };
+
+    result += getIndent(indent) + branchToString(branches[0], "if");
 
     for (std::size_t i = 1; i < branches.size; ++i) {
-        const auto& elifBranch = branches[i];
-        std::string elifCondStr = elifBranch.condition->toString(interner, indent);
-
-        if (elifBranch.variableDeclaration != nullptr) {
-            elifCondStr = std::format("{} {}", elifBranch.variableDeclaration->toString(interner, indent), elifCondStr);
-        }
-        result += std::format(" elif ({}) ", elifCondStr) + blockToString(elifBranch.body, interner, indent);
+        result += branchToString(branches[i], " elif");
     }
 
     if (elseBody.has_value()) { result += " else " + blockToString(*elseBody, interner, indent); }
@@ -197,6 +224,7 @@ std::string IfStatement::toString(const utils::StringInterner& interner, std::si
 }
 
 std::string ImportStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string result = attributesToString(attributes, interner, indent);
     std::string pathStr;
     for (std::size_t i = 0; i < path.size; ++i) {
         pathStr += interner.get_view(path[i]);
@@ -204,29 +232,34 @@ std::string ImportStatement::toString(const utils::StringInterner& interner, std
     }
     const std::string aliasStr = alias.has_value() ? std::format("as {}", interner.get_view(*alias)) : "";
 
-    return getIndent(indent) + std::format("import {} {};", pathStr, aliasStr);
+    return result + getIndent(indent) + std::format("import {} {};", pathStr, aliasStr);
 }
 
 std::string NamespaceStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    return getIndent(indent) + std::format("namespace {} ", interner.get_view(name))
+    std::string result = attributesToString(attributes, interner, indent);
+    return result + getIndent(indent) + std::format("namespace {} ", interner.get_view(name))
         + blockToString(block, interner, indent);
 }
 
 std::string ModuleDeclarationStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    return getIndent(indent) + std::format("module {};", interner.get_view(name));
+    std::string result = attributesToString(attributes, interner, indent);
+    return result + getIndent(indent) + std::format("module {};", interner.get_view(name));
 }
 
 std::string NestedBlockStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    return getIndent(indent) + blockToString(block, interner, indent);
+    std::string result = attributesToString(attributes, interner, indent);
+    return result + getIndent(indent) + blockToString(block, interner, indent);
 }
 
 std::string ReturnStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string result = attributesToString(attributes, interner, indent);
     std::string valStr = (value != nullptr) ? value->toString(interner, indent) : "";
-    return getIndent(indent) + std::format("return {};", valStr);
+    return result + getIndent(indent) + std::format("return {};", valStr);
 }
 
 std::string SwitchStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string result = getIndent(indent) + std::format("switch ({})", target->toString(interner, indent)) + " {\n";
+    std::string result = attributesToString(attributes, interner, indent);
+    result += getIndent(indent) + std::format("switch ({})", target->toString(interner, indent)) + " {\n";
     for (const CaseClause& _case : cases) {
         result += getIndent(indent + 1) + std::format("case {}:\n", commaSeparatedList(_case.values, interner));
         for (const Statement* stmt : _case.body) { result += stmt->toString(interner, indent + 2) + "\n"; }
@@ -240,6 +273,7 @@ std::string SwitchStatement::toString(const utils::StringInterner& interner, std
 }
 
 std::string VariableDeclarationStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    std::string result = attributesToString(attributes, interner, indent);
     std::string typeName;
 
     if (type == nullptr) {
@@ -254,12 +288,13 @@ std::string VariableDeclarationStatement::toString(const utils::StringInterner& 
     std::string typeStr = std::format("{} {}", visibilityToString(visibility), typeName);
     std::string valueStr = (value == nullptr) ? "" : " = " + value->toString(interner, 0);
 
-    return getIndent(indent)
+    return result + getIndent(indent)
         + std::format("({} {}: {}{});", isMutable ? "let mut" : "let", interner.get_view(name), typeStr, valueStr);
 }
 
 std::string WhileLoopStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string result = getIndent(indent);
+    std::string result = attributesToString(attributes, interner, indent);
+    result += getIndent(indent);
     const std::string whileCond = std::format("while ({})", condition->toString(interner, indent));
     if (isDoWhile) {
         result += "do ";
