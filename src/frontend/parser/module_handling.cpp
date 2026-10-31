@@ -108,10 +108,14 @@ std::vector<ParsedFile> parseInParallel(const std::vector<std::string>& filename
     parsedFiles.resize(filenames.size());
 
     std::mutex resultsMutex;
-    std::vector<logging::LogRecord> aggregatedLogs;
+    std::vector<logging::LogRecord> logs;
     std::mutex logsMutex;
 
-    std::for_each(std::execution::par, filenames.begin(), filenames.end(), [&](const std::string& path) {
+    std::vector<std::size_t> indices(filenames.size());
+    std::iota(indices.begin(), indices.end(), 0);
+
+    std::for_each(std::execution::par, indices.begin(), indices.end(), [&](std::size_t idx) {
+        const std::string& path = filenames[idx];
         logging::ThreadLogBufferGuard logGuard;
 
         utils::chunk_allocator localArena;
@@ -120,28 +124,24 @@ std::vector<ParsedFile> parseInParallel(const std::vector<std::string>& filename
 
         {
             std::lock_guard<std::mutex> lock{resultsMutex};
-
             globalArena.merge_with(std::move(localArena));
-
-            // Store the result at the correct index to preserve input file ordering
-            auto idx = static_cast<std::size_t>(&path - filenames.data());
             parsedFiles[idx] = file;
         }
 
         if (!logGuard.records.empty()) {
             std::lock_guard<std::mutex> lock{logsMutex};
-            for (auto& rec : logGuard.records) { aggregatedLogs.push_back(std::move(rec)); }
+            for (auto& rec : logGuard.records) { logs.push_back(std::move(rec)); }
         }
     });
 
     // flush logs on the main thread
-    if (!aggregatedLogs.empty()) {
-        std::ranges::sort(aggregatedLogs, [](const auto& a, const auto& b) {
+    if (!logs.empty()) {
+        std::ranges::sort(logs, [](const auto& a, const auto& b) {
             if (a.line != b.line) { return a.line < b.line; }
             return a.col < b.col;
         });
 
-        for (const auto& rec : aggregatedLogs) {
+        for (const auto& rec : logs) {
             if (rec.level == logging::LogLevel::Error) {
                 logging::logError(rec.line, rec.col, "{}", rec.message);
             } else if (rec.level == logging::LogLevel::Warning) {
