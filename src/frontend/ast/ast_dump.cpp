@@ -37,8 +37,7 @@ inline void dumpBlock(std::ostream& os, std::string_view label, const utils::Str
     for (const ast::Statement* stmt : block) { stmt->dump(os, interner, indent.next()); }
     os << indent << "]\n";
 }
-
-void dumpSemanticType(std::ostream& os, Indent ind, const semantic::SemanticType* semanticType) {
+inline void dumpSemanticType(std::ostream& os, Indent ind, const semantic::SemanticType* semanticType) {
     os << ind << "semantic type: ";
     if (semanticType != nullptr) {
         os << semanticType->toString();
@@ -46,6 +45,22 @@ void dumpSemanticType(std::ostream& os, Indent ind, const semantic::SemanticType
         os << "not yet deduced";
     }
     os << "\n";
+}
+
+inline void dumpAttributes(std::ostream& os, const utils::StringInterner& interner, Indent indent,
+                           const utils::Slice<Attribute> attributes) {
+    if (attributes.empty()) { return; }
+    os << indent << "attributes: [\n";
+    for (const auto& attribute : attributes) {
+        os << indent.next() << "Attribute: " << interner.get_view(attribute.name);
+        if (attribute.argument != nullptr) {
+            os << " (argument:\n";
+            attribute.argument->dump(os, interner, indent.next(2));
+            os << indent.next() << ")";
+        }
+        os << " [known: " << (attribute.known ? "true" : "false") << "]\n";
+    }
+    os << indent << "]\n";
 }
 
 inline std::size_t utf8Length(std::string_view str) noexcept {
@@ -64,6 +79,8 @@ void AggregateDeclarationStatement::dump(std::ostream& os, const utils::StringIn
                                          std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AggregateDeclarationStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
     os << ind.next() << "fields: [\n";
@@ -83,31 +100,41 @@ void AggregateDeclarationStatement::dump(std::ostream& os, const utils::StringIn
 void AliasStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AliasStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     os << ind.next() << "alias: " << interner.get_view(name) << "\n";
     os << ind.next() << "base type: ";
     baseType->dump(os, interner, ind.next(2));
     os << ind << "}\n";
 }
 
-void BreakStatement::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
+void BreakStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "BreakStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
 }
 
-void ContinueStatement::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
+void ContinueStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ContinueStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
 }
 
-void EmptyStatement::dump(std::ostream& os, const utils::StringInterner& /*unused*/, std::size_t indent) const {
+void EmptyStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "EmptyStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     os << " }";  // header includes an opening curly brace
 }
 
 void EnumDeclarationStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "EnumDeclarationStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
 
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
@@ -129,6 +156,8 @@ void EnumDeclarationStatement::dump(std::ostream& os, const utils::StringInterne
 void ExpressionStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ExpressionStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     expression->dump(os, interner, ind.next());
     os << ind << "}\n";
 }
@@ -136,6 +165,8 @@ void ExpressionStatement::dump(std::ostream& os, const utils::StringInterner& in
 void ForEachLoopStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ForEachLoopStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
 
     os << ind.next() << "Element: {\n";
     os << ind.next(2) << "name: " << interner.get_view(element.name) << "\n";
@@ -164,6 +195,8 @@ void ForEachLoopStatement::dump(std::ostream& os, const utils::StringInterner& i
 void ForLoopStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ForLoopStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
 
     auto dumpOptionalNode = [&](std::string_view label, const auto* node) {
         os << ind.next() << label << ": \n";
@@ -186,6 +219,8 @@ void FunctionDeclarationStatement::dump(std::ostream& os, const utils::StringInt
                                         std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "FunctionDeclarationStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
     os << ind.next() << "visibility: " << visibilityToString(visibility) << "\n";
 
@@ -229,6 +264,8 @@ void FunctionDeclarationStatement::dump(std::ostream& os, const utils::StringInt
 void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "IfStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
 
     const auto& ifBranch = branches[0];
 
@@ -263,6 +300,8 @@ void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, 
 void ImportStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ImportStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
 
     os << ind.next() << "path: [";
     for (std::size_t i = 0; i < path.size; ++i) {
@@ -279,6 +318,8 @@ void ModuleDeclarationStatement::dump(std::ostream& os, const utils::StringInter
                                       std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ModuleDeclarationStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     os << ind.next() << "module name: " << interner.get_view(name) << "\n";
     os << ind << "}\n";
 }
@@ -286,6 +327,8 @@ void ModuleDeclarationStatement::dump(std::ostream& os, const utils::StringInter
 void NamespaceStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "NamespaceStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
     dumpBlock(os, "statement", interner, ind.next(), block);
     os << ind << "}\n";
@@ -294,6 +337,8 @@ void NamespaceStatement::dump(std::ostream& os, const utils::StringInterner& int
 void NestedBlockStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "NestedBlockStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     dumpBlock(os, "body", interner, ind.next(), block);
     os << ind << "}\n";
 }
@@ -301,6 +346,8 @@ void NestedBlockStatement::dump(std::ostream& os, const utils::StringInterner& i
 void ReturnStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ReturnStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     if (value != nullptr) {
         os << ind.next() << "value: \n";
         value->dump(os, interner, ind.next(2));
@@ -313,6 +360,8 @@ void ReturnStatement::dump(std::ostream& os, const utils::StringInterner& intern
 void SwitchStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "SwitchStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
 
     os << ind.next() << "target: \n";
     target->dump(os, interner, ind.next(2));
@@ -336,6 +385,8 @@ void VariableDeclarationStatement::dump(std::ostream& os, const utils::StringInt
                                         std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "VariableDeclarationStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     os << ind.next() << "name: " << interner.get_view(name) << "\n";
     os << ind.next() << "isMutable: " << (isMutable ? "true" : "false") << "\n";
     os << ind.next() << "visibility: " << (visibility == Visibility::Public ? "Public" : "Private") << "\n";
@@ -362,6 +413,8 @@ void VariableDeclarationStatement::dump(std::ostream& os, const utils::StringInt
 void WhileLoopStatement::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "WhileLoopStatement", *this);
+    dumpAttributes(os, interner, ind, attributes);
+
     os << ind.next() << "Is Do-While: " << (isDoWhile ? "true" : "false") << "\n";
     os << ind.next() << "condition: \n";
     condition->dump(os, interner, ind.next(2));
@@ -375,6 +428,7 @@ void AggregateInstantiationExpression::dump(std::ostream& os, const utils::Strin
                                             std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AggregateInstantiationExpression", *this);
+
     os << ind.next() << "base:\n";
     base->dump(os, interner, ind.next(2));
 
@@ -395,6 +449,7 @@ void AggregateLiteralExpression::dump(std::ostream& os, const utils::StringInter
                                       std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "AggregateLiteralExpression", *this);
+
     os << ind.next() << "Elements {\n";
     for (const Expression* element : elements) { element->dump(os, interner, ind.next(2)); }
     os << ind.next() << "}\n";
