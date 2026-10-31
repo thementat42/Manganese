@@ -10,6 +10,8 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 
+#include "frontend/ast/ast_expressions.hpp"
+
 namespace Manganese::codegen {
 
 auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
@@ -139,17 +141,30 @@ auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
 auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> stmtvisit_t {
     if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
 
+    std::string_view linkName = statement->mangledName.has_value() ? interner.get_view(*statement->mangledName)
+                                                                   : interner.get_view(statement->name);
+
+    for (const auto& attribute : statement->attributes) {
+        if (interner.get_view(attribute.name) == "extern" && attribute.argument != nullptr
+            && attribute.argument->kind == ast::ExpressionKind::StringLiteralExpression) {
+            linkName = interner.get_view(static_cast<const ast::StringLiteralExpression*>(attribute.argument)->value);
+            break;
+        }
+    }
+
     const semantic::SemanticType* oldFunctionSemanticReturnType = currentFunctionSemanticReturnType;
     const auto* funcSemanticType = static_cast<const semantic::Function*>(statement->semanticType);
     currentFunctionSemanticReturnType = funcSemanticType->returnType;
 
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(funcSemanticType));
 
-    const std::string_view mangledNameView = statement->mangledName.has_value()
-        ? interner.get_view(*statement->mangledName)
-        : interner.get_view(statement->name);
-    auto* llvmFunction
-        = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, mangledNameView, module.get());
+    auto* llvmFunction = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, linkName, module.get());
+
+    if (!statement->body.has_value()) {
+        // this is an extern declaration so there's no body
+        currentFunctionSemanticReturnType = oldFunctionSemanticReturnType;
+        return;
+    }
 
     // Save the previous insertion point
     // Since generic instantiations skip around insertion points, we need to make sure to go back to the
@@ -172,7 +187,7 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
         namedValues[param.name] = alloca;
     }
 
-    visit(statement->body);
+    visit(*statement->body);
 
     // Make sure a return instruction is always emitted (e.g. if no explicit return instruction is written)
     if (builder->GetInsertBlock()->getTerminator() == nullptr) {
@@ -186,6 +201,7 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     if (oldInsertBlock != nullptr) { builder->SetInsertPoint(oldInsertBlock); }
     currentFunctionSemanticReturnType = oldFunctionSemanticReturnType;
 }
+
 auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     llvm::Function* function = builder->GetInsertBlock()->getParent();
 

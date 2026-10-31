@@ -156,6 +156,13 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
         return stmtvisit_t::Failure;
     }
 
+    for (const auto& attr : statement->attributes) {
+        if (interner.get_view(attr.name) == "extern" && statement->body.has_value()) {
+            logError(statement, "Extern function '{}' cannot have a body", interner.get_view(statement->name));
+            return stmtvisit_t::Failure;
+        }
+    }
+
     if (!context.isInstantiatingGeneric) {
         statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)};
     }
@@ -209,7 +216,9 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     const SemanticType* previousReturnType = context.currentFunctionReturnType;
     context.currentFunctionReturnType = fnType->returnType;
 
-    const stmtvisit_t bodyResult = visit(statement->body, false, statement->associatedScope);
+    stmtvisit_t bodyResult = stmtvisit_t::Success;
+    if (statement->body.has_value()) { bodyResult = visit(*statement->body, false, statement->associatedScope); }
+
     context.currentFunctionReturnType = previousReturnType;
 
     const bool isSuccess = (signatureResult == stmtvisit_t::Success && bodyResult == stmtvisit_t::Success);

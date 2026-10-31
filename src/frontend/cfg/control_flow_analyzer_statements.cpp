@@ -99,7 +99,10 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) no
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::FunctionDeclarationStatement* statement) noexcept {
-    const FlowStatus bodyStatus = visit(statement->body, true, statement->associatedScope);
+    // Extern functions don't have a body to analyzer
+    if (!statement->body.has_value()) { return FlowStatus::FallsThrough; }
+    
+    const FlowStatus bodyStatus = visit(*statement->body, true, statement->associatedScope);
     if ((statement->returnType != nullptr) && statement->returnType->semanticType != nullptr
         && !statement->returnType->semanticType->isVoid() && bodyStatus == FlowStatus::FallsThrough) {
         logError(statement, "non-void function '{}' does not return a value on all control paths", statement->name);

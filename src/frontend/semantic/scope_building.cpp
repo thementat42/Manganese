@@ -100,7 +100,10 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
             if (!funcStmt->genericTypes.empty()) { return result; }
 
             // Process the internal block statements
-            const Result bodyResult = _buildBodyScope(funcStmt->body, &funcStmt->associatedScope);
+            Result bodyResult = Result::Success;
+            if (funcStmt->body.has_value()) {
+                bodyResult = _buildBodyScope(*funcStmt->body, &funcStmt->associatedScope);
+            }
             return (result == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
         }
         case IfStatement: {
