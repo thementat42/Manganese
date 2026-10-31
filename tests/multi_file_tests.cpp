@@ -66,9 +66,8 @@ bool testCircularDependencyDetection() {
         std::cout
             << "ERROR: Expected circular dependency to trigger a critical error exception, but it completed successfully.\n";
         return false;
-    } catch (const std::exception& e) { return true; } catch (...) {
-        return true;
-    }
+    } catch (const std::exception& e) { return true; }
+    return false;
 }
 }  // namespace
 
