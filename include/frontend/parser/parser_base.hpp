@@ -147,7 +147,7 @@ class Parser {
     }
 
     template <class T, class... Args>
-        requires(std::is_convertible_v<T*, ast::ASTNode*> && std::is_constructible_v<T, Args...>)
+        requires(std::derived_from<T, ast::ASTNode> && std::is_constructible_v<T, Args...>)
     T* makeNode(const Token& startToken, Args&&... args) {
         if constexpr (std::is_same_v<T, ast::PoisonedExpression> || std::is_same_v<T, ast::PoisonedStatement>
                       || std::is_same_v<T, ast::PoisonedType>) {
