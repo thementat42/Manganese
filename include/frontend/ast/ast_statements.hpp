@@ -169,29 +169,20 @@ struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {
     bool isDeclaration() const noexcept override { return true; }
 };
 
-struct ElifClause {
-    Statement* variableDeclaration;
+struct IfBranch {
+    Statement* variableDeclaration = nullptr;
     Expression* condition;
     Block body;
     semantic::Scope* associatedScope;
 };
 
 struct IfStatement final : public Statement, ScopeOwner {
-    Statement* variableDeclaration;
-    Expression* condition;
-    Block body;
-    std::optional<Block> elseBody;  // elseBody might be empty
+    utils::Slice<IfBranch> branches;  // first branch is the if, subsequent branches are elifs
+    std::optional<Block> elseBody;
     semantic::Scope* elseAssociatedScope = nullptr;
-    utils::Slice<ElifClause> elifs;
 
-    IfStatement(Statement* _variableDeclaration, Expression* _condition, Block _body, utils::Slice<ElifClause> _elifs,
-                std::optional<Block> _elseBody = {}) noexcept :
-        Statement(StatementKind::IfStatement),
-        variableDeclaration(_variableDeclaration),
-        condition(_condition),
-        body(_body),
-        elseBody(_elseBody),
-        elifs(_elifs) {}
+    IfStatement(utils::Slice<IfBranch> _branches, std::optional<Block> _elseBody = {}) noexcept :
+        Statement(StatementKind::IfStatement), branches(_branches), elseBody(_elseBody) {}
 
     MN_AST_STANDARD_INTERFACE(IfStatement);
 };

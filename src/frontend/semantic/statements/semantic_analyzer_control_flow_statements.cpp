@@ -135,39 +135,41 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     const ContextGuard guard{context.ifStatementDepth,
                              static_cast<decltype(context.ifStatementDepth)>(context.ifStatementDepth + 1)};
 
-    const bool hasVar = (statement->variableDeclaration != nullptr);
-    if (hasVar) {
-        symbolTable.enterScope(statement->associatedScope);
-        if (visit(statement->variableDeclaration) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-    }
+    for (std::size_t i = 0; i < statement->branches.size; ++i) {
+        const auto& branch = statement->branches[i];
+        const bool isPrimary = (i == 0);
+        const bool hasVar = (branch.variableDeclaration != nullptr);
 
-    context.inCondition = true;
-    if (visit(statement->condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-    context.inCondition = false;
-
-    if (statement->condition->semanticType->isPoison()) {
-        logError(statement, "Could not deduce type of condition {}", statement->condition->toString(interner));
-        result = stmtvisit_t::Failure;
-    } else {
-        const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
-            statement->condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
-
-        if (!conditionCanBeBool) {
-            logError(statement,
-                     "Condition in if statement must be a boolean type or implicitly convertible to it, not {}",
-                     statement->condition->semanticType->toString());
-            result = stmtvisit_t::Failure;
-        } else if (conditionCanBeBool.result == Compatible_t::Warning) {
-            logWarning(statement, "{}", conditionCanBeBool.message);
+        if (hasVar) {
+            symbolTable.enterScope(branch.associatedScope);
+            if (visit(branch.variableDeclaration) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
         }
-    }
 
-    if (visit(statement->body, !hasVar, statement->associatedScope) == stmtvisit_t::Failure) {
-        result = stmtvisit_t::Failure;
-    }
+        context.inCondition = true;
+        if (visit(branch.condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+        context.inCondition = false;
 
-    for (const ast::ElifClause& elif : statement->elifs) {
-        if (checkElifClause(statement, elif) == Result::Failure) { result = stmtvisit_t::Failure; }
+        if (branch.condition->semanticType->isPoison()) {
+            logError(statement, "Could not deduce type of condition {}", branch.condition->toString(interner));
+            result = stmtvisit_t::Failure;
+        } else {
+            const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
+                branch.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
+
+            const char* clauseName = isPrimary ? "if" : "elif";
+            if (!conditionCanBeBool) {
+                logError(statement,
+                         "Condition in {} statement must be a boolean type or implicitly convertible to it, not {}",
+                         clauseName, branch.condition->semanticType->toString());
+                result = stmtvisit_t::Failure;
+            } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+                logWarning(statement, "{}", conditionCanBeBool.message);
+            }
+        }
+
+        if (visit(branch.body, !hasVar, branch.associatedScope) == stmtvisit_t::Failure) {
+            result = stmtvisit_t::Failure;
+        }
     }
 
     if (statement->elseBody.has_value()) {
@@ -240,37 +242,6 @@ auto SemanticAnalyzer::visit(ast::WhileLoopStatement* statement) -> stmtvisit_t 
 }
 
 // Helpers
-
-Result SemanticAnalyzer::checkElifClause(const ast::IfStatement* statement, const ast::ElifClause& elif) {
-    Result result = Result::Success;
-    const bool elifHasVar = (elif.variableDeclaration != nullptr);
-    if (elifHasVar) {
-        symbolTable.enterScope(elif.associatedScope);
-        if (visit(elif.variableDeclaration) == Result::Failure) { result = Result::Failure; }
-    }
-
-    if (visit(elif.condition) == exprvisit_t::Failure) { result = Result::Failure; }
-
-    if (elif.condition->semanticType->isPoison()) {
-        logError(statement, "Could not deduce type of condition {}", elif.condition->toString(interner));
-        result = Result::Failure;
-    } else {
-        const typeCompatibilityResult conditionCanBeBool
-            = areTypesCompatible(elif.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
-
-        if (!conditionCanBeBool) {
-            logError(statement,
-                     "Condition in elif statement must be a boolean type or implicitly convertible to it, not {}",
-                     elif.condition->semanticType->toString());
-            result = Result::Failure;
-        } else if (conditionCanBeBool.result == Compatible_t::Warning) {
-            logWarning(statement, "{}", conditionCanBeBool.message);
-        }
-    }
-
-    if (visit(elif.body, !elifHasVar, elif.associatedScope) == Result::Failure) { result = Result::Failure; }
-    return result;
-}
 
 Result SemanticAnalyzer::checkCaseClause(ast::SwitchStatement* statement, const ast::CaseClause& caseClause,
                                          const SemanticType* targetType, bool first) {

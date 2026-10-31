@@ -159,7 +159,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result checkFunctionParameter(ast::FunctionDeclarationStatement* statement, const ast::FunctionParameter& param);
     Result checkCaseClause(ast::SwitchStatement* statement, const ast::CaseClause& caseClause,
                            const SemanticType* targetType, bool first);
-    Result checkElifClause(const ast::IfStatement* statement, const ast::ElifClause& elif);
 
     // Generics Specialization & Instantiation
     exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,

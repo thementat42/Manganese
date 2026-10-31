@@ -171,20 +171,24 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
 }
 
 std::string IfStatement::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    std::string condStr = condition->toString(interner, indent);
-    if (variableDeclaration != nullptr) {
-        condStr = std::format("{} {}", variableDeclaration->toString(interner, indent), condStr);
+    const auto& ifBranch = branches[0];
+    std::string condStr = ifBranch.condition->toString(interner, indent);
+
+    if (ifBranch.variableDeclaration != nullptr) {
+        condStr = std::format("{} {}", ifBranch.variableDeclaration->toString(interner, indent), condStr);
     }
 
-    std::string result = getIndent(indent) + std::format("if ({}) ", condStr) + blockToString(body, interner, indent);
+    std::string result
+        = getIndent(indent) + std::format("if ({}) ", condStr) + blockToString(ifBranch.body, interner, indent);
 
-    for (const ElifClause& elif : elifs) {
-        std::string elifCondStr = elif.condition->toString(interner, indent);
-        if (elif.variableDeclaration != nullptr) {
-            elifCondStr = std::format("{} {}", elif.variableDeclaration->toString(interner, indent), elifCondStr);
+    for (std::size_t i = 1; i < branches.size; ++i) {
+        const auto& elifBranch = branches[i];
+        std::string elifCondStr = elifBranch.condition->toString(interner, indent);
+
+        if (elifBranch.variableDeclaration != nullptr) {
+            elifCondStr = std::format("{} {}", elifBranch.variableDeclaration->toString(interner, indent), elifCondStr);
         }
-
-        result += std::format(" elif ({}) ", elifCondStr) + blockToString(elif.body, interner, indent);
+        result += std::format(" elif ({}) ", elifCondStr) + blockToString(elifBranch.body, interner, indent);
     }
 
     if (elseBody.has_value()) { result += " else " + blockToString(*elseBody, interner, indent); }

@@ -130,26 +130,24 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
 }
 
 IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
-    Statement* variableDeclarationClone
-        = variableDeclaration == nullptr ? nullptr : variableDeclaration->clone(context);
-    Expression* conditionClone = condition->clone(context);
-    std::vector<ElifClause> elifClones;
-    elifClones.reserve(elifs.size);
+    std::vector<IfBranch> branchClones;
+    branchClones.reserve(branches.size);
 
-    for (const auto& elif : elifs) {
-        Statement* elifVariableDeclarationCLone
-            = elif.variableDeclaration == nullptr ? nullptr : elif.variableDeclaration->clone(context);
-        elifClones.push_back({.variableDeclaration = elifVariableDeclarationCLone,
-                              .condition = elif.condition->clone(context),
-                              .body = cloneBlock(elif.body, context),
-                              .associatedScope = nullptr});
+    for (const auto& branch : branches) {
+        auto* variableClone
+            = branch.variableDeclaration != nullptr ? branch.variableDeclaration->clone(context) : nullptr;
+        branchClones.push_back(IfBranch{
+            .variableDeclaration = variableClone,
+            .condition = branch.condition->clone(context),
+            .body = cloneBlock(branch.body, context),
+            .associatedScope = nullptr  // set by the semanic analyzer
+        });
     }
 
-    std::optional<ast::Block> elseBodyClone = std::nullopt;
+    std::optional<Block> elseBodyClone;
     if (elseBody.has_value()) { elseBodyClone = cloneBlock(*elseBody, context); }
 
-    return makeClonedNode(this, context, variableDeclarationClone, conditionClone, cloneBlock(body, context),
-                          context->arena.emplace_range(elifClones), elseBodyClone);
+    return makeClonedNode(this, context, context->arena.emplace_range(branchClones), elseBodyClone);
 }
 
 ImportStatement* ImportStatement::clone(semantic::CloneContext* /*context*/) const {

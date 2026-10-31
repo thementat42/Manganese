@@ -10,10 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "frontend/ast/ast_statements.hpp"
-#include "frontend/lexer/token.hpp"
-#include "frontend/parser/operators.hpp"
-
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
@@ -234,36 +230,42 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
 
 ast::Statement* Parser::parseIfStatement() {
     const Token startToken = consumeToken();
-    ast::Statement* declaredVariable = nullptr;
 
-    expectToken(TokenType::LeftParen, "Expected '(' to introduce if condition");
-    if (peekTokenType() == TokenType::Let) { declaredVariable = parseVariableDeclarationStatement(); }
-    ast::Expression* condition = parseExpression(Precedence::Default);
-    expectToken(TokenType::RightParen, "Expected ')' to end if condition");
-    const ast::Block body = parseBlock("if body");
+    auto parseBranch = [this](const char* bodyName) -> ast::IfBranch {
+        ast::Statement* declaredVariable = nullptr;
 
-    std::vector<ast::ElifClause> elifs;
+        expectToken(TokenType::LeftParen, std::format("Expected '(' to introduce {} condition", bodyName));
+        if (peekTokenType() == TokenType::Let) { declaredVariable = parseVariableDeclarationStatement(); }
+        ast::Expression* condition = parseExpression(Precedence::Default);
+        expectToken(TokenType::RightParen, std::format("Expected ')' to end {} condition", bodyName));
+
+        const ast::Block body = parseBlock(std::format("{} body", bodyName));
+
+        return ast::IfBranch{
+            .variableDeclaration = declaredVariable,
+            .condition = condition,
+            .body = body,
+            .associatedScope = nullptr,
+        };
+    };
+
+    ast::IfBranch primaryBranch = parseBranch("if");
+    std::vector<ast::IfBranch> branches;
+    branches.push_back(primaryBranch);
+
     while (peekTokenType() == TokenType::Elif) {
-        ast::Statement* elifVariable = nullptr;
         DISCARD(consumeToken());
-
-        expectToken(TokenType::LeftParen, "Expected '(' to introduce elif condition");
-        if (peekTokenType() == TokenType::Let) { elifVariable = parseVariableDeclarationStatement(); }
-
-        ast::Expression* elifCondition = parseExpression(Precedence::Default);
-
-        expectToken(TokenType::RightParen, "Expected ')' to end elif condition");
-
-        elifs.emplace_back(elifVariable, elifCondition, parseBlock("elif body"));
+        branches.push_back(parseBranch("elif"));
     }
+
     std::optional<ast::Block> elseBody;
     if (peekTokenType() == TokenType::Else) {
         DISCARD(consumeToken());
         elseBody = parseBlock("else body");
         if (elseBody->empty()) { elseBody = std::nullopt; }
     }
-    return makeNode<ast::IfStatement>(startToken, declaredVariable, condition, arena.emplace_range(body),
-                                      arena.emplace_range(elifs), elseBody);
+
+    return makeNode<ast::IfStatement>(startToken, arena.emplace_range(branches), elseBody);
 }
 
 ast::Statement* Parser::parseImportStatement() {

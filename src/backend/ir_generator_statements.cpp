@@ -192,46 +192,54 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     // set up blocks for each place to jump to
     // merge block is where to jump after the if statement
     llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(*context, "if_end", function);
-    // block for the main if statement
-    llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(*context, "if_true", function);
 
-    std::vector<std::pair<llvm::BasicBlock*, llvm::BasicBlock*>> elifBlocks;
-    elifBlocks.reserve(statement->elifs.size);
+    // Create a vector of pairs (condition block, body block) for every branch (if + elifs)
+    // statement->branches[0] is the main 'if', indices >= 1 are the 'elifs'
+    std::vector<std::pair<llvm::BasicBlock*, llvm::BasicBlock*>> branchBlocks;
+    branchBlocks.reserve(statement->branches.size);
 
-    for (std::size_t i = 0; i < statement->elifs.size; ++i) {
-        llvm::BasicBlock* elifConditionBlock
-            = llvm::BasicBlock::Create(*context, std::format("elif_condition_{}", i), function);
-        llvm::BasicBlock* elifBodyBlock
-            = llvm::BasicBlock::Create(*context, std::format("elif_condition_{}_true", i), function);
-        elifBlocks.emplace_back(elifConditionBlock, elifBodyBlock);
+    for (std::size_t i = 0; i < statement->branches.size; ++i) {
+        if (i == 0) {
+            // Main 'if' body block doesn't need a separate condition block since we emit the condition right away
+            llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(*context, "if_true", function);
+            branchBlocks.emplace_back(nullptr, thenBlock);
+        } else {
+            // 'elif' clauses need both a condition block and a body block
+            llvm::BasicBlock* elifConditionBlock
+                = llvm::BasicBlock::Create(*context, std::format("elif_condition_{}", i - 1), function);
+            llvm::BasicBlock* elifBodyBlock
+                = llvm::BasicBlock::Create(*context, std::format("elif_condition_{}_true", i - 1), function);
+            branchBlocks.emplace_back(elifConditionBlock, elifBodyBlock);
+        }
     }
 
     llvm::BasicBlock* elseBlock
         = statement->elseBody.has_value() ? llvm::BasicBlock::Create(*context, "else_body", function) : nullptr;
 
     // Determine where the primary 'if' false branch should jump
-    // If there are elifs, jump to the first one, otherwise we can just go straight to else
+    // If there are elifs (size > 1), jump to the first elif's condition block, otherwise go to else or merge
     llvm::BasicBlock* mainFalseDest
-        = !elifBlocks.empty() ? elifBlocks[0].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
+        = (statement->branches.size > 1) ? branchBlocks[1].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
 
-    // Run codegen for the main variable declaration (if present) and condition
-    if (statement->variableDeclaration != nullptr) { visit(statement->variableDeclaration); }
-    llvm::Value* condVal = visit(statement->condition);
-    builder->CreateCondBr(condVal, thenBlock, mainFalseDest);
+    // 1. Emit the primary 'if' condition and branch
+    const auto& ifBranch = statement->branches[0];
+    if (ifBranch.variableDeclaration != nullptr) { visit(ifBranch.variableDeclaration); }
+    llvm::Value* condVal = visit(ifBranch.condition);
+    builder->CreateCondBr(condVal, branchBlocks[0].second, mainFalseDest);
 
-    builder->SetInsertPoint(thenBlock);
-    visit(statement->body);
+    // Emit the primary 'if' body block
+    builder->SetInsertPoint(branchBlocks[0].second);
+    visit(ifBranch.body);
     if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
 
-    // emit each elif branch
+    // 2. Emit each subsequent 'elif' branch
+    for (size_t i = 1; i < statement->branches.size; ++i) {
+        auto [condBlk, bodyBlk] = branchBlocks[i];
+        const auto& elifClause = statement->branches[i];
 
-    for (size_t i = 0; i < statement->elifs.size; ++i) {
-        auto [condBlk, bodyBlk] = elifBlocks[i];
-        const auto& elifClause = statement->elifs[i];
-
-        // If this elif fails, jump to the next elif, the else block, or the merge block
+        // If this elif fails, jump to the next elif condition, the else block, or the merge block
         llvm::BasicBlock* nextFalseDest
-            = (i + 1 < elifBlocks.size()) ? elifBlocks[i + 1].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
+            = (i + 1 < statement->branches.size) ? branchBlocks[i + 1].first : ((elseBlock != nullptr) ? elseBlock : mergeBlock);
 
         // Emit the elif condition block
         builder->SetInsertPoint(condBlk);
@@ -245,6 +253,7 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
         if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
+    // 3. Emit the 'else' block if present
     if (elseBlock != nullptr) {
         builder->SetInsertPoint(elseBlock);
         visit(*statement->elseBody);

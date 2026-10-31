@@ -230,32 +230,29 @@ void IfStatement::dump(std::ostream& os, const utils::StringInterner& interner, 
     const Indent ind{indent};
     dumpHeader(os, ind, "IfStatement", *this);
 
-    if (variableDeclaration != nullptr) {
+    const auto& ifBranch = branches[0];
+
+    if (ifBranch.variableDeclaration != nullptr) {
         os << ind.next() << "variable declaration: \n";
-        variableDeclaration->dump(os, interner, ind.next(2));
+        ifBranch.variableDeclaration->dump(os, interner, ind.next(2));
     }
 
     os << ind.next() << "condition: \n";
-    condition->dump(os, interner, ind.next(2));
+    ifBranch.condition->dump(os, interner, ind.next(2));
 
-    dumpBlock(os, "body", interner, ind.next(), body);
+    dumpBlock(os, "body", interner, ind.next(), ifBranch.body);
 
-    if (!elifs.empty()) {
-        os << ind.next() << "elif clauses: [\n";
-        for (const auto& elif : elifs) {
-            os << ind.next(2) << "{\n";
-
-            if (elif.variableDeclaration != nullptr) {
-                os << ind.next(3) << "variable declaration: \n";
-                elif.variableDeclaration->dump(os, interner, ind.next(4));
-            }
-
-            os << ind.next(3) << "condition: \n";
-            elif.condition->dump(os, interner, ind.next(4));
-            dumpBlock(os, "body", interner, ind.next(3), elif.body);
-            os << ind.next(2) << "}\n";
+    for (std::size_t i = 1; i < branches.size; ++i) {
+        const auto& elifBranch = branches[i];
+        os << ind.next() << "elif clause {\n";
+        if (elifBranch.variableDeclaration != nullptr) {
+            os << ind.next(3) << "variable declaration: \n";
+            elifBranch.variableDeclaration->dump(os, interner, ind.next(4));
         }
-        os << ind.next() << "]\n";
+        os << ind.next(3) << "condition: \n";
+        elifBranch.condition->dump(os, interner, ind.next(4));
+        dumpBlock(os, "body", interner, ind.next(3), elifBranch.body);
+        os << ind.next(2) << "}\n";
     }
 
     if (elseBody.has_value()) { dumpBlock(os, "else body", interner, ind.next(), *elseBody); }

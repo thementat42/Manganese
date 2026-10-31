@@ -108,39 +108,49 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::FunctionDeclarationStatement* s
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcept {
-    visit(statement->condition);
     auto preBranchStates = symbolAssignmentStates;
 
-    const FlowStatus ifBodyStatus = visit(statement->body, true, statement->associatedScope);
-    auto ifStates = symbolAssignmentStates;
-    bool allBranchesTerminate = (ifBodyStatus != FlowStatus::FallsThrough);
-    FlowStatus result = ifBodyStatus;
+    bool allBranchesTerminate = true;
+    std::optional<FlowStatus> resultStatus = std::nullopt;
+    auto mergedStates = symbolAssignmentStates;
+    bool firstBranch = true;
 
-    auto mergedStates = ifStates;
-
-    for (const auto& elif : statement->elifs) {
+    for (const auto& branch : statement->branches) {
         symbolAssignmentStates = preBranchStates;
-        const FlowStatus elifStatus = visit(elif.body, true, elif.associatedScope);
-        if (elifStatus == FlowStatus::FallsThrough || (allBranchesTerminate && elifStatus != result)) {
-            allBranchesTerminate = false;
+
+        if (branch.variableDeclaration != nullptr) { visit(branch.variableDeclaration); }
+        visit(branch.condition);
+
+        const FlowStatus branchStatus = visit(branch.body, true, branch.associatedScope);
+        auto branchStates = symbolAssignmentStates;
+
+        if (firstBranch) {
+            allBranchesTerminate = (branchStatus != FlowStatus::FallsThrough);
+            resultStatus = branchStatus;
+            mergedStates = branchStates;
+            firstBranch = false;
+        } else {
+            if (branchStatus == FlowStatus::FallsThrough || (allBranchesTerminate && branchStatus != *resultStatus)) {
+                allBranchesTerminate = false;
+            }
+            mergeStates(mergedStates, branchStates);
         }
-        mergeStates(mergedStates, symbolAssignmentStates);
     }
 
     if (!statement->elseBody.has_value()) {
         allBranchesTerminate = false;
         mergeStates(mergedStates, preBranchStates);
-
     } else {
         symbolAssignmentStates = preBranchStates;
         const FlowStatus elseStatus = visit(*statement->elseBody, true, statement->elseAssociatedScope);
-        if ((elseStatus == FlowStatus::FallsThrough) || (allBranchesTerminate && elseStatus != result)) {
+        if ((elseStatus == FlowStatus::FallsThrough) || (allBranchesTerminate && elseStatus != *resultStatus)) {
             allBranchesTerminate = false;
         }
         mergeStates(mergedStates, symbolAssignmentStates);
     }
+
     symbolAssignmentStates = std::move(mergedStates);
-    return allBranchesTerminate ? result : FlowStatus::FallsThrough;
+    return allBranchesTerminate && resultStatus.has_value() ? *resultStatus : FlowStatus::FallsThrough;
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::ImportStatement* /*unused*/) noexcept {
