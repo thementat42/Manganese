@@ -49,7 +49,7 @@ ast::Attribute Parser::parseAttribute() {
     return ast::Attribute{
         .name = name,
         .argument = argument,
-        .known = false  // TODO have a lookup table for attributes?
+        .known = isKnownAttribute(interner.get_view(name))
     };
 }
 
