@@ -43,6 +43,7 @@ class Parser {
         bool hasWarning : 1 = false;
         bool hasModuleDeclaration : 1 = false;
         bool hasImports : 1 = false;
+        bool isExtern: 1 = false;
     } flags;
 
    public:

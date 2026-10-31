@@ -44,6 +44,8 @@ ast::Attribute Parser::parseAttribute() {
         expectToken(lexer::TokenType::RightParen, "Expected a ')' to after an attribute argument");
     }
 
+    if (interner.get_view(name) == "extern") { flags.isExtern = true; }
+
     return ast::Attribute{.name = name, .argument = argument, .known = isKnownAttribute(interner.get_view(name))};
 }
 
@@ -52,6 +54,7 @@ ast::Statement* Parser::parseAttributes() {
     while (peekTokenType() == TokenType::At) { attributes.push_back(parseAttribute()); }
     ast::Statement* taggedStatement = parseStatement();
     taggedStatement->attributes = arena.emplace_range(attributes);
+    flags.isExtern = false;
     return taggedStatement;
 }
 
@@ -246,9 +249,16 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         returnType = parseType(Precedence::Default);
     }
 
+    ast::Block body = {};
+
+    if (flags.isExtern) {
+        expectToken(TokenType::Semicolon, "Expected a ';' after an extern function declaration");
+    } else {
+        body = parseBlock("function body");
+    }
+
     return makeNode<ast::FunctionDeclarationStatement>(startToken, name, arena.emplace_range(genericTypes),
-                                                       arena.emplace_range(params), returnType,
-                                                       parseBlock("function body"));
+                                                       arena.emplace_range(params), returnType, body);
 }
 
 ast::Statement* Parser::parseIfStatement() {
