@@ -119,6 +119,7 @@ class Parser {
                                               utils::StringID contextName);
 
     // Parsing Helpers
+    static bool isKnownAttribute(std::string_view name) noexcept;
     ast::Attribute parseAttribute();
     ast::Statement* parseAttributes();
     ast::EnumValue parseEnumMember();

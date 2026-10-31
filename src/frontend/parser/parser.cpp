@@ -52,6 +52,15 @@ ParsedFile Parser::parse() {
 
 // Helper functions
 
+bool Parser::isKnownAttribute(std::string_view name) noexcept {
+    constexpr static std::array knownAttributes = {
+#define ATTRIBUTE(attr) std::string_view(MN_STRINGIFY(attr)),
+#include <frontend/ast/attributes.def>
+#undef ATTRIBUTE
+    };
+    return std::ranges::find(knownAttributes, name) != knownAttributes.end();
+}
+
 std::string flattenPath(const std::vector<std::string>& path) {
     std::string result;
     for (size_t i = 0; i < path.size(); ++i) {
@@ -65,13 +74,11 @@ bool Parser::isUnaryContext() const noexcept {
     if (!previousToken) { return true; /* Start of file */ }
     const TokenType lastType = previousToken->getType();
 
-    // Statement or expression delimiters
     if (utils::enum_matches(lastType, TokenType::Semicolon, TokenType::LeftParen, TokenType::LeftBrace,
                             TokenType::LeftSquare, TokenType::Comma, TokenType::Colon, TokenType::Assignment)) {
         return true;
     }
 
-    // 2. Binary / prefix operators (e.g. `1 + -2` or `return *ptr`)
     if (previousToken->isOperator() && lastType != TokenType::Inc && lastType != TokenType::Dec) { return true; }
 
     return false;
