@@ -252,7 +252,11 @@ void FunctionDeclarationStatement::dump(std::ostream& os, const utils::StringInt
         os << "void\n";
     }
 
-    dumpBlock(os, "body", interner, ind.next(), body);
+    if (body.has_value()) {
+        dumpBlock(os, "body", interner, ind.next(), *body);
+    } else {
+        os << ind.next() << "extern = true\n";
+    }
     os << ind << "}\n";
 }
 

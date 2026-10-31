@@ -249,7 +249,7 @@ ast::Statement* Parser::parseFunctionDeclarationStatement() {
         returnType = parseType(Precedence::Default);
     }
 
-    ast::Block body = {};
+    std::optional<ast::Block> body;
 
     if (flags.isExtern) {
         expectToken(TokenType::Semicolon, "Expected a ';' after an extern function declaration");

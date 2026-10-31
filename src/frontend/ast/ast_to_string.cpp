@@ -185,8 +185,12 @@ std::string FunctionDeclarationStatement::toString(const utils::StringInterner& 
     }
     result += ')';
     if (returnType != nullptr) { result += std::format(" -> {}", returnType->toString(interner, indent)); }
-    result += ' ';
-    result += blockToString(body, interner, indent);
+    if (body.has_value()) {
+        result += ' ';
+        result += blockToString(*body, interner, indent);
+    } else {
+        result += ';';
+    }
     return result;
 }
 

@@ -134,9 +134,12 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
     }
     Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
 
-    auto* clone
-        = makeClonedNode(this, context, name, utils::Slice<utils::StringID>{},
-                         context->arena.emplace_range(parameterClones), returnTypeClone, cloneBlock(body, context));
+    std::optional<Block> bodyClone;
+
+    if (body.has_value()) { bodyClone = cloneBlock(*body, context); }
+
+    auto* clone = makeClonedNode(this, context, name, utils::Slice<utils::StringID>{},
+                                 context->arena.emplace_range(parameterClones), returnTypeClone, bodyClone);
     clone->visibility = visibility;
     return clone;
 }
