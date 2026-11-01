@@ -1,5 +1,7 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Metadata.h>
+#include <llvm/IR/MDBuilder.h>
 #include <llvm/Support/raw_os_ostream.h>
 
 #include <backend/ir_generator.hpp>
@@ -20,6 +22,36 @@ void IRGenerator::generate() noexcept {
 void IRGenerator::dump(std::ostream& os) const {
     llvm::raw_os_ostream ros{os};
     module->print(ros, nullptr);
+}
+
+void IRGenerator::attachBranchWeights(llvm::Instruction* branchInstruction, utils::Slice<ast::Attribute> attributes) {
+    bool isLikely = false;
+    bool isUnlikely = false;
+    for (const auto& attr : attributes) {
+        std::string_view name = interner.get_view(attr.name);
+        if (name == "likely") {
+            isLikely = true;
+            break;
+        }
+        if (name == "unlikely") {
+            isUnlikely = true;
+            break;
+        }
+    }
+
+    // no branch hints to make
+    if (!isLikely && !isUnlikely) { return; }
+
+    // if a branch is likely, favour the true branch
+    // if it's unlikely, favour the false branch
+    uint32_t trueWeight = isLikely ? LIKELY_BRANCH_WEIGHTING : UNLIKELY_BRANCH_WEIGHTING;
+    uint32_t falseWeight = isUnlikely ? LIKELY_BRANCH_WEIGHTING : UNLIKELY_BRANCH_WEIGHTING;
+
+    llvm::MDNode* weights = llvm::MDBuilder(*context).createBranchWeights(trueWeight, falseWeight);
+
+    // name must be "prof" (profile data)
+    branchInstruction->setMetadata("prof", weights);
+
 }
 
 [[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const {

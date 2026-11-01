@@ -240,7 +240,9 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
     const auto& ifBranch = statement->branches[0];
     if (ifBranch.variableDeclaration != nullptr) { visit(ifBranch.variableDeclaration); }
     llvm::Value* condVal = visit(ifBranch.condition);
-    builder->CreateCondBr(condVal, branchBlocks[0].second, mainFalseDest);
+
+    llvm::BranchInst* ifBranchInstruction = builder->CreateCondBr(condVal, branchBlocks[0].second, mainFalseDest);
+    attachBranchWeights(ifBranchInstruction, ifBranch.attributes);
 
     builder->SetInsertPoint(branchBlocks[0].second);
     visit(ifBranch.body);
@@ -259,7 +261,9 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
         builder->SetInsertPoint(condBlk);
         if (elifClause.variableDeclaration != nullptr) { visit(elifClause.variableDeclaration); }
         llvm::Value* elifCondVal = visit(elifClause.condition);
-        builder->CreateCondBr(elifCondVal, bodyBlk, nextFalseDest);
+
+        llvm::BranchInst* elifBranchInstruction = builder->CreateCondBr(elifCondVal, bodyBlk, nextFalseDest);
+        attachBranchWeights(elifBranchInstruction, elifClause.attributes);
 
         // Emit the elif body block
         builder->SetInsertPoint(bodyBlk);

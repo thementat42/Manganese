@@ -47,6 +47,10 @@ class IRGenerator final : public _irgen_base_t {
     utils::tiny_stack<LoopTarget> loopStack;
     const semantic::SemanticType* currentFunctionSemanticReturnType = nullptr;
 
+    // Misc
+    constexpr static inline std::uint32_t LIKELY_BRANCH_WEIGHTING = 2000;
+    constexpr static inline std::uint32_t UNLIKELY_BRANCH_WEIGHTING = 1;
+
    public:
     IRGenerator(std::string_view moduleName, std::vector<parser::ParsedFile>& parsedFiles,
                 semantic::SemanticAnalyzer& analyzerReference, utils::StringInterner& internerReference,
@@ -102,6 +106,7 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visit(const semantic::Uninitialized*);
     [[nodiscard]] typevisit_t visit(const semantic::Void*);
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
+    void attachBranchWeights(llvm::Instruction* branchInstruction, utils::Slice<ast::Attribute> attributes);
 
     // Expression Helpers
     [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const;
