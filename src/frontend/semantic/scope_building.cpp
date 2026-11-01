@@ -99,10 +99,14 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
 
             if (!funcStmt->genericTypes.empty()) { return result; }
 
-            // Process the internal block statements
             Result bodyResult = Result::Success;
             if (funcStmt->body.has_value()) {
                 bodyResult = _buildBodyScope(*funcStmt->body, &funcStmt->associatedScope);
+            } else {
+                // extern functions still need an associated scope for their parameters
+                symbolTable.enterScope();
+                funcStmt->associatedScope = symbolTable.getCurrentScope();
+                symbolTable.exitScope();
             }
             return (result == Result::Success && bodyResult == Result::Success) ? Result::Success : Result::Failure;
         }

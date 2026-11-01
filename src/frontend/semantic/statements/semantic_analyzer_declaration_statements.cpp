@@ -217,7 +217,12 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
     context.currentFunctionReturnType = fnType->returnType;
 
     stmtvisit_t bodyResult = stmtvisit_t::Success;
-    if (statement->body.has_value()) { bodyResult = visit(*statement->body, false, statement->associatedScope); }
+    if (statement->body.has_value()) {
+        bodyResult = visit(*statement->body, false, statement->associatedScope);
+    } else {
+        // extern functions have dummy scopes for their parameters, so we need to exit here
+        symbolTable.exitScope();
+    }
 
     context.currentFunctionReturnType = previousReturnType;
 
