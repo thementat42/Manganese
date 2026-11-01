@@ -734,6 +734,13 @@ bool testDeeplyNestedGenerics() {
     return validateStatement(getParserResults(expression), expected, "Deeply Nested Generics");
 }
 
+bool testAttributes() {
+    const std::string expression = "@extern func puts(s: string) -> int32;\n"
+                                   "@foo(100) let x = 42;\n";
+    const parser::ParsedFile file = getParserResults(expression);
+    return file.program.size == 2;
+}
+
 bool miscTests() {
     const std::string expression = "int x = aggregate{1, \"asdf\", 3.1f32};";
     parser::ParsedFile x = getParserResults(expression);
@@ -777,6 +784,7 @@ void TestRunner::runParserTests() {
     runTest("Parser: Uninitialized Keyword Parsing", parser_tests::testUninitializedKeywordParsing);
     runTest("Parser: Complex Function Pointers and Aliases", parser_tests::testComplexFunctionPointersAndAliases);
     runTest("Parser: Deeply Nested Generics", parser_tests::testDeeplyNestedGenerics);
+    runTest("Parser: Attributes", parser_tests::testAttributes);
     runTest("Parser: Miscellaneous Tests", parser_tests::miscTests);
 }
 }  // namespace Manganese::tests

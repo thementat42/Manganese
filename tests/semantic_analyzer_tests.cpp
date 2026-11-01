@@ -921,6 +921,20 @@ bool miscTests() {
     )";
     return analyzeSource(code, false, __func__);
 }
+
+bool testAttributes() {
+    const std::string source = R"(
+        @extern
+        func puts(s: string) -> int32;
+
+        func main() {
+            @inline
+            let x = 42;
+        }
+    )";
+    return analyzeSource(source, true, __func__);
+}
+
 }  // namespace
 }  // namespace analyzer_tests
 
@@ -973,6 +987,7 @@ void TestRunner::runSemanticAnalyzerTests() {
     runTest("Semantic Analyzer: Slice length and anonymous aggregate",
             analyzer_tests::testSliceLengthAndAnonymousAggregates);
     runTest("Semantic Analyzer: Chained Comparison Expression", analyzer_tests::testChainedComparisonSemantics);
+    runTest("Semantic Analyzer: Attributes", analyzer_tests::testAttributes);
     runTest("Semantic Analyzer: Miscellaneous Tests", analyzer_tests::miscTests);
 }
 
