@@ -13,23 +13,32 @@
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {
+    // Handle bare semicolons
+    if (peekTokenType() == TokenType::Semicolon) { return makeNode<ast::EmptyStatement>(consumeToken()); }
+
+    // Parse out attributes
+    std::vector<ast::Attribute> attributes = parseAttributes();
+
     const Token startToken = peekToken();
     const TokenType type = peekTokenType();
 
+    ast::Statement* statement = nullptr;
+
     if (type == TokenType::LeftBrace) {
-        return makeNode<ast::NestedBlockStatement>(startToken, parseBlock("nested block"));
+        statement = makeNode<ast::NestedBlockStatement>(startToken, parseBlock("nested block"));
+    } else if (const statementHandler_t handler = lookupTable[type].statementHandler; handler != nullptr) {
+        statement = (this->*handler)();
+
+    } else {
+        // Parse out an expression then convert it to a statement
+        ast::Expression* expr = parseExpression(Precedence::Default);
+        expectToken(TokenType::Semicolon, "Expected semicolon after expression");
+        statement = makeNode<ast::ExpressionStatement>(startToken, expr);
     }
 
-    // Handle bare semicolons
-    if (type == TokenType::Semicolon) { return makeNode<ast::EmptyStatement>(consumeToken()); }
-
-    const statementHandler_t handler = lookupTable[type].statementHandler;
-    if (handler != nullptr) { return (this->*handler)(); }
-
-    // Parse out an expression then convert it to a statement
-    ast::Expression* expr = parseExpression(Precedence::Default);
-    expectToken(TokenType::Semicolon, "Expected semicolon after expression");
-    return makeNode<ast::ExpressionStatement>(startToken, expr);
+    statement->attributes = arena.emplace_range(attributes);
+    flags.isExtern = false;
+    return statement;
 }
 
 ast::Attribute Parser::parseAttribute() {
@@ -49,13 +58,10 @@ ast::Attribute Parser::parseAttribute() {
     return ast::Attribute{.name = name, .argument = argument, .known = isKnownAttribute(interner.get_view(name))};
 }
 
-ast::Statement* Parser::parseAttributes() {
+std::vector<ast::Attribute> Parser::parseAttributes() {
     std::vector<ast::Attribute> attributes;
     while (peekTokenType() == TokenType::At) { attributes.push_back(parseAttribute()); }
-    ast::Statement* taggedStatement = parseStatement();
-    taggedStatement->attributes = arena.emplace_range(attributes);
-    flags.isExtern = false;
-    return taggedStatement;
+    return attributes;
 }
 
 // Specific statement parsing methods

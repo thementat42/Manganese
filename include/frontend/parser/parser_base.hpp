@@ -122,7 +122,7 @@ class Parser {
     // Parsing Helpers
     static bool isKnownAttribute(std::string_view name) noexcept;
     ast::Attribute parseAttribute();
-    ast::Statement* parseAttributes();
+    std::vector<ast::Attribute> parseAttributes();
     ast::EnumValue parseEnumMember();
     std::vector<utils::StringID> parseGenericsList(utils::StringID contextName);
     std::optional<ast::AggregateField> parseAggregateField(utils::StringID aggregateName,
