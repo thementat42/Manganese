@@ -1,7 +1,7 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/InstrTypes.h>
-#include <llvm/IR/Metadata.h>
 #include <llvm/IR/MDBuilder.h>
+#include <llvm/IR/Metadata.h>
 #include <llvm/Support/raw_os_ostream.h>
 
 #include <backend/ir_generator.hpp>
@@ -10,6 +10,10 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/type_context.hpp>
+
+#include "frontend/ast/ast_expressions.hpp"
+#include "utils/str_to_num.hpp"
+
 
 namespace Manganese::codegen {
 
@@ -51,7 +55,23 @@ void IRGenerator::attachBranchWeights(llvm::Instruction* branchInstruction, util
 
     // name must be "prof" (profile data)
     branchInstruction->setMetadata("prof", weights);
+}
 
+llvm::AllocaInst* IRGenerator::createAlignedAlloca(llvm::Type* type, std::string_view name,
+                                                   utils::Slice<ast::Attribute> attributes) {
+    uint64_t alignment = 0;
+    for (const auto& attribute : attributes) {
+        if (interner.get_view(attribute.name) == "align") {
+            alignment
+                = utils::stringToNumber<uint64_t>(
+                      interner.get_view(static_cast<const ast::NumberLiteralExpression*>(attribute.argument)->value),
+                      false)
+                      .value;
+        }
+    }
+    llvm::AllocaInst* allocaInst = builder->CreateAlloca(type, nullptr, name);
+    if (alignment > 0) { allocaInst->setAlignment(llvm::Align(alignment)); }
+    return allocaInst;
 }
 
 [[nodiscard]] llvm::IntegerType* IRGenerator::getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const {

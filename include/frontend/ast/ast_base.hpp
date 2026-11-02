@@ -106,6 +106,9 @@ struct Attribute {
     bool known;
 };
 
+const Attribute* getAttribute(utils::Slice<Attribute> attributes, std::string_view name, const utils::StringInterner& interner);
+const Attribute* getAttribute(const Statement* statement, std::string_view name, const utils::StringInterner& interner);
+
 using Block = utils::Slice<Statement*>;
 
 struct ASTNode {

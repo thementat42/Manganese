@@ -21,4 +21,16 @@ std::string_view primitiveTypeToString(PrimitiveType prim) {
     return primitiveNames[index];
 }
 
+const Attribute* getAttribute(utils::Slice<Attribute> attributes, std::string_view name,
+                              const utils::StringInterner& interner) {
+    for (const auto& attribute : attributes) {
+        if (interner.get_view(attribute.name) == name) { return &attribute; }
+    }
+    return nullptr;
+}
+const Attribute* getAttribute(const Statement* statement, std::string_view name,
+                              const utils::StringInterner& interner) {
+    return getAttribute(statement->attributes, name, interner);
+}
+
 }  // namespace Manganese::ast

@@ -107,6 +107,7 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visit(const semantic::Void*);
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
     void attachBranchWeights(llvm::Instruction* branchInstruction, utils::Slice<ast::Attribute> attributes);
+    llvm::AllocaInst* createAlignedAlloca(llvm::Type* type, std::string_view name, utils::Slice<ast::Attribute> attributes);
 
     // Expression Helpers
     [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const;

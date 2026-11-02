@@ -381,7 +381,7 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
 auto IRGenerator::visit(const ast::VariableDeclarationStatement* statement) -> stmtvisit_t {
     llvm::Type* variableTypeLLVM = visitTypeAsValue(statement->semanticType);
     const std::string_view statementName = interner.get_view(statement->name);
-    llvm::AllocaInst* alloca = builder->CreateAlloca(variableTypeLLVM, nullptr, statementName);
+    llvm::AllocaInst* alloca = createAlignedAlloca(variableTypeLLVM, statementName, statement->attributes);
 
     if (statement->value != nullptr && statement->value->kind != ast::ExpressionKind::UninitializedExpression) {
         llvm::Value* initializerValue = visit(statement->value);
