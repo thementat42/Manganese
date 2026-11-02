@@ -20,10 +20,18 @@ auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> 
     savedTypes[statement->semanticType]
         = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
 
+    bool isPacked = false;
+    for (const auto& attr : statement->attributes) {
+        if (interner.get_view(attr.name) == "packed") {
+            isPacked = true;
+            break;
+        }
+    }
+
     std::vector<llvm::Type*> memberTypes;
     memberTypes.reserve(statement->fields.size);
     for (const auto& field : statement->fields) { memberTypes.push_back(visitTypeAsValue(field.type->semanticType)); }
-    llvmType->setBody(memberTypes);
+    llvmType->setBody(memberTypes, isPacked);
 }
 
 auto IRGenerator::visit(const ast::AliasStatement* /*unused*/) -> stmtvisit_t { /*type aliases are purely semantic*/ }
