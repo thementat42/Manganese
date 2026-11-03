@@ -52,15 +52,6 @@ ParsedFile Parser::parse() {
 
 // Helper functions
 
-bool Parser::isKnownAttribute(std::string_view name) noexcept {
-    constexpr static std::array knownAttributes = {
-#define ATTRIBUTE(attr) std::string_view(MN_STRINGIFY(attr)),
-#include <frontend/ast/attributes.def>
-#undef ATTRIBUTE
-    };
-    return std::ranges::find(knownAttributes, name) != knownAttributes.end();
-}
-
 std::string flattenPath(const std::vector<std::string>& path) {
     std::string result;
     for (size_t i = 0; i < path.size(); ++i) {

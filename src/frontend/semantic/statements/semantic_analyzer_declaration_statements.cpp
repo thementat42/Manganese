@@ -156,11 +156,10 @@ auto SemanticAnalyzer::visit(ast::FunctionDeclarationStatement* statement) -> st
         return stmtvisit_t::Failure;
     }
 
-    for (const auto& attr : statement->attributes) {
-        if (interner.get_view(attr.name) == "extern" && statement->body.has_value()) {
-            logError(statement, "Extern function '{}' cannot have a body", interner.get_view(statement->name));
-            return stmtvisit_t::Failure;
-        }
+    if (const auto* attribute = ast::getAttribute(statement, ast::AttributeKind::Extern);
+        attribute != nullptr && statement->body.has_value()) {
+        logError(statement, "Extern function '{}' cannot have a body", interner.get_view(statement->name));
+        return stmtvisit_t::Failure;
     }
 
     if (!context.isInstantiatingGeneric) {

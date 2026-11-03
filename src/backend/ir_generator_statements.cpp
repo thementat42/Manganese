@@ -10,8 +10,6 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 
-#include "frontend/ast/ast_expressions.hpp"
-
 namespace Manganese::codegen {
 
 auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
@@ -20,13 +18,7 @@ auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> 
     savedTypes[statement->semanticType]
         = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
 
-    bool isPacked = false;
-    for (const auto& attr : statement->attributes) {
-        if (interner.get_view(attr.name) == "packed") {
-            isPacked = true;
-            break;
-        }
-    }
+    bool isPacked = ast::getAttribute(statement, ast::AttributeKind::Packed) != nullptr;
 
     std::vector<llvm::Type*> memberTypes;
     memberTypes.reserve(statement->fields.size);
@@ -152,12 +144,9 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     std::string_view linkName = statement->mangledName.has_value() ? interner.get_view(*statement->mangledName)
                                                                    : interner.get_view(statement->name);
 
-    for (const auto& attribute : statement->attributes) {
-        if (interner.get_view(attribute.name) == "extern" && attribute.argument != nullptr
-            && attribute.argument->kind == ast::ExpressionKind::StringLiteralExpression) {
-            linkName = interner.get_view(static_cast<const ast::StringLiteralExpression*>(attribute.argument)->value);
-            break;
-        }
+    if (const auto* attribute = ast::getAttribute(statement, ast::AttributeKind::Extern);
+        attribute != nullptr && attribute->argument != nullptr) {
+        linkName = interner.get_view(static_cast<const ast::StringLiteralExpression*>(attribute->argument)->value);
     }
 
     const semantic::SemanticType* oldFunctionSemanticReturnType = currentFunctionSemanticReturnType;

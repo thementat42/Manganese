@@ -21,16 +21,27 @@ std::string_view primitiveTypeToString(PrimitiveType prim) {
     return primitiveNames[index];
 }
 
-const Attribute* getAttribute(utils::Slice<Attribute> attributes, std::string_view name,
-                              const utils::StringInterner& interner) {
+AttributeKind attributeKindFromString(std::string_view name) {
+    using enum AttributeKind;
+    if (name == "extern") { return Extern; }
+    if (name == "likely") { return Likely; }
+    if (name == "unlikely") { return Unlikely; }
+    if (name == "packed") { return Packed; }
+    if (name == "align") { return Align; }
+    if (name == "noreturn") { return Noreturn; }
+    if (name == "deprecated") { return Deprecated; }
+
+    return Unknown;
+}
+
+const Attribute* getAttribute(utils::Slice<Attribute> attributes, AttributeKind kind) {
     for (const auto& attribute : attributes) {
-        if (interner.get_view(attribute.name) == name) { return &attribute; }
+        if (attribute.kind == kind) { return &attribute; }
     }
     return nullptr;
 }
-const Attribute* getAttribute(const Statement* statement, std::string_view name,
-                              const utils::StringInterner& interner) {
-    return getAttribute(statement->attributes, name, interner);
+const Attribute* getAttribute(const Statement* statement, AttributeKind kind) {
+    return getAttribute(statement->attributes, kind);
 }
 
 }  // namespace Manganese::ast

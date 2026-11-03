@@ -11,9 +11,9 @@
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/type_context.hpp>
 
+#include "frontend/ast/ast_base.hpp"
 #include "frontend/ast/ast_expressions.hpp"
 #include "utils/str_to_num.hpp"
-
 
 namespace Manganese::codegen {
 
@@ -29,19 +29,8 @@ void IRGenerator::dump(std::ostream& os) const {
 }
 
 void IRGenerator::attachBranchWeights(llvm::Instruction* branchInstruction, utils::Slice<ast::Attribute> attributes) {
-    bool isLikely = false;
-    bool isUnlikely = false;
-    for (const auto& attr : attributes) {
-        std::string_view name = interner.get_view(attr.name);
-        if (name == "likely") {
-            isLikely = true;
-            break;
-        }
-        if (name == "unlikely") {
-            isUnlikely = true;
-            break;
-        }
-    }
+    bool isLikely = ast::getAttribute(attributes, ast::AttributeKind::Likely) != nullptr;
+    bool isUnlikely = ast::getAttribute(attributes, ast::AttributeKind::Unlikely) != nullptr;
 
     // no branch hints to make
     if (!isLikely && !isUnlikely) { return; }
@@ -60,14 +49,11 @@ void IRGenerator::attachBranchWeights(llvm::Instruction* branchInstruction, util
 llvm::AllocaInst* IRGenerator::createAlignedAlloca(llvm::Type* type, std::string_view name,
                                                    utils::Slice<ast::Attribute> attributes) {
     uint64_t alignment = 0;
-    for (const auto& attribute : attributes) {
-        if (interner.get_view(attribute.name) == "align") {
-            alignment
-                = utils::stringToNumber<uint64_t>(
-                      interner.get_view(static_cast<const ast::NumberLiteralExpression*>(attribute.argument)->value),
-                      false)
-                      .value;
-        }
+    if (const auto* attribute = ast::getAttribute(attributes, ast::AttributeKind::Align); attribute != nullptr) {
+        const utils::StringID numberLiteral
+            = static_cast<const ast::NumberLiteralExpression*>(attribute->argument)->value;
+
+        alignment = utils::stringToNumber<uint64_t>(interner.get_view(numberLiteral), /*isFloat=*/false).value;
     }
     llvm::AllocaInst* allocaInst = builder->CreateAlloca(type, nullptr, name);
     if (alignment > 0) { allocaInst->setAlignment(llvm::Align(alignment)); }

@@ -58,7 +58,7 @@ inline void dumpAttributes(std::ostream& os, const utils::StringInterner& intern
             attribute.argument->dump(os, interner, indent.next(2));
             os << indent.next() << ")";
         }
-        os << " [known: " << (attribute.known ? "true" : "false") << "]\n";
+        os << " [known: " << (attribute.kind != AttributeKind::Unknown ? "true" : "false") << "]\n";
     }
     os << indent << "]\n";
 }

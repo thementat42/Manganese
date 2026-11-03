@@ -70,6 +70,13 @@ enum class TypeKind : std::uint8_t {
 #undef TYPE_NODE
 };
 
+enum class AttributeKind : std::uint8_t {
+#define ATTRIBUTE(name) name,
+#include <frontend/ast/attributes.def>
+#undef ATTRIBUTE
+Unknown
+};
+
 enum class PrimitiveType : std::uint8_t {
     int8,
     uint8,
@@ -103,11 +110,13 @@ constexpr const char* visibilityToString(Visibility visibility) noexcept {
 struct Attribute {
     utils::StringID name;
     Expression* argument;
-    bool known;
+    AttributeKind kind;
 };
 
-const Attribute* getAttribute(utils::Slice<Attribute> attributes, std::string_view name, const utils::StringInterner& interner);
-const Attribute* getAttribute(const Statement* statement, std::string_view name, const utils::StringInterner& interner);
+const Attribute* getAttribute(utils::Slice<Attribute> attributes, AttributeKind kind);
+const Attribute* getAttribute(const Statement* statement, AttributeKind kind);
+
+AttributeKind attributeKindFromString(std::string_view name);
 
 using Block = utils::Slice<Statement*>;
 

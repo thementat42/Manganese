@@ -30,7 +30,7 @@ utils::Slice<Attribute> cloneAttributes(utils::Slice<Attribute> attributes, sema
         result.push_back(
             Attribute{.name = attribute.name,
                       .argument = attribute.argument == nullptr ? nullptr : attribute.argument->clone(context),
-                      .known = attribute.known});
+                      .kind = attribute.kind});
     }
     return context->arena.emplace_range(result);
 }
