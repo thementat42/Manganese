@@ -110,7 +110,7 @@ function(enable_debug_flags target)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(${target} PRIVATE
             -O0 -g3 -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fcheck-new --save-temps
-            -DGLIBCXX_DEBUG -fno-rtti
+            -fno-rtti
         )
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         target_compile_options(${target} PRIVATE
