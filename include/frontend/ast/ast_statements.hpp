@@ -158,7 +158,8 @@ struct FunctionDeclarationStatement final : public Declaration, ScopeOwner {
     Visibility visibility = Visibility::Private;
 
     FunctionDeclarationStatement(utils::StringID _name, utils::Slice<utils::StringID> _genericTypes,
-                                 utils::Slice<FunctionParameter> _parameters, Type* _returnType, std::optional<Block> _body) noexcept :
+                                 utils::Slice<FunctionParameter> _parameters, Type* _returnType,
+                                 std::optional<Block> _body) noexcept :
         Declaration(StatementKind::FunctionDeclarationStatement, _name),
         genericTypes(_genericTypes),
         parameters(_parameters),

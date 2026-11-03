@@ -10,10 +10,7 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <frontend/semantic/type_context.hpp>
-
-#include "frontend/ast/ast_base.hpp"
-#include "frontend/ast/ast_expressions.hpp"
-#include "utils/str_to_num.hpp"
+#include <utils/str_to_num.hpp>
 
 namespace Manganese::codegen {
 

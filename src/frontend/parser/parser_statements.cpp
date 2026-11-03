@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "frontend/ast/ast_base.hpp"
-
 namespace Manganese::parser {
 
 ast::Statement* Parser::parseStatement() {

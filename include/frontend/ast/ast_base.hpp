@@ -74,7 +74,7 @@ enum class AttributeKind : std::uint8_t {
 #define ATTRIBUTE(name) name,
 #include <frontend/ast/attributes.def>
 #undef ATTRIBUTE
-Unknown
+    Unknown
 };
 
 enum class PrimitiveType : std::uint8_t {
