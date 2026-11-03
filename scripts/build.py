@@ -321,7 +321,7 @@ if args.clean:
                 item.unlink()
             elif item.is_dir():
                 shutil.rmtree(item)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Warning: Could not remove {item}: {e}")
     print("Cleaned build directory")
 

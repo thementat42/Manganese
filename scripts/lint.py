@@ -71,7 +71,7 @@ def run_clang_tidy(clang_tidy, file: Path, report):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        check = False
+        check=False,
     )
 
     report.write(result.stdout)
