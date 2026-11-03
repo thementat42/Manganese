@@ -333,5 +333,5 @@ if args.run:
     cmd = [EXECUTE_PATH]
     if args.exec_with:
         cmd.extend(args.exec_with)
-    print("Running with positional arguments:", *args.exec_with, "")
+        print("Running with positional arguments:", *args.exec_with, "")
     run_command(cmd)
