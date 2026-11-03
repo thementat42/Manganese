@@ -35,7 +35,7 @@ struct InstantiationResult {
 };
 
 struct _insthasher {
-    constexpr std::size_t operator()(const InstantiationKey& key) const noexcept {
+    std::size_t operator()(const InstantiationKey& key) const noexcept {
         std::size_t hash_value = std::hash<const ast::ASTNode*>{}(key.declNode);
         for (const auto* type : key.typeArgs) {
             hash_value = hash_combine(hash_value, std::hash<decltype(type)>{}(type));
