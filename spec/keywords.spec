@@ -16,9 +16,11 @@ false
 float32
 float64
 for
+foreach
 func
 if
 import
+in
 int128
 int16
 int32
