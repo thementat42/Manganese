@@ -136,38 +136,7 @@ auto SemanticAnalyzer::visit(ast::IfStatement* statement) -> stmtvisit_t {
     for (std::size_t i = 0; i < statement->branches.size; ++i) {
         const auto& branch = statement->branches[i];
         const bool isPrimary = (i == 0);
-        const bool hasVar = (branch.variableDeclaration != nullptr);
-
-        if (hasVar) {
-            symbolTable.enterScope(branch.associatedScope);
-            if (visit(branch.variableDeclaration) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-        }
-
-        context.inCondition = true;
-        if (visit(branch.condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
-        context.inCondition = false;
-
-        if (branch.condition->semanticType->isPoison()) {
-            logError(statement, "Could not deduce type of condition {}", branch.condition->toString(interner));
-            result = stmtvisit_t::Failure;
-        } else {
-            const typeCompatibilityResult conditionCanBeBool = areTypesCompatible(
-                branch.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
-
-            const char* clauseName = isPrimary ? "if" : "elif";
-            if (!conditionCanBeBool) {
-                logError(statement,
-                         "Condition in {} statement must be a boolean type or implicitly convertible to it, not {}",
-                         clauseName, branch.condition->semanticType->toString());
-                result = stmtvisit_t::Failure;
-            } else if (conditionCanBeBool.result == Compatible_t::Warning) {
-                logWarning(statement, "{}", conditionCanBeBool.message);
-            }
-        }
-
-        if (visit(branch.body, !hasVar, branch.associatedScope) == stmtvisit_t::Failure) {
-            result = stmtvisit_t::Failure;
-        }
+        if (checkIfBranch(branch, isPrimary) == Result::Failure) { result = stmtvisit_t::Failure; }
     }
 
     if (statement->elseBody.has_value()) {
@@ -264,6 +233,50 @@ Result SemanticAnalyzer::checkCaseClause(ast::SwitchStatement* statement, const 
         == Result::Failure) {
         result = stmtvisit_t::Failure;
     }
+    return result;
+}
+
+Result SemanticAnalyzer::checkIfBranch(const ast::IfBranch& branch, bool isPrimary) {
+    Result result = Result::Success;
+    const bool hasVar = (branch.variableDeclaration != nullptr);
+    const bool hasLikely = ast::getAttribute(branch.attributes, ast::AttributeKind::Likely) != nullptr;
+    const bool hasUnlikely = ast::getAttribute(branch.attributes, ast::AttributeKind::Unlikely) != nullptr;
+
+    if (hasLikely && hasUnlikely) {
+        // can be neither likely nor unlikely
+        logError(branch.condition, "If statement cannot be marked as both @likely and @unlikely");
+        result = stmtvisit_t::Failure;
+    }
+
+    if (hasVar) {
+        symbolTable.enterScope(branch.associatedScope);
+        if (visit(branch.variableDeclaration) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    }
+
+    context.inCondition = true;
+    if (visit(branch.condition) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+    context.inCondition = false;
+
+    if (branch.condition->semanticType->isPoison()) {
+        logError(branch.condition, "Could not deduce type of condition {}", branch.condition->toString(interner));
+        result = stmtvisit_t::Failure;
+    } else {
+        const typeCompatibilityResult conditionCanBeBool
+            = areTypesCompatible(branch.condition->semanticType, typeContext.getPrimitive(ast::PrimitiveType::boolean));
+
+        const char* clauseName = isPrimary ? "if" : "elif";
+        if (!conditionCanBeBool) {
+            logError(branch.condition,
+                     "Condition in {} statement must be a boolean type or implicitly convertible to it, not {}",
+                     clauseName, branch.condition->semanticType->toString());
+            result = stmtvisit_t::Failure;
+        } else if (conditionCanBeBool.result == Compatible_t::Warning) {
+            logWarning(branch.condition, "{}", conditionCanBeBool.message);
+        }
+    }
+
+    if (visit(branch.body, !hasVar, branch.associatedScope) == stmtvisit_t::Failure) { result = stmtvisit_t::Failure; }
+
     return result;
 }
 
