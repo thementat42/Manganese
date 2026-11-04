@@ -928,11 +928,25 @@ bool testAttributes() {
         func puts(s: string) -> int32;
 
         func main() {
-            @inline
+            puts("asdf");
             let x = 42;
         }
     )";
-    return analyzeSource(source, true, __func__);
+    const std::string invalid = R"(
+        @extern
+        func foo() {
+            if (false) @likely @unlikely {
+                let x = 3;    
+            } else {
+                let x = 4;
+            }
+        }
+
+        func main() {
+            let x = foo();
+        }
+    )";
+    return analyzeSource(source, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
 }  // namespace
