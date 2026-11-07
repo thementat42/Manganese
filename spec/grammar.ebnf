@@ -233,7 +233,7 @@ aggregate_declaration_statement =
         aggregate_member*
     "}"
 
-aggregate_member = identifier ":" type ";"
+aggregate_member = attribute* identifier ":" type ";"
 
 alias_statement = access_modifier? "alias" identifier "=" type ";"
 

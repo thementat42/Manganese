@@ -87,6 +87,7 @@ void AggregateDeclarationStatement::dump(std::ostream& os, const utils::StringIn
 
     for (const auto& field : fields) {
         os << ind.next(2) << "{\n";
+        dumpAttributes(os, interner, ind.next(3), field.attributes);
         os << ind.next(3) << "name: " << interner.get_view(field.name) << "\n";
         os << ind.next(3) << "type: \n";
         field.type->dump(os, interner, ind.next(4));

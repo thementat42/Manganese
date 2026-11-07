@@ -81,8 +81,10 @@ std::string AggregateDeclarationStatement::toString(const utils::StringInterner&
     if (!genericTypes.empty()) { result += std::format("[{}]", commaSeparatedList(genericTypes, interner)); }
     result += " {\n";
     for (const AggregateField& field : fields) {
-        result += getIndent(indent + 1) + std::string(interner.get_view(field.name)) + ": "
-            + field.type->toString(interner, indent + 1) + ";\n";
+        std::string attributesString;
+        if (!field.attributes.empty()) { attributesString = attributesToString(field.attributes, interner) + ' '; }
+        result += getIndent(indent + 1) + attributesString + std::string(interner.get_view(field.name)) + ": "
+            + (field.isMutable ? "mut " : "") + field.type->toString(interner, indent + 1) + ";\n";
     }
     result += getIndent(indent) + "}";
     return result;

@@ -29,6 +29,7 @@ struct AggregateField {
     Type* type;
     std::size_t line, column;
     bool isMutable;
+    utils::Slice<Attribute> attributes;
 };
 
 struct AggregateDeclarationStatement final : public Declaration {

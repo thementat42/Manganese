@@ -56,7 +56,8 @@ AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::Cl
                                .type = field.type->clone(context),
                                .line = field.line,
                                .column = field.column,
-                               .isMutable = field.isMutable});
+                               .isMutable = field.isMutable,
+                               .attributes = cloneAttributes(field.attributes, context)});
     }
     auto* cloned = makeClonedNode(this, context, name, utils::Slice<utils::StringID>{},
                                   context->arena.emplace_range(fieldClones));

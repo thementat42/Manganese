@@ -466,6 +466,7 @@ std::vector<utils::StringID> Parser::parseGenericsList(utils::StringID contextNa
 
 std::optional<ast::AggregateField> Parser::parseAggregateField(utils::StringID aggregateName,
                                                                std::span<ast::AggregateField> existingFields) {
+    std::vector<ast::Attribute> fieldAttributes = parseAttributes();
     if (peekTokenType() != TokenType::Identifier) {
         logError(peekToken(), "Unexpected token '{}' in aggregate declaration. Expected field name.",
                  interner.get_view(peekToken().getLexeme()));
@@ -493,11 +494,9 @@ std::optional<ast::AggregateField> Parser::parseAggregateField(utils::StringID a
         return std::nullopt;
     }
 
-    return ast::AggregateField{.name = fieldName,
-                               .type = type,
-                               .line = fieldToken.getLine(),
-                               .column = fieldToken.getColumn(),
-                               .isMutable = isMutable};
+    return ast::AggregateField{
+        .name = fieldName, .type = type, .line = fieldToken.getLine(), .column = fieldToken.getColumn(),
+        .isMutable = isMutable, .attributes = arena.emplace_range(fieldAttributes)};
 }
 
 std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::StringID functionName,
