@@ -140,7 +140,7 @@ typeCompatibilityResult SemanticAnalyzer::areTypesCompatible(const SemanticType*
     }
 
     // Fast path for identical type pointers
-    if (from == to) { return {.result = Compatible_t::Valid}; }
+    if (from == to) { return {.result = Compatible_t::Valid, .message = ""}; }
 
     const std::string conversionError = std::format("Cannot convert {} to {}", from->toString(), to->toString());
 
@@ -209,7 +209,9 @@ typeCompatibilityResult SemanticAnalyzer::checkFunctionCompatibility(const Seman
         }
     }
 
-    if (funcFrom->returnType->isVoid() && funcTo->returnType->isVoid()) { return {.result = Compatible_t::Valid}; }
+    if (funcFrom->returnType->isVoid() && funcTo->returnType->isVoid()) {
+        return {.result = Compatible_t::Valid, .message = ""};
+    }
     return areTypesCompatible(funcFrom->returnType, funcTo->returnType);
 }
 
@@ -237,17 +239,17 @@ typeCompatibilityResult SemanticAnalyzer::checkSliceCompatibility(const Semantic
 auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const SemanticType* to) const
     -> typeCompatibilityResult {
     using Cat = PrimitiveInfo::Category;
-    if (from->primitiveType == to->primitiveType) { return {.result = Compatible_t::Valid}; }
+    if (from->primitiveType == to->primitiveType) { return {.result = Compatible_t::Valid, .message = ""}; }
 
     const PrimitiveInfo src = getPrimitiveInfo(from->primitiveType);
     const PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType);
 
     if (dest.category == Cat::Bool && (context.inCondition || context.inTernary)) {
-        return {.result = Compatible_t::Valid};
+        return {.result = Compatible_t::Valid, .message = ""};
     }
 
     auto yield_warning = [this](std::string&& msg) -> typeCompatibilityResult {
-        if (context.typeCastDepth) { return {.result = Compatible_t::Valid}; }
+        if (context.typeCastDepth) { return {.result = Compatible_t::Valid, .message = ""}; }
         return {.result = Compatible_t::Warning, .message = std::move(msg)};
     };
 
@@ -262,7 +264,7 @@ auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const S
 
     if (dest.category == Cat::String) {
         if (src.category == Cat::Char) {
-            return {.result = Compatible_t::Valid};  // char -> string is fine
+            return {.result = Compatible_t::Valid, .message = ""};  // char -> string is fine
         }
         return {.result = Compatible_t::Error,
                 .message = std::format("Cannot convert non-char type to '{}'", string_str)};
@@ -282,7 +284,7 @@ auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const S
             return yield_warning(std::format("Conversion from '{}' to '{}' may lose precision digits", from->toString(),
                                              to->toString()));
         }
-        return {.result = Compatible_t::Valid};  // e.g. i16 -> f32 is completely safe
+        return {.result = Compatible_t::Valid, .message = ""};  // e.g. i16 -> f32 is completely safe
     }
 
     if (src.category == Cat::Float && (dest.category == Cat::Int || dest.category == Cat::UInt)) {
@@ -300,7 +302,7 @@ auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const S
         return yield_warning(std::format("Narrowing conversion: potential data loss converting from '{}' to '{}'",
                                          from->toString(), to->toString()));
     }
-    return {.result = Compatible_t::Valid};  // Widening conversion is fine
+    return {.result = Compatible_t::Valid, .message = ""};  // Widening conversion is fine
 }
 
 auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const SemanticType* rhs) -> typeCompatibilityResult {
@@ -310,17 +312,17 @@ auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const Semanti
     if (lhs->isPoison() || rhs->isPoison()) {
         return {.result = Compatible_t::Error, .message = "Unable to deduce types in comparison"};
     }
-    if (lhs->isString() && rhs->isString()) { return {.result = Compatible_t::Valid}; }
+    if (lhs->isString() && rhs->isString()) { return {.result = Compatible_t::Valid, .message = ""}; }
 
-    if (lhs == rhs) { return {.result = Compatible_t::Valid}; }
+    if (lhs == rhs) { return {.result = Compatible_t::Valid, .message = ""}; }
 
-    if (lhs->isNumeric() && rhs->isNumeric()) { return {.result = Compatible_t::Valid}; }
+    if (lhs->isNumeric() && rhs->isNumeric()) { return {.result = Compatible_t::Valid, .message = ""}; }
 
     if (lhs->isPointer() && rhs->isPointer()) {
         const auto* lhsBase = static_cast<const Pointer*>(lhs)->baseType;
         const auto* rhsBase = static_cast<const Pointer*>(rhs)->baseType;
 
-        if (lhsBase == rhsBase) { return {.result = Compatible_t::Valid}; }
+        if (lhsBase == rhsBase) { return {.result = Compatible_t::Valid, .message = ""}; }
 
         return {.result = Compatible_t::Error,
                 .message
@@ -333,7 +335,7 @@ auto SemanticAnalyzer::areTypesComparable(const SemanticType* lhs, const Semanti
                     .message = std::format("Cannot compare distinct enum types '{}' and '{}'", lhs->toString(),
                                            rhs->toString())};
         }
-        return {.result = Compatible_t::Valid};
+        return {.result = Compatible_t::Valid, .message = ""};
     }
 
     return {

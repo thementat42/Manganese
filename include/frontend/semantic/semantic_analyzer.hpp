@@ -57,7 +57,7 @@ enum class Compatible_t : std::int8_t {
 
 struct typeCompatibilityResult {
     const Compatible_t result;
-    const std::string message{};
+    const std::string message;
 
     constexpr operator bool() const noexcept { return result != Compatible_t::Error; }
 };
