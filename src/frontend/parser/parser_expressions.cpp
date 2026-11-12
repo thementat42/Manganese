@@ -126,7 +126,7 @@ ast::Expression* Parser::parseAlignofExpression() {
     if (peekTokenType() != lexer::TokenType::RightParen) {
         logError(
             peekToken(),
-            "alignof expects a type as its argument. If you are trying to take the type of an expression, use alignof(typeof(...))");
+            "alignof expects a type as its argument. If you are trying to take the size of an expression, use alignof(typeof(...))");
 
         while (peekTokenType() != lexer::TokenType::RightParen && peekTokenType() != lexer::TokenType::Semicolon
                && peekTokenType() != lexer::TokenType::EndOfFile) {
@@ -264,7 +264,7 @@ ast::Expression* Parser::parseSizeofExpression() {
     if (peekTokenType() != lexer::TokenType::RightParen) {
         logError(
             peekToken(),
-            "sizeof expects a type as its argument. If you are trying to take the type of an expression, use sizeof(typeof(...))");
+            "sizeof expects a type as its argument. If you are trying to take the alignment of an expression, use sizeof(typeof(...))");
 
         while (peekTokenType() != lexer::TokenType::RightParen && peekTokenType() != lexer::TokenType::Semicolon
                && peekTokenType() != lexer::TokenType::EndOfFile) {
