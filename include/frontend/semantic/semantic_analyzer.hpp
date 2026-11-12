@@ -160,6 +160,9 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result checkCaseClause(ast::SwitchStatement* statement, const ast::CaseClause& caseClause,
                            const SemanticType* targetType, bool first);
     Result checkIfBranch(const ast::IfBranch& branch, bool isPrimary);
+    Result checkAlignAttribute(const ast::Attribute* alignment, const ast::Statement* statement);
+    const SemanticType* checkAggregateField(const ast::AggregateField& field,
+                                                          ast::AggregateDeclarationStatement* aggregate);
 
     // Helpers for generic instantiation
     exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,

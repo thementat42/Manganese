@@ -1,3 +1,4 @@
+#include <bit>
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -15,8 +16,6 @@ namespace Manganese::semantic {
 
 auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
     statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)};
-    // We don't know the generic types at declaration so we can't check them
-    // Instead, check only when they're instantiated
     if (!statement->genericTypes.empty()) { return stmtvisit_t::Success; }
 
     const Symbol* symbol = symbolTable.lookup(statement->name);
@@ -35,31 +34,20 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
     if (aggregateType->status == ResolutionStatus::Success) { return stmtvisit_t::Success; }
 
     aggregateType->status = ResolutionStatus::InProgress;
+    stmtvisit_t aggregateResult = stmtvisit_t::Success;
+
+    if (const ast::Attribute* aligned = ast::getAttribute(statement, ast::AttributeKind::Align); aligned != nullptr) {
+        if (checkAlignAttribute(aligned, statement) == Result::Failure) { aggregateResult = stmtvisit_t::Failure; }
+    }
 
     std::vector<AggregateField> fieldTypes;
     fieldTypes.reserve(statement->fields.size);
 
     for (const ast::AggregateField& field : statement->fields) {
-        DISCARD(visit(field.type));
-        const SemanticType* resolvedFieldType = field.type->semanticType;
+        const SemanticType* resolvedFieldType = checkAggregateField(field, statement);
         if (resolvedFieldType->isPoison()) {
-            logging::logError(field.line, field.column, "Unknown type for field '{}' in aggregate '{}'",
-                              interner.get_view(field.name), interner.get_view(statement->name));
+            aggregateType->status = ResolutionStatus::Failure;
             return stmtvisit_t::Failure;
-        }
-
-        if (resolvedFieldType->isAggregate()) {
-            const auto* nestedAggregateType = static_cast<const Aggregate*>(resolvedFieldType);
-            const Symbol* nestedSymbol = symbolTable.lookup(interner.intern(nestedAggregateType->name));
-            if (nestedSymbol != nullptr && nestedSymbol->node != nullptr) {
-                // Cast to non-const ast::Statement* so visit() can accept it
-                auto* nestedStmt = static_cast<ast::Statement*>(nestedSymbol->node);
-
-                if (visit(nestedStmt) == stmtvisit_t::Failure) {
-                    aggregateType->status = ResolutionStatus::Failure;
-                    return stmtvisit_t::Failure;
-                }
-            }
         }
         fieldTypes.push_back(AggregateField{.name = interner.get_view(field.name), .type = resolvedFieldType});
     }
@@ -67,7 +55,7 @@ auto SemanticAnalyzer::visit(ast::AggregateDeclarationStatement* statement) -> s
     aggregateType->fields = std::move(fieldTypes);
     aggregateType->status = ResolutionStatus::Success;
     statement->semanticType = aggregateType;
-    return stmtvisit_t::Success;
+    return aggregateResult;
 }
 
 auto SemanticAnalyzer::visit(ast::AliasStatement* statement) -> stmtvisit_t {
@@ -239,6 +227,12 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
     const SemanticType* variableType = nullptr;
     statement->mangledName = utils::OptionalStringID{.id = getMangledName(statement->name)};
 
+    stmtvisit_t alignResult = stmtvisit_t::Success;
+    if (const ast::Attribute* alignment = ast::getAttribute(statement, ast::AttributeKind::Align);
+        alignment != nullptr) {
+        if (checkAlignAttribute(alignment, statement) == Result::Failure) { alignResult = stmtvisit_t::Failure; }
+    }
+
     if (statement->type != nullptr) {
         if (visit(statement->type) == stmtvisit_t::Failure) { return stmtvisit_t::Failure; }
         variableType = statement->type->semanticType;
@@ -279,8 +273,7 @@ auto SemanticAnalyzer::visit(ast::VariableDeclarationStatement* statement) -> st
     }
 
     statement->semanticType = variableType;
-
-    return stmtvisit_t::Success;
+    return alignResult;
 }
 
 // Helpers
@@ -404,6 +397,53 @@ Result SemanticAnalyzer::checkFunctionParameter(ast::FunctionDeclarationStatemen
         }
     }
     return result;
+}
+
+Result SemanticAnalyzer::checkAlignAttribute(const ast::Attribute* alignment, const ast::Statement* statement) {
+    if (alignment->argument == nullptr || alignment->argument->kind != ast::ExpressionKind::NumberLiteralExpression) {
+        logError(statement, "@align attribute expects a number as its argument");
+        return Result::Failure;
+    }
+    const auto* numberExpression = static_cast<const ast::NumberLiteralExpression*>(alignment->argument);
+    const auto alignmentValue = utils::stringToNumber<size_t>(interner.get_view(numberExpression->value), false);
+
+    if (!alignmentValue.exists) {
+        logError(statement, "@align attribute expects a number as its argument");
+        return Result::Failure;
+    }
+    if (!std::has_single_bit(alignmentValue.value)) {
+        logError(statement, "Alignment value in @align must be a power of 2");
+        return Result::Failure;
+    }
+    return Result::Success;
+}
+
+const SemanticType* SemanticAnalyzer::checkAggregateField(const ast::AggregateField& field,
+                                                          ast::AggregateDeclarationStatement* aggregate) {
+    if (const ast::Attribute* fieldAligned = ast::getAttribute(field.attributes, ast::AttributeKind::Align);
+        fieldAligned != nullptr) {
+        if (checkAlignAttribute(fieldAligned, nullptr) == Result::Failure) { return typeContext.getPoison(); }
+    }
+
+    if (visit(field.type) == stmtvisit_t::Failure) { return typeContext.getPoison(); }
+
+    const SemanticType* resolvedFieldType = field.type->semanticType;
+    if (resolvedFieldType->isPoison()) {
+        logging::logError(field.line, field.column, "Unknown type for field '{}' in aggregate '{}'",
+                          interner.get_view(field.name), interner.get_view(aggregate->name));
+        return typeContext.getPoison();
+    }
+
+    if (resolvedFieldType->isAggregate()) {
+        const auto* nestedAggregateType = static_cast<const Aggregate*>(resolvedFieldType);
+        const Symbol* nestedSymbol = symbolTable.lookup(interner.intern(nestedAggregateType->name));
+        if (nestedSymbol != nullptr && nestedSymbol->node != nullptr) {
+            auto* nestedStmt = static_cast<ast::Statement*>(nestedSymbol->node);
+            if (visit(nestedStmt) == stmtvisit_t::Failure) { return typeContext.getPoison(); }
+        }
+    }
+
+    return resolvedFieldType;
 }
 
 }  // namespace Manganese::semantic
