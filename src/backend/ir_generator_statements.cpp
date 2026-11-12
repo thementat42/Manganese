@@ -15,14 +15,43 @@ namespace Manganese::codegen {
 auto IRGenerator::visit(const ast::AggregateDeclarationStatement* statement) -> stmtvisit_t {
     if (!statement->genericTypes.empty()) { return; /*generate this on instantiation*/ }
     auto* llvmType = llvm::StructType::create(*context, interner.get_view(statement->name));
-    savedTypes[statement->semanticType]
-        = llvmType;  // save immediately in case we have self-reference (pointer-to-self)
+    savedTypes[statement->semanticType] = llvmType;  // save immediately in case of self-reference
 
     bool isPacked = ast::getAttribute(statement, ast::AttributeKind::Packed) != nullptr;
 
     std::vector<llvm::Type*> memberTypes;
     memberTypes.reserve(statement->fields.size);
-    for (const auto& field : statement->fields) { memberTypes.push_back(visitTypeAsValue(field.type->semanticType)); }
+
+    const llvm::DataLayout& dataLayout = module->getDataLayout();
+    uint64_t currentOffset = 0;
+
+    for (const auto& field : statement->fields) {
+        llvm::Type* fieldTy = visitTypeAsValue(field.type->semanticType);
+
+        uint64_t requiredAlignment = 0;
+        if (const auto* alignment = ast::getAttribute(field.attributes, ast::AttributeKind::Align);
+            alignment != nullptr) {
+            const auto* numberExpression = static_cast<const ast::NumberLiteralExpression*>(alignment->argument);
+            requiredAlignment = utils::stringToNumber<size_t>(interner.get_view(numberExpression->value), false).value;
+        }
+
+        const uint64_t naturalAlignment = isPacked ? 1 : dataLayout.getABITypeAlign(fieldTy).value();
+        const uint64_t targetAlignment = naturalAlignment > requiredAlignment ? naturalAlignment : requiredAlignment;
+
+        if (targetAlignment > 1 && !isPacked) {
+            uint64_t padding = (targetAlignment - (currentOffset % targetAlignment)) % targetAlignment;
+            // insert padding bytes to satisfy alignment requirement
+            if (padding > 0) {
+                auto* padType = llvm::ArrayType::get(llvm::Type::getInt8Ty(*context), padding);
+                memberTypes.push_back(padType);
+                currentOffset += padding;
+            }
+        }
+
+        memberTypes.push_back(fieldTy);
+        currentOffset += dataLayout.getTypeAllocSize(fieldTy);
+    }
+
     llvmType->setBody(memberTypes, isPacked);
 }
 
