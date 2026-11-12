@@ -162,7 +162,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     Result checkIfBranch(const ast::IfBranch& branch, bool isPrimary);
     Result checkAlignAttribute(const ast::Attribute* alignment, const ast::Statement* statement);
     const SemanticType* checkAggregateField(const ast::AggregateField& field,
-                                                          ast::AggregateDeclarationStatement* aggregate);
+                                            ast::AggregateDeclarationStatement* aggregate);
 
     // Helpers for generic instantiation
     exprvisit_t instantiateGenericFunction(ast::GenericInstantiationExpression* expression, const Symbol* symbol,

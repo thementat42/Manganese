@@ -494,9 +494,12 @@ std::optional<ast::AggregateField> Parser::parseAggregateField(utils::StringID a
         return std::nullopt;
     }
 
-    return ast::AggregateField{
-        .name = fieldName, .type = type, .line = fieldToken.getLine(), .column = fieldToken.getColumn(),
-        .isMutable = isMutable, .attributes = arena.emplace_range(fieldAttributes)};
+    return ast::AggregateField{.name = fieldName,
+                               .type = type,
+                               .line = fieldToken.getLine(),
+                               .column = fieldToken.getColumn(),
+                               .isMutable = isMutable,
+                               .attributes = arena.emplace_range(fieldAttributes)};
 }
 
 std::optional<ast::FunctionParameter> Parser::parseFunctionParameter(utils::StringID functionName,
