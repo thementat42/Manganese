@@ -1,6 +1,6 @@
 
-#ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_MODULE_HANDLING_HPP
-#define MANGANESE_INCLUDE_FRONTEND_PARSER_MODULE_HANDLING_HPP 1
+#ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_MODULES_HPP
+#define MANGANESE_INCLUDE_FRONTEND_PARSER_MODULES_HPP 1
 
 #include <frontend/ast.hpp>
 #include <frontend/parser/parser_base.hpp>
@@ -25,4 +25,4 @@ std::vector<ParsedFile> parseInParallel(const std::vector<std::string>& filename
 
 }  // namespace Manganese::parser
 
-#endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_MODULE_HANDLING_HPP
+#endif  // MANGANESE_INCLUDE_FRONTEND_PARSER_MODULES_HPP
