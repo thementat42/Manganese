@@ -226,12 +226,6 @@ if args.exec_with and not args.run:
         "were passed to the script but the run flag (-r) was not specified",
     )
 
-if args.tests and not args.debug:
-    print(
-        "Warning: --tests will compile in debug mode",
-        "even if the debug flag (-d or --debug) is not set",
-    )
-
 if args.fresh_build and BUILD_DIR.exists():
     print(f"Cleaning build directory before building ({BUILD_DIR})")
     try:
@@ -248,7 +242,7 @@ cmake_args = [
     "cmake",
     "..",
     f"-DBUILD_TESTS={'ON' if args.tests else 'OFF'}",
-    f"-DCMAKE_BUILD_TYPE={('Debug' if args.debug or args.tests else 'Release')}",
+    f"-DCMAKE_BUILD_TYPE={('Debug' if args.debug else 'Release')}",
     f"-DCMAKE_EXPORT_COMPILE_COMMANDS={'ON' if args.compile_commands else 'OFF'}",
     f"-DDISABLE_ANSI_COLOURS={'ON' if args.disable_ansi else 'OFF'}",
 ]

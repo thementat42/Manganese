@@ -65,7 +65,7 @@ void logRaw(LogLevel level, std::size_t line, std::size_t col, std::string_view 
 
 template <class... Args>
 void logInternal(LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
-#if MN_DEBUG
+#if MN_DEBUG || MN_TESTING
     std::string message = std::format(fmt, std::forward<Args>(args)...);
     logInternalRaw(level, message);
     if (level == LogLevel::Critical) { throw std::runtime_error{message}; }

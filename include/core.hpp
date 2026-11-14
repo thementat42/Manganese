@@ -21,6 +21,10 @@ namespace Manganese {
 #endif  // NDEBUG
 #endif  // MN_DEBUG
 
+#ifndef MN_TESTING  // Should be defined by CMake
+#define MN_TESTING 0
+#endif
+
 #ifndef DISCARD
 #define DISCARD(value) (static_cast<void>((value)))  // Explicitly discard a value
 #endif  // DISCARD

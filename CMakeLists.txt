@@ -67,7 +67,8 @@ set_target_properties(manganese PROPERTIES
 # `#define` stuff
 
 target_compile_definitions(manganese PRIVATE
-    MN_DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BUILD_TESTS}>>
+    MN_DEBUG=$<CONFIG:Debug>
+    MN_TESTING=$<BOOL:${BUILD_TESTS}>
     NO_ANSI_COLOURS=$<BOOL:${DISABLE_ANSI_COLOURS}>
 )
 
@@ -153,9 +154,7 @@ function(enable_release_flags target)
 endfunction()
 
 enable_strict_warnings(manganese)
-if(BUILD_TESTS)
-    enable_debug_flags(manganese)
-elseif(CMAKE_BUILD_TYPE STREQUAL Debug)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
     enable_debug_flags(manganese)
 else()
     enable_release_flags(manganese)

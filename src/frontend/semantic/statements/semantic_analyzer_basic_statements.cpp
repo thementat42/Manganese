@@ -13,7 +13,7 @@ auto SemanticAnalyzer::visit(ast::ExpressionStatement* statement) -> stmtvisit_t
         statement->expression->semanticType = typeContext.getPoison();
         return stmtvisit_t::Failure;
     }
-#if MN_DEBUG
+#if MN_DEBUG || MN_TESTING
     if (statement->expression->semanticType == nullptr) {
         logging::logInternal(logging::LogLevel::Warning, "Expression '{}' did not have its semantic type set",
                              statement->expression->toString(interner));

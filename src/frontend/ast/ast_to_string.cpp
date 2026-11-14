@@ -8,11 +8,11 @@
 #include <utils/containers/string_interner.hpp>
 
 // In tests, add extra parentheses around sub expressions to make sure operator precedence works
-#if MN_DEBUG
+#if MN_TESTING
 #define WRAP(str) "(" str ")"
 #else
 #define WRAP(str) str
-#endif  // MN_DEBUG
+#endif  // MN_TESTING
 
 namespace Manganese::ast {
 

@@ -1,5 +1,5 @@
 
-#if MN_DEBUG  // dump methods are only for debug builds
+#if MN_DEBUG || MN_TESTING // dump methods are only for testing
 
 #include <core.hpp>
 #include <cstddef>
@@ -831,4 +831,4 @@ void PoisonedType::dump(std::ostream& os, const utils::StringInterner& /*unused*
 
 }  // namespace Manganese::ast
 
-#endif  // MN_DEBUG
+#endif  // MN_DEBUG || MN_TESTING

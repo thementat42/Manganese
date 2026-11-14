@@ -12,7 +12,7 @@
 #include <utils/meta/target_info.hpp>
 #include <utils/meta/type_names.hpp>
 
-#if MN_DEBUG
+#if MN_DEBUG || MN_TESTING
 #define MN_AST_DUMP void dump(std::ostream& os, const utils::StringInterner&, std::size_t indent = 0) const override;
 #else
 #define MN_AST_DUMP
@@ -129,7 +129,7 @@ struct ASTNode {
     virtual std::string toString(const utils::StringInterner&, std::size_t indent = 0) const = 0;
     virtual ASTNode* clone(semantic::CloneContext* context) const = 0;
 
-#if MN_DEBUG
+#if MN_DEBUG || MN_TESTING
     virtual void dump(std::ostream& os, const utils::StringInterner&, std::size_t indentDepth = 0) const = 0;
 #endif  // MN_DEBUG
 };
