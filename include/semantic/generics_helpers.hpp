@@ -3,8 +3,8 @@
 
 #include <core.hpp>
 #include <cstddef>
-#include <frontend/ast/ast_base.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast/ast_base.hpp>
+#include <semantic/type_context.hpp>
 #include <functional>
 #include <unordered_map>
 #include <utils/containers/slice.hpp>

@@ -1,5 +1,5 @@
-#include <frontend/ast.hpp>
-#include <frontend/cfg.hpp>
+#include <ast.hpp>
+#include <cfg.hpp>
 
 namespace Manganese::cfg {
 

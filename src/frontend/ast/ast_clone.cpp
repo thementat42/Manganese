@@ -1,8 +1,8 @@
 #include <concepts>
 #include <core.hpp>
-#include <frontend/ast.hpp>
-#include <frontend/semantic/clone_context.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <semantic/clone_context.hpp>
+#include <semantic/type_context.hpp>
 #include <optional>
 #include <utils/containers/string_interner.hpp>
 #include <vector>

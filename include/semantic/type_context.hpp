@@ -4,7 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <frontend/ast.hpp>
+#include <ast.hpp>
 #include <optional>
 #include <string>
 #include <string_view>

@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <format>
-#include <frontend/lexer/token.hpp>
+#include <lexer/token.hpp>
 #include <io/logging.hpp>
 #include <string>
 
@@ -23,7 +23,7 @@ std::string tokenTypeToString(TokenType type) {
 #define OPERATOR_TOKEN(name, text) \
     case TokenType::name: return text;
 
-#include <frontend/lexer/tokens.def>
+#include <lexer/tokens.def>
 
 #undef SPECIAL_TOKEN
 #undef LITERAL_TOKEN
@@ -71,7 +71,7 @@ constexpr std::array _keywordTableHelper = {
 
 #define KEYWORD_TOKEN(name, text) keyword_map_entry{.str = (text), .type = TokenType::name},
 
-#include <frontend/lexer/tokens.def>
+#include <lexer/tokens.def>
 
 #undef SPECIAL_TOKEN
 #undef LITERAL_TOKEN
@@ -93,7 +93,7 @@ constexpr std::array _operatorTableHelper{
 #define OPERATOR_TOKEN(name, text)    operator_map_entry{.str = (text), .type = TokenType::name},
 #define KEYWORD_TOKEN(name, text)
 
-#include <frontend/lexer/tokens.def>
+#include <lexer/tokens.def>
 
 #undef SPECIAL_TOKEN
 #undef LITERAL_TOKEN

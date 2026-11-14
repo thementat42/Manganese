@@ -3,10 +3,10 @@
 
 #include <array>
 #include <cstddef>
-#include <frontend/ast.hpp>
-#include <frontend/lexer/token.hpp>
-#include <frontend/parser/operators.hpp>
-#include <frontend/parser/parser_base.hpp>
+#include <ast.hpp>
+#include <lexer/token.hpp>
+#include <parser/operators.hpp>
+#include <parser/parser_base.hpp>
 #include <type_traits>
 
 namespace Manganese::parser {

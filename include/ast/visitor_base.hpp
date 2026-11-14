@@ -3,10 +3,10 @@
 
 #include <core.hpp>
 #include <format>
-#include <frontend/ast/ast_base.hpp>
-#include <frontend/ast/ast_expressions.hpp>
-#include <frontend/ast/ast_statements.hpp>
-#include <frontend/ast/ast_types.hpp>
+#include <ast/ast_base.hpp>
+#include <ast/ast_expressions.hpp>
+#include <ast/ast_statements.hpp>
+#include <ast/ast_types.hpp>
 #include <type_traits>
 
 namespace Manganese::ast {
@@ -26,7 +26,7 @@ class Visitor {
 #define STMT_NODE(name) virtual stmtvisit_t visit(NodePointer<ast::name>) = 0;
 #define EXPR_NODE(name) virtual exprvisit_t visit(NodePointer<ast::name>) = 0;
 #define TYPE_NODE(name) virtual typevisit_t visit(NodePointer<ast::name>) = 0;
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
 #undef STMT_NODE
 #undef EXPR_NODE
 #undef TYPE_NODE
@@ -41,7 +41,7 @@ class Visitor {
 #define EXPR_NODE(name)
 #define TYPE_NODE(name)
 
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
         }
 
         ASSERT_UNREACHABLE_FMT("No visit() overload for statement kind {}", static_cast<int>(stmt->kind));
@@ -57,7 +57,7 @@ class Visitor {
     case ast::ExpressionKind::name: return visit(static_cast<NodePointer<ast::name>>(expr));
 
 #define TYPE_NODE(name)
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
         }
 
         ASSERT_UNREACHABLE_FMT("No visit() overload for expression kind {}", static_cast<int>(expr->kind));
@@ -74,7 +74,7 @@ class Visitor {
 #define TYPE_NODE(name) \
     case ast::TypeKind::name: return visit(static_cast<NodePointer<ast::name>>(type));
 
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
         }
 
         ASSERT_UNREACHABLE_FMT("No visit() overload for type kind {}", static_cast<int>(type->kind));

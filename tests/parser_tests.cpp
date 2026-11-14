@@ -2,7 +2,7 @@
 #include <core.hpp>
 #include <cstddef>
 #include <filesystem>
-#include <frontend/parser.hpp>
+#include <parser.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>

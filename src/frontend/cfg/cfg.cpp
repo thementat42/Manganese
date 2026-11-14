@@ -1,4 +1,4 @@
-#include <frontend/cfg/control_flow_analyzer.hpp>
+#include <cfg/control_flow_analyzer.hpp>
 
 namespace Manganese::cfg {
 

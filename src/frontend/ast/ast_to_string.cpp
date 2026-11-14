@@ -1,9 +1,9 @@
 #include <concepts>
 #include <cstddef>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/lexer.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <lexer.hpp>
+#include <semantic/type_context.hpp>
 #include <string>
 #include <utils/containers/string_interner.hpp>
 

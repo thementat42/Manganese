@@ -4,13 +4,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/lexer.hpp>
-#include <frontend/lexer/token.hpp>
-#include <frontend/parser.hpp>
-#include <frontend/semantic/generics_helpers.hpp>
-#include <frontend/semantic/symbol_table.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <lexer.hpp>
+#include <lexer/token.hpp>
+#include <parser.hpp>
+#include <semantic/generics_helpers.hpp>
+#include <semantic/symbol_table.hpp>
+#include <semantic/type_context.hpp>
 #include <io/logging.hpp>
 #include <string>
 #include <utility>
@@ -210,7 +210,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
 #define EXPR_NODE(name) exprvisit_t visit(ast::name*) override;
 #define TYPE_NODE(name) typevisit_t visit(ast::name*) override;
 
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
 
 #undef STMT_NODE
 #undef EXPR_NODE

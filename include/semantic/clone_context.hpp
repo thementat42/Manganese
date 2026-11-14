@@ -1,7 +1,7 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_CLONE_CONTEXT_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_CLONE_CONTEXT_HPP 1
 
-#include <frontend/semantic/type_context.hpp>
+#include <semantic/type_context.hpp>
 #include <unordered_map>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/containers/string_interner.hpp>

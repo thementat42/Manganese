@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <core.hpp>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/lexer.hpp>
-#include <frontend/parser.hpp>
+#include <ast.hpp>
+#include <lexer.hpp>
+#include <parser.hpp>
 #include <io/logging.hpp>
 #include <optional>
 #include <span>

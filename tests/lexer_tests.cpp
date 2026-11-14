@@ -1,7 +1,7 @@
 #include <cassert>
 #include <filesystem>
 #include <format>
-#include <frontend/lexer.hpp>
+#include <lexer.hpp>
 #include <io/logging.hpp>
 #include <iostream>
 #include <stdexcept>

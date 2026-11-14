@@ -1,8 +1,8 @@
 #include <core.hpp>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/semantic/semantic_analyzer.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <semantic/semantic_analyzer.hpp>
+#include <semantic/type_context.hpp>
 #include <utility>
 #include <vector>
 

@@ -1,10 +1,10 @@
 #include <core.hpp>
 #include <cstddef>
-#include <frontend/ast.hpp>
-#include <frontend/semantic.hpp>
-#include <frontend/semantic/clone_context.hpp>
-#include <frontend/semantic/symbol_table.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <semantic.hpp>
+#include <semantic/clone_context.hpp>
+#include <semantic/symbol_table.hpp>
+#include <semantic/type_context.hpp>
 #include <string_view>
 #include <utility>
 #include <utils/expression_folding.hpp>

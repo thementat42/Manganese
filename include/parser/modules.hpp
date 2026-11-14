@@ -2,8 +2,8 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_MODULES_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_MODULES_HPP 1
 
-#include <frontend/ast.hpp>
-#include <frontend/parser/parser_base.hpp>
+#include <ast.hpp>
+#include <parser/parser_base.hpp>
 #include <string>
 #include <unordered_set>
 #include <utils/containers/chunk_allocator.hpp>

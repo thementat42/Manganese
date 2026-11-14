@@ -13,8 +13,8 @@
 #include <backend/ir_generator.hpp>
 #include <core.hpp>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/semantic.hpp>
+#include <ast.hpp>
+#include <semantic.hpp>
 #include <runtime/string.hpp>
 
 namespace Manganese::codegen {

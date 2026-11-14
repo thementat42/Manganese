@@ -4,10 +4,10 @@
 
 #include <core.hpp>
 #include <cstdint>
-#include <frontend/ast.hpp>
-#include <frontend/ast/visitor_base.hpp>
-#include <frontend/parser.hpp>
-#include <frontend/semantic.hpp>
+#include <ast.hpp>
+#include <ast/visitor_base.hpp>
+#include <parser.hpp>
+#include <semantic.hpp>
 #include <io/logging.hpp>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/containers/string_interner.hpp>
@@ -92,7 +92,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
 #define TYPE_NODE(name) \
     constexpr typevisit_t visit(const ast::name*) noexcept override {}
 
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
 
 #undef STMT_NODE
 #undef EXPR_NODE

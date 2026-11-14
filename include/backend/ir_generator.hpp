@@ -7,11 +7,11 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 
-#include <frontend/ast.hpp>
-#include <frontend/lexer/token.hpp>
-#include <frontend/parser.hpp>
-#include <frontend/semantic.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <lexer/token.hpp>
+#include <parser.hpp>
+#include <semantic.hpp>
+#include <semantic/type_context.hpp>
 #include <memory>
 #include <ostream>
 #include <string_view>
@@ -84,7 +84,7 @@ class IRGenerator final : public _irgen_base_t {
 #define EXPR_NODE(name) [[nodiscard]] exprvisit_t visit(const ast::name*) override;
 #define TYPE_NODE(name) [[nodiscard]] typevisit_t visit(const ast::name*) override;
 #define SEMANTIC(name)  [[nodiscard]] typevisit_t visit(const semantic::name*);
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
 #undef STMT_NODE
 #undef EXPR_NODE
 #undef TYPE_NODE

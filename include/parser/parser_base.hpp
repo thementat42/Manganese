@@ -4,9 +4,9 @@
 #include <concepts>
 #include <cstddef>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/lexer.hpp>
-#include <frontend/parser/operators.hpp>
+#include <ast.hpp>
+#include <lexer.hpp>
+#include <parser/operators.hpp>
 #include <io/logging.hpp>
 #include <optional>
 #include <span>

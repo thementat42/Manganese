@@ -3,8 +3,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/semantic.hpp>
+#include <ast.hpp>
+#include <semantic.hpp>
 #include <io/logging.hpp>
 #include <utility>
 #include <utils/expression_folding.hpp>

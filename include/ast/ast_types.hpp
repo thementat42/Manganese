@@ -1,8 +1,8 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_TYPES_HPP
 
-#include <frontend/ast/ast_base.hpp>
-#include <frontend/lexer/token.hpp>
+#include <ast/ast_base.hpp>
+#include <lexer/token.hpp>
 #include <utils/meta/named_parameter.hpp>
 #include <utils/containers/slice.hpp>
 #include <utils/containers/string_interner.hpp>

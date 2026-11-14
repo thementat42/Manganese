@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <frontend/lexer.hpp>
+#include <lexer.hpp>
 #include <io/logging.hpp>
 #include <optional>
 #include <string>

@@ -1,8 +1,8 @@
 #include <core.hpp>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/lexer.hpp>
-#include <frontend/parser.hpp>
+#include <ast.hpp>
+#include <lexer.hpp>
+#include <parser.hpp>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/meta/enum_matches.hpp>
 #include <vector>

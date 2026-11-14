@@ -1,6 +1,6 @@
 #include <core.hpp>
-#include <frontend/ast.hpp>
-#include <frontend/parser.hpp>
+#include <ast.hpp>
+#include <parser.hpp>
 #include <io/logging.hpp>
 #include <string>
 #include <utils/containers/chunk_allocator.hpp>

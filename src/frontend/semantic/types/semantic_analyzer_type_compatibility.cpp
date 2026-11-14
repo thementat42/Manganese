@@ -1,10 +1,10 @@
 #include <core.hpp>
 #include <cstddef>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/lexer/token.hpp>
-#include <frontend/semantic/semantic_analyzer.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <lexer/token.hpp>
+#include <semantic/semantic_analyzer.hpp>
+#include <semantic/type_context.hpp>
 #include <string>
 #include <utility>
 #include <utils/meta/enum_matches.hpp>

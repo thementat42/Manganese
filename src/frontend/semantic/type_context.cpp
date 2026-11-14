@@ -2,8 +2,8 @@
 #include <core.hpp>
 #include <cstddef>
 #include <format>
-#include <frontend/ast/ast_base.hpp>
-#include <frontend/semantic.hpp>
+#include <ast/ast_base.hpp>
+#include <semantic.hpp>
 #include <functional>
 #include <string>
 #include <string_view>

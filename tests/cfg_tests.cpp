@@ -1,8 +1,8 @@
 #include <core.hpp>
 #include <filesystem>
-#include <frontend/cfg/control_flow_analyzer.hpp>
-#include <frontend/parser.hpp>
-#include <frontend/semantic/semantic_analyzer.hpp>
+#include <cfg/control_flow_analyzer.hpp>
+#include <parser.hpp>
+#include <semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>

@@ -1,7 +1,7 @@
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/cfg/control_flow_analyzer.hpp>
-#include <frontend/semantic/symbol_table.hpp>
+#include <ast.hpp>
+#include <cfg/control_flow_analyzer.hpp>
+#include <semantic/symbol_table.hpp>
 #include <utils/expression_folding.hpp>
 
 namespace Manganese::cfg {

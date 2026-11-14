@@ -1,6 +1,6 @@
 #include <core.hpp>
-#include <frontend/ast.hpp>
-#include <frontend/semantic.hpp>
+#include <ast.hpp>
+#include <semantic.hpp>
 #include <io/logging.hpp>
 #include <string_view>
 

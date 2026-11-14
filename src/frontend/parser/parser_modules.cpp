@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <execution>
-#include <frontend/parser.hpp>
+#include <parser.hpp>
 #include <io/logging.hpp>
 #include <mutex>
 #include <string>

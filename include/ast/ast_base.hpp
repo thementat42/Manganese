@@ -46,7 +46,7 @@ enum class StatementKind : std::uint8_t {
 #define STMT_NODE(name) name,
 #define EXPR_NODE(name)
 #define TYPE_NODE(name)
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
 #undef STMT_NODE
 #undef EXPR_NODE
 #undef TYPE_NODE
@@ -56,7 +56,7 @@ enum class ExpressionKind : std::uint8_t {
 #define STMT_NODE(name)
 #define EXPR_NODE(name) name,
 #define TYPE_NODE(name)
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
 #undef STMT_NODE
 #undef EXPR_NODE
 #undef TYPE_NODE
@@ -66,7 +66,7 @@ enum class TypeKind : std::uint8_t {
 #define STMT_NODE(name)
 #define EXPR_NODE(name)
 #define TYPE_NODE(name) name,
-#include <frontend/ast/ast.def>
+#include <ast/ast.def>
 #undef STMT_NODE
 #undef EXPR_NODE
 #undef TYPE_NODE
@@ -74,7 +74,7 @@ enum class TypeKind : std::uint8_t {
 
 enum class AttributeKind : std::uint8_t {
 #define ATTRIBUTE(name) name,
-#include <frontend/ast/attributes.def>
+#include <ast/attributes.def>
 #undef ATTRIBUTE
     Unknown
 };

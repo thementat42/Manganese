@@ -1,10 +1,10 @@
 #include <cassert>
 #include <core.hpp>
 #include <filesystem>
-#include <frontend/ast.hpp>
-#include <frontend/parser.hpp>
-#include <frontend/semantic/semantic_analyzer.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <parser.hpp>
+#include <semantic/semantic_analyzer.hpp>
+#include <semantic/type_context.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>

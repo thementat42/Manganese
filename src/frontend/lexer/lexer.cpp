@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <frontend/lexer.hpp>
+#include <lexer.hpp>
 #include <io/filereader.hpp>
 #include <io/heapfilereader.hpp>
 #include <io/logging.hpp>

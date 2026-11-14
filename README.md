@@ -83,9 +83,9 @@ This will produce a `manganese` executable which, when run, runs the test suite 
 
 Manganese follows a fairly standard pipeline from source code to final binary:
 
-- [Lexing](/src/frontend/lexer/) transforms the text into tokens
-- [Parsing](/src/frontend/parser) builds out an abstract syntax tree (AST)
-- [Semantic analysis](/src/frontend/semantic) validates the AST through several passes:
+- [Lexing](/src/lexer/) transforms the text into tokens
+- [Parsing](/src/parser) builds out an abstract syntax tree (AST)
+- [Semantic analysis](/src/semantic) validates the AST through several passes:
   - The first pass collects all global functions and aggregate types (to permit out-of-order declaration)
   - The second pass validates semantics
   - The third pass checks control flow

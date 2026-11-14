@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <core.hpp>
-#include <frontend/ast.hpp>
-#include <frontend/parser.hpp>
+#include <ast.hpp>
+#include <parser.hpp>
 #include <utils/meta/type_names.hpp>
 
 namespace Manganese::parser {

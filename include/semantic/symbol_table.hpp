@@ -4,8 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <semantic/type_context.hpp>
 #include <io/logging.hpp>
 #include <unordered_map>
 #include <utils/containers/chunk_allocator.hpp>

@@ -1,7 +1,7 @@
 #include <core.hpp>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/semantic.hpp>
+#include <ast.hpp>
+#include <semantic.hpp>
 #include <io/logging.hpp>
 
 namespace Manganese::semantic {

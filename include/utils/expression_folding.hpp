@@ -1,8 +1,8 @@
 #ifndef MANGANESE_INCLUDE_UTILS_EXPRESSION_FOLDING
 #define MANGANESE_INCLUDE_UTILS_EXPRESSION_FOLDING 1
 
-#include <frontend/ast.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <semantic/type_context.hpp>
 #include <utils/meta/number_types.hpp>
 #include <utils/str_to_num.hpp>
 #include <utils/containers/string_interner.hpp>

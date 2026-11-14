@@ -1,9 +1,9 @@
 #include <array>
 #include <core.hpp>
 #include <cstddef>
-#include <frontend/ast.hpp>
-#include <frontend/lexer/token.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <lexer/token.hpp>
+#include <semantic/type_context.hpp>
 #include <utils/str_to_num.hpp>
 #include <utils/meta/target_info.hpp>
 #include <utils/meta/type_names.hpp>

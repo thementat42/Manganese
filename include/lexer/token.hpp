@@ -18,7 +18,7 @@ enum class TokenType : std::uint8_t {
 #define KEYWORD_TOKEN(name, text)     name,
 #define OPERATOR_TOKEN(name, text)    name,
 
-#include <frontend/lexer/tokens.def>
+#include <lexer/tokens.def>
 
 #undef SPECIAL_TOKEN
 #undef LITERAL_TOKEN

@@ -5,9 +5,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <frontend/ast.hpp>
-#include <frontend/lexer.hpp>
-#include <frontend/semantic/type_context.hpp>
+#include <ast.hpp>
+#include <lexer.hpp>
+#include <semantic/type_context.hpp>
 #include <ostream>
 #include <string>
 #include <string_view>

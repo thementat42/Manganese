@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <core.hpp>
-#include <frontend/ast.hpp>
-#include <frontend/semantic/symbol_table.hpp>
+#include <ast.hpp>
+#include <semantic/symbol_table.hpp>
 #include <io/logging.hpp>
 #include <string>
 
