@@ -33,8 +33,7 @@ struct CompilationResult {
     std::string errorMsg;
 };
 
-// Helper function isolating the LLVM IR generation, verification, and optimization pipeline
-CompilationResult generateAndOptimizeModule(std::vector<parser::ParsedFile>& parsedFiles,
+CompilationResult generateIR(std::vector<parser::ParsedFile>& parsedFiles,
                                             semantic::SemanticAnalyzer& semanticAnalyzer) {
     codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, interner, utils::getTargetInfo());
     irGenerator.generate();
@@ -63,7 +62,7 @@ CompilationResult generateAndOptimizeModule(std::vector<parser::ParsedFile>& par
         module->print(rso, nullptr);
     }
 
-    codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
+    codegen::runOptimizationPasses(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
 
     std::string verifyOptErrorStr;
     llvm::raw_string_ostream verifyOptErrorOS(verifyOptErrorStr);
@@ -97,7 +96,7 @@ bool validateIRContains(const std::string& source, std::initializer_list<std::st
 
     CompilationResult compResult;
     try {
-        compResult = generateAndOptimizeModule(parsedFiles, semanticAnalyzer);
+        compResult = generateIR(parsedFiles, semanticAnalyzer);
     } catch (const std::exception& e) {
         compResult = {.success = false,
                       .irOutput = "",
@@ -397,7 +396,7 @@ bool testCodegenFromFile() {
             rso.flush();
             irOutput = tempStr;
 
-            codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
+            codegen::runOptimizationPasses(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
 
             // Log optimized IR
             std::string optTempStr;

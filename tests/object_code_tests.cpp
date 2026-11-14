@@ -49,7 +49,7 @@ bool validateObjectCodeEmits(const std::string& source, std::string_view testNam
 
         if (llvm::verifyModule(*module, &llvm::errs())) { return false; }
 
-        codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
+        codegen::runOptimizationPasses(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
 
         if (llvm::verifyModule(*module, &llvm::errs())) { return false; }
 

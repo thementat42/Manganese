@@ -51,7 +51,7 @@ bool validateIRExecutes(const std::string& source, const std::string& functionNa
         if (llvm::verifyModule(*module, &llvm::errs())) { return false; }
 
         // Run the optimization pipeline
-        codegen::optimizeModule(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
+        codegen::runOptimizationPasses(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
 
         if (llvm::verifyModule(*module, &llvm::errs())) { return false; }
 

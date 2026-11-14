@@ -11,7 +11,7 @@
 // https://llvm.org/docs/NewPassManager.html
 
 namespace Manganese::codegen {
-void optimizeModule(llvm::Module* module, llvm::OptimizationLevel level, llvm::TargetMachine* tm) {
+void runOptimizationPasses(llvm::Module* module, llvm::OptimizationLevel level, llvm::TargetMachine* tm) {
     if (level == llvm::OptimizationLevel::O0) { return; }
     llvm::LoopAnalysisManager LAM;
     llvm::FunctionAnalysisManager FAM;

@@ -6,7 +6,7 @@
 #include <llvm/Passes/OptimizationLevel.h>
 
 namespace Manganese::codegen {
-void optimizeModule(llvm::Module* module, llvm::OptimizationLevel level, llvm::TargetMachine* tm);
+void runOptimizationPasses(llvm::Module* module, llvm::OptimizationLevel level, llvm::TargetMachine* tm);
 }
 
 #endif  // MANGANESE_INCLUDE_BACKEND_OPTIMIZATIONS_HPP
