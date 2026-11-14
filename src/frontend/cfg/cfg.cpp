@@ -49,4 +49,22 @@ void ControlFlowAnalyzer::mergeStates(states_t& dest, const states_t& src) {
     }
 }
 
+bool ControlFlowAnalyzer::isNoReturnCall(const ast::FunctionCallExpression* callExpr) noexcept {
+    if (callExpr->callee == nullptr) { return false; }
+
+    ast::Expression* unwrapped = semantic::SemanticAnalyzer::unwrapBaseDeclaration(callExpr->callee);
+
+    if (unwrapped->kind != ast::ExpressionKind::IdentifierExpression) { return false; }
+    const auto* idExpr = static_cast<const ast::IdentifierExpression*>(unwrapped);
+    const semantic::Symbol* symbol = symbolTable.lookup(idExpr->name);
+    if (symbol != nullptr && symbol->node != nullptr) {
+        if (static_cast<const ast::Statement*>(symbol->node)->kind
+            == ast::StatementKind::FunctionDeclarationStatement) {
+            const auto* funcDecl = static_cast<const ast::FunctionDeclarationStatement*>(symbol->node);
+            return ast::getAttribute(funcDecl->attributes, ast::AttributeKind::Noreturn) != nullptr;
+        }
+    }
+    return false;
+}
+
 }  // namespace Manganese::cfg
