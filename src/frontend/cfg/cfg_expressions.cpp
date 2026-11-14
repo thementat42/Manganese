@@ -1,5 +1,5 @@
 #include <ast.hpp>
-#include <cfg.hpp>
+#include <cfg/control_flow_analyzer.hpp>
 
 namespace Manganese::cfg {
 
