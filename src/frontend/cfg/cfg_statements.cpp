@@ -30,6 +30,10 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::EnumDeclarationStatement* /*unu
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::ExpressionStatement* statement) noexcept {
     visit(statement->expression);
+    if (statement->expression->kind == ast::ExpressionKind::FunctionCallExpression) {
+        const auto* callExpr = static_cast<const ast::FunctionCallExpression*>(statement->expression);
+        if (isNoReturnCall(callExpr)) { return FlowStatus::NoReturn; }
+    }
     return FlowStatus::FallsThrough;
 }
 
@@ -99,22 +103,39 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::ForLoopStatement* statement) no
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::FunctionDeclarationStatement* statement) noexcept {
-    // Extern functions don't have a body to analyzer
+    // Extern functions don't have a body to analyze
     if (!statement->body.has_value()) { return FlowStatus::FallsThrough; }
 
     const FlowStatus bodyStatus = visit(*statement->body, true, statement->associatedScope);
-    if ((statement->returnType != nullptr) && statement->returnType->semanticType != nullptr
-        && !statement->returnType->semanticType->isVoid() && bodyStatus == FlowStatus::FallsThrough) {
-        logError(statement, "non-void function '{}' does not return a value on all control paths",
-                 interner.get_view(statement->name));
+
+    bool isNoReturn = ast::getAttribute(statement, ast::AttributeKind::Noreturn) != nullptr;
+
+    if (isNoReturn) {
+        if (statement->returnType != nullptr && statement->returnType->semanticType != nullptr
+            && !statement->returnType->semanticType->isVoid()) {
+            logError(statement, "noreturn function '{}' cannot have a non-void return type",
+                     interner.get_view(statement->name));
+        }
+
+        if (bodyStatus == FlowStatus::FallsThrough || bodyStatus == FlowStatus::Returns) {
+            logError(statement, "noreturn function '{}' can return or fall through on some paths",
+                     interner.get_view(statement->name));
+        }
+    } else {
+        if ((statement->returnType != nullptr) && statement->returnType->semanticType != nullptr
+            && !statement->returnType->semanticType->isVoid() && bodyStatus == FlowStatus::FallsThrough) {
+            logError(statement, "non-void function '{}' does not return a value on all control paths",
+                     interner.get_view(statement->name));
+        }
     }
+
     return FlowStatus::FallsThrough;  // A function declaration itself doesn't affect control flow
 }
-
 FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcept {
     auto preBranchStates = symbolAssignmentStates;
 
     bool allBranchesTerminate = true;
+    bool hasNoReturnBranch = false;
     std::optional<FlowStatus> resultStatus = std::nullopt;
     auto mergedStates = symbolAssignmentStates;
     bool firstBranch = true;
@@ -128,14 +149,18 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcep
         const FlowStatus branchStatus = visit(branch.body, true, branch.associatedScope);
         auto branchStates = symbolAssignmentStates;
 
+        if (branchStatus == FlowStatus::NoReturn) { hasNoReturnBranch = true; }
+
         if (firstBranch) {
             allBranchesTerminate = (branchStatus != FlowStatus::FallsThrough);
             resultStatus = branchStatus;
             mergedStates = branchStates;
             firstBranch = false;
         } else {
-            if (branchStatus == FlowStatus::FallsThrough || (allBranchesTerminate && branchStatus != *resultStatus)) {
+            if (branchStatus == FlowStatus::FallsThrough) {
                 allBranchesTerminate = false;
+            } else if (allBranchesTerminate && resultStatus != branchStatus) {
+                if (branchStatus == FlowStatus::NoReturn) { resultStatus = FlowStatus::NoReturn; }
             }
             mergeStates(mergedStates, branchStates);
         }
@@ -147,14 +172,22 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::IfStatement* statement) noexcep
     } else {
         symbolAssignmentStates = preBranchStates;
         const FlowStatus elseStatus = visit(*statement->elseBody, true, statement->elseAssociatedScope);
-        if ((elseStatus == FlowStatus::FallsThrough) || (allBranchesTerminate && elseStatus != *resultStatus)) {
+
+        if (elseStatus == FlowStatus::NoReturn) { hasNoReturnBranch = true; }
+
+        if (elseStatus == FlowStatus::FallsThrough) {
             allBranchesTerminate = false;
+        } else if (allBranchesTerminate && resultStatus != elseStatus) {
+            if (elseStatus == FlowStatus::NoReturn) { resultStatus = FlowStatus::NoReturn; }
         }
         mergeStates(mergedStates, symbolAssignmentStates);
     }
 
     symbolAssignmentStates = std::move(mergedStates);
-    return allBranchesTerminate && resultStatus.has_value() ? *resultStatus : FlowStatus::FallsThrough;
+
+    if (!allBranchesTerminate || !resultStatus.has_value()) { return FlowStatus::FallsThrough; }
+
+    return hasNoReturnBranch ? FlowStatus::NoReturn : *resultStatus;
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::ImportStatement* /*unused*/) noexcept {
@@ -184,31 +217,52 @@ FlowStatus ControlFlowAnalyzer::visit(const ast::SwitchStatement* statement) noe
     auto preSwitchStates = symbolAssignmentStates;
     states_t mergedStates;
 
-    const bool hasDefault = !statement->defaultBody.has_value();
+    const bool hasDefault = statement->defaultBody.has_value();
     bool allCasesTerminate = hasDefault;
+    bool hasNoReturnCase = false;
+    std::optional<FlowStatus> resultStatus = std::nullopt;
 
     if (hasDefault) {
+        symbolAssignmentStates = preSwitchStates;
         const FlowStatus defaultStatus = visit(*statement->defaultBody, true, statement->defaultAssociatedScope);
         mergedStates = symbolAssignmentStates;
-        if (defaultStatus == FlowStatus::FallsThrough) { allCasesTerminate = false; }
+
+        if (defaultStatus == FlowStatus::NoReturn) { hasNoReturnCase = true; }
+        if (defaultStatus == FlowStatus::FallsThrough) {
+            allCasesTerminate = false;
+        } else {
+            resultStatus = defaultStatus;
+        }
     } else {
-        // no default means it's possible the switch is skipped
         mergedStates = preSwitchStates;
         allCasesTerminate = false;
     }
+
     for (const auto& caseClause : statement->cases) {
         symbolAssignmentStates = preSwitchStates;
         const FlowStatus caseStatus = visit(caseClause.body, true, caseClause.associatedScope);
         mergeStates(mergedStates, symbolAssignmentStates);
 
-        if (caseStatus == FlowStatus::FallsThrough) { allCasesTerminate = false; }
+        if (caseStatus == FlowStatus::NoReturn) { hasNoReturnCase = true; }
+
+        if (caseStatus == FlowStatus::FallsThrough) {
+            allCasesTerminate = false;
+        } else if (allCasesTerminate) {
+            if (caseStatus == FlowStatus::NoReturn) {
+                resultStatus = FlowStatus::NoReturn;
+            } else if (!resultStatus.has_value()) {
+                resultStatus = caseStatus;
+            }
+        }
     }
 
-    // If there is no default, merge preSwitchStates to account for the path where no case matches
     if (!hasDefault) { mergeStates(mergedStates, preSwitchStates); }
 
     symbolAssignmentStates = std::move(mergedStates);
-    return allCasesTerminate ? FlowStatus::Returns : FlowStatus::FallsThrough;
+
+    if (!allCasesTerminate || !resultStatus.has_value()) { return FlowStatus::FallsThrough; }
+
+    return hasNoReturnCase ? FlowStatus::NoReturn : *resultStatus;
 }
 
 FlowStatus ControlFlowAnalyzer::visit(const ast::VariableDeclarationStatement* statement) noexcept {

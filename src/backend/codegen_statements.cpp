@@ -186,6 +186,10 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
 
     auto* llvmFunction = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, linkName, module.get());
 
+    if (ast::getAttribute(statement, ast::AttributeKind::Noreturn) != nullptr) {
+        llvmFunction->addFnAttr(llvm::Attribute::NoReturn);
+    }
+
     if (!statement->body.has_value()) {
         // this is an extern declaration so there's no body
         currentFunctionSemanticReturnType = oldFunctionSemanticReturnType;

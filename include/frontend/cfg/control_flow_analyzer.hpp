@@ -21,7 +21,8 @@ enum class FlowStatus : std::int8_t {
     Returns = 1,
     Breaks = 2,
     ContinuesLoop = 3,
-    InfiniteLoop = 4
+    InfiniteLoop = 4,
+    NoReturn = 5,
 };
 
 enum class AssignmentState : std::int8_t {
@@ -64,6 +65,7 @@ class ControlFlowAnalyzer final : public _flow_base_t {
     AssignmentState getAssignmentState(const semantic::Symbol& symbol) const noexcept;
 
     void setAssignmentState(const semantic::Symbol& symbol, AssignmentState newState) noexcept;
+    bool isNoReturnCall(const ast::FunctionCallExpression* callExpr) noexcept;
 
     template <class... Args>
     void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {

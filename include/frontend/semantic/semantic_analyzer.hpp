@@ -173,17 +173,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const SemanticType* getInstantiatedFunctionType(const ast::FunctionDeclarationStatement* decl);
     const SemanticType* getInstantiatedAggregateType(const ast::AggregateDeclarationStatement* decl);
 
-    static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
-        using enum ast::ExpressionKind;
-        switch (expr->kind) {
-            case GenericInstantiationExpression:
-                return unwrapBaseDeclaration(static_cast<ast::GenericInstantiationExpression*>(expr)->identifier);
-            case ScopeResolutionExpression:
-                return unwrapBaseDeclaration(static_cast<ast::ScopeResolutionExpression*>(expr)->element);
-            default: return expr;
-        }
-    }
-
     // Other helpers
     bool isMutableExpression(const ast::Expression* expr) const;
     const Symbol* resolveTypeSymbol(const ast::Type* typeNode);
@@ -200,6 +189,19 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     template <class... Args>
     static void logWarning(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {
         logging::logWarning(node->line, node->column, message, std::forward<Args>(args)...);
+    }
+
+   public:
+    
+    static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
+        using enum ast::ExpressionKind;
+        switch (expr->kind) {
+            case GenericInstantiationExpression:
+                return unwrapBaseDeclaration(static_cast<ast::GenericInstantiationExpression*>(expr)->identifier);
+            case ScopeResolutionExpression:
+                return unwrapBaseDeclaration(static_cast<ast::ScopeResolutionExpression*>(expr)->element);
+            default: return expr;
+        }
     }
 
    protected:

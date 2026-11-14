@@ -481,6 +481,39 @@ bool testForEachLoopCodegen() {
     return validateIRContains(source, {"sumArray", "foreach_cond", "foreach_body", "icmp ult"}, __func__);
 }
 
+bool testFieldAlignmentCodegen() {
+    const std::string source = R"(
+        aggregate Aligned {
+            blah: int32;
+            @align(16) alignedField: int32;
+            normalField: int32;
+        }
+        func makeAligned() -> Aligned {
+            return Aligned{ blah = 0, alignedField = 1, normalField = 2 };
+        }
+    )";
+    // Check that padding array types ([12 x i8]) are injected to achieve 16-byte alignment
+    return validateIRContains(source, {"Aligned", "i8"}, __func__);
+}
+
+bool testNoReturnCodegen() {
+    const std::string source = R"(
+        @noreturn
+        @extern
+        func exit(code: int);
+
+        @noreturn
+        func panic(code: int32) {
+            exit(code);
+        }
+        func triggerPanic() {
+            panic(42);
+        }
+    )";
+    // Check the 'noreturn' function attribute and the 'unreachable' terminator at the call site
+    return validateIRContains(source, {"noreturn", "unreachable"}, __func__);
+}
+
 }  // namespace
 }  // namespace codegen_tests
 
@@ -515,6 +548,8 @@ void TestRunner::runCodeGenerationTests() {
     runTest("Codegen: Slice Length and Numeric Access", codegen_tests::testSliceLengthAndNumericAccessCodeGen);
     runTest("Codegen: Chained Comparison", codegen_tests::testChainedComparisonCodeGen);
     runTest("Codegen: ForEach Loops", codegen_tests::testForEachLoopCodegen);
+    runTest("Codegen: Field-Level Alignment Padding", codegen_tests::testFieldAlignmentCodegen);
+    runTest("Codegen: NoReturn Functions", codegen_tests::testNoReturnCodegen);
 }
 
 }  // namespace Manganese::tests

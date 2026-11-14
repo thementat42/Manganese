@@ -340,7 +340,20 @@ namespace Manganese::codegen {
         calleeValue = visit(expression->callee);
     }
 
-    return builder->CreateCall(functionType, calleeValue, argumentValues, "call_tmp");
+    std::string_view callName = functionType->getReturnType()->isVoidTy() ? "" : "call_tmp";
+
+    llvm::Value* call = builder->CreateCall(functionType, calleeValue, argumentValues, callName);
+
+    bool isNoReturn = false;
+    if (baseDeclaration != nullptr) {
+        isNoReturn = ast::getAttribute(baseDeclaration, ast::AttributeKind::Noreturn) != nullptr;
+    } else if (auto* fn = llvm::dyn_cast<llvm::Function>(calleeValue)) {
+        isNoReturn = fn->doesNotReturn();
+    }
+
+    if (isNoReturn) { builder->CreateUnreachable(); }
+
+    return call;
 }
 
 auto IRGenerator::visit(const ast::GenericInstantiationExpression* expression) -> exprvisit_t {

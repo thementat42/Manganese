@@ -206,6 +206,35 @@ bool testForEachLoopAssignmentSafety() {
     return analyzeControlFlow(invalid, false, __func__);
 }
 
+bool testNoReturnFunction() {
+    const std::string valid = R"(
+        @noreturn
+        @extern
+        func exit(code: int);
+
+        @noreturn
+        func fatalError() {
+            exit(1);
+        }
+    )";
+
+    const std::string invalid = R"(
+        @noreturn
+        func badNoreturn() -> int32 {
+            return 42;
+        }
+    )";
+
+    const std::string invalid2 = R"(
+        @noreturn
+        func fallsThrough() {
+            let x = 10;
+        }
+    )";
+    return analyzeControlFlow(invalid, false, __func__) && analyzeControlFlow(invalid2, false, __func__)
+        && analyzeControlFlow(valid, true, __func__);
+}
+
 }  // namespace
 }  // namespace control_flow_tests
 
@@ -216,7 +245,7 @@ void TestRunner::runControlFlowAnalyzerTests() {
 
     runTest("Control Flow: Unreachable Code", control_flow_tests::testUnreachableCode);
     runTest("Control Flow: Missing Return Paths", control_flow_tests::testMissingReturnPaths);
-    runTest("Control Flow: Valid Branching Returns", control_flow_tests::testValidBranchingReturns);
+runTest("Control Flow: Valid Branching Returns", control_flow_tests::testValidBranchingReturns);
     runTest("Control Flow: Partial Return Branching", control_flow_tests::testPartialReturnBranching);
     runTest("Control Flow: File", control_flow_tests::testControlFlowFromFile);
 
@@ -229,6 +258,7 @@ void TestRunner::runControlFlowAnalyzerTests() {
     runTest("Control Flow: Explicit Uninitialized Keyword", control_flow_tests::testExplicitUninitializedKeyword);
     runTest("Control Flow: Nested If-Else Definite Initialization", control_flow_tests::testNestedIfInitialization);
     runTest("Control Flow: ForEach Loop Assignment Safety", control_flow_tests::testForEachLoopAssignmentSafety);
+    runTest("Control Flow: NoReturn Function", control_flow_tests::testNoReturnFunction);
 }
 
 }  // namespace Manganese::tests
