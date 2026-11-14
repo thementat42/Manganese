@@ -192,7 +192,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     }
 
    public:
-    
     static ast::Expression* unwrapBaseDeclaration(ast::Expression* expr) {
         using enum ast::ExpressionKind;
         switch (expr->kind) {

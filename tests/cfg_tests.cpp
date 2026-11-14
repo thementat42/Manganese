@@ -245,7 +245,7 @@ void TestRunner::runControlFlowAnalyzerTests() {
 
     runTest("Control Flow: Unreachable Code", control_flow_tests::testUnreachableCode);
     runTest("Control Flow: Missing Return Paths", control_flow_tests::testMissingReturnPaths);
-runTest("Control Flow: Valid Branching Returns", control_flow_tests::testValidBranchingReturns);
+    runTest("Control Flow: Valid Branching Returns", control_flow_tests::testValidBranchingReturns);
     runTest("Control Flow: Partial Return Branching", control_flow_tests::testPartialReturnBranching);
     runTest("Control Flow: File", control_flow_tests::testControlFlowFromFile);
 
