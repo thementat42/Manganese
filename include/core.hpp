@@ -8,7 +8,9 @@
 #include <string>
 #include <utility>  // C++ 23 for unreachable() and its associated feature macro
 
-//~ Build type
+namespace Manganese {
+
+//~ Macros
 
 #ifndef MN_DEBUG  // Defined by CMake (see CMakeLists.txt) -- if for some reason it doesn't exist, use NDEBUG as a
                   // fallback
@@ -22,6 +24,56 @@
 #ifndef DISCARD
 #define DISCARD(value) (static_cast<void>((value)))  // Explicitly discard a value
 #endif  // DISCARD
+
+#define BETWEEN(c, low, high) (((low) <= (c)) && ((c) <= (high)))
+
+#ifndef MN_STRINGIFY_HELPER
+#define MN_STRINGIFY_HELPER(x) #x
+#endif
+
+#ifndef MN_STRINGIFY
+#define MN_STRINGIFY(x) MN_STRINGIFY_HELPER(x)
+#endif  // MN_STRINGIFY
+
+#if MN_DEBUG
+#define ASSERT_UNREACHABLE(message)          panic((message), __FILE__, __LINE__, __func__)
+#define ASSERT_UNREACHABLE_FMT(message, ...) ASSERT_UNREACHABLE(std::format(message __VA_OPT__(, ) __VA_ARGS__))
+#else
+#define ASSERT_UNREACHABLE(message)          manganese_unreachable()
+#define ASSERT_UNREACHABLE_FMT(message, ...) manganese_unreachable()
+#endif  // MN_DEBUG
+
+#ifndef MN_BEGIN_C_LINKAGE
+#ifdef __cplusplus
+#define MN_BEGIN_C_LINKAGE extern "C" {
+#else
+#define MN_BEGIN_C_LINKAGE
+#endif
+#endif
+
+#ifndef MN_END_C_LINKAGE
+#ifdef __cplusplus
+#define MN_END_C_LINKAGE }
+#else
+#define MN_END_C_LINKAGE
+#endif
+#endif
+
+//~ Types
+
+enum class [[nodiscard]] Result : bool {
+    Failure,
+    Success
+};
+
+enum class [[nodiscard]] ResolutionStatus : std::int8_t {
+    Failure = -1,
+    InProgress = 0,
+    Success = 1,
+    NotStarted = 2,
+};
+
+//~ Functions
 
 [[noreturn]] inline void manganese_unreachable(int /*unused*/) {
     *(static_cast<volatile int*>(nullptr)) = 0;  // still invokes UB (and should crash on most platforms)
@@ -62,50 +114,6 @@
     panic(message.c_str(), file, line, func);
 }
 
-#define BETWEEN(c, low, high) (((low) <= (c)) && ((c) <= (high)))
-
-#ifndef MN_STRINGIFY_HELPER
-#define MN_STRINGIFY_HELPER(x) #x
-#endif
-
-#ifndef MN_STRINGIFY
-#define MN_STRINGIFY(x) MN_STRINGIFY_HELPER(x)
-#endif  // MN_STRINGIFY
-
-#if MN_DEBUG
-#define ASSERT_UNREACHABLE(message)          panic((message), __FILE__, __LINE__, __func__)
-#define ASSERT_UNREACHABLE_FMT(message, ...) ASSERT_UNREACHABLE(std::format(message __VA_OPT__(, ) __VA_ARGS__))
-#else
-#define ASSERT_UNREACHABLE(message)          manganese_unreachable()
-#define ASSERT_UNREACHABLE_FMT(message, ...) manganese_unreachable()
-#endif  // MN_DEBUG
-
-#ifndef MN_BEGIN_C_LINKAGE
-#ifdef __cplusplus
-#define MN_BEGIN_C_LINKAGE extern "C" {
-#else
-#define MN_BEGIN_C_LINKAGE
-#endif
-#endif
-
-#ifndef MN_END_C_LINKAGE
-#ifdef __cplusplus
-#define MN_END_C_LINKAGE }
-#else
-#define MN_END_C_LINKAGE
-#endif
-#endif
-
-enum class [[nodiscard]] Result : bool {
-    Failure,
-    Success
-};
-
-enum class [[nodiscard]] ResolutionStatus : std::int8_t {
-    Failure = -1,
-    InProgress = 0,
-    Success = 1,
-    NotStarted = 2,
-};
+}  // namespace Manganese
 
 #endif  // MANGANESE_INCLUDE_CORE_HPP
