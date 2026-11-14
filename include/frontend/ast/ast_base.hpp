@@ -39,6 +39,8 @@ struct Expression;
 struct Statement;
 struct Type;
 struct Declaration;
+struct Attribute;
+using Block = utils::Slice<Statement*>;
 
 enum class StatementKind : std::uint8_t {
 #define STMT_NODE(name) name,
@@ -96,7 +98,7 @@ enum class PrimitiveType : std::uint8_t {
     not_primitive,
 };
 
-enum class Visibility : std::uint8_t {
+enum class Visibility : bool {
     Public,
     Private,
 };
@@ -118,7 +120,6 @@ const Attribute* getAttribute(const Statement* statement, AttributeKind kind);
 
 AttributeKind attributeKindFromString(std::string_view name);
 
-using Block = utils::Slice<Statement*>;
 
 struct ASTNode {
     std::size_t line = 0, column = 0;

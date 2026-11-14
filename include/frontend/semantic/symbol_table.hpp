@@ -9,8 +9,7 @@
 #include <io/logging.hpp>
 #include <unordered_map>
 #include <utils/chunk_allocator.hpp>
-#include <utils/resolution_status.hpp>
-#include <utils/result.hpp>
+#include <core.hpp>
 #include <utils/string_interner.hpp>
 #include <vector>
 

@@ -16,7 +16,6 @@
 #include <utility>
 #include <utils/chunk_allocator.hpp>
 #include <utils/enum_matches.hpp>
-#include <utils/result.hpp>
 #include <utils/string_interner.hpp>
 #include <utils/target_info.hpp>
 

@@ -5,7 +5,6 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <utility>
-#include <utils/result.hpp>
 
 namespace Manganese::semantic {
 

@@ -13,7 +13,6 @@
 #include <string_view>
 #include <system_error>
 #include <utility>
-#include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
 
 namespace Manganese::lexer {

@@ -3,7 +3,6 @@
 #include <frontend/ast.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
-#include <utils/result.hpp>
 
 namespace Manganese::semantic {
 

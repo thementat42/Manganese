@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utils/chunk_allocator.hpp>
-#include <utils/resolution_status.hpp>
+#include <core.hpp>
 
 namespace Manganese::parser {
 

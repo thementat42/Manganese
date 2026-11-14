@@ -1,8 +1,8 @@
 #ifndef MANGANESE_TESTS_TESTS_HPP
 #define MANGANESE_TESTS_TESTS_HPP
 
+#include <core.hpp>
 #include <string>
-#include <utils/result.hpp>
 
 namespace Manganese::tests {
 

@@ -2,7 +2,6 @@
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
 #include <utils/target_info.hpp>
 

@@ -5,11 +5,8 @@
 #include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/generics_helpers.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <string>
 #include <utility>
 #include <utils/expression_folding.hpp>
-#include <utils/resolution_status.hpp>
-#include <utils/result.hpp>
 #include <vector>
 
 namespace Manganese::semantic {

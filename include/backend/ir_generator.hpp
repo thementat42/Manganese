@@ -92,6 +92,7 @@ class IRGenerator final : public _irgen_base_t {
 
     stmtvisit_t visit(ast::Block block);
 
+   private:
     // Semantic Type to LLVM Type Conversion
     [[nodiscard]] typevisit_t visitTypeAsValue(const semantic::SemanticType* type);
     [[nodiscard]] typevisit_t visitTypeAsValue(const ast::Type* type);
@@ -106,9 +107,6 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] typevisit_t visit(const semantic::Uninitialized*);
     [[nodiscard]] typevisit_t visit(const semantic::Void*);
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
-    void attachBranchWeights(llvm::Instruction* branchInstruction, utils::Slice<ast::Attribute> attributes);
-    llvm::AllocaInst* createAlignedAlloca(llvm::Type* type, std::string_view name,
-                                          utils::Slice<ast::Attribute> attributes);
 
     // Expression Helpers
     [[nodiscard]] llvm::IntegerType* getLLVMIntegerType(const ast::NumberLiteralExpression* expression) const;
@@ -125,11 +123,15 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] llvm::Value* emitTypeCast(llvm::Value* originalValue, const semantic::SemanticType* fromType,
                                             const semantic::SemanticType* toType);
 
-    // Foreach Loop Helpers
+    // Statement Helpers
     [[nodiscard]] llvm::Value* emitContainerLengthInForeach(const semantic::SemanticType* containerType,
                                                             llvm::Value* containerVal);
     [[nodiscard]] llvm::Value* emitElementAccessInForeach(const semantic::SemanticType* containerType,
                                                           llvm::Value* containerVal, llvm::Value* indexVal);
+
+    void attachBranchWeights(llvm::Instruction* branchInstruction, utils::Slice<ast::Attribute> attributes);
+        llvm::AllocaInst* createAlignedAlloca(llvm::Type* type, std::string_view name,
+                                          utils::Slice<ast::Attribute> attributes);
 };
 
 }  // namespace Manganese::codegen

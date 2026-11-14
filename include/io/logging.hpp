@@ -11,7 +11,7 @@
 #include <vector>
 
 // defined in CMake; if a terminal doesn't support ANSI colour sequences
-// This macro can disable them
+// This macro can disable there
 #if NO_ANSI_COLOURS
 #define ANSI_VAL(val) ""
 #else

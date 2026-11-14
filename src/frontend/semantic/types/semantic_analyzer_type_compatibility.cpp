@@ -8,7 +8,6 @@
 #include <string>
 #include <utility>
 #include <utils/enum_matches.hpp>
-#include <utils/result.hpp>
 #include <utils/type_names.hpp>
 
 namespace Manganese::semantic {

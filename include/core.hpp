@@ -96,4 +96,16 @@
 #endif
 #endif
 
+enum class [[nodiscard]] Result : bool {
+    Failure,
+    Success
+};
+
+enum class [[nodiscard]] ResolutionStatus : std::int8_t {
+    Failure = -1,
+    InProgress = 0,
+    Success = 1,
+    NotStarted = 2,
+};
+
 #endif  // MANGANESE_INCLUDE_CORE_HPP

@@ -6,7 +6,6 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <utils/enum_matches.hpp>
-#include <utils/result.hpp>
 
 namespace Manganese::semantic {
 auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit_t {

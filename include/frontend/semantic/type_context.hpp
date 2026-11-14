@@ -13,7 +13,7 @@
 #include <utility>
 #include <utils/chunk_allocator.hpp>
 #include <utils/enum_matches.hpp>
-#include <utils/resolution_status.hpp>
+#include <core.hpp>
 #include <utils/target_info.hpp>
 #include <vector>
 

@@ -1,3 +1,4 @@
+#include <core.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -7,7 +8,6 @@
 #include <string>
 #include <string_view>
 #include <utility>
-#include <utils/result.hpp>
 
 namespace Manganese::lexer {
 

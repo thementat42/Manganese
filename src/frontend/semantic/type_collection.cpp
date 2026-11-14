@@ -4,8 +4,6 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <utility>
-#include <utils/resolution_status.hpp>
-#include <utils/result.hpp>
 #include <vector>
 
 namespace Manganese::semantic {

@@ -14,7 +14,6 @@
 #include <string>
 #include <string_view>
 #include <utility>
-#include <utils/result.hpp>
 #include <utils/str_to_num.hpp>
 #include <utils/string_interner.hpp>
 

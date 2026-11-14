@@ -4,7 +4,6 @@
 #include <frontend/semantic/symbol_table.hpp>
 #include <io/logging.hpp>
 #include <string>
-#include <utils/resolution_status.hpp>
 
 namespace Manganese::semantic {
 

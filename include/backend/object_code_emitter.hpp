@@ -8,7 +8,6 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include <core.hpp>
-#include <utils/result.hpp>
 #include <utils/target_info.hpp>
 
 namespace Manganese::backend {
