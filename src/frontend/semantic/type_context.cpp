@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
-#include <utils/target_info.hpp>
+#include <utils/meta/target_info.hpp>
 #include <vector>
 
 namespace Manganese::semantic {

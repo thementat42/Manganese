@@ -2,7 +2,7 @@
 #include <core.hpp>
 #include <frontend/ast.hpp>
 #include <frontend/parser.hpp>
-#include <utils/type_names.hpp>
+#include <utils/meta/type_names.hpp>
 
 namespace Manganese::parser {
 

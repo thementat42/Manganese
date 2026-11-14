@@ -3,8 +3,8 @@
 #include <frontend/ast.hpp>
 #include <frontend/lexer.hpp>
 #include <frontend/parser.hpp>
-#include <utils/chunk_allocator.hpp>
-#include <utils/enum_matches.hpp>
+#include <utils/containers/chunk_allocator.hpp>
+#include <utils/meta/enum_matches.hpp>
 #include <vector>
 
 /**

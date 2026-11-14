@@ -5,7 +5,7 @@
 #include <frontend/lexer.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <string>
-#include <utils/string_interner.hpp>
+#include <utils/containers/string_interner.hpp>
 
 // In tests, add extra parentheses around sub expressions to make sure operator precedence works
 #if MN_DEBUG

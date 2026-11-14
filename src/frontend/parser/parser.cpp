@@ -3,8 +3,8 @@
 #include <frontend/parser.hpp>
 #include <io/logging.hpp>
 #include <string>
-#include <utils/chunk_allocator.hpp>
-#include <utils/enum_matches.hpp>
+#include <utils/containers/chunk_allocator.hpp>
+#include <utils/meta/enum_matches.hpp>
 #include <vector>
 
 namespace Manganese::parser {

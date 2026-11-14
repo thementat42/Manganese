@@ -14,10 +14,10 @@
 #include <io/logging.hpp>
 #include <string>
 #include <utility>
-#include <utils/chunk_allocator.hpp>
-#include <utils/enum_matches.hpp>
-#include <utils/string_interner.hpp>
-#include <utils/target_info.hpp>
+#include <utils/containers/chunk_allocator.hpp>
+#include <utils/meta/enum_matches.hpp>
+#include <utils/containers/string_interner.hpp>
+#include <utils/meta/target_info.hpp>
 
 namespace Manganese {
 

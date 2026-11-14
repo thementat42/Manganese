@@ -11,8 +11,8 @@
 #include <ostream>
 #include <string>
 #include <string_view>
-#include <utils/string_interner.hpp>
-#include <utils/type_names.hpp>
+#include <utils/containers/string_interner.hpp>
+#include <utils/meta/type_names.hpp>
 
 namespace Manganese::ast {
 

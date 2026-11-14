@@ -5,9 +5,9 @@
 #include <frontend/ast/ast_base.hpp>
 #include <frontend/lexer/token.hpp>
 #include <optional>
-#include <utils/named_parameter.hpp>
-#include <utils/slice.hpp>
-#include <utils/string_interner.hpp>
+#include <utils/meta/named_parameter.hpp>
+#include <utils/containers/slice.hpp>
+#include <utils/containers/string_interner.hpp>
 
 namespace Manganese::ast {
 

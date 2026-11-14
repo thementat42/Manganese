@@ -6,8 +6,8 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
-#include <utils/enum_matches.hpp>
-#include <utils/string_interner.hpp>
+#include <utils/meta/enum_matches.hpp>
+#include <utils/containers/string_interner.hpp>
 
 namespace Manganese::lexer {
 

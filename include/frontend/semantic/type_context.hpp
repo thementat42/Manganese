@@ -11,10 +11,10 @@
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
-#include <utils/chunk_allocator.hpp>
-#include <utils/enum_matches.hpp>
+#include <utils/containers/chunk_allocator.hpp>
+#include <utils/meta/enum_matches.hpp>
 #include <core.hpp>
-#include <utils/target_info.hpp>
+#include <utils/meta/target_info.hpp>
 #include <vector>
 
 namespace Manganese::semantic {

@@ -3,7 +3,7 @@
 
 #include <io/logging.hpp>
 #include <string_view>
-#include <utils/target_info.hpp>
+#include <utils/meta/target_info.hpp>
 
 namespace Manganese::utils {
 TargetInfo TargetInfo::fromTriple(std::string_view tripleString) {

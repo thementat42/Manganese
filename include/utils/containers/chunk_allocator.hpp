@@ -9,7 +9,7 @@
 #include <ranges>
 #include <type_traits>
 #include <utility>
-#include <utils/slice.hpp>
+#include <utils/containers/slice.hpp>
 #include <vector>
 
 namespace Manganese::utils {

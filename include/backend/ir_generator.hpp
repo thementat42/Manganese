@@ -15,9 +15,9 @@
 #include <memory>
 #include <ostream>
 #include <string_view>
-#include <utils/string_interner.hpp>
-#include <utils/target_info.hpp>
-#include <utils/tiny_stack.hpp>
+#include <utils/containers/string_interner.hpp>
+#include <utils/meta/target_info.hpp>
+#include <utils/containers/tiny_stack.hpp>
 
 namespace Manganese::codegen {
 

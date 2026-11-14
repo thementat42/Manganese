@@ -3,9 +3,9 @@
 
 #include <frontend/ast.hpp>
 #include <frontend/semantic/type_context.hpp>
-#include <utils/number_types.hpp>
+#include <utils/meta/number_types.hpp>
 #include <utils/str_to_num.hpp>
-#include <utils/string_interner.hpp>
+#include <utils/containers/string_interner.hpp>
 
 namespace Manganese::utils {
 

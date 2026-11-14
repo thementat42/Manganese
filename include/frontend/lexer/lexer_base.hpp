@@ -15,7 +15,7 @@
 #include <string_view>
 #include <utility>
 #include <utils/str_to_num.hpp>
-#include <utils/string_interner.hpp>
+#include <utils/containers/string_interner.hpp>
 
 namespace Manganese::lexer {
 

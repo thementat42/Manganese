@@ -4,7 +4,7 @@
 #include <frontend/semantic/clone_context.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <optional>
-#include <utils/string_interner.hpp>
+#include <utils/containers/string_interner.hpp>
 #include <vector>
 
 namespace Manganese::ast {

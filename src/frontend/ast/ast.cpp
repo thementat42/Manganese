@@ -5,8 +5,8 @@
 #include <frontend/lexer/token.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <utils/str_to_num.hpp>
-#include <utils/target_info.hpp>
-#include <utils/type_names.hpp>
+#include <utils/meta/target_info.hpp>
+#include <utils/meta/type_names.hpp>
 
 namespace Manganese::ast {
 

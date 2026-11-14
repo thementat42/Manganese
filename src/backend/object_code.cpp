@@ -6,7 +6,7 @@
 
 #include <backend/object_code_emitter.hpp>
 #include <core.hpp>
-#include <utils/target_info.hpp>
+#include <utils/meta/target_info.hpp>
 
 namespace Manganese::backend {
 

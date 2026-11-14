@@ -6,8 +6,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <utils/chunk_allocator.hpp>
-#include <utils/target_info.hpp>
+#include <utils/containers/chunk_allocator.hpp>
+#include <utils/meta/target_info.hpp>
 
 #include "tests.hpp"
 

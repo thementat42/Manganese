@@ -14,7 +14,7 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
-#include <utils/chunk_allocator.hpp>
+#include <utils/containers/chunk_allocator.hpp>
 #include <vector>
 
 namespace Manganese::parser {

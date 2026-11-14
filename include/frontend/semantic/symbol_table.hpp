@@ -8,9 +8,9 @@
 #include <frontend/semantic/type_context.hpp>
 #include <io/logging.hpp>
 #include <unordered_map>
-#include <utils/chunk_allocator.hpp>
+#include <utils/containers/chunk_allocator.hpp>
 #include <core.hpp>
-#include <utils/string_interner.hpp>
+#include <utils/containers/string_interner.hpp>
 #include <vector>
 
 namespace Manganese::semantic {

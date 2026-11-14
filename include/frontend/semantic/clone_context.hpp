@@ -3,8 +3,8 @@
 
 #include <frontend/semantic/type_context.hpp>
 #include <unordered_map>
-#include <utils/chunk_allocator.hpp>
-#include <utils/string_interner.hpp>
+#include <utils/containers/chunk_allocator.hpp>
+#include <utils/containers/string_interner.hpp>
 
 namespace Manganese {
 namespace ast {

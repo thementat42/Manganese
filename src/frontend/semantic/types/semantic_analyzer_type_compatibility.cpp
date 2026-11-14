@@ -7,8 +7,8 @@
 #include <frontend/semantic/type_context.hpp>
 #include <string>
 #include <utility>
-#include <utils/enum_matches.hpp>
-#include <utils/type_names.hpp>
+#include <utils/meta/enum_matches.hpp>
+#include <utils/meta/type_names.hpp>
 
 namespace Manganese::semantic {
 

@@ -9,9 +9,9 @@
 #include <frontend/parser.hpp>
 #include <frontend/semantic.hpp>
 #include <io/logging.hpp>
-#include <utils/chunk_allocator.hpp>
-#include <utils/string_interner.hpp>
-#include <utils/target_info.hpp>
+#include <utils/containers/chunk_allocator.hpp>
+#include <utils/containers/string_interner.hpp>
+#include <utils/meta/target_info.hpp>
 #include <vector>
 
 

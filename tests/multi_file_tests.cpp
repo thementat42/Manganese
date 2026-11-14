@@ -2,8 +2,8 @@
 #include <frontend/parser.hpp>
 #include <iostream>
 #include <string>
-#include <utils/chunk_allocator.hpp>
-#include <utils/string_interner.hpp>
+#include <utils/containers/chunk_allocator.hpp>
+#include <utils/containers/string_interner.hpp>
 #include <vector>
 
 #include "tests.hpp"

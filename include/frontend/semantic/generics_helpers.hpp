@@ -7,8 +7,8 @@
 #include <frontend/semantic/type_context.hpp>
 #include <functional>
 #include <unordered_map>
-#include <utils/slice.hpp>
-#include <utils/string_interner.hpp>
+#include <utils/containers/slice.hpp>
+#include <utils/containers/string_interner.hpp>
 
 
 namespace Manganese::semantic {

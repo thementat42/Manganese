@@ -3,7 +3,7 @@
 #include <frontend/semantic/semantic_analyzer.hpp>
 #include <frontend/semantic/type_context.hpp>
 #include <utils/str_to_num.hpp>
-#include <utils/target_info.hpp>
+#include <utils/meta/target_info.hpp>
 
 namespace Manganese::semantic {
 
