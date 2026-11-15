@@ -2,9 +2,10 @@
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_TYPE_CONTEXT_HPP 1
 
 #include <array>
+#include <ast.hpp>
+#include <core.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <ast.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -13,9 +14,9 @@
 #include <utility>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/meta/enum_matches.hpp>
-#include <core.hpp>
 #include <utils/meta/target_info.hpp>
 #include <vector>
+
 
 namespace Manganese::semantic {
 
@@ -61,7 +62,9 @@ struct SemanticType {
     constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
     constexpr bool isSlice() const noexcept { return kind == SemanticTypeKind::Slice; }
     constexpr bool isUninitialized() const noexcept { return kind == SemanticTypeKind::Uninitialized; }
-    constexpr bool isVoid() const noexcept { return kind == SemanticTypeKind::Void; }
+    constexpr bool isVoid() const noexcept {
+        return kind == SemanticTypeKind::Void || (isPrimitive() && primitiveType == ast::PrimitiveType::void_type);
+    }
 
     constexpr bool isBoolean() const noexcept { return isPrimitive() && primitiveType == ast::PrimitiveType::boolean; }
 

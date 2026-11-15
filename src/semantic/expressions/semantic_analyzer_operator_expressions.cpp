@@ -1,6 +1,6 @@
+#include <ast.hpp>
 #include <core.hpp>
 #include <format>
-#include <ast.hpp>
 #include <lexer/token.hpp>
 #include <semantic/semantic_analyzer.hpp>
 #include <semantic/symbol_table.hpp>
@@ -276,7 +276,14 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
                 expression->semanticType = typeContext.getPoison();
                 return exprvisit_t::Failure;
             }
-            expression->semanticType = static_cast<const Pointer*>(expression->right->semanticType)->baseType;
+            const auto* ptrType = static_cast<const Pointer*>(expression->right->semanticType);
+
+            if (ptrType->baseType->isVoid()) {
+                logError(expression, "Cannot dereference 'ptr void' without an explicit cast");
+                return exprvisit_t::Failure;
+            }
+
+            expression->semanticType = ptrType->baseType;
         } break;
 
         case Not: {
@@ -359,6 +366,9 @@ auto SemanticAnalyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t
     } else if (fromType->isEnum() && toType->isInteger()) {
         isValidCast = true;
     } else if (fromType->isInteger() && toType->isEnum()) {
+        isValidCast = true;
+    } else if (fromType->isPointer() && toType->isPointer()) {
+        // Allow explicit casting between pointers (especially for void* interop)
         isValidCast = true;
     }
 

@@ -219,6 +219,11 @@ typeCompatibilityResult SemanticAnalyzer::checkPointerCompatibility(const Semant
     const auto* ptrFrom = static_cast<const Pointer*>(from);
     const auto* ptrTo = static_cast<const Pointer*>(to);
 
+    if (ptrFrom->baseType->isVoid() && !ptrTo->baseType->isVoid()) {
+        return {.result = Compatible_t::Error,
+                .message = conversionError + " (cannot convert an void pointer to a non-void pointer without an explicit cast)."};
+    }
+
     // Making an immutable pointer mutable is not allowed
     if (!ptrFrom->isMutable && ptrTo->isMutable) {
         return {.result = Compatible_t::Error,
