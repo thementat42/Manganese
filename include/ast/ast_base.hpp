@@ -10,7 +10,6 @@
 #include <utils/containers/slice.hpp>
 #include <utils/containers/string_interner.hpp>
 #include <utils/meta/target_info.hpp>
-#include <utils/meta/type_names.hpp>
 
 #if MN_DEBUG || MN_TESTING
 #define MN_AST_DUMP void dump(std::ostream& os, const utils::StringInterner&, std::size_t indent = 0) const override;
@@ -80,22 +79,9 @@ enum class AttributeKind : std::uint8_t {
 };
 
 enum class PrimitiveType : std::uint8_t {
-    int8,
-    uint8,
-    int16,
-    uint16,
-    int32,
-    uint32,
-    int64,
-    uint64,
-    int128,
-    uint128,
-    float32,
-    float64,
-    character,
-    string,
-    boolean,
-    not_primitive,
+#define PRIMITIVE(type, name) type,
+#include <ast/primitives.def>
+#undef PRIMITIVE
 };
 
 enum class Visibility : bool {
@@ -119,7 +105,6 @@ const Attribute* getAttribute(utils::Slice<Attribute> attributes, AttributeKind 
 const Attribute* getAttribute(const Statement* statement, AttributeKind kind);
 
 AttributeKind attributeKindFromString(std::string_view name);
-
 
 struct ASTNode {
     std::size_t line = 0, column = 0;
