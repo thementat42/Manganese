@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <utils/meta/number_types.hpp>
 
-
 namespace Manganese::utils {
 
 enum class Base : std::uint8_t {

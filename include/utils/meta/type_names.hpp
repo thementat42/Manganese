@@ -4,7 +4,6 @@
 #include <core.hpp>
 #include <string_view>
 
-
 namespace Manganese {
 
 #define PRIMITIVE(type, name) constexpr inline std::string_view name##_str = MN_STRINGIFY(name);

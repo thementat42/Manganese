@@ -1,11 +1,11 @@
+#include <ast.hpp>
 #include <bit>
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <ast.hpp>
-#include <semantic.hpp>
 #include <io/logging.hpp>
+#include <semantic.hpp>
 #include <utility>
 #include <utils/expression_folding.hpp>
 #include <vector>

@@ -2,8 +2,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <lexer.hpp>
 #include <io/logging.hpp>
+#include <lexer.hpp>
 #include <optional>
 #include <string>
 #include <string_view>

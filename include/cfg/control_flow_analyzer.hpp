@@ -2,18 +2,17 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_CFG_CONTROL_FLOW_ANALYZER_HPP
 #define MANGANESE_INCLUDE_FRONTEND_CFG_CONTROL_FLOW_ANALYZER_HPP 1
 
-#include <core.hpp>
-#include <cstdint>
 #include <ast.hpp>
 #include <ast/visitor_base.hpp>
+#include <core.hpp>
+#include <cstdint>
+#include <io/logging.hpp>
 #include <parser.hpp>
 #include <semantic.hpp>
-#include <io/logging.hpp>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/containers/string_interner.hpp>
 #include <utils/meta/target_info.hpp>
 #include <vector>
-
 
 namespace Manganese::cfg {
 

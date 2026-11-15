@@ -1,12 +1,12 @@
+#include <ast.hpp>
 #include <cassert>
 #include <core.hpp>
 #include <filesystem>
-#include <ast.hpp>
+#include <fstream>
+#include <iostream>
 #include <parser.hpp>
 #include <semantic/semantic_analyzer.hpp>
 #include <semantic/type_context.hpp>
-#include <fstream>
-#include <iostream>
 #include <string>
 
 #include "tests.hpp"
@@ -981,8 +981,7 @@ bool testVoidPointers() {
         }
     )";
 
-    return analyzeSource(validSource, true, __func__) 
-        && analyzeSource(invalid, false, __func__) 
+    return analyzeSource(validSource, true, __func__) && analyzeSource(invalid, false, __func__)
         && analyzeSource(invalid2, false, __func__);
 }
 

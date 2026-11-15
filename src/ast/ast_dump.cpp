@@ -1,14 +1,14 @@
 
-#if MN_DEBUG || MN_TESTING // dump methods are only for testing
+#if MN_DEBUG || MN_TESTING  // dump methods are only for testing
 
+#include <ast.hpp>
 #include <core.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <ast.hpp>
 #include <lexer.hpp>
-#include <semantic/type_context.hpp>
 #include <ostream>
+#include <semantic/type_context.hpp>
 #include <string>
 #include <string_view>
 #include <utils/containers/string_interner.hpp>

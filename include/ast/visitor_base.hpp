@@ -1,12 +1,12 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_VISITOR_VISITOR_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_VISITOR_VISITOR_BASE_HPP
 
-#include <core.hpp>
-#include <format>
 #include <ast/ast_base.hpp>
 #include <ast/ast_expressions.hpp>
 #include <ast/ast_statements.hpp>
 #include <ast/ast_types.hpp>
+#include <core.hpp>
+#include <format>
 #include <type_traits>
 
 namespace Manganese::ast {

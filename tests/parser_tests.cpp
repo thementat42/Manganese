@@ -2,9 +2,9 @@
 #include <core.hpp>
 #include <cstddef>
 #include <filesystem>
-#include <parser.hpp>
 #include <fstream>
 #include <iostream>
+#include <parser.hpp>
 #include <string>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/containers/string_interner.hpp>

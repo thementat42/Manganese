@@ -123,7 +123,7 @@ namespace Manganese::codegen {
             // needs to be handled by language runtime
             return llvm::StructType::get(*context, {charPointerType, lengthType});
         }
-        case void_type : return builder->getVoidTy();
+        case void_type: return builder->getVoidTy();
         case not_primitive: ASSERT_UNREACHABLE("IRGenerator::getPrimitiveType called on non-primitive semantic type");
     }
     ASSERT_UNREACHABLE("Unknown primitive type in IRGenerator::getPrimitiveType");

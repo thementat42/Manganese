@@ -1,7 +1,7 @@
-#include <core.hpp>
 #include <ast.hpp>
-#include <parser.hpp>
+#include <core.hpp>
 #include <io/logging.hpp>
+#include <parser.hpp>
 #include <string>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/meta/enum_matches.hpp>

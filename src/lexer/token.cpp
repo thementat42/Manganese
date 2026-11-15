@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <format>
-#include <lexer/token.hpp>
 #include <io/logging.hpp>
+#include <lexer/token.hpp>
 #include <string>
 
 namespace Manganese::lexer {

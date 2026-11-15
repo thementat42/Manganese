@@ -1,11 +1,11 @@
 #include <algorithm>
+#include <ast.hpp>
 #include <core.hpp>
 #include <format>
-#include <ast.hpp>
-#include <lexer.hpp>
-#include <parser.hpp>
 #include <io/logging.hpp>
+#include <lexer.hpp>
 #include <optional>
+#include <parser.hpp>
 #include <span>
 #include <string>
 #include <vector>

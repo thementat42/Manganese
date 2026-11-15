@@ -1,8 +1,8 @@
 #include <algorithm>
-#include <core.hpp>
 #include <ast.hpp>
-#include <semantic/symbol_table.hpp>
+#include <core.hpp>
 #include <io/logging.hpp>
+#include <semantic/symbol_table.hpp>
 #include <string>
 
 namespace Manganese::semantic {

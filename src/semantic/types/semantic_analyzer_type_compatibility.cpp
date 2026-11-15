@@ -1,7 +1,7 @@
+#include <ast.hpp>
 #include <core.hpp>
 #include <cstddef>
 #include <format>
-#include <ast.hpp>
 #include <lexer/token.hpp>
 #include <semantic/semantic_analyzer.hpp>
 #include <semantic/type_context.hpp>
@@ -221,7 +221,8 @@ typeCompatibilityResult SemanticAnalyzer::checkPointerCompatibility(const Semant
 
     if (ptrFrom->baseType->isVoid() && !ptrTo->baseType->isVoid()) {
         return {.result = Compatible_t::Error,
-                .message = conversionError + " (cannot convert an void pointer to a non-void pointer without an explicit cast)."};
+                .message = conversionError
+                    + " (cannot convert an void pointer to a non-void pointer without an explicit cast)."};
     }
 
     // Making an immutable pointer mutable is not allowed

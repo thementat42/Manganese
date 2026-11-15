@@ -6,8 +6,8 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
-#include <utils/meta/enum_matches.hpp>
 #include <utils/containers/string_interner.hpp>
+#include <utils/meta/enum_matches.hpp>
 #include <utils/meta/named_parameter.hpp>
 
 namespace Manganese::lexer {
@@ -42,7 +42,7 @@ class Token {
 
    public:
     Token() noexcept = default;
-    Token(TokenType type, utils::StringID lexeme, TokenLine_t line,TokenColumn_t column, bool isInvalid = false) :
+    Token(TokenType type, utils::StringID lexeme, TokenLine_t line, TokenColumn_t column, bool isInvalid = false) :
         _lexeme(lexeme), _line(line.get()), _column(column.get()), _type(type), _isInvalid(isInvalid) {}
     ~Token() noexcept = default;
 

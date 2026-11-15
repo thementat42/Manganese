@@ -4,13 +4,13 @@
 
 #include <backend/ir_generator.hpp>
 #include <backend/optimizations.hpp>
+#include <cfg/control_flow_analyzer.hpp>
 #include <core.hpp>
 #include <filesystem>
-#include <cfg/control_flow_analyzer.hpp>
-#include <parser.hpp>
-#include <semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
+#include <parser.hpp>
+#include <semantic/semantic_analyzer.hpp>
 #include <string>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/containers/string_interner.hpp>
@@ -34,7 +34,7 @@ struct CompilationResult {
 };
 
 CompilationResult generateIR(std::vector<parser::ParsedFile>& parsedFiles,
-                                            semantic::SemanticAnalyzer& semanticAnalyzer) {
+                             semantic::SemanticAnalyzer& semanticAnalyzer) {
     codegen::IRGenerator irGenerator("TestModule", parsedFiles, semanticAnalyzer, interner, utils::getTargetInfo());
     irGenerator.generate();
 
@@ -396,7 +396,8 @@ bool testCodegenFromFile() {
             rso.flush();
             irOutput = tempStr;
 
-            codegen::runOptimizationPasses(module, llvm::OptimizationLevel::O2, utils::getTargetInfo().targetMachine.get());
+            codegen::runOptimizationPasses(module, llvm::OptimizationLevel::O2,
+                                           utils::getTargetInfo().targetMachine.get());
 
             // Log optimized IR
             std::string optTempStr;

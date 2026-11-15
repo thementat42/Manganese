@@ -1,6 +1,6 @@
+#include <ast.hpp>
 #include <core.hpp>
 #include <format>
-#include <ast.hpp>
 #include <lexer.hpp>
 #include <parser.hpp>
 #include <utils/containers/chunk_allocator.hpp>

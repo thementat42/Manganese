@@ -2,8 +2,8 @@
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_LOOKUP_TABLE 1
 
 #include <array>
-#include <cstddef>
 #include <ast.hpp>
+#include <cstddef>
 #include <lexer/token.hpp>
 #include <parser/operators.hpp>
 #include <parser/parser_base.hpp>

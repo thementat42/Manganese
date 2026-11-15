@@ -1,13 +1,13 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_AST_AST_STATEMENTS_HPP
 
-#include <cstddef>
 #include <ast/ast_base.hpp>
+#include <cstddef>
 #include <lexer/token.hpp>
 #include <optional>
-#include <utils/meta/named_parameter.hpp>
 #include <utils/containers/slice.hpp>
 #include <utils/containers/string_interner.hpp>
+#include <utils/meta/named_parameter.hpp>
 
 namespace Manganese::ast {
 

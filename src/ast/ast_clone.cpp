@@ -1,9 +1,9 @@
+#include <ast.hpp>
 #include <concepts>
 #include <core.hpp>
-#include <ast.hpp>
+#include <optional>
 #include <semantic/clone_context.hpp>
 #include <semantic/type_context.hpp>
-#include <optional>
 #include <utils/containers/string_interner.hpp>
 #include <vector>
 

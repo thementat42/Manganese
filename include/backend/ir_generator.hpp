@@ -9,15 +9,15 @@
 
 #include <ast.hpp>
 #include <lexer/token.hpp>
+#include <memory>
+#include <ostream>
 #include <parser.hpp>
 #include <semantic.hpp>
 #include <semantic/type_context.hpp>
-#include <memory>
-#include <ostream>
 #include <string_view>
 #include <utils/containers/string_interner.hpp>
-#include <utils/meta/target_info.hpp>
 #include <utils/containers/tiny_stack.hpp>
+#include <utils/meta/target_info.hpp>
 
 namespace Manganese::codegen {
 
@@ -130,7 +130,7 @@ class IRGenerator final : public _irgen_base_t {
                                                           llvm::Value* containerVal, llvm::Value* indexVal);
 
     void attachBranchWeights(llvm::Instruction* branchInstruction, utils::Slice<ast::Attribute> attributes);
-        llvm::AllocaInst* createAlignedAlloca(llvm::Type* type, std::string_view name,
+    llvm::AllocaInst* createAlignedAlloca(llvm::Type* type, std::string_view name,
                                           utils::Slice<ast::Attribute> attributes);
 };
 

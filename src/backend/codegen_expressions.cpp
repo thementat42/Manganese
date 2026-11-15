@@ -10,12 +10,12 @@
 #include <llvm/IR/Value.h>
 
 #include <array>
+#include <ast.hpp>
 #include <backend/ir_generator.hpp>
 #include <core.hpp>
 #include <format>
-#include <ast.hpp>
-#include <semantic.hpp>
 #include <runtime/string.hpp>
+#include <semantic.hpp>
 
 namespace Manganese::codegen {
 

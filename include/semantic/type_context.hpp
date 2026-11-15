@@ -17,7 +17,6 @@
 #include <utils/meta/target_info.hpp>
 #include <vector>
 
-
 namespace Manganese::semantic {
 
 struct SemanticType;

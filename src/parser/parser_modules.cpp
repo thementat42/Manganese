@@ -1,13 +1,13 @@
 #include <algorithm>
+#include <core.hpp>
 #include <execution>
-#include <parser.hpp>
 #include <io/logging.hpp>
 #include <mutex>
+#include <parser.hpp>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utils/containers/chunk_allocator.hpp>
-#include <core.hpp>
 
 namespace Manganese::parser {
 

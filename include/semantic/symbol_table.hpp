@@ -1,15 +1,15 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SYMBOL_TABLE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SYMBOL_TABLE_HPP
 
+#include <ast.hpp>
+#include <core.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <ast.hpp>
-#include <semantic/type_context.hpp>
 #include <io/logging.hpp>
+#include <semantic/type_context.hpp>
 #include <unordered_map>
 #include <utils/containers/chunk_allocator.hpp>
-#include <core.hpp>
 #include <utils/containers/string_interner.hpp>
 #include <vector>
 

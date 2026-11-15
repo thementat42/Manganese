@@ -1,9 +1,9 @@
 #include <cassert>
 #include <filesystem>
 #include <format>
-#include <lexer.hpp>
 #include <io/logging.hpp>
 #include <iostream>
+#include <lexer.hpp>
 #include <stdexcept>
 #include <string>
 #include <string_view>

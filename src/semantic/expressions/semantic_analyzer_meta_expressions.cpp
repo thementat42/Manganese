@@ -1,10 +1,9 @@
-#include <core.hpp>
 #include <ast.hpp>
+#include <core.hpp>
 #include <lexer/token.hpp>
 #include <semantic/semantic_analyzer.hpp>
 #include <semantic/symbol_table.hpp>
 #include <semantic/type_context.hpp>
-#include <vector>
 
 namespace Manganese::semantic {
 

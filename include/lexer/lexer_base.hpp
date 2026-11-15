@@ -6,16 +6,16 @@
 #include <cstdint>
 #include <deque>
 #include <format>
-#include <lexer/token.hpp>
 #include <io/logging.hpp>
 #include <io/reader.hpp>
+#include <lexer/token.hpp>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
-#include <utils/str_to_num.hpp>
 #include <utils/containers/string_interner.hpp>
+#include <utils/str_to_num.hpp>
 
 namespace Manganese::lexer {
 

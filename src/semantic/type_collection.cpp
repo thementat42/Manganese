@@ -1,6 +1,6 @@
+#include <ast.hpp>
 #include <core.hpp>
 #include <format>
-#include <ast.hpp>
 #include <semantic/semantic_analyzer.hpp>
 #include <semantic/type_context.hpp>
 #include <utility>

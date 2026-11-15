@@ -4,10 +4,10 @@
 #include <llvm/IR/Metadata.h>
 #include <llvm/Support/raw_os_ostream.h>
 
+#include <ast.hpp>
 #include <backend/ir_generator.hpp>
 #include <core.hpp>
 #include <format>
-#include <ast.hpp>
 #include <semantic.hpp>
 #include <semantic/type_context.hpp>
 #include <utils/str_to_num.hpp>

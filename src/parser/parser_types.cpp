@@ -4,7 +4,6 @@
 #include <parser.hpp>
 #include <utils/meta/type_names.hpp>
 
-
 namespace Manganese::parser {
 
 ast::Type* Parser::parseType(Precedence precedence) {
@@ -114,9 +113,9 @@ ast::Type* Parser::parseIdentifierType() {
     const std::string_view lexeme = interner.get_view(lexemeId);
     ast::PrimitiveType prim_t = not_primitive;
 
-#define PRIMITIVE(type, name)           \
+#define PRIMITIVE(type, name)   \
     if (lexeme == name##_str) { \
-        prim_t = (type);                \
+        prim_t = (type);        \
     } else
 
 #include <ast/primitives.def>

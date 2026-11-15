@@ -1,14 +1,14 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 #define MANGANESE_INCLUDE_FRONTEND_PARSER_PARSER_BASE_HPP
 
+#include <ast.hpp>
 #include <concepts>
 #include <cstddef>
 #include <format>
-#include <ast.hpp>
-#include <lexer.hpp>
-#include <parser/operators.hpp>
 #include <io/logging.hpp>
+#include <lexer.hpp>
 #include <optional>
+#include <parser/operators.hpp>
 #include <span>
 #include <string>
 #include <string_view>

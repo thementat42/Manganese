@@ -1,22 +1,22 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_ANALYZER_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_SEMANTIC_ANALYZER_HPP
 
+#include <ast.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <ast.hpp>
+#include <io/logging.hpp>
 #include <lexer.hpp>
 #include <lexer/token.hpp>
 #include <parser.hpp>
 #include <semantic/generics_helpers.hpp>
 #include <semantic/symbol_table.hpp>
 #include <semantic/type_context.hpp>
-#include <io/logging.hpp>
 #include <string>
 #include <utility>
 #include <utils/containers/chunk_allocator.hpp>
-#include <utils/meta/enum_matches.hpp>
 #include <utils/containers/string_interner.hpp>
+#include <utils/meta/enum_matches.hpp>
 #include <utils/meta/target_info.hpp>
 
 namespace Manganese {

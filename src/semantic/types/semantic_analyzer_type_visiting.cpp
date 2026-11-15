@@ -1,6 +1,6 @@
+#include <ast.hpp>
 #include <core.hpp>
 #include <cstddef>
-#include <ast.hpp>
 #include <semantic.hpp>
 #include <semantic/clone_context.hpp>
 #include <semantic/symbol_table.hpp>

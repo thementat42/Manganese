@@ -1,7 +1,7 @@
+#include <ast.hpp>
 #include <concepts>
 #include <cstddef>
 #include <format>
-#include <ast.hpp>
 #include <lexer.hpp>
 #include <semantic/type_context.hpp>
 #include <string>

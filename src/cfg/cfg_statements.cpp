@@ -1,6 +1,6 @@
-#include <format>
 #include <ast.hpp>
 #include <cfg/control_flow_analyzer.hpp>
+#include <format>
 #include <semantic/symbol_table.hpp>
 #include <utils/expression_folding.hpp>
 

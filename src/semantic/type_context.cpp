@@ -1,10 +1,10 @@
 #include <algorithm>
+#include <ast/ast_base.hpp>
 #include <core.hpp>
 #include <cstddef>
 #include <format>
-#include <ast/ast_base.hpp>
-#include <semantic.hpp>
 #include <functional>
+#include <semantic.hpp>
 #include <string>
 #include <string_view>
 #include <utility>

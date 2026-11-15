@@ -3,9 +3,9 @@
 
 #include <ast/ast_base.hpp>
 #include <lexer/token.hpp>
-#include <utils/meta/named_parameter.hpp>
 #include <utils/containers/slice.hpp>
 #include <utils/containers/string_interner.hpp>
+#include <utils/meta/named_parameter.hpp>
 
 namespace Manganese::ast {
 struct AggregateType final : public Type {

@@ -1,10 +1,10 @@
+#include <cfg/control_flow_analyzer.hpp>
 #include <core.hpp>
 #include <filesystem>
-#include <cfg/control_flow_analyzer.hpp>
-#include <parser.hpp>
-#include <semantic/semantic_analyzer.hpp>
 #include <fstream>
 #include <iostream>
+#include <parser.hpp>
+#include <semantic/semantic_analyzer.hpp>
 #include <string>
 #include <utils/containers/chunk_allocator.hpp>
 #include <utils/meta/target_info.hpp>

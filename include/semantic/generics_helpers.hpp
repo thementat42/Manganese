@@ -1,15 +1,14 @@
 #ifndef MANGANESE_INCLUDE_FRONTEND_SEMANTIC_GENERICS_HELPERS_HPP
 #define MANGANESE_INCLUDE_FRONTEND_SEMANTIC_GENERICS_HELPERS_HPP 1
 
+#include <ast/ast_base.hpp>
 #include <core.hpp>
 #include <cstddef>
-#include <ast/ast_base.hpp>
-#include <semantic/type_context.hpp>
 #include <functional>
+#include <semantic/type_context.hpp>
 #include <unordered_map>
 #include <utils/containers/slice.hpp>
 #include <utils/containers/string_interner.hpp>
-
 
 namespace Manganese::semantic {
 struct Scope;
