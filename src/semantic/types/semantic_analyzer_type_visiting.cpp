@@ -218,10 +218,7 @@ auto SemanticAnalyzer::visit(ast::PointerType* type) -> typevisit_t {
         logError(type, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString(interner));
         return typevisit_t::Failure;
     }
-    if (baseType->isVoid()) {
-        logError(type, "Cannot form pointer to a void expression");
-        return typevisit_t::Failure;
-    }
+
     type->semanticType = typeContext.getPointer(baseType, pointerType->isMutable);
     return typevisit_t::Success;
 }
