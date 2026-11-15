@@ -10,6 +10,7 @@
 #include <utils/containers/slice.hpp>
 #include <utils/containers/string_interner.hpp>
 #include <utils/meta/target_info.hpp>
+#include <utils/meta/type_names.hpp>
 
 #if MN_DEBUG || MN_TESTING
 #define MN_AST_DUMP void dump(std::ostream& os, const utils::StringInterner&, std::size_t indent = 0) const override;
