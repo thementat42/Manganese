@@ -5,9 +5,9 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 
+#include <ast.hpp>
 #include <backend/ir_generator.hpp>
 #include <core.hpp>
-#include <ast.hpp>
 #include <semantic.hpp>
 
 namespace Manganese::codegen {
@@ -102,32 +102,28 @@ namespace Manganese::codegen {
     // map to the same LLVM type
     using enum ast::PrimitiveType;
     switch (type) {
-        case ast::PrimitiveType::int8:
-        case ast::PrimitiveType::uint8: return builder->getInt8Ty();
-        case ast::PrimitiveType::int16:
-        case ast::PrimitiveType::uint16: return builder->getInt16Ty();
-        case ast::PrimitiveType::int32:
-        case ast::PrimitiveType::uint32:
-        case ast::PrimitiveType::character:  // char32 is a 32-bit int
-            return builder->getInt32Ty();
-        case ast::PrimitiveType::int64:
-        case ast::PrimitiveType::uint64: return builder->getInt64Ty();
-        case ast::PrimitiveType::int128:
-        case ast::PrimitiveType::uint128: return builder->getInt128Ty();
-        case ast::PrimitiveType::float32: return builder->getFloatTy();
-        case ast::PrimitiveType::float64: return builder->getDoubleTy();
-        case ast::PrimitiveType::boolean:
-            // LLVM doesn't have a separate boolean type, just a "1-bit integer"
-            return builder->getInt1Ty();
-        case ast::PrimitiveType::string: {
+        case int8:
+        case uint8: return builder->getInt8Ty();
+        case int16:
+        case uint16: return builder->getInt16Ty();
+        case int32:
+        case uint32:
+        case character: return builder->getInt32Ty();  // char32 is a 32-bit int
+        case int64:
+        case uint64: return builder->getInt64Ty();
+        case int128:
+        case uint128: return builder->getInt128Ty();
+        case float32: return builder->getFloatTy();
+        case float64: return builder->getDoubleTy();
+        case boolean: return builder->getInt1Ty();  // LLVM doesn't have a separate boolean type, just a "1-bit integer"
+        case string: {
             llvm::Type* charPointerType = llvm::PointerType::get(*context, 0);
             llvm::Type* lengthType = builder->getInt64Ty();
             // strings are a pointer + a length so return an anonymous struct
             // needs to be handled by language runtime
             return llvm::StructType::get(*context, {charPointerType, lengthType});
         }
-        case ast::PrimitiveType::not_primitive:
-            ASSERT_UNREACHABLE("IRGenerator::getPrimitiveType called on non-primitive semantic type");
+        case not_primitive: ASSERT_UNREACHABLE("IRGenerator::getPrimitiveType called on non-primitive semantic type");
     }
     ASSERT_UNREACHABLE("Unknown primitive type in IRGenerator::getPrimitiveType");
 }
