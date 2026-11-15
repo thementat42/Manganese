@@ -23,6 +23,7 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
     auto& parsedFile = parsedFiles[0];
 
+    std::cout << "EEEEE\n";
     semantic::SemanticAnalyzer analyzer(parsedFiles, utils::getTargetInfo(), arena, interner);
     const Result result = analyzer.analyze();
 
@@ -949,6 +950,42 @@ bool testAttributes() {
     return analyzeSource(source, true, __func__) && analyzeSource(invalid, false, __func__);
 }
 
+bool testVoidPointers() {
+    const std::string validSource = R"(
+        @extern
+        func malloc(size: int64) -> ptr void;
+        @extern
+        func free(p: ptr void);
+
+        func main() {
+            let p: ptr void = malloc(1024);
+            let intPtr: ptr int32 = p as ptr int32;  # cast should work
+            let val = *intPtr;  # dereference should be allowed since this is not void
+            free(p);
+        }
+    )";
+
+    // Implicit decay isn't allowed
+    const std::string invalid = R"(
+        func main() {
+            let mut v: ptr void = uninitialized;
+            let iPtr: ptr int32 = v;
+        }
+    )";
+
+    // can't dereference void pointer
+    const std::string invalid2 = R"(
+        func main() {
+            let mut v: ptr void = uninitialized;
+            let x = *v;
+        }
+    )";
+
+    return analyzeSource(validSource, true, __func__) 
+        && analyzeSource(invalid, false, __func__) 
+        && analyzeSource(invalid2, false, __func__);
+}
+
 }  // namespace
 }  // namespace analyzer_tests
 
@@ -1002,6 +1039,7 @@ void TestRunner::runSemanticAnalyzerTests() {
             analyzer_tests::testSliceLengthAndAnonymousAggregates);
     runTest("Semantic Analyzer: Chained Comparison Expression", analyzer_tests::testChainedComparisonSemantics);
     runTest("Semantic Analyzer: Attributes", analyzer_tests::testAttributes);
+    runTest("Semantic Analyzer: Void Pointers", analyzer_tests::testVoidPointers);
     runTest("Semantic Analyzer: Miscellaneous Tests", analyzer_tests::miscTests);
 }
 
