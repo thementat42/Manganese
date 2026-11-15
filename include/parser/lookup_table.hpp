@@ -231,6 +231,7 @@ consteval void initializeTypeLookups(LookupTable& table) noexcept {
     registerNudHandler_type(table, Char, &Parser::parseIdentifierType);
     registerNudHandler_type(table, Bool, &Parser::parseIdentifierType);
     registerNudHandler_type(table, String, &Parser::parseIdentifierType);
+    registerNudHandler_type(table, Void, &Parser::parseIdentifierType);
     registerNudHandler_type(table, Ptr, &Parser::parsePointerType);
 
     //~ Complex types
