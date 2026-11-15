@@ -12,7 +12,6 @@
 #include <string>
 #include <string_view>
 #include <utils/containers/string_interner.hpp>
-#include <utils/meta/type_names.hpp>
 
 namespace Manganese::ast {
 
