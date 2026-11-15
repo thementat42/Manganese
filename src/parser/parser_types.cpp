@@ -1,8 +1,9 @@
 #include <algorithm>
-#include <core.hpp>
 #include <ast.hpp>
+#include <core.hpp>
 #include <parser.hpp>
 #include <utils/meta/type_names.hpp>
+
 
 namespace Manganese::parser {
 
@@ -112,39 +113,31 @@ ast::Type* Parser::parseIdentifierType() {
     const auto lexemeId = startToken.getLexeme();
     const std::string_view lexeme = interner.get_view(lexemeId);
     ast::PrimitiveType prim_t = not_primitive;
-    if (lexeme == int8_str) {
-        prim_t = int8;
-    } else if (lexeme == int16_str) {
-        prim_t = int16;
-    } else if (lexeme == int32_str || lexeme == int_str) {
+
+#define PRIMITIVE(type, name)           \
+    if (lexeme == name##_str) { \
+        prim_t = (type);                \
+    } else
+
+#include <ast/primitives.def>
+
+#undef PRIMITIVE
+
+    if (lexeme == int_str) {
         prim_t = int32;
-    } else if (lexeme == int64_str) {
-        prim_t = int64;
-    } else if (lexeme == int128_str) {
-        prim_t = int128;
-    } else if (lexeme == uint8_str) {
-        prim_t = uint8;
-    } else if (lexeme == uint16_str) {
-        prim_t = uint16;
-    } else if (lexeme == uint32_str || lexeme == uint_str) {
+    }
+
+    else if (lexeme == uint_str) {
         prim_t = uint32;
-    } else if (lexeme == uint64_str) {
-        prim_t = uint64;
-    } else if (lexeme == uint128_str) {
-        prim_t = uint128;
-    } else if (lexeme == float32_str) {
-        prim_t = float32;
-    } else if (lexeme == float64_str || lexeme == float_str) {
+    }
+
+    else if (lexeme == float_str) {
         prim_t = float64;
-    } else if (lexeme == string_str) {
-        prim_t = string;
-    } else if (lexeme == char_str) {
-        prim_t = character;
-    } else if (lexeme == bool_str) {
-        prim_t = boolean;
+
     } else {
         ASSERT_UNREACHABLE_FMT("Unknown primitive type '{}'", lexeme);
     }
+
     return makeNode<ast::IdentifierType>(startToken, lexemeId, prim_t);
 }
 
