@@ -51,6 +51,7 @@ KEYWORD_TOKEN(Bool, "bool")
 KEYWORD_TOKEN(True, "true")
 KEYWORD_TOKEN(False, "false")
 KEYWORD_TOKEN(String, "string")
+KEYWORD_TOKEN(Void, "void")
 
 KEYWORD_TOKEN(If, "if")
 KEYWORD_TOKEN(Elif, "elif")

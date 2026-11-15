@@ -72,7 +72,7 @@ class Token {
     bool isPrimitiveType() const noexcept {
         using enum TokenType;
         return utils::enum_matches<TokenType>(_type, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float32,
-                                              Float64, Int128, UInt128, Char, Bool, String);
+                                              Float64, Int128, UInt128, Char, Bool, String, Void);
     }
     bool isInteger() const noexcept {
         using enum TokenType;
