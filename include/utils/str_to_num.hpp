@@ -1,11 +1,12 @@
 #ifndef MANGANESE_INCLUDE_UTILS_STR_TO_NUM_HPP
 #define MANGANESE_INCLUDE_UTILS_STR_TO_NUM_HPP 1
 
+#include <ast/ast_base.hpp>
 #include <cmath>
 #include <core.hpp>
 #include <cstdint>
-#include <ast/ast_base.hpp>
 #include <utils/meta/number_types.hpp>
+
 
 namespace Manganese::utils {
 
@@ -270,39 +271,28 @@ inline string_conversion_result_t<T> stringToNumber(std::string_view str, bool i
         if (!result32.overflowed) { return wrap_result<T>(result32); }
         // if float32 fails do float64
         return wrap_result<T>(_stox<utils::float64_t>(parsing_start, parsing_end, base));
-
-    } else if (t == int8) {
-        return wrap_result<T>(_stox<std::int8_t>(parsing_start, parsing_end, base));
-    } else if (t == int16) {
-        return wrap_result<T>(_stox<std::int16_t>(parsing_start, parsing_end, base));
-    } else if (t == int32) {
-        return wrap_result<T>(_stox<std::int32_t>(parsing_start, parsing_end, base));
-    } else if (t == int64) {
-        return wrap_result<T>(_stox<std::int64_t>(parsing_start, parsing_end, base));
-    } else if (t == int128) {
-        return wrap_result<T>(_stox<utils::int128_t>(parsing_start, parsing_end, base));
-    } else if (t == uint8) {
-        return wrap_result<T>(_stox<std::uint8_t>(parsing_start, parsing_end, base));
-    } else if (t == uint16) {
-        return wrap_result<T>(_stox<std::uint16_t>(parsing_start, parsing_end, base));
-    } else if (t == uint32) {
-        return wrap_result<T>(_stox<std::uint32_t>(parsing_start, parsing_end, base));
-    } else if (t == uint64) {
-        return wrap_result<T>(_stox<std::uint64_t>(parsing_start, parsing_end, base));
-    } else if (t == uint128) {
-        return wrap_result<T>(_stox<utils::uint128_t>(parsing_start, parsing_end, base));
-    } else {
-        auto result32 = _stox<std::int32_t>(parsing_start, parsing_end, base);
-        if (!result32.overflowed) { return wrap_result<T>(result32); }
-        // if int32 fails try int64
-        auto result64 = _stox<std::int64_t>(parsing_start, parsing_end, base);
-        if (!result64.overflowed) { return wrap_result<T>(result64); }
-        // if int64 fails try int128
-        auto result128 = _stox<utils::int128_t>(parsing_start, parsing_end, base);
-        if (!result128.overflowed) { return wrap_result<T>(result128); }
-        // if int128 fails do uint128
-        return wrap_result<T>(_stox<utils::uint128_t>(parsing_start, parsing_end, base));
     }
+    if (t == int8) { return wrap_result<T>(_stox<std::int8_t>(parsing_start, parsing_end, base)); }
+    if (t == int16) { return wrap_result<T>(_stox<std::int16_t>(parsing_start, parsing_end, base)); }
+    if (t == int32) { return wrap_result<T>(_stox<std::int32_t>(parsing_start, parsing_end, base)); }
+    if (t == int64) { return wrap_result<T>(_stox<std::int64_t>(parsing_start, parsing_end, base)); }
+    if (t == int128) { return wrap_result<T>(_stox<utils::int128_t>(parsing_start, parsing_end, base)); }
+    if (t == uint8) { return wrap_result<T>(_stox<std::uint8_t>(parsing_start, parsing_end, base)); }
+    if (t == uint16) { return wrap_result<T>(_stox<std::uint16_t>(parsing_start, parsing_end, base)); }
+    if (t == uint32) { return wrap_result<T>(_stox<std::uint32_t>(parsing_start, parsing_end, base)); }
+    if (t == uint64) { return wrap_result<T>(_stox<std::uint64_t>(parsing_start, parsing_end, base)); }
+    if (t == uint128) { return wrap_result<T>(_stox<utils::uint128_t>(parsing_start, parsing_end, base)); }
+
+    auto result32 = _stox<std::int32_t>(parsing_start, parsing_end, base);
+    if (!result32.overflowed) { return wrap_result<T>(result32); }
+    // if int32 fails try int64
+    auto result64 = _stox<std::int64_t>(parsing_start, parsing_end, base);
+    if (!result64.overflowed) { return wrap_result<T>(result64); }
+    // if int64 fails try int128
+    auto result128 = _stox<utils::int128_t>(parsing_start, parsing_end, base);
+    if (!result128.overflowed) { return wrap_result<T>(result128); }
+    // if int128 fails do uint128
+    return wrap_result<T>(_stox<utils::uint128_t>(parsing_start, parsing_end, base));
 }
 
 }  // namespace Manganese::utils
