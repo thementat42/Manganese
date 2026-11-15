@@ -75,8 +75,8 @@ const SemanticType* SemanticAnalyzer::promoteNumericTypes(const SemanticType* lh
     // direct match, don't need to promote
     if (lhs == rhs) { return lhs; }
 
-    const PrimitiveInfo lhsInfo = getPrimitiveInfo(lhs->primitiveType);
-    const PrimitiveInfo rhsInfo = getPrimitiveInfo(rhs->primitiveType);
+    const PrimitiveInfo lhsInfo = getPrimitiveInfo(lhs->primitiveType, targetInfo);
+    const PrimitiveInfo rhsInfo = getPrimitiveInfo(rhs->primitiveType, targetInfo);
 
     const bool lhsIsFloat = lhsInfo.category == PrimitiveInfo::Category::Float;
     const bool rhsIsFloat = rhsInfo.category == PrimitiveInfo::Category::Float;
@@ -102,8 +102,8 @@ const SemanticType* SemanticAnalyzer::promoteNumericTypes(const SemanticType* lh
         const SemanticType* signedType = lhsIsSignedInteger ? lhs : rhs;
         const SemanticType* unsignedType = lhsIsSignedInteger ? rhs : lhs;
 
-        const auto signedInfo = getPrimitiveInfo(signedType->primitiveType);
-        const auto unsignedInfo = getPrimitiveInfo(unsignedType->primitiveType);
+        const auto signedInfo = getPrimitiveInfo(signedType->primitiveType, targetInfo);
+        const auto unsignedInfo = getPrimitiveInfo(unsignedType->primitiveType, targetInfo);
 
         if (signedInfo.bitWidth > unsignedInfo.bitWidth) { return signedType; }
         return unsignedType;
@@ -158,7 +158,6 @@ typeCompatibilityResult SemanticAnalyzer::areTypesCompatible(const SemanticType*
         case SemanticTypeKind::Pointer: return checkPointerCompatibility(from, to, conversionError);
         case SemanticTypeKind::Primitive: return arePrimitivesCompatible(from, to);
         case SemanticTypeKind::Slice: return checkSliceCompatibility(from, to, conversionError);
-        case SemanticTypeKind::Void:
         case SemanticTypeKind::Poison:
         case SemanticTypeKind::Uninitialized: break;  // Handled by guards
     }
@@ -246,8 +245,8 @@ auto SemanticAnalyzer::arePrimitivesCompatible(const SemanticType* from, const S
     using Cat = PrimitiveInfo::Category;
     if (from->primitiveType == to->primitiveType) { return {.result = Compatible_t::Valid, .message = ""}; }
 
-    const PrimitiveInfo src = getPrimitiveInfo(from->primitiveType);
-    const PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType);
+    const PrimitiveInfo src = getPrimitiveInfo(from->primitiveType, targetInfo);
+    const PrimitiveInfo dest = getPrimitiveInfo(to->primitiveType, targetInfo);
 
     if (dest.category == Cat::Bool && (context.inCondition || context.inTernary)) {
         return {.result = Compatible_t::Valid, .message = ""};

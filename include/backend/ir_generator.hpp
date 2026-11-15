@@ -105,7 +105,6 @@ class IRGenerator final : public _irgen_base_t {
     [[nodiscard]] static typevisit_t visit(const semantic::Poison*);
     [[nodiscard]] typevisit_t visit(const semantic::Slice*);
     [[nodiscard]] typevisit_t visit(const semantic::Uninitialized*);
-    [[nodiscard]] typevisit_t visit(const semantic::Void*);
     [[nodiscard]] typevisit_t getPrimitiveType(ast::PrimitiveType type);
 
     // Expression Helpers

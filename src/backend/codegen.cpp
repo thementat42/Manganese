@@ -98,8 +98,8 @@ llvm::AllocaInst* IRGenerator::createAlignedAlloca(llvm::Type* type, std::string
                                                             const semantic::SemanticType* toType) {
     if (fromType == toType) { return val; }
     llvm::Type* toTypeLLVM = visit(toType);
-    auto fromWidth = semantic::getPrimitiveInfo(fromType->primitiveType).bitWidth;
-    auto toWidth = semantic::getPrimitiveInfo(toType->primitiveType).bitWidth;
+    auto fromWidth = semantic::getPrimitiveInfo(fromType->primitiveType, targetInfo).bitWidth;
+    auto toWidth = semantic::getPrimitiveInfo(toType->primitiveType, targetInfo).bitWidth;
 
     if (fromType->isInteger()) {
         if (toType->isFloat()) {

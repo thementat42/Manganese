@@ -23,7 +23,6 @@ namespace Manganese::codegen {
         case Poison: return visit(static_cast<const semantic::Poison*>(type));
         case Uninitialized: return visit(static_cast<const semantic::Uninitialized*>(type));
         case Slice: return visit(static_cast<const semantic::Slice*>(type));
-        case Void: return visit(static_cast<const semantic::Void*>(type));
         case Primitive: return getPrimitiveType(type->primitiveType);
     };
     ASSERT_UNREACHABLE("Unknown semantic type kind in IRGenerator::visit(SemanticType*)");
@@ -95,7 +94,6 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Uninitialized* /*unused*/) -> typevisit_t { return nullptr; }
 
-[[nodiscard]] auto IRGenerator::visit(const semantic::Void* /*unused*/) -> typevisit_t { return builder->getVoidTy(); }
 
 [[nodiscard]] auto IRGenerator::getPrimitiveType(ast::PrimitiveType type) -> typevisit_t {
     // Note: LLVM doesn't have a signed/unsigned distinction so signed and unsigned ints of the same bit width

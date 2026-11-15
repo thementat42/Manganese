@@ -101,7 +101,7 @@ auto SemanticAnalyzer::visit(ast::BinaryExpression* expression) -> exprvisit_t {
             const SemanticType* commonType = promoteNumericTypes(lhsType, rhsType);
 
             if (commonType->isFloat()) {
-                auto info = getPrimitiveInfo(commonType->primitiveType);
+                auto info = getPrimitiveInfo(commonType->primitiveType, targetInfo);
                 auto targetPrimitive = (info.bitWidth == 32) ? ast::PrimitiveType::int32 : ast::PrimitiveType::int64;
 
                 expression->semanticType = typeContext.getPrimitive(targetPrimitive);

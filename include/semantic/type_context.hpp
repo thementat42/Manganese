@@ -34,7 +34,6 @@ enum class SemanticTypeKind : std::uint8_t {
     Primitive,
     Slice,
     Uninitialized,
-    Void,
 };
 
 struct SemanticType {
@@ -61,9 +60,7 @@ struct SemanticType {
     constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
     constexpr bool isSlice() const noexcept { return kind == SemanticTypeKind::Slice; }
     constexpr bool isUninitialized() const noexcept { return kind == SemanticTypeKind::Uninitialized; }
-    constexpr bool isVoid() const noexcept {
-        return kind == SemanticTypeKind::Void || (isPrimitive() && primitiveType == ast::PrimitiveType::void_type);
-    }
+    constexpr bool isVoid() const noexcept { return primitiveType == ast::PrimitiveType::void_type; }
 
     constexpr bool isBoolean() const noexcept { return isPrimitive() && primitiveType == ast::PrimitiveType::boolean; }
 
@@ -247,13 +244,14 @@ struct PrimitiveInfo {
         Float,
         Char,
         Bool,
-        String
+        String,
+        Void
     };
     Category category;
     int bitWidth = 0;
 };
 
-PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type);
+PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type, const utils::TargetInfo& target);
 
 struct Slice final : public SemanticType {
     const SemanticType* elementType;
@@ -273,15 +271,6 @@ struct Slice final : public SemanticType {
 struct Uninitialized final : public SemanticType {
     Uninitialized() noexcept : SemanticType(SemanticTypeKind::Uninitialized) {}
     ~Uninitialized() override = default;
-
-    std::string toString() const override;
-    std::size_t size(const utils::TargetInfo& target) const noexcept override;
-    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
-};
-
-struct Void final : public SemanticType {
-    Void() noexcept : SemanticType(SemanticTypeKind::Void) {};
-    ~Void() override = default;
 
     std::string toString() const override;
     std::size_t size(const utils::TargetInfo& target) const noexcept override;
@@ -315,7 +304,6 @@ class TypeContext {
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
     std::array<SemanticType, NUM_PRIMITIVES> _primitives;
-    Void _voidInstance;
     Uninitialized _uninitializedInstance;
     Poison _poisonInstance;
 

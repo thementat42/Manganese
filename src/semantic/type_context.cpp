@@ -15,7 +15,7 @@ namespace Manganese::semantic {
 
 // String conversions
 
-PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type) {
+PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type, const utils::TargetInfo& target) {
     using enum ast::PrimitiveType;
     using Cat = PrimitiveInfo::Category;
 
@@ -37,8 +37,10 @@ PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type) {
 
         case character: return {.category = Cat::Char, .bitWidth = 8};
         case boolean: return {.category = Cat::Bool, .bitWidth = 1};
-        case string: return {.category = Cat::String, .bitWidth = 0};
-        default: break;
+        case string: return {.category = Cat::String, .bitWidth = static_cast<int>(target.pointerSize) + 8};
+
+        case ast::PrimitiveType::void_type: return {.category = Cat::Void, .bitWidth = 0};
+        case ast::PrimitiveType::not_primitive: ASSERT_UNREACHABLE("getPrimitiveInfo called on non-primitive type");
     }
     return {.category = Cat::Int, .bitWidth = 0};
 }
@@ -107,17 +109,15 @@ std::string Slice::toString() const { return std::format("{}[]", elementType->to
 
 std::string Uninitialized::toString() const { return "keyword 'uninitialized'"; }
 
-std::string Void::toString() const { return "void"; }
-
 // Size & Alignment
-std::size_t SemanticType::size(const utils::TargetInfo& /*unused*/) const noexcept {
-    if (isPrimitive()) { return static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8); }
+std::size_t SemanticType::size(const utils::TargetInfo& target) const noexcept {
+    if (isPrimitive()) { return static_cast<std::size_t>(getPrimitiveInfo(primitiveType, target).bitWidth / 8); }
     return 0;
 }
 
-std::size_t SemanticType::alignment(const utils::TargetInfo& /*unused*/) const noexcept {
+std::size_t SemanticType::alignment(const utils::TargetInfo& target) const noexcept {
     if (isPrimitive()) {
-        const std::size_t align = static_cast<std::size_t>(getPrimitiveInfo(primitiveType).bitWidth / 8);
+        const std::size_t align = static_cast<std::size_t>(getPrimitiveInfo(primitiveType, target).bitWidth / 8);
         return std::max<std::size_t>(1, align);
     }
     return 1;
@@ -186,10 +186,6 @@ std::size_t Uninitialized::size(const utils::TargetInfo& /*target*/) const noexc
 
 std::size_t Uninitialized::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
 
-std::size_t Void::size(const utils::TargetInfo& /*target*/) const noexcept { return 0; }
-
-std::size_t Void::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
-
 std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
     if (t == nullptr) [[unlikely]] { return 0; }
     // start by hashing the type kind (isolates primitives, pointers, etc)
@@ -247,8 +243,7 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             return hash_combine(hash, std::hash<const SemanticType*>{}(slice->elementType));
         }
         case SemanticTypeKind::Poison:
-        case SemanticTypeKind::Uninitialized:
-        case SemanticTypeKind::Void: {
+        case SemanticTypeKind::Uninitialized: {
             return hash;
         }
 
@@ -300,7 +295,7 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
         }
         case SemanticTypeKind::Uninitialized:
         case SemanticTypeKind::Poison:
-        case SemanticTypeKind::Void: return true;
+        return true;
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
 }
@@ -372,7 +367,7 @@ const SemanticType* TypeContext::getSlice(const SemanticType* elementType) {
 }
 
 const SemanticType* TypeContext::getUninitalized() const noexcept { return &_uninitializedInstance; }
-const SemanticType* TypeContext::getVoid() const noexcept { return &_voidInstance; }
+const SemanticType* TypeContext::getVoid() const noexcept { return getPrimitive(ast::PrimitiveType::void_type); }
 
 const SemanticType* TypeContext::getUSizeType() const noexcept {
     return _targetInfo.pointerSize == 4 ? getPrimitive(ast::PrimitiveType::uint32)

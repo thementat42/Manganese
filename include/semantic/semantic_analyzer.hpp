@@ -79,6 +79,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     InstantiationCache instantiationCache;
     utils::chunk_allocator& arena;
     utils::StringInterner& interner;
+    const utils::TargetInfo& targetInfo;
 
     struct {
         std::vector<utils::StringID> namespaceStack;
@@ -103,7 +104,8 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         typeContext(_arena, target),
         parsedFiles(files),
         arena(_arena),
-        interner(_interner) {}
+        interner(_interner),
+        targetInfo(target) {}
 
     ~SemanticAnalyzer() override = default;
 
