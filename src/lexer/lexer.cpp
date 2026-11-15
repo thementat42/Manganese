@@ -2,11 +2,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <lexer.hpp>
 #include <io/filereader.hpp>
 #include <io/heapfilereader.hpp>
 #include <io/logging.hpp>
 #include <io/stringreader.hpp>
+#include <lexer.hpp>
 #include <memory>
 #include <optional>
 #include <string>
@@ -89,7 +89,8 @@ Token Lexer::consumeToken() {
     if (tokenStream.empty()) { lex(QUEUE_LOOKAHEAD_AMOUNT); }
     // check if queue is still empty if it is, we are done tokenizing
     if (tokenStream.empty()) {
-        return {TokenType::EndOfFile, interner.intern(std::string_view("EOF")), getLine(), getCol()};
+        return {TokenType::EndOfFile, interner.intern(std::string_view("EOF")), TokenLine_t{getLine()},
+                TokenColumn_t{getCol()}};
     }
     const Token token = tokenStream.front();
     tokenStream.pop_front();  // get rid of the token
@@ -362,11 +363,13 @@ Result Lexer::tokenizeSymbol() {
 //~ Helper Functions
 
 void Lexer::emitToken(TokenType type, std::string&& lexeme, bool invalid) {
-    tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
+    tokenStream.emplace_back(type, interner.intern(lexeme), TokenLine_t{tokenStartLine}, TokenColumn_t{tokenStartCol},
+                             invalid);
 }
 
 void Lexer::emitToken(TokenType type, std::string_view lexeme, bool invalid) {
-    tokenStream.emplace_back(type, interner.intern(lexeme), tokenStartLine, tokenStartCol, invalid);
+    tokenStream.emplace_back(type, interner.intern(lexeme), TokenLine_t{tokenStartLine}, TokenColumn_t{tokenStartCol},
+                             invalid);
 }
 
 std::unique_ptr<io::Reader> makeFileReader(const std::string& source) {

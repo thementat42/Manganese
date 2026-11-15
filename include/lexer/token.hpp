@@ -8,6 +8,7 @@
 #include <string_view>
 #include <utils/meta/enum_matches.hpp>
 #include <utils/containers/string_interner.hpp>
+#include <utils/meta/named_parameter.hpp>
 
 namespace Manganese::lexer {
 
@@ -29,6 +30,9 @@ enum class TokenType : std::uint8_t {
 
 std::string tokenTypeToString(TokenType type);
 
+using TokenLine_t = utils::NamedParameter<std::size_t, struct _token_line>;
+using TokenColumn_t = utils::NamedParameter<std::size_t, struct _token_col>;
+
 class Token {
    private:
     utils::StringID _lexeme;
@@ -38,8 +42,8 @@ class Token {
 
    public:
     Token() noexcept = default;
-    Token(TokenType type, utils::StringID lexeme, std::size_t line, std::size_t column, bool isInvalid = false) :
-        _lexeme(lexeme), _line(line), _column(column), _type(type), _isInvalid(isInvalid) {}
+    Token(TokenType type, utils::StringID lexeme, TokenLine_t line,TokenColumn_t column, bool isInvalid = false) :
+        _lexeme(lexeme), _line(line.get()), _column(column.get()), _type(type), _isInvalid(isInvalid) {}
     ~Token() noexcept = default;
 
     bool isKeyword() const noexcept { return BETWEEN(_type, TokenType::_keywordStart, TokenType::_keywordEnd); }
