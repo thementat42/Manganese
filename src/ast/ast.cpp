@@ -1,24 +1,22 @@
-#include <array>
-#include <core.hpp>
-#include <cstddef>
 #include <ast.hpp>
+#include <core.hpp>
 #include <lexer/token.hpp>
 #include <semantic/type_context.hpp>
-#include <utils/str_to_num.hpp>
 #include <utils/meta/target_info.hpp>
 #include <utils/meta/type_names.hpp>
+#include <utils/str_to_num.hpp>
 
 namespace Manganese::ast {
 
 std::string_view primitiveTypeToString(PrimitiveType prim) {
-    constexpr static std::array primitiveNames
-        = {int8_str,   uint8_str,   int16_str,   uint16_str,
-           int32_str,  uint32_str,  int64_str,   uint64_str,
-           int128_str, uint128_str, float32_str, float64_str,
-           char_str,   string_str,  bool_str,    decltype(bool_str){"not primitive"}};
-    const auto index = static_cast<std::size_t>(prim);
-    if (index >= primitiveNames.size()) { ASSERT_UNREACHABLE("Invalid primitive type"); }
-    return primitiveNames[index];
+    using enum PrimitiveType;
+    switch (prim) {
+#define PRIMITIVE(type, name) \
+    case type: return name##_str;
+#include <ast/primitives.def>
+#undef PRIMITIVE
+    }
+    ASSERT_UNREACHABLE("Invalid primitive type");
 }
 
 AttributeKind attributeKindFromString(std::string_view name) {
