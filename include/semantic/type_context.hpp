@@ -309,7 +309,7 @@ class TypeContext {
    private:
     utils::chunk_allocator& _arena;
     const utils::TargetInfo& _targetInfo;
-    constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::boolean) + 1;
+    constexpr static inline unsigned NUM_PRIMITIVES = static_cast<unsigned>(ast::PrimitiveType::not_primitive);
 
     std::unordered_set<const SemanticType*, TypeLookup, TypeLookup> _cache;
     std::array<SemanticType, NUM_PRIMITIVES> _primitives;
