@@ -117,7 +117,7 @@ auto IRGenerator::visit(const ast::ForEachLoopStatement* statement) -> stmtvisit
 
     visit(statement->body);
 
-    if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(postBlock); }
+    if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) { builder->CreateBr(postBlock); }
 
     loopStack.pop();
 
@@ -156,7 +156,7 @@ auto IRGenerator::visit(const ast::ForLoopStatement* statement) -> stmtvisit_t {
     // emit the body
     builder->SetInsertPoint(bodyBlock);
     visit(statement->body);
-    if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(postBlock); }
+    if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) { builder->CreateBr(postBlock); }
 
     loopStack.pop();
 
@@ -220,7 +220,7 @@ auto IRGenerator::visit(const ast::FunctionDeclarationStatement* statement) -> s
     visit(*statement->body);
 
     // Make sure a return instruction is always emitted (e.g. if no explicit return instruction is written)
-    if (builder->GetInsertBlock()->getTerminator() == nullptr) {
+    if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) {
         if (llvmFunction->getReturnType()->isVoidTy()) {
             builder->CreateRetVoid();
         } else {
@@ -276,7 +276,7 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
 
     builder->SetInsertPoint(branchBlocks[0].second);
     visit(ifBranch.body);
-    if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
+    if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) { builder->CreateBr(mergeBlock); }
 
     for (size_t i = 1; i < statement->branches.size; ++i) {
         auto [condBlk, bodyBlk] = branchBlocks[i];
@@ -298,13 +298,13 @@ auto IRGenerator::visit(const ast::IfStatement* statement) -> stmtvisit_t {
         // Emit the elif body block
         builder->SetInsertPoint(bodyBlk);
         visit(elifClause.body);
-        if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
+        if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
     if (elseBlock != nullptr) {
         builder->SetInsertPoint(elseBlock);
         visit(*statement->elseBody);
-        if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
+        if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
     // done with the if statement, we want to go back to emitting code outside it
@@ -387,14 +387,14 @@ auto IRGenerator::visit(const ast::SwitchStatement* statement) -> stmtvisit_t {
         visit(astCase->body);
 
         // If the body doesn't end with a terminator (like a return or break), branch to merge
-        if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
+        if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
     // Emit default body if there is one
     if (statement->defaultBody.has_value()) {
         builder->SetInsertPoint(defaultBlock);
         visit(*statement->defaultBody);
-        if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(mergeBlock); }
+        if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) { builder->CreateBr(mergeBlock); }
     }
 
     builder->SetInsertPoint(mergeBlock);
@@ -454,7 +454,7 @@ auto IRGenerator::visit(const ast::WhileLoopStatement* statement) -> stmtvisit_t
 
         builder->SetInsertPoint(bodyBlock);
         visit(statement->body);
-        if (builder->GetInsertBlock()->getTerminator() == nullptr) { builder->CreateBr(conditionBlock); }
+        if (builder->GetInsertBlock()->getTerminatorOrNull() == nullptr) { builder->CreateBr(conditionBlock); }
 
         loopStack.pop();
     }
