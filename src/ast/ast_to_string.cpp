@@ -120,7 +120,7 @@ std::string EnumDeclarationStatement::toString(const utils::StringInterner& inte
         const EnumValue& value = values[i];
         result += getIndent(indent + 1) + std::string(interner.get_view(value.name));
         if (value.value != nullptr) { result += std::format(" = {}", value.value->toString(interner, indent + 1)); }
-        if (i != values.size - 1) { result += ","; }
+        if (i != values.size - 1) { result += ','; }
         result += '\n';
     }
     result += getIndent(indent) + "}";
@@ -154,12 +154,12 @@ std::string ForLoopStatement::toString(const utils::StringInterner& interner, st
     if (initializationStep != nullptr) {
         result += initializationStep->toString(interner, 0) + " ";
     } else {
-        result += ";";
+        result += ';';
     }
     if (stopCondition != nullptr) {
         result += stopCondition->toString(interner, 0) + "; ";
     } else {
-        result += ";";
+        result += ';';
     }
     if (postExpression != nullptr) { result += postExpression->toString(interner, 0); }
     result += ") ";
@@ -322,7 +322,7 @@ std::string AggregateInstantiationExpression::toString(const utils::StringIntern
         result += std::format("{} = {}", interner.get_view(field.name), field.value->toString(interner, indent));
         if (i != fields.size - 1) { result += ", "; }
     }
-    result += "}";
+    result += '}';
     return result;
 }
 
@@ -332,7 +332,7 @@ std::string AggregateLiteralExpression::toString(const utils::StringInterner& in
         result += elements[i]->toString(interner, indent);
         if (i < elements.size - 1) [[likely]] { result += ", "; }
     }
-    result += "}";
+    result += '}';
     return result;
 }
 
@@ -346,7 +346,7 @@ std::string ArrayLiteralExpression::toString(const utils::StringInterner& intern
         result += elements[i]->toString(interner, indent);
         if (i < elements.size - 1) [[likely]] { result += ", "; }
     }
-    result += "]";
+    result += ']';
     return result;
 }
 
@@ -383,13 +383,17 @@ std::string CharLiteralExpression::toString(const utils::StringInterner& /*unuse
     return std::format("'{}'", lexer::codepointToUTF8(value));
 }
 
+std::string CopyExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    return std::format(WRAP("copy({})"), copiedExpression->toString(interner, indent));
+}
+
 std::string FunctionCallExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
     std::string result = callee->toString(interner, indent) + "(";
     for (std::size_t i = 0; i < arguments.size; ++i) {
         result += arguments[i]->toString(interner, indent);
         if (i < arguments.size - 1) [[likely]] { result += ", "; }
     }
-    result += ")";
+    result += ')';
     return result;
 }
 
@@ -419,6 +423,10 @@ std::string PostfixExpression::toString(const utils::StringInterner& interner, s
 
 std::string PrefixExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
     return std::format(WRAP("{}{}"), lexer::tokenTypeToString(op), right->toString(interner, indent));
+}
+
+std::string ReferenceExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    return std::format(WRAP("ref({})"), referencedExpression->toString(interner, indent));
 }
 
 std::string ScopeResolutionExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
@@ -455,7 +463,7 @@ std::string AggregateType::toString(const utils::StringInterner& interner, std::
         result += fieldTypes[i]->toString(interner, indent);
         if (i < fieldTypes.size - 1) [[likely]] { result += ", "; }
     }
-    result += "}";
+    result += '}';
     return result;
 }
 
@@ -470,7 +478,7 @@ std::string FunctionType::toString(const utils::StringInterner& interner, std::s
         result += std::format("{}{}", (param.isMutable ? "mut " : ""), param.type->toString(interner, indent));
         if (i != parameterTypes.size - 1) { result += ", "; }
     }
-    result += ")";
+    result += ')';
     if (returnType != nullptr) { result += std::format(" -> {}", returnType->toString(interner, indent)); }
     return result;
 }
@@ -485,6 +493,10 @@ std::string IdentifierType::toString(const utils::StringInterner& interner, std:
 
 std::string PointerType::toString(const utils::StringInterner& interner, std::size_t indent) const {
     return std::format("ptr {}{}", (isMutable ? "mut " : ""), baseType->toString(interner, indent));
+}
+
+std::string ReferenceType::toString(const utils::StringInterner& interner, std::size_t indent) const {
+    return std::format("ref {}{}", (isMutable ? "mut " : ""), baseType->toString(interner, indent));
 }
 
 std::string ScopedType::toString(const utils::StringInterner& interner, std::size_t /*indent*/) const {

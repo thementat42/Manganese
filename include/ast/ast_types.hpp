@@ -72,6 +72,16 @@ struct PointerType final : public Type {
     MN_AST_STANDARD_INTERFACE(PointerType);
 };
 
+struct ReferenceType final : public Type {
+    Type* baseType;
+    bool isMutable;
+
+    ReferenceType(Type* _baseType, bool _isMutable) noexcept :
+        Type(TypeKind::ReferenceType), baseType(_baseType), isMutable(_isMutable) {}
+
+    MN_AST_STANDARD_INTERFACE(ReferenceType);
+};
+
 using ScopedTypeScope = utils::NamedParameter<Type*, struct ScopeTScope>;
 using ScopedTypeType = utils::NamedParameter<Type*, struct ScopeTType>;
 

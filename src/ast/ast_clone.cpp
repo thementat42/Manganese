@@ -27,10 +27,11 @@ utils::Slice<Attribute> cloneAttributes(utils::Slice<Attribute> attributes, sema
     std::vector<Attribute> result;
     result.reserve(attributes.size);
     for (const auto& attribute : attributes) {
-        result.push_back(
-            Attribute{.name = attribute.name,
-                      .argument = attribute.argument == nullptr ? nullptr : attribute.argument->clone(context),
-                      .kind = attribute.kind});
+        result.push_back(Attribute{
+            .name = attribute.name,
+            .argument = attribute.argument == nullptr ? nullptr : attribute.argument->clone(context),
+            .kind = attribute.kind,
+        });
     }
     return context->arena.emplace_range(result);
 }
@@ -52,14 +53,16 @@ AggregateDeclarationStatement* AggregateDeclarationStatement::clone(semantic::Cl
     std::vector<AggregateField> fieldClones;
     fieldClones.reserve(fields.size);
     for (const auto& field : fields) {
-        fieldClones.push_back({.name = field.name,
-                               .type = field.type->clone(context),
-                               .line = field.line,
-                               .column = field.column,
-                               .isMutable = field.isMutable,
-                               .attributes = cloneAttributes(field.attributes, context)});
+        fieldClones.push_back({
+            .name = field.name,
+            .type = field.type->clone(context),
+            .line = field.line,
+            .column = field.column,
+            .isMutable = field.isMutable,
+            .attributes = cloneAttributes(field.attributes, context),
+        });
     }
-    auto* cloned = makeClonedNode(this, context, name, utils::Slice<utils::StringID>{},
+    auto* cloned = makeClonedNode(this, context, name, utils::Slice<utils::StringID>(),
                                   context->arena.emplace_range(fieldClones));
     cloned->visibility = visibility;
     return cloned;
@@ -86,8 +89,12 @@ EnumDeclarationStatement* EnumDeclarationStatement::clone(semantic::CloneContext
     valueClones.reserve(values.size);
 
     for (const auto& value : values) {
-        valueClones.push_back(
-            {.name = value.name, .value = value.value->clone(context), .line = value.line, .column = value.column});
+        valueClones.push_back({
+            .name = value.name,
+            .value = value.value->clone(context),
+            .line = value.line,
+            .column = value.column,
+        });
     }
     auto* clone = makeClonedNode(this, context, name, baseTypeClone, context->arena.emplace_range(valueClones));
     clone->visibility = visibility;
@@ -99,10 +106,12 @@ ExpressionStatement* ExpressionStatement::clone(semantic::CloneContext* context)
 }
 
 ForEachLoopStatement* ForEachLoopStatement::clone(semantic::CloneContext* context) const {
-    auto elementClone = ForEachElement{.name = element.name,
-                                       .type = element.type == nullptr ? nullptr : element.type->clone(context),
-                                       .semanticType = element.semanticType,
-                                       .isMutable = element.isMutable};
+    auto elementClone = ForEachElement{
+        .name = element.name,
+        .type = element.type == nullptr ? nullptr : element.type->clone(context),
+        .semanticType = element.semanticType,
+        .isMutable = element.isMutable,
+    };
     Expression* containerClone = container->clone(context);
 
     return makeClonedNode(this, context, elementClone, containerClone, cloneBlock(body, context));
@@ -125,13 +134,14 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
     std::vector<FunctionParameter> parameterClones;
     parameterClones.reserve(parameters.size);
     for (const auto& param : parameters) {
-        parameterClones.push_back(
-            {.name = param.name,
-             .type = param.type->clone(context),
-             .defaultValue = (param.defaultValue == nullptr) ? nullptr : param.defaultValue->clone(context),
-             .line = param.line,
-             .column = param.column,
-             .isMutable = param.isMutable});
+        parameterClones.push_back({
+            .name = param.name,
+            .type = param.type->clone(context),
+            .defaultValue = (param.defaultValue == nullptr) ? nullptr : param.defaultValue->clone(context),
+            .line = param.line,
+            .column = param.column,
+            .isMutable = param.isMutable,
+        });
     }
     Type* returnTypeClone = (returnType == nullptr) ? nullptr : returnType->clone(context);
 
@@ -139,7 +149,7 @@ FunctionDeclarationStatement* FunctionDeclarationStatement::clone(semantic::Clon
 
     if (body.has_value()) { bodyClone = cloneBlock(*body, context); }
 
-    auto* clone = makeClonedNode(this, context, name, utils::Slice<utils::StringID>{},
+    auto* clone = makeClonedNode(this, context, name, utils::Slice<utils::StringID>(),
                                  context->arena.emplace_range(parameterClones), returnTypeClone, bodyClone);
     clone->visibility = visibility;
     return clone;
@@ -152,11 +162,13 @@ IfStatement* IfStatement::clone(semantic::CloneContext* context) const {
     for (const auto& branch : branches) {
         auto* variableClone
             = branch.variableDeclaration != nullptr ? branch.variableDeclaration->clone(context) : nullptr;
-        branchClones.push_back(IfBranch{.variableDeclaration = variableClone,
-                                        .condition = branch.condition->clone(context),
-                                        .body = cloneBlock(branch.body, context),
-                                        .associatedScope = nullptr,  // set by the semanic analyzer
-                                        .attributes = cloneAttributes(attributes, context)});
+        branchClones.push_back(IfBranch{
+            .variableDeclaration = variableClone,
+            .condition = branch.condition->clone(context),
+            .body = cloneBlock(branch.body, context),
+            .associatedScope = nullptr,  // set by the semanic analyzer
+            .attributes = cloneAttributes(attributes, context),
+        });
     }
 
     std::optional<Block> elseBodyClone;
@@ -197,9 +209,11 @@ SwitchStatement* SwitchStatement::clone(semantic::CloneContext* context) const {
         clonedCaseValues.reserve(caseClause.values.size);
 
         for (const auto* value : caseClause.values) { clonedCaseValues.push_back(value->clone(context)); }
-        caseClones.push_back({.values = context->arena.emplace_range(clonedCaseValues),
-                              .body = cloneBlock(caseClause.body, context),
-                              .associatedScope = nullptr});
+        caseClones.push_back({
+            .values = context->arena.emplace_range(clonedCaseValues),
+            .body = cloneBlock(caseClause.body, context),
+            .associatedScope = nullptr,
+        });
     }
 
     std::optional<Block> defaultBodyClone = std::nullopt;
@@ -229,8 +243,12 @@ AggregateInstantiationExpression* AggregateInstantiationExpression::clone(semant
     fieldClones.reserve(fields.size);
 
     for (const auto& field : fields) {
-        fieldClones.push_back(
-            {.name = field.name, .value = field.value->clone(context), .line = field.line, .column = field.column});
+        fieldClones.push_back({
+            .name = field.name,
+            .value = field.value->clone(context),
+            .line = field.line,
+            .column = field.column,
+        });
     }
 
     return makeClonedNode(this, context, baseClone, context->arena.emplace_range(fieldClones));
@@ -282,6 +300,10 @@ ChainedComparisonExpression* ChainedComparisonExpression::clone(semantic::CloneC
 
 CharLiteralExpression* CharLiteralExpression::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context, value);
+}
+
+CopyExpression* CopyExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, copiedExpression);
 }
 
 FunctionCallExpression* FunctionCallExpression::clone(semantic::CloneContext* context) const {
@@ -344,6 +366,10 @@ PrefixExpression* PrefixExpression::clone(semantic::CloneContext* context) const
     return makeClonedNode(this, context, op, right->clone(context));
 }
 
+ReferenceExpression* ReferenceExpression::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, referencedExpression);
+}
+
 ScopeResolutionExpression* ScopeResolutionExpression::clone(semantic::CloneContext* context) const {
     auto* clone = makeClonedNode(this, context, ScopeExpressionScope{scope->clone(context)},
                                  ScopeExpressionElement{element->clone(context)});
@@ -391,7 +417,10 @@ FunctionType* FunctionType::clone(semantic::CloneContext* context) const {
     parameterTypeClones.reserve(parameterTypes.size);
 
     for (const auto& param : parameterTypes) {
-        parameterTypeClones.push_back({.isMutable = param.isMutable, .type = param.type->clone(context)});
+        parameterTypeClones.push_back({
+            .isMutable = param.isMutable,
+            .type = param.type->clone(context),
+        });
     }
 
     Type* returnTypeClone = returnType == nullptr ? nullptr : returnType->clone(context);
@@ -425,6 +454,10 @@ IdentifierType* IdentifierType::clone(semantic::CloneContext* context) const {
 }
 
 PointerType* PointerType::clone(semantic::CloneContext* context) const {
+    return makeClonedNode(this, context, baseType->clone(context), isMutable);
+}
+
+ReferenceType* ReferenceType::clone(semantic::CloneContext* context) const {
     return makeClonedNode(this, context, baseType->clone(context), isMutable);
 }
 

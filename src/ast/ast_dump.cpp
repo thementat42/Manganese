@@ -21,7 +21,11 @@ namespace {
 struct Indent {
     const std::size_t level;
 
-    Indent next(std::size_t delta = 1) const noexcept { return Indent{.level = level + delta}; }
+    Indent next(std::size_t delta = 1) const noexcept {
+        return Indent{
+            .level = level + delta,
+        };
+    }
     operator std::size_t() const noexcept { return level; }
     friend std::ostream& operator<<(std::ostream& os, Indent ind) { return os << std::string(ind.level * 2, ' '); }
 };
@@ -539,6 +543,15 @@ void CharLiteralExpression::dump(std::ostream& os, const utils::StringInterner& 
     os << ind << "}\n";
 }
 
+void CopyExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "CopyExpression", *this);
+    os << ind.next() << "expression: \n";
+    copiedExpression->dump(os, interner, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
+    os << ind << "}\n";
+}
+
 void FunctionCallExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "FunctionCallExpression", *this);
@@ -628,6 +641,15 @@ void PrefixExpression::dump(std::ostream& os, const utils::StringInterner& inter
     os << ind.next() << "operator: " << lexer::tokenTypeToString(op) << "\n";
     os << ind.next() << "operand: \n";
     right->dump(os, interner, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
+    os << ind << "}\n";
+}
+
+void ReferenceExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ReferenceExpression", *this);
+    os << ind.next() << "expression: \n";
+    referencedExpression->dump(os, interner, ind.next(2));
     dumpSemanticType(os, ind.next(), semanticType);
     os << ind << "}\n";
 }
@@ -775,6 +797,15 @@ void GenericInstantiationType::dump(std::ostream& os, const utils::StringInterne
 void PointerType::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "PointerType", *this);
+    os << ind.next() << "base type: \n";
+    baseType->dump(os, interner, ind.next(2));
+    dumpSemanticType(os, ind.next(), semanticType);
+    os << ind << "}\n";
+}
+
+void ReferenceType::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
+    const Indent ind{indent};
+    dumpHeader(os, ind, "ReferenceType", *this);
     os << ind.next() << "base type: \n";
     baseType->dump(os, interner, ind.next(2));
     dumpSemanticType(os, ind.next(), semanticType);

@@ -112,6 +112,15 @@ struct CharLiteralExpression final : public Expression {
     MN_AST_STANDARD_INTERFACE(CharLiteralExpression);
 };
 
+struct CopyExpression final : public Expression {
+    Expression* copiedExpression;
+
+    explicit CopyExpression(Expression* _copiedExpression) noexcept :
+        Expression(ExpressionKind::CopyExpression), copiedExpression(_copiedExpression) {}
+
+    MN_AST_STANDARD_INTERFACE(CopyExpression);
+};
+
 struct FunctionCallExpression final : public Expression {
     Expression* callee;
     utils::Slice<Expression*> arguments;
@@ -204,6 +213,15 @@ struct PrefixExpression final : public Expression {
     bool canFold() const noexcept override { return right->canFold(); }
 
     MN_AST_STANDARD_INTERFACE(PrefixExpression);
+};
+
+struct ReferenceExpression final : public Expression {
+    Expression* referencedExpression;
+
+    explicit ReferenceExpression(Expression* _referencedExpression) noexcept :
+        Expression(ExpressionKind::ReferenceExpression), referencedExpression(_referencedExpression) {}
+
+    MN_AST_STANDARD_INTERFACE(ReferenceExpression);
 };
 
 using ScopeExpressionScope = utils::NamedParameter<Expression*, struct ScopeName>;
