@@ -47,6 +47,8 @@ auto ControlFlowAnalyzer::visit(const ast::ChainedComparisonExpression* expressi
 
 auto ControlFlowAnalyzer::visit(const ast::CharLiteralExpression* /*unused*/) noexcept -> exprvisit_t {}
 
+auto ControlFlowAnalyzer::visit(const ast::CopyExpression* /*unused*/) noexcept -> exprvisit_t {}
+
 auto ControlFlowAnalyzer::visit(const ast::FunctionCallExpression* expression) noexcept -> exprvisit_t {
     visit(expression->callee);
     for (const ast::Expression* argument : expression->arguments) { visit(argument); }
@@ -89,6 +91,8 @@ auto ControlFlowAnalyzer::visit(const ast::PostfixExpression* expression) noexce
 auto ControlFlowAnalyzer::visit(const ast::PrefixExpression* expression) noexcept -> exprvisit_t {
     visit(expression->right);
 }
+
+auto ControlFlowAnalyzer::visit(const ast::ReferenceExpression* /*unused*/) noexcept -> exprvisit_t {}
 
 auto ControlFlowAnalyzer::visit(const ast::ScopeResolutionExpression* expression) noexcept -> exprvisit_t {
     visit(expression->scope);

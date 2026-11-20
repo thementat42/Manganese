@@ -74,21 +74,15 @@ class IRGenerator final : public _irgen_base_t {
    protected:
     // Visitor Overrides
     using _irgen_base_t::visit;
-
-    [[nodiscard]] exprvisit_t visit(const ast::Expression* expr) { return _irgen_base_t::visit(expr); }
-    stmtvisit_t visit(const ast::Statement* stmt) { _irgen_base_t::visit(stmt); }
-    typevisit_t visit(const ast::Type* type) { return _irgen_base_t::visit(type); }
     [[nodiscard]] typevisit_t visit(const semantic::SemanticType*);
 
 #define STMT_NODE(name) stmtvisit_t visit(const ast::name*) override;
 #define EXPR_NODE(name) [[nodiscard]] exprvisit_t visit(const ast::name*) override;
 #define TYPE_NODE(name) [[nodiscard]] typevisit_t visit(const ast::name*) override;
-#define SEMANTIC(name)  [[nodiscard]] typevisit_t visit(const semantic::name*);
 #include <ast/ast.def>
 #undef STMT_NODE
 #undef EXPR_NODE
 #undef TYPE_NODE
-#undef SEMANTIC
 
     stmtvisit_t visit(ast::Block block);
 

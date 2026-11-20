@@ -286,6 +286,8 @@ namespace Manganese::codegen {
     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), static_cast<std::uint64_t>(expression->value));
 }
 
+auto IRGenerator::visit(const ast::CopyExpression* /*unused*/) -> exprvisit_t { return nullptr; }
+
 [[nodiscard]] auto IRGenerator::visit(const ast::FunctionCallExpression* expression) -> exprvisit_t {
     auto* functionType = llvm::cast<llvm::FunctionType>(visit(expression->callee->semanticType));
     const auto* funcSemanticType = static_cast<const semantic::Function*>(expression->callee->semanticType);
@@ -579,6 +581,8 @@ auto IRGenerator::visit(const ast::NumberLiteralExpression* expression) -> exprv
     }
     return nullptr;
 }
+
+auto IRGenerator::visit(const ast::ReferenceExpression* /*unused*/) -> exprvisit_t { return nullptr; }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::ScopeResolutionExpression* expression) -> exprvisit_t {
     if (expression->semanticType->isEnum()) {

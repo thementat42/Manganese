@@ -314,6 +314,9 @@ auto SemanticAnalyzer::visit(ast::IdentifierType* type) -> typevisit_t {
     return typevisit_t::Success;
 }
 
+auto SemanticAnalyzer::visit(ast::ReferenceType* /*unused*/) -> typevisit_t { return typevisit_t::Success; }
+
+
 auto SemanticAnalyzer::visit(ast::TypeofType* type) -> typevisit_t {
     const auto* typeofType = static_cast<const ast::TypeofType*>(type);
     if (visit(typeofType->expression) == typevisit_t::Failure) { return typevisit_t::Failure; }

@@ -94,7 +94,6 @@ namespace Manganese::codegen {
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Uninitialized* /*unused*/) -> typevisit_t { return nullptr; }
 
-
 [[nodiscard]] auto IRGenerator::getPrimitiveType(ast::PrimitiveType type) -> typevisit_t {
     // Note: LLVM doesn't have a signed/unsigned distinction so signed and unsigned ints of the same bit width
     // map to the same LLVM type
@@ -150,6 +149,8 @@ namespace Manganese::codegen {
 [[nodiscard]] auto IRGenerator::visit(const ast::IdentifierType* type) -> typevisit_t {
     return visit(type->semanticType);
 }
+
+[[nodiscard]] auto IRGenerator::visit(const ast::ReferenceType* /*unused*/) -> typevisit_t { return nullptr; }
 
 [[nodiscard]] auto IRGenerator::visit(const ast::SliceType* type) -> typevisit_t { return visit(type->semanticType); }
 

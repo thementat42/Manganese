@@ -19,6 +19,9 @@ auto SemanticAnalyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t 
     return exprvisit_t::Success;
 }
 
+auto SemanticAnalyzer::visit(ast::CopyExpression* /*unused*/) -> exprvisit_t { return exprvisit_t::Success; }
+
+
 auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
     TypeList resolvedTypeArguments;
@@ -54,6 +57,8 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
              expression->identifier->toString(interner));
     return exprvisit_t::Failure;
 }
+
+auto SemanticAnalyzer::visit(ast::ReferenceExpression* /*unused*/) -> exprvisit_t { return exprvisit_t::Success; }
 
 auto SemanticAnalyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
