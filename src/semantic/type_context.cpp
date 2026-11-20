@@ -62,7 +62,7 @@ std::string Aggregate::toString() const {
         result += fields[i].type->toString();
         if (i != fields.size() - 1) [[likely]] { result += ", "; }
     }
-    result += "}";
+    result += '}';
     return result;
 }
 
@@ -79,7 +79,7 @@ std::string Aggregate::toStringWithTypeArguments(const TypeList& typeArguments) 
         result += fields[i].type->toString();
         if (i != fields.size() - 1) [[likely]] { result += ", "; }
     }
-    result += "}";
+    result += '}';
     return result;
 }
 
@@ -95,7 +95,7 @@ std::string Function::toString() const {
         result += param.type->toString();
         if (i != parameterTypes.size() - 1) [[likely]] { result += ", "; }
     }
-    result += ")";
+    result += ')';
     return result;
 }
 
@@ -104,6 +104,10 @@ std::string Pointer::toString() const {
 }
 
 std::string Poison::toString() const { return "<error_type>"; }
+
+std::string Reference::toString() const {
+    return std::format("{}ref {}", (isMutable ? "mut " : ""), baseType->toString());
+}
 
 std::string Slice::toString() const { return std::format("{}[]", elementType->toString()); }
 
@@ -182,6 +186,10 @@ std::size_t Slice::size(const utils::TargetInfo& target) const noexcept { return
 
 std::size_t Slice::alignment(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment; }
 
+std::size_t Reference::size(const utils::TargetInfo& target) const noexcept { return target.pointerSize; }
+
+std::size_t Reference::alignment(const utils::TargetInfo& target) const noexcept { return target.pointerAlignment; }
+
 std::size_t Uninitialized::size(const utils::TargetInfo& /*target*/) const noexcept { return 0; }
 
 std::size_t Uninitialized::alignment(const utils::TargetInfo& /*target*/) const noexcept { return 1; }
@@ -238,6 +246,12 @@ std::size_t TypeLookup::operator()(const SemanticType* t) const noexcept {
             hash = hash_combine(hash, std::hash<const SemanticType*>{}(pointer->baseType));
             return hash_combine(hash, std::hash<bool>{}(pointer->isMutable));
         }
+        case SemanticTypeKind::Reference: {
+            // like arrays, just hash the fields
+            const auto* reference = static_cast<const Reference*>(t);
+            hash = hash_combine(hash, std::hash<const SemanticType*>{}(reference->baseType));
+            return hash_combine(hash, std::hash<bool>{}(reference->isMutable));
+        }
         case SemanticTypeKind::Slice: {
             const auto* slice = static_cast<const Slice*>(t);
             return hash_combine(hash, std::hash<const SemanticType*>{}(slice->elementType));
@@ -264,6 +278,11 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
         case SemanticTypeKind::Pointer: {
             const auto* left = static_cast<const Pointer*>(lhs);
             const auto* right = static_cast<const Pointer*>(rhs);
+            return (left->baseType == right->baseType) && (left->isMutable == right->isMutable);
+        }
+        case SemanticTypeKind::Reference: {
+            const auto* left = static_cast<const Reference*>(lhs);
+            const auto* right = static_cast<const Reference*>(rhs);
             return (left->baseType == right->baseType) && (left->isMutable == right->isMutable);
         }
         case SemanticTypeKind::Array: {
@@ -294,8 +313,7 @@ bool TypeLookup::operator()(const SemanticType* lhs, const SemanticType* rhs) co
             return (left->elementType == right->elementType);
         }
         case SemanticTypeKind::Uninitialized:
-        case SemanticTypeKind::Poison:
-        return true;
+        case SemanticTypeKind::Poison: return true;
     }
     ASSERT_UNREACHABLE("Unknown semantic type kind in TypeLookup search");
 }
@@ -350,6 +368,14 @@ const SemanticType* TypeContext::getPointer(const SemanticType* baseType, bool i
 }
 
 const SemanticType* TypeContext::getPoison() const noexcept { return &_poisonInstance; }
+
+const SemanticType* TypeContext::getReference(const SemanticType* baseType, bool isMutable) {
+    Reference tmp(baseType, isMutable);
+    if (auto it = _cache.find(static_cast<const SemanticType*>(&tmp)); it != _cache.end()) { return *it; }
+    auto* heapAlloc = _arena.emplace<Reference>(baseType, isMutable);
+    _cache.insert(heapAlloc);
+    return heapAlloc;
+}
 
 const SemanticType* TypeContext::getPrimitive(ast::PrimitiveType primitive) const noexcept {
     if (primitive == ast::PrimitiveType::not_primitive) {

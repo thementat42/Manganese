@@ -21,6 +21,7 @@ namespace Manganese::codegen {
         case Function: return visit(static_cast<const semantic::Function*>(type));
         case Pointer: return visit(static_cast<const semantic::Pointer*>(type));
         case Poison: return visit(static_cast<const semantic::Poison*>(type));
+        case Reference: return visit(static_cast<const semantic::Reference*>(type));
         case Uninitialized: return visit(static_cast<const semantic::Uninitialized*>(type));
         case Slice: return visit(static_cast<const semantic::Slice*>(type));
         case Primitive: return getPrimitiveType(type->primitiveType);
@@ -91,6 +92,8 @@ namespace Manganese::codegen {
     llvm::Type* lenType = llvm::Type::getInt64Ty(*context);
     return llvm::StructType::get(*context, {ptrType, lenType});
 }
+
+[[nodiscard]] auto IRGenerator::visit(const semantic::Reference* /*unused*/) -> typevisit_t { return nullptr; }
 
 [[nodiscard]] auto IRGenerator::visit(const semantic::Uninitialized* /*unused*/) -> typevisit_t { return nullptr; }
 

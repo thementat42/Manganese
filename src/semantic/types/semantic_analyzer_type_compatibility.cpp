@@ -148,8 +148,10 @@ typeCompatibilityResult SemanticAnalyzer::areTypesCompatible(const SemanticType*
     // Dispatch to kind-specific helper functions
     switch (from->kind) {
         case SemanticTypeKind::Aggregate:
-            return {.result = Compatible_t::Error,
-                    .message = conversionError + " (aggregates cannot be converted to other types)."};
+            return {
+                .result = Compatible_t::Error,
+                .message = conversionError + " (aggregates cannot be converted to other types).",
+            };
         case SemanticTypeKind::Array: return checkArrayCompatibility(from, to, conversionError);
         case SemanticTypeKind::Enum:
             return typeCompatibilityResult{.result = Compatible_t::Error,
@@ -157,6 +159,11 @@ typeCompatibilityResult SemanticAnalyzer::areTypesCompatible(const SemanticType*
         case SemanticTypeKind::Function: return checkFunctionCompatibility(from, to, conversionError);
         case SemanticTypeKind::Pointer: return checkPointerCompatibility(from, to, conversionError);
         case SemanticTypeKind::Primitive: return arePrimitivesCompatible(from, to);
+        case SemanticTypeKind::Reference:
+            return {
+                .result = Compatible_t::Error,
+                .message = conversionError + " (todo).",
+            };
         case SemanticTypeKind::Slice: return checkSliceCompatibility(from, to, conversionError);
         case SemanticTypeKind::Poison:
         case SemanticTypeKind::Uninitialized: break;  // Handled by guards

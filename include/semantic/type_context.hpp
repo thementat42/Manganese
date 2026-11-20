@@ -32,6 +32,7 @@ enum class SemanticTypeKind : std::uint8_t {
     Pointer,
     Poison,
     Primitive,
+    Reference,
     Slice,
     Uninitialized,
 };
@@ -58,6 +59,7 @@ struct SemanticType {
     constexpr bool isPointer() const noexcept { return kind == SemanticTypeKind::Pointer; }
     constexpr bool isPoison() const noexcept { return kind == SemanticTypeKind::Poison; }
     constexpr bool isPrimitive() const noexcept { return kind == SemanticTypeKind::Primitive; }
+    constexpr bool isReference() const noexcept { return kind == SemanticTypeKind::Reference; }
     constexpr bool isSlice() const noexcept { return kind == SemanticTypeKind::Slice; }
     constexpr bool isUninitialized() const noexcept { return kind == SemanticTypeKind::Uninitialized; }
     constexpr bool isVoid() const noexcept { return primitiveType == ast::PrimitiveType::void_type; }
@@ -106,17 +108,17 @@ struct Aggregate final : public SemanticType {
     std::string_view name;
     mutable ResolutionStatus status;
 
-    Aggregate(std::vector<AggregateField>&& fieldTypes, std::string_view aggregateName = {}) noexcept :
+    Aggregate(std::vector<AggregateField>&& _fields, std::string_view _name = {}) noexcept :
         SemanticType(SemanticTypeKind::Aggregate),
-        fields(std::move(fieldTypes)),
-        name(aggregateName),
+        fields(std::move(_fields)),
+        name(_name),
         status(ResolutionStatus::NotStarted) {}
 
     // For anonymous aggregates
-    Aggregate(TypeList&& rawTypes) noexcept :
+    Aggregate(TypeList&& _rawTypes) noexcept :
         SemanticType(SemanticTypeKind::Aggregate), status(ResolutionStatus::Success) {
-        fields.reserve(rawTypes.size());
-        for (const SemanticType* t : rawTypes) { fields.push_back(AggregateField{.name = {}, .type = t}); }
+        fields.reserve(_rawTypes.size());
+        for (const SemanticType* t : _rawTypes) { fields.push_back(AggregateField{.name = {}, .type = t}); }
     }
 
     const SemanticType* getFieldType(std::string_view fieldName) const noexcept {
@@ -143,8 +145,8 @@ struct Array final : public SemanticType {
     const SemanticType* elementType;
     std::size_t length;
 
-    Array(const SemanticType* baseType, std::size_t len) noexcept :
-        SemanticType(SemanticTypeKind::Array), elementType(baseType), length(len) {}
+    Array(const SemanticType* _elementType, std::size_t _length) noexcept :
+        SemanticType(SemanticTypeKind::Array), elementType(_elementType), length(_length) {}
 
     ~Array() override = default;
 
@@ -164,8 +166,8 @@ struct Enum final : public SemanticType {
     mutable std::vector<EnumVariant> variants;
     mutable ResolutionStatus status = ResolutionStatus::NotStarted;
 
-    explicit Enum(std::string_view enumName, const SemanticType* defaultUnderlying = nullptr) noexcept :
-        SemanticType(SemanticTypeKind::Enum), name(enumName), underlyingType(defaultUnderlying) {}
+    explicit Enum(std::string_view _name, const SemanticType* _underlyingType = nullptr) noexcept :
+        SemanticType(SemanticTypeKind::Enum), name(_name), underlyingType(_underlyingType) {}
 
     bool hasEnumVariant(std::string_view variantName) const noexcept {
         return std::ranges::find(variants, variantName, &EnumVariant::name) != variants.end();
@@ -203,10 +205,10 @@ struct Function final : public SemanticType {
     const SemanticType* returnType;
     std::vector<Parameter> parameterTypes;
 
-    Function(std::vector<Parameter>&& params, const SemanticType* ret) noexcept :
+    Function(std::vector<Parameter>&& _parameterTypes, const SemanticType* _returnType) noexcept :
         SemanticType(SemanticTypeKind::Function, static_cast<ast::PrimitiveType>(0)),
-        returnType(ret),
-        parameterTypes(std::move(params)) {}
+        returnType(_returnType),
+        parameterTypes(std::move(_parameterTypes)) {}
 
     ~Function() override = default;
 
@@ -219,8 +221,8 @@ struct Pointer final : public SemanticType {
     const SemanticType* baseType;
     const bool isMutable;
 
-    Pointer(const SemanticType* base, bool isMut) noexcept :
-        SemanticType(SemanticTypeKind::Pointer), baseType(base), isMutable(isMut) {}
+    Pointer(const SemanticType* _baseType, bool _isMutable) noexcept :
+        SemanticType(SemanticTypeKind::Pointer), baseType(_baseType), isMutable(_isMutable) {}
     ~Pointer() override = default;
 
     std::string toString() const override;
@@ -245,7 +247,7 @@ struct PrimitiveInfo {
         Char,
         Bool,
         String,
-        Void
+        Void,
     };
     Category category;
     int bitWidth = 0;
@@ -253,10 +255,22 @@ struct PrimitiveInfo {
 
 PrimitiveInfo getPrimitiveInfo(ast::PrimitiveType type, const utils::TargetInfo& target);
 
+struct Reference final : public SemanticType {
+    const SemanticType* baseType;
+    const bool isMutable;
+
+    Reference(const SemanticType* _baseType, bool _isMutable) noexcept :
+        SemanticType(SemanticTypeKind::Reference), baseType(_baseType), isMutable(_isMutable) {}
+
+    std::string toString() const override;
+    std::size_t size(const utils::TargetInfo& target) const noexcept override;
+    std::size_t alignment(const utils::TargetInfo& target) const noexcept override;
+};
+
 struct Slice final : public SemanticType {
     const SemanticType* elementType;
 
-    Slice(const SemanticType* baseType) noexcept : SemanticType(SemanticTypeKind::Slice), elementType(baseType) {}
+    Slice(const SemanticType* _elementType) noexcept : SemanticType(SemanticTypeKind::Slice), elementType(_elementType) {}
 
     ~Slice() override = default;
 
@@ -336,10 +350,12 @@ class TypeContext {
     const SemanticType* getFunction(std::vector<Parameter>&& parameterTypes, const SemanticType* returnType);
 
     const SemanticType* getPointer(const SemanticType* baseType, bool isMutable);
-
+    
     const SemanticType* getPoison() const noexcept;
 
     const SemanticType* getPrimitive(ast::PrimitiveType primitive) const noexcept;
+    
+    const SemanticType* getReference(const SemanticType* baseType, bool isMutable);
 
     const SemanticType* getSlice(const SemanticType* elementType);
 
