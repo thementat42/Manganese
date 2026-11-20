@@ -18,6 +18,7 @@ Result emitObjectCode(llvm::Module* module, utils::TargetInfo& targetInfo, std::
     }
     auto targetTriple = targetInfo.targetMachine->getTargetTriple();
     module->setTargetTriple(targetTriple);
+    module->setDataLayout(targetInfo.targetMachine->createDataLayout());
 
     std::string error;
 
