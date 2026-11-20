@@ -26,6 +26,7 @@ SPECIAL_TOKEN(_keywordStart, "<keyword-start>")  // meta for keyword info (nothi
 KEYWORD_TOKEN(Let, "let")
 KEYWORD_TOKEN(Mut, "mut")
 KEYWORD_TOKEN(Ptr, "ptr")
+KEYWORD_TOKEN(Ref, "ref")
 KEYWORD_TOKEN(Uninitialized, "uninitialized")
 
 KEYWORD_TOKEN(Private, "private")
@@ -85,6 +86,7 @@ KEYWORD_TOKEN(Alias, "alias")
 KEYWORD_TOKEN(Alignof, "alignof")
 KEYWORD_TOKEN(Sizeof, "sizeof")
 KEYWORD_TOKEN(Typeof, "typeof")
+KEYWORD_TOKEN(Copy, "copy")
 
 SPECIAL_TOKEN(_keywordEnd, "<keyword-end>")  // meta for keyword info (nothing lexes to this)
 
