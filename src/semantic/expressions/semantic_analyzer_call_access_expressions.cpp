@@ -17,7 +17,7 @@ auto SemanticAnalyzer::visit(ast::AggregateInstantiationExpression* expression) 
 
     const SemanticType* baseType = expression->base->semanticType;
     if (baseType->isPoison()) {
-        logError(expression->base, "Cannot instantiate unresolvable aggregate type");
+        logError(expression->base, "Could not deduce type of {}", expression->base->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -86,7 +86,7 @@ auto SemanticAnalyzer::visit(ast::FunctionCallExpression* expression) -> exprvis
     if (visit(expression->callee) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
     const SemanticType* calleeType = expression->callee->semanticType;
     if (calleeType->isPoison()) {
-        logError(expression->callee, "Cannot call expression with unresolvable type");
+        logError(expression->callee, "Could not deduce type of {}", expression->callee->toString(interner));
         return exprvisit_t::Failure;
     }
 
@@ -198,7 +198,7 @@ auto SemanticAnalyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
 
 auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
-    DISCARD(visitWithExpectedType(expression->object, nullptr));
+    DISCARD(visit(expression->object));
     const SemanticType* objectType = expression->object->semanticType;
     if (objectType->isPoison()) {
         logError(expression->object, "Could not deduce type of expression {}", expression->object->toString(interner));
@@ -217,7 +217,7 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
 
     if (!objectType->isAggregate()) {
         logError(expression->object,
-                 "Element access can only be performed on an aggregate type, (or a pointer/reference to an aggregate), not '{}'",
+                 "Element access can only be performed on an aggregate type (or a pointer/reference to an aggregate), not '{}'",
                  objectType->toString());
         return exprvisit_t::Failure;
     }

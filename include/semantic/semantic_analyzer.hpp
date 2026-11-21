@@ -182,11 +182,6 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     utils::StringID getMangledName(utils::StringID baseName) const;
     utils::StringID getMangledName(utils::StringID baseName, const TypeList& typeArgs) const;
 
-    exprvisit_t visitWithExpectedType(ast::Expression* expr, const SemanticType* expectedType) {
-        ContextGuard<const SemanticType*> guard{context.currentExpressionExpectedType, expectedType};
-        return visit(expr);
-    }
-
     // Logging Helpers
     template <class... Args>
     static void logError(const ast::ASTNode* node, std::format_string<Args...> message, Args&&... args) noexcept {

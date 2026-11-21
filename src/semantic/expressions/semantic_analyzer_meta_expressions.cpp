@@ -70,7 +70,7 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
 
 auto SemanticAnalyzer::visit(ast::ReferenceExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
-    if (visitWithExpectedType(expression->referencedExpression, nullptr) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
+    if (visit(expression->referencedExpression) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
 
     const SemanticType* operandType = expression->referencedExpression->semanticType;
     if (operandType == nullptr || operandType->isPoison()) { return exprvisit_t::Failure; }
