@@ -67,6 +67,7 @@ class Parser {
     ast::Expression* parseAssignmentExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseBinaryExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseChainedComparison(ast::Expression* left, const Token& op, Precedence precedence);
+    ast::Expression* parseCopyExpression();
     ast::Expression* parseFunctionCallExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseGenericInstantiationExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseIndexingExpression(ast::Expression* left, Precedence precedence);
@@ -75,6 +76,7 @@ class Parser {
     ast::Expression* parsePostfixExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parsePrefixExpression();
     ast::Expression* parsePrimaryExpression();
+    ast::Expression* parseReferenceExpression();
     ast::Expression* parseScopeResolutionExpression(ast::Expression* left, Precedence precedence);
     ast::Expression* parseSizeofExpression();
     ast::Expression* parseTernaryExpression(ast::Expression* left, Precedence precedence);
@@ -111,6 +113,7 @@ class Parser {
     ast::Type* parseIdentifierType();
     ast::Type* parsePointerType();
     ast::Type* parseParenthesizedType();
+    ast::Type* parseReferenceType();
     ast::Type* parseScopedType(ast::Type* left, Precedence precedence);
     ast::Type* parseTypeofType();
 

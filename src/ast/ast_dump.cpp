@@ -648,6 +648,7 @@ void PrefixExpression::dump(std::ostream& os, const utils::StringInterner& inter
 void ReferenceExpression::dump(std::ostream& os, const utils::StringInterner& interner, std::size_t indent) const {
     const Indent ind{indent};
     dumpHeader(os, ind, "ReferenceExpression", *this);
+    os << ind.next() << "isMutable: " << (isMutable ? "true" : "false") << "\n";
     os << ind.next() << "expression: \n";
     referencedExpression->dump(os, interner, ind.next(2));
     dumpSemanticType(os, ind.next(), semanticType);

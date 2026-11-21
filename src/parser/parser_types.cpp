@@ -157,6 +157,16 @@ ast::Type* Parser::parsePointerType() {
     return makeNode<ast::PointerType>(startToken, parseType(Precedence::Default), isMutable);
 }
 
+ast::Type* Parser::parseReferenceType() {
+    const Token startToken = consumeToken();  // Consume `ref`
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        isMutable = true;
+        DISCARD(consumeToken());  // Consume `mut`
+    }
+    return makeNode<ast::ReferenceType>(startToken, parseType(Precedence::Default), isMutable);
+}
+
 ast::Type* Parser::parseScopedType(ast::Type* left, Precedence precedence) {
     const Token startToken = consumeToken();  // consume the `::`
     ast::Type* type = parseType(precedence);

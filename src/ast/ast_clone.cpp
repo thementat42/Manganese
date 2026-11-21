@@ -367,7 +367,7 @@ PrefixExpression* PrefixExpression::clone(semantic::CloneContext* context) const
 }
 
 ReferenceExpression* ReferenceExpression::clone(semantic::CloneContext* context) const {
-    return makeClonedNode(this, context, referencedExpression);
+    return makeClonedNode(this, context, referencedExpression, isMutable);
 }
 
 ScopeResolutionExpression* ScopeResolutionExpression::clone(semantic::CloneContext* context) const {

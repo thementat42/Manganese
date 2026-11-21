@@ -426,7 +426,7 @@ std::string PrefixExpression::toString(const utils::StringInterner& interner, st
 }
 
 std::string ReferenceExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {
-    return std::format(WRAP("ref({})"), referencedExpression->toString(interner, indent));
+    return std::format(WRAP("ref{}({})"), isMutable ? " mut" : "", referencedExpression->toString(interner, indent));
 }
 
 std::string ScopeResolutionExpression::toString(const utils::StringInterner& interner, std::size_t indent) const {

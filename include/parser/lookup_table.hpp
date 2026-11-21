@@ -210,6 +210,8 @@ consteval void initializeLookups(LookupTable& table) noexcept {
     registerNudHandler_binary(table, Aggregate, &Parser::parseAggregateLiteralExpression);
     registerNudHandler_binary(table, Sizeof, &Parser::parseSizeofExpression);
     registerNudHandler_binary(table, Alignof, &Parser::parseAlignofExpression);
+    registerNudHandler_binary(table, Copy, &Parser::parseCopyExpression);
+    registerNudHandler_binary(table, Ref, &Parser::parseReferenceExpression);
 }
 
 consteval void initializeTypeLookups(LookupTable& table) noexcept {
@@ -233,6 +235,7 @@ consteval void initializeTypeLookups(LookupTable& table) noexcept {
     registerNudHandler_type(table, String, &Parser::parseIdentifierType);
     registerNudHandler_type(table, Void, &Parser::parseIdentifierType);
     registerNudHandler_type(table, Ptr, &Parser::parsePointerType);
+    registerNudHandler_type(table, Ref, &Parser::parseReferenceType);
 
     //~ Complex types
     registerNudHandler_type(table, Aggregate, &Parser::parseAggregateType);

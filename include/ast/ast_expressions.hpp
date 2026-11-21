@@ -217,9 +217,10 @@ struct PrefixExpression final : public Expression {
 
 struct ReferenceExpression final : public Expression {
     Expression* referencedExpression;
+    bool isMutable;
 
-    explicit ReferenceExpression(Expression* _referencedExpression) noexcept :
-        Expression(ExpressionKind::ReferenceExpression), referencedExpression(_referencedExpression) {}
+    ReferenceExpression(Expression* _referencedExpression, bool _isMutable) noexcept :
+        Expression(ExpressionKind::ReferenceExpression), referencedExpression(_referencedExpression), isMutable(_isMutable) {}
 
     MN_AST_STANDARD_INTERFACE(ReferenceExpression);
 };

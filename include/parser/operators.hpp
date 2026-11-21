@@ -28,7 +28,7 @@ enum class Precedence : char {
     Member = 17,  // . (member access)
     ScopeResolution = 18,  // ::
     Generic = 18,  // @ (for generics)
-    Primary = 19  // (expression), literal, identifier, etc.
+    Primary = 19,  // (expression), literal, identifier, etc.
 };
 
 struct Operator {

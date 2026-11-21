@@ -168,6 +168,14 @@ ast::Expression* Parser::parseBinaryExpression(ast::Expression* left, Precedence
     return makeNode<ast::BinaryExpression>(startToken, left, op, right);
 }
 
+ast::Expression* Parser::parseCopyExpression() {
+    const Token startToken = consumeToken();  // discard copy
+    expectToken(lexer::TokenType::LeftParen, "Expected '(' after copy");
+    ast::Expression* copiedExpression = parseExpression(Precedence::Default);
+    expectToken(lexer::TokenType::RightParen, "Expected ')' to enclose copy expression");
+    return makeNode<ast::CopyExpression>(startToken, copiedExpression);
+}
+
 ast::Expression* Parser::parseFunctionCallExpression(ast::Expression* left, Precedence /*unused*/) {
     const Token startToken = consumeToken();
     auto arguments
@@ -245,8 +253,22 @@ ast::Expression* Parser::parsePrimaryExpression() {
         case TokenType::Uninitialized: return makeNode<ast::UninitializedExpression>(startToken);
         default:
             ASSERT_UNREACHABLE_FMT("Invalid Token Type in parsePrimaryExpression: {}",
-                                   lexer ::tokenTypeToString(startToken.getType()));
+                                   lexer::tokenTypeToString(startToken.getType()));
     }
+}
+
+ast::Expression* Parser::parseReferenceExpression() {
+    const Token startToken = consumeToken();  // discard ref
+    bool isMutable = false;
+    if (peekTokenType() == TokenType::Mut) {
+        isMutable = true;
+        DISCARD(consumeToken());
+    }
+
+    expectToken(lexer::TokenType::LeftParen, "Expected '(' after ref");
+    ast::Expression* referencedExpression = parseExpression(Precedence::Default);
+    expectToken(lexer::TokenType::RightParen, "Expected ')' to enclose ref expression");
+    return makeNode<ast::ReferenceExpression>(startToken, referencedExpression, isMutable);
 }
 
 ast::Expression* Parser::parseScopeResolutionExpression(ast::Expression* left, Precedence /*unused*/) {
