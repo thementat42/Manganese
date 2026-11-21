@@ -210,16 +210,65 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationType* type) -> typevisit_t
     return typevisit_t::Success;
 }
 
+auto SemanticAnalyzer::visit(ast::IdentifierType* type) -> typevisit_t {
+    if (type->semanticType != nullptr) { return typevisit_t::Success; }
+
+    const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
+    if (IdentifierType->primitiveType != ast::PrimitiveType::not_primitive) {
+        type->semanticType = typeContext.getPrimitive(IdentifierType->primitiveType);
+        return typevisit_t::Success;
+    }
+    const Symbol* symbol = symbolTable.lookup(IdentifierType->name);
+    if (symbol == nullptr) {
+        logError(type, "Unknown type '{}'", interner.get_view(IdentifierType->name));
+        return typevisit_t::Failure;
+    }
+    if (symbol->kind == SymbolKind::TypeAlias && symbol->status != ResolutionStatus::Success) {
+        auto* aliasStatement = static_cast<ast::AliasStatement*>(symbol->node);
+        if (visit(aliasStatement) == typevisit_t::Failure) { return typevisit_t::Failure; }
+    }
+    if (symbol->type == nullptr) {
+        logError(type, "'{}' is not a valid type", interner.get_view(IdentifierType->name));
+        return typevisit_t::Failure;
+    }
+    type->semanticType = symbol->type;
+    return typevisit_t::Success;
+}
+
 auto SemanticAnalyzer::visit(ast::PointerType* type) -> typevisit_t {
     const auto* pointerType = static_cast<const ast::PointerType*>(type);
     DISCARD(visit(pointerType->baseType));
     const SemanticType* baseType = pointerType->baseType->semanticType;
+
     if (baseType->isPoison()) {
         logError(type, "Cannot form pointer to invalid type '{}'", pointerType->baseType->toString(interner));
         return typevisit_t::Failure;
     }
 
+    if (baseType->isReference()) {
+        logError(type, "Cannot form a pointer to a reference");
+        return typevisit_t::Failure;
+    }
+
     type->semanticType = typeContext.getPointer(baseType, pointerType->isMutable);
+    return typevisit_t::Success;
+}
+
+auto SemanticAnalyzer::visit(ast::ReferenceType* type) -> typevisit_t {
+    type->semanticType = typeContext.getPoison();
+    if (visit(type->baseType) == typevisit_t::Failure) { return typevisit_t::Failure; }
+
+    const SemanticType* base = type->baseType->semanticType;
+    if (base->isVoid()) {
+        logError(type, "Cannot form a reference to 'void'; use 'ptr void' for untyped addresses");
+        return typevisit_t::Failure;
+    }
+    if (base->isReference()) {
+        logError(type, "Cannot form a reference to a reference");
+        return typevisit_t::Failure;
+    }
+
+    type->semanticType = typeContext.getReference(base, type->isMutable);
     return typevisit_t::Success;
 }
 
@@ -288,34 +337,6 @@ auto SemanticAnalyzer::visit(ast::SliceType* type) -> typevisit_t {
     type->semanticType = typeContext.getSlice(elementType);
     return typevisit_t::Success;
 }
-
-auto SemanticAnalyzer::visit(ast::IdentifierType* type) -> typevisit_t {
-    if (type->semanticType != nullptr) { return typevisit_t::Success; }
-
-    const auto* IdentifierType = static_cast<const ast::IdentifierType*>(type);
-    if (IdentifierType->primitiveType != ast::PrimitiveType::not_primitive) {
-        type->semanticType = typeContext.getPrimitive(IdentifierType->primitiveType);
-        return typevisit_t::Success;
-    }
-    const Symbol* symbol = symbolTable.lookup(IdentifierType->name);
-    if (symbol == nullptr) {
-        logError(type, "Unknown type '{}'", interner.get_view(IdentifierType->name));
-        return typevisit_t::Failure;
-    }
-    if (symbol->kind == SymbolKind::TypeAlias && symbol->status != ResolutionStatus::Success) {
-        auto* aliasStatement = static_cast<ast::AliasStatement*>(symbol->node);
-        if (visit(aliasStatement) == typevisit_t::Failure) { return typevisit_t::Failure; }
-    }
-    if (symbol->type == nullptr) {
-        logError(type, "'{}' is not a valid type", interner.get_view(IdentifierType->name));
-        return typevisit_t::Failure;
-    }
-    type->semanticType = symbol->type;
-    return typevisit_t::Success;
-}
-
-auto SemanticAnalyzer::visit(ast::ReferenceType* /*unused*/) -> typevisit_t { return typevisit_t::Success; }
-
 
 auto SemanticAnalyzer::visit(ast::TypeofType* type) -> typevisit_t {
     const auto* typeofType = static_cast<const ast::TypeofType*>(type);
