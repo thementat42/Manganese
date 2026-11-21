@@ -19,8 +19,18 @@ auto SemanticAnalyzer::visit(ast::AlignofExpression* expression) -> exprvisit_t 
     return exprvisit_t::Success;
 }
 
-auto SemanticAnalyzer::visit(ast::CopyExpression* /*unused*/) -> exprvisit_t { return exprvisit_t::Success; }
+auto SemanticAnalyzer::visit(ast::CopyExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
+    if (visit(expression->copiedExpression) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
+    if (!isLvalue(expression->copiedExpression)) {
+        logWarning(expression->copiedExpression,
+                   "copying an rvalue expression '{}' is redundant; consider removing the copy",
+                   expression->copiedExpression->toString(interner));
+    }
+    expression->semanticType = expression->copiedExpression->semanticType;
 
+    return exprvisit_t::Success;
+}
 
 auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
