@@ -258,32 +258,43 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
         } break;
 
         case AddressOf: {
+            if (expression->right->semanticType->isReference()) {
+                logError(expression->right, "Cannot take the address of a reference '{}'",
+                         expression->right->toString(interner));
+                return exprvisit_t::Failure;
+            }
             // temporary, to avoid failures
-            bool isMut = false;
-            expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMut);
+            bool isMutable = false;
+            expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMutable);
             if (!isLvalue(expression->right)) {
                 logError(expression->right, "Cannot take the address of r-value '{}'",
                          expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
-            isMut = isMutableExpression(expression->right);
-            expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMut);
+
+            isMutable = isMutableExpression(expression->right);
+            expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMutable);
         } break;
 
         case Dereference: {
-            if (!expression->right->semanticType->isPointer()) {
+            if (expression->right->semanticType->isPointer()) {
+                const auto* ptrType = static_cast<const Pointer*>(expression->right->semanticType);
+
+                if (ptrType->baseType->isVoid()) {
+                    logError(expression, "Cannot dereference 'ptr void' without an explicit cast");
+                    return exprvisit_t::Failure;
+                }
+
+                expression->semanticType = ptrType->baseType;
+            } else if (expression->right->semanticType->isReference()) {
+                const auto* refType = static_cast<const Reference*>(expression->right->semanticType);
+                expression->semanticType = refType->baseType;
+            } else {
                 logError(expression, "Dereferencing cannot be applied to a non-pointer type");
                 expression->semanticType = typeContext.getPoison();
                 return exprvisit_t::Failure;
             }
-            const auto* ptrType = static_cast<const Pointer*>(expression->right->semanticType);
 
-            if (ptrType->baseType->isVoid()) {
-                logError(expression, "Cannot dereference 'ptr void' without an explicit cast");
-                return exprvisit_t::Failure;
-            }
-
-            expression->semanticType = ptrType->baseType;
         } break;
 
         case Not: {
