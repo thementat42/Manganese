@@ -23,7 +23,6 @@ bool analyzeSource(const std::string& source, bool expectSuccess, std::string_vi
     std::vector<parser::ParsedFile> parsedFiles = {parser.parse()};
     auto& parsedFile = parsedFiles[0];
 
-    std::cout << "EEEEE\n";
     semantic::SemanticAnalyzer analyzer(parsedFiles, utils::getTargetInfo(), arena, interner);
     const Result result = analyzer.analyze();
 
