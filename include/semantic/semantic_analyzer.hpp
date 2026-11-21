@@ -85,6 +85,7 @@ class SemanticAnalyzer final : public _analyzer_base_t {
         std::vector<utils::StringID> namespaceStack;
         const SemanticType* currentFunctionReturnType = nullptr;
         const SemanticType* currentVariableDeclarationType = nullptr;
+        const SemanticType* currentExpressionExpectedType = nullptr;
         const Symbol* nestedScopeResolutionCurrentSymbol = nullptr;
 
         std::uint8_t typeCastDepth = 0;
@@ -180,6 +181,11 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     const Symbol* resolveScopeSymbol(const ast::Expression* expression) const;
     utils::StringID getMangledName(utils::StringID baseName) const;
     utils::StringID getMangledName(utils::StringID baseName, const TypeList& typeArgs) const;
+
+    exprvisit_t visitWithExpectedType(ast::Expression* expr, const SemanticType* expectedType) {
+        ContextGuard<const SemanticType*> guard{context.currentExpressionExpectedType, expectedType};
+        return visit(expr);
+    }
 
     // Logging Helpers
     template <class... Args>

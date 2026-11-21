@@ -68,7 +68,42 @@ auto SemanticAnalyzer::visit(ast::GenericInstantiationExpression* expression) ->
     return exprvisit_t::Failure;
 }
 
-auto SemanticAnalyzer::visit(ast::ReferenceExpression* /*unused*/) -> exprvisit_t { return exprvisit_t::Success; }
+auto SemanticAnalyzer::visit(ast::ReferenceExpression* expression) -> exprvisit_t {
+    expression->semanticType = typeContext.getPoison();
+    if (visitWithExpectedType(expression->referencedExpression, nullptr) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
+
+    const SemanticType* operandType = expression->referencedExpression->semanticType;
+    if (operandType == nullptr || operandType->isPoison()) { return exprvisit_t::Failure; }
+
+    if (operandType->isReference()) {
+        logError(expression, "Cannot form a reference to a reference type");
+        return exprvisit_t::Failure;
+    }
+    if (operandType->isVoid()) {
+        logError(expression, "Cannot form a reference to void");
+        return exprvisit_t::Failure;
+    }
+
+    if (!isLvalue(expression->referencedExpression)) {
+        logError(expression, "Cannot form a reference to an rvalue");
+        return exprvisit_t::Failure;
+    }
+
+    bool isMutable = false;
+    const SemanticType* targetType = context.currentExpressionExpectedType;
+    if (targetType != nullptr && targetType->isReference()) {
+        isMutable = static_cast<const Reference*>(targetType)->isMutable;
+    }
+
+    if (isMutable && !isMutableExpression(expression->referencedExpression)) {
+        logError(expression, "Cannot form a mutable reference to immutable expression '{}'",
+                 expression->referencedExpression->toString(interner));
+        return exprvisit_t::Failure;
+    }
+
+    expression->semanticType = typeContext.getReference(operandType, isMutable);
+    return exprvisit_t::Success;
+}
 
 auto SemanticAnalyzer::visit(ast::SizeofExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
