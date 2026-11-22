@@ -147,10 +147,10 @@ class SemanticAnalyzer final : public _analyzer_base_t {
                                                    const std::string& conversionError) const;
     typeCompatibilityResult checkFunctionCompatibility(const SemanticType* from, const SemanticType* to,
                                                        const std::string& conversionError) const;
-    typeCompatibilityResult checkPointerCompatibility(const SemanticType* from, const SemanticType* to,
-                                                      const std::string& conversionError) const;
-    typeCompatibilityResult checkReferenceCompatibility(const SemanticType* from, const SemanticType* to,
-                                                      const std::string& conversionError) const;
+    static typeCompatibilityResult checkPointerCompatibility(const SemanticType* from, const SemanticType* to,
+                                                             const std::string& conversionError);
+    static typeCompatibilityResult checkReferenceCompatibility(const SemanticType* from, const SemanticType* to,
+                                                               const std::string& conversionError);
     typeCompatibilityResult checkSliceCompatibility(const SemanticType* from, const SemanticType* to,
                                                     const std::string& conversionError) const;
 

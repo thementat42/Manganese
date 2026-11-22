@@ -218,7 +218,11 @@ typeCompatibilityResult SemanticAnalyzer::checkFunctionCompatibility(const Seman
 }
 
 typeCompatibilityResult SemanticAnalyzer::checkPointerCompatibility(const SemanticType* from, const SemanticType* to,
-                                                                    const std::string& conversionError) const {
+                                                                    const std::string& conversionError) {
+    if (from == nullptr || to == nullptr || !from->isPointer() || !to->isPointer()) {
+        return {.result = Compatible_t::Error, .message = conversionError};
+    }
+
     const auto* ptrFrom = static_cast<const Pointer*>(from);
     const auto* ptrTo = static_cast<const Pointer*>(to);
 
@@ -230,29 +234,47 @@ typeCompatibilityResult SemanticAnalyzer::checkPointerCompatibility(const Semant
         };
     }
 
-    // Making an immutable pointer mutable is not allowed
     if (!ptrFrom->isMutable && ptrTo->isMutable) {
         return {
             .result = Compatible_t::Error,
             .message = conversionError + " (cannot convert an immutable pointer to a mutable pointer).",
         };
     }
-    return areTypesCompatible(ptrFrom->baseType, ptrTo->baseType);
+
+    if (ptrFrom->baseType != ptrTo->baseType) {
+        return {
+            .result = Compatible_t::Error,
+            .message = conversionError + " (pointer base types must match without an explicit cast).",
+        };
+    }
+
+    return {.result = Compatible_t::Valid, .message = ""};
 }
 
 typeCompatibilityResult SemanticAnalyzer::checkReferenceCompatibility(const SemanticType* from, const SemanticType* to,
-                                                                      const std::string& conversionError) const {
+                                                                      const std::string& conversionError)  {
+    if (from == nullptr || to == nullptr || !from->isReference() || !to->isReference()) {
+        return {.result = Compatible_t::Error, .message = conversionError};
+    }
+
     const auto* refFrom = static_cast<const Reference*>(from);
     const auto* refTo = static_cast<const Reference*>(to);
 
-    // Making an immutable reference mutable is not allowed
     if (!refFrom->isMutable && refTo->isMutable) {
         return {
             .result = Compatible_t::Error,
             .message = conversionError + " (cannot convert an immutable reference to a mutable reference).",
         };
     }
-    return areTypesCompatible(refFrom->baseType, refTo->baseType);
+
+    if (refFrom->baseType != refTo->baseType) {
+        return {
+            .result = Compatible_t::Error,
+            .message = conversionError + " (reference base types must match).",
+        };
+    }
+
+    return {.result = Compatible_t::Valid, .message = ""};
 }
 
 typeCompatibilityResult SemanticAnalyzer::checkSliceCompatibility(const SemanticType* from, const SemanticType* to,
