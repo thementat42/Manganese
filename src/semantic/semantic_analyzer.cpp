@@ -89,6 +89,8 @@ const Symbol* SemanticAnalyzer::resolveScopeSymbol(const ast::Expression* expr) 
 
 bool SemanticAnalyzer::isMutableExpression(const ast::Expression* expr) const {
     using enum ast::ExpressionKind;
+    if (expr == nullptr) { return false; }
+
     switch (expr->kind) {
         case IdentifierExpression: {
             const auto* id = static_cast<const ast::IdentifierExpression*>(expr);
@@ -99,17 +101,36 @@ bool SemanticAnalyzer::isMutableExpression(const ast::Expression* expr) const {
             const auto* prefix = static_cast<const ast::PrefixExpression*>(expr);
             if (prefix->op == lexer::TokenType::Dereference) {
                 const SemanticType* operandType = prefix->right->semanticType;
-                if (!operandType->isPointer()) { return false; }
-                return static_cast<const Pointer*>(operandType)->isMutable;
+                if (operandType == nullptr) { return false; }
+                if (operandType->isPointer()) {
+                    return static_cast<const Pointer*>(operandType)->isMutable;
+                }
+                if (operandType->isReference()) {
+                    return static_cast<const Reference*>(operandType)->isMutable;
+                }
             }
             return false;
         }
         case MemberAccessExpression: {
             const auto* mem = static_cast<const ast::MemberAccessExpression*>(expr);
+            const SemanticType* objType = mem->object->semanticType;
+            if (objType != nullptr && objType->isReference()) {
+                return static_cast<const Reference*>(objType)->isMutable;
+            }
+            if (objType != nullptr && objType->isPointer()) {
+                return static_cast<const Pointer*>(objType)->isMutable;
+            }
             return isMutableExpression(mem->object);
         }
         case IndexExpression: {
             const auto* index = static_cast<const ast::IndexExpression*>(expr);
+            const SemanticType* varType = index->variable->semanticType;
+            if (varType != nullptr && varType->isReference()) {
+                return static_cast<const Reference*>(varType)->isMutable;
+            }
+            if (varType != nullptr && varType->isPointer()) {
+                return static_cast<const Pointer*>(varType)->isMutable;
+            }
             return isMutableExpression(index->variable);
         }
         case ScopeResolutionExpression: {
