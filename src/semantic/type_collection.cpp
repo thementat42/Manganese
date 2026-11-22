@@ -93,15 +93,13 @@ Result SemanticAnalyzer::collectGlobalAggregate(ast::AggregateDeclarationStateme
 }
 
 Result SemanticAnalyzer::collectGlobalFunction(ast::FunctionDeclarationStatement* function) {
-    // Skip uninstantiated generics
-    if (!function->genericTypes.empty()) { return Result::Success; }
-
     Symbol* symbol = symbolTable.lookup(function->name);
     if (symbol == nullptr) {
         ASSERT_UNREACHABLE_FMT("Function '{}' was not recorded during type collection",
                                interner.get_view(function->name));
     }
 
+    // Skip uninstantiated generics
     if (!function->genericTypes.empty()) {
         symbol->status = ResolutionStatus::NotStarted;  // Registered as available generic template
         return Result::Success;
