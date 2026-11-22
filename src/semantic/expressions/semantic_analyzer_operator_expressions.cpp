@@ -359,15 +359,22 @@ auto SemanticAnalyzer::visit(ast::TypeCastExpression* expression) -> exprvisit_t
 
     bool isValidCast = false;
     if (fromType == toType) {
+        logWarning(expression, "Redundant cast from '{}' to '{}'; consider removing 'as {}'", fromType->toString(),
+                   toType->toString(), expression->targetType->toString(interner));
         isValidCast = true;
     } else if (fromType->isPrimitive() && toType->isPrimitive()) {
         isValidCast = !utils::enum_matches(ast::PrimitiveType::string, fromType->primitiveType, toType->primitiveType);
-    } else if (fromType->isEnum() && toType->isInteger()) {
-        isValidCast = true;
-    } else if (fromType->isInteger() && toType->isEnum()) {
+    } else if ((fromType->isEnum() && toType->isInteger()) || (fromType->isInteger() && toType->isEnum())) {
+        // integer to/from enum is fine
         isValidCast = true;
     } else if (fromType->isPointer() && toType->isPointer()) {
-        // Allow explicit casting between pointers (especially for void* interop)
+        const auto* ptrFrom = static_cast<const Pointer*>(fromType);
+        const auto* ptrTo = static_cast<const Pointer*>(toType);
+        if (!ptrFrom->isMutable && ptrTo->isMutable) {
+            logError(expression, "Cannot cast immutable pointer '{}' to mutable pointer '{}'", fromType->toString(),
+                     toType->toString());
+            return exprvisit_t::Failure;
+        }
         isValidCast = true;
     }
 
