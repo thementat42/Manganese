@@ -123,8 +123,6 @@ Result SemanticAnalyzer::_buildStatementScope(ast::Statement* stmt) {
             }
 
             return result;
-
-            return result;
         }
         case NamespaceStatement: {
             auto* namespaceStatement = static_cast<ast::NamespaceStatement*>(stmt);
