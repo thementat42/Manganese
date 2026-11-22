@@ -291,7 +291,7 @@ auto SemanticAnalyzer::visit(ast::ScopedType* type) -> typevisit_t {
         return typevisit_t::Failure;
     }
     if (type->type->kind != ast::TypeKind::IdentifierType) {
-        logError(type->type, "Expected an identifier in a scope resolution expression");
+        logError(type->type, "Expected an identifier in a scoped type");
         return typevisit_t::Failure;
     }
     const utils::StringID memberNameID = static_cast<ast::IdentifierType*>(type->type)->name;

@@ -51,7 +51,7 @@ struct [[nodiscard]] ContextGuard {
 enum class Compatible_t : std::int8_t {
     Error = -1,
     Warning = 0,
-    Valid = 1
+    Valid = 1,
 };
 
 struct typeCompatibilityResult {
@@ -148,6 +148,8 @@ class SemanticAnalyzer final : public _analyzer_base_t {
     typeCompatibilityResult checkFunctionCompatibility(const SemanticType* from, const SemanticType* to,
                                                        const std::string& conversionError) const;
     typeCompatibilityResult checkPointerCompatibility(const SemanticType* from, const SemanticType* to,
+                                                      const std::string& conversionError) const;
+    typeCompatibilityResult checkReferenceCompatibility(const SemanticType* from, const SemanticType* to,
                                                       const std::string& conversionError) const;
     typeCompatibilityResult checkSliceCompatibility(const SemanticType* from, const SemanticType* to,
                                                     const std::string& conversionError) const;

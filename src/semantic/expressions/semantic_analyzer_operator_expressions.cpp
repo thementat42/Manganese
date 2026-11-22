@@ -25,7 +25,7 @@ auto SemanticAnalyzer::visit(ast::AssignmentExpression* expression) -> exprvisit
     }
 
     const typeCompatibilityResult isAssignmentValid
-        = areTypesCompatible(expression->assignee->semanticType, expression->value->semanticType);
+        = areTypesCompatible(expression->value->semanticType, expression->assignee->semanticType);
     if (!isAssignmentValid) {
         logError(expression, "Cannot assign a value of type {} to a value of type {}",
                  expression->value->semanticType->toString(), expression->assignee->semanticType->toString());
