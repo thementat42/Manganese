@@ -99,26 +99,21 @@ bool SemanticAnalyzer::isMutableExpression(const ast::Expression* expr) const {
         }
         case PrefixExpression: {
             const auto* prefix = static_cast<const ast::PrefixExpression*>(expr);
-            if (prefix->op == lexer::TokenType::Dereference) {
-                const SemanticType* operandType = prefix->right->semanticType;
-                if (operandType == nullptr) { return false; }
-                if (operandType->isPointer()) {
-                    return static_cast<const Pointer*>(operandType)->isMutable;
-                }
-                if (operandType->isReference()) {
-                    return static_cast<const Reference*>(operandType)->isMutable;
-                }
-            }
-            return false;
+            if (prefix->op != lexer::TokenType::Dereference) { return false; }
+            const SemanticType* operandType = prefix->right->semanticType;
+            if (operandType == nullptr) { return false; }
+            if (operandType->isPointer()) { return static_cast<const Pointer*>(operandType)->isMutable; }
+            if (operandType->isReference()) { return static_cast<const Reference*>(operandType)->isMutable; }
+            return false;  // invalid dereference should be caught elsewhere
         }
         case MemberAccessExpression: {
             const auto* mem = static_cast<const ast::MemberAccessExpression*>(expr);
-            const SemanticType* objType = mem->object->semanticType;
-            if (objType != nullptr && objType->isReference()) {
-                return static_cast<const Reference*>(objType)->isMutable;
+            const SemanticType* memberType = mem->object->semanticType;
+            if (memberType != nullptr && memberType->isReference()) {
+                return static_cast<const Reference*>(memberType)->isMutable;
             }
-            if (objType != nullptr && objType->isPointer()) {
-                return static_cast<const Pointer*>(objType)->isMutable;
+            if (memberType != nullptr && memberType->isPointer()) {
+                return static_cast<const Pointer*>(memberType)->isMutable;
             }
             return isMutableExpression(mem->object);
         }
@@ -128,9 +123,7 @@ bool SemanticAnalyzer::isMutableExpression(const ast::Expression* expr) const {
             if (varType != nullptr && varType->isReference()) {
                 return static_cast<const Reference*>(varType)->isMutable;
             }
-            if (varType != nullptr && varType->isPointer()) {
-                return static_cast<const Pointer*>(varType)->isMutable;
-            }
+            if (varType != nullptr && varType->isPointer()) { return static_cast<const Pointer*>(varType)->isMutable; }
             return isMutableExpression(index->variable);
         }
         case ScopeResolutionExpression: {
