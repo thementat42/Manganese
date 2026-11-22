@@ -136,15 +136,6 @@ auto SemanticAnalyzer::visit(ast::ChainedComparisonExpression* expression) -> ex
         if (visit(operand) == exprvisit_t::Failure) { result = exprvisit_t::Failure; }
     }
 
-    // make sure all operands are valid
-
-    for (auto* operand : expression->operands) {
-        if (operand->semanticType == nullptr || operand->semanticType->isPoison()) {
-            expression->semanticType = typeContext.getPoison();
-            return exprvisit_t::Failure;
-        }
-    }
-
     // make sure each comparison is valid
     for (std::size_t i = 0; i < expression->operators.size; ++i) {
         auto* left = expression->operands[i];
@@ -153,7 +144,7 @@ auto SemanticAnalyzer::visit(ast::ChainedComparisonExpression* expression) -> ex
 
         const typeCompatibilityResult comparisonResult = areTypesComparable(left->semanticType, right->semanticType);
 
-        if (!areTypesComparable(left->semanticType, right->semanticType)) {
+        if (!comparisonResult) {
             logError(expression, "Cannot compare types {} and {} with operator {}", left->semanticType->toString(),
                      right->semanticType->toString(), tokenTypeToString(op));
             result = exprvisit_t::Failure;
@@ -242,7 +233,6 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
 
         case UnaryPlus:
         case UnaryMinus: {
-            if (visit(expression->right) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
             const SemanticType* operandType = expression->right->semanticType;
             if (operandType->isPoison()) { return exprvisit_t::Failure; }
             if (!operandType->isNumeric()) {
@@ -264,15 +254,13 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
                 return exprvisit_t::Failure;
             }
             // temporary, to avoid failures
-            bool isMutable = false;
-            expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMutable);
             if (!isLvalue(expression->right)) {
                 logError(expression->right, "Cannot take the address of r-value '{}'",
                          expression->right->toString(interner));
                 return exprvisit_t::Failure;
             }
 
-            isMutable = isMutableExpression(expression->right);
+            const bool isMutable = isMutableExpression(expression->right);
             expression->semanticType = typeContext.getPointer(expression->right->semanticType, isMutable);
         } break;
 
@@ -290,7 +278,7 @@ auto SemanticAnalyzer::visit(ast::PrefixExpression* expression) -> exprvisit_t {
                 const auto* refType = static_cast<const Reference*>(expression->right->semanticType);
                 expression->semanticType = refType->baseType;
             } else {
-                logError(expression, "Dereferencing cannot be applied to a non-pointer type");
+                logError(expression, "Dereferencing can only be applied to references and pointers type");
                 expression->semanticType = typeContext.getPoison();
                 return exprvisit_t::Failure;
             }

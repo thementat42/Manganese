@@ -198,15 +198,19 @@ auto SemanticAnalyzer::visit(ast::IndexExpression* expression) -> exprvisit_t {
 
 auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvisit_t {
     expression->semanticType = typeContext.getPoison();
-    DISCARD(visit(expression->object));
+    if (visit(expression->object) == exprvisit_t::Failure) { return exprvisit_t::Failure; }
+
     const SemanticType* objectType = expression->object->semanticType;
     if (objectType->isPoison()) {
         logError(expression->object, "Could not deduce type of expression {}", expression->object->toString(interner));
         return exprvisit_t::Failure;
     }
     // accessing a member from a pointer to an aggregate is also done using x.y so auto-dereference if that's the case
-    if (objectType->isPointer()) { objectType = static_cast<const Pointer*>(objectType)->baseType; }
-    else if (objectType->isReference()) { objectType = static_cast<const Reference*>(objectType)->baseType; }
+    if (objectType->isPointer()) {
+        objectType = static_cast<const Pointer*>(objectType)->baseType;
+    } else if (objectType->isReference()) {
+        objectType = static_cast<const Reference*>(objectType)->baseType;
+    }
 
     std::string_view fieldName = interner.get_view(expression->field);
 
@@ -216,9 +220,10 @@ auto SemanticAnalyzer::visit(ast::MemberAccessExpression* expression) -> exprvis
     }
 
     if (!objectType->isAggregate()) {
-        logError(expression->object,
-                 "Element access can only be performed on an aggregate type (or a pointer/reference to an aggregate), not '{}'",
-                 objectType->toString());
+        logError(
+            expression->object,
+            "Element access can only be performed on an aggregate type (or a pointer/reference to an aggregate), not '{}'",
+            objectType->toString());
         return exprvisit_t::Failure;
     }
 
