@@ -89,19 +89,13 @@ auto SemanticAnalyzer::visit(ast::ReferenceExpression* expression) -> exprvisit_
         return exprvisit_t::Failure;
     }
 
-    bool isMutable = false;
-    const SemanticType* targetType = context.currentExpressionExpectedType;
-    if (targetType != nullptr && targetType->isReference()) {
-        isMutable = static_cast<const Reference*>(targetType)->isMutable;
-    }
-
-    if (isMutable && !isMutableExpression(expression->referencedExpression)) {
+    if (expression->isMutable && !isMutableExpression(expression->referencedExpression)) {
         logError(expression, "Cannot form a mutable reference to immutable expression '{}'",
                  expression->referencedExpression->toString(interner));
         return exprvisit_t::Failure;
     }
 
-    expression->semanticType = typeContext.getReference(operandType, isMutable);
+    expression->semanticType = typeContext.getReference(operandType, expression->isMutable);
     return exprvisit_t::Success;
 }
 
